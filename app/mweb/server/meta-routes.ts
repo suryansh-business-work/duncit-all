@@ -50,9 +50,9 @@ export const DYNAMIC_ROUTES: DynamicRoute[] = [
     descriptionKey: 'mweb.meta.club.description',
   },
   {
-    pattern: '/u/:userId',
+    pattern: '/u/:handle',
     kind: 'USER',
-    idParams: ['userId'],
+    idParams: ['handle'],
     descriptionKey: 'mweb.meta.publicProfile.description',
   },
   {
@@ -143,6 +143,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
     pattern: '/account/whatsapp-preference',
     titleKey: 'mweb.meta.whatsappPreference.title',
   },
+  { pattern: '/account/sms-preference', titleKey: 'mweb.meta.smsPreference.title' },
   { pattern: '/signup-survey', titleKey: 'mweb.meta.signupSurvey.title' },
   { pattern: '/signup-whatsapp', titleKey: 'mweb.meta.signupWhatsapp.title' },
   { pattern: '/signup-referral', titleKey: 'mweb.meta.signupReferral.title' },

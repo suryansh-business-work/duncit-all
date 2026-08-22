@@ -75,7 +75,7 @@ export function ProfileHeader({
             ) : null}
           </XStack>
           <Text fontSize={13} color="$muted" numberOfLines={1}>
-            {me.email ?? '—'}
+            {me.username ? `@${me.username}` : (me.email ?? '—')}
           </Text>
         </YStack>
       </XStack>
@@ -131,7 +131,7 @@ export function ProfileHeader({
         testID="profile-share"
         role="button"
         aria-label={t('mweb.common.shareProfile')}
-        onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
+        onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile', me.username)}
         height={44}
         alignItems="center"
         justifyContent="center"

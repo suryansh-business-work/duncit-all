@@ -10,8 +10,10 @@ interface Props {
   /** Memoized by the page — the date format for the two date columns. */
   columnDeps: AudienceColumnDeps;
   /** Everything the sidebar has selected. Filtering lives there, not in the
-   * column popovers, so a change here resets to page 1 and refetches. */
-  externalFilters: TableFilterValue[];
+   * column popovers, so a change here resets to page 1 and refetches. Omitted
+   * by a saved list's detail page, whose membership the server already
+   * resolved. */
+  externalFilters?: TableFilterValue[];
 }
 
 const getRowId = (row: AudienceRow) => row.id;

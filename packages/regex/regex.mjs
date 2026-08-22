@@ -107,3 +107,22 @@ export const isGstin = (v) => GSTIN.test(v);
 export const isPersonName = (v) => PERSON_NAME.test(v);
 /** Referral-code shape check. Case-sensitive: upper-case before calling it. */
 export const isReferralCode = (v) => REFERRAL_CODE.test(v);
+
+/**
+ * A Duncit @handle — the thing that stands in for a Mongo id in a profile URL.
+ *
+ * Lowercase letters, digits and single hyphens, 3–30 characters, starting and
+ * ending on an alphanumeric. Deliberately narrower than a display name: this
+ * string goes into `duncit.com/u/<username>`, so anything that would need
+ * percent-encoding (spaces, dots, unicode) is rejected rather than escaped —
+ * an escaped handle is neither readable nor shareable, which is the whole
+ * point of having one.
+ *
+ * The length bound lives in the lookahead so ONE pattern answers the whole
+ * question, and each `-` must be followed by an alphanumeric, so `a--b` and a
+ * trailing `-` are rejected without the pattern ever becoming ambiguous.
+ */
+export const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Handle shape check. Lower-case before calling it — the pattern is strict. */
+export const isUsername = (v) => USERNAME.test(v);

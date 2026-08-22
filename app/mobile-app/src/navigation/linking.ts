@@ -61,6 +61,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // without a URL, so the web export had no address for it at all.
       MailPreference: 'account/mail-preference',
       WhatsAppPreference: 'account/whatsapp-preference',
+      SmsPreference: 'account/sms-preference',
       VenueHealth: 'venues/:venueId/health',
       Saved: 'saved',
       PodHistory: 'pod-history',
@@ -119,6 +120,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ClubDetails: 'club/:clubSlug',
       HostsVenues: 'hosts-venues',
       Venues: 'venues',
+      // The segment is the @handle on every link shared since handles
+      // existed, and a raw user id on the ones shared before. The server
+      // resolves both, so the pattern stays one param either way.
       PublicProfile: 'u/:userId',
       PostDetail: 'post/:postId',
       VenueDetails: 'venue/:venueId',

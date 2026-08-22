@@ -170,7 +170,12 @@ const profileResolver: TargetResolver = async (ref, base) => {
   const user: any = await byDocId(UserModel, ref);
   if (!user) return null;
   const name = `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`.trim();
-  return { url: `${base}/u/${String(user._id)}`, label: label('Profile', name) };
+  // The @handle when the account has one — it is readable, it is what a
+  // crawler indexes, and it does not put the row's storage key in a link that
+  // gets forwarded. Accounts that predate handles keep the id until the
+  // migration reaches them, and `/u/` resolves both.
+  const handle = user.profile?.username || String(user._id);
+  return { url: `${base}/u/${handle}`, label: label('Profile', name) };
 };
 
 const postResolver: TargetResolver = async (ref, base) => {

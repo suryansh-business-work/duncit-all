@@ -11,6 +11,8 @@ export interface LinkPreview {
   title: string;
   description: string | null;
   image_url: string | null;
+  /** Where this entity should be indexed, when that differs from the request. */
+  canonical_path: string | null;
 }
 
 interface MediaItem {
@@ -58,6 +60,7 @@ const preview = (
     title: cleanTitle,
     description: cleanText(description),
     image_url: typeof imageUrl === 'string' && imageUrl ? imageUrl : null,
+    canonical_path: null,
   };
 };
 
@@ -80,16 +83,26 @@ async function clubPreview(id: string): Promise<LinkPreview | null> {
   );
 }
 
-/** Mirrors publicUserProfile's privacy rule: name + avatar always, bio only when public. */
+/**
+ * Mirrors publicUserProfile's privacy rule: name + avatar always, bio only
+ * when public — and resolves the @handle as readily as a raw id, because that
+ * is what a shared profile link now carries.
+ *
+ * It also names its own canonical URL. A profile reached by id is the same
+ * page as the same profile reached by its handle, and a crawler shown both
+ * splits the ranking between them unless one points at the other.
+ */
 async function userPreview(id: string): Promise<LinkPreview | null> {
-  const user = await userService.getById(id).catch(() => null);
+  const user = await userService.getByHandle(id).catch(() => null);
   if (!user) return null;
   const isPrivate = (user.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
-  return preview(
+  const card = preview(
     user.full_name ?? `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim(),
     isPrivate ? null : user.bio,
     user.profile_photo
   );
+  if (!card || !user.username) return card;
+  return { ...card, canonical_path: `/u/${user.username}` };
 }
 
 /** Title is the author's name; the surface wraps it in its own localized copy.

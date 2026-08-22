@@ -13,20 +13,25 @@ interface Props {
   /** True when the user has an active story → coloured ring + tap views it. */
   hasStory: boolean;
   saving?: boolean;
-  /** Tap: view the active story, or add one when none exists (item 12). */
+  /** Tap: view the active story, or the photo full-size when there is none. */
   onPress: () => void;
-  /** Long-press: open the photo action menu (item 9). */
+  /** Long-press: open the photo action menu. */
   onLongPress: () => void;
-  /** The "+" badge: always add a story, even when one already exists (item 12). */
-  onAddStory: () => void;
-  /** The edit pencil affordance — also opens the photo menu (item 9). */
+  /** The edit pencil affordance — also opens the photo menu. */
   onEditPhoto: () => void;
   testID?: string;
 }
 
-/** Avatar with the Instagram-style interactions (items 9 + 12): a story ring +
- * tap-to-view/add, long-press photo menu, a "+" add-story badge and an edit
- * pencil. Shared by the Profile and Profile-Settings headers. */
+/**
+ * Avatar with a story ring + tap-to-view, long-press photo menu and an edit
+ * pencil. mWeb's AvatarButton twin (rule 27).
+ *
+ * There is deliberately no "+" badge and no add-a-story path here any more. A
+ * story is posted from Home, where the whole status rail is — putting a second
+ * entrance on the profile photo meant the same picture both WAS the account's
+ * identity and was a button that published something, and people tapped it
+ * expecting the first.
+ */
 export function AvatarStoryButton({
   photo,
   initial,
@@ -35,20 +40,22 @@ export function AvatarStoryButton({
   saving = false,
   onPress,
   onLongPress,
-  onAddStory,
   onEditPhoto,
   testID = 'avatar-story-button',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary, primary, color } = useThemeColors();
   const badge = Math.round(size * 0.34);
+  const label = hasStory
+    ? t('mweb.profileAvatar.viewYourStory')
+    : t('mweb.profileAvatar.profilePhoto');
 
   return (
     <YStack width={size} height={size}>
       <YStack
         testID={testID}
         role="button"
-        aria-label={hasStory ? 'View your story' : 'Add a story'}
+        aria-label={label}
         onPress={onPress}
         onLongPress={onLongPress}
         width={size}
@@ -73,26 +80,6 @@ export function AvatarStoryButton({
             {initial}
           </Text>
         )}
-      </YStack>
-
-      <YStack
-        testID={`${testID}-add-story`}
-        role="button"
-        aria-label={t('mweb.common.addStory')}
-        onPress={onAddStory}
-        position="absolute"
-        bottom={-2}
-        left={-2}
-        width={badge}
-        height={badge}
-        borderRadius={badge / 2}
-        alignItems="center"
-        justifyContent="center"
-        backgroundColor="$primary"
-        borderWidth={2}
-        borderColor="$background"
-      >
-        <MaterialIcons name="add" size={badge * 0.6} color={onPrimary} />
       </YStack>
 
       <YStack

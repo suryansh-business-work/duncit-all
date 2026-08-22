@@ -26,6 +26,8 @@ export type RootStackParamList = {
   MailPreference: undefined;
   /** Profile → WhatsApp Preference, mWeb's /account/whatsapp-preference. */
   WhatsAppPreference: undefined;
+  /** Profile → SMS Preference, mWeb's /account/sms-preference. */
+  SmsPreference: undefined;
   Verification: undefined;
   VenueHealth: { venueId: string };
   Saved: undefined;
@@ -108,6 +110,11 @@ export type RootStackParamList = {
   ProductDetail: { productId: string };
   HostsVenues: undefined;
   Venues: undefined;
+  /**
+   * Someone else’s profile. `userId` carries the @handle when the link came
+   * from a share (`/u/<handle>`) and a raw user id when it came from inside
+   * the app; `publicUserProfile` resolves either.
+   */
   PublicProfile: { userId: string };
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };

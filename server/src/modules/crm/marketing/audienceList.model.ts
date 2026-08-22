@@ -7,6 +7,10 @@ import { Schema, model, InferSchemaType, type Types } from 'mongoose';
  * list re-runs the filters, so somebody who signs up tomorrow and matches is in
  * it tomorrow, and the member count is always current rather than a number that
  * was true the day the list was built.
+ *
+ * `manual_user_ids` is the one exception: people added to the list by hand,
+ * unioned with whoever the criteria match. It is a union and not a snapshot, so
+ * a list can be a segment, a hand-picked set, or both at once.
  */
 const audienceFilterSchema = new Schema(
   {
@@ -32,6 +36,8 @@ const audienceListSchema = new Schema(
     filters: { type: [audienceFilterSchema], default: [] },
     /** The free-text search that was active alongside the filters. */
     search: { type: String, default: '', trim: true, maxlength: 200 },
+    /** People added to this list by hand, on top of whoever the criteria match. */
+    manual_user_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     /** The signed-in user who created it (audit; `owner` is editable copy). */
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },

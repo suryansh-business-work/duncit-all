@@ -11,11 +11,11 @@ import {
   ConnectedAccountsSection,
   EditAccountDialog,
   LanguageSection,
-  MailPreferenceCard,
   PrivacyToggleCard,
   SecuritySection,
-  WhatsAppPreferenceCard,
+  UsernameSection,
 } from '@/components/account';
+import { CommunicationPreferencesSection } from '@/components/comm-preference';
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useAccount } from '@/hooks/useAccount';
@@ -33,6 +33,12 @@ export function AccountScreen() {
   const { me, health, isLoading, error, updateProfile, updateVisibility, refresh } = useAccount();
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
+
+  const openChannel = (channel: 'EMAIL' | 'WHATSAPP' | 'SMS') => {
+    if (channel === 'EMAIL') navigation.navigate('MailPreference');
+    else if (channel === 'WHATSAPP') navigation.navigate('WhatsAppPreference');
+    else navigation.navigate('SmsPreference');
+  };
 
   const loaded =
     error || !me ? (
@@ -96,9 +102,11 @@ export function AccountScreen() {
         ) : null}
 
         <YStack height={1} backgroundColor="$borderColor" />
+        <UsernameSection current={me.username ?? null} onSaved={() => refresh()} />
         <LanguageSection />
-        <MailPreferenceCard onPress={() => navigation.navigate('MailPreference')} />
-        <WhatsAppPreferenceCard onPress={() => navigation.navigate('WhatsAppPreference')} />
+        {/* Email, WhatsApp and SMS under one heading — each a door to its
+            own categories, each with its one-time-code switch inline. */}
+        <CommunicationPreferencesSection onOpenChannel={openChannel} />
         <ConnectedAccountsSection />
         <SecuritySection />
       </ScrollView>

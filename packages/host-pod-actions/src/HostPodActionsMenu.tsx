@@ -15,6 +15,12 @@ interface Props {
   podTitle: string;
   /** Set on a completed/cancelled pod — the whole menu is then read-only. */
   disabled?: boolean;
+  /**
+   * The venue refused this pod's slot, so it never ran and never sold a seat.
+   * Scanning tickets, marking attendance, completing it and asking guests to
+   * rate it are all meaningless then — the host resubmits or cancels instead.
+   */
+  venueRejected?: boolean;
   onScan: () => void;
   onComplete: () => void;
   /**
@@ -50,6 +56,7 @@ interface Props {
 export default function HostPodActionsMenu({
   podTitle,
   disabled = false,
+  venueRejected = false,
   onScan,
   onComplete,
   onSeeAttendance,
@@ -68,6 +75,9 @@ export default function HostPodActionsMenu({
     setAnchorEl(null);
     action();
   };
+
+  // The actions that only make sense for a pod that actually gets to run.
+  const showAttendeeActions = !venueRejected;
 
   return (
     <>
@@ -90,13 +100,15 @@ export default function HostPodActionsMenu({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem onClick={pick(onScan)}>
-          <ListItemIcon>
-            <QrCodeScannerIcon fontSize="small" color="primary" />
-          </ListItemIcon>
-          <ListItemText primary="Scan attendee event tickets" />
-        </MenuItem>
-        {onSeeAttendance && (
+        {showAttendeeActions && (
+          <MenuItem onClick={pick(onScan)}>
+            <ListItemIcon>
+              <QrCodeScannerIcon fontSize="small" color="primary" />
+            </ListItemIcon>
+            <ListItemText primary="Scan attendee event tickets" />
+          </MenuItem>
+        )}
+        {showAttendeeActions && onSeeAttendance && (
           <MenuItem onClick={pick(onSeeAttendance)}>
             <ListItemIcon>
               <FactCheckIcon fontSize="small" color="success" />
@@ -112,12 +124,14 @@ export default function HostPodActionsMenu({
             <ListItemText primary={labels.slotRequest} />
           </MenuItem>
         )}
-        <MenuItem onClick={pick(onComplete)}>
-          <ListItemIcon>
-            <TaskAltIcon fontSize="small" color="success" />
-          </ListItemIcon>
-          <ListItemText primary="Complete pod" />
-        </MenuItem>
+        {showAttendeeActions && (
+          <MenuItem onClick={pick(onComplete)}>
+            <ListItemIcon>
+              <TaskAltIcon fontSize="small" color="success" />
+            </ListItemIcon>
+            <ListItemText primary="Complete pod" />
+          </MenuItem>
+        )}
         <MenuItem onClick={pick(onEdit)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
@@ -126,11 +140,13 @@ export default function HostPodActionsMenu({
         </MenuItem>
         {/* The rating link: clicking the row opens the form, and the two icons
             beside it hand the link to the people who came. */}
-        <FeedbackLinkItem
-          onOpen={pick(onOpenFeedback)}
-          onShare={pick(onShareFeedback)}
-          onCopy={pick(onCopyFeedback)}
-        />
+        {showAttendeeActions && (
+          <FeedbackLinkItem
+            onOpen={pick(onOpenFeedback)}
+            onShare={pick(onShareFeedback)}
+            onCopy={pick(onCopyFeedback)}
+          />
+        )}
         {onClubAdmin && (
           <MenuItem onClick={pick(onClubAdmin)}>
             <ListItemIcon>

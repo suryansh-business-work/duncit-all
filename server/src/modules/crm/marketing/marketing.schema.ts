@@ -216,7 +216,8 @@ export const marketingTypeDefs = /* GraphQL */ `
   """
   A saved Target Audience list. It stores the filter CRITERIA, not the people —
   opening it re-runs them, so the membership and the count are always current
-  rather than a snapshot of the day it was built.
+  rather than a snapshot of the day it was built. People added by hand are
+  unioned on top of whoever the criteria match.
   """
   type AudienceList {
     id: ID!
@@ -226,7 +227,12 @@ export const marketingTypeDefs = /* GraphQL */ `
     owner_user_id: ID
     filters: [AudienceListFilter!]!
     search: String!
-    "How many people match the criteria right now."
+    "How many people were added to this list by hand."
+    manual_member_count: Int!
+    """
+    How many people are in the list right now: everyone matching the criteria,
+    plus everyone added by hand. Somebody who is both is counted once.
+    """
     member_count: Int!
     created_at: String
     updated_at: String
@@ -353,6 +359,12 @@ export const marketingTypeDefs = /* GraphQL */ `
     audienceFilterOptions: AudienceFilterOptions!
     "Saved Target Audience lists."
     audienceListsTable(query: TableQueryInput): AudienceListTablePage!
+    """
+    Who is in one saved list right now — the criteria re-run, plus everyone
+    added by hand. The union is resolved here so a list's detail page can never
+    show a membership that differs from what the next send reaches.
+    """
+    audienceListMembersTable(list_id: ID!, query: TableQueryInput): AudienceTablePage!
     "One saved list, with its member count recomputed."
     audienceList(id: ID!): AudienceList
     "Everybody who can open this portal — the assignable owners for a list."
@@ -371,6 +383,12 @@ export const marketingTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     createAudienceList(input: AudienceListInput!): AudienceList!
+    """
+    Add hand-picked people to a saved list, on top of its criteria. Adding
+    somebody already in the list is a no-op, and ids of closed accounts are
+    dropped rather than stored.
+    """
+    addAudienceListMembers(id: ID!, user_ids: [ID!]!): AudienceList!
     deleteAudienceList(id: ID!): Boolean!
     createMarketingCampaign(input: MarketingCampaignInput!): MarketingCampaign!
     sendMarketingCampaign(campaign_id: ID!): MarketingCampaign!

@@ -29,6 +29,10 @@ const FALLBACK_THEME_COLOR = '#F82C2E';
  */
 export function buildMetaBlock(meta: PageMeta, origin: string, path: string): string {
   const pageUrl = `${origin}${path}`;
+  // og:url stays the address that was actually requested — a card should
+  // reopen the link somebody shared. `canonical` is the indexable one, so
+  // /u/<id> and /u/<handle> are ranked as the single page they are.
+  const canonicalUrl = `${origin}${meta.canonicalPath ?? path}`;
   const title = escapeHtml(meta.title);
   const fullTitle =
     meta.title === meta.appName ? title : `${title} | ${escapeHtml(meta.appName)}`;
@@ -43,7 +47,7 @@ export function buildMetaBlock(meta: PageMeta, origin: string, path: string): st
     `<meta name="apple-mobile-web-app-title" content="${escapeHtml(meta.appName)}" />`,
     `<title>${fullTitle}</title>`,
     `<meta name="description" content="${description}" />`,
-    `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`,
+    `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,
     '<meta property="og:type" content="website" />',
     `<meta property="og:site_name" content="${escapeHtml(meta.appName)}" />`,
     `<meta property="og:title" content="${title}" />`,

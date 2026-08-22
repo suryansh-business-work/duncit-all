@@ -103,6 +103,19 @@ const addressSchema = new Schema(
 const profileSchema = new Schema(
   {
     first_name: { type: String, required: true, trim: true },
+    /**
+     * The globally unique @handle this account is shared as.
+     *
+     * Minted from the name at signup and editable from Profile Settings. It is
+     * what `/u/<username>` carries, so it is the one profile field a stranger
+     * sees in a URL — see ./username.ts for the shape and the reserved list.
+     *
+     * Optional in the schema, not in practice: accounts created before the
+     * field existed have none until `migrate:usernames` runs, and the readers
+     * fall back to the user id for those. A required field here would refuse
+     * to save every one of those documents on their next unrelated edit.
+     */
+    username: { type: String, required: false, trim: true, lowercase: true },
     // Optional: simplified signup collects a single "Name"; surname may be empty.
     last_name: { type: String, required: false, trim: true },
     // The saved main postal address (prefills checkout; billing may differ).
@@ -126,6 +139,29 @@ const profileSchema = new Schema(
   { _id: false }
 );
 
+/**
+ * Which channels this account will accept a one-time code on.
+ *
+ * Three booleans rather than three rows in the marketing preference
+ * collections, because this is a different axis: MailPreference and
+ * WaPreference answer "do you want to hear from us", keyed on an address or a
+ * number that need not belong to an account at all. This answers "how do you
+ * prove it is you", which only an account can have and which the send paths
+ * must be able to read without a second lookup.
+ *
+ * All true by default, and `commPreference.service` refuses the write that
+ * would leave none of them on — a person with no channel for a code cannot
+ * sign in, and a setting that locks you out is a bug wearing a switch.
+ */
+const otpChannelSchema = new Schema(
+  {
+    email: { type: Boolean, default: true },
+    whatsapp: { type: Boolean, default: true },
+    sms: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
 const communicationSchema = new Schema(
   {
     whatsapp: new Schema(
@@ -136,6 +172,10 @@ const communicationSchema = new Schema(
       },
       { _id: false }
     ),
+    otp_channels: { type: otpChannelSchema, default: () => ({}) },
+    // Stamped only when a switch actually moves, so the screen can say when
+    // — a schema timestamp would move on every unrelated profile save.
+    otp_channels_updated_at: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -239,6 +279,13 @@ userSchema.index(
     partialFilterExpression: { 'auth.google_id': { $type: 'string' } },
   }
 );
+userSchema.index(
+  { 'profile.username': 1 },
+  {
+    unique: true,
+    partialFilterExpression: { 'profile.username': { $type: 'string' } },
+  }
+);
 userSchema.index({ 'metadata.status': 1 });
 userSchema.index({ 'metadata.deleted_at': 1 });
 userSchema.index({ 'metadata.role_keys': 1 });
@@ -252,6 +299,7 @@ const legacyVirtuals: Record<string, string> = {
   dob: 'profile.dob',
   country: 'profile.country',
   profile_photo: 'profile.profile_photo',
+  username: 'profile.username',
   bio: 'profile.bio',
   city: 'profile.city',
   zone: 'profile.zone',

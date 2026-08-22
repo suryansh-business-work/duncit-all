@@ -308,6 +308,31 @@ export {
   type PodAttendanceLabels,
 } from './pod-attendance-copy';
 export {
+  buildCommPreferenceLabels,
+  commRowState,
+  COMM_CHANNELS,
+  type CommChannel,
+  type CommChannelLabels,
+  type CommChannelState,
+  type CommPreferenceLabels,
+  type CommRowState,
+  type CommTranslate,
+} from './comm-preference';
+export {
+  buildUsernameLabels,
+  canSaveUsername,
+  isUsernameError,
+  normalizeUsername,
+  profileUrl,
+  usernameStatus,
+  USERNAME_PATTERN,
+  type UsernameLabels,
+  type UsernameRejection,
+  type UsernameStatus,
+  type UsernameStatusInput,
+  type UsernameTranslate,
+} from './username';
+export {
   autoPodActionable,
   autoPodEnrolledCount,
   autoPodModeCount,

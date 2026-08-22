@@ -86,7 +86,7 @@ export function AccountProfileHeader({
           testID="account-share"
           role="button"
           aria-label={t('mweb.common.shareProfile')}
-          onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
+          onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile', me.username)}
           flex={1}
           height={44}
           alignItems="center"

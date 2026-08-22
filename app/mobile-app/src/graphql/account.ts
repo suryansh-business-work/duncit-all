@@ -9,6 +9,7 @@ export const MobileMeDocument = gql(`
   query MobileMe {
     me {
       user_id
+      username
       first_name
       last_name
       full_name
@@ -51,6 +52,7 @@ export const MobileAccountDocument = gql(`
   query MobileAccount {
     me {
       user_id
+      username
       first_name
       last_name
       full_name

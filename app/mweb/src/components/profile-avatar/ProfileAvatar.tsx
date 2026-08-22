@@ -19,12 +19,17 @@ interface Props {
   onChanged?: () => void;
 }
 
-/** The interactive profile avatar (items 9 + 12): story ring + click-to-view/add,
- * an edit pencil → View / Change / Remove menu, crop dialog and the own-story
- * viewer with a delete action. Shared by mWeb's Account and Profile pages. */
+/**
+ * The interactive profile avatar: story ring + tap-to-view, an edit pencil →
+ * View / Change / Remove menu, crop dialog and the own-story viewer with a
+ * delete action. Shared by mWeb's Account and Profile pages.
+ *
+ * It does not post stories. That entrance lives on Home, with the rest of the
+ * status rail — see AvatarButton for why it was taken off the photo.
+ */
 export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const a = useProfileAvatar(onChanged);
+  const a = useProfileAvatar(onChanged, !!photo);
   const initial = (name?.[0] ?? 'U').toUpperCase();
   const storyItem = useMemo(
     () => buildOwnStoryItem(name, photo ?? null, a.stories),
@@ -41,7 +46,6 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         hasStory={a.hasStory}
         saving={a.saving}
         onAvatarClick={a.onAvatarClick}
-        onAddStory={a.addStory}
         onEdit={a.openMenu}
       />
 
@@ -55,18 +59,6 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
           const file = e.target.files?.[0] ?? null;
           e.target.value = '';
           a.onFileChange(file).catch((error) => logs.mWeb.error('ProfileAvatar', 'onFileChange', { error }));
-        }}
-      />
-      <input
-        ref={a.storyFileRef}
-        type="file"
-        accept="image/*,video/*"
-        hidden
-        data-testid="avatar-story-input"
-        onChange={(e) => {
-          const file = e.target.files?.[0] ?? null;
-          e.target.value = '';
-          a.onStoryFileChange(file).catch((error) => logs.mWeb.error('ProfileAvatar', 'onStoryFileChange', { error }));
         }}
       />
 

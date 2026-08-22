@@ -5,6 +5,7 @@ import {
   Box,
   ImageList,
   ImageListItem,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
@@ -39,7 +40,7 @@ interface Props {
 /** Posts grid + active stories on a member's public profile. When the account
  * is private and the viewer is not a follower, a lock card is shown instead. */
 export default function PublicProfilePosts({ userId, canView, meId }: Readonly<Props>) {
-  const { data } = useQuery(PUBLIC_USER_POSTS, {
+  const { data, loading } = useQuery(PUBLIC_USER_POSTS, {
     variables: { id: userId },
     skip: !canView,
     fetchPolicy: 'cache-and-network',
@@ -62,10 +63,57 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
   }
 
   const posts = data?.posts ?? [];
+  const isFirstLoad = loading && !data;
+  const gridSkeleton = (
+    <ImageList cols={3} gap={4} sx={{ m: 0 }} data-testid="public-posts-loading">
+      {['a', 'b', 'c', 'd', 'e', 'f'].map((slot) => (
+        <ImageListItem key={slot}>
+          <Skeleton variant="rectangular" sx={{ width: '100%', aspectRatio: '1 / 1' }} />
+        </ImageListItem>
+      ))}
+    </ImageList>
+  );
+
   const stories = (data?.stories ?? []).map((story: any) => ({
     url: story.image_url,
     type: story.media_type,
   }));
+
+  const postsGrid = (
+    <ImageList cols={3} gap={4} sx={{ m: 0 }}>
+      {posts.map((post: any) => (
+        <ImageListItem
+          key={post.id}
+          onClick={() => setOpenPostId(post.id)}
+          sx={{ cursor: 'pointer', aspectRatio: '1 / 1', overflow: 'hidden' }}
+        >
+          <Box
+            component="img"
+            src={post.image_url}
+            alt={post.caption || 'post'}
+            loading="lazy"
+            sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        </ImageListItem>
+      ))}
+    </ImageList>
+  );
+
+  const emptyGrid = (
+    <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+      No posts yet.
+    </Typography>
+  );
+
+  /**
+   * Three states, decided above the return so the body stays a layout
+   * (S3776) — and so the first fetch no longer renders "No posts yet." for a
+   * beat on every profile that does have posts.
+   */
+  let grid = postsGrid;
+  if (isFirstLoad) grid = gridSkeleton;
+  else if (posts.length === 0) grid = emptyGrid;
+
 
   return (
     <Stack spacing={1.5}>
@@ -97,29 +145,7 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
         </Typography>
       </Stack>
 
-      {posts.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-          No posts yet.
-        </Typography>
-      ) : (
-        <ImageList cols={3} gap={4} sx={{ m: 0 }}>
-          {posts.map((post: any) => (
-            <ImageListItem
-              key={post.id}
-              onClick={() => setOpenPostId(post.id)}
-              sx={{ cursor: 'pointer', aspectRatio: '1 / 1', overflow: 'hidden' }}
-            >
-              <Box
-                component="img"
-                src={post.image_url}
-                alt={post.caption || 'post'}
-                loading="lazy"
-                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            </ImageListItem>
-          ))}
-        </ImageList>
-      )}
+      {grid}
 
       <PostDialog
         postId={openPostId}

@@ -8,6 +8,7 @@ import {
 } from '@modules/engagement/notification/notification.model';
 import {
   buildTableFilter,
+  combineFilters,
   runTableQuery,
   type TableEntityConfig,
   type TableFilterInput,
@@ -211,9 +212,7 @@ async function applyTranslated(base: BaseFilter, f: TableFilterInput): Promise<v
  */
 async function translate(input?: TableQueryInput | null) {
   const all = input?.filters ?? [];
-  // Soft-deleted accounts are never an audience — a campaign must not reach a
-  // closed account. usersTable does not do this; here it is not optional.
-  const base: BaseFilter = { 'metadata.deleted_at': null };
+  const base: BaseFilter = {};
 
   for (const f of all.filter((x) => TRANSLATED.has(x.field))) {
     await applyTranslated(base, f);
@@ -280,17 +279,43 @@ async function pushPlatformsFor(ids: string[]): Promise<Map<string, string[]>> {
   return new Map([...byUser].map(([k, v]) => [k, [...v].sort((a, b) => a.localeCompare(b))]));
 }
 
-/** The Mongo filter a saved list's criteria describe right now. */
-async function audienceFilter(input?: TableQueryInput | null) {
+/**
+ * Soft-deleted accounts are never an audience — a campaign must not reach a
+ * closed account. usersTable does not do this; here it is not optional. It is
+ * held apart from the criteria so it can stay an AND across the union below:
+ * adding somebody by hand must never put a closed account back in a send list.
+ */
+const NOT_DELETED: BaseFilter = { 'metadata.deleted_at': null };
+
+/**
+ * The Mongo filter a saved list describes right now.
+ *
+ * `manualIds` are the people a marketer added to the list by hand. They are
+ * UNIONed with the criteria, never intersected — somebody added by hand is in
+ * the list whether or not they match the filters, which is the entire reason
+ * for adding them. With no criteria at all the list is already everybody, so
+ * the union is skipped rather than written as a redundant `$or`.
+ */
+export async function audienceFilter(
+  input?: TableQueryInput | null,
+  manualIds?: Types.ObjectId[] | null
+): Promise<BaseFilter> {
   const { base, query } = await translate(input);
-  const built = buildTableFilter(query, AUDIENCE_TABLE_CONFIG);
-  return Object.keys(built).length > 0 ? { $and: [base, built] } : base;
+  const criteria = combineFilters(base, buildTableFilter(query, AUDIENCE_TABLE_CONFIG));
+  if (!manualIds?.length || Object.keys(criteria).length === 0) {
+    return combineFilters(NOT_DELETED, criteria);
+  }
+  return combineFilters(NOT_DELETED, { $or: [criteria, { _id: { $in: manualIds } }] });
 }
 
-/** How many people match a saved list's criteria right now. A live segment has
- * no stored membership, so the count is always recomputed. */
-export async function countAudience(input?: TableQueryInput | null): Promise<number> {
-  return UserModel.countDocuments(await audienceFilter(input));
+/** How many people a saved list holds right now — its criteria plus anybody
+ * added by hand. A live segment stores no membership, so this is recomputed on
+ * every read rather than kept as a column. */
+export async function countAudience(
+  input?: TableQueryInput | null,
+  manualIds?: Types.ObjectId[] | null
+): Promise<number> {
+  return UserModel.countDocuments(await audienceFilter(input, manualIds));
 }
 
 /**
@@ -303,19 +328,47 @@ export async function countAudience(input?: TableQueryInput | null): Promise<num
  */
 export async function audienceMatchesUser(
   input: TableQueryInput | null | undefined,
-  userId: string
+  userId: string,
+  manualIds?: Types.ObjectId[] | null
 ): Promise<boolean> {
   if (!Types.ObjectId.isValid(userId)) return false;
-  const filter = await audienceFilter(input);
+  const filter = await audienceFilter(input, manualIds);
   const match = await UserModel.exists({ $and: [filter, { _id: new Types.ObjectId(userId) }] });
   return !!match;
 }
 
 /** Who matches right now — the recipients a campaign or notification sends to.
  * Recomputed per send, so a list built last month reaches this month's people. */
-export async function audienceUserIds(input?: TableQueryInput | null): Promise<Types.ObjectId[]> {
-  const users = await UserModel.find(await audienceFilter(input)).select('_id');
+export async function audienceUserIds(
+  input?: TableQueryInput | null,
+  manualIds?: Types.ObjectId[] | null
+): Promise<Types.ObjectId[]> {
+  const users = await UserModel.find(await audienceFilter(input, manualIds)).select('_id');
   return users.map((u: any) => u._id);
+}
+
+/**
+ * One page of audience rows. `membership` is who is eligible at all — the whole
+ * audience, or one saved list's members; `input` is the table's own search,
+ * sort and paging. Both the directory and a list's detail page render through
+ * here, so the row shape and the push-platform lookup exist once.
+ */
+export async function audienceTablePage(membership: BaseFilter, input?: TableQueryInput | null) {
+  const { base, query } = await translate(input);
+  const { docs, total, page, page_size } = await runTableQuery<any>(
+    UserModel,
+    combineFilters(membership, base),
+    query,
+    AUDIENCE_TABLE_CONFIG
+  );
+  const rows = docs.map(toAudienceRow);
+  const platforms = await pushPlatformsFor(rows.map((r) => r.id));
+  return {
+    rows: rows.map((r) => ({ ...r, push_platforms: platforms.get(r.id) ?? [] })),
+    total,
+    page,
+    page_size,
+  };
 }
 
 export const audienceService = {
@@ -341,20 +394,6 @@ export const audienceService = {
   },
 
   async table(input?: TableQueryInput | null) {
-    const { base, query } = await translate(input);
-    const { docs, total, page, page_size } = await runTableQuery<any>(
-      UserModel,
-      base,
-      query,
-      AUDIENCE_TABLE_CONFIG
-    );
-    const rows = docs.map(toAudienceRow);
-    const platforms = await pushPlatformsFor(rows.map((r) => r.id));
-    return {
-      rows: rows.map((r) => ({ ...r, push_platforms: platforms.get(r.id) ?? [] })),
-      total,
-      page,
-      page_size,
-    };
+    return audienceTablePage(NOT_DELETED, input);
   },
 };

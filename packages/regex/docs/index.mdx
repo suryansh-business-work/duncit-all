@@ -26,6 +26,7 @@ exports:
   - 'BANK_ACCOUNT_NUMBER'
   - 'GSTIN'
   - 'REFERRAL_CODE'
+  - 'USERNAME'
   - 'isPhoneNumber'
   - 'isPhoneIntl'
   - 'isPincode'
@@ -33,6 +34,7 @@ exports:
   - 'isEmail'
   - 'isOtp'
   - 'isIfsc'
+  - 'isUsername'
   - 'isUpiId'
   - 'isBankAccountNumber'
   - 'isGstin'
@@ -157,10 +159,21 @@ Every pattern is a plain `RegExp` with no flags; every validator is
 | `UPI_ID` | `/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/` | `isUpiId` | `name@bank` |
 | `BANK_ACCOUNT_NUMBER` | `/^\d{6,18}$/` | `isBankAccountNumber` | 6–18 digits |
 | `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
+| `USERNAME` | `/^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUsername` | a Duncit @handle — `suryansh-srivastava-7k2f` |
 
 `EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`
 so the `\.` separator never overlaps a label. Both are linear; neither can be made to
 backtrack.
+
+`USERNAME` is what goes into `duncit.com/u/<username>`, which is why it is narrower than a
+display name: anything needing percent-encoding is rejected rather than escaped, since an
+escaped handle is neither readable nor shareable. The length bound lives in the lookahead so
+ONE pattern answers the whole question, and every `-` must be followed by an alphanumeric —
+so `a--b` and a trailing `-` are refused without the pattern ever becoming ambiguous. Two
+copies exist outside this package on purpose: `@duncit/utils` restates it (that package is
+zero-dependency, and the native app breaks on a sibling `@duncit/*` import) and the server
+mirrors it in `server/src/modules/access/user/username.ts`, which is the only one of the
+three that decides anything.
 
 ## No live preview
 

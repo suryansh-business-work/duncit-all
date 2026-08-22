@@ -1,5 +1,4 @@
 import { Avatar, Box, CircularProgress, IconButton, Tooltip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -10,12 +9,19 @@ interface Props {
   hasStory: boolean;
   saving: boolean;
   onAvatarClick: () => void;
-  onAddStory: () => void;
   onEdit: (el: HTMLElement) => void;
 }
 
-/** The avatar visual (items 9 + 12): story ring + click-to-view/add, a "+" add
- * badge and an edit pencil that opens the photo menu. */
+/**
+ * The avatar visual: story ring, tap to view, and an edit pencil that opens the
+ * photo menu.
+ *
+ * There is deliberately no "+" badge and no add-a-story path here any more. A
+ * story is posted from Home, where the whole status rail is — putting a second
+ * entrance on the profile photo meant the same picture both WAS the account's
+ * identity and was a button that published something, and people tapped it
+ * expecting the first.
+ */
 export default function AvatarButton({
   photo,
   initial,
@@ -23,20 +29,22 @@ export default function AvatarButton({
   hasStory,
   saving,
   onAvatarClick,
-  onAddStory,
   onEdit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const ringSx = hasStory
     ? { p: '3px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff8b5f, #ed4f7a)' }
     : {};
+  const label = hasStory
+    ? t('mweb.profileAvatar.viewYourStory')
+    : t('mweb.profileAvatar.profilePhoto');
 
   return (
     <Box sx={{ position: 'relative', width: size + 8, height: size + 8 }}>
-      <Tooltip title={hasStory ? 'View your story' : 'Add a story'}>
+      <Tooltip title={label}>
         <Box
           role="button"
-          aria-label={hasStory ? 'View your story' : 'Add a story'}
+          aria-label={label}
           data-testid="avatar-button"
           onClick={onAvatarClick}
           sx={{ cursor: 'pointer', display: 'inline-flex', ...ringSx }}
@@ -55,25 +63,6 @@ export default function AvatarButton({
             {initial}
           </Avatar>
         </Box>
-      </Tooltip>
-
-      <Tooltip title={t('mweb.common.addStory')}>
-        <IconButton
-          size="small"
-          data-testid="avatar-add-story"
-          aria-label={t('mweb.common.addStory')}
-          onClick={onAddStory}
-          sx={{
-            position: 'absolute',
-            left: -2,
-            bottom: -2,
-            bgcolor: 'primary.main',
-            color: 'common.white',
-            '&:hover': { bgcolor: 'primary.dark' },
-          }}
-        >
-          <AddIcon fontSize="small" />
-        </IconButton>
       </Tooltip>
 
       <Tooltip title={t('mweb.profileAvatar.changeProfilePhoto')}>

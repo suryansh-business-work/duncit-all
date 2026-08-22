@@ -95,7 +95,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
             )}
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
-            {me.email ?? `@${me.user_id}`}
+            {me.username ? `@${me.username}` : (me.email ?? `@${me.user_id}`)}
           </Typography>
           {me.bio && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.25, whiteSpace: 'pre-wrap' }}>
@@ -124,7 +124,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
             Edit profile
           </Button>
           <IconButton
-            onClick={() => shareProfile(me.user_id, displayName)}
+            onClick={() => shareProfile(me.user_id, displayName, me.username)}
             sx={{
               width: 44,
               height: 42,

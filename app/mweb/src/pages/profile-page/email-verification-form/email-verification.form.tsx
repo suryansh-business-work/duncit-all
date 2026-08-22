@@ -3,7 +3,14 @@ import { gql, useMutation } from '@apollo/client';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { OTP_PATTERN } from '../../../forms/validation/rules';
 import type { EmailVerificationFormProps, EmailVerificationValues } from './email-verification.types';
@@ -101,7 +108,14 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
       {error && <Alert severity="error">{error}</Alert>}
       <form noValidate onSubmit={submit}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'flex-start' }}>
-          <Button variant="outlined" onClick={sendOtp} disabled={!email || requestState.loading}>
+          <Button
+            variant="outlined"
+            onClick={sendOtp}
+            disabled={!email || requestState.loading}
+            startIcon={
+              requestState.loading ? <CircularProgress size={16} color="inherit" /> : undefined
+            }
+          >
             {requested ? 'Resend OTP' : 'Send OTP'}
           </Button>
           <Controller
@@ -118,7 +132,16 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
               />
             )}
           />
-          <Button type="submit" variant="contained" disabled={verifyState.loading}>{t('mweb.common.verify')}</Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={verifyState.loading}
+            startIcon={
+              verifyState.loading ? <CircularProgress size={16} color="inherit" /> : undefined
+            }
+          >
+            {t('mweb.common.verify')}
+          </Button>
         </Stack>
       </form>
     </Stack>

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useApolloTableFetch } from '@duncit/table';
@@ -13,6 +13,7 @@ import {
   APPROVE_CLUB_ADMIN,
   ASSIGN_CLUB_ADMIN_CLUBS,
   CLUB_ADMINS_TABLE,
+  DEFAULT_CLUB_ADMIN_COMMISSION,
   DELETE_CLUB_ADMIN,
   REJECT_CLUB_ADMIN,
   SET_CLUB_ADMIN_ACTIVE,
@@ -30,6 +31,11 @@ export default function ClubAdminsPage() {
   const [setCommission, { loading: savingCommission }] = useMutation(SET_CLUB_ADMIN_COMMISSION);
   const [assignClubs, { loading: savingClubs }] = useMutation(ASSIGN_CLUB_ADMIN_CLUBS);
   const lifecycle = useEntityLifecycle(SET_CLUB_ADMIN_ACTIVE, DELETE_CLUB_ADMIN, refresh);
+
+  const { data: defaultsData } = useQuery(DEFAULT_CLUB_ADMIN_COMMISSION, {
+    fetchPolicy: 'cache-first',
+  });
+  const defaultCommissionPct: number | undefined = defaultsData?.defaultClubAdminCommissionPct;
 
   const [active, setActive] = useState<ClubAdminRow | null>(null);
   const [editing, setEditing] = useState<ClubAdminRow | null>(null);
@@ -150,6 +156,7 @@ export default function ClubAdminsPage() {
         savingCommission={savingCommission}
         onAssignClubs={doAssignClubs}
         savingClubs={savingClubs}
+        defaultCommissionPct={defaultCommissionPct}
       />
     </Box>
   );

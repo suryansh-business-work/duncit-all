@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -7,6 +7,7 @@ import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
 import {
   APPROVE_BRAND,
+  DEFAULT_PRODUCT_COMMISSION,
   DELETE_ECOMM_BRAND,
   ECOMM_BRANDS_TABLE,
   REJECT_BRAND,
@@ -26,6 +27,10 @@ export default function EcommBrandsPage() {
   const [reject] = useMutation(REJECT_BRAND);
   const [setBrandCommission, { loading: savingCommission }] = useMutation(SET_BRAND_COMMISSION);
   const lifecycle = useEntityLifecycle(SET_ECOMM_BRAND_ACTIVE, DELETE_ECOMM_BRAND, refresh);
+  const { data: defaultsData } = useQuery(DEFAULT_PRODUCT_COMMISSION, {
+    fetchPolicy: 'cache-first',
+  });
+  const defaultCommissionPct: number | undefined = defaultsData?.defaultProductCommissionPct;
   const [active, setActive] = useState<any>(null);
   const [editing, setEditing] = useState<any>(null);
   const [notes, setNotes] = useState('');
@@ -126,6 +131,7 @@ export default function EcommBrandsPage() {
         onReject={doReject}
         onSaveCommission={doSaveCommission}
         savingCommission={savingCommission}
+        defaultCommissionPct={defaultCommissionPct}
       />
     </Box>
   );

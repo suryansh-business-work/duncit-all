@@ -123,6 +123,16 @@ export const financeResolvers = {
       const doc = await getFinanceSettings();
       return doc.default_venue_commission_pct;
     },
+    defaultClubAdminCommissionPct: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, COMMISSION_DEFAULT_READ);
+      const doc = await getFinanceSettings();
+      return doc.default_club_admin_pct;
+    },
+    defaultProductCommissionPct: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, COMMISSION_DEFAULT_READ);
+      const doc = await getFinanceSettings();
+      return doc.default_product_commission_pct;
+    },
     publicFinanceSettings: async () => {
       const doc = await getFinanceSettings();
       return {

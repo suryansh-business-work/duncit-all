@@ -15017,6 +15017,12 @@ export type Query = {
   /** One restore by id, or the most recent one. Polled for progress. */
   dbRestoreJob?: Maybe<DbRestore>;
   /**
+   * The same, for Club Admins — the Onboarding console's Review Club Admin
+   * dialog seeds its Pay Commission field from this, so a reviewer opens on the
+   * cut a club admin is actually paid when they carry no override of their own.
+   */
+  defaultClubAdminCommissionPct: Scalars['Float']['output'];
+  /**
    * Just the global default host commission % (Finance → Default Deductions).
    * Split out of financeSettings because the Onboarding console's Review Host
    * dialog seeds its commission field from this number, and financeSettings
@@ -15024,6 +15030,12 @@ export type Query = {
    * onboarding staff have no business reading.
    */
   defaultHostCommissionPct: Scalars['Float']['output'];
+  /**
+   * The same, for product sales — the Onboarding console's Review Brand dialog
+   * seeds its commission field from this whenever the brand has no override, so
+   * the number on screen is the one the product invoice will charge.
+   */
+  defaultProductCommissionPct: Scalars['Float']['output'];
   /**
    * The same, for venues — the Onboarding console's Review Venue dialog seeds
    * its commission field from this so a reviewer sees the number settlement

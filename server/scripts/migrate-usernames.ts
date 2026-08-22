@@ -68,6 +68,16 @@ async function run() {
   await connectDB();
   log(`mode: ${dryRun ? 'DRY-RUN' : 'WRITE'}`);
 
+  // The unique index is what actually keeps two people off one handle, and
+  // this script is what writes them in bulk — so it makes sure the constraint
+  // exists before it starts, rather than trusting that a boot has happened
+  // since the field was added. `createIndexes` only ADDS what is missing; it
+  // never drops, which `syncIndexes` on a collection this central would.
+  if (!dryRun) {
+    await UserModel.createIndexes();
+    log('user indexes ensured');
+  }
+
   // Deleted accounts are deliberately included: their handle stays reserved,
   // so a restored account keeps the link that was shared for it.
   const users = await UserModel.find({

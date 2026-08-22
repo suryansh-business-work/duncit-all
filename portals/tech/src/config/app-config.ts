@@ -63,10 +63,23 @@ export const appConfig = {
         { label: 'Info', labelKey: 'shell.nav.info', to: '/server/info', icon: 'info' },
         { label: 'Docker', labelKey: 'shell.nav.docker', to: '/server/docker', icon: 'docker' },
         { label: 'Terminal', labelKey: 'shell.nav.terminal', to: '/server/terminal', icon: 'terminal' },
-        { label: 'Data Clone', labelKey: 'shell.nav.dataClone', to: '/server/data-clone', icon: 'warehouse' },
+      ],
+    },
+    {
+      // Both entries move a whole database: one takes a copy of it, the other
+      // overwrites staging with production. They belong beside each other
+      // rather than filed under Server next to a log viewer and a terminal.
+      label: 'Database', labelKey: 'shell.nav.database',
+      icon: 'storage',
+      children: [
+        { label: 'Backups', labelKey: 'shell.nav.backups', to: '/database/backups', icon: 'backup' },
+        { label: 'Data Clone', labelKey: 'shell.nav.dataClone', to: '/database/data-clone', icon: 'warehouse' },
       ],
     },
     { label: 'Slack', labelKey: 'shell.nav.slack', to: '/slack', icon: 'chat' },
+    // Sits beside Telemetry rather than inside it: those rows are written by
+    // machines, these by people, and the triage is a different job.
+    { label: 'Status Reports', labelKey: 'shell.nav.statusReports', to: '/status-reports', icon: 'sos' },
     {
       label: 'App Builds', labelKey: 'shell.nav.appBuilds',
       icon: 'installMobile',

@@ -90,6 +90,7 @@ export {
   policyAcceptanceMethodLabel,
   resolveLocale,
   SHELL_BUNDLE,
+  STATUS_BUNDLE,
   MARKETING_BUNDLE,
   ONBOARDING_BUNDLE,
   POD_FORM_BUNDLE,

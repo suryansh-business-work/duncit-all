@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Alert, Container, CssBaseline, Skeleton, Stack, ThemeProvider, Typography } from '@mui/material';
+import { Alert, Container, CssBaseline, ThemeProvider, Typography } from '@mui/material';
 import Header from './components/Header';
 import OverallStatusBanner from './components/OverallStatusBanner';
 import GlobalUptimeChart from './components/GlobalUptimeChart';
+import RefreshIndicator from './components/RefreshIndicator';
+import StatusBoardSkeleton from './components/StatusBoardSkeleton';
 import StatusFilters, { type FilterState } from './components/StatusFilters';
 import ServiceGroupCard from './components/ServiceGroupCard';
 import IncidentsSection from './components/IncidentsSection';
 import Footer from './components/Footer';
+import ReportIssueSection from './forms/report-issue';
 import { ServiceDetailsDialog } from './components/service-details-dialog';
 import { useBranding } from './hooks/useBranding';
 import { useColorMode } from './hooks/useColorMode';
@@ -15,18 +18,7 @@ import { useFilteredGroups } from './hooks/useFilteredGroups';
 import { buildTheme } from './theme';
 import type { StatusService } from './types';
 
-const SKELETON_GROUPS = ['consoles', 'platform', 'websites'];
 const INITIAL_FILTERS: FilterState = { query: '', status: 'all', group: 'all' };
-
-function GroupsSkeleton() {
-  return (
-    <Stack spacing={3} mb={4}>
-      {SKELETON_GROUPS.map((key) => (
-        <Skeleton key={key} variant="rounded" height={160} />
-      ))}
-    </Stack>
-  );
-}
 
 export default function App() {
   const { mode, toggleMode } = useColorMode();
@@ -43,6 +35,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <RefreshIndicator active={data.refreshing} />
       <Container maxWidth="md" sx={{ pt: { xs: 4, sm: 7 }, pb: 8 }}>
         <Header
           appName={branding.appName}
@@ -51,34 +44,42 @@ export default function App() {
           mode={mode}
           onToggleMode={toggleMode}
         />
-        <OverallStatusBanner overall={data.summary?.overall} lastUpdated={data.lastUpdated} />
-        <GlobalUptimeChart
-          global={data.summary?.global}
-          overallUptime={data.summary?.overall.uptime_90d}
-        />
         {data.error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {data.error}
           </Alert>
         )}
-        {data.loading && <GroupsSkeleton />}
-        {data.groups && (
-          <StatusFilters value={filters} groupTitles={groupTitles} onChange={setFilters} />
+        {/* One gate for the whole board: a half-drawn banner over an empty chart
+            over three grey blocks was three different loading states pretending
+            to be a page. */}
+        {data.loading && <StatusBoardSkeleton />}
+        {!data.loading && (
+          <>
+            <OverallStatusBanner overall={data.summary?.overall} lastUpdated={data.lastUpdated} />
+            <GlobalUptimeChart
+              global={data.summary?.global}
+              overallUptime={data.summary?.overall.uptime_90d}
+            />
+            {data.groups && (
+              <StatusFilters value={filters} groupTitles={groupTitles} onChange={setFilters} />
+            )}
+            {noMatches && (
+              <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+                No services match your filters.
+              </Typography>
+            )}
+            {filteredGroups.map((group) => (
+              <ServiceGroupCard
+                key={group.title}
+                group={group}
+                summary={data.summary}
+                onSelect={setSelected}
+              />
+            ))}
+          </>
         )}
-        {noMatches && (
-          <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-            No services match your filters.
-          </Typography>
-        )}
-        {filteredGroups.map((group) => (
-          <ServiceGroupCard
-            key={group.title}
-            group={group}
-            summary={data.summary}
-            onSelect={setSelected}
-          />
-        ))}
         <IncidentsSection incidents={data.incidents} />
+        <ReportIssueSection groups={data.groups} />
         <Footer appName={branding.appName} />
       </Container>
       <ServiceDetailsDialog service={selected} onClose={() => setSelected(null)} />

@@ -143,9 +143,15 @@ export const policyService = {
    *
    * A retired policy stops gating signup the moment it is deactivated, which is
    * why `is_active` is part of the question and not a separate one.
+   *
+   * `$ne: false` rather than `true`, because a schema default is applied when a
+   * document is WRITTEN, never to documents already stored: every policy Legal
+   * wrote before the flag existed has no such field at all, and an equality
+   * match drops exactly those — the oldest and most important ones — from the
+   * signup list. Absent means true here, the same reading `toPub` gives it.
    */
   async signupRequired() {
-    return PolicyModel.find({ is_active: true, requires_signup_acceptance: true }).sort({
+    return PolicyModel.find({ is_active: true, requires_signup_acceptance: { $ne: false } }).sort({
       sort_order: 1,
       title: 1,
     });
@@ -233,6 +239,26 @@ export const policyService = {
       await doc.save();
     }
     return { repaired: idless.length };
+  },
+
+  /**
+   * Write the signup flag onto policies stored before it existed.
+   *
+   * `signupRequired` already reads an absent flag as true, so the gate is
+   * correct without this. It runs so the STORED data says what the schema
+   * claims it defaults to: the admin table filters this field by plain
+   * equality, and a policy that gates signup while the console's "requires
+   * acceptance" filter hides it is the same bug wearing a different face.
+   *
+   * Only ever fills in what is missing — a policy Legal deliberately set to
+   * false is left alone.
+   */
+  async backfillSignupAcceptance(): Promise<{ repaired: number }> {
+    const r = await PolicyModel.updateMany(
+      { requires_signup_acceptance: { $exists: false } },
+      { $set: { requires_signup_acceptance: true } }
+    );
+    return { repaired: r.modifiedCount ?? 0 };
   },
 
   async remove(id: string) {

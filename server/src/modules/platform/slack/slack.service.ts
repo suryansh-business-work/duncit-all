@@ -189,8 +189,15 @@ export const slackService = {
     platform: string;
     media_urls?: string[];
     blocks_json?: string | null;
+    /**
+     * The channel Support picked on Report a Problem settings. Wins over the
+     * env entries, which stay as the fallback for an install that never picked
+     * one — the caller owns the routing, this module owns the posting.
+     */
+    channel?: string | null;
   }): Promise<{ ts?: string | null; skipped?: string | null }> {
     const channel =
+      optionalStr(report.channel) ??
       optionalStr(await getRuntimeEnvValue('SLACK_FEEDBACK_CHANNEL')) ??
       optionalStr(await getRuntimeEnvValue('SLACK_DEFAULT_CHANNEL'));
     if (!channel) {

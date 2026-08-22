@@ -1,3 +1,4 @@
+import type { FlatCatalogue, Locale } from '@duncit/i18n';
 import { SERVER_BASE } from './config/server';
 import type {
   Branding,
@@ -6,6 +7,7 @@ import type {
   IncidentsResponse,
   ProbeResult,
   ServicesResponse,
+  StatusReportInput,
   SummaryResponse,
 } from './types';
 
@@ -47,15 +49,88 @@ export function fetchHealth(url: string, signal?: AbortSignal): Promise<HealthRe
   return getJson<HealthReport>(url, signal);
 }
 
-/** Live brand (logo, name, accent) from admin settings — same query the old site used. */
-export async function fetchBranding(signal?: AbortSignal): Promise<Branding | null> {
+/**
+ * One POST to /graphql. The status page has no Apollo client — it renders
+ * before any session exists — so the four documents it needs share this
+ * instead of four hand-rolled fetches (rule 34).
+ *
+ * Returns null on a transport or GraphQL error: every caller here has a
+ * fallback that is better than an exception on a page whose entire job is to
+ * still be readable when things are broken.
+ */
+async function graphqlRequest<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<T | null> {
   const res = await fetch(`${SERVER_BASE}/graphql`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query: '{ branding { app_name logo_url primary_color } }' }),
+    body: JSON.stringify({ query, variables }),
     signal,
   });
   if (!res.ok) return null;
-  const json = (await res.json()) as { data?: { branding?: Branding } };
-  return json?.data?.branding ?? null;
+  const json = (await res.json()) as { data?: T; errors?: Array<{ message: string }> };
+  if (json.errors?.length) throw new Error(json.errors[0]?.message ?? 'Request failed');
+  return json.data ?? null;
+}
+
+/** Live brand (logo, name, accent) from admin settings — same query the old site used. */
+export async function fetchBranding(signal?: AbortSignal): Promise<Branding | null> {
+  const data = await graphqlRequest<{ branding?: Branding }>(
+    '{ branding { app_name logo_url primary_color } }',
+    undefined,
+    signal,
+  );
+  return data?.branding ?? null;
+}
+
+const LOCALES_QUERY = '{ publicLocales { code label is_rtl is_active is_default } }';
+
+/** Active locales, so the page can pick the visitor's language like every other surface. */
+export async function fetchLocales(signal?: AbortSignal): Promise<Locale[]> {
+  const data = await graphqlRequest<{ publicLocales?: Locale[] }>(
+    LOCALES_QUERY,
+    undefined,
+    signal,
+  );
+  return data?.publicLocales ?? [];
+}
+
+const TRANSLATIONS_QUERY =
+  'query PublicTranslations($locale: String!) { publicTranslations(locale: $locale) { key value } }';
+
+/** The admin-managed catalogue for one locale, merged over the bundled fallback. */
+export async function fetchTranslations(
+  locale: string,
+  signal?: AbortSignal,
+): Promise<FlatCatalogue> {
+  const data = await graphqlRequest<{ publicTranslations?: Array<{ key: string; value: string }> }>(
+    TRANSLATIONS_QUERY,
+    { locale },
+    signal,
+  );
+  const entries: FlatCatalogue = {};
+  for (const row of data?.publicTranslations ?? []) entries[row.key] = row.value;
+  return entries;
+}
+
+const SUBMIT_REPORT_MUTATION =
+  'mutation SubmitStatusReport($input: SubmitStatusReportInput!) {' +
+  ' submitStatusReport(input: $input) { ok id } }';
+
+/**
+ * File one problem report. Unauthenticated by design — the visitor this form
+ * exists for may be the one who cannot sign in anywhere.
+ */
+export async function submitStatusReport(
+  input: StatusReportInput,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const data = await graphqlRequest<{ submitStatusReport?: { ok: boolean } }>(
+    SUBMIT_REPORT_MUTATION,
+    { input },
+    signal,
+  );
+  return data?.submitStatusReport?.ok === true;
 }

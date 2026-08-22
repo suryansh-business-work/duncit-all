@@ -168,6 +168,31 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
       minCharacters: 'Minimum characters',
       allowScreenshots: 'Let reporters attach screenshots',
       maxScreenshots: 'Max screenshots',
+      categories: 'Categories',
+      categoriesHint:
+        'These are the chips a reporter picks from. Turning one off hides it from the app without touching the reports already filed under it.',
+      add: 'Add',
+      removeCategory: 'Remove category',
+      prompt: 'The prompt',
+      screenshots: 'Screenshots',
+      savedHint: 'Saved — the app picks this up on its next open.',
+
+      // Where a new report is announced. Slack is the notification, never the
+      // store of record, which is what the hint below has to keep saying.
+      slackTitle: 'Slack notification',
+      slackSubtitle:
+        'Post every new report to a Slack channel the moment it is filed. The report is always saved here either way.',
+      slackEnabled: 'Announce new reports on Slack',
+      slackChannel: 'Channel',
+      slackChannelHint: 'The channel every new report is posted to.',
+      slackFallback: 'Use the default channel from Tech settings',
+      slackNotConfigured:
+        'No Slack bot token is configured. Connect Slack in the Tech portal before reports can be announced.',
+      slackUnreachable: 'Slack could not be reached, so the channel list is empty.',
+      slackNotMember:
+        'The bot is not in this channel yet, so Slack will refuse the post. Invite it from the Tech portal first.',
+      slackPrivate: 'Private',
+      slackSaved: 'Saved — new reports go to this channel from now on.',
     },
   },
 };

@@ -16,6 +16,10 @@ const badInput = (message: string) =>
 
 const clean = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
+/** Recorded on the row when Support has switched the announcement off, so the
+ * queue can tell "nobody looked" from "nobody was told". */
+const SLACK_OFF = 'Slack announcements are switched off for Report a Problem';
+
 /** The reporter's phone as one dialable string, or '' when they have none —
  * phone is optional on an account since signup stopped collecting it. */
 const phoneOf = (profile: any): string => {
@@ -71,6 +75,43 @@ const FEEDBACK_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { created_at: -1 },
 };
 
+/**
+ * Announce a SAVED report on Slack, recording the outcome on the row.
+ *
+ * Never throws: the report is already filed by the time this runs, and a Slack
+ * outage that cost the reporter their report is the bug this whole order of
+ * operations exists to prevent.
+ */
+async function announce(
+  doc: IFeedbackReport,
+  report: {
+    category: string;
+    message: string;
+    who: string;
+    media_urls: string[];
+    blocks_json: string | null;
+    channel: string | null;
+  }
+) {
+  try {
+    const { slackService } = await import('@modules/platform/slack/slack.service');
+    const result = await slackService.announceFeedback({
+      ...report,
+      report_no: doc.report_no,
+      platform: doc.platform,
+    });
+    doc.slack_ts = result?.ts ?? null;
+    doc.slack_error = result?.skipped ?? null;
+  } catch (err) {
+    doc.slack_error = err instanceof Error ? err.message : 'Slack announcement failed';
+    logs.server.warn('feedback.service', 'submit', {
+      error: err,
+      msg: 'slack announcement failed; report still saved',
+      report_no: doc.report_no,
+    });
+  }
+}
+
 export const feedbackService = {
   /**
    * Record a problem report, then TRY to announce it on Slack.
@@ -100,12 +141,12 @@ export const feedbackService = {
     const message = clean(input.message);
     if (!category) throw badInput('Pick a category');
 
-    const config = await this.config();
-    if (message.length < config.message_min_length) {
-      throw badInput(`Please write at least ${config.message_min_length} characters`);
+    const settings = await this.configDoc();
+    if (message.length < settings.message_min_length) {
+      throw badInput(`Please write at least ${settings.message_min_length} characters`);
     }
 
-    const media = (input.media_urls ?? []).map(clean).filter(Boolean).slice(0, config.max_media);
+    const media = (input.media_urls ?? []).map(clean).filter(Boolean).slice(0, settings.max_media);
 
     const profile = await UserModel.findById(user.id).select('profile.first_name profile.last_name profile.city profile.locale auth.email auth.phone metadata.role_keys').lean();
     const name = `${(profile as any)?.profile?.first_name ?? ''} ${(profile as any)?.profile?.last_name ?? ''}`.trim();
@@ -130,25 +171,18 @@ export const feedbackService = {
     });
 
     // Best effort from here. Anything that goes wrong is written to the row.
-    try {
-      const { slackService } = await import('@modules/platform/slack/slack.service');
-      const result = await slackService.announceFeedback({
-        report_no: doc.report_no,
+    // Switched off is not a failure, but it IS the answer to "why was this never
+    // announced?", so Support reads it in the same place a failure is read.
+    if (settings.slack_enabled === false) {
+      doc.slack_error = SLACK_OFF;
+    } else {
+      await announce(doc, {
         category,
         message,
         who: doc.user_email || doc.user_name || user.id,
-        platform: doc.platform,
         media_urls: media,
         blocks_json: input.blocks_json ?? null,
-      });
-      doc.slack_ts = result?.ts ?? null;
-      doc.slack_error = result?.skipped ?? null;
-    } catch (err) {
-      doc.slack_error = err instanceof Error ? err.message : 'Slack announcement failed';
-      logs.server.warn('feedback.service', 'submit', {
-        error: err,
-        msg: 'slack announcement failed; report still saved',
-        report_no: doc.report_no,
+        channel: settings.slack_channel_id || null,
       });
     }
     await doc.save();
@@ -178,14 +212,20 @@ export const feedbackService = {
     return toPub(doc);
   },
 
-  /** The singleton, seeded on first read so a fresh install renders the same
-   * four chips the app used to hardcode. */
-  async config() {
-    const doc = await ReportProblemConfigModel.findOneAndUpdate(
+  /** The singleton document, seeded on first read so a fresh install renders
+   * the same four chips the app used to hardcode. */
+  async configDoc() {
+    return ReportProblemConfigModel.findOneAndUpdate(
       { singleton_key: 'report_problem' },
       { $setOnInsert: { categories: DEFAULT_CATEGORIES } },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+  },
+
+  /** What the app renders. Readable by every signed-in user, which is why the
+   * Slack routing below is deliberately NOT part of it. */
+  async config() {
+    const doc = await this.configDoc();
     return {
       categories: (doc.categories ?? []).slice().sort((a, b) => a.sort_order - b.sort_order),
       message_label: doc.message_label,
@@ -235,5 +275,55 @@ export const feedbackService = {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
     return this.config();
+  },
+
+  /**
+   * Where reports are announced, plus the channels there are to choose from.
+   *
+   * The channel list is fetched here rather than through `slackChannels`
+   * because that query is a Tech-portal capability; Support may pick where its
+   * own reports land without being handed the Slack console. A workspace that
+   * cannot be reached answers with an empty list and the reason, so the page
+   * still renders the switch and the channel already chosen.
+   */
+  async slackSettings() {
+    const doc = await this.configDoc();
+    const chosen = {
+      enabled: doc.slack_enabled !== false,
+      channel_id: doc.slack_channel_id ?? '',
+      channel_name: doc.slack_channel_name ?? '',
+    };
+    const { slackService } = await import('@modules/platform/slack/slack.service');
+    if (!(await slackService.configured())) {
+      return { ...chosen, slack_configured: false, channels: [], error: '' };
+    }
+    try {
+      const channels = await slackService.channels();
+      return { ...chosen, slack_configured: true, channels, error: '' };
+    } catch (err) {
+      return {
+        ...chosen,
+        slack_configured: true,
+        channels: [],
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
+  },
+
+  async updateSlack(input: {
+    enabled?: boolean | null;
+    channel_id?: string | null;
+    channel_name?: string | null;
+  }) {
+    const set: Record<string, unknown> = {};
+    if (typeof input?.enabled === 'boolean') set.slack_enabled = input.enabled;
+    if (typeof input?.channel_id === 'string') set.slack_channel_id = clean(input.channel_id);
+    if (typeof input?.channel_name === 'string') set.slack_channel_name = clean(input.channel_name);
+    await ReportProblemConfigModel.findOneAndUpdate(
+      { singleton_key: 'report_problem' },
+      { $set: set, $setOnInsert: { categories: DEFAULT_CATEGORIES } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    return this.slackSettings();
   },
 };

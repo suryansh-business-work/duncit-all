@@ -14,6 +14,8 @@ import { startTelemetryCleanupScheduler } from './observability/telemetrySchedul
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
+import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
+import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
@@ -168,6 +170,14 @@ async function bootstrap() {
   await safeSeed('category', () => categoryService.seedDefaults());
   await safeSeed('vapid', () => notificationService.ensureVapid());
   await safeSeed('policy', () => policyService.seedDefaults());
+  // Stamp the signup-acceptance flag onto policies written before it existed,
+  // so the admin console filters the same set the signup gate actually asks for.
+  await safeSeed('policySignupFlag', async () => {
+    const { repaired } = await policyService.backfillSignupAcceptance();
+    if (repaired > 0) {
+      logs.server.info('bootstrap', 'policySignupFlag', { repaired });
+    }
+  });
   // Every key the platform ships copy for, into Admin > Localization.
   // This used to happen only when somebody opened that page and pressed
   // "Import app keys", so a fresh environment — or any key added since the
@@ -307,6 +317,11 @@ async function bootstrap() {
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
+
+  // Database backups: a one-minute tick that takes the archive when the
+  // admin-configured window has passed (Tech > Database > Backups; off until
+  // an operator turns it on) and prunes past the keep-last count.
+  startDbBackupScheduler();
 
   // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
   // nudge to complete a finished pod, an unanswered slot request, a released
@@ -494,6 +509,12 @@ async function bootstrap() {
   // signature, because a browser cannot make one and the signed-from-the-browser
   // scheme fails outright when the two keys are not a pair.
   app.use('/upload', buildUploadRouter());
+
+  // Database backup archives. Unlike /app-builds there is no nginx location for
+  // these — an archive is the whole database in one file, so the only way out
+  // is this route, behind a signed link that names one backup and lives for
+  // minutes. See dbBackup.router.ts.
+  app.use('/db-backups', buildDbBackupRouter());
 
   app.use('/status', buildStatusProbeRouter());
 

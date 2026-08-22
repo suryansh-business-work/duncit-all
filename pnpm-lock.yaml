@@ -5214,6 +5214,12 @@ importers:
 
   website/status-website:
     dependencies:
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -5229,6 +5235,9 @@ importers:
       '@fontsource/nunito':
         specifier: ^5.1.1
         version: 5.2.7
+      '@hookform/resolvers':
+        specifier: ^3.9.1
+        version: 3.10.0(react-hook-form@7.77.0(react@18.3.1))
       '@mui/icons-material':
         specifier: ^5.15.18
         version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
@@ -5247,6 +5256,12 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.54.0
+        version: 7.77.0(react@18.3.1)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.9.1

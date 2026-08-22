@@ -82,6 +82,15 @@ export default function GrievanceTicketsTable({
         filter: { type: 'text' },
         cellRenderer: renderSubject,
       },
+      {
+        field: 'support_ticket_ref',
+        headerName: t('legal.grievance.colSupportTicket'),
+        minWidth: 160,
+        filter: { type: 'text' },
+        // Blank is the whole reason this column is in the queue: it names the
+        // grievances that skipped support, which is what gets rejected.
+        valueGetter: (g) => g.support_ticket_ref || t('legal.grievance.noSupportTicket'),
+      },
       { field: 'name', headerName: t('shell.common.name'), minWidth: 160, filter: { type: 'text' } },
       { field: 'email', headerName: t('shell.common.email'), minWidth: 200, filter: { type: 'text' } },
       { field: 'phone', headerName: t('shell.common.phone'), minWidth: 140, sortable: false, filter: { type: 'text' } },

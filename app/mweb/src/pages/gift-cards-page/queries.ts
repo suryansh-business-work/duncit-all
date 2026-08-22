@@ -22,6 +22,10 @@ export interface GiftCard {
   /** Snapshot of the category name — empty for SHOP cards (clients localize it). */
   scope_name: string;
   scope_image_url: string;
+  /** The category's uploaded card artwork, frozen at purchase. Empty means the
+   * category shipped none, and the gradient card renders instead. */
+  scope_image_front_url: string;
+  scope_image_back_url: string;
   initial_amount: number;
   balance: number;
   status: GiftCardStatus;
@@ -55,6 +59,9 @@ export interface GiftCardCategory {
   icon: string | null;
   level: 'SUPER' | 'CATEGORY' | 'SUB';
   parent_id: string | null;
+  /** Admin-uploaded gift card faces for this category; empty when unset. */
+  gift_card_image_front: string;
+  gift_card_image_back: string;
 }
 
 /** What the buy tab hands the checkout page via router state. */
@@ -63,6 +70,8 @@ export interface GiftCardSelection {
   scope_category_id: string | null;
   scope_name: string;
   scope_image_url: string;
+  scope_image_front_url: string;
+  scope_image_back_url: string;
   amount: number;
   gift: boolean;
   recipient_email: string;
@@ -92,6 +101,8 @@ export const GIFT_CARD_CATEGORIES = gql`
       icon
       level
       parent_id
+      gift_card_image_front
+      gift_card_image_back
     }
   }
 `;
@@ -106,6 +117,8 @@ export const MY_GIFT_CARDS = gql`
         scope_category_id
         scope_name
         scope_image_url
+        scope_image_front_url
+        scope_image_back_url
         initial_amount
         balance
         status
@@ -125,6 +138,8 @@ export const MY_GIFT_CARDS = gql`
         scope_category_id
         scope_name
         scope_image_url
+        scope_image_front_url
+        scope_image_back_url
         initial_amount
         balance
         status
@@ -150,6 +165,8 @@ export const GIFT_CARD_BY_CODE = gql`
       scope_category_id
       scope_name
       scope_image_url
+      scope_image_front_url
+      scope_image_back_url
       initial_amount
       balance
       status

@@ -98,6 +98,13 @@ export default function GrievanceDetailDialog({
             <GrievanceFactRow label={t('shell.common.email')} value={ticket?.email ?? ''} />
             <GrievanceFactRow label={t('shell.common.phone')} value={ticket?.phone ?? ''} />
             <GrievanceFactRow label={t('legal.grievance.address')} value={ticket?.address ?? ''} />
+            {/* The escalation this grievance stands on. A blank one is the
+                ground for rejecting it, so it says so in words rather than
+                showing the em-dash every other empty fact shows. */}
+            <GrievanceFactRow
+              label={t('legal.grievance.colSupportTicket')}
+              value={ticket?.support_ticket_ref || t('legal.grievance.noSupportTicket')}
+            />
             <GrievanceFactRow label={t('legal.grievance.colReceived')} value={received} />
             {closed && <GrievanceFactRow label={t('legal.grievance.closed')} value={closed} />}
             {ticket?.handled_by_name && (

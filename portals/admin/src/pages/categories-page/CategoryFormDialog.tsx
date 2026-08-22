@@ -16,6 +16,7 @@ import {
 import IconPickerField from '../../components/IconPickerField';
 import MediaPickerField from '../../components/MediaPickerField';
 import IconLayoutSection from './IconLayoutSection';
+import GiftCardArtworkSection from './GiftCardArtworkSection';
 import { Level, FormState } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -136,6 +137,12 @@ export default function CategoryFormDialog({
               multiline
               minRows={2}
               fullWidth
+            />
+            {/* Gift card artwork is offered on every level — a card is sold
+                for a super category, a category and a sub-category alike. */}
+            <GiftCardArtworkSection
+              form={dialog.form}
+              onFormChange={(form) => setDialog({ ...dialog, form })}
             />
             <TextField
               label={t('admin.categories.media')}

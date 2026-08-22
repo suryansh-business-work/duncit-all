@@ -62,6 +62,7 @@ describe('videoCompression unit', () => {
     });
     expect(job.status).toBe('FAILED');
     expect(job.url).toBeNull();
-    expect(job.error).toMatch(/could not trim/i);
+    // One message covers every job that MUST encode, trim included.
+    expect(job.error).toMatch(/upload settings unavailable/i);
   });
 });

@@ -33,6 +33,13 @@ export const giftCardTypeDefs = /* GraphQL */ `
     "Snapshot of the category name — empty for SHOP cards (clients localize it)."
     scope_name: String!
     scope_image_url: String!
+    """
+    The category's card artwork, frozen at purchase — the front face. Empty when
+    the category ships none, and the client then draws its gradient card.
+    """
+    scope_image_front_url: String!
+    "The back face of the card artwork. Empty when the category ships none."
+    scope_image_back_url: String!
     initial_amount: Float!
     "Equals initial_amount until redeemed, then 0."
     balance: Float!
@@ -124,6 +131,8 @@ export const giftCardTypeDefs = /* GraphQL */ `
     scope_category_id: ID
     scope_name: String!
     scope_image_url: String!
+    scope_image_front_url: String!
+    scope_image_back_url: String!
     initial_amount: Float!
     balance: Float!
     status: GiftCardStatus!

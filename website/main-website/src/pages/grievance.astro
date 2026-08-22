@@ -5,7 +5,7 @@
 // well have already deleted their account, so this page asks for no login at
 // all. The officer block above the form is what we are required to publish;
 // the Legal portal fills it in and this page reads it at build time.
-import { captchaCopy } from '@duncit/i18n';
+import { captchaCopy, grievanceEscalationCopy, grievanceTicketFieldCopy } from '@duncit/i18n';
 import Captcha from '@duncit/captcha/Captcha.astro';
 import PageLayout from '../layouts/PageLayout.astro';
 import { fetchGrievanceOfficer } from '../lib/site-data';
@@ -35,6 +35,17 @@ const fields = [
 const optionalSuffix = ` (${t('grievance.optional')})`;
 const inputClass =
   'w-full px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none';
+
+// Support first, grievance after. The same three steps and the same warning the
+// two apps render, resolved from the shared builder rather than written again
+// here — this is the sentence a rejected grievance is measured against, and a
+// visitor told one thing on the website and another in the app has a fair
+// argument that they were misled.
+const escalation = grievanceEscalationCopy(t);
+// The website has nobody signed in, so it cannot offer a dropdown of the
+// visitor's own tickets the way mWeb and the app do. It asks for the number
+// instead — required, because a grievance with nothing behind it is rejected.
+const ticketField = grievanceTicketFieldCopy(t);
 ---
 
 <PageLayout
@@ -60,6 +71,35 @@ const inputClass =
     )}
   </section>
 
+  {/* The escalation ladder, before the form rather than beside it: a visitor
+      who reads it after typing has already wasted the effort. Hidden together
+      with the form once a grievance lands. */}
+  <section class="not-prose my-8" id="grievanceLadder">
+    <h2 class="font-head font-bold text-ink text-xl mb-3">{escalation.title}</h2>
+    <ol class="grid gap-4 p-5 rounded-2xl glass">
+      {escalation.steps.map((step, index) => (
+        <li class="flex gap-3">
+          <span
+            class="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-ink text-cream font-bold text-sm"
+            aria-hidden="true"
+          >
+            {index + 1}
+          </span>
+          <span class="grid gap-0.5">
+            <span class="font-bold text-ink">{step.title}</span>
+            <span class="text-sm text-ink-soft">{step.body}</span>
+          </span>
+        </li>
+      ))}
+    </ol>
+    <p
+      class="mt-4 p-4 rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 text-sm text-ink font-bold"
+      role="note"
+    >
+      {escalation.warning}
+    </p>
+  </section>
+
   <h2>{t('grievance.title')}</h2>
   {/* The copy travels on the element, not through `define:vars`: that directive
       makes the script inline, which would ship the imports below verbatim and
@@ -70,6 +110,23 @@ const inputClass =
     data-failed={t('grievance.failed')}
     data-sending={t('grievance.submitting')}
   >
+    {/* First, and required: it is the gate the rest of the form stands behind,
+        and somebody who has not been to support should find that out before
+        writing five paragraphs. The one field the two apps render as a dropdown
+        instead — nobody is signed in here, so there is no history to pick from. */}
+    <label class="grid gap-1.5">
+      <span class="text-sm text-ink-soft">{ticketField.label}</span>
+      <input
+        name="support_ticket_ref"
+        type="text"
+        required
+        maxlength="60"
+        placeholder={ticketField.refPlaceholder}
+        aria-describedby="grievanceTicketHint"
+        class={inputClass}
+      />
+      <span id="grievanceTicketHint" class="text-xs text-ink-soft">{ticketField.refHint}</span>
+    </label>
     {fields.map((field) => (
       <label class="grid gap-1.5">
         <span class="text-sm text-ink-soft">
@@ -127,7 +184,15 @@ const inputClass =
 
     const fd = new FormData(form);
     const input: Record<string, string> = { source: 'WEBSITE' };
-    for (const key of ['name', 'email', 'phone', 'address', 'subject', 'description']) {
+    for (const key of [
+      'support_ticket_ref',
+      'name',
+      'email',
+      'phone',
+      'address',
+      'subject',
+      'description',
+    ]) {
       input[key] = String(fd.get(key) || '').trim();
     }
     Object.assign(input, captchaFieldsFrom(form));
@@ -164,6 +229,9 @@ const inputClass =
       // leaving the fields filled invites a duplicate grievance.
       if (ref) ref.textContent = grievance.grievance_no;
       form.classList.add('hidden');
+      // The ladder was instructions for filling the form; with the form gone it
+      // would read as a warning about a grievance that has already landed.
+      document.getElementById('grievanceLadder')?.classList.add('hidden');
       done?.classList.remove('hidden');
       done?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (err) {

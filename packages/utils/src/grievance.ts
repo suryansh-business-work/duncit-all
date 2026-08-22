@@ -14,9 +14,17 @@
  */
 
 /** A field on the grievance form, in the order every surface renders them. */
-export type GrievanceField = 'name' | 'email' | 'phone' | 'address' | 'subject' | 'description';
+export type GrievanceField =
+  | 'support_ticket_ref'
+  | 'name'
+  | 'email'
+  | 'phone'
+  | 'address'
+  | 'subject'
+  | 'description';
 
 export const GRIEVANCE_FIELDS: readonly GrievanceField[] = [
+  'support_ticket_ref',
   'name',
   'email',
   'phone',
@@ -27,6 +35,7 @@ export const GRIEVANCE_FIELDS: readonly GrievanceField[] = [
 
 /** Maximum accepted length per field. Mirrors the server's schema exactly. */
 export const GRIEVANCE_MAX_LENGTH: Readonly<Record<GrievanceField, number>> = {
+  support_ticket_ref: 60,
   name: 120,
   email: 200,
   phone: 30,
@@ -53,6 +62,20 @@ export function grievanceFieldLabelKey(field: GrievanceField): string {
 }
 
 export interface GrievanceDraft {
+  /**
+   * The support ticket this grievance escalates — `ST-A1B2C3`, `CB-…`, `CH-…`
+   * or `SOS-…`.
+   *
+   * A grievance is the LAST step, not the first: support gets the issue first,
+   * and only what support could not settle reaches the Grievance Officer. The
+   * reference is how the officer finds that history, and a grievance arriving
+   * without one is what gets rejected — which is why every form demands it and
+   * says so before the person starts typing.
+   *
+   * It leads the form for the same reason: somebody who has not been to support
+   * should find that out before writing five paragraphs, not after.
+   */
+  support_ticket_ref: string;
   name: string;
   email: string;
   phone: string;
@@ -62,6 +85,7 @@ export interface GrievanceDraft {
 }
 
 export const EMPTY_GRIEVANCE_DRAFT: GrievanceDraft = {
+  support_ticket_ref: '',
   name: '',
   email: '',
   phone: '',
@@ -86,4 +110,59 @@ export const GRIEVANCE_STATUSES: readonly GrievanceStatus[] = [
 /** Grievances still owed an answer — what the redressal clock runs on. */
 export function isGrievanceOpen(status: GrievanceStatus): boolean {
   return status === 'RECEIVED' || status === 'IN_REVIEW';
+}
+
+/**
+ * The steps a complainant has to have walked before a grievance is accepted.
+ *
+ * Rendered as a numbered timeline above the form on mWeb, native AND the
+ * website. The order is the policy, so it lives here rather than three times
+ * in three layouts — and the copy for each step is resolved from
+ * `grievanceEscalationCopy` in @duncit/i18n, which owns the words.
+ */
+export type GrievanceEscalationStep = 'raise' | 'wait' | 'escalate';
+
+export const GRIEVANCE_ESCALATION_STEPS: readonly GrievanceEscalationStep[] = [
+  'raise',
+  'wait',
+  'escalate',
+];
+
+/**
+ * One row of the support-ticket dropdown, as mWeb and native both render it.
+ *
+ * Two surfaces showing the same list is exactly what rule 40 asks to share, and
+ * the value is what lands in `support_ticket_ref` — so the reference the
+ * officer reads is byte-identical whichever app raised it.
+ */
+export interface GrievanceSupportTicketOption {
+  /** Stored on the grievance: the prefixed ticket number, e.g. `ST-A1B2C3`. */
+  value: string;
+  /** Shown in the dropdown: `ST-A1B2C3 · Refund not received`. */
+  label: string;
+}
+
+/** What a unified support row has to carry to become a dropdown option. */
+export interface GrievanceSupportTicketSource {
+  ticket_no: string;
+  title: string;
+}
+
+/**
+ * Turn the user's support history into dropdown options.
+ *
+ * Rows with no ticket number are dropped rather than rendered blank: an option
+ * that stores an empty reference is the same as not choosing one, and the whole
+ * point of the field is that the officer can find the ticket behind it.
+ */
+export function grievanceSupportTicketOptions(
+  rows: readonly GrievanceSupportTicketSource[]
+): GrievanceSupportTicketOption[] {
+  return rows
+    .filter((row) => (row.ticket_no ?? '').trim().length > 0)
+    .map((row) => {
+      const value = row.ticket_no.trim();
+      const title = (row.title ?? '').trim();
+      return { value, label: title ? `${value} · ${title}` : value };
+    });
 }

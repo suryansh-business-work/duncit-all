@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, ScrollView, Text, YStack } from 'tamagui';
-import type { SubmittedGrievance } from '@duncit/utils';
+import { grievanceSupportTicketOptions, type SubmittedGrievance } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
+import { GrievanceEscalationNotice } from '@/components/support/grievance/GrievanceEscalationNotice';
 import { GrievanceForm } from '@/components/support/grievance/GrievanceForm';
 import { GrievanceOfficerCard } from '@/components/support/grievance/GrievanceOfficerCard';
 import type { GrievanceValues } from '@/components/support/grievance/grievance.types';
 import { submitGrievance, useGrievanceOfficer } from '@/hooks/useGrievance';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useUnifiedTickets } from '@/hooks/useUnifiedTickets';
 
 /**
  * Raise a grievance — the RN twin of mWeb's /support/grievance page.
+ *
+ * The screen states the escalation ladder before the form: support first, the
+ * Grievance Officer only after support could not settle it. That is not advice
+ * — a grievance with no support ticket behind it is rejected — so it is read
+ * before any typing starts, and the form then asks which ticket is being
+ * escalated.
  *
  * The reference number is what the person leaves with: on screen the moment
  * the grievance lands, in the email a second later, and the only thing they
@@ -19,9 +27,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 export function GrievanceScreen() {
   const { t } = useTranslation();
   const officer = useGrievanceOfficer();
+  // The same list "All Support Tickets" shows — tickets, SOS, callbacks, chats.
+  const { rows, isLoading: ticketsLoading } = useUnifiedTickets();
   const [sent, setSent] = useState<SubmittedGrievance | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Built by the shared helper so the option this app stores and the one mWeb
+  // stores are the same string (rule 40).
+  const tickets = useMemo(() => grievanceSupportTicketOptions(rows), [rows]);
 
   const onSubmit = async (values: GrievanceValues) => {
     setSubmitting(true);
@@ -68,7 +82,16 @@ export function GrievanceScreen() {
             </Button>
           </YStack>
         ) : (
-          <GrievanceForm submitting={submitting} errorMessage={error} onSubmit={onSubmit} />
+          <>
+            <GrievanceEscalationNotice />
+            <GrievanceForm
+              submitting={submitting}
+              errorMessage={error}
+              tickets={tickets}
+              ticketsLoading={ticketsLoading}
+              onSubmit={onSubmit}
+            />
+          </>
         )}
         <GrievanceOfficerCard officer={officer} />
       </ScrollView>

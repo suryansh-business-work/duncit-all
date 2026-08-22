@@ -40,6 +40,8 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/availability-calendar"
   },
   "dependencies": {
-    "@duncit/datetime": "workspace:*"
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/datetime": "workspace:*",
+    "@duncit/dialogs": "workspace:*"
   }
 }

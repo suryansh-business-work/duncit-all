@@ -2234,6 +2234,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       validUntil: 'Valid until {date}',
       copyCode: 'Copy code',
       codeCopied: 'Code copied',
+      flipCard: 'Flip card',
+      cardFront: 'Front of the gift card',
+      cardBack: 'Back of the gift card',
       shareCard: 'Share',
       shareMessage: '{sender} sent you a Duncit gift card of {amount}! Redeem it here:',
       // Checkout

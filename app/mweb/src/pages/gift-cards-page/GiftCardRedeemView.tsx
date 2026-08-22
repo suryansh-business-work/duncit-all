@@ -75,6 +75,8 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
         scopeCategoryId={card.scope_category_id}
         scopeName={card.scope_name}
         scopeImageUrl={card.scope_image_url}
+        artworkFrontUrl={card.scope_image_front_url}
+        artworkBackUrl={card.scope_image_back_url}
         amount={card.initial_amount}
         currencySymbol={currencySymbol}
         code={card.code}

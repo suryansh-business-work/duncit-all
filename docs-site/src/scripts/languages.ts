@@ -78,10 +78,18 @@ export function monacoLanguage(fence: string): string {
  * This is the half of "make it readable" that does not need a parser, which is
  * why it works on the shell, GraphQL and MDX blocks that Format cannot touch.
  */
+/** Trailing spaces/tabs off ONE line, without an anchored quantifier. */
+function trimLineEnd(line: string): string {
+  let end = line.length;
+  while (end > 0 && (line.charAt(end - 1) === ' ' || line.charAt(end - 1) === '\t')) end -= 1;
+  return line.slice(0, end);
+}
+
 export function tidy(source: string): string {
-  return `${source
+  const body = source
     .replaceAll('\t', '  ')
-    .replaceAll(/[ \t]+$/gm, '')
-    .replaceAll(/\n{3,}/g, '\n\n')
-    .trim()}\n`;
+    .split('\n')
+    .map(trimLineEnd)
+    .join('\n');
+  return `${body.replaceAll(/\n{3,}/g, '\n\n').trim()}\n`;
 }

@@ -68,16 +68,32 @@ const MAX_BASE_LENGTH = USERNAME_MAX_LENGTH - SUFFIX_LENGTH - 1;
  * Everything else that is not a letter or digit becomes a boundary, and the
  * boundaries collapse into single hyphens.
  */
+/**
+ * Strip leading and trailing `-` in one linear pass.
+ *
+ * An anchored `-+$` makes the engine retry from every start position on a run
+ * that never reaches the end of the string, which is quadratic. Scanning the
+ * two ends is O(n) and says the same thing.
+ */
+function trimDashes(value: string): string {
+  let start = 0;
+  let end = value.length;
+  while (start < end && value.charAt(start) === '-') start += 1;
+  while (end > start && value.charAt(end - 1) === '-') end -= 1;
+  return value.slice(start, end);
+}
+
 export function slugifyName(...parts: Array<string | null | undefined>): string {
   const raw = parts.filter(Boolean).join(' ');
-  return raw
-    .normalize('NFD')
-    .replaceAll(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '')
-    .slice(0, MAX_BASE_LENGTH)
-    .replaceAll(/-+$/g, '');
+  const base = trimDashes(
+    raw
+      .normalize('NFD')
+      .replaceAll(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, '-'),
+  );
+  // The slice can re-expose a trailing dash, so trim again after it.
+  return trimDashes(base.slice(0, MAX_BASE_LENGTH));
 }
 
 /** The base every generated handle is built on — never empty, never reserved. */
@@ -136,7 +152,7 @@ export type UsernameRejection = 'FORMAT' | 'RESERVED';
  * duplicate-key error in front of the user.
  */
 export function normalizeUsername(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase();
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
 }
 
 export function checkUsername(value: string): UsernameRejection | null {

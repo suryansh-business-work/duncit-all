@@ -63,6 +63,8 @@ export const giftCardPub = (card: IGiftCard) => ({
   scope_category_id: card.scope_category_id ? String(card.scope_category_id) : null,
   scope_name: card.scope_name ?? '',
   scope_image_url: card.scope_image_url ?? '',
+  scope_image_front_url: card.scope_image_front_url ?? '',
+  scope_image_back_url: card.scope_image_back_url ?? '',
   initial_amount: card.initial_amount,
   balance: card.balance,
   status: statusOf(card),
@@ -81,6 +83,9 @@ export interface GiftCardPurchaseFacts {
   scope_category_id: string | null;
   scope_name: string;
   scope_image_url: string;
+  /** The category's card artwork at the moment of purchase — see IGiftCard. */
+  scope_image_front_url: string;
+  scope_image_back_url: string;
   amount: number;
   recipient_email: string;
   recipient_name: string;
@@ -124,6 +129,8 @@ export const giftcardService = {
     let scopeCategoryId: string | null = null;
     let scopeName = '';
     let scopeImage = '';
+    let scopeFront = '';
+    let scopeBack = '';
     if (scopeType === 'SHOP') {
       if (input.scope_category_id) badInput('A shop gift card carries no category');
       const branding = await settingsService.getBranding();
@@ -143,6 +150,8 @@ export const giftcardService = {
       scopeCategoryId = String(doc._id);
       scopeName = doc.name;
       scopeImage = doc.icon || doc.media?.find((m: { type: string }) => m.type === 'IMAGE')?.url || '';
+      scopeFront = doc.gift_card_image_front ?? '';
+      scopeBack = doc.gift_card_image_back ?? '';
     }
 
     return {
@@ -150,6 +159,8 @@ export const giftcardService = {
       scope_category_id: scopeCategoryId,
       scope_name: scopeName,
       scope_image_url: scopeImage,
+      scope_image_front_url: scopeFront,
+      scope_image_back_url: scopeBack,
       amount,
       recipient_email: (input.recipient_email ?? '').trim().toLowerCase(),
       recipient_name: (input.recipient_name ?? '').trim(),
@@ -195,6 +206,10 @@ export const giftcardService = {
                 : null,
               scope_name: facts.scope_name,
               scope_image_url: facts.scope_image_url,
+              // Older payments were frozen before artwork existed, so their
+              // facts carry none — the card then renders as it always did.
+              scope_image_front_url: facts.scope_image_front_url ?? '',
+              scope_image_back_url: facts.scope_image_back_url ?? '',
               initial_amount: facts.amount,
               balance: facts.amount,
               status: 'ACTIVE',

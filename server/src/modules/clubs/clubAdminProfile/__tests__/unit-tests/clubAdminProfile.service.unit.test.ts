@@ -158,10 +158,12 @@ describe('table', () => {
 });
 
 describe('byId', () => {
-  it('refuses an id that is not one, and one that names nothing', async () => {
+  // `clubAdminProfile(id: ID!): ClubAdminProfile` is a NULLABLE field, so an id
+  // that names nothing answers null rather than erroring the whole query.
+  it('answers null for an id that names nothing', async () => {
     profiles.findById.mockResolvedValue(null);
 
-    await expect(clubAdminProfileService.byId(ID)).rejects.toThrow('Club Admin not found');
+    await expect(clubAdminProfileService.byId(ID)).resolves.toBeNull();
   });
 
   it('answers with the enriched record', async () => {

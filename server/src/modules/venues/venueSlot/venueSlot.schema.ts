@@ -100,9 +100,28 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     capacity: Int
   }
 
+  """
+  How a new slot that overlaps an existing one in the SAME space is resolved.
+  Slots in different spaces never conflict — two courts may share a time window.
+  """
+  enum VenueSlotConflictMode {
+    "Reject the whole request — nothing is created. The default."
+    FAIL
+    "Drop the colliding new slots and create the rest."
+    SKIP
+    """
+    Delete the colliding slots and create the new ones in their place. A BOOKED
+    slot, or one holding a PENDING request, is never deleted: the new slots
+    that collide with one are dropped instead.
+    """
+    REPLACE
+  }
+
   input BulkCreateVenueSlotsInput {
     venue_id: ID!
     slots: [CreateVenueSlotInput!]!
+    "What to do when a new slot overlaps an existing one (defaults to FAIL)."
+    on_conflict: VenueSlotConflictMode
   }
 
   input UpdateVenueSlotInput {

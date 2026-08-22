@@ -116,6 +116,8 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
       <GiftCardVisual
         theme={card}
         imageUrl={card.scope_image_url}
+        artworkFrontUrl={card.scope_image_front_url}
+        artworkBackUrl={card.scope_image_back_url}
         amountLabel={formatMoney(currency, card.initial_amount)}
       />
       {card.sender_name ? (

@@ -93,6 +93,8 @@ export default function ThemePicker({
                   scopeCategoryId={category.id}
                   scopeName={category.name}
                   scopeImageUrl={category.icon ?? ''}
+                  artworkFrontUrl={category.gift_card_image_front}
+                  artworkBackUrl={category.gift_card_image_back}
                   amount={amount}
                   currencySymbol={currencySymbol}
                 />

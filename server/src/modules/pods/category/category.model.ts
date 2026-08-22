@@ -35,6 +35,11 @@ export interface ICategory extends Document {
   /** CATEGORY level only: per-surface icon placement + size in the vibe tabber. */
   icon_layout_mweb?: ICategoryIconLayout;
   icon_layout_native?: ICategoryIconLayout;
+  /** Artwork for the gift card sold under this category — the two faces of the
+   * printed card. Every level may carry them; empty means "no artwork", and the
+   * clients then render their generated gradient card exactly as before. */
+  gift_card_image_front: string;
+  gift_card_image_back: string;
   /** SUB level only: may a host invite co-hosts to a pod in this sub-category? */
   allow_co_hosts: boolean;
   /** SUB level only: how many co-hosts a single pod may carry (1-5). Only
@@ -90,6 +95,10 @@ const categorySchema = new Schema<ICategory>(
     // independently for mWeb and the native app (undefined → client default).
     icon_layout_mweb: { type: iconLayoutSchema, default: undefined },
     icon_layout_native: { type: iconLayoutSchema, default: undefined },
+    // The gift card's two faces, uploaded per category in Admin > Categories.
+    // Empty on every existing row, which is exactly the "no artwork" case.
+    gift_card_image_front: { type: String, default: '', trim: true },
+    gift_card_image_back: { type: String, default: '', trim: true },
     // Co-hosting is configured per SUB-category by an admin. Defaults keep every
     // existing sub-category behaving exactly as before (no co-hosts).
     allow_co_hosts: { type: Boolean, default: false },

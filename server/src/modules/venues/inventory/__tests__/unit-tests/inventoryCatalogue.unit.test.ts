@@ -22,7 +22,12 @@ jest.mock('../../inventoryActivityLog.model', () => ({
 jest.mock('../../inventoryStockMovement.model', () => ({
   InventoryStockMovementModel: { create: jest.fn(), find: jest.fn() },
 }));
-jest.mock('@modules/access/user/user.model', () => ({ UserModel: { findById: jest.fn() } }));
+// `find` as well as `findById`: ledger rows resolve the actor's name from the
+// account at read time (userDisplayMap), instead of echoing the stale email the
+// row used to carry.
+jest.mock('@modules/access/user/user.model', () => ({
+  UserModel: { findById: jest.fn(), find: jest.fn() },
+}));
 jest.mock('@modules/venues/ecommBrand/ecommBrand.model', () => ({
   EcommBrandModel: { findById: jest.fn(), find: jest.fn() },
 }));
@@ -52,6 +57,7 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { UserModel } from '@modules/access/user/user.model';
 import { inventoryService } from '../../inventory.service';
 import { InventoryProductModel } from '../../inventory.model';
 import { InventoryActivityLogModel } from '../../inventoryActivityLog.model';
@@ -64,10 +70,13 @@ const brandModel = EcommBrandModel as unknown as Record<string, jest.Mock>;
 const warehouseModel = BrandPickupLocationModel as unknown as Record<string, jest.Mock>;
 const podModel = PodModel as unknown as Record<string, jest.Mock>;
 const clubModel = ClubModel as unknown as Record<string, jest.Mock>;
+const userModel = UserModel as unknown as Record<string, jest.Mock>;
 
 const BRAND_ID = '65c000000000000000000001';
 const WAREHOUSE_ID = '65c000000000000000000005';
 const PRODUCT_ID = '65c000000000000000000009';
+/** A real ObjectId: userDisplayMap drops any actor id that is not one. */
+const EDITOR_ID = '65c00000000000000000000b';
 const VARIANT_ID = '65c00000000000000000000a';
 const ADMIN = { id: 'u-admin-1', email: 'ops@duncit.com' } as unknown as AuthUser;
 
@@ -652,7 +661,9 @@ describe('inventoryService.create', () => {
       product_name: 'Duncit Cap',
       sku: 'CAP-9',
       unit_cost: 250,
-      last_updated_by_name: 'ops@duncit.com',
+      // The product keeps the editor's ID; the readable name lives on the
+      // activity log rather than being denormalised onto every product.
+      last_updated_by_id: ADMIN.id,
     });
     expect(doc.ownership).toBe('DUNCIT');
     expect(doc.brand_id).toBeNull();
@@ -749,12 +760,18 @@ describe('inventoryService.update', () => {
     expect(warehouseModel.findById).not.toHaveBeenCalled();
   });
 
-  it('falls back to "system" as the editor when there is no acting user', async () => {
+  it('records no editor id, and journals the edit, when there is no acting user', async () => {
     const doc = productDoc({ ownership: 'BRAND' });
     productModel.findById.mockResolvedValue(doc);
+
     await inventoryService.update(PRODUCT_ID, { product_name: 'Renamed' }, null);
-    expect(doc.last_updated_by_name).toBe('system');
+
     expect(doc.last_updated_by_id).toBeNull();
+    // The edit is still journalled — an unattributed change must not be an
+    // invisible one.
+    expect(activityModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'UPDATE', user_id: null }),
+    );
   });
 });
 
@@ -937,9 +954,35 @@ describe('inventoryService pod reads', () => {
   });
 
   it('returns no purchase options when no live pod stocks the product', async () => {
+    productModel.findById.mockReturnValue(query({ is_active: true }));
     podModel.find.mockReturnValue(query([]));
+
     await expect(inventoryService.podsForProduct(PRODUCT_ID)).resolves.toEqual([]);
-    expect(productModel.findById).not.toHaveBeenCalled();
+    expect(clubModel.find).not.toHaveBeenCalled();
+  });
+
+  // The product is read FIRST, so a paused product or a deactivated brand costs
+  // nothing to refuse: a stale product-detail screen must not stay purchasable.
+  it('offers nothing for a paused product, without going looking for pods', async () => {
+    productModel.findById.mockReturnValue(query({ is_active: false }));
+
+    await expect(inventoryService.podsForProduct(PRODUCT_ID)).resolves.toEqual([]);
+    expect(podModel.find).not.toHaveBeenCalled();
+  });
+
+  it('offers nothing when the product belongs to a deactivated brand', async () => {
+    productModel.findById.mockReturnValue(query({ is_active: true, brand_id: BRAND_ID }));
+    brandModel.findById.mockReturnValue(query({ is_active: false }));
+
+    await expect(inventoryService.podsForProduct(PRODUCT_ID)).resolves.toEqual([]);
+    expect(podModel.find).not.toHaveBeenCalled();
+  });
+
+  it('offers nothing for a product that no longer exists', async () => {
+    productModel.findById.mockReturnValue(query(null));
+
+    await expect(inventoryService.podsForProduct(PRODUCT_ID)).resolves.toEqual([]);
+    expect(podModel.find).not.toHaveBeenCalled();
   });
 
   it('builds one purchase option per live pod, with the club slug and live threshold', async () => {
@@ -986,7 +1029,8 @@ describe('inventoryService pod reads', () => {
     podModel.find.mockReturnValue(
       query([{ _id: 'pod-1', product_requests: [{ product_id: PRODUCT_ID, quantity: 2 }] }])
     );
-    productModel.findById.mockReturnValue(query(null));
+    // Live product, but it carries no free-delivery offer of its own.
+    productModel.findById.mockReturnValue(query({ is_active: true }));
 
     const options = await inventoryService.podsForProduct(PRODUCT_ID);
 
@@ -1009,8 +1053,7 @@ describe('inventoryService ledger reads', () => {
         {
           _id: 'log-1',
           product_id: PRODUCT_ID,
-          user_id: 'u1',
-          user_name: 'ops',
+          user_id: EDITOR_ID,
           action: 'UPDATE',
           changed_fields: ['sku'],
           notes: 'renamed',
@@ -1019,14 +1062,18 @@ describe('inventoryService ledger reads', () => {
         { _id: 'log-2', product_id: PRODUCT_ID, action: 'CREATE' },
       ])
     );
+    // The name comes off the account now, so the row only has to carry the id.
+    userModel.find.mockReturnValue(
+      query([{ _id: EDITOR_ID, profile: { first_name: 'Ops', last_name: 'Admin' } }])
+    );
 
     const rows = await inventoryService.listActivityLogs(PRODUCT_ID, 0);
 
     expect(rows[0]).toEqual({
       id: 'log-1',
       product_id: PRODUCT_ID,
-      user_id: 'u1',
-      user_name: 'ops',
+      user_id: EDITOR_ID,
+      user_name: 'Ops Admin',
       action: 'UPDATE',
       changed_fields: ['sku'],
       notes: 'renamed',

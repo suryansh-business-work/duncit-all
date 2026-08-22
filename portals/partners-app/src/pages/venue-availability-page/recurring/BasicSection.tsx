@@ -1,6 +1,7 @@
 import { Box, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { addDays } from 'date-fns';
+import ConflictModeSection from './ConflictModeSection';
 import DayOfWeekPicker from './DayOfWeekPicker';
 import TimeSlotsSection from './TimeSlotsSection';
 import SpacePricingSection from './SpacePricingSection';
@@ -68,6 +69,11 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
       )}
 
       <SpacePricingSection spaces={form.spaces} onChange={(spaces) => patch({ spaces })} />
+
+      <ConflictModeSection
+        value={form.conflictMode}
+        onChange={(conflictMode) => patch({ conflictMode })}
+      />
     </Stack>
   );
 }

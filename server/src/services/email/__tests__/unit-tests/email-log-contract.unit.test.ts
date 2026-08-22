@@ -44,15 +44,37 @@ jest.mock('@modules/access/user/user.model', () => ({
 
 jest.mock('../../../../config/url-configs', () => ({
   getMailConfigs: jest.fn().mockResolvedValue({ from: 'noreply@test', host: '', port: 587 }),
-  getUrlConfigs: jest
-    .fn()
-    .mockResolvedValue({ supportEmail: 'support@test', websiteUrl: 'https://test' }),
+  // `appUrl` builds the footer's unsubscribe link; without it every send threw
+  // on `appUrl.replace(...)` and was journalled as that TypeError instead of the
+  // delivery outcome this suite is about.
+  getUrlConfigs: jest.fn().mockResolvedValue({
+    supportEmail: 'support@test',
+    websiteUrl: 'https://test',
+    appUrl: 'https://app.test',
+  }),
 }));
 
 jest.mock('nodemailer', () => ({ createTransport: () => ({ sendMail: sendMailMock }) }));
 
 jest.mock('@modules/platform/envEntry/envEntry.service', () => ({
   envEntryService: { resolveRuntime: jest.fn().mockResolvedValue(null) },
+}));
+
+// The opt-out gates, which sit in front of every send. Unmocked, the bulk one
+// runs a real Mongo query with no connection and the test dies on the 5s
+// timeout — this suite is about what gets JOURNALLED, so everyone is allowed
+// through and the delivery outcome is the only variable.
+jest.mock('@modules/content/mailPreference/mailPreference.service', () => ({
+  mailPreferenceService: {
+    allows: jest.fn().mockResolvedValue(true),
+    allowedRecipients: jest.fn(async (list: string[]) => ({
+      allowed: [...list],
+      suppressed: [],
+    })),
+  },
+}));
+jest.mock('@modules/access/commPreference/commPreference.service', () => ({
+  commPreferenceService: { allowsEmailOtp: jest.fn().mockResolvedValue(true) },
 }));
 
 type EmailModule = typeof import('../../email.service');

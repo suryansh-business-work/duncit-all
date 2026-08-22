@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
-import { formatMoney } from '@duncit/utils';
+import { Box, IconButton } from '@mui/material';
+import FlipIcon from '@mui/icons-material/Flip';
+import { canFlipGiftCard, giftCardArtwork } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
-import { giftCardGradient } from './giftCardTheme';
+import GiftCardFace from './GiftCardFace';
 import type { GiftCardScopeType } from './queries';
 
 interface GiftCardVisualProps {
@@ -11,99 +12,103 @@ interface GiftCardVisualProps {
   /** Snapshot name — empty for SHOP cards, which localize their own title. */
   scopeName: string;
   scopeImageUrl: string;
+  /** Admin-uploaded card faces; empty on both keeps the gradient card flat. */
+  artworkFrontUrl?: string;
+  artworkBackUrl?: string;
   amount: number;
   currencySymbol: string;
   /** Shown on owned cards only — a shared preview never prints a code. */
   code?: string;
-  /** Dense variant for the theme picker's option tiles. */
+  /** Dense variant for the theme picker's option tiles. Never flips: the tile
+   * is itself a button, so a second control inside it would fight the tap. */
   compact?: boolean;
 }
 
+const COMPACT_HEIGHT = 118;
+const FULL_HEIGHT = 172;
+/** Long enough to read as a card turning over, short enough not to be in the way. */
+const FLIP_MS = 600;
+
 /**
- * THE gift card — the one visual every surface of the feature renders. The
- * gradient is derived from the scope, so a category's card looks identical on
- * the buy picker, in My cards, at checkout and on the claim link.
+ * THE gift card — the one visual every surface of the feature renders. Without
+ * artwork it is the gradient card it has always been; once a category ships a
+ * front or a back image, the same card gains a real flip between its two faces.
  */
 export default function GiftCardVisual({
   scopeType,
   scopeCategoryId,
   scopeName,
   scopeImageUrl,
+  artworkFrontUrl,
+  artworkBackUrl,
   amount,
   currencySymbol,
   code,
   compact = false,
 }: Readonly<GiftCardVisualProps>) {
   const { t } = useTranslation();
-  const [imageFailed, setImageFailed] = useState(false);
-  // SHOP cards carry no category, so the scope type itself seeds the palette.
-  const gradient = giftCardGradient(scopeCategoryId || scopeName || scopeType);
-  const title = scopeType === 'SHOP' ? t('mweb.giftCards.shopTheme') : scopeName;
-  const showImage = !!scopeImageUrl && !imageFailed;
-  const iconSize = compact ? 28 : 38;
+  const [flipped, setFlipped] = useState(false);
+  const artwork = giftCardArtwork(artworkFrontUrl, artworkBackUrl);
+  const canFlip = !compact && canFlipGiftCard(artwork);
+  const height = compact ? COMPACT_HEIGHT : FULL_HEIGHT;
+
+  const faceProps = {
+    scopeType,
+    scopeCategoryId,
+    scopeName,
+    scopeImageUrl,
+    amount,
+    currencySymbol,
+    code,
+    compact,
+  };
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        overflow: 'hidden',
-        width: '100%',
-        borderRadius: '16px',
-        p: compact ? 1.5 : 2.5,
-        minHeight: compact ? 118 : 172,
-        color: '#fff',
-        background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-      }}
-    >
-      {/* Decorative sheen — purely visual, sits under the content. */}
+    <Box sx={{ position: 'relative', width: '100%', height, perspective: '1200px' }}>
       <Box
         sx={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'radial-gradient(circle at 85% -20%, rgba(255,255,255,0.30) 0%, transparent 55%), radial-gradient(circle at -10% 110%, rgba(255,255,255,0.12) 0%, transparent 45%)',
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          transformStyle: 'preserve-3d',
+          transition: `transform ${FLIP_MS}ms`,
+          transform: flipped ? 'rotateY(180deg)' : 'none',
         }}
-      />
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1} sx={{ zIndex: 1 }}>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" sx={{ opacity: 0.85, letterSpacing: 1.2, lineHeight: 1.6, display: 'block' }}>
-            {t('mweb.giftCards.title')}
-          </Typography>
-          <Typography variant={compact ? 'body2' : 'subtitle1'} fontWeight={700} noWrap>
-            {title}
-          </Typography>
+      >
+        <Box sx={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
+          <GiftCardFace side="FRONT" artworkUrl={artwork.front} {...faceProps} />
         </Box>
-        {showImage && (
+        {canFlip && (
           <Box
-            component="img"
-            src={scopeImageUrl}
-            alt=""
-            onError={() => setImageFailed(true)}
             sx={{
-              width: iconSize,
-              height: iconSize,
-              objectFit: 'contain',
-              flexShrink: 0,
-              borderRadius: '8px',
-              bgcolor: 'rgba(255,255,255,0.16)',
-              p: 0.5,
+              position: 'absolute',
+              inset: 0,
+              backfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
             }}
-          />
-        )}
-      </Stack>
-      <Box sx={{ zIndex: 1 }}>
-        <Typography variant={compact ? 'h6' : 'h4'} fontWeight={800} sx={{ lineHeight: 1.1 }}>
-          {formatMoney(amount, { symbol: currencySymbol })}
-        </Typography>
-        {code && (
-          <Typography variant="body2" sx={{ fontFamily: 'monospace', letterSpacing: 1.5, opacity: 0.92, mt: 0.5 }}>
-            {code}
-          </Typography>
+          >
+            <GiftCardFace side="BACK" artworkUrl={artwork.back} {...faceProps} />
+          </Box>
         )}
       </Box>
+      {canFlip && (
+        <IconButton
+          size="small"
+          onClick={() => setFlipped((was) => !was)}
+          aria-label={t('mweb.giftCards.flipCard')}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            bottom: 8,
+            zIndex: 2,
+            color: '#fff',
+            bgcolor: 'rgba(0,0,0,0.35)',
+            '&:hover': { bgcolor: 'rgba(0,0,0,0.5)' },
+          }}
+        >
+          <FlipIcon fontSize="small" />
+        </IconButton>
+      )}
     </Box>
   );
 }

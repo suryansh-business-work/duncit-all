@@ -82,6 +82,8 @@ export default function CategoriesPage() {
         min_pax: item.min_pax ?? 0,
         icon_layout_mweb: item.icon_layout_mweb ?? null,
         icon_layout_native: item.icon_layout_native ?? null,
+        gift_card_image_front: item.gift_card_image_front ?? '',
+        gift_card_image_back: item.gift_card_image_back ?? '',
       },
     });
   };

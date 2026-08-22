@@ -84,6 +84,8 @@ export default function GiftCardCheckoutPage() {
           scopeCategoryId={selection.scope_category_id}
           scopeName={selection.scope_name}
           scopeImageUrl={selection.scope_image_url}
+          artworkFrontUrl={selection.scope_image_front_url}
+          artworkBackUrl={selection.scope_image_back_url}
           amount={selection.amount}
           currencySymbol={currencySymbol}
         />

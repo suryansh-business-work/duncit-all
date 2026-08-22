@@ -12,9 +12,14 @@ exports:
   - 'AvailabilityCalendar'
   - 'DayDrawer'
   - 'RecurringAvailabilityDialog'
+  - 'isSlotConflictError'
+  - 'slotCoversDay'
+  - 'slotCoveredDays'
+  - 'wholeDayWindow'
   - 'CalendarView'
   - 'VenueSlotRow'
   - 'VenueSlotStatus'
+  - 'VenueSpace'
   - 'NewSlotInput'
 ---
 
@@ -56,14 +61,30 @@ import {
   date={selectedDate}
   slots={slotsForSelected}
   onClose={() => setSelectedDate(null)}
-  onCreate={handleCreate}          // (input: NewSlotInput) => Promise<void>
+  onCreate={handleCreate}          // (input: NewSlotInput, overwrite: boolean) => Promise<void>
   onToggleBlock={handleToggleBlock}
   onDelete={handleDelete}
+  spaces={venue.capacity_items}    // [{ label: 'Court 1', capacity: 4 }, …]
 />
 ```
 
 Every handler returns a promise; `DayDrawer` awaits it and keeps its own busy/error state, so
 the page only has to fire the mutation and `refetch()`.
+
+## Spaces, and the overwrite the second argument buys
+
+A venue that lists capacity items sells each one separately — "Court 1" and "Court 2" may hold
+the same hour — so a slot always says which space it is for. Pass `spaces`; the add form shows
+a picker defaulted to the first entry and rides the chosen space's `capacity` along with the
+slot. Pass nothing and the venue is a single whole-venue space, exactly as before.
+
+`onCreate`'s second argument is what makes a clash recoverable. The server rejects an
+overlapping slot with the `CONFLICT` code; the form recognises it (`isSlotConflictError`),
+keeps the rejected payload, and offers an **Overwrite** action on the error. Confirming it —
+behind a dialog that names what is deleted — re-sends the same payload with `overwrite: true`,
+which the page maps to `on_conflict: 'REPLACE'` on `BulkCreateVenueSlotsInput`. Send `'FAIL'`
+otherwise: an accidental clash must stay a refusal, never a silent deletion. A booked slot, or
+one holding a pending request, is never replaced by any mode.
 
 ## Sample data
 
@@ -331,10 +352,14 @@ duplicating a third row shape.
 
 ## Constraints
 
-Zero runtime dependencies; MUI, `@mui/x-date-pickers`, `date-fns`, React and `react-dom` are
-peers supplied by the consuming portal. Nothing here imports Apollo, and it should stay that
-way — the moment a query moves inside, the Onboarding portal (which uses entirely different,
-role-gated operations) can no longer share it.
+No third-party runtime dependencies; MUI, `@mui/x-date-pickers`, `date-fns`, React and
+`react-dom` are peers supplied by the consuming portal. The workspace deps are `@duncit/datetime`
+(admin-configured date/time formats), `@duncit/app-settings` (`useTranslation`, so the copy
+added here is a `shell.availability.*` key rather than a literal — rule 38) and
+`@duncit/dialogs` (the shared confirm — rule 12). Nothing here imports Apollo, and it should
+stay that way — the moment a query moves inside, the Onboarding portal (which uses entirely
+different, role-gated operations) can no longer share it. `isSlotConflictError` reads the
+Apollo error's SHAPE, not the client.
 
 This is a web/MUI package with no native twin; venue availability is a partner-console feature
 and does not exist in the mobile app.

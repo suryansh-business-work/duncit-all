@@ -12,6 +12,9 @@ export interface GiftCardSelection {
   scope_category_id: string | null;
   scope_name: string;
   scope_image_url: string;
+  /** The category's uploaded card faces; empty keeps the gradient card. */
+  scope_image_front_url: string;
+  scope_image_back_url: string;
   /** Face value in whole rupees, within the configured min/max. */
   amount: number;
   /** Empty strings mean the buyer keeps the card. */

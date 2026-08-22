@@ -659,6 +659,35 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       current: 'current',
     },
     /**
+     * The venue availability EDITOR — @duncit/availability-calendar, which the
+     * partner's own calendar and the onboarding console both render. It is the
+     * shell bundle rather than one portal's namespace because both surfaces
+     * ship the shell and neither owns the component (rule 40).
+     */
+    availability: {
+      overwriteAction: 'Overwrite',
+      overwriteTitle: 'Overwrite the existing slot?',
+      overwriteMessage:
+        'The slot already published for this space and time will be permanently deleted and replaced by the new one. A booked slot, or one with a pending request, is never touched.',
+      overwriteConfirm: 'Delete and overwrite',
+      // The add-slot fields. `space` is the venue's capacity entry the slot is
+      // sold as — a court, a hall, a table — and every venue that lists them
+      // publishes each one on its own calendar row.
+      space: 'Space',
+      spaceHint: 'Each space is booked separately — two spaces can share the same time.',
+      spaceHolds: '{label} · holds {capacity}',
+      wholeDayHint: 'Book the entire date(s) — no time selection needed.',
+      startDate: 'Start date',
+      startTime: 'Start time',
+      endDate: 'End date',
+      endTime: 'End time',
+      multiDayHint:
+        'This creates one continuous multi-day booking (e.g. a multi-day activity or event).',
+      price: 'Price (₹)',
+      priceHint: 'Leave 0 for a free slot',
+      notes: 'Notes (optional)',
+    },
+    /**
      * The host's per-pod actions, rendered by @duncit/host-pod-actions.
      *
      * Word-for-word identical to `mweb.podFeedback` / `mweb.hostScan` — the

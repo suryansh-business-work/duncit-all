@@ -47,6 +47,18 @@ export interface IGrievanceTicket extends Document {
   phone: string;
   /** Optional — a grievance is answerable by email; a postal address is not required. */
   address: string;
+  /**
+   * The support ticket this grievance escalates — `ST-A1B2C3`, `CB-…`, `CH-…`
+   * or `SOS-…`, as the complainant picked it from their own history.
+   *
+   * Every form demands one and says, before the person starts typing, that a
+   * grievance without one is rejected. The MODEL still accepts a blank, and
+   * deliberately: a grievance that arrived in the mailbox never had a field to
+   * type it in, and an app build shipped before this field existed is still out
+   * there. Blank is not "fine" — it is the thing the officer rejects on — but
+   * losing the record of a complaint is worse than recording an incomplete one.
+   */
+  support_ticket_ref: string;
   subject: string;
   description: string;
   status: GrievanceStatus;
@@ -67,6 +79,7 @@ const grievanceTicketSchema = new Schema<IGrievanceTicket>(
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 200, index: true },
     phone: { type: String, default: '', trim: true, maxlength: 30 },
     address: { type: String, default: '', trim: true, maxlength: 500 },
+    support_ticket_ref: { type: String, default: '', trim: true, maxlength: 60, index: true },
     subject: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, required: true, trim: true, maxlength: 5000 },
     status: { type: String, enum: GRIEVANCE_STATUSES, default: 'RECEIVED', index: true },

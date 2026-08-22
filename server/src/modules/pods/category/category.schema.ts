@@ -66,6 +66,13 @@ export const categoryTypeDefs = /* GraphQL */ `
     icon_layout_mweb: CategoryIconLayout
     "CATEGORY level only: icon layout for the native-app vibe tabber."
     icon_layout_native: CategoryIconLayout
+    """
+    Front face of the gift card sold under this category. Empty means no artwork
+    was uploaded, and the clients render their generated gradient card instead.
+    """
+    gift_card_image_front: String!
+    "Back face of the gift card sold under this category. Empty means no artwork."
+    gift_card_image_back: String!
     created_at: String!
     updated_at: String!
   }
@@ -89,6 +96,8 @@ export const categoryTypeDefs = /* GraphQL */ `
     min_pax: Int
     icon_layout_mweb: CategoryIconLayoutInput
     icon_layout_native: CategoryIconLayoutInput
+    gift_card_image_front: String
+    gift_card_image_back: String
   }
 
   input UpdateCategoryInput {
@@ -103,6 +112,8 @@ export const categoryTypeDefs = /* GraphQL */ `
     min_pax: Int
     icon_layout_mweb: CategoryIconLayoutInput
     icon_layout_native: CategoryIconLayoutInput
+    gift_card_image_front: String
+    gift_card_image_back: String
   }
 
   extend type Query {

@@ -134,6 +134,8 @@ export function GiftCardCheckoutScreen() {
         <GiftCardVisual
           theme={selection}
           imageUrl={selection.scope_image_url}
+          artworkFrontUrl={selection.scope_image_front_url}
+          artworkBackUrl={selection.scope_image_back_url}
           amountLabel={amountLabel}
         />
         <YStack

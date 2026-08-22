@@ -76,7 +76,7 @@ export function renderCaptchaSvg(code: string): string {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img">`,
     `<rect width="${WIDTH}" height="${HEIGHT}" rx="10" fill="#f2f2f4"/>`,
     ...Array.from({ length: 4 }, strokeLine),
-    ...[...code].map(glyph),
+    ...[...code].map((char, index) => glyph(char, index)),
     ...Array.from({ length: 40 }, speckle),
     '</svg>',
   ];

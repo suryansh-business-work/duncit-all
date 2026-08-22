@@ -42,7 +42,7 @@
   "packages/ai-prompts/src/mui/PromptsTable.tsx": 6,
   "packages/auto-pods/src/form/AutoPodForm.tsx": 3,
   "packages/availability-calendar/src/AvailabilityCalendar.tsx": 1,
-  "packages/availability-calendar/src/DayDrawer/AddSlotForm.tsx": 13,
+  "packages/availability-calendar/src/DayDrawer/AddSlotForm.tsx": 4,
   "packages/availability-calendar/src/DayDrawer/index.tsx": 4,
   "packages/availability-calendar/src/DayDrawer/SlotList.tsx": 7,
   "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx": 11,

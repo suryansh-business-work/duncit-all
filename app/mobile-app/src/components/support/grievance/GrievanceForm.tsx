@@ -1,16 +1,21 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import { Button, Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GrievanceField } from './GrievanceField';
+import { GrievanceTicketField } from './GrievanceTicketField';
 import { buildGrievanceSchema, grievanceDefaults, type GrievanceValues } from './grievance.types';
 
 interface Props {
   submitting?: boolean;
   errorMessage?: string;
+  /** The user's own support tickets — what this grievance can escalate. */
+  tickets: GrievanceSupportTicketOption[];
+  ticketsLoading?: boolean;
   onSubmit: (values: GrievanceValues) => void;
 }
 
@@ -19,12 +24,23 @@ interface Props {
  *
  * Same fields in the same order, same shared rules, same localization keys.
  * Only the widgets differ.
+ *
+ * Submitting is blocked while the user has no support ticket to point at: the
+ * grievance desk is the step AFTER support, and a grievance with nothing behind
+ * it is one the officer rejects.
  */
-export function GrievanceForm({ submitting, errorMessage, onSubmit }: Readonly<Props>) {
+export function GrievanceForm({
+  submitting,
+  errorMessage,
+  tickets,
+  ticketsLoading,
+  onSubmit,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   // Rebuilt when the language changes so the messages follow it.
   const schema = useMemo(() => buildGrievanceSchema(t), [t]);
+  const noTickets = !ticketsLoading && tickets.length === 0;
 
   const { control, handleSubmit } = useForm<GrievanceValues>({
     defaultValues: grievanceDefaults,
@@ -42,6 +58,7 @@ export function GrievanceForm({ submitting, errorMessage, onSubmit }: Readonly<P
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
+      <GrievanceTicketField control={control} options={tickets} loading={ticketsLoading} />
       <GrievanceField control={control} name="name" label={t('grievance.field.name')} />
       <GrievanceField control={control} name="email" label={t('grievance.field.email')} />
       <GrievanceField control={control} name="phone" label={t('grievance.field.phone')} />
@@ -69,7 +86,7 @@ export function GrievanceForm({ submitting, errorMessage, onSubmit }: Readonly<P
         testID="grievance-submit"
         theme="active"
         borderRadius={12}
-        disabled={submitting}
+        disabled={submitting || noTickets}
         color={onPrimary}
         onPress={handleSubmit(onSubmit)}
       >

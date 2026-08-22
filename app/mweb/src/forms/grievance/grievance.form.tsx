@@ -2,12 +2,17 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Stack } from '@mui/material';
+import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import RhfTextField from '../components/RhfTextField';
+import SupportTicketField from './SupportTicketField';
 import { useTranslation } from '../../i18n/useTranslation';
 import { buildGrievanceSchema, grievanceDefaults, type GrievanceValues } from './grievance.types';
 
 interface Props {
   loading?: boolean;
+  /** The user's own support tickets — what this grievance can escalate. */
+  tickets: GrievanceSupportTicketOption[];
+  ticketsLoading?: boolean;
   onSubmit: (values: GrievanceValues) => Promise<void> | void;
 }
 
@@ -15,12 +20,22 @@ interface Props {
  * Raise a grievance (RHF + Zod + MUI) — the mWeb twin of the native
  * GrievanceForm. Both build their rules from the same shared spec and render
  * the same localization keys, so the two forms accept and say the same things.
+ *
+ * Submitting is blocked while the user has no support ticket to point at: the
+ * grievance desk is the step AFTER support, and a grievance with nothing behind
+ * it is one the officer rejects.
  */
-export default function GrievanceForm({ loading, onSubmit }: Readonly<Props>) {
+export default function GrievanceForm({
+  loading,
+  tickets,
+  ticketsLoading,
+  onSubmit,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Rebuilt when the language changes so the messages follow it.
   const schema = useMemo(() => buildGrievanceSchema(t), [t]);
+  const noTickets = !ticketsLoading && tickets.length === 0;
 
   const { control, handleSubmit } = useForm<GrievanceValues>({
     defaultValues: grievanceDefaults,
@@ -40,6 +55,7 @@ export default function GrievanceForm({ loading, onSubmit }: Readonly<Props>) {
   return (
     <form noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
+        <SupportTicketField control={control} options={tickets} loading={ticketsLoading} />
         <RhfTextField control={control} name="name" label={t('grievance.field.name')} required />
         <RhfTextField control={control} name="email" label={t('grievance.field.email')} required />
         <RhfTextField control={control} name="phone" label={t('grievance.field.phone')} required />
@@ -67,7 +83,7 @@ export default function GrievanceForm({ loading, onSubmit }: Readonly<Props>) {
           minRows={4}
         />
         {submitError && <Alert severity="error">{submitError}</Alert>}
-        <Button type="submit" variant="contained" disabled={loading}>
+        <Button type="submit" variant="contained" disabled={loading || noTickets}>
           {loading ? t('grievance.submitting') : t('grievance.submit')}
         </Button>
       </Stack>

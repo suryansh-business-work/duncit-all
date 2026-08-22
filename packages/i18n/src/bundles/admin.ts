@@ -389,6 +389,12 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       muiIconHint: 'Search Material icons (e.g. Pets, SportsSoccer) or paste an emoji.',
       media: 'Images & Videos (one URL per line)',
       mediaHint: 'URLs ending in .mp4/.mov/.webm are stored as VIDEO, others as IMAGE.',
+      giftCardArtwork: 'Gift card artwork',
+      giftCardArtworkHint:
+        'The two faces of the gift card sold for this category. Leave both empty to keep the generated gradient card.',
+      giftCardFront: 'Gift card front image',
+      giftCardBack: 'Gift card back image',
+      giftCardFlipHint: 'Buyers can flip between these faces on mWeb and the app.',
       allowCoHosts: 'Allow Co-Hosts',
       maxCoHosts: 'Max co-hosts per pod',
       maxCoHostsHint: 'How many co-hosts a host may invite to one pod in this sub-category.',

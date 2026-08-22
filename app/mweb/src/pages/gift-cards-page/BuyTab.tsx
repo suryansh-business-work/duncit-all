@@ -68,6 +68,8 @@ export default function BuyTab() {
       scope_category_id: shop ? null : scopeCategory?.id ?? null,
       scope_name: shop ? '' : scopeCategory?.name ?? '',
       scope_image_url: shop ? '' : scopeCategory?.icon ?? '',
+      scope_image_front_url: shop ? '' : scopeCategory?.gift_card_image_front ?? '',
+      scope_image_back_url: shop ? '' : scopeCategory?.gift_card_image_back ?? '',
       amount,
       gift,
       recipient_email: gift ? recipientEmail.trim() : '',

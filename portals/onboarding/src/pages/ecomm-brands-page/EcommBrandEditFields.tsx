@@ -2,6 +2,7 @@ import { Box, Button, IconButton, MenuItem, Stack, TextField, Typography } from 
 import DeleteIcon from '@mui/icons-material/Delete';
 import MediaPickerField from '../../components/MediaPickerField';
 import { DOC_TYPES } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 export interface DocEntry {
   id: string;
@@ -47,6 +48,7 @@ interface Props {
 const grid2 = { display: 'grid', columnGap: 1.5, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } };
 
 export default function EcommBrandEditFields({ values, setValues, docs, setDocs, addDoc }: Readonly<Props>) {
+  const { t } = useTranslation();
   const set = (key: keyof BrandValues) => (value: string) => setValues({ ...values, [key]: value });
   const field = (key: keyof BrandValues, label: string) => (
     <TextField size="small" label={label} value={values[key]} onChange={(e) => set(key)(e.target.value)} />
@@ -55,16 +57,16 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
   return (
     <Stack spacing={2.5}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>Brand</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.ecommBrands.brand')}</Typography>
         <Box sx={grid2}>
           {field('brand_name', 'Brand name')}
           {field('tagline', 'Tagline')}
         </Box>
-        <TextField size="small" label="Description" value={values.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} />
-        <TextField size="small" label="Product categories" value={values.product_categories} onChange={(e) => set('product_categories')(e.target.value)} helperText="Comma separated categories." />
+        <TextField size="small" label={t('shell.common.description')} value={values.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} />
+        <TextField size="small" label={t('onboarding.ecommBrands.productCategories')} value={values.product_categories} onChange={(e) => set('product_categories')(e.target.value)} helperText={t('onboarding.ecommBrands.commaSeparatedCategories')} />
         <Box sx={grid2}>
-          <MediaPickerField label="Logo" value={values.logo_url} onChange={set('logo_url')} folder="/ecomm/brands" />
-          <MediaPickerField label="Cover image" value={values.cover_image_url} onChange={set('cover_image_url')} folder="/ecomm/brands" />
+          <MediaPickerField label={t('onboarding.ecommBrands.logo')} value={values.logo_url} onChange={set('logo_url')} folder="/ecomm/brands" />
+          <MediaPickerField label={t('onboarding.common.coverImage')} value={values.cover_image_url} onChange={set('cover_image_url')} folder="/ecomm/brands" />
         </Box>
         <Box sx={grid2}>
           {field('website_url', 'Website URL')}
@@ -73,7 +75,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>Contact</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.common.contact')}</Typography>
         <Box sx={grid2}>
           {field('contact_person', 'Contact person')}
           {field('contact_email', 'Contact email')}
@@ -82,7 +84,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>Business & legal</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.ecommBrands.businessAndLegal')}</Typography>
         <Box sx={grid2}>
           {field('registered_business_name', 'Registered business name')}
           {field('established_year', 'Established year')}
@@ -92,8 +94,8 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>Address</Typography>
-        <TextField size="small" label="Address line 1" value={values.address_line1} onChange={(e) => set('address_line1')(e.target.value)} />
+        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.common.address')}</Typography>
+        <TextField size="small" label={t('onboarding.common.addressLine1')} value={values.address_line1} onChange={(e) => set('address_line1')(e.target.value)} />
         <Box sx={grid2}>
           {field('city', 'City')}
           {field('state', 'State')}
@@ -103,7 +105,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>Payout</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.common.payout')}</Typography>
         <Box sx={grid2}>
           {field('account_holder_name', 'Account holder name')}
           {field('account_number', 'Account number')}
@@ -113,7 +115,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>Documents</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('shell.nav.documents')}</Typography>
         {docs.map((doc) => (
           <Box
             key={doc.id}
@@ -128,7 +130,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
             <TextField
               select
               size="small"
-              label="Type"
+              label={t('shell.common.type')}
               value={doc.type}
               onChange={(e) => setDocs(docs.map((x) => (x.id === doc.id ? { ...x, type: e.target.value } : x)))}
             >
@@ -138,7 +140,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
             </TextField>
             <Box sx={{ flex: 1 }}>
               <MediaPickerField
-                label="File"
+                label={t('onboarding.common.file')}
                 value={doc.url}
                 onChange={(url) => setDocs(docs.map((x) => (x.id === doc.id ? { ...x, url } : x)))}
                 folder="/ecomm/brands/docs"
@@ -149,7 +151,7 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
             </IconButton>
           </Box>
         ))}
-        <Button onClick={addDoc} sx={{ alignSelf: 'flex-start' }}>Add document</Button>
+        <Button onClick={addDoc} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.ecommBrands.addDocument')}</Button>
       </Stack>
     </Stack>
   );

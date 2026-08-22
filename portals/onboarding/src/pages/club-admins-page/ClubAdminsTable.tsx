@@ -6,6 +6,7 @@ import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@du
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { categoryPath, isActiveClubAdmin, STATUS_OPTIONS, type ClubAdminRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<ClubAdminRow>;
@@ -79,15 +80,16 @@ export default function ClubAdminsTable({
   onToggleActive,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ClubAdminRow>[]>(() => {
     const renderActions = (row: ClubAdminRow) => (
       <>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(row)}>
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Review">
+        <Tooltip title={t('onboarding.common.review')}>
           <IconButton size="small" onClick={() => onReview(row)}>
             <RateReviewIcon fontSize="small" />
           </IconButton>
@@ -104,13 +106,13 @@ export default function ClubAdminsTable({
     return [
       {
         field: 'club_admin_no',
-        headerName: 'Club Admin ID',
+        headerName: t('onboarding.clubAdmins.clubAdminId'),
         width: 140,
         valueGetter: (row) => row.club_admin_no || '—',
       },
       {
         field: 'full_name',
-        headerName: 'Club Admin',
+        headerName: t('onboarding.common.clubAdmin'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderPerson,
@@ -118,7 +120,7 @@ export default function ClubAdminsTable({
       },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: t('onboarding.common.category'),
         sortable: false,
         minWidth: 220,
         cellRenderer: renderCategory,
@@ -126,7 +128,7 @@ export default function ClubAdminsTable({
       },
       {
         field: 'assigned_clubs',
-        headerName: 'Assigned Clubs',
+        headerName: t('onboarding.clubAdmins.assignedClubs2'),
         sortable: false,
         minWidth: 200,
         cellRenderer: renderClubs,
@@ -134,7 +136,7 @@ export default function ClubAdminsTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 120,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -142,19 +144,19 @@ export default function ClubAdminsTable({
       },
       dateColumn<ClubAdminRow>({
         field: 'joined_at',
-        headerName: 'Date Joined',
+        headerName: t('onboarding.clubAdmins.dateJoined2'),
         width: 135,
       }),
       {
         field: 'commission_pct',
-        headerName: 'Pay Commission',
+        headerName: t('onboarding.clubAdmins.payCommission2'),
         width: 150,
         filter: { type: 'number' },
         cellRenderer: renderCommission,
         valueGetter: (row) => commissionLabel(row.commission_pct),
       },
-      { field: 'phone', headerName: 'Phone', hide: true, minWidth: 140 },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'phone', headerName: t('shell.common.phone'), hide: true, minWidth: 140 },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 

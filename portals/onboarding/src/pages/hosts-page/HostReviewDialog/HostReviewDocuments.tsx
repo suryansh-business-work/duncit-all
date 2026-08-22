@@ -1,5 +1,6 @@
 import { Divider, Stack, Typography } from '@mui/material';
 import { ImagePreview } from '@duncit/ui';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   passportUrl?: string | null;
@@ -13,6 +14,7 @@ interface Props {
  * was legible. The thumbnails enlarge in place instead.
  */
 export default function HostReviewDocuments({ passportUrl, policeVerificationUrl }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <Divider textAlign="left">
@@ -21,9 +23,9 @@ export default function HostReviewDocuments({ passportUrl, policeVerificationUrl
         </Typography>
       </Divider>
       <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-        {passportUrl && <ImagePreview src={passportUrl} label="Passport photo" />}
+        {passportUrl && <ImagePreview src={passportUrl} label={t('onboarding.common.passportPhoto')} />}
         {policeVerificationUrl && (
-          <ImagePreview src={policeVerificationUrl} label="Police verification" />
+          <ImagePreview src={policeVerificationUrl} label={t('onboarding.hosts.policeVerification')} />
         )}
         {!passportUrl && !policeVerificationUrl && (
           <Typography variant="body2" color="warning.main" data-testid="review-no-documents">

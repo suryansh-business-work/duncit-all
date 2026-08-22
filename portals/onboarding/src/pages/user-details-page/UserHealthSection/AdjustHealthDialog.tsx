@@ -16,6 +16,7 @@ import {
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
 import { ADJUST_HEALTH, type AdminHealthScore } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -36,6 +37,7 @@ export default function AdjustHealthDialog({
   onClose,
   onSaved,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [direction, setDirection] = useState<'plus' | 'minus'>('plus');
   const [magnitude, setMagnitude] = useState<number>(5);
   const [remark, setRemark] = useState('');
@@ -58,11 +60,11 @@ export default function AdjustHealthDialog({
   const submit = async () => {
     setError(null);
     if (!magnitude || magnitude < 1) {
-      setError('Enter an adjustment between 1 and 100.');
+      setError(t('onboarding.userDetails.enterAnAdjustmentBetween1And'));
       return;
     }
     if (remark.trim().length < 3) {
-      setError('A remark of at least 3 characters is required.');
+      setError(t('onboarding.userDetails.aRemarkOfAtLeast3'));
       return;
     }
     try {
@@ -104,7 +106,7 @@ export default function AdjustHealthDialog({
           </ToggleButtonGroup>
 
           <TextField
-            label="Magnitude"
+            label={t('onboarding.userDetails.magnitude')}
             type="number"
             inputProps={{ min: 1, max: 100, step: 1 }}
             size="small"
@@ -114,7 +116,7 @@ export default function AdjustHealthDialog({
           />
 
           <TextField
-            label="Remark (visible to the user)"
+            label={t('onboarding.userDetails.remarkVisibleToTheUser')}
             multiline
             minRows={3}
             value={remark}
@@ -127,7 +129,7 @@ export default function AdjustHealthDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={submit} disabled={loading}>
           {loading ? 'Saving…' : 'Save adjustment'}
         </Button>

@@ -14,6 +14,7 @@ import VenueOwnerSection from './VenueOwnerSection';
 import type { Step3 } from './queries';
 import { getVenueError, type VenueValidationErrors } from './venue.form';
 import type { VenueAccordionMode } from './VenueAccordionForm';
+import { useTranslation } from '@duncit/app-settings';
 
 interface OwnerUser {
   user_id: string;
@@ -45,6 +46,7 @@ export default function VenueOwnerAccordion({
   ownerOptions,
   errors,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const handleOwnerPick = (next: OwnerUser | null) => {
     setOwner?.(next);
     if (next && setS3) {
@@ -62,7 +64,7 @@ export default function VenueOwnerAccordion({
   return (
     <Accordion expanded={expanded} onChange={onToggle} disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography variant="subtitle1">Owner details</Typography>
+        <Typography variant="subtitle1">{t('onboarding.adminVenueCreateDialog.ownerDetails')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2}>
@@ -78,7 +80,7 @@ export default function VenueOwnerAccordion({
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Pick an existing user as owner"
+                  label={t('onboarding.adminVenueCreateDialog.pickAnExistingUserAsOwner')}
                   size="small"
                   required
                   error={!!getVenueError(errors, 'owner_user_id')}

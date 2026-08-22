@@ -4,6 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import HostCategoryPicker from './HostCategoryPicker';
 import type { HostCategoryValue, HostEditValues } from '../../forms/host';
+import { useTranslation } from '@duncit/app-settings';
 
 const path = (c: HostCategoryValue) =>
   [c.super_category_name, c.category_name, c.sub_category_name].filter(Boolean).join(' › ') ||
@@ -13,6 +14,7 @@ const path = (c: HostCategoryValue) =>
  * the categories the host requested (with their request no.) and lets an admin
  * add or remove more so one host can operate across several super-categories. */
 export default function HostCategoriesSection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<HostEditValues>();
   const { fields, append, remove } = useFieldArray({ control, name: 'categories' });
   const existingSubIds = fields.map((f) => (f as unknown as HostCategoryValue).sub_category_id);
@@ -60,10 +62,10 @@ export default function HostCategoriesSection() {
                       sx={{ mt: 0.5 }}
                     />
                   ) : (
-                    <Chip size="small" variant="outlined" label="Added by admin" sx={{ mt: 0.5 }} />
+                    <Chip size="small" variant="outlined" label={t('onboarding.hostForm.addedByAdmin')} sx={{ mt: 0.5 }} />
                   )}
                 </Box>
-                <Tooltip title="Remove category">
+                <Tooltip title={t('onboarding.hostForm.removeCategory')}>
                   <IconButton size="small" color="error" aria-label={`Remove ${path(category)}`} onClick={() => remove(index)}>
                     <DeleteOutlineIcon fontSize="small" />
                   </IconButton>

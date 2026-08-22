@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { HostRequest } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 export type DecisionMode = 'APPROVE' | 'REJECT';
 
@@ -21,28 +22,31 @@ interface Props {
   onConfirm: (notes: string) => void;
 }
 
-const COPY: Record<DecisionMode, { title: string; label: string; helper: string; cta: string; color: 'success' | 'error' }> = {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const decisionCopy = (t: Translate): Record<DecisionMode, { title: string; label: string; helper: string; cta: string; color: 'success' | 'error' }> => ({
   APPROVE: {
-    title: 'Approve host request',
-    label: 'Notes (optional)',
+    title: t('onboarding.hostRequests.approveHostRequest'),
+    label: t('onboarding.hostRequests.notesOptional'),
     helper: 'Shared with the host on approval.',
     cta: 'Approve',
     color: 'success',
   },
   REJECT: {
-    title: 'Reject host request',
-    label: 'Reason',
+    title: t('onboarding.hostRequests.rejectHostRequest'),
+    label: t('onboarding.common.reason'),
     helper: 'Required — shared with the host so they know why.',
     cta: 'Reject',
     color: 'error',
   },
-};
+});
 
 /** Approve (optional notes) / Reject (required reason) confirmation for a request. */
 export default function DecisionDialog({ mode, request, busy, onClose, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState('');
   if (!mode) return null;
-  const copy = COPY[mode];
+  const dialogCopy = decisionCopy(t)[mode];
   const trimmed = notes.trim();
   const disabled = busy || (mode === 'REJECT' && !trimmed);
 
@@ -58,14 +62,14 @@ export default function DecisionDialog({ mode, request, busy, onClose, onConfirm
 
   return (
     <Dialog open={!!request} onClose={close} fullWidth maxWidth="xs">
-      <DialogTitle>{copy.title}</DialogTitle>
+      <DialogTitle>{dialogCopy.title}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           {request?.request_no} · {request?.host_name}
         </Typography>
         <TextField
-          label={copy.label}
-          helperText={copy.helper}
+          label={dialogCopy.label}
+          helperText={dialogCopy.helper}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           multiline
@@ -75,9 +79,9 @@ export default function DecisionDialog({ mode, request, busy, onClose, onConfirm
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={close}>Cancel</Button>
-        <Button variant="contained" color={copy.color} onClick={confirm} disabled={disabled}>
-          {copy.cta}
+        <Button onClick={close}>{t('shell.common.cancel')}</Button>
+        <Button variant="contained" color={dialogCopy.color} onClick={confirm} disabled={disabled}>
+          {dialogCopy.cta}
         </Button>
       </DialogActions>
     </Dialog>

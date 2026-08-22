@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
 import type { HostRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   host: HostRow;
@@ -49,68 +50,69 @@ function Section({ title, children }: Readonly<{ title: string; children: ReactN
  * it just used to be thrown away.
  */
 export default function HostReviewDetails({ host, formatDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
   const at = (value?: string | null) => (value ? formatDateTime(value) : '—');
   const bank = host.bank_account;
 
   return (
     <Stack spacing={1.5}>
-      <Section title="Application">
-        <InfoRow variant="inline" labelWidth={120} label="Host ID" value={dash(host.host_no)} />
-        <InfoRow variant="inline" labelWidth={120} label="User ID" value={host.user_id} />
+      <Section title={t('onboarding.hosts.application')}>
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.hostId')} value={dash(host.host_no)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.userId')} value={host.user_id} />
         <InfoRow
           variant="inline"
           labelWidth={120}
-          label="Onboarding"
+          label={t('shell.nav.onboarding')}
           value={`Step ${host.step_completed ?? 0} of 4`}
         />
-        <InfoRow variant="inline" labelWidth={120} label="Started" value={at(host.created_at)} />
-        <InfoRow variant="inline" labelWidth={120} label="Submitted" value={at(host.submitted_at)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.common.started')} value={at(host.created_at)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.common.submitted')} value={at(host.submitted_at)} />
       </Section>
 
-      <Section title="Contact">
-        <InfoRow variant="inline" labelWidth={120} label="Email" value={dash(host.email)} />
-        <InfoRow variant="inline" labelWidth={120} label="Phone" value={dash(host.phone)} />
+      <Section title={t('onboarding.common.contact')}>
+        <InfoRow variant="inline" labelWidth={120} label={t('shell.common.email')} value={dash(host.email)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('shell.common.phone')} value={dash(host.phone)} />
       </Section>
 
-      <Section title="Identity">
-        <InfoRow variant="inline" labelWidth={120} label="Date of birth" value={at(host.dob)} />
-        <InfoRow variant="inline" labelWidth={120} label="Aadhar" value={dash(host.aadhar_number)} />
+      <Section title={t('onboarding.common.identity')}>
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.dateOfBirth')} value={at(host.dob)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.aadhar')} value={dash(host.aadhar_number)} />
         <InfoRow variant="inline" labelWidth={120} label="PAN" value={dash(host.pan_number)} />
         <InfoRow
           variant="inline"
           labelWidth={120}
-          label="Address"
+          label={t('onboarding.common.address')}
           value={dash(host.full_address)}
           sx={FULL_WIDTH}
         />
       </Section>
 
-      <Section title="Payout">
-        <InfoRow variant="inline" labelWidth={120} label="Method" value={dash(bank?.payout_method)} />
+      <Section title={t('onboarding.common.payout')}>
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.method')} value={dash(bank?.payout_method)} />
         <InfoRow
           variant="inline"
           labelWidth={120}
-          label="Account holder"
+          label={t('onboarding.hosts.accountHolder')}
           value={dash(bank?.account_holder_name)}
         />
         <InfoRow
           variant="inline"
           labelWidth={120}
-          label="Account no."
+          label={t('onboarding.hosts.accountNo')}
           value={maskAccount(bank?.account_number)}
         />
         <InfoRow variant="inline" labelWidth={120} label="IFSC" value={dash(bank?.ifsc_code)} />
         <InfoRow variant="inline" labelWidth={120} label="UPI" value={dash(bank?.upi_id)} />
       </Section>
 
-      <Section title="Review history">
-        <InfoRow variant="inline" labelWidth={120} label="Approved" value={at(host.approved_at)} />
-        <InfoRow variant="inline" labelWidth={120} label="Rejected" value={at(host.rejected_at)} />
-        <InfoRow variant="inline" labelWidth={120} label="Last updated" value={at(host.updated_at)} />
+      <Section title={t('onboarding.hosts.reviewHistory')}>
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.approved')} value={at(host.approved_at)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.common.rejected')} value={at(host.rejected_at)} />
+        <InfoRow variant="inline" labelWidth={120} label={t('onboarding.hosts.lastUpdated')} value={at(host.updated_at)} />
         <InfoRow
           variant="inline"
           labelWidth={120}
-          label="Last note"
+          label={t('onboarding.hosts.lastNote')}
           value={dash(host.reviewer_notes)}
           sx={FULL_WIDTH}
         />

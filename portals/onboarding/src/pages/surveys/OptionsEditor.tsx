@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   options: string[];
@@ -16,6 +17,7 @@ interface Props {
  * options are always a plain string array.
  */
 export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const list = options.length ? options : [''];
   const rowKeys = useRef<{ keys: string[]; seq: number }>({ keys: [], seq: 0 });
   if (rowKeys.current.keys.length !== list.length) {
@@ -39,7 +41,7 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
 
   return (
     <Stack spacing={0.75}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Options</Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>{t('onboarding.surveys.options')}</Typography>
       {list.map((opt, i) => {
         const rowKey = rowKeys.current.keys[i];
         return (
@@ -52,13 +54,13 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
             onChange={(e) => set(i, e.target.value)}
             inputProps={{ 'aria-label': `Option ${i + 1}` }}
           />
-          <Tooltip title="Move up"><span><IconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
-          <Tooltip title="Move down"><span><IconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
-          <Tooltip title="Remove option"><IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+          <Tooltip title={t('onboarding.common.moveUp')}><span><IconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
+          <Tooltip title={t('onboarding.common.moveDown')}><span><IconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
+          <Tooltip title={t('onboarding.surveys.removeOption')}><IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
         </Stack>
         );
       })}
-      <Button size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>Add option</Button>
+      <Button size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.surveys.addOption')}</Button>
     </Stack>
   );
 }

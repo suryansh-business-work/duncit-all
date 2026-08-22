@@ -14,11 +14,13 @@ import ScopePicker, { emptyScope, type Scope } from './ScopePicker';
 import DefaultSurveyButton from './DefaultSurveyButton';
 import SurveysTable from './SurveysTable';
 import { kindMetaBySlug } from './surveyKinds';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Category-specific surveys for a single audience (kind). Reached from a hub card. */
 export default function SurveysListPage() {
+  const { t } = useTranslation();
   const { kind: slug } = useParams<{ kind: string }>();
-  const meta = kindMetaBySlug(slug);
+  const meta = kindMetaBySlug(slug, t);
   const kind = meta?.kind ?? 'VENUE';
 
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ export default function SurveysListPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Box><BackButton onClick={() => navigate('/surveys')}>Back to Surveys</BackButton></Box>
+      <Box><BackButton onClick={() => navigate('/surveys')}>{t('onboarding.surveys.backToSurveys')}</BackButton></Box>
 
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
         <Icon color="primary" />
@@ -76,7 +78,7 @@ export default function SurveysListPage() {
           </Typography>
         </Box>
         <DefaultSurveyButton kind={meta.kind} />
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)}>New survey</Button>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)}>{t('onboarding.surveys.newSurvey')}</Button>
       </Stack>
 
       <ScopePicker value={scope} onChange={setScope} />
@@ -85,7 +87,7 @@ export default function SurveysListPage() {
         <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
       )}
       {!catsLoading && superIds.length === 0 && (
-        <Alert severity="info">No category-specific surveys yet. The Default Survey (button above) is used as the fallback. Create one with “New survey”.</Alert>
+        <Alert severity="info">{t('onboarding.surveys.noCategorySpecificSurveysYetThe')}</Alert>
       )}
       {superIds.length > 0 && (
         <SurveysTable
@@ -98,10 +100,10 @@ export default function SurveysListPage() {
       )}
 
       <Dialog open={!!confirmId} onClose={() => setConfirmId(null)}>
-        <DialogTitle>Delete survey?</DialogTitle>
-        <DialogContent><DialogContentText>This removes the survey definition. Existing responses are kept.</DialogContentText></DialogContent>
+        <DialogTitle>{t('onboarding.surveys.deleteSurvey')}</DialogTitle>
+        <DialogContent><DialogContentText>{t('onboarding.surveys.thisRemovesTheSurveyDefinitionExisting')}</DialogContentText></DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmId(null)}>Cancel</Button>
+          <Button onClick={() => setConfirmId(null)}>{t('shell.common.cancel')}</Button>
           <Button color="error" variant="contained" onClick={onDelete} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete'}</Button>
         </DialogActions>
       </Dialog>

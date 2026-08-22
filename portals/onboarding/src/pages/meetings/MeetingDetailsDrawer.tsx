@@ -5,6 +5,7 @@ import { SurveyAnswers } from '../../components/survey-answers';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting, SurveyKind } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLOR: StatusColorMap = {
   REQUESTED: 'default',
@@ -24,6 +25,7 @@ interface Props {
 
 // Right-side details drawer for a single onboarding meeting (incl. survey answers).
 export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
   const blocked = !!meeting && (meeting.status === 'CANCELLED' || meeting.approval_status === 'DENIED');
   // The drawer is a details view, so it only offers the ONE action the request is
   // still waiting on. A meeting is waiting to be scheduled while it is REQUESTED;
@@ -48,26 +50,26 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
                 {meeting.user_name || meeting.contact_name || 'Applicant'}
               </Typography>
             </Box>
-            <IconButton size="small" onClick={onClose} aria-label="Close"><CloseIcon /></IconButton>
+            <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
           </Stack>
 
           <StatusChip status={meeting.status} colorMap={STATUS_COLOR} label={meetingStatusLabel(meeting)} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
 
-          {catPath && <InfoRow label="Category" value={catPath} />}
-          <InfoRow label="Requested for" value={fmt(meeting.requested_at)} />
-          <InfoRow label="Scheduled" value={fmt(meeting.scheduled_at)} />
-          <InfoRow label="Contact" value={[meeting.user_email, meeting.contact_phone].filter(Boolean).join(' · ') || '—'} />
+          {catPath && <InfoRow label={t('onboarding.common.category')} value={catPath} />}
+          <InfoRow label={t('onboarding.meetings.requestedFor')} value={fmt(meeting.requested_at)} />
+          <InfoRow label={t('onboarding.meetings.scheduled')} value={fmt(meeting.scheduled_at)} />
+          <InfoRow label={t('onboarding.common.contact')} value={[meeting.user_email, meeting.contact_phone].filter(Boolean).join(' · ') || '—'} />
 
           {meeting.meeting_link && !blocked && (
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>Meeting link</Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>{t('onboarding.meetings.meetingLink')}</Typography>
               <Box>
-                <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">Join meeting</Link>
+                <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">{t('onboarding.meetings.joinMeeting')}</Link>
               </Box>
             </Box>
           )}
-          {meeting.notes && <InfoRow label="Notes" value={meeting.notes} />}
-          {meeting.status === 'CANCELLED' && meeting.cancel_reason && <InfoRow label="Cancel reason" value={meeting.cancel_reason} />}
+          {meeting.notes && <InfoRow label={t('onboarding.meetings.notes')} value={meeting.notes} />}
+          {meeting.status === 'CANCELLED' && meeting.cancel_reason && <InfoRow label={t('onboarding.meetings.cancelReason')} value={meeting.cancel_reason} />}
 
           <Divider />
           {meeting.user_id && <SurveyAnswers userId={meeting.user_id} kind={meeting.kind} />}
@@ -76,8 +78,8 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
             <>
               <Divider />
               <Stack direction="row" spacing={1}>
-                {showEdit && <Button variant="contained" onClick={() => onEdit?.(meeting)}>Schedule</Button>}
-                {showCancel && <Button color="error" onClick={() => onCancel?.(meeting)}>Cancel</Button>}
+                {showEdit && <Button variant="contained" onClick={() => onEdit?.(meeting)}>{t('onboarding.meetings.schedule')}</Button>}
+                {showCancel && <Button color="error" onClick={() => onCancel?.(meeting)}>{t('shell.common.cancel')}</Button>}
               </Stack>
             </>
           )}

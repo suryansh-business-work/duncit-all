@@ -15,6 +15,7 @@ import {
 import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import { parseApiError } from '@duncit/utils';
 import { UPDATE_CLUB_ADMIN, type ClubAdminRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   row: ClubAdminRow | null;
@@ -32,6 +33,7 @@ const str = (value: string | number | null | undefined) => (value == null ? '' :
  * hand-rolled triple of selects.
  */
 export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -106,22 +108,22 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
 
           <TextField
             size="small"
-            label="Full name"
+            label={t('onboarding.common.fullName')}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             fullWidth
           />
           <TextField
             size="small"
-            label="Email"
+            label={t('shell.common.email')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             fullWidth
-            helperText="Used for onboarding contact. The login account is not changed."
+            helperText={t('onboarding.clubAdmins.usedForOnboardingContactTheLogin')}
           />
           <TextField
             size="small"
-            label="Phone"
+            label={t('shell.common.phone')}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             fullWidth
@@ -140,7 +142,7 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
           <TextField
             size="small"
             type="number"
-            label="Pay commission"
+            label={t('onboarding.clubAdmins.payCommission')}
             value={commission}
             onChange={(e) => setCommission(e.target.value)}
             error={!commissionValid}
@@ -152,7 +154,7 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Button variant="contained" disabled={loading || !commissionValid} onClick={onSave}>
           {loading ? 'Saving…' : 'Save'}
         </Button>

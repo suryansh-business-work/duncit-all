@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardActionArea, Stack, Typography } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { SURVEY_KINDS, type SurveyKindMeta } from './surveyKinds';
+import { surveyKinds, type SurveyKindMeta } from './surveyKinds';
+import { useTranslation } from '@duncit/app-settings';
 
 interface CardProps {
   meta: SurveyKindMeta;
@@ -40,6 +41,7 @@ function SurveyKindCard({ meta, onOpen }: Readonly<CardProps>) {
 
 /** Surveys landing: pick who a survey is for, then manage that kind's surveys. */
 export default function SurveysHubPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const openKind = (slug: string) => navigate(`/surveys/kind/${slug}`);
 
@@ -48,7 +50,7 @@ export default function SurveysHubPage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <AssignmentIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>Surveys</Typography>
+          <Typography variant="h5" fontWeight={800}>{t('shell.nav.surveys')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Choose who a survey is for. Each type has its own category-specific surveys and a kind-level default.
           </Typography>
@@ -62,7 +64,7 @@ export default function SurveysHubPage() {
           gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' },
         }}
       >
-        {SURVEY_KINDS.map((meta) => (
+        {surveyKinds(t).map((meta) => (
           <SurveyKindCard key={meta.kind} meta={meta} onOpen={openKind} />
         ))}
       </Box>

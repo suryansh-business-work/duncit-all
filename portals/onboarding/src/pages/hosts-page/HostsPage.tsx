@@ -10,8 +10,10 @@ import { useHostReview } from './useHostReview';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function HostsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
@@ -24,7 +26,7 @@ export default function HostsPage() {
   return (
     <Box>
       <Stack spacing={0.25} mb={2}>
-        <Typography variant="h5" fontWeight={700}>Hosts</Typography>
+        <Typography variant="h5" fontWeight={700}>{t('onboarding.common.hosts')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Review submitted host requests and manage approved hosts for Duncit communities.
         </Typography>

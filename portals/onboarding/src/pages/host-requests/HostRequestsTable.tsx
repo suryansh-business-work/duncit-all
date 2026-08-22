@@ -5,6 +5,7 @@ import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import HostRequestRowActions from './HostRequestRowActions';
 import { STATUS_OPTIONS, type HostRequest } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',
@@ -49,6 +50,7 @@ export default function HostRequestsTable({
   onReject,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<HostRequest>[]>(() => {
     const renderActions = (r: HostRequest) => (
       <HostRequestRowActions
@@ -63,14 +65,14 @@ export default function HostRequestsTable({
     return [
       {
         field: 'request_no',
-        headerName: 'Request ID',
+        headerName: t('onboarding.common.requestId'),
         minWidth: 160,
         cellRenderer: renderRequestNo,
         valueGetter: (r) => r.request_no,
       },
       {
         field: 'host_name',
-        headerName: 'Host Name',
+        headerName: t('onboarding.hostRequests.hostName'),
         flex: 1,
         minWidth: 150,
         filter: { type: 'text' },
@@ -78,26 +80,26 @@ export default function HostRequestsTable({
       },
       {
         field: 'category_name',
-        headerName: 'Category',
+        headerName: t('onboarding.common.category'),
         minWidth: 220,
         valueGetter: catPath,
       },
       {
         field: 'created_at',
-        headerName: 'Requested On',
+        headerName: t('onboarding.hostRequests.requestedOn'),
         minWidth: 180,
         filter: { type: 'date' },
         valueGetter: requestedOnValue,
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 150,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
         valueGetter: (r) => r.status,
       },
-      { field: 'actions', headerName: 'Action', sortable: false, width: 90, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('onboarding.hostRequests.action'), sortable: false, width: 90, cellRenderer: renderActions },
     ];
   }, [busy, onAcknowledge, onApprove, onReject, onDelete]);
 

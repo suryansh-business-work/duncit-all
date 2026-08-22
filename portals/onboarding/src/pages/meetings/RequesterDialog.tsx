@@ -4,6 +4,7 @@ import { InfoRow } from '@duncit/ui';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 
@@ -14,6 +15,7 @@ interface Props {
 
 /** Read-only requester details for a meeting row — uses only data already on the row (no extra query). */
 export default function RequesterDialog({ meeting, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!meeting) return null;
   const name = meeting.user_name || meeting.contact_name || '—';
   const catPath =
@@ -22,20 +24,20 @@ export default function RequesterDialog({ meeting, onClose }: Readonly<Props>) {
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ pr: 6, fontWeight: 800 }}>
         Requester details
-        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <IconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          <InfoRow label="Name" value={name} />
-          <InfoRow label="Email" value={meeting.user_email || '—'} />
-          <InfoRow label="Phone" value={meeting.contact_phone || '—'} />
-          <InfoRow label="Request ID" value={meeting.request_no || '—'} />
-          <InfoRow label="Category" value={catPath} />
-          <InfoRow label="Requested for" value={fmt(meeting.requested_at)} />
-          <InfoRow label="Scheduled" value={fmt(meeting.scheduled_at)} />
-          <InfoRow label="Status" value={meetingStatusLabel(meeting)} />
+          <InfoRow label={t('shell.common.name')} value={name} />
+          <InfoRow label={t('shell.common.email')} value={meeting.user_email || '—'} />
+          <InfoRow label={t('shell.common.phone')} value={meeting.contact_phone || '—'} />
+          <InfoRow label={t('onboarding.common.requestId')} value={meeting.request_no || '—'} />
+          <InfoRow label={t('onboarding.common.category')} value={catPath} />
+          <InfoRow label={t('onboarding.meetings.requestedFor')} value={fmt(meeting.requested_at)} />
+          <InfoRow label={t('onboarding.meetings.scheduled')} value={fmt(meeting.scheduled_at)} />
+          <InfoRow label={t('shell.common.status')} value={meetingStatusLabel(meeting)} />
         </Stack>
       </DialogContent>
     </Dialog>

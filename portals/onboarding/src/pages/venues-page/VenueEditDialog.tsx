@@ -28,6 +28,7 @@ import {
 } from '../../components/admin-venue-create-dialog/venue.form';
 import { normalizeBankAccountValues } from '../../forms/validation/bankAccount';
 import { STATUSES, UPDATE_VENUE } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   venue: any;
@@ -51,6 +52,7 @@ const isCompleteCategory = (c: VenueCategoryValue) =>
   !!(c.super_category_id && c.category_id && c.sub_category_id);
 
 export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [s1, setS1] = useState<Step1>(blankS1);
   const [docs, setDocs] = useState<DocEntry[]>([]);
   const [s2, setS2] = useState({ gstin: '', pan: '' });
@@ -141,7 +143,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
 
   return (
     <Dialog open={!!venue} onClose={state.loading ? undefined : onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit Venue</DialogTitle>
+      <DialogTitle>{t('onboarding.venues.editVenue')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {submitError && <Alert severity="error">{submitError}</Alert>}
@@ -159,7 +161,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
           />
           <TextField
             select
-            label="Status"
+            label={t('shell.common.status')}
             value={status}
             onChange={(event) => setStatus(event.target.value)}
             sx={{ maxWidth: 280 }}

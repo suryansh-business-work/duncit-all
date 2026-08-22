@@ -17,6 +17,7 @@ import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import AssignClubsSection from './AssignClubsSection';
 import { categoryPath, isActiveClubAdmin, type ClubAdminRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: ClubAdminRow | null;
@@ -51,6 +52,7 @@ export default function ClubAdminReviewDialog({
   onAssignClubs,
   savingClubs,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [commission, setCommission] = useState('0');
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function ClubAdminReviewDialog({
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Stack direction="row" alignItems="center" spacing={1.5}>
-          <span>Review Club Admin</span>
+          <span>{t('onboarding.clubAdmins.reviewClubAdmin')}</span>
           <StatusChip status={active.status} colorMap={STATUS_COLOR} />
           <Typography variant="caption" color="text.secondary">
             {active.club_admin_no || '—'}
@@ -79,18 +81,18 @@ export default function ClubAdminReviewDialog({
       <DialogContent dividers>
         <Stack spacing={2}>
           <Paper variant="outlined" sx={{ p: 2 }}>
-            <InfoRow label="Name" value={active.full_name || '—'} />
-            <InfoRow label="Email" value={active.email || '—'} />
-            <InfoRow label="Phone" value={active.phone || '—'} />
-            <InfoRow label="Category" value={categoryPath(active)} />
+            <InfoRow label={t('shell.common.name')} value={active.full_name || '—'} />
+            <InfoRow label={t('shell.common.email')} value={active.email || '—'} />
+            <InfoRow label={t('shell.common.phone')} value={active.phone || '—'} />
+            <InfoRow label={t('onboarding.common.category')} value={categoryPath(active)} />
             <InfoRow
-              label="Assigned clubs"
+              label={t('onboarding.clubAdmins.assignedClubs')}
               value={active.assigned_clubs.map((c) => c.club_name).join(', ') || '—'}
             />
-            <InfoRow label="Status" value={isActiveClubAdmin(active) ? 'Active' : 'Inactive'} />
-            <InfoRow label="Date joined" value={dateLabel(active.joined_at)} />
-            <InfoRow label="Request" value={active.request_no || '—'} />
-            {active.reviewer_notes && <InfoRow label="Previous notes" value={active.reviewer_notes} />}
+            <InfoRow label={t('shell.common.status')} value={isActiveClubAdmin(active) ? 'Active' : 'Inactive'} />
+            <InfoRow label={t('onboarding.clubAdmins.dateJoined')} value={dateLabel(active.joined_at)} />
+            <InfoRow label={t('onboarding.clubAdmins.request')} value={active.request_no || '—'} />
+            {active.reviewer_notes && <InfoRow label={t('onboarding.clubAdmins.previousNotes')} value={active.reviewer_notes} />}
           </Paper>
 
           <Divider />
@@ -103,7 +105,7 @@ export default function ClubAdminReviewDialog({
               <TextField
                 size="small"
                 type="number"
-                label="Commission"
+                label={t('onboarding.common.commission')}
                 value={commission}
                 onChange={(e) => setCommission(e.target.value)}
                 error={!commissionValid}
@@ -131,19 +133,19 @@ export default function ClubAdminReviewDialog({
           <Divider />
 
           <TextField
-            label="Review notes"
+            label={t('onboarding.clubAdmins.reviewNotes')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
             minRows={2}
             fullWidth
-            helperText="Required to reject; optional when approving."
+            helperText={t('onboarding.clubAdmins.requiredToRejectOptionalWhenApproving')}
           />
         </Stack>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Button color="error" disabled={!notes.trim()} onClick={onReject}>
           Reject
         </Button>

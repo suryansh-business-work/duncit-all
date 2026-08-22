@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Chip, Stack, Typography } from '@mui/material';
 import { REGISTRATION_CONFIG, type Step1 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   s1: Step1;
@@ -9,15 +10,18 @@ interface Props {
 
 type ChecklistKey = 'amenities' | 'facilities' | 'security';
 
-const GROUPS: { name: ChecklistKey; label: string; hint: string }[] = [
-  { name: 'amenities', label: 'Amenities', hint: 'Comfort features inside the venue' },
-  { name: 'facilities', label: 'Facilities', hint: 'Infrastructure the premises offer' },
-  { name: 'security', label: 'Venue Security', hint: 'Safety & security measures' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const groups = (t: Translate): { name: ChecklistKey; label: string; hint: string }[] => [
+  { name: 'amenities', label: t('onboarding.adminVenueCreateDialog.amenities'), hint: 'Comfort features inside the venue' },
+  { name: 'facilities', label: t('onboarding.adminVenueCreateDialog.facilities'), hint: 'Infrastructure the premises offer' },
+  { name: 'security', label: t('onboarding.adminVenueCreateDialog.venueSecurity'), hint: 'Safety & security measures' },
 ];
 
 /** Amenities / Facilities / Security toggle-chip checklists — same catalogs
  * (venueRegistrationConfig) and data shape as the partners-app register form. */
 export default function VenueChecklistFields({ s1, set }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data } = useQuery(REGISTRATION_CONFIG, { fetchPolicy: 'cache-first' });
   const config = data?.venueRegistrationConfig;
 
@@ -32,7 +36,7 @@ export default function VenueChecklistFields({ s1, set }: Readonly<Props>) {
 
   return (
     <Stack spacing={2}>
-      {GROUPS.map((group) => (
+      {groups(t).map((group) => (
         <Stack key={group.name} spacing={0.75}>
           <Typography variant="subtitle2" fontWeight={800}>{group.label}</Typography>
           <Typography variant="caption" color="text.secondary">{group.hint}</Typography>

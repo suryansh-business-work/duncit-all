@@ -19,6 +19,7 @@ import HostReviewDetails from './HostReviewDetails';
 import HostReviewDocuments from './HostReviewDocuments';
 import type { HostRow } from '../queries';
 import type { HostCategoryValue } from '../../../forms/host';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: HostRow | null;
@@ -68,6 +69,7 @@ export default function HostReviewDialog({
   savingCategories,
   deciding,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   // Nothing may leave the dialog mid-write: the commission and the categories
   // save without a button, so an escape here loses an edit silently.
@@ -134,7 +136,7 @@ export default function HostReviewDialog({
           )}
 
           <TextField
-            label="Reviewer notes"
+            label={t('onboarding.common.reviewerNotes')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
@@ -142,10 +144,10 @@ export default function HostReviewDialog({
             fullWidth
           />
           <TextField
-            label="Tags"
+            label={t('onboarding.common.tags')}
             value={tagsText}
             onChange={(e) => setTagsText(e.target.value)}
-            helperText="Comma-separated tags applied when this host is approved."
+            helperText={t('onboarding.hosts.commaSeparatedTagsAppliedWhenThis')}
             fullWidth
           />
         </Stack>

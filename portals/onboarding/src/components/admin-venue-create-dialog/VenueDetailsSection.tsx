@@ -6,6 +6,7 @@ import MediaPickerField from '../MediaPickerField';
 import { VENUE_TYPES, type Step1 } from './queries';
 import VenueChecklistFields from './VenueChecklistFields';
 import { getVenueError, type VenueValidationErrors } from './venue.form';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   s1: Step1;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function VenueDetailsSection({ s1, setS1, errors }: Readonly<Props>) {
+  const { t } = useTranslation();
   const set = (patch: Partial<Step1>) => setS1({ ...s1, ...patch });
   const err = (field: string) => getVenueError(errors, `step1.${field}`);
 
@@ -69,25 +71,25 @@ export default function VenueDetailsSection({ s1, setS1, errors }: Readonly<Prop
           gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
         }}
       >
-        <TextField label="Venue name" required size="small" value={s1.venue_name} onChange={(e) => set({ venue_name: e.target.value })} error={!!err('venue_name')} helperText={err('venue_name') || undefined} />
-        <TextField select label="Type" size="small" value={s1.venue_type} onChange={(e) => set({ venue_type: e.target.value })} error={!!err('venue_type')} helperText={err('venue_type') || undefined}>
+        <TextField label={t('onboarding.adminVenueCreateDialog.venueName')} required size="small" value={s1.venue_name} onChange={(e) => set({ venue_name: e.target.value })} error={!!err('venue_name')} helperText={err('venue_name') || undefined} />
+        <TextField select label={t('shell.common.type')} size="small" value={s1.venue_type} onChange={(e) => set({ venue_type: e.target.value })} error={!!err('venue_type')} helperText={err('venue_type') || undefined}>
           {VENUE_TYPES.map((t) => (
             <MenuItem key={t} value={t}>{t}</MenuItem>
           ))}
         </TextField>
-        <TextField label="Capacity" type="number" size="small" value={s1.capacity} onChange={(e) => set({ capacity: Number(e.target.value) })} error={!!err('capacity')} helperText={err('capacity') || undefined} />
-        <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 1" required size="small" value={s1.address_line1} onChange={(e) => set({ address_line1: e.target.value })} error={!!err('address_line1')} helperText={err('address_line1') || undefined} />
-        <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 2" size="small" value={s1.address_line2} onChange={(e) => set({ address_line2: e.target.value })} />
-        <TextField sx={{ gridColumn: '1 / -1' }} label="Description" size="small" multiline minRows={2} value={s1.description} onChange={(e) => set({ description: e.target.value })} error={!!err('description')} helperText={err('description') || undefined} />
+        <TextField label={t('onboarding.common.capacity')} type="number" size="small" value={s1.capacity} onChange={(e) => set({ capacity: Number(e.target.value) })} error={!!err('capacity')} helperText={err('capacity') || undefined} />
+        <TextField sx={{ gridColumn: '1 / -1' }} label={t('onboarding.common.addressLine1')} required size="small" value={s1.address_line1} onChange={(e) => set({ address_line1: e.target.value })} error={!!err('address_line1')} helperText={err('address_line1') || undefined} />
+        <TextField sx={{ gridColumn: '1 / -1' }} label={t('onboarding.adminVenueCreateDialog.addressLine2')} size="small" value={s1.address_line2} onChange={(e) => set({ address_line2: e.target.value })} />
+        <TextField sx={{ gridColumn: '1 / -1' }} label={t('shell.common.description')} size="small" multiline minRows={2} value={s1.description} onChange={(e) => set({ description: e.target.value })} error={!!err('description')} helperText={err('description') || undefined} />
         <TextField
           sx={{ gridColumn: '1 / -1' }}
-          label="Tags"
+          label={t('onboarding.common.tags')}
           size="small"
           value={s1.tags.join(', ')}
           onChange={(e) =>
             set({ tags: e.target.value.split(',').map((tag) => tag.trim()).filter(Boolean) })
           }
-          helperText="Comma separated tags shown on approved venue cards."
+          helperText={t('onboarding.adminVenueCreateDialog.commaSeparatedTagsShownOnApproved')}
         />
       </Box>
 
@@ -120,18 +122,18 @@ export default function VenueDetailsSection({ s1, setS1, errors }: Readonly<Prop
       <VenueChecklistFields s1={s1} set={set} />
 
       <MediaPickerField
-        label="Cover image"
+        label={t('onboarding.common.coverImage')}
         value={s1.cover_image_url}
         onChange={(url) => set({ cover_image_url: url })}
         helperText={err('cover_image_url') || undefined}
         folder="/venues/cover"
       />
       <MediaListField
-        label="Other images"
+        label={t('onboarding.adminVenueCreateDialog.otherImages')}
         value={s1.gallery.join('\n')}
         onChange={(value) => set({ gallery: value.split('\n').map((url) => url.trim()).filter(Boolean) })}
         folder="/venues/gallery"
-        helperText="Additional venue photos shown on the public venue page."
+        helperText={t('onboarding.adminVenueCreateDialog.additionalVenuePhotosShownOnThe')}
       />
     </Stack>
   );

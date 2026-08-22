@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { InputAdornment, Paper, Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   /** The host's stored override. 0 means "no override — inherit the default". */
@@ -32,6 +33,7 @@ const isValidPct = (text: string) => {
  * default the instant the parent merges the new value.
  */
 export default function HostReviewCommission({ value, defaultPct, saving, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [text, setText] = useState(() => String(value > 0 ? value : defaultPct));
   const savedRef = useRef(text);
   const valid = isValidPct(text);
@@ -67,7 +69,7 @@ export default function HostReviewCommission({ value, defaultPct, saving, onSave
       </Typography>
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
         <TextField
-          label="Commission from host"
+          label={t('onboarding.hosts.commissionFromHost')}
           type="number"
           size="small"
           value={text}

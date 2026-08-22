@@ -7,14 +7,17 @@ import {
   type TableQueryState,
 } from '@duncit/table';
 import type { PodApprovalStatus, PodRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Time buckets expressible as server-side pod_date_time filters. ('Ongoing'
  * vs 'Hosted' needs pod_end_date_time, which the server does not filter on.) */
 type PodTimeFilter = 'all' | 'upcoming' | 'started';
-const TIME_FILTERS: { value: PodTimeFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'upcoming', label: 'Upcoming' },
-  { value: 'started', label: 'Started' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const timeFilters = (t: Translate): { value: PodTimeFilter; label: string }[] => [
+  { value: 'all', label: t('onboarding.common.all') },
+  { value: 'upcoming', label: t('onboarding.podsTable.upcoming') },
+  { value: 'started', label: t('onboarding.common.started') },
 ];
 
 const APPROVAL_COLOR: Record<PodApprovalStatus, 'default' | 'warning' | 'success' | 'error'> = {
@@ -76,6 +79,7 @@ export default function PodsTable({
   showApproval = false,
   emptyText,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [timeFilter, setTimeFilter] = useState<PodTimeFilter>('all');
 
   const scopedFetch = useCallback(
@@ -95,7 +99,7 @@ export default function PodsTable({
     const cols: DuncitColumn<PodRow>[] = [
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('onboarding.podsTable.pod'),
         flex: 1,
         minWidth: 180,
         cellRenderer: renderPod,
@@ -103,7 +107,7 @@ export default function PodsTable({
       },
       {
         field: 'pod_date_time',
-        headerName: 'Date & time',
+        headerName: t('onboarding.podsTable.dateAndTime'),
         minWidth: 180,
         filter: { type: 'date' },
         valueGetter: dateValue,
@@ -120,7 +124,7 @@ export default function PodsTable({
     }
     cols.push({
       field: 'pod_mode',
-      headerName: 'Mode',
+      headerName: t('onboarding.podsTable.mode'),
       width: 120,
       filter: { type: 'select', options: MODE_OPTIONS },
       cellRenderer: renderMode,
@@ -129,7 +133,7 @@ export default function PodsTable({
     if (showApproval) {
       cols.push({
         field: 'venue_approval_status',
-        headerName: 'Venue approval',
+        headerName: t('onboarding.podsTable.venueApproval'),
         width: 150,
         filter: { type: 'select', options: APPROVAL_OPTIONS },
         cellRenderer: renderApproval,
@@ -138,7 +142,7 @@ export default function PodsTable({
     }
     cols.push({
       field: 'is_active',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       width: 110,
       filter: { type: 'boolean' },
       cellRenderer: renderStatus,
@@ -156,7 +160,7 @@ export default function PodsTable({
         onChange={(_e, next) => next && setTimeFilter(next)}
         sx={{ alignSelf: 'flex-start' }}
       >
-        {TIME_FILTERS.map((f) => (
+        {timeFilters(t).map((f) => (
           <ToggleButton key={f.value} value={f.value} sx={{ textTransform: 'none' }}>
             {f.label}
           </ToggleButton>

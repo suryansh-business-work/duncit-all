@@ -10,6 +10,7 @@ import { categoryPath } from '../../utils/categoryPath';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type HostCategoryRow, type HostRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<HostRow>;
@@ -102,20 +103,21 @@ export default function HostsTable({
   onToggleActive,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<HostRow>[]>(() => {
     const renderActions = (h: HostRow) => (
       <>
-        <Tooltip title="Host details">
+        <Tooltip title={t('onboarding.hosts.hostDetails')}>
           <IconButton size="small" component={RouterLink} to={`/hosts/${h.id}`}>
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(h)}>
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Review">
+        <Tooltip title={t('onboarding.common.review')}>
           <IconButton size="small" onClick={() => onReview(h)}>
             <RateReviewIcon fontSize="small" />
           </IconButton>
@@ -129,17 +131,17 @@ export default function HostsTable({
       </>
     );
     return [
-      { field: 'host_no', headerName: 'Host ID', width: 130, sortable: false, valueGetter: (h) => h.host_no || '—' },
-      { field: 'full_name', headerName: 'Host', flex: 1, minWidth: 170, cellRenderer: renderHost, valueGetter: (h) => h.full_name || '—' },
-      { field: 'email', headerName: 'Contact', minWidth: 180, cellRenderer: renderContact, valueGetter: (h) => h.email || '—' },
-      { field: 'documents', headerName: 'Documents', sortable: false, minWidth: 170, cellRenderer: renderDocuments, valueGetter: documentsValue },
-      { field: 'host_categories', headerName: 'Category', sortable: false, minWidth: 200, cellRenderer: renderCategories, valueGetter: categoriesValue },
-      { field: 'status', headerName: 'Status', width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (h) => h.status },
-      { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
-      { field: 'commission', headerName: 'Commission', sortable: false, width: 130, cellRenderer: renderCommission, valueGetter: (h) => commissionLabel(h.host_commission_pct) },
-      dateColumn<HostRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125 }),
-      { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 190, cellRenderer: renderActions },
+      { field: 'host_no', headerName: t('onboarding.hosts.hostId'), width: 130, sortable: false, valueGetter: (h) => h.host_no || '—' },
+      { field: 'full_name', headerName: t('onboarding.common.host'), flex: 1, minWidth: 170, cellRenderer: renderHost, valueGetter: (h) => h.full_name || '—' },
+      { field: 'email', headerName: t('onboarding.common.contact'), minWidth: 180, cellRenderer: renderContact, valueGetter: (h) => h.email || '—' },
+      { field: 'documents', headerName: t('shell.nav.documents'), sortable: false, minWidth: 170, cellRenderer: renderDocuments, valueGetter: documentsValue },
+      { field: 'host_categories', headerName: t('onboarding.common.category'), sortable: false, minWidth: 200, cellRenderer: renderCategories, valueGetter: categoriesValue },
+      { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (h) => h.status },
+      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
+      { field: 'commission', headerName: t('onboarding.common.commission'), sortable: false, width: 130, cellRenderer: renderCommission, valueGetter: (h) => commissionLabel(h.host_commission_pct) },
+      dateColumn<HostRow>({ field: 'submitted_at', headerName: t('onboarding.common.submitted'), hide: false, width: 125 }),
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, filter: { type: 'date' } },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 190, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 

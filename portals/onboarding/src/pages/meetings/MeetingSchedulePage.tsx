@@ -24,20 +24,24 @@ import {
   type OnboardingMeeting,
   type SurveyKind,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
-const STATUS_FILTERS: { value: StatusFilterKey | ''; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'REQUESTED', label: 'Requested' },
-  { value: 'SCHEDULED', label: 'Scheduled' },
-  { value: 'DONE', label: 'Done' },
-  { value: 'REJECTED', label: 'Rejected' },
-  { value: 'CANCELLED', label: 'Cancelled' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const statusFilters = (t: Translate): { value: StatusFilterKey | ''; label: string }[] => [
+  { value: '', label: t('onboarding.common.all') },
+  { value: 'REQUESTED', label: t('onboarding.meetings.requested') },
+  { value: 'SCHEDULED', label: t('onboarding.meetings.scheduled') },
+  { value: 'DONE', label: t('onboarding.meetings.done') },
+  { value: 'REJECTED', label: t('onboarding.common.rejected') },
+  { value: 'CANCELLED', label: t('onboarding.meetings.cancelled') },
 ];
 const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
 const STATUS_FILTER_KEYS = new Set<StatusFilterKey>(['REQUESTED', 'SCHEDULED', 'DONE', 'REJECTED', 'CANCELLED']);
 
 /** Onboarding → Meeting → Venue/Host/E-Commerce Brand Meeting Schedule: requests + scheduling. */
 export default function MeetingSchedulePage() {
+  const { t } = useTranslation();
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
   const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
@@ -94,7 +98,7 @@ export default function MeetingSchedulePage() {
       try {
         await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
       } catch (e) {
-        setActionError(e instanceof Error ? e.message : 'Could not mark the meeting as done');
+        setActionError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotMarkTheMeetingAs'));
       } finally {
         markingRef.current = false;
         // Refetch on FAILURE too — a mutation that throws after its own write
@@ -106,7 +110,7 @@ export default function MeetingSchedulePage() {
     [updateMeeting, refresh],
   );
 
-  if (!valid) return <Alert severity="error">Unknown meeting kind.</Alert>;
+  if (!valid) return <Alert severity="error">{t('onboarding.meetings.unknownMeetingKind')}</Alert>;
 
   return (
     <Stack spacing={2.5}>
@@ -119,7 +123,7 @@ export default function MeetingSchedulePage() {
       </Stack>
 
       <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => onStatusChange(v ?? '')}>
-        {STATUS_FILTERS.map((f) => <ToggleButton key={f.label} value={f.value}>{f.label}</ToggleButton>)}
+        {statusFilters(t).map((f) => <ToggleButton key={f.label} value={f.value}>{f.label}</ToggleButton>)}
       </ToggleButtonGroup>
 
       {actionError && <Alert severity="error" onClose={() => setActionError(null)}>{actionError}</Alert>}

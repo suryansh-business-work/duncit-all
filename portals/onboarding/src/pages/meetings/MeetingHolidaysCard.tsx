@@ -26,6 +26,7 @@ import {
   type MeetingHoliday,
 } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const TYPE_OPTIONS = Object.keys(HOLIDAY_TYPE_LABELS) as HolidayType[];
 
@@ -36,6 +37,7 @@ const prettyDate = (ymd: string) => {
 
 /** Holidays / leave days — block bookable slots and show on the onboarding calendar. */
 export default function MeetingHolidaysCard() {
+  const { t } = useTranslation();
   const { data, refetch } = useQuery<{ meetingHolidays: MeetingHoliday[] }>(MEETING_HOLIDAYS, { fetchPolicy: 'cache-and-network' });
   const [addHoliday, { loading: adding }] = useMutation(ADD_MEETING_HOLIDAY);
   const [removeHoliday] = useMutation(REMOVE_MEETING_HOLIDAY);
@@ -48,7 +50,7 @@ export default function MeetingHolidaysCard() {
 
   const add = async () => {
     if (!date || Number.isNaN(date.getTime())) {
-      setError('Pick a date for the holiday');
+      setError(t('onboarding.meetings.pickADateForTheHoliday'));
       return;
     }
     setError(null);
@@ -58,7 +60,7 @@ export default function MeetingHolidaysCard() {
       setDate(null);
       await refetch();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not add the holiday');
+      setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotAddTheHoliday'));
     }
   };
 
@@ -73,7 +75,7 @@ export default function MeetingHolidaysCard() {
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
           <BeachAccessIcon color="primary" fontSize="small" />
           <Box>
-            <Typography variant="subtitle1" fontWeight={800}>Holidays &amp; leave</Typography>
+            <Typography variant="subtitle1" fontWeight={800}>{t('onboarding.meetings.holidaysAndAmpLeave')}</Typography>
             <Typography variant="body2" color="text.secondary">
               Public holidays, office holidays and official leave — slots on these days are blocked and they show on the calendar.
             </Typography>
@@ -84,16 +86,16 @@ export default function MeetingHolidaysCard() {
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
           <DatePicker
-            label="Date"
+            label={t('onboarding.meetings.date')}
             value={date}
             onChange={setDate}
             slotProps={{ textField: { size: 'small', fullWidth: true } }}
           />
-          <TextField size="small" label="Name (optional)" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
+          <TextField size="small" label={t('onboarding.meetings.nameOptional')} value={name} onChange={(e) => setName(e.target.value)} fullWidth />
           <TextField
             size="small"
             select
-            label="Type"
+            label={t('shell.common.type')}
             value={type}
             onChange={(e) => setType(e.target.value as HolidayType)}
             sx={{ minWidth: 170 }}
@@ -109,14 +111,14 @@ export default function MeetingHolidaysCard() {
 
         <Stack spacing={1} sx={{ mt: 2 }}>
           {holidays.length === 0 && (
-            <Typography variant="body2" color="text.secondary">No holidays added yet.</Typography>
+            <Typography variant="body2" color="text.secondary">{t('onboarding.meetings.noHolidaysAddedYet')}</Typography>
           )}
           {holidays.map((h) => (
             <Stack key={h.id} direction="row" alignItems="center" spacing={1} sx={{ borderBottom: 1, borderColor: 'divider', pb: 0.75 }}>
               <Typography variant="body2" fontWeight={700} sx={{ minWidth: 170 }}>{prettyDate(h.date)}</Typography>
               <Chip size="small" label={HOLIDAY_TYPE_LABELS[h.type]} />
               <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>{h.name || ''}</Typography>
-              <IconButton size="small" color="error" onClick={() => remove(h.id)} aria-label="Remove holiday">
+              <IconButton size="small" color="error" onClick={() => remove(h.id)} aria-label={t('onboarding.meetings.removeHoliday')}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>
             </Stack>

@@ -147,24 +147,24 @@ export const contractService = {
     if (!doc) fail('NOT_FOUND', 'Contract not found');
     // A signed contract is finished. Editing it would leave a signature
     // attached to words nobody agreed to — the same rule legal documents carry.
-    if (doc!.signed_at) {
+    if (doc.signed_at) {
       fail('FORBIDDEN', 'This contract is signed and can no longer be edited.');
     }
 
     if (input.title !== undefined) {
       const title = String(input.title).trim();
       if (!title) fail('BAD_USER_INPUT', 'Title is required');
-      doc!.title = title;
+      doc.title = title;
     }
-    if (input.description !== undefined) doc!.description = String(input.description).trim();
-    if (input.content !== undefined) doc!.content = input.content;
-    if (input.status !== undefined) doc!.status = asStatus(input.status);
-    if (input.counterparty !== undefined) doc!.counterparty = String(input.counterparty).trim();
-    if (input.effective_from !== undefined) doc!.effective_from = asDate(input.effective_from);
-    if (input.effective_to !== undefined) doc!.effective_to = asDate(input.effective_to);
+    if (input.description !== undefined) doc.description = String(input.description).trim();
+    if (input.content !== undefined) doc.content = input.content;
+    if (input.status !== undefined) doc.status = asStatus(input.status);
+    if (input.counterparty !== undefined) doc.counterparty = String(input.counterparty).trim();
+    if (input.effective_from !== undefined) doc.effective_from = asDate(input.effective_from);
+    if (input.effective_to !== undefined) doc.effective_to = asDate(input.effective_to);
     // The id is never among the editable fields — that is what "immutable" means.
-    doc!.updated_by = new Types.ObjectId(userId);
-    await doc!.save();
+    doc.updated_by = new Types.ObjectId(userId);
+    await doc.save();
     return toPub(doc);
   },
 
@@ -181,9 +181,9 @@ export const contractService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid contract id');
     const doc = await ContractModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Contract not found');
-    doc!.status = 'ARCHIVED';
-    doc!.updated_by = new Types.ObjectId(userId);
-    await doc!.save();
+    doc.status = 'ARCHIVED';
+    doc.updated_by = new Types.ObjectId(userId);
+    await doc.save();
     return toPub(doc);
   },
 
@@ -204,15 +204,15 @@ export const contractService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid contract id');
     const doc = await ContractModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Contract not found');
-    if (doc!.signed_at) fail('FORBIDDEN', 'This contract is already signed.');
+    if (doc.signed_at) fail('FORBIDDEN', 'This contract is already signed.');
 
     const clean = await validateSignature(input);
-    await applySignature(doc!, userId, clean);
+    await applySignature(doc, userId, clean);
     // A signed contract is in force, so it stops being a draft. An ARCHIVED or
     // EXPIRED one keeps the status it was deliberately given.
-    if (doc!.status === 'DRAFT') doc!.status = 'ACTIVE';
-    doc!.updated_by = new Types.ObjectId(userId);
-    await doc!.save();
+    if (doc.status === 'DRAFT') doc.status = 'ACTIVE';
+    doc.updated_by = new Types.ObjectId(userId);
+    await doc.save();
     return toPub(doc);
   },
 
@@ -221,7 +221,7 @@ export const contractService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid contract id');
     const doc = await ContractModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Contract not found');
-    return renderPdf(doc!);
+    return renderPdf(doc);
   },
 
   /**
@@ -236,13 +236,13 @@ export const contractService = {
 
     const doc = await ContractModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Contract not found');
-    if (!doc!.signed_at) fail('FORBIDDEN', 'This contract has not been signed yet.');
+    if (!doc.signed_at) fail('FORBIDDEN', 'This contract has not been signed yet.');
 
-    const pdf = await renderPdf(doc!);
+    const pdf = await renderPdf(doc);
     const { sendSignedContractEmail } = await import('@services/email/email.service');
     await sendSignedContractEmail({
       to: recipient,
-      contract_name: doc!.title,
+      contract_name: doc.title,
       sender_name: (await userDisplayOf(userId)).name,
       message: String(message ?? '').trim(),
       pdf,

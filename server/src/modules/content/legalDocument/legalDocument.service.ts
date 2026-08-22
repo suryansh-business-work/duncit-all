@@ -184,7 +184,7 @@ export const legalDocumentService = {
     if (!doc) fail('NOT_FOUND', 'Document not found');
     // A signed contract is finished. Editing it would leave a signature
     // attached to words nobody agreed to.
-    if (doc!.signed_at) {
+    if (doc.signed_at) {
       fail('FORBIDDEN', 'This contract is signed and can no longer be edited.');
     }
     // Guard before the snapshot: a rejected edit must not leave a version
@@ -195,13 +195,13 @@ export const legalDocumentService = {
     }
     // Snapshot the current state into history before applying the edit.
     snapshot(doc, userId);
-    if (input.name !== undefined) doc!.name = input.name.trim();
-    if (input.document_type !== undefined) doc!.document_type = input.document_type.trim();
-    if (input.description !== undefined) doc!.description = input.description.trim();
-    if (input.content !== undefined) doc!.content = input.content;
-    if (input.is_active !== undefined) doc!.is_active = !!input.is_active;
-    doc!.updated_by = new Types.ObjectId(userId);
-    await doc!.save();
+    if (input.name !== undefined) doc.name = input.name.trim();
+    if (input.document_type !== undefined) doc.document_type = input.document_type.trim();
+    if (input.description !== undefined) doc.description = input.description.trim();
+    if (input.content !== undefined) doc.content = input.content;
+    if (input.is_active !== undefined) doc.is_active = !!input.is_active;
+    doc.updated_by = new Types.ObjectId(userId);
+    await doc.save();
     return toPub(doc);
   },
 
@@ -221,9 +221,9 @@ export const legalDocumentService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const doc = await LegalDocumentModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Document not found');
-    doc!.is_active = !!isActive;
-    doc!.updated_by = new Types.ObjectId(userId);
-    await doc!.save();
+    doc.is_active = !!isActive;
+    doc.updated_by = new Types.ObjectId(userId);
+    await doc.save();
     return toPub(doc);
   },
 
@@ -283,11 +283,11 @@ export const legalDocumentService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const doc = await LegalDocumentModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Document not found');
-    if (doc!.signed_at) fail('FORBIDDEN', 'This contract is already signed.');
+    if (doc.signed_at) fail('FORBIDDEN', 'This contract is already signed.');
 
     const clean = await validateSignature(input);
-    await applySignature(doc!, userId, clean);
-    await doc!.save();
+    await applySignature(doc, userId, clean);
+    await doc.save();
     return toPub(doc);
   },
 
@@ -311,13 +311,13 @@ export const legalDocumentService = {
 
     const doc = await LegalDocumentModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Document not found');
-    if (!doc!.signed_at) fail('FORBIDDEN', 'This contract has not been signed yet.');
+    if (!doc.signed_at) fail('FORBIDDEN', 'This contract has not been signed yet.');
 
     const pdf = await renderPdf(doc);
     const { sendSignedContractEmail } = await import('@services/email/email.service');
     await sendSignedContractEmail({
       to: recipient,
-      contract_name: doc!.name,
+      contract_name: doc.name,
       sender_name: (await userDisplayOf(userId)).name,
       message: String(message ?? '').trim(),
       pdf,

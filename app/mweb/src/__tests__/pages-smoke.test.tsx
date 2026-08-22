@@ -53,6 +53,22 @@ vi.mock('@duncit/user-context', async (importOriginal) => {
   };
 });
 
+/**
+ * The props the real route table hands its pages.
+ *
+ * Five of mWeb's pages take the header's current category, city and zone —
+ * HomePage renders its whole feed from them, so mounted bare it shows the "no
+ * content here" branch and the pod cards, the featured rail and the status
+ * viewer never render at all. React ignores a prop a component does not
+ * declare, so passing the same bag to every page is safe.
+ */
+const PAGE_PROPS = {
+  superCategorySlug: 'nightlife',
+  superCategory: 'nightlife',
+  locationId: 'loc-1',
+  zoneName: 'South',
+};
+
 const PAGES: PageEntry[] = [
   ['/', '/', () => import('../pages/HomePage')],
   ['/menu', '/menu', () => import('../pages/menu-page')],
@@ -344,7 +360,7 @@ describe('every routed page mounts with no data behind it', () => {
 
   it.each(PAGES)('mounts %s', async (pattern, concrete, load) => {
     const module = await load();
-    const Page = module.default as ComponentType<Record<string, never>>;
+    const Page = module.default as ComponentType<typeof PAGE_PROPS>;
 
     // A page can be a plain function, a memo() or a forwardRef() — all objects
     // React can render, so the check is that the module exports one at all.
@@ -355,7 +371,7 @@ describe('every routed page mounts with no data behind it', () => {
         <ThemeProvider theme={smokeTheme}>
         <MemoryRouter initialEntries={[concrete]}>
           <Routes>
-            <Route path={pattern} element={<Page />} />
+            <Route path={pattern} element={<Page {...PAGE_PROPS} />} />
           </Routes>
         </MemoryRouter>
         </ThemeProvider>
@@ -369,14 +385,14 @@ describe('every routed page mounts with no data behind it', () => {
 
   it.each(PAGES)('survives every control on %s being pressed', async (pattern, concrete, load) => {
     const module = await load();
-    const Page = module.default as ComponentType<Record<string, never>>;
+    const Page = module.default as ComponentType<typeof PAGE_PROPS>;
 
     const { unmount } = render(
       <MockedProvider mocks={[]}>
         <ThemeProvider theme={smokeTheme}>
         <MemoryRouter initialEntries={[concrete]}>
           <Routes>
-            <Route path={pattern} element={<Page />} />
+            <Route path={pattern} element={<Page {...PAGE_PROPS} />} />
           </Routes>
         </MemoryRouter>
         </ThemeProvider>
@@ -406,14 +422,14 @@ describe('every routed page mounts with no data behind it', () => {
    */
   it.each(PAGES)('renders %s with data behind it', async (pattern, concrete, load) => {
     const module = await load();
-    const Page = module.default as ComponentType<Record<string, never>>;
+    const Page = module.default as ComponentType<typeof PAGE_PROPS>;
 
     const { container, unmount } = render(
       <MockedProvider link={schemaMockLink()}>
         <ThemeProvider theme={smokeTheme}>
         <MemoryRouter initialEntries={[concrete]}>
           <Routes>
-            <Route path={pattern} element={<Page />} />
+            <Route path={pattern} element={<Page {...PAGE_PROPS} />} />
           </Routes>
         </MemoryRouter>
         </ThemeProvider>

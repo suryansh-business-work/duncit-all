@@ -184,7 +184,10 @@ function resolveSort(q: TableQueryInput, config: TableEntityConfig): Record<stri
 }
 
 /** `$and`-combine so client filters can never override guard keys in baseFilter. */
-function combineFilters(
+/** AND two Mongo filter fragments, without an `$and` wrapper when either side
+ * is empty. Exported because a caller that assembles its own base filter needs
+ * exactly this rule — spreading instead would drop a key both sides carry. */
+export function combineFilters(
   base: Record<string, unknown>,
   built: Record<string, unknown>
 ): Record<string, unknown> {

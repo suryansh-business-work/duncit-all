@@ -25,6 +25,14 @@ export const marketingResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return audienceListService.table(args.query);
     },
+    audienceListMembersTable: (
+      _p: unknown,
+      args: { list_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.membersTable(args.list_id, args.query);
+    },
     audienceList: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return audienceListService.get(args.id);
@@ -70,6 +78,14 @@ export const marketingResolvers = {
     createAudienceList: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return audienceListService.create(args.input, ctx.user?.id ?? null);
+    },
+    addAudienceListMembers: (
+      _p: unknown,
+      args: { id: string; user_ids: string[] },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.addMembers(args.id, args.user_ids);
     },
     deleteAudienceList: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);

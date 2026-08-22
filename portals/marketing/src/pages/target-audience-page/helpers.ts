@@ -41,6 +41,8 @@ export interface AudienceListRow {
   owner: string;
   owner_user_id?: string | null;
   search: string;
+  /** How many people were added to the list by hand. */
+  manual_member_count: number;
   member_count: number;
   filters: AudienceListFilterRow[];
   created_at?: string | null;

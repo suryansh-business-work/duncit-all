@@ -49,8 +49,10 @@ const renderQuestion = (row: FaqRow) => (
   </Box>
 );
 
-/** One DuncitTable config serving both FAQ audiences — pages pin the audience
- * filter inside fetchRows and provide their own category/topic column. */
+/**
+ * One DuncitTable config serving both FAQ audiences — pages pin the audience
+ * filter inside `fetchRows` and provide their own category/topic column.
+ */
 export default function FaqsTableBase({
   tableId,
   fetchRows,
@@ -62,23 +64,33 @@ export default function FaqsTableBase({
   onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const columns = useMemo<DuncitColumn<FaqRow>[]>(() => {
-    return [
+  const columns = useMemo<DuncitColumn<FaqRow>[]>(
+    () => [
       {
         field: 'question',
-        headerName: t('admin.faqs.question'),
+        headerName: t('support.faqs.question'),
         flex: 1.6,
         minWidth: 280,
         cellRenderer: renderQuestion,
         valueGetter: (row) => row.question,
       },
       entityColumn,
-      { field: 'sort_order', headerName: t('admin.podPlans.sort'), filter: { type: 'number' }, width: 90 },
-      activeChipColumn<FaqRow>({ headerName: t('admin.profile.active'), inactiveLabel: 'Hidden' }),
-      dateColumn<FaqRow>(),
-      actionsColumn<FaqRow>({ onEdit, onDelete }),
-    ];
-  }, [entityColumn, onEdit, onDelete]);
+      {
+        field: 'sort_order',
+        headerName: t('support.faqs.sort'),
+        filter: { type: 'number' },
+        width: 90,
+      },
+      activeChipColumn<FaqRow>({
+        headerName: t('shell.common.status'),
+        activeLabel: t('support.faqs.active'),
+        inactiveLabel: t('support.faqs.hidden'),
+      }),
+      dateColumn<FaqRow>({ headerName: t('shell.common.created') }),
+      actionsColumn<FaqRow>({ headerName: t('shell.common.actions'), onEdit, onDelete }),
+    ],
+    [entityColumn, onEdit, onDelete, t],
+  );
 
   return (
     <DuncitTable<FaqRow>
@@ -89,7 +101,7 @@ export default function FaqsTableBase({
       toolbarActions={toolbarActions}
       emptyText={emptyText}
       defaultSort={{ field: 'sort_order', dir: 'asc' }}
-      searchPlaceholder="Search question or answer"
+      searchPlaceholder={t('support.faqs.searchPlaceholder')}
       refetchRef={refetchRef}
     />
   );

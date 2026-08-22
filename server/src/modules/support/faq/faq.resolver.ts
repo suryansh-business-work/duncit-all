@@ -4,7 +4,9 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
+// FAQs are authored from the Support portal, so its managers write them
+// alongside the admins who still hold every platform key.
+const FAQ_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'SUPPORT_MANAGER'];
 // FAQ submissions are triaged from the Website portal as well as admin.
 const SUBMISSION_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'WEBSITE_MANAGER'];
 
@@ -52,15 +54,15 @@ export const faqResolvers = {
   },
   Mutation: {
     createFaq: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FAQ_RW);
       return faqService.create(args.input);
     },
     updateFaq: (_p: unknown, args: { faq_doc_id: string; input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FAQ_RW);
       return faqService.update(args.faq_doc_id, args.input);
     },
     deleteFaq: (_p: unknown, args: { faq_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FAQ_RW);
       return faqService.remove(args.faq_doc_id);
     },
     submitFaqQuestion: (_p: unknown, args: { input: any }) => faqSubmissionService.submit(args.input),

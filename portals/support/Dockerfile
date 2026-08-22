@@ -54,6 +54,7 @@ COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/dialogs/package.json ./packages/dialogs/
+COPY packages/forms/package.json ./packages/forms/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 

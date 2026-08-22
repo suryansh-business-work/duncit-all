@@ -87,8 +87,6 @@ export const appConfig = {
       label: 'Engagement', labelKey: 'shell.nav.engagement',
       icon: 'campaign',
       children: [
-        { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', icon: 'help' },
-        { label: 'Partner FAQs', labelKey: 'shell.nav.partnerFaqs', to: '/partners/faqs', icon: 'help' },
         { label: 'Badges', labelKey: 'shell.nav.badges', to: '/badges', icon: 'shield' },
         { label: 'Something for you', labelKey: 'shell.nav.somethingForYou', to: '/something-for-you', icon: 'campaign' },
       ],
@@ -167,8 +165,6 @@ export const appConfig = {
     },
     { label: 'Categories', labelKey: 'shell.nav.categories', to: '/categories', section: 'Catalog', sectionKey: 'shell.nav.catalog' },
     { label: 'Locations', labelKey: 'shell.nav.locations', to: '/locations', section: 'Catalog', sectionKey: 'shell.nav.catalog' },
-    { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', section: 'Engagement', sectionKey: 'shell.nav.engagement' },
-    { label: 'Partner FAQs', labelKey: 'shell.nav.partnerFaqs', to: '/partners/faqs', section: 'Engagement', sectionKey: 'shell.nav.engagement', keywords: ['partner', 'help'] },
     { label: 'Badges', labelKey: 'shell.nav.badges', to: '/badges', section: 'Engagement', sectionKey: 'shell.nav.engagement', keywords: ['achievement', 'reward'] },
     { label: 'Something for you', labelKey: 'shell.nav.somethingForYou', to: '/something-for-you', section: 'Engagement', sectionKey: 'shell.nav.engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
     {

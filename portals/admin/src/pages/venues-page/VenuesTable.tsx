@@ -76,7 +76,7 @@ export default function VenuesTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<VenueRow>[]>(
     () => [
-      { field: 'venue_name', headerName: t('admin.faqs.audienceVenue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
+      { field: 'venue_name', headerName: t('admin.venues.colVenue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
       { field: 'venue_category', headerName: t('admin.clubs.colCategory'), minWidth: 200, sortable: false, valueGetter: categoryValue },
       { field: 'locality', headerName: t('admin.venues.colLocation'), minWidth: 160, filter: { type: 'text' }, valueGetter: locationValue },
       { field: 'owner_name', headerName: t('admin.venues.colOwner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },

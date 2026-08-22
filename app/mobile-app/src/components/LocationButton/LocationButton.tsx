@@ -8,9 +8,11 @@ import { LocationDialog } from '@/components/LocationDialog';
 import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { countryFlagUrl } from '@/utils/location-tree';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Header chip showing the selected country flag + city; opens the picker. */
 export function LocationButton() {
+  const { t } = useTranslation();
   const { cityLabel, countryCode } = useLocations();
   const { color } = useThemeColors();
   const [open, setOpen] = useState(false);
@@ -21,7 +23,7 @@ export function LocationButton() {
       <XStack
         testID="location-button"
         role="button"
-        aria-label="Select location"
+        aria-label={t('mweb.common.selectLocation')}
         onPress={() => setOpen(true)}
         alignItems="center"
         gap={4}

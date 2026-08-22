@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PolicyLink {
   id: string;
@@ -19,6 +20,7 @@ export function SidebarPolicies({
   policies: PolicyLink[];
   onSelect: (slug: string) => void;
 }>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { muted } = useThemeColors();
 
@@ -33,7 +35,7 @@ export function SidebarPolicies({
     <YStack testID="sidebar-policies">
       <XStack
         role="button"
-        aria-label="Policies"
+        aria-label={t('mweb.common.policies')}
         onPress={toggle}
         marginHorizontal={8}
         marginVertical={2}

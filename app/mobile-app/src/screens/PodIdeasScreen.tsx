@@ -21,10 +21,12 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { ideaMatchesScope } from '@/utils/idea-category';
 import { shareUrl } from '@/services/share-link';
 import { POD_WEB_BASE } from '@/utils/pod-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Pod Ideas board — searchable community ideas with submit, like, share and a
  * comment thread. RN port of mWeb's PodIdeasPage. */
 export function PodIdeasScreen() {
+  const { t } = useTranslation();
   const { muted, onPrimary } = useThemeColors();
   const [search, setSearch] = useState('');
   const [filterScope, setFilterScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
@@ -92,7 +94,7 @@ export function PodIdeasScreen() {
     <XStack
       testID="pod-ideas-add"
       role="button"
-      aria-label="Share an idea"
+      aria-label={t('mweb.podIdeas.shareAnIdea')}
       onPress={() => setComposerOpen(true)}
       alignItems="center"
       gap={5}
@@ -110,7 +112,7 @@ export function PodIdeasScreen() {
   );
 
   return (
-    <StackScreen title="Pod Ideas" testID="pod-ideas-screen" right={shareButton}>
+    <StackScreen title={t('mweb.podIdeas.podIdeas')} testID="pod-ideas-screen" right={shareButton}>
       <XStack
         alignItems="center"
         gap={8}
@@ -126,12 +128,12 @@ export function PodIdeasScreen() {
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
           testID="pod-ideas-search"
-          aria-label="Search pod ideas"
+          aria-label={t('mweb.podIdeas.searchPodIdeas')}
           flex={1}
           unstyled
           value={search}
           onChangeText={setSearch}
-          placeholder="Search ideas…"
+          placeholder={t('mweb.podIdeas.searchIdeas')}
           placeholderTextColor="$muted"
           color="$color"
           fontSize={14}

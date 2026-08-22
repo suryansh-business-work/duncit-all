@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -61,6 +62,7 @@ export function PhotoActionSheet({
   onRemove,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color, danger } = useThemeColors();
 
   return (
@@ -76,7 +78,7 @@ export function PhotoActionSheet({
       {hasPhoto ? (
         <ActionRow
           icon="visibility"
-          label="View photo"
+          label={t('mweb.common.viewPhoto')}
           color={color}
           testID="photo-action-view"
           onPress={onView}
@@ -84,7 +86,7 @@ export function PhotoActionSheet({
       ) : null}
       <ActionRow
         icon="photo-camera"
-        label="Change photo"
+        label={t('mweb.common.changePhoto')}
         color={color}
         testID="photo-action-change"
         onPress={onChange}
@@ -92,7 +94,7 @@ export function PhotoActionSheet({
       {hasPhoto ? (
         <ActionRow
           icon="delete-outline"
-          label="Remove photo"
+          label={t('mweb.common.removePhoto')}
           color={danger}
           testID="photo-action-remove"
           onPress={onRemove}

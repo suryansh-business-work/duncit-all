@@ -20,6 +20,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import { isPodActive, podStatus, podStatusChip } from '../utils/podStatus';
 import { formatDateTime } from '../utils/dateFormat';
+import { useTranslation } from '../i18n/useTranslation';
 
 type ChatPodFilter = 'ALL' | 'UPCOMING' | 'PREVIOUS';
 
@@ -54,6 +55,7 @@ interface ChatsPageProps {
 }
 
 export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const navigate = useNavigate();
   const [filter, setFilter] = useState<ChatPodFilter>('ALL');
@@ -120,7 +122,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       </Box>
       <TextField
         size="small"
-        placeholder="Search chats by pod name"
+        placeholder={t('mweb.chatsPage.searchChatsByPodName')}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         InputProps={{

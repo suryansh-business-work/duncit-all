@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import EmojiFeedbackDialog from '../support-chat/EmojiFeedbackDialog';
 import { SUBMIT_TICKET_FEEDBACK } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,7 @@ export default function TicketFeedbackDialog({
   onClose,
   onSubmitted,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [submit, { loading }] = useMutation(SUBMIT_TICKET_FEEDBACK);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +33,7 @@ export default function TicketFeedbackDialog({
       await submit({ variables: { ticket_id: ticketId, rating: value, comment: note || null } });
       onSubmitted(value, note);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not submit your feedback.');
+      setError(e instanceof Error ? e.message : t('mweb.common.couldNotSubmitYourFeedback'));
     }
   };
 

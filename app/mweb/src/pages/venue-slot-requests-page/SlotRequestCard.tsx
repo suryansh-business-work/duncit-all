@@ -18,6 +18,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { SlotRequestRow } from './queries';
 import { podSummary, requestedAt, slotPrice, slotWindow } from './slot-request';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   request: SlotRequestRow;
@@ -46,6 +47,7 @@ function Detail({ label, value }: Readonly<{ label: string; value: React.ReactNo
  * moment you say yes, so neither is a button to nudge by accident.
  */
 export default function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [confirmApprove, setConfirmApprove] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -62,19 +64,19 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
               {podSummary(request)}
             </Typography>
           </Box>
-          <Chip size="small" color="warning" label="Awaiting decision" />
+          <Chip size="small" color="warning" label={t('mweb.venueSlotRequests.awaitingDecision')} />
         </Stack>
 
         <Divider />
 
         <Stack spacing={1}>
-          <Detail label="Venue" value={request.venue_name} />
-          <Detail label="Slot" value={slotWindow(request)} />
-          <Detail label="Slot price" value={slotPrice(request.price)} />
-          <Detail label="Requested" value={requestedAt(request.requested_at)} />
-          <Detail label="Host" value={request.host_name || '—'} />
+          <Detail label={t('mweb.common.venue')} value={request.venue_name} />
+          <Detail label={t('mweb.venueSlotRequests.slot')} value={slotWindow(request)} />
+          <Detail label={t('mweb.venueSlotRequests.slotPrice')} value={slotPrice(request.price)} />
+          <Detail label={t('mweb.venueSlotRequests.requested')} value={requestedAt(request.requested_at)} />
+          <Detail label={t('mweb.venueSlotRequests.host')} value={request.host_name || '—'} />
           <Detail
-            label="Contact"
+            label={t('mweb.venueSlotRequests.contact')}
             value={
               <>
                 {request.host_email ? (
@@ -116,7 +118,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
       </Stack>
 
       <Dialog open={confirmApprove} onClose={() => setConfirmApprove(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Approve this booking?</DialogTitle>
+        <DialogTitle>{t('mweb.venueSlotRequests.approveThisBooking')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2">
             {request.pod_title} goes live at {request.venue_name} for {slotWindow(request)}. The host
@@ -124,7 +126,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmApprove(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmApprove(false)}>{t('mweb.common.cancel')}</Button>
           <Button
             variant="contained"
             onClick={() => {
@@ -138,7 +140,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
       </Dialog>
 
       <Dialog open={declineOpen} onClose={() => setDeclineOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Decline this booking?</DialogTitle>
+        <DialogTitle>{t('mweb.venueSlotRequests.declineThisBooking')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 1.5 }}>
             The slot opens again and the host is told. A reason helps them ask better next time.
@@ -148,13 +150,13 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             size="small"
             multiline
             minRows={2}
-            label="Reason (optional)"
+            label={t('mweb.common.reasonOptional')}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeclineOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeclineOpen(false)}>{t('mweb.common.cancel')}</Button>
           <Button
             color="error"
             variant="contained"

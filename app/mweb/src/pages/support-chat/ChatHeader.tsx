@@ -9,6 +9,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
 import type { TranscriptFormat } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   ticketNo: string | null;
@@ -32,6 +33,7 @@ export default function ChatHeader({
   onDownload,
   onEmail,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const close = () => setAnchor(null);
   const run = (fn: () => void) => () => {
@@ -41,7 +43,7 @@ export default function ChatHeader({
 
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
-      <IconButton size="small" onClick={onBack} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
+      <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
       </IconButton>
       <SupportAgentIcon color="primary" />
@@ -62,7 +64,7 @@ export default function ChatHeader({
           label={status === 'OPEN' ? 'Open' : 'Resolved'}
         />
       )}
-      <IconButton aria-label="Chat options" disabled={!ticketNo} onClick={(e) => setAnchor(e.currentTarget)}>
+      <IconButton aria-label={t('mweb.supportChat.chatOptions')} disabled={!ticketNo} onClick={(e) => setAnchor(e.currentTarget)}>
         <MoreVertIcon />
       </IconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={close}>

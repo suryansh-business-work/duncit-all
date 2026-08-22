@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfilePost } from '@/hooks/useProfile';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Header "Add post" pill; shows an uploading state while a post is in flight. */
 function AddPostButton({
@@ -14,11 +15,12 @@ function AddPostButton({
   onAddPost,
   onPrimary,
 }: Readonly<{ uploading?: boolean; onAddPost: () => void; onPrimary: string }>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID="profile-add-post"
       role="button"
-      aria-label="Add post"
+      aria-label={t('mweb.profile.addPost')}
       aria-disabled={uploading}
       onPress={uploading ? undefined : onAddPost}
       alignItems="center"
@@ -53,6 +55,7 @@ export function ProfilePostsGrid({
   onChanged?: () => void;
   uploading?: boolean;
 }>) {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const { muted, primary, onPrimary } = useThemeColors();
   const size = (width - 32 - 8) / 3;
@@ -77,7 +80,7 @@ export function ProfilePostsGrid({
             <XStack
               testID="profile-add-post-empty"
               role="button"
-              aria-label="Add your first post"
+              aria-label={t('mweb.profile.addYourFirstPost')}
               aria-disabled={uploading}
               onPress={uploading ? undefined : onAddPost}
               alignItems="center"
@@ -103,7 +106,7 @@ export function ProfilePostsGrid({
               key={post.id}
               testID={`post-${post.id}`}
               role="button"
-              aria-label="Open post"
+              aria-label={t('mweb.common.openPost')}
               onPress={() => setActive(post)}
               width={size}
               height={size}

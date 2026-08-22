@@ -15,6 +15,7 @@ import {
   type SubmitHostRequestInput,
 } from './queries';
 import SuccessScreen from './SuccessScreen';
+import { useTranslation } from '../../i18n/useTranslation';
 
 type Step = 'category' | 'survey' | 'success';
 
@@ -25,6 +26,7 @@ type Step = 'category' | 'survey' | 'success';
  * submitHostRequest, then a success screen back to Host Studio.
  */
 export default function HostApplyPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('category');
   const [scope, setScope] = useState<CategoryScope | null>(null);
@@ -51,7 +53,7 @@ export default function HostApplyPage() {
       await submitRequest({ variables: { input } });
       setStep('success');
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : 'Could not submit your request — please try again.');
+      notifyError(e instanceof Error ? e.message : t('mweb.hostApply.couldNotSubmitYourRequestPlease'));
     }
   };
 
@@ -74,11 +76,11 @@ export default function HostApplyPage() {
     submit(scope, answers, survey?.id ?? null).catch(() => undefined);
   };
 
-  let heading = 'Host a new category';
-  let subtitle = 'Tell us your category so we can ask the right questions.';
+  let heading = t('mweb.hostApply.hostANewCategory');
+  let subtitle = t('mweb.common.tellUsYourCategorySoWe');
   if (step === 'survey') {
     heading = survey?.title || heading;
-    subtitle = 'A few quick questions before you submit.';
+    subtitle = t('mweb.hostApply.aFewQuickQuestionsBeforeYou');
   }
 
   return (
@@ -105,7 +107,7 @@ export default function HostApplyPage() {
             />
           )}
           {step === 'survey' && survey && (
-            <SurveyStepper survey={survey} submitting={submitting} submitLabel="Submit" onSubmit={onSurvey} />
+            <SurveyStepper survey={survey} submitting={submitting} submitLabel={t('mweb.hostApply.submit')} onSubmit={onSurvey} />
           )}
           {step === 'success' && <SuccessScreen />}
         </CardContent>

@@ -17,6 +17,7 @@ import { TourAnchor } from '@/tours/TourAnchor';
 import { pickPodMoments } from '@/utils/club-detail';
 import { isClubAdminOf } from '@duncit/utils';
 import { useMeStore } from '@/stores/me.store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** The club-details body — summary, stats, WhatsApp chat, members and the
  * tabbed segments (pods schedule, moments, content sections, hosts). */
@@ -45,12 +46,17 @@ export function ClubBody({
   onOpenMember: (userId: string) => void;
   onOpenVenue: (venueId: string) => void;
 }>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const viewerId = useMeStore((s) => s.data?.me?.user_id);
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const chatLinks = [
-    { key: 'community', label: 'Community', href: club.club_whats_app_community_link },
-    { key: 'group', label: 'Group chat', href: club.club_whats_app_group_link },
+    {
+      key: 'community',
+      label: t('mweb.common.community'),
+      href: club.club_whats_app_community_link,
+    },
+    { key: 'group', label: t('mweb.common.groupChat'), href: club.club_whats_app_group_link },
   ].filter((link) => link.href);
 
   const memberIds = useMemo(

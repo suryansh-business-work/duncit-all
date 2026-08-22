@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   /** Show the resolve (open) / reopen (closed-within-window) toggle. */
@@ -38,6 +39,7 @@ export function ChatHeaderActions({
   onDownloadDocx,
   onEmail,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink } = useThemeColors();
   return (
     <XStack gap={6} alignItems="center">
@@ -52,21 +54,21 @@ export function ChatHeaderActions({
       ) : null}
       <IconButton
         testID="chat-action-download"
-        label="Download transcript"
+        label={t('mweb.common.downloadTranscript')}
         icon="file-download"
         color={ink}
         onPress={onDownloadTxt}
       />
       <IconButton
         testID="chat-action-download-docx"
-        label="Download Word transcript"
+        label={t('mweb.common.downloadWordTranscript')}
         icon="description"
         color={ink}
         onPress={onDownloadDocx}
       />
       <IconButton
         testID="chat-action-email"
-        label="Email transcript"
+        label={t('mweb.common.emailTranscript')}
         icon="email"
         color={ink}
         onPress={onEmail}

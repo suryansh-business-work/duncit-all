@@ -20,6 +20,7 @@ import IdeasList from './IdeasList';
 import PodIdeasHeader from './PodIdeasHeader';
 import { ideaMatchesScope } from '../../utils/ideaCategory';
 import { shareUrl } from '../../lib/share-link';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const EMPTY_LABELS: CategoryLabels = {
   super_category_name: '',
@@ -28,6 +29,7 @@ const EMPTY_LABELS: CategoryLabels = {
 };
 
 export default function PodIdeasPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [filterScope, setFilterScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -113,7 +115,7 @@ export default function PodIdeasPage() {
       setDescription('');
       setScope(EMPTY_CATEGORY_SCOPE);
       setLabels(EMPTY_LABELS);
-      setToast('Idea submitted! It will appear publicly once approved.');
+      setToast(t('mweb.podIdeas.ideaSubmittedItWillAppearPublicly'));
       await refetchAll();
     } catch (e: any) {
       setComposerErr(e.message);
@@ -139,7 +141,7 @@ export default function PodIdeasPage() {
         await navigator.share({ title: idea.title, text: idea.description, url });
       } else {
         await navigator.clipboard.writeText(url);
-        setToast('Link copied to clipboard');
+        setToast(t('mweb.podIdeas.linkCopiedToClipboard'));
       }
       await shareMut({ variables: { id: idea.id } });
       await refetch();
@@ -153,7 +155,7 @@ export default function PodIdeasPage() {
     setDeleting(true);
     try {
       await deleteMut({ variables: { id: confirmDeleteId } });
-      setToast('Deleted');
+      setToast(t('mweb.podIdeas.deleted'));
       setConfirmDeleteId(null);
       await refetchAll();
     } catch (e: any) {
@@ -170,7 +172,7 @@ export default function PodIdeasPage() {
         setSearch={setSearch}
         onShare={() => {
           if (!me) {
-            setToast('Please sign in to share an idea');
+            setToast(t('mweb.podIdeas.pleaseSignInToShareAn'));
             return;
           }
           setComposerOpen(true);
@@ -227,9 +229,9 @@ export default function PodIdeasPage() {
       />
       <ConfirmDialog
         open={!!confirmDeleteId}
-        title="Delete this idea?"
-        message="This will permanently remove the idea, its likes, and all comments."
-        confirmLabel="Delete"
+        title={t('mweb.podIdeas.deleteThisIdea')}
+        message={t('mweb.podIdeas.thisWillPermanentlyRemoveTheIdea')}
+        confirmLabel={t('mweb.common.delete')}
         destructive
         busy={deleting}
         onConfirm={performDelete}

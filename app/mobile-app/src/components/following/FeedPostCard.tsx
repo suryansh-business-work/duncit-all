@@ -5,6 +5,7 @@ import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { FeedPost } from '@/hooks/useFollowingFeed';
 import { formatDateTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   post: FeedPost;
@@ -21,6 +22,7 @@ export function FeedPostCard({
   onOpenComments,
   onOpenAuthor,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
   const name = post.author?.first_name || post.author?.full_name || 'Duncit member';
   const avatar = post.author?.profile_photo;
@@ -118,7 +120,7 @@ export function FeedPostCard({
           <XStack
             testID={`feed-comment-${post.id}`}
             role="button"
-            aria-label="Comments"
+            aria-label={t('mweb.common.comments')}
             onPress={onOpenComments}
             alignItems="center"
             gap={5}

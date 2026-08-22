@@ -12,6 +12,7 @@ import {
   type CurrentPasswordValues,
   type NewPasswordValues,
 } from './change-password.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface StepProps<T> {
   loading?: boolean;
@@ -25,6 +26,7 @@ export function CurrentPasswordForm({
   errorMessage,
   onSubmit,
 }: Readonly<StepProps<CurrentPasswordValues>>) {
+  const { t } = useTranslation();
   const { control, handleSubmit } = useForm<CurrentPasswordValues>({
     defaultValues: currentPasswordDefaults,
     resolver: zodResolver(currentPasswordSchema),
@@ -36,8 +38,8 @@ export function CurrentPasswordForm({
       <FormTextField
         control={control}
         name="current_password"
-        label="Current password"
-        placeholder="Enter your current password"
+        label={t('mweb.changePassword.currentPassword')}
+        placeholder={t('mweb.changePassword.enterYourCurrentPassword')}
         secureTextEntry
         autoComplete="password"
         textContentType="password"
@@ -64,6 +66,7 @@ export function NewPasswordForm({
   errorMessage,
   onSubmit,
 }: Readonly<StepProps<NewPasswordValues>>) {
+  const { t } = useTranslation();
   const { control, handleSubmit } = useForm<NewPasswordValues>({
     defaultValues: newPasswordDefaults,
     resolver: zodResolver(newPasswordSchema),
@@ -85,8 +88,8 @@ export function NewPasswordForm({
       <FormTextField
         control={control}
         name="new_password"
-        label="New password"
-        placeholder="Create a new password"
+        label={t('mweb.changePassword.newPassword')}
+        placeholder={t('mweb.changePassword.createANewPassword')}
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
@@ -96,8 +99,8 @@ export function NewPasswordForm({
       <FormTextField
         control={control}
         name="confirm_password"
-        label="Confirm new password"
-        placeholder="Re-enter new password"
+        label={t('mweb.changePassword.confirmNewPassword')}
+        placeholder={t('mweb.changePassword.reEnterNewPassword')}
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"

@@ -14,6 +14,7 @@ import { CountryStateChips } from './CountryStateChips';
 import { LocationMap } from './LocationMap';
 import { useLocationDraft } from './useLocationDraft';
 import type { LocationItem } from '@/stores/location.store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -29,6 +30,7 @@ interface Props {
  * Defaults to setting the global header location; pass `onApply` to capture the
  * pick into a form (create-pod). */
 export function LocationDialog({ open, onClose, onApply, initialLocationId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const draft = useLocationDraft(open, onClose, { onApply, initialId: initialLocationId });
   const { color, primary, onPrimary } = useThemeColors();
   const zonesLabel = draft.zones.length ? `Apply · ${draft.zones.length} areas` : 'Apply';
@@ -42,7 +44,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
             <YStack
               testID="location-backdrop"
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -70,7 +72,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                     <XStack
                       testID="location-close"
                       role="button"
-                      aria-label="Close"
+                      aria-label={t('mweb.common.close')}
                       onPress={onClose}
                       width={32}
                       height={32}
@@ -83,7 +85,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   <XStack
                     testID="location-gps"
                     role="button"
-                    aria-label="Use my location"
+                    aria-label={t('mweb.location.useMyLocation')}
                     onPress={() => void draft.detect()}
                     alignItems="center"
                     justifyContent="center"
@@ -150,7 +152,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   <XStack
                     testID="location-cancel"
                     role="button"
-                    aria-label="Cancel"
+                    aria-label={t('mweb.common.cancel')}
                     onPress={onClose}
                     flex={1}
                     height={48}
@@ -168,7 +170,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   <XStack
                     testID="location-apply"
                     role="button"
-                    aria-label="Apply location"
+                    aria-label={t('mweb.location.applyLocation')}
                     aria-disabled={!draft.draftId}
                     onPress={draft.apply}
                     flex={2}

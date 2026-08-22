@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   filterCount: number;
@@ -12,6 +13,7 @@ interface Props {
 /** Header Filter + Sort buttons for Saved Items (top-right). Filter shows a count
  * badge while a Super/Category/Sub filter is applied. */
 export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color, onPrimary } = useThemeColors();
   const filterActive = filterCount > 0;
   return (
@@ -19,7 +21,7 @@ export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>)
       <XStack
         testID="saved-filter-button"
         role="button"
-        aria-label="Filter"
+        aria-label={t('mweb.common.filter')}
         onPress={onFilter}
         alignItems="center"
         gap={4}
@@ -41,7 +43,7 @@ export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>)
       <XStack
         testID="saved-sort-button"
         role="button"
-        aria-label="Sort"
+        aria-label={t('mweb.common.sort')}
         onPress={onSort}
         alignItems="center"
         justifyContent="center"

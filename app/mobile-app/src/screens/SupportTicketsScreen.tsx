@@ -9,6 +9,7 @@ import { MyTicketsList } from '@/components/support/MyTicketsList';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useMeStore } from '@/stores/me.store';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Create Support Tickets — opens straight onto the form (mWeb parity), with the
@@ -16,6 +17,7 @@ import type { RootStackParamList } from '@/navigation/types';
  * user's existing tickets live on the All Support Tickets screen, not here.
  */
 export function SupportTicketsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'SupportTickets'>>();
   const podId = route.params?.podId;
@@ -24,7 +26,7 @@ export function SupportTicketsScreen() {
   const { onPrimary, success } = useThemeColors();
 
   return (
-    <StackScreen title="Create Support Tickets" testID="support-tickets-screen">
+    <StackScreen title={t('mweb.common.createSupportTickets')} testID="support-tickets-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
         <Text testID="tickets-subtitle" fontSize={13} color="$muted">
           Raise an issue with our team
@@ -73,7 +75,7 @@ export function SupportTicketsScreen() {
         <XStack
           testID="tickets-faq-banner"
           role="button"
-          aria-label="Read FAQs"
+          aria-label={t('mweb.supportTickets.readFaqs')}
           onPress={() => navigation.navigate('Faqs')}
           alignItems="center"
           gap={10}

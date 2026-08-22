@@ -14,11 +14,13 @@ import { useSearchCategories, useSearchDiscovery, useSearchSuggestions } from '@
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import type { SearchSort } from '@/utils/search-sort';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Home > Search — live suggestions, category quick-actions, club-grouped results
  * (Happening This Week / More Clubs), sort & filter and discovery-oriented empty
  * states. Identical experience to mWeb's SearchPage. */
 export function SearchScreen() {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod, openClub } = useDetailNav();
@@ -58,7 +60,7 @@ export function SearchScreen() {
   };
 
   return (
-    <StackScreen title="Search" testID="search-screen">
+    <StackScreen title={t('mweb.common.search')} testID="search-screen">
       <XStack
         alignItems="center"
         gap={8}
@@ -75,13 +77,13 @@ export function SearchScreen() {
         <Input
           ref={inputRef}
           testID="search-input"
-          aria-label="Search"
+          aria-label={t('mweb.common.search')}
           flex={1}
           unstyled
           autoFocus
           value={query}
           onChangeText={onChange}
-          placeholder="Search clubs, pods, categories or activities…"
+          placeholder={t('mweb.search.searchClubsPodsCategoriesOrActivities')}
           placeholderTextColor="$muted"
           color="$color"
           fontSize={15}

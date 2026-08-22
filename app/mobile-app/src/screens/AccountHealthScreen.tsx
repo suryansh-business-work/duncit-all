@@ -5,10 +5,12 @@ import { HealthBreakdown, HealthMeter } from '@/components/health';
 import { StackScreen } from '@/components/StackScreen';
 import { useAccountHealth } from '@/hooks/useHealth';
 import { toErrorMessage } from '@/utils/errors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Account Health detail — meter + score breakdown + admin remarks.
  * RN twin of mWeb's AccountHealthPage. */
 export function AccountHealthScreen() {
+  const { t } = useTranslation();
   const { health, isLoading, error } = useAccountHealth();
 
   let body: ReactNode;
@@ -28,7 +30,11 @@ export function AccountHealthScreen() {
     body = (
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
         <YStack alignItems="center">
-          <HealthMeter score={health.total_score} band={health.band} label="Account Health" />
+          <HealthMeter
+            score={health.total_score}
+            band={health.band}
+            label={t('mweb.common.accountHealth')}
+          />
         </YStack>
         <HealthBreakdown score={health} />
       </ScrollView>
@@ -42,7 +48,7 @@ export function AccountHealthScreen() {
   }
 
   return (
-    <StackScreen title="Account Health" testID="account-health-screen">
+    <StackScreen title={t('mweb.common.accountHealth')} testID="account-health-screen">
       {body}
     </StackScreen>
   );

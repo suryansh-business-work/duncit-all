@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   /** Resolved/closed ticket within the reopen window. */
@@ -19,6 +20,7 @@ export function TicketReopenFooter({
   deadlineLabel,
   onReopen,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink } = useThemeColors();
 
   if (reopenable) {
@@ -27,7 +29,7 @@ export function TicketReopenFooter({
         <XStack
           testID="ticket-reopen"
           role="button"
-          aria-label="Re-open ticket"
+          aria-label={t('mweb.support.reOpenTicket')}
           onPress={onReopen}
           height={42}
           alignItems="center"

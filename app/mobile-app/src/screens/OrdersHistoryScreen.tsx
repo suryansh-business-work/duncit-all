@@ -9,6 +9,7 @@ import { MyProductOrdersDocument } from '@/graphql/product-orders';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type OrderRow = ResultOf<typeof MyProductOrdersDocument>['myProductOrders'][number];
 
@@ -16,6 +17,7 @@ type OrderRow = ResultOf<typeof MyProductOrdersDocument>['myProductOrders'][numb
  * all pods (newest first), each with its full fulfilment tracking. RN twin of
  * mWeb's OrdersHistoryPage. */
 export function OrdersHistoryScreen() {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +77,7 @@ export function OrdersHistoryScreen() {
   }
 
   return (
-    <StackScreen title="My Product Orders" testID="orders-history-screen">
+    <StackScreen title={t('mweb.ordersHistory.myProductOrders')} testID="orders-history-screen">
       <ScrollView flex={1}>{body}</ScrollView>
     </StackScreen>
   );

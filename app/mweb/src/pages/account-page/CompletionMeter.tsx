@@ -3,6 +3,7 @@ import {
   profileCompletion,
   type ProfileForCompletion,
 } from './account-edit/completion';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface CompletionMeterProps {
   profile: ProfileForCompletion;
@@ -14,6 +15,7 @@ export interface CompletionMeterProps {
  * the mobile CompletionMeter). No backend write.
  */
 export default function CompletionMeter({ profile }: Readonly<CompletionMeterProps>) {
+  const { t } = useTranslation();
   const percent = profileCompletion(profile);
 
   return (
@@ -29,7 +31,7 @@ export default function CompletionMeter({ profile }: Readonly<CompletionMeterPro
       <LinearProgress
         variant="determinate"
         value={percent}
-        aria-label="Profile completion"
+        aria-label={t('mweb.account.profileCompletion')}
         sx={{ height: 8, borderRadius: '8px' }}
       />
     </Box>

@@ -1,3 +1,4 @@
+import { useTranslation } from '../../../i18n/useTranslation';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Box, Fab, Stack, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -23,6 +24,7 @@ const TicketThread = forwardRef<TicketThreadHandle, Props>(function TicketThread
   { messages, timeZone, formatTime, agentLastReadAt },
   ref,
 ) {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [showJump, setShowJump] = useState(false);
   // Default pinned so the thread opens at the LATEST message and follows new
@@ -68,7 +70,7 @@ const TicketThread = forwardRef<TicketThreadHandle, Props>(function TicketThread
         </Stack>
       </Box>
       {showJump && (
-        <Fab size="small" color="primary" aria-label="Jump to latest" onClick={jumpToBottom} sx={{ position: 'absolute', right: 8, bottom: 8 }}>
+        <Fab size="small" color="primary" aria-label={t('mweb.common.jumpToLatest')} onClick={jumpToBottom} sx={{ position: 'absolute', right: 8, bottom: 8 }}>
           <KeyboardArrowDownIcon />
         </Fab>
       )}

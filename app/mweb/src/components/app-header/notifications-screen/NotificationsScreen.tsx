@@ -12,6 +12,7 @@ import { isPushSupported, unsubscribePush } from '../../../pwa';
 import NotificationFilterChips from './NotificationFilterChips';
 import NotificationRow from './NotificationRow';
 import NotificationsHero from './NotificationsHero';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface NotificationsScreenProps {
   open: boolean;
@@ -45,6 +46,7 @@ export default function NotificationsScreen({
   markAllBusy = false,
   onRefresh,
 }: Readonly<NotificationsScreenProps>) {
+  const { t } = useTranslation();
   const pushSupported = isPushSupported() && perm !== 'unsupported';
   // Pending allow/deny choice — confirmed before we touch the push subscription.
   const [pendingToggle, setPendingToggle] = useState<boolean | null>(null);
@@ -99,7 +101,7 @@ export default function NotificationsScreen({
         >
           <IconButton
             onClick={onClose}
-            aria-label="Close notifications"
+            aria-label={t('mweb.common.closeNotifications')}
             sx={{ bgcolor: 'action.hover' }}
           >
             <CloseIcon />
@@ -115,7 +117,7 @@ export default function NotificationsScreen({
           <IconButton
             onClick={onMarkAll}
             disabled={liveUnread === 0 || markAllBusy}
-            aria-label="Mark all as read"
+            aria-label={t('mweb.common.markAllAsRead')}
             aria-busy={markAllBusy}
             sx={{ bgcolor: 'action.hover' }}
           >

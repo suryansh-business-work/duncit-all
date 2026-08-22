@@ -12,9 +12,11 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { stripHtml } from '@/utils/html';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Reader for a single public policy, opened from the sidebar's Policies group. */
 export function PolicyScreen() {
+  const { t } = useTranslation();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'Policy'>>();
   const slug = route.params?.slug ?? '';
@@ -46,7 +48,7 @@ export function PolicyScreen() {
           <XStack
             testID="policy-back"
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={goBack}
             width={40}
             height={40}
@@ -63,7 +65,7 @@ export function PolicyScreen() {
           <XStack
             testID="policy-pdf"
             role="button"
-            aria-label="Download PDF"
+            aria-label={t('mweb.policy.downloadPdf')}
             onPress={() => {
               if (!busy) download(slug).catch(() => undefined);
             }}

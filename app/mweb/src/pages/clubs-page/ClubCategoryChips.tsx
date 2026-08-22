@@ -1,5 +1,6 @@
 import { Box, Chip, Stack } from '@mui/material';
 import type { SearchCategory } from '../search-page/useSearchDiscovery';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ClubCategoryChipsProps {
   categories: SearchCategory[];
@@ -24,12 +25,13 @@ export default function ClubCategoryChips({
   selectedId,
   onSelect,
 }: Readonly<ClubCategoryChipsProps>) {
+  const { t } = useTranslation();
   if (categories.length === 0) return null;
   return (
     <Box sx={railSx}>
       <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
         <Chip
-          label="All"
+          label={t('mweb.common.all')}
           clickable
           color={selectedId === '' ? 'primary' : 'default'}
           variant={selectedId === '' ? 'filled' : 'outlined'}

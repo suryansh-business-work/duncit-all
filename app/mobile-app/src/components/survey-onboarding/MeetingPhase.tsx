@@ -6,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, MeetingSlot } from '@/graphql/onboarding-survey';
 import { SlotPicker } from './SlotPicker';
 import type { Answer } from './useOnboardingFlow';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   survey: ActiveSurvey | null;
@@ -50,6 +51,7 @@ export function MeetingPhase({
   error,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink, primary } = useThemeColors();
   // "Book this slot" is the last row of this scroll and nothing floats over it,
   // so it only has to clear the Android navigation bar the edge-to-edge window
@@ -108,7 +110,7 @@ export function MeetingPhase({
         </Text>
         <Input
           testID="meeting-name"
-          aria-label="Your name"
+          aria-label={t('mweb.common.yourName')}
           value={name}
           onChangeText={setName}
           disabled={lockName}
@@ -125,7 +127,7 @@ export function MeetingPhase({
         <XStack gap={8}>
           <Input
             testID="meeting-ext"
-            aria-label="Country code"
+            aria-label={t('mweb.surveyOnboarding.countryCode')}
             value={ext}
             disabled
             opacity={0.6}
@@ -133,7 +135,7 @@ export function MeetingPhase({
           />
           <Input
             testID="meeting-phone"
-            aria-label="Phone"
+            aria-label={t('mweb.common.phone')}
             value={phone}
             keyboardType="phone-pad"
             disabled
@@ -154,7 +156,7 @@ export function MeetingPhase({
             <XStack
               testID="meeting-go-to-profile"
               role="button"
-              aria-label="Go To Profile"
+              aria-label={t('mweb.surveyOnboarding.goToProfile')}
               onPress={onGoToProfile}
               alignSelf="flex-start"
               paddingHorizontal={16}
@@ -174,7 +176,7 @@ export function MeetingPhase({
         </Text>
         <TextArea
           testID="meeting-notes"
-          aria-label="Notes"
+          aria-label={t('mweb.surveyOnboarding.notes')}
           value={notes}
           onChangeText={setNotes}
           minHeight={70}

@@ -9,6 +9,7 @@ import LocationSelect from './LocationSelect';
 import ContactFields from './ContactFields';
 import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';
 import { useDateFormat, useMinSignupAge } from '../../../utils/dateFormat';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 const ADDRESS_NAMES: AddressFieldNames<AccountEditValues> = {
   line1: 'address_line1',
@@ -44,6 +45,7 @@ export default function AccountEditForm({
   onDirtyChange,
   onRegisterReset,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   // The joining age is admin-configured, so the schema is built from it.
   const minAge = useMinSignupAge();
@@ -79,7 +81,7 @@ export default function AccountEditForm({
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Could not save profile');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.account.couldNotSaveProfile2'));
     }
   });
 
@@ -91,7 +93,7 @@ export default function AccountEditForm({
           <RhfTextField
             control={control}
             name="first_name"
-            label="First name"
+            label={t('mweb.common.firstName')}
             required
             size="small"
             InputLabelProps={{ shrink: true }}
@@ -99,7 +101,7 @@ export default function AccountEditForm({
           <RhfTextField
             control={control}
             name="last_name"
-            label="Last name"
+            label={t('mweb.common.lastName')}
             size="small"
             InputLabelProps={{ shrink: true }}
           />
@@ -107,7 +109,7 @@ export default function AccountEditForm({
         <RhfTextField
           control={control}
           name="bio"
-          label="Bio"
+          label={t('mweb.common.bio')}
           hint="Up to 500 characters"
           multiline
           minRows={2}

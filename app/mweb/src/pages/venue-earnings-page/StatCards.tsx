@@ -1,4 +1,5 @@
 import { Card, CardContent, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** myVenueEarningsSummary — settled/pending venue earnings totals. */
 export interface VenueEarningsSummary {
@@ -11,12 +12,13 @@ export interface VenueEarningsSummary {
 
 /** The four Venue Earnings stat cards (Lifetime / Pending / This month / Pods). */
 export default function StatCards({ summary }: Readonly<{ summary: VenueEarningsSummary }>) {
+  const { t } = useTranslation();
   const money = (value: number) => `${summary.currency_symbol}${value.toFixed(2)}`;
   const stats = [
-    { label: 'Lifetime', value: money(summary.lifetime_earnings) },
-    { label: 'Pending', value: money(summary.pending_amount) },
-    { label: 'This month', value: money(summary.this_month_earnings) },
-    { label: 'Pods completed', value: String(summary.pods_completed) },
+    { label: t('mweb.venueEarnings.lifetime'), value: money(summary.lifetime_earnings) },
+    { label: t('mweb.common.pending'), value: money(summary.pending_amount) },
+    { label: t('mweb.common.thisMonth'), value: money(summary.this_month_earnings) },
+    { label: t('mweb.common.podsCompleted'), value: String(summary.pods_completed) },
   ];
 
   return (

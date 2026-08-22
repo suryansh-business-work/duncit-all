@@ -8,6 +8,7 @@ import { useMyHostRequest } from '@/hooks/useMyHostRequest';
 import { applyButtonState } from '@/graphql/host-request';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Host Studio CTA inviting an approved host to apply to host in another
@@ -15,6 +16,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
  * while a request is pending and refetches that lock on screen focus.
  */
 export function HostApplyBanner() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const roles = useMe().data?.me?.roles ?? [];
   const { request, refetch } = useMyHostRequest();
@@ -63,7 +65,7 @@ export function HostApplyBanner() {
         <XStack
           testID="host-apply-cta"
           role="button"
-          aria-label="Apply Now"
+          aria-label={t('mweb.hostManage.applyNow')}
           alignSelf="flex-start"
           onPress={() => navigation.navigate('HostApply')}
           paddingHorizontal={18}

@@ -11,6 +11,7 @@ import ProductQuantityBar from './pod-details-page/ProductQuantityBar';
 import { formatRupees, productSpecs } from './pod-details-page/product-specs';
 import { PUBLIC_PRODUCT } from './pod-details-page/queries';
 import { cartLineKey, useCart } from '../components/cart/CartContext';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Pods that stock a catalogue product — the per-pod cart context so a buyer can
  * add the product from this pod-less standalone page (products stay separate). */
@@ -33,6 +34,7 @@ export const PODS_FOR_PRODUCT = gql`
  * products are purchased through a pod's shop, so there is no add-to-cart here —
  * variant chips swap the shown price/stock/images exactly like the pod dialog. */
 export default function ProductDetailPage() {
+  const { t } = useTranslation();
   const { productId = '' } = useParams();
   const navigate = useNavigate();
   const [variantId, setVariantId] = useState<string | null>(null);
@@ -107,12 +109,12 @@ export default function ProductDetailPage() {
       </Stack>
     );
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!product) return <Alert severity="info">Product not found.</Alert>;
+  if (!product) return <Alert severity="info">{t('mweb.productDetailPage.productNotFound')}</Alert>;
 
   return (
     <Stack spacing={1.5} sx={{ py: 0.5 }}>
       <Stack direction="row" spacing={1} alignItems="center">
-        <IconButton aria-label="Go back" onClick={() => navigate(-1)} size="small">
+        <IconButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} size="small">
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>

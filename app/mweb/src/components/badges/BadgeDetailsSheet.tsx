@@ -2,6 +2,7 @@ import { Avatar, Box, Chip, LinearProgress, Stack, Typography } from '@mui/mater
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ResponsiveDialog from '../ResponsiveDialog';
 import { formatDate } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const CONDITION_LABEL: Record<string, string> = {
   POD_JOIN_COUNT: 'Pods joined',
@@ -42,6 +43,7 @@ export default function BadgeDetailsSheet({
   awardedAt,
   awardedReason,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!badge) return null;
   const conditionLabel =
     CONDITION_LABEL[badge.condition_type ?? ''] ?? badge.condition_type ?? '';
@@ -52,7 +54,7 @@ export default function BadgeDetailsSheet({
       : null;
 
   return (
-    <ResponsiveDialog open={open} onClose={onClose} bottomSheetOnly title="Badge details">
+    <ResponsiveDialog open={open} onClose={onClose} bottomSheetOnly title={t('mweb.badges.badgeDetails')}>
       <Stack spacing={2} sx={{ pb: 1 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <Avatar

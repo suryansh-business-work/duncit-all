@@ -7,6 +7,7 @@ import type { ActiveAd } from '@/hooks/useActiveAds';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { AdMedia } from './AdMedia';
 import { SponsoredBadge } from './AdCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ExploreAdCardProps {
   ad: ActiveAd;
@@ -22,6 +23,7 @@ interface ExploreAdCardProps {
  * badge, the title and an optional Learn-more CTA opening the advertiser link.
  */
 export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreAdCardProps>) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const redirect = ad.redirect_url;
   return (
@@ -38,7 +40,7 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
           <XStack
             testID={`ad-reel-${ad.id}-cta`}
             role="button"
-            aria-label="Learn more"
+            aria-label={t('mweb.ads.learnMore')}
             onPress={() => fireAndForget(Linking.openURL(redirect))}
             alignSelf="flex-start"
             alignItems="center"

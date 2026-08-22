@@ -14,6 +14,7 @@ import {
   type AccountEditValues,
 } from './account-edit';
 import { useUnsavedGuard } from './useUnsavedGuard';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateMyProfileFull($input: UpdateMyProfileInput!) {
@@ -51,6 +52,7 @@ export interface EditAccountDialogProps {
 }
 
 export default function EditAccountDialog({ open, onClose, initial, onSaved }: Readonly<EditAccountDialogProps>) {
+  const { t } = useTranslation();
   const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE);
   const guard = useUnsavedGuard(onClose);
 
@@ -63,7 +65,7 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
   return (
     <>
       <Dialog open={open} onClose={guard.requestClose} fullWidth maxWidth="sm">
-        <DialogTitle>Edit profile</DialogTitle>
+        <DialogTitle>{t('mweb.account.editProfile')}</DialogTitle>
         <DialogContent dividers>
           <AccountEditForm
             defaultValues={accountEditDefaults(initial)}
@@ -76,7 +78,7 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
         </DialogContent>
       </Dialog>
       <Dialog open={guard.confirmOpen} onClose={guard.cancelDiscard} data-testid="discard-confirm">
-        <DialogTitle>Discard unsaved changes?</DialogTitle>
+        <DialogTitle>{t('mweb.account.discardUnsavedChanges')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             You have unsaved changes. Closing now will lose them.

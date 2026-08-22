@@ -2,6 +2,7 @@ import { Text, YStack } from 'tamagui';
 
 import { useConfigStore } from '@/stores/config.store';
 import { locationMapEmbedUrl, locationMapQuery } from '@/utils/location-tree';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   city?: string | null;
@@ -13,6 +14,7 @@ interface Props {
 /** Web variant of the location map — a real DOM <iframe> embed (react-native-web
  * renders intrinsic tags through React DOM), so the experience matches mWeb. */
 export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props>) {
+  const { t } = useTranslation();
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const query = locationMapQuery(city, zoneName, pincode, country);
   const url = locationMapEmbedUrl(apiKey, query);
@@ -24,7 +26,7 @@ export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props
         MAP
       </Text>
       <iframe
-        title="Selected location map"
+        title={t('mweb.common.selectedLocationMap')}
         src={url}
         loading="lazy"
         style={{

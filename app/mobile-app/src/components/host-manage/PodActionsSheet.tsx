@@ -51,14 +51,14 @@ export function PodActionsSheet({
       onClose={onClose}
       testID="pod-actions-sheet"
       title={podTitle}
-      subtitle="Pod actions"
+      subtitle={t('mweb.hostManage.podActions')}
       closeLabel="Close"
     >
       <YStack gap={10}>
         <ActionRow
           testID="pod-action-scan"
           icon="qr-code-scanner"
-          label="Scan attendee event tickets"
+          label={t('mweb.hostManage.scanAttendeeEventTickets')}
           tint={primary}
           onPress={onScan}
         />
@@ -79,14 +79,14 @@ export function PodActionsSheet({
         <ActionRow
           testID="pod-action-complete"
           icon="task-alt"
-          label="Complete pod"
+          label={t('mweb.hostManage.completePod')}
           tint={success}
           onPress={onComplete}
         />
         <ActionRow
           testID="pod-action-edit"
           icon="edit"
-          label="Edit pod"
+          label={t('mweb.hostManage.editPod')}
           tint={ink}
           onPress={onEdit}
         />
@@ -107,7 +107,7 @@ export function PodActionsSheet({
         <ActionRow
           testID="pod-action-cancel"
           icon="cancel"
-          label="Cancel pod"
+          label={t('mweb.hostManage.cancelPod')}
           tint={danger}
           danger
           onPress={onCancel}

@@ -13,6 +13,7 @@ import PostActions from './PostActions';
 import PostCommentList from './PostCommentList';
 import PostDialogHeader from './PostDialogHeader';
 import PostMediaPane from './PostMediaPane';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   postId: string | null;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const open = !!postId;
   const { data, loading } = useQuery(POST_DETAILS, {
     variables: { id: postId },
@@ -148,7 +150,7 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
     </Stack>
   ) : (
     <Box sx={{ p: 4 }}>
-      <Alert severity="warning">Post not found.</Alert>
+      <Alert severity="warning">{t('mweb.profile.postNotFound')}</Alert>
     </Box>
   );
 
@@ -165,9 +167,9 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
       </DialogContent>
       <ConfirmDialog
         open={confirmPostOpen}
-        title="Delete this post?"
-        message="This will permanently remove the post and all its comments."
-        confirmLabel="Delete"
+        title={t('mweb.profile.deleteThisPost')}
+        message={t('mweb.profile.thisWillPermanentlyRemoveThePost')}
+        confirmLabel={t('mweb.common.delete')}
         destructive
         busy={deletingPost}
         onConfirm={performDeletePost}

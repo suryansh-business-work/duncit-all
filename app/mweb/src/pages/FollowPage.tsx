@@ -1,3 +1,4 @@
+import { useTranslation } from '../i18n/useTranslation';
 import { useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
@@ -6,15 +7,16 @@ import PostDialog from './profile-page/post-dialog/PostDialog';
 import FollowFeedList from './follow-page/FollowFeedList';
 import { FEED_CLUBS, FOLLOW_ME } from './follow-page/queries';
 import type { FeedClub, FollowingFeedSource } from './follow-page/queries';
+import type { Translate } from '../i18n/fallback';
 
 const EMPTY_TEXT: Record<FollowingFeedSource, string> = {
   CLUBS: 'Follow clubs to see their posts here',
   PEOPLE: 'Follow people to see their posts here',
 };
 
-const SOURCE_TABS: DuncitTabItem<FollowingFeedSource>[] = [
-  { value: 'CLUBS', label: 'Clubs' },
-  { value: 'PEOPLE', label: 'People' },
+const sourceTabs = (t: Translate): DuncitTabItem<FollowingFeedSource>[] => [
+  { value: 'CLUBS', label: t('mweb.nav.clubs') },
+  { value: 'PEOPLE', label: t('mweb.followPage.people') },
 ];
 
 interface FeedClubsData {
@@ -23,8 +25,9 @@ interface FeedClubsData {
 }
 
 export default function FollowPage({ superCategorySlug }: Readonly<{ superCategorySlug?: string }>) {
+  const { t } = useTranslation();
   const apollo = useApolloClient();
-  const tabs = useTabParam<FollowingFeedSource>({ items: SOURCE_TABS, fallback: 'CLUBS' });
+  const tabs = useTabParam<FollowingFeedSource>({ items: sourceTabs(t), fallback: 'CLUBS' });
   const tab = tabs.value;
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const meQuery = useQuery(FOLLOW_ME, { fetchPolicy: 'cache-and-network' });

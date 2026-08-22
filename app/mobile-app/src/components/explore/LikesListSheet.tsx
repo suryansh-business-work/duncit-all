@@ -14,6 +14,7 @@ import { PodLikersDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Liker = ResultOf<typeof PodLikersDocument>['publicUsersByIds'][number];
 
@@ -26,6 +27,7 @@ interface Props {
 /** "Who liked this pod" — tap the like count to open this, tap a person to open
  * their public profile (explore item 8). */
 export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [likers, setLikers] = useState<Liker[]>([]);
@@ -117,7 +119,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
         <YStack flex={1} testID="likes-sheet">
           <YStack
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.common.close')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -150,7 +152,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                 <XStack
                   testID="likes-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={32}
                   height={32}

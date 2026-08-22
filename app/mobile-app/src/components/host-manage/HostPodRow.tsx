@@ -4,6 +4,7 @@ import { semantic } from '@duncit/auth-tokens';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { VenueApprovalChip } from '@/utils/venue-approval';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   id: string;
@@ -33,6 +34,7 @@ export function HostPodRow({
   onOpen,
   onActions,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink } = useThemeColors();
   return (
     <YStack
@@ -47,7 +49,7 @@ export function HostPodRow({
         <YStack
           testID={`host-pod-open-${id}`}
           role="button"
-          aria-label="Open pod"
+          aria-label={t('mweb.common.openPod')}
           onPress={onOpen}
           flex={1}
           pressStyle={{ opacity: 0.8 }}

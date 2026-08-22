@@ -17,6 +17,7 @@ import {
 } from '../../forms/change-password';
 import { parseApiError } from '../../utils/parseApiError';
 import { CHANGE_PASSWORD_WITH_OTP, REQUEST_PASSWORD_CHANGE_OTP } from './security-queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -26,6 +27,7 @@ interface Props {
 
 /** Two-step change-password dialog: verify current password → OTP + new password. */
 export default function ChangePasswordDialog({ open, onClose, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2>(1);
   const [currentPassword, setCurrentPassword] = useState('');
   const [info, setInfo] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="xs">
-      <DialogTitle>Change password</DialogTitle>
+      <DialogTitle>{t('mweb.account.changePassword')}</DialogTitle>
       <DialogContent dividers>
         {step === 1 ? (
           <Stack spacing={1.5}>

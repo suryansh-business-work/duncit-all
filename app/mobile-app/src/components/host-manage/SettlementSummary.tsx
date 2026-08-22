@@ -2,6 +2,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import type { PodSettlement } from '@/hooks/useSettlementPreview';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   settlement: PodSettlement | null;
@@ -38,6 +39,7 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
 
 /** "Host Share" preview of the reconciled split for the entered venue bill. */
 export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   // Hex-alpha-suffix tint pattern (same as CouponField/ClubTotalMembersSection) —
   // an 8% alpha channel on the resolved primary token instead of a hardcoded rgba.
@@ -46,20 +48,20 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
   if (settlement) {
     const w = settlement.waterfall;
     const lines: Line[] = [
-      { label: 'Customer Paid', value: w.amount },
+      { label: t('mweb.hostManage.customerPaid'), value: w.amount },
       { label: `− GST (${w.gst_pct}%)`, value: w.gst_amount },
       { label: `− Platform Fee (${w.platform_fee_pct}%)`, value: w.platform_fee_amount },
-      { label: 'Pool', value: w.pool_amount },
+      { label: t('mweb.hostManage.pool'), value: w.pool_amount },
     ];
     if (settlement.has_venue) {
       lines.push(
-        { label: 'Venue price', value: w.venue_amount },
-        { label: 'Venue receives', value: w.venue_receives },
+        { label: t('mweb.hostManage.venuePrice'), value: w.venue_amount },
+        { label: t('mweb.hostManage.venueReceives'), value: w.venue_receives },
       );
     }
     lines.push(
-      { label: 'You receive', value: w.host_receives, strong: true },
-      { label: 'Duncit revenue', value: w.duncit_revenue },
+      { label: t('mweb.hostManage.youReceive'), value: w.host_receives, strong: true },
+      { label: t('mweb.hostManage.duncitRevenue'), value: w.duncit_revenue },
     );
     body = (
       <YStack gap={4}>

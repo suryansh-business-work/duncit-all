@@ -15,6 +15,7 @@ import {
 } from '@/forms/account-edit';
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface EditAccountDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ const NOOP = () => undefined;
 /** Edit-profile bottom sheet hosting the RHF+Zod form — RN twin of mWeb's
  * <EditAccountDialog/>. */
 export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAccountDialogProps>) {
+  const { t } = useTranslation();
   const { color } = useThemeColors();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
       await onSave(toUpdateProfileInput(values));
       onClose();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not save profile.');
+      setErrorMessage(err instanceof Error ? err.message : t('mweb.account.couldNotSaveProfile'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
           <YStack flex={1} testID="edit-account-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={requestClose}
               position="absolute"
               top={0}
@@ -103,7 +105,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
                   <XStack
                     testID="edit-account-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={requestClose}
                     width={32}
                     height={32}
@@ -135,10 +137,10 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
           <ConfirmDialog
             open={confirmOpen}
             testID="edit-account-discard-confirm"
-            title="Discard unsaved changes?"
-            message="You have unsaved changes. Closing now will lose them."
-            confirmLabel="Discard"
-            cancelLabel="Keep editing"
+            title={t('mweb.account.discardUnsavedChanges')}
+            message={t('mweb.account.youHaveUnsavedChangesClosingNow')}
+            confirmLabel={t('mweb.common.discard')}
+            cancelLabel={t('mweb.account.keepEditing')}
             destructive
             onConfirm={confirmDiscard}
             onCancel={() => setConfirmOpen(false)}

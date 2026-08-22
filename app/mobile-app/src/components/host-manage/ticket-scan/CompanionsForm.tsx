@@ -96,7 +96,7 @@ export function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Pro
       <XStack
         testID="companions-submit"
         role="button"
-        aria-label="Mark attendance"
+        aria-label={t('mweb.hostManage.markAttendance')}
         aria-disabled={busy}
         onPress={busy ? undefined : press}
         height={46}

@@ -19,6 +19,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import { formatRelative } from './queries';
 import { categoryPathLabel } from '../../utils/ideaCategory';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface IdeaCardProps {
   idea: any;
@@ -39,6 +40,7 @@ export default function IdeaCard({
   onDelete,
   showStatus,
 }: Readonly<IdeaCardProps>) {
+  const { t } = useTranslation();
   const author = idea.author;
   const isMine = myId && idea.author_id === myId;
   const notApprovedColor = idea.status === 'REJECTED' ? 'error' : 'warning';
@@ -63,7 +65,7 @@ export default function IdeaCard({
             <Chip size="small" label={idea.status} color={statusColor} />
           )}
           {isMine && (
-            <Tooltip title="Delete">
+            <Tooltip title={t('mweb.common.delete')}>
               <IconButton size="small" color="error" onClick={onDelete}>
                 <DeleteIcon fontSize="small" />
               </IconButton>

@@ -1,6 +1,7 @@
 import { Spinner, Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   busy: boolean;
@@ -10,13 +11,14 @@ interface Props {
 
 /** Cancel / Resubmit action row for the resubmission sheet. */
 export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   return (
     <XStack gap={12} paddingTop={12}>
       <XStack
         testID="pod-resubmit-cancel"
         role="button"
-        aria-label="Cancel"
+        aria-label={t('mweb.common.cancel')}
         aria-disabled={busy}
         onPress={onCancel}
         flex={1}
@@ -36,7 +38,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
       <XStack
         testID="pod-resubmit-save"
         role="button"
-        aria-label="Resubmit request"
+        aria-label={t('mweb.hostManage.resubmitRequest')}
         aria-disabled={busy}
         onPress={busy ? undefined : onSubmit}
         flex={1}

@@ -3,6 +3,7 @@ import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } fr
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import SimpleBarChart from '../../components/SimpleBarChart';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const AVAILABLE_PRODUCTS = gql`
   query EcommDashboardProducts {
@@ -18,6 +19,7 @@ const AVAILABLE_PRODUCTS = gql`
 /** ecomm studio dashboard — catalogue size, stock and price stats + a
  * stock-by-product chart (B3-1). */
 export default function ProductsManagePage() {
+  const { t } = useTranslation();
   const showProducts = useFeatureFlag('is_product_visible');
   const { data, loading, error } = useQuery(AVAILABLE_PRODUCTS, {
     fetchPolicy: 'cache-and-network',
@@ -26,7 +28,7 @@ export default function ProductsManagePage() {
   if (!showProducts) {
     return (
       <Stack sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 4 }}>
-        <Alert severity="info">Product features are not available right now.</Alert>
+        <Alert severity="info">{t('mweb.productsManage.productFeaturesAreNotAvailableRight')}</Alert>
       </Stack>
     );
   }
@@ -65,7 +67,7 @@ export default function ProductsManagePage() {
       {error && <Alert severity="error">{error.message}</Alert>}
 
       <Stack direction="row" spacing={1}>
-        {[{ label: 'Products', value: products.length }, { label: 'In stock', value: totalStock }, { label: 'Avg price', value: `₹${avgPrice}` }].map((item) => (
+        {[{ label: t('mweb.productsManage.products'), value: products.length }, { label: t('mweb.productsManage.inStock'), value: totalStock }, { label: t('mweb.productsManage.avgPrice'), value: `₹${avgPrice}` }].map((item) => (
           <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>{item.label}</Typography>

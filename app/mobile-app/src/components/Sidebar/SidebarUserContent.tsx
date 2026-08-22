@@ -145,7 +145,7 @@ export function SidebarUserContent({
         />
       ) : null}
       <SidebarManageList
-        title="Manage Account"
+        title={t('mweb.common.manageAccount')}
         items={buildManageItems(showPodPlans, showTourGuide)}
         onNavigate={onNavigate}
       />
@@ -157,7 +157,7 @@ export function SidebarUserContent({
           onNavigate={onNavigate}
         />
       ))}
-      <SidebarManageList title="Shop" items={SHOP_ITEMS} onNavigate={onNavigate} />
+      <SidebarManageList title={t('mweb.common.shop')} items={SHOP_ITEMS} onNavigate={onNavigate} />
     </YStack>
   );
 }

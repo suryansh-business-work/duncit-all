@@ -9,6 +9,7 @@ import {
   deleteAccountSchema,
   type DeleteAccountValues,
 } from './delete-account.types';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   loading?: boolean;
@@ -18,6 +19,7 @@ interface Props {
 
 /** OTP step that confirms permanent account deletion. */
 export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
@@ -30,7 +32,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.common.somethingWentWrong'));
     }
   });
 

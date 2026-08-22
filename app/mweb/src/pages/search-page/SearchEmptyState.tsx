@@ -3,6 +3,7 @@ import LightbulbIcon from '@mui/icons-material/LightbulbOutlined';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExploreIcon from '@mui/icons-material/ExploreOutlined';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface CtaBlockProps {
   icon: JSX.Element;
@@ -49,6 +50,7 @@ export default function SearchEmptyState({
   onEarn,
   onExploreCategories,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const isCategory = variant === 'empty-category';
   const heading = isCategory ? 'Nothing Here Yet' : 'No Pods Match Your Search';
   const description = isCategory
@@ -78,15 +80,15 @@ export default function SearchEmptyState({
       {isCategory ? (
         <CtaBlock
           icon={<ExploreIcon color="primary" />}
-          title="Explore Other Interests"
-          description="Browse the full set of categories and discover communities that match what you love."
+          title={t('mweb.search.exploreOtherInterests')}
+          description={t('mweb.search.browseTheFullSetOfCategories')}
           cta="Explore More Categories"
           onClick={onExploreCategories}
         />
       ) : (
         <CtaBlock
           icon={<StorefrontIcon color="primary" />}
-          title="Turn Your Passion Into Something Bigger"
+          title={t('mweb.search.turnYourPassionIntoSomethingBigger')}
           description="If the experience you're searching for doesn't exist yet, why not create it? Host experiences, register your venue or list your products and start earning with Duncit."
           cta="Earn With Duncit"
           onClick={onEarn}

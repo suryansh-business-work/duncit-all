@@ -3,11 +3,13 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AdMedia from './AdMedia';
 import { openAdLink } from './adClick';
 import type { PublicAd } from './useActiveAds';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** A full-viewport sponsored slide for the Explore reel: cover media with a
  * bottom gradient carrying the Sponsored chip, title and an optional
  * "Learn more" CTA when the ad has a landing page. */
 export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
+  const { t } = useTranslation();
   return (
     <Box data-testid="ad-slide" sx={{ position: 'relative', height: '100%', width: '100%', bgcolor: '#000' }}>
       <Box sx={{ position: 'absolute', inset: 0 }}>
@@ -29,7 +31,7 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
         }}
       >
         <Chip
-          label="Sponsored"
+          label={t('mweb.ads.sponsored')}
           size="small"
           sx={{ height: 20, fontSize: 10.5, fontWeight: 600, color: '#fff', bgcolor: 'rgba(255,255,255,0.22)' }}
         />

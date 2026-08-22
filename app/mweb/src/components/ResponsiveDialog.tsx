@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useTheme, type SxProps, type Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -56,6 +57,7 @@ export default function ResponsiveDialog({
   actionsSx,
   children,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useSheet = bottomSheetOnly || (!desktopOnly && isMobile);
@@ -105,7 +107,7 @@ export default function ResponsiveDialog({
             sx={{ px: 2, pt: 0.5, pb: 0.5, flex: '0 0 auto' }}
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>{title}</Box>
-            <IconButton size="small" onClick={onClose} aria-label="Close">
+            <IconButton size="small" onClick={onClose} aria-label={t('mweb.common.close')}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Stack>
@@ -140,7 +142,7 @@ export default function ResponsiveDialog({
             onClick={onClose}
             sx={{ position: 'absolute', right: 8, top: 8 }}
             size="small"
-            aria-label="Close"
+            aria-label={t('mweb.common.close')}
           >
             <CloseIcon fontSize="small" />
           </IconButton>

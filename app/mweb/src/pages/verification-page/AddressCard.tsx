@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client';
 import { Button, Stack, TextField } from '@mui/material';
 import VerificationCardShell from './VerificationCardShell';
 import { SUBMIT_ADDRESS_VERIFICATION, type Verification } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   item: Verification;
@@ -30,6 +31,7 @@ const initialForm = (item: Verification): AddressForm => ({
 
 /** Address verification — a manually-entered residential address → Under Review. */
 export default function AddressCard({ item, onChanged, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<AddressForm>(() => initialForm(item));
   const [busy, setBusy] = useState(false);
   const [submit] = useMutation(SUBMIT_ADDRESS_VERIFICATION);
@@ -60,7 +62,7 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
       });
       onChanged();
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Could not submit the address.');
+      onError(e instanceof Error ? e.message : t('mweb.verification.couldNotSubmitTheAddress'));
     } finally {
       setBusy(false);
     }
@@ -71,15 +73,15 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
   return (
     <VerificationCardShell item={item}>
       <Stack spacing={1.25} sx={{ mt: 1.5 }}>
-        <TextField size="small" label="Address line 1" value={form.line1} onChange={set('line1')} fullWidth />
-        <TextField size="small" label="Address line 2 (optional)" value={form.line2} onChange={set('line2')} fullWidth />
+        <TextField size="small" label={t('mweb.common.addressLine1')} value={form.line1} onChange={set('line1')} fullWidth />
+        <TextField size="small" label={t('mweb.verification.addressLine2Optional')} value={form.line2} onChange={set('line2')} fullWidth />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-          <TextField size="small" label="State" value={form.state} onChange={set('state')} fullWidth />
-          <TextField size="small" label="City" value={form.city} onChange={set('city')} fullWidth />
+          <TextField size="small" label={t('mweb.common.state')} value={form.state} onChange={set('state')} fullWidth />
+          <TextField size="small" label={t('mweb.common.city')} value={form.city} onChange={set('city')} fullWidth />
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-          <TextField size="small" label="Pincode" value={form.pincode} onChange={set('pincode')} fullWidth />
-          <TextField size="small" label="Country (optional)" value={form.country} onChange={set('country')} fullWidth />
+          <TextField size="small" label={t('mweb.common.pincode')} value={form.pincode} onChange={set('pincode')} fullWidth />
+          <TextField size="small" label={t('mweb.verification.countryOptional')} value={form.country} onChange={set('country')} fullWidth />
         </Stack>
         <Button
           variant="outlined"

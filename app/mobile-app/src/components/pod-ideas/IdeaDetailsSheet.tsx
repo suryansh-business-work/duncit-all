@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePodIdeaDetails } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { IdeaDetailsBody } from './IdeaDetailsBody';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   id: string;
@@ -21,6 +22,7 @@ interface Props {
 /** Idea details bottom sheet — description, like, and the comment thread with an
  * add-comment composer. RN port of mWeb's IdeaDetailsDialog. */
 export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color } = useThemeColors();
   const { idea, isLoading, addComment, deleteComment, toggleLike } = usePodIdeaDetails(
     id,
@@ -50,7 +52,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
           <YStack flex={1} testID="idea-details-sheet">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -77,7 +79,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
                   <XStack
                     testID="idea-details-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={onClose}
                     width={32}
                     height={32}

@@ -7,12 +7,14 @@ import NotificationsScreen from './notifications-screen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
 import { useNotificationsSse } from './useNotificationsSse';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface HeaderNotificationsBellProps {
   onToast: (toast: { title?: string; body?: string } | null) => void;
 }
 
 export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNotificationsBellProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -79,7 +81,7 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
 
   return (
     <>
-      <Tooltip title="Notifications">
+      <Tooltip title={t('mweb.appHeader.notifications')}>
         <IconButton
           size="small"
           onClick={() => setNotificationsOpen(true)}

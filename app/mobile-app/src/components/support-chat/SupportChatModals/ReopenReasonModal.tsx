@@ -3,6 +3,7 @@ import { Text, TextArea, XStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
 import { Backdrop, ModalButton } from './ModalBase';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,7 @@ export function ReopenReasonModal({
   onSubmit,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   if (!open) return null;
   return (
@@ -29,7 +31,7 @@ export function ReopenReasonModal({
       testID="reopen-reason-modal"
       footer={
         <XStack gap={8} justifyContent="flex-end">
-          <ModalButton testID="reopen-cancel" label="Cancel" onPress={onClose} />
+          <ModalButton testID="reopen-cancel" label={t('mweb.common.cancel')} onPress={onClose} />
           <ModalButton
             testID="reopen-submit"
             label={busy ? 'Re-opening…' : 'Re-open'}
@@ -51,13 +53,13 @@ export function ReopenReasonModal({
           You can reopen until {deadlineLabel}
         </Text>
       ) : null}
-      <Field label="Reason">
+      <Field label={t('mweb.common.reason')}>
         <TextArea
           testID="reopen-reason-input"
-          aria-label="Reason"
+          aria-label={t('mweb.common.reason')}
           value={reason}
           onChangeText={setReason}
-          placeholder="Reason for re-opening (optional)"
+          placeholder={t('mweb.supportChat.reasonForReOpeningOptional')}
           placeholderTextColor="$muted"
           maxLength={1000}
           backgroundColor="$surface"

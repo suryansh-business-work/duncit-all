@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   /** Hidden when the account has no email or it is already verified. */
@@ -14,6 +15,7 @@ interface Props {
  * header shows. Tapping opens Profile Settings, where the verification section
  * mails and checks the OTP. */
 export function VerifyEmailBanner({ email, verified, onPress }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   if (!email || verified) return null;
 
@@ -21,7 +23,7 @@ export function VerifyEmailBanner({ email, verified, onPress }: Readonly<Props>)
     <XStack
       testID="verify-email-banner"
       role="button"
-      aria-label="Verify your email"
+      aria-label={t('mweb.home.verifyYourEmail')}
       onPress={onPress}
       marginHorizontal={16}
       alignItems="center"

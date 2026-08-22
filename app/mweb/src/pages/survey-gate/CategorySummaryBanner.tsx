@@ -1,6 +1,7 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { CategoryLabels } from './CategoryStep';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const summary = (labels: CategoryLabels) =>
   [labels.super, labels.category, labels.sub].filter(Boolean).join(' › ');
@@ -14,6 +15,7 @@ export default function CategorySummaryBanner({
   labels,
   onChange,
 }: Readonly<{ labels: CategoryLabels; onChange: () => void }>) {
+  const { t } = useTranslation();
   const text = summary(labels);
   if (!text) return null;
   return (
@@ -40,7 +42,7 @@ export default function CategorySummaryBanner({
       </Stack>
       <Chip
         icon={<EditIcon />}
-        label="Change"
+        label={t('mweb.surveyGate.change')}
         onClick={onChange}
         size="small"
         variant="outlined"

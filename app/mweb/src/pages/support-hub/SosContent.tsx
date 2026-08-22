@@ -5,6 +5,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { SupportPodOption } from './queries';
 import { MY_ACTIVE_SOS, RAISE_SOS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   selected: SupportPodOption | null;
@@ -39,6 +40,7 @@ async function captureLocation(): Promise<GeoSample | null> {
 }
 
 export default function SosContent({ selected }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -126,8 +128,8 @@ export default function SosContent({ selected }: Readonly<Props>) {
       </Paper>
 
       <TextField
-        label="Quick note (optional)"
-        placeholder="e.g. medical help needed"
+        label={t('mweb.common.quickNoteOptional')}
+        placeholder={t('mweb.supportHub.eGMedicalHelpNeeded')}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         size="small"
@@ -142,7 +144,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
           {error}
         </Alert>
       )}
-      {success && !error && <Alert severity="success">SOS sent. Hang tight.</Alert>}
+      {success && !error && <Alert severity="success">{t('mweb.supportHub.sosSentHangTight')}</Alert>}
 
       <Button
         variant="contained"

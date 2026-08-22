@@ -1,15 +1,16 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
 import type { PodPickerProduct } from '@duncit/utils';
+import type { Translate } from '../../../i18n/fallback';
 
 // TODO(i18n) — labels
-export const POD_TYPES = [
-  { value: 'FREE', label: 'Free' },
-  { value: 'PAID', label: 'Paid' },
+export const podTypes = (t: Translate) => [
+  { value: 'FREE', label: t('mweb.createPod.free') },
+  { value: 'PAID', label: t('mweb.common.paid') },
 ] as const;
 
 /** The only pod types — FREE and PAID. */
-export const POD_TYPE_VALUES = new Set<string>(POD_TYPES.map((type) => type.value));
+export const POD_TYPE_VALUES = new Set<string>(['FREE', 'PAID']);
 
 export const isFreePodType = (podType?: string | null) => podType === 'FREE';
 

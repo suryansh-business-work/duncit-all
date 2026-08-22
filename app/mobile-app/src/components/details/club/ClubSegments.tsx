@@ -1,3 +1,5 @@
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Translate } from '@/i18n/fallback';
 import { useMemo, useState } from 'react';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -30,14 +32,16 @@ interface Props {
   onOpenHost: (id: string) => void;
 }
 
-function segmentContent(active: SegmentKey, ctx: Props) {
+function segmentContent(active: SegmentKey, ctx: Props, t: Translate) {
   if (active === 'MOMENTS') return <ClubMomentsRail moments={ctx.moments} />;
   if (active === 'WHO')
-    return <ClubBulletsSection title="Who We Are" items={ctx.club.who_we_are} />;
+    return <ClubBulletsSection title={t('mweb.common.whoWeAre')} items={ctx.club.who_we_are} />;
   if (active === 'WHAT')
-    return <ClubBulletsSection title="What We Do" items={ctx.club.what_we_do} />;
-  if (active === 'PERKS') return <ClubBulletsSection title="Perks" items={ctx.club.perks} />;
-  if (active === 'VALUES') return <ClubBulletsSection title="Values" items={ctx.club.values} />;
+    return <ClubBulletsSection title={t('mweb.common.whatWeDo')} items={ctx.club.what_we_do} />;
+  if (active === 'PERKS')
+    return <ClubBulletsSection title={t('mweb.common.perks')} items={ctx.club.perks} />;
+  if (active === 'VALUES')
+    return <ClubBulletsSection title={t('mweb.common.values')} items={ctx.club.values} />;
   if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs} />;
   if (active === 'HOSTS')
     return <ClubHostsRail hosts={ctx.club.hosts} onOpenHost={ctx.onOpenHost} />;
@@ -59,6 +63,7 @@ function segmentContent(active: SegmentKey, ctx: Props) {
 /** The tabbed Club Detail segments — Pods Schedule, Club Moments, the admin
  * content sections and Club Hosts. Empty segments are hidden. */
 export function ClubSegments(props: Readonly<Props>) {
+  const { t } = useTranslation();
   const { club, moments } = props;
   const segments = useMemo(() => {
     const all: readonly (readonly [SegmentKey, string, boolean])[] = [
@@ -106,7 +111,7 @@ export function ClubSegments(props: Readonly<Props>) {
           );
         })}
       </ScrollView>
-      {segmentContent(active, props)}
+      {segmentContent(active, props, t)}
     </YStack>
   );
 }

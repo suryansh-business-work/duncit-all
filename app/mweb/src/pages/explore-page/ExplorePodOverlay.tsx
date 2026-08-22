@@ -6,6 +6,7 @@ import EventIcon from '@mui/icons-material/Event';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { usePricing } from '../../hooks/usePricing';
 import { formatDateTime } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pod: any;
@@ -16,6 +17,7 @@ interface Props {
 const CAPTION_COLLAPSE_AT = 90;
 
 export default function ExplorePodOverlay({ pod, club, location }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { format } = usePricing();
   const [expanded, setExpanded] = useState(false);
@@ -64,7 +66,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               {club.club_name}
             </Typography>
             {club.is_verified && (
-              <VerifiedIcon sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} aria-label="Verified club" />
+              <VerifiedIcon sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} aria-label={t('mweb.explore.verifiedClub')} />
             )}
           </Stack>
         )}

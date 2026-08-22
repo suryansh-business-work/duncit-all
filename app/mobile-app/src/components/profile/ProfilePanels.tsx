@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { Accordion } from '@/components/details/Accordion';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function NavRow({
   icon,
@@ -54,6 +55,7 @@ export function ProfilePanels({
   onOpenHost: () => void;
   onOpenVenue: () => void;
 }>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [open, setOpen] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>
@@ -72,7 +74,7 @@ export function ProfilePanels({
     <YStack paddingHorizontal={16}>
       {me.profile_links.length > 0 ? (
         <Accordion
-          title="Links"
+          title={t('mweb.profile.links')}
           icon="link"
           open={open.has('links')}
           onToggle={() => toggle('links')}
@@ -101,7 +103,7 @@ export function ProfilePanels({
 
       {pet ? (
         <Accordion
-          title="Pet profile"
+          title={t('mweb.profile.petProfile')}
           icon="pets"
           open={open.has('pet')}
           onToggle={() => toggle('pet')}

@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ExploreActionButton } from '@/components/explore/ExploreActionButton';
 import { railLayout } from '@/utils/explore-rail';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -29,6 +30,7 @@ interface ExploreActionRailProps {
  * many actions as fit by screen height and collapses the rest into a "More"
  * (⋮) menu. */
 export function ExploreActionRail({ actions, availableHeight }: Readonly<ExploreActionRailProps>) {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { visible, overflow } = railLayout(actions.length, availableHeight);
   const shown = overflow ? actions.slice(0, visible) : actions;
@@ -53,7 +55,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
           <ExploreActionButton
             testID="reel-more"
             icon="more-vert"
-            label="More"
+            label={t('mweb.explore.more')}
             onPress={() => setMenuOpen((open) => !open)}
           />
           {menuOpen && (

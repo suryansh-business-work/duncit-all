@@ -18,12 +18,14 @@ import InterviewDetailsForm from './InterviewDetailsForm';
 import InterviewSuccessCard from './InterviewSuccessCard';
 import { PHONE_EXTENSION_PATTERN, PHONE_NUMBER_PATTERN } from '../../forms/validation/rules';
 import { parseApiError } from '../../utils/parseApiError';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   type: 'HOST' | 'VENUE';
 }
 
 export default function InterviewBookingPage({ type }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [createMut] = useMutation(CREATE_INTERVIEW);
   const isHost = type === 'HOST';
@@ -76,15 +78,15 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
 
   const submit = async () => {
     setError(null);
-    if (!name.trim()) return setError('Your name is required');
-    if (!email.trim()) return setError('Email is required');
-    if (!PHONE_EXTENSION_PATTERN.test(phoneExtension)) return setError('Phone code is invalid');
-    if (!PHONE_NUMBER_PATTERN.test(phoneNumber)) return setError('Phone must contain only digits (6-15 digits)');
+    if (!name.trim()) return setError(t('mweb.interviewBooking.yourNameIsRequired'));
+    if (!email.trim()) return setError(t('mweb.interviewBooking.emailIsRequired'));
+    if (!PHONE_EXTENSION_PATTERN.test(phoneExtension)) return setError(t('mweb.interviewBooking.phoneCodeIsInvalid'));
+    if (!PHONE_NUMBER_PATTERN.test(phoneNumber)) return setError(t('mweb.interviewBooking.phoneMustContainOnlyDigits6'));
     if (!about.trim())
       return setError(
         `Tell us briefly about ${isHost ? 'why you want to host' : 'your venue'}`
       );
-    if (slotList.length === 0) return setError('Pick at least one preferred time slot');
+    if (slotList.length === 0) return setError(t('mweb.interviewBooking.pickAtLeastOnePreferredTime'));
 
     setBusy(true);
     try {
@@ -173,7 +175,7 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
         />
 
         <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button onClick={() => navigate(-1)}>Cancel</Button>
+          <Button onClick={() => navigate(-1)}>{t('mweb.common.cancel')}</Button>
           <Button variant="contained" size="large" onClick={submit} disabled={busy}>
             {busy ? 'Submitting…' : 'Request Interview'}
           </Button>

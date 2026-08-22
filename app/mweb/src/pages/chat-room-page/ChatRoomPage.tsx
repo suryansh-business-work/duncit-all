@@ -19,8 +19,10 @@ import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
 import { CHAT_PARTICIPANTS, POD_MESSAGES, REACT_MSG, SEND_MSG } from './queries';
 import { usePodSocket } from './usePodSocket';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function ChatRoomPage() {
+  const { t } = useTranslation();
   const { id: podId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery(POD_MESSAGES, {
@@ -50,7 +52,7 @@ export default function ChatRoomPage() {
     if (pod?.club_slug && pod?.pod_id) {
       navigate(podUrl(pod.club_slug, pod.pod_id));
     } else {
-      setError('Pod details are unavailable for this chat.');
+      setError(t('mweb.chatRoom.podDetailsAreUnavailableForThis'));
     }
   };
   const messages = useMemo(() => {
@@ -201,7 +203,7 @@ export default function ChatRoomPage() {
           submit(url);
         }}
         folder="/chat"
-        title="Send image"
+        title={t('mweb.common.sendImage')}
       />
     </Stack>
   );

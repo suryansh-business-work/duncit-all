@@ -2,6 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Text, YStack } from 'tamagui';
 
 import { clampScore, healthBandColor } from '@/utils/health';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface HealthMeterProps {
   score: number;
@@ -17,11 +18,15 @@ export interface HealthMeterProps {
 export function HealthMeter({
   score,
   band,
-  label = 'Account Health',
+  label,
   size = 168,
   thickness = 14,
   caption,
 }: Readonly<HealthMeterProps>) {
+  const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const labelText = label ?? t('mweb.health.accountHealth');
   const radius = (size - thickness) / 2;
   const center = size / 2;
   const circumference = Math.PI * radius;
@@ -75,7 +80,7 @@ export function HealthMeter({
         </YStack>
       </YStack>
       <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted" marginTop={8}>
-        {label}
+        {labelText}
       </Text>
       {caption ? (
         <Text fontSize={12} color="$muted" textAlign="center" marginTop={2}>

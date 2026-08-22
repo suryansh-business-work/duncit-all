@@ -12,6 +12,7 @@ import {
 import { DeleteAccountForm, type DeleteAccountValues } from '../../forms/delete-account';
 import { parseApiError } from '../../utils/parseApiError';
 import { DELETE_MY_ACCOUNT, REQUEST_ACCOUNT_DELETION_OTP } from './security-queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,7 @@ interface Props {
 /** OTP step of the delete-account flow (the danger confirmation lives in the
  * parent ConfirmDialog, which requests the OTP before opening this). */
 export default function DeleteAccountDialog({ open, onClose, onDeleted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [info, setInfo] = useState<string | null>('OTP sent to your email.');
   const [requestOtp, { loading: requesting }] = useMutation(REQUEST_ACCOUNT_DELETION_OTP);
   const [deleteAccount, { loading: deleting }] = useMutation(DELETE_MY_ACCOUNT);
@@ -43,7 +45,7 @@ export default function DeleteAccountDialog({ open, onClose, onDeleted }: Readon
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Delete account</DialogTitle>
+      <DialogTitle>{t('mweb.account.deleteAccount')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           {info && <Alert severity="info">{info}</Alert>}

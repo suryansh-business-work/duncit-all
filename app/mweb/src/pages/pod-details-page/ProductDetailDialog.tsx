@@ -26,6 +26,7 @@ import ProductReviews from './ProductReviews';
 import { formatRupees, productSpecs, type ProductSpec } from './product-specs';
 import { PUBLIC_PRODUCT, RECORD_PRODUCT_CLICK, RECORD_PRODUCT_VIEW } from './queries';
 import { selectionKey } from '../../utils/product-selection';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** The variant the buyer has picked in the dialog, with everything the cart
  * line needs (label/price/image/stock cap). Null for variant-less products. */
@@ -108,6 +109,7 @@ export default function ProductDetailDialog({
   onUpdateLine,
   viewOnly = false,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
@@ -176,7 +178,7 @@ export default function ProductDetailDialog({
               <ButtonBase
                 key={url}
                 onClick={() => setZoomIndex(imageIndex)}
-                aria-label="Zoom image"
+                aria-label={t('mweb.common.zoomImage')}
                 sx={{ borderRadius: '16px', flex: '0 0 auto' }}
               >
                 <Box
@@ -248,7 +250,7 @@ export default function ProductDetailDialog({
       <Dialog open={Boolean(productId)} onClose={onClose} fullScreen>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           Product details
-          <IconButton aria-label="Close" onClick={onClose} size="small">
+          <IconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>

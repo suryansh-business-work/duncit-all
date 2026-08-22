@@ -6,6 +6,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import { AddressForm, type AddressFormValues, type UserAddress } from './address-book-form';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const ADDRESS_FIELDS = gql`
   fragment AddressFields on UserAddress {
@@ -55,6 +56,7 @@ const oneLine = (a: UserAddress) =>
 /** Profile Settings › Address Book — the user's saved delivery addresses,
  * selectable at checkout. Add/edit via the RHF+Zod dialog; delete inline. */
 export default function AddressBookSection() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(MY_ADDRESSES, {
     fetchPolicy: 'cache-and-network',
   });
@@ -129,7 +131,7 @@ export default function AddressBookSection() {
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {address.label}
                 </Typography>
-                {address.is_default && <Chip size="small" color="primary" label="Default" sx={{ fontWeight: 600 }} />}
+                {address.is_default && <Chip size="small" color="primary" label={t('mweb.account.default')} sx={{ fontWeight: 600 }} />}
               </Stack>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} noWrap>
                 {oneLine(address)}

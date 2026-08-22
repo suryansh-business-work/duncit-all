@@ -1,5 +1,6 @@
 import { Box, keyframes } from '@mui/material';
 import { semantic } from '@duncit/auth-tokens';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   variant: 'processing' | 'success';
@@ -33,11 +34,12 @@ const popIn = keyframes`
 `;
 
 function ProcessingDots({ size }: Readonly<{ size: number }>) {
+  const { t } = useTranslation();
   const dot = size * 0.18;
   return (
     <Box
       role="img"
-      aria-label="Processing payment"
+      aria-label={t('mweb.paymentLottie.processingPayment')}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -66,10 +68,11 @@ function ProcessingDots({ size }: Readonly<{ size: number }>) {
 }
 
 function SuccessCheck({ size }: Readonly<{ size: number }>) {
+  const { t } = useTranslation();
   return (
     <Box
       role="img"
-      aria-label="Payment successful"
+      aria-label={t('mweb.paymentLottie.paymentSuccessful')}
       sx={{
         width: size,
         height: size,

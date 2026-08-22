@@ -15,6 +15,7 @@ import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import { alpha, type Theme } from '@mui/material/styles';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Zone {
   zone_name: string;
@@ -41,6 +42,7 @@ export default function LocationAreaPicker({
   draftZone,
   setDraftZone,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const filteredZones = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -81,7 +83,7 @@ export default function LocationAreaPicker({
           <TextField
             size="small"
             fullWidth
-            placeholder="Search locality or PIN code"
+            placeholder={t('mweb.appHeader.searchLocalityOrPinCode')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             InputProps={{
@@ -107,7 +109,7 @@ export default function LocationAreaPicker({
                   <LayersOutlinedIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="All areas"
+                  primary={t('mweb.common.allAreas')}
                   secondary={`${zones.length} localities`}
                   primaryTypographyProps={{ variant: 'body2', fontWeight: 600, noWrap: true }}
                   secondaryTypographyProps={{ variant: 'caption' }}

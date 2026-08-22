@@ -21,6 +21,7 @@ import {
   supportSchema,
 } from './schema';
 import AttachmentsField from './AttachmentsField';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   initialValues?: Partial<SupportFormValues>;
@@ -35,6 +36,7 @@ export default function SupportForm({
   errorMessage,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<string | undefined>(undefined);
   const { control, handleSubmit, formState, setValue } = useForm<SupportFormValues>({
     defaultValues: { ...DEFAULTS, ...initialValues },
@@ -58,7 +60,7 @@ export default function SupportForm({
     try {
       await onSubmit(values);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : 'Could not submit. Please try again.');
+      setStatus(e instanceof Error ? e.message : t('mweb.support.couldNotSubmitPleaseTryAgain'));
     }
   });
 
@@ -80,7 +82,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="name"
-          label="Name"
+          label={t('mweb.support.name')}
           autoComplete="name"
           hint="From your Duncit account"
           InputProps={{ readOnly: true }}
@@ -88,7 +90,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="email"
-          label="Email"
+          label={t('mweb.common.email')}
           type="email"
           autoComplete="email"
           hint="From your Duncit account"
@@ -101,7 +103,7 @@ export default function SupportForm({
             <TextField
               {...field}
               select
-              label="Category"
+              label={t('mweb.common.category')}
               required
               size="small"
               fullWidth
@@ -124,7 +126,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="subject"
-          label="Subject"
+          label={t('mweb.common.subject')}
           required
           hint="3–120 characters"
           InputProps={{

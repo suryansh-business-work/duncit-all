@@ -1,5 +1,6 @@
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import IdeaCard from './IdeaCard';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface IdeasListProps {
   loading: boolean;
@@ -24,9 +25,10 @@ export default function IdeasList({
   onShare,
   onDelete,
 }: Readonly<IdeasListProps>) {
+  const { t } = useTranslation();
   const ideasContent =
     ideas.length === 0 ? (
-      <Alert severity="info">No ideas yet — be the first to share one!</Alert>
+      <Alert severity="info">{t('mweb.podIdeas.noIdeasYetBeTheFirst')}</Alert>
     ) : (
       <Stack spacing={1.5}>
         {ideas.map((idea: any) => (

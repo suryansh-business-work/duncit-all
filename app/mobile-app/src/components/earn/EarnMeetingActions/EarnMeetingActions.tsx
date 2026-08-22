@@ -14,6 +14,7 @@ import {
 import { ActionButton } from './ActionButton';
 import { RescheduleDialog } from './RescheduleDialog';
 import { CancelDialog } from './CancelDialog';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   kind: string;
@@ -36,6 +37,7 @@ export function EarnMeetingActions({
   currentSlot,
   onChanged,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const canReschedule = (rescheduleCount ?? 0) < 1;
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -72,11 +74,11 @@ export function EarnMeetingActions({
 
   const reschedule = async () => {
     if (!slot) {
-      setError('Pick an available slot');
+      setError(t('mweb.earn.pickAnAvailableSlot'));
       return;
     }
     if (!reason.trim()) {
-      setError('Please tell us why you are rescheduling');
+      setError(t('mweb.earn.pleaseTellUsWhyYouAre'));
       return;
     }
     setError(null);
@@ -98,7 +100,7 @@ export function EarnMeetingActions({
 
   const cancel = async () => {
     if (!reason.trim()) {
-      setError('Please tell us why you are cancelling');
+      setError(t('mweb.earn.pleaseTellUsWhyYouAre2'));
       return;
     }
     setError(null);
@@ -123,7 +125,7 @@ export function EarnMeetingActions({
       {canReschedule ? (
         <ActionButton
           testID={`reschedule-${kind}`}
-          label="Reschedule meeting"
+          label={t('mweb.earn.rescheduleMeeting')}
           onPress={openReschedule}
         />
       ) : (
@@ -131,7 +133,12 @@ export function EarnMeetingActions({
           {RESCHEDULE_LIMIT_MESSAGE}
         </Text>
       )}
-      <ActionButton testID={`cancel-${kind}`} label="Cancel meeting" danger onPress={openCancel} />
+      <ActionButton
+        testID={`cancel-${kind}`}
+        label={t('mweb.earn.cancelMeeting')}
+        danger
+        onPress={openCancel}
+      />
 
       <RescheduleDialog
         open={rescheduleOpen}

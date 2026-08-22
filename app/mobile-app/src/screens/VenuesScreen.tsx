@@ -10,6 +10,7 @@ import { useActiveAds } from '@/hooks/useActiveAds';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExplore';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Horizontal Super-category chip rail — "All" clears the filter. */
 function CategoryChips({
@@ -57,6 +58,7 @@ function CategoryChips({
 /** Venues discovery — venues in the selected location with a server-side
  * debounced search + Super-category filter. mWeb twin: /venues (VenuesPage). */
 export function VenuesScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { primary } = useThemeColors();
   const {
@@ -74,14 +76,14 @@ export function VenuesScreen() {
   const { ads } = useActiveAds('VENUE_LIST');
 
   return (
-    <StackScreen title="Venues" testID="venues-screen">
+    <StackScreen title={t('mweb.common.venues')} testID="venues-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={12} padding={16} paddingBottom={40}>
           <VenuesLocationBar cityLabel={cityLabel} />
           <Input
             testID="venues-search"
-            aria-label="Search venues"
-            placeholder="Search venues by name, type or area"
+            aria-label={t('mweb.venues.searchVenues')}
+            placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
             placeholderTextColor="$muted"
             value={searchInput}
             onChangeText={setSearchInput}

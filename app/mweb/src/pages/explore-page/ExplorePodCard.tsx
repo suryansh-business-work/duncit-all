@@ -23,6 +23,7 @@ import { usePricing } from '../../hooks/usePricing';
 import { isPodExpired } from '../../utils/podStatus';
 import { shareUrl } from '../../lib/share-link';
 import { podSeatsTaken } from '@duncit/utils';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pod: any;
@@ -53,6 +54,7 @@ export default function ExplorePodCard({
   onToggleSave,
   viewerId,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { format } = usePricing();
   // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
@@ -159,13 +161,13 @@ export default function ExplorePodCard({
           {
             key: 'save',
             icon: saved ? <BookmarkIcon /> : <BookmarkBorderIcon />,
-            label: 'Save',
+            label: t('mweb.explore.save'),
             onClick: onToggleSave,
             active: saved,
             loading: savePending,
           },
-          { key: 'share', icon: <ShareIcon />, label: 'Share', onClick: share },
-          { key: 'open', icon: <OpenInNewIcon />, label: 'Open', onClick: openPod },
+          { key: 'share', icon: <ShareIcon />, label: t('mweb.common.share'), onClick: share },
+          { key: 'open', icon: <OpenInNewIcon />, label: t('mweb.explore.open'), onClick: openPod },
         ]}
       />
 
@@ -202,7 +204,7 @@ export default function ExplorePodCard({
             endIcon={<ArrowForwardIcon />}
             onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
             sx={{ minWidth: 48, borderRadius: '16px', px: 1.2 }}
-            aria-label="Open pod details"
+            aria-label={t('mweb.explore.openPodDetails')}
           >
             Go
           </Button>

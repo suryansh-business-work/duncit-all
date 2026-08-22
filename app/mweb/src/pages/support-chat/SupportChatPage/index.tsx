@@ -10,8 +10,10 @@ import ChatDialogs from './ChatDialogs';
 import { useSupportChat } from './useSupportChat';
 import { useDateFormat } from '../../../utils/dateFormat';
 import type { SupportChatMessage } from '../queries';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 export default function SupportChatPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const chat = useSupportChat();
   const { formatDateTime, formatTime, timeZone } = useDateFormat();
@@ -67,7 +69,7 @@ export default function SupportChatPage() {
       await chat.reopen(reason);
       setReopenOpen(false);
     } catch (e) {
-      setReopenError(e instanceof Error ? e.message : 'Could not re-open this chat.');
+      setReopenError(e instanceof Error ? e.message : t('mweb.supportChat.couldNotReOpenThisChat'));
     }
   };
 
@@ -97,7 +99,7 @@ export default function SupportChatPage() {
       />
 
       {showJump && (
-        <Fab size="small" color="primary" aria-label="Jump to latest" onClick={jumpToBottom} sx={{ position: 'absolute', right: 12, bottom: 76 }}>
+        <Fab size="small" color="primary" aria-label={t('mweb.common.jumpToLatest')} onClick={jumpToBottom} sx={{ position: 'absolute', right: 12, bottom: 76 }}>
           <KeyboardArrowDownIcon />
         </Fab>
       )}

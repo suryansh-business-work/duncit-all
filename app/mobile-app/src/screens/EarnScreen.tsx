@@ -22,6 +22,7 @@ import {
   type EarnJourneyCta,
   type EarnMeeting,
 } from '@duncit/onboarding';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Journeys, copy and the locked/unlocked rules are shared with mWeb and the
 // partner portal so the three cannot drift (they already had — this screen's
@@ -36,6 +37,7 @@ const ICONS: Record<EarnJourney['iconKey'], ComponentProps<typeof MaterialIcons>
 /** "Earn with Duncit" — three ways to start earning; a box is disabled when the
  * user already holds the matching role or has a pending onboarding meeting. */
 export function EarnScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const roles = useMe().data?.me?.roles ?? [];
   const showProducts = useFeatureFlag('is_product_visible');
@@ -68,7 +70,7 @@ export function EarnScreen() {
   };
 
   return (
-    <StackScreen title="Earn with Duncit" testID="earn-screen">
+    <StackScreen title={t('mweb.earn.earnWithDuncit')} testID="earn-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={40}>
           <Text fontSize={13} color="$muted">

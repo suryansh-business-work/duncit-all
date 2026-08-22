@@ -6,6 +6,7 @@ import type { PodIdea } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { categoryPathLabel } from '@/utils/idea-category';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   idea: PodIdea;
@@ -35,6 +36,7 @@ export function IdeaCard({
   onDelete,
   showStatus,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted, danger } = useThemeColors();
   const author = idea.author;
   const isMine = !!myId && idea.author_id === myId;
@@ -88,7 +90,7 @@ export function IdeaCard({
           <XStack
             testID={`idea-delete-${idea.id}`}
             role="button"
-            aria-label="Delete idea"
+            aria-label={t('mweb.podIdeas.deleteIdea')}
             onPress={onDelete}
             padding={4}
             pressStyle={{ opacity: 0.6 }}
@@ -151,7 +153,7 @@ export function IdeaCard({
         <XStack
           testID={`idea-like-${idea.id}`}
           role="button"
-          aria-label="Like idea"
+          aria-label={t('mweb.podIdeas.likeIdea')}
           onPress={onLike}
           alignItems="center"
           gap={5}
@@ -169,7 +171,7 @@ export function IdeaCard({
         <XStack
           testID={`idea-comment-${idea.id}`}
           role="button"
-          aria-label="Comment on idea"
+          aria-label={t('mweb.podIdeas.commentOnIdea')}
           onPress={onOpen}
           alignItems="center"
           gap={5}
@@ -183,7 +185,7 @@ export function IdeaCard({
         <XStack
           testID={`idea-share-${idea.id}`}
           role="button"
-          aria-label="Share idea"
+          aria-label={t('mweb.podIdeas.shareIdea')}
           onPress={onShare}
           alignItems="center"
           gap={5}

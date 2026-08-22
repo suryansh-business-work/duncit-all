@@ -3,9 +3,11 @@ import { XStack } from 'tamagui';
 
 import { useLogout } from '@/hooks/useLogout';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Clears the session and returns to login — mirrors mWeb's header logout. */
 export function LogoutButton() {
+  const { t } = useTranslation();
   const onLogout = useLogout();
   const { color } = useThemeColors();
 
@@ -13,7 +15,7 @@ export function LogoutButton() {
     <XStack
       testID="logout-button"
       role="button"
-      aria-label="Logout"
+      aria-label={t('mweb.common.logout')}
       onPress={() => void onLogout()}
       width={40}
       height={40}

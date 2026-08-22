@@ -11,6 +11,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useFollowList, type FollowListPerson, type FollowTab } from '@/hooks/useFollowList';
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const TABS: FollowTab[] = ['followers', 'following'];
 const TAB_LABELS: Record<FollowTab, string> = { followers: 'Followers', following: 'Following' };
@@ -90,6 +91,7 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
 /** Followers / Following list for a profile (bug 9). Opens from the
  * followers/following counts; rows deep-link to each person's public profile. */
 export function FollowListScreen() {
+  const { t } = useTranslation();
   const { params } = useRoute<RouteProp<RootStackParamList, 'Follow'>>();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [tab, setTab] = useState<FollowTab>(params.tab);
@@ -97,7 +99,7 @@ export function FollowListScreen() {
   const myId = useMe().data?.me?.user_id;
 
   return (
-    <StackScreen title="Connections" testID="follow-list-screen">
+    <StackScreen title={t('mweb.followList.connections')} testID="follow-list-screen">
       <XStack gap={8} paddingHorizontal={16} paddingTop={8} paddingBottom={4}>
         {TABS.map((value) => {
           const selected = tab === value;

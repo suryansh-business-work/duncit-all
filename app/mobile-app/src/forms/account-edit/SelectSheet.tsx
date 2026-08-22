@@ -8,6 +8,7 @@ import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface SelectOption {
   value: string;
@@ -59,6 +60,7 @@ export function SelectSheet({
   leading,
   onPick,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -111,7 +113,7 @@ export function SelectSheet({
               <YStack
                 testID={`${testID}-sheet-backdrop`}
                 role="button"
-                aria-label="Close"
+                aria-label={t('mweb.common.close')}
                 onPress={close}
                 position="absolute"
                 top={0}
@@ -145,7 +147,7 @@ export function SelectSheet({
                   <MaterialIcons name="search" size={16} color={muted} />
                   <Input
                     testID={`${testID}-search`}
-                    aria-label="Search"
+                    aria-label={t('mweb.common.search')}
                     flex={1}
                     unstyled
                     value={query}

@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -23,6 +24,7 @@ export function PlaceholderScreen({
   subtitle?: string;
   icon?: IconName;
 }>) {
+  const { t } = useTranslation();
   const goBack = useGoBack();
   const { color: ink, primary } = useThemeColors();
 
@@ -34,7 +36,7 @@ export function PlaceholderScreen({
           <XStack
             testID="placeholder-back"
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={goBack}
             width={40}
             height={40}

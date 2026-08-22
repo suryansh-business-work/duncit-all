@@ -8,16 +8,18 @@ import { StackScreen } from '@/components/StackScreen';
 import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Policies — the list of policy documents; tapping opens the reader. */
 export function PoliciesScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { data, isLoading } = usePublicPolicies();
   const { primary, muted } = useThemeColors();
   const policies = data?.publicPolicies ?? [];
 
   return (
-    <StackScreen title="Policies" testID="policies-screen">
+    <StackScreen title={t('mweb.common.policies')} testID="policies-screen">
       {isLoading && policies.length === 0 ? (
         <ListSkeleton testID="policies-loading" count={5} />
       ) : (

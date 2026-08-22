@@ -6,6 +6,8 @@ import ClubBulletsSection from './ClubBulletsSection';
 import ClubFaqsSection from './ClubFaqsSection';
 import ClubHostsSection from './ClubHostsSection';
 import ClubAdminsSection from './ClubAdminsSection';
+import type { Translate } from '../../i18n/fallback';
+import { useTranslation } from '../../i18n/useTranslation';
 
 type SegmentKey = 'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS' | 'ADMINS';
 
@@ -26,12 +28,12 @@ export const pickPodMoments = (pods: any[], limit: number) => {
   return [...all].sort(() => Math.random() - 0.5).slice(0, limit);
 };
 
-function renderSegment(active: SegmentKey, ctx: RenderCtx) {
+function renderSegment(active: SegmentKey, ctx: RenderCtx, t: Translate) {
   if (active === 'MOMENTS') return <ClubMomentsSection moments={ctx.moments} />;
-  if (active === 'WHO') return <ClubBulletsSection title="Who We Are" items={ctx.club.who_we_are ?? []} />;
-  if (active === 'WHAT') return <ClubBulletsSection title="What We Do" items={ctx.club.what_we_do ?? []} />;
-  if (active === 'PERKS') return <ClubBulletsSection title="Perks" items={ctx.club.perks ?? []} />;
-  if (active === 'VALUES') return <ClubBulletsSection title="Values" items={ctx.club.values ?? []} />;
+  if (active === 'WHO') return <ClubBulletsSection title={t('mweb.common.whoWeAre')} items={ctx.club.who_we_are ?? []} />;
+  if (active === 'WHAT') return <ClubBulletsSection title={t('mweb.common.whatWeDo')} items={ctx.club.what_we_do ?? []} />;
+  if (active === 'PERKS') return <ClubBulletsSection title={t('mweb.common.perks')} items={ctx.club.perks ?? []} />;
+  if (active === 'VALUES') return <ClubBulletsSection title={t('mweb.common.values')} items={ctx.club.values ?? []} />;
   if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs ?? []} />;
   if (active === 'HOSTS') return <ClubHostsSection hosts={ctx.club.hosts ?? []} />;
   if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins ?? []} />;
@@ -49,6 +51,7 @@ function renderSegment(active: SegmentKey, ctx: RenderCtx) {
 
 /** The tabbed Club Detail segments (Pods Schedule, Club Moments, content sections, hosts). */
 export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Readonly<Props>) {
+  const { t } = useTranslation();
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const segments = useMemo(() => {
     const all: ReadonlyArray<readonly [SegmentKey, string, boolean]> = [
@@ -81,7 +84,7 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
           />
         ))}
       </Stack>
-      <Box>{renderSegment(active, { club, pods, moments, priceFormat, onOpenPod })}</Box>
+      <Box>{renderSegment(active, { club, pods, moments, priceFormat, onOpenPod }, t)}</Box>
     </Stack>
   );
 }

@@ -120,11 +120,12 @@ function FollowButton({
 
 /** Owner-only shortcut into the account editor. */
 function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID="public-profile-edit"
       role="button"
-      aria-label="Edit my profile"
+      aria-label={t('mweb.publicProfile.editMyProfile')}
       onPress={onPress}
       alignSelf="center"
       alignItems="center"
@@ -206,7 +207,7 @@ export function PublicProfileScreen() {
   }
 
   return (
-    <StackScreen title="Profile" testID="public-profile-screen">
+    <StackScreen title={t('mweb.publicProfile.profile')} testID="public-profile-screen">
       {body}
     </StackScreen>
   );

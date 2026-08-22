@@ -7,6 +7,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import FollowListDialog from '../../components/FollowListDialog';
 import ProfileAvatar from '../../components/profile-avatar';
 import { shareProfile } from '../../utils/share';
+import { useTranslation } from '../../i18n/useTranslation';
 
 function Stat({
   label,
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const displayName = me.full_name || `${me.first_name} ${me.last_name}`;
   const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
@@ -67,7 +69,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           position: 'relative',
         }}
       >
-        <Tooltip title="Account settings">
+        <Tooltip title={t('mweb.profile.accountSettings')}>
           <IconButton onClick={onSettings} sx={{ position: 'absolute', top: 12, right: 12, color: '#fff', bgcolor: 'rgba(0,0,0,0.32)' }}>
             <SettingsIcon />
           </IconButton>
@@ -131,7 +133,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               border: 1,
               borderColor: 'divider',
             }}
-            aria-label="Share profile"
+            aria-label={t('mweb.common.shareProfile')}
           >
             <ShareIcon />
           </IconButton>
@@ -145,7 +147,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               border: 1,
               borderColor: 'divider',
             }}
-            aria-label="Account settings"
+            aria-label={t('mweb.profile.accountSettings')}
           >
             <SettingsIcon />
           </IconButton>

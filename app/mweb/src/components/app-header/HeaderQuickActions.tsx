@@ -69,7 +69,7 @@ export default function HeaderQuickActions({
           onClick={onOpenMenu}
           data-tour="home-profile"
           sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
-          aria-label="Open account menu"
+          aria-label={t('mweb.common.openAccountMenu')}
         >
           <Badge
             overlap="circular"

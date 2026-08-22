@@ -1,6 +1,7 @@
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { SEARCH_SORT_OPTIONS, type SearchSort } from '@/utils/search-sort';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -16,12 +17,13 @@ interface Props {
  * {@link DuncitDialog}; this file only declares the options.
  */
 export function SearchSortSheet({ open, value, onClose, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <DuncitDialog
       open={open}
       onClose={onClose}
       testID="search-sort"
-      title="Sort Results"
+      title={t('mweb.search.sortResults')}
       closeLabel="Close"
     >
       <OptionChipRow

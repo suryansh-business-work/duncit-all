@@ -1,3 +1,4 @@
+import type { Translate } from '@/i18n/fallback';
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -9,12 +10,15 @@ import { useLogout } from '@/hooks/useLogout';
 import { graphqlRequest } from '@/services/graphql.client';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
+import { useTranslation } from '@/hooks/useTranslation';
 
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong.');
+const errMsg = (e: unknown, t: Translate) =>
+  e instanceof Error ? e.message : t('mweb.account.somethingWentWrong');
 
 /** Account security — change password + the de-emphasised, danger-styled delete
  * action at the bottom of Profile Settings. RN twin of mWeb's SecuritySection. */
 export function SecuritySection() {
+  const { t } = useTranslation();
   const { color, danger } = useThemeColors();
   const logout = useLogout();
   const [changeOpen, setChangeOpen] = useState(false);
@@ -32,7 +36,7 @@ export function SecuritySection() {
         setConfirmOpen(false);
         setDeleteOpen(true);
       })
-      .catch((e) => setError(errMsg(e)))
+      .catch((e) => setError(errMsg(e, t)))
       .finally(() => setRequesting(false));
   };
 
@@ -59,7 +63,7 @@ export function SecuritySection() {
         <Text
           testID="open-change-password"
           role="button"
-          aria-label="Change password"
+          aria-label={t('mweb.account.changePassword')}
           onPress={() => setChangeOpen(true)}
           fontSize={13}
           fontWeight="700"
@@ -74,7 +78,7 @@ export function SecuritySection() {
       <XStack
         testID="open-delete-account"
         role="button"
-        aria-label="Delete account"
+        aria-label={t('mweb.account.deleteAccount')}
         onPress={() => setConfirmOpen(true)}
         alignItems="center"
         gap={10}
@@ -99,10 +103,10 @@ export function SecuritySection() {
 
       <ConfirmDialog
         open={changedOpen}
-        title="Password updated"
-        message="Your password has been changed successfully."
-        confirmLabel="Done"
-        cancelLabel="Close"
+        title={t('mweb.account.passwordUpdated')}
+        message={t('mweb.account.yourPasswordHasBeenChangedSuccessfully')}
+        confirmLabel={t('mweb.common.done')}
+        cancelLabel={t('mweb.common.close')}
         onConfirm={() => setChangedOpen(false)}
         onCancel={() => setChangedOpen(false)}
         testID="password-changed-dialog"
@@ -110,10 +114,10 @@ export function SecuritySection() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete your account?"
-        message="This permanently deletes your account and data. This action cannot be undone."
+        title={t('mweb.account.deleteYourAccount')}
+        message={t('mweb.account.thisPermanentlyDeletesYourAccountAnd')}
         confirmLabel={requesting ? 'Sending…' : 'Send code'}
-        cancelLabel="Cancel"
+        cancelLabel={t('mweb.common.cancel')}
         destructive
         onConfirm={confirmDeletion}
         onCancel={() => setConfirmOpen(false)}

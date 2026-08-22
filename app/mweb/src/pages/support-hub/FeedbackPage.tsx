@@ -5,12 +5,14 @@ import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
 import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
 import SupportShell from './SupportShell';
 import FeedbackForm, { type FeedbackValues } from '../../forms/feedback';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const SUBMIT_APP_FEEDBACK = gql(SUBMIT_APP_FEEDBACK_SDL);
 
 /** "Report a problem" — a quick feedback note that reaches the team on Slack.
  * The server stamps the signed-in identity; the client only sends content. */
 export default function FeedbackPage() {
+  const { t } = useTranslation();
   const [submit, { loading }] = useMutation(SUBMIT_APP_FEEDBACK);
   const [sent, setSent] = useState(false);
 
@@ -42,13 +44,13 @@ export default function FeedbackPage() {
 
   return (
     <SupportShell
-      title="Report a Problem"
-      subtitle="Send feedback or report an issue — it reaches our team instantly"
+      title={t('mweb.common.reportAProblem')}
+      subtitle={t('mweb.supportHub.sendFeedbackOrReportAnIssue')}
       icon={<FeedbackOutlinedIcon />}
       backTo="/support"
     >
       {sent ? (
-        <Alert severity="success">Thanks! Your feedback has been sent to our team.</Alert>
+        <Alert severity="success">{t('mweb.supportHub.thanksYourFeedbackHasBeenSent')}</Alert>
       ) : (
         <FeedbackForm loading={loading} onSubmit={onSubmit} />
       )}

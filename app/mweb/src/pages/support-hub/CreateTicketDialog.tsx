@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import AttachmentsField from '../../forms/support-form/AttachmentsField';
 import { CREATE_TICKET, type TicketCategory } from '../support-tickets/queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const CATEGORIES: TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function CreateTicketDialog({ open, onClose, onCreated }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState<TicketCategory>('GENERAL');
   const [message, setMessage] = useState('');
@@ -49,11 +51,11 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>New Ticket</DialogTitle>
+      <DialogTitle>{t('mweb.supportHub.newTicket')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           <TextField
-            label="Subject"
+            label={t('mweb.common.subject')}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             fullWidth
@@ -61,7 +63,7 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
           />
           <TextField
             select
-            label="Category"
+            label={t('mweb.common.category')}
             value={category}
             onChange={(e) => setCategory(e.target.value as TicketCategory)}
             fullWidth
@@ -73,7 +75,7 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
             ))}
           </TextField>
           <TextField
-            label="Describe the issue"
+            label={t('mweb.supportHub.describeTheIssue')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             fullWidth
@@ -84,7 +86,7 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('mweb.common.cancel')}</Button>
         <Button
           variant="contained"
           disabled={loading || !subject.trim() || !message.trim()}

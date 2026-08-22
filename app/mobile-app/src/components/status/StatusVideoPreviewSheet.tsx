@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { VideoTrim } from '@/services/video-compression';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Story videos are short clips — capped at 15s (Bug 3). */
 export const MAX_STORY_VIDEO_SECONDS = 15;
@@ -69,6 +70,7 @@ function PreviewBody({
   onCancel,
   onConfirm,
 }: Readonly<Props & { video: PendingStoryVideo }>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const { height: windowHeight } = useWindowDimensions();
   const [start, setStart] = useState(0);
@@ -102,7 +104,7 @@ function PreviewBody({
       <XStack
         testID="story-video-cancel"
         role="button"
-        aria-label="Cancel"
+        aria-label={t('mweb.common.cancel')}
         onPress={onCancel}
         flex={1}
         height={46}
@@ -143,7 +145,7 @@ function PreviewBody({
       onClose={onCancel}
       testID="story-video-sheet"
       variant="center"
-      title="Preview your video story"
+      title={t('mweb.common.previewYourVideoStory')}
       closeLabel="Close"
       showCloseButton={false}
       footer={footer}

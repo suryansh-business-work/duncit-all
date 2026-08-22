@@ -1,3 +1,4 @@
+import { useTranslation } from '../../i18n/useTranslation';
 import { useNavigate } from 'react-router-dom';
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -5,6 +6,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import type { ReactNode } from 'react';
+import type { Translate } from '../../i18n/fallback';
 
 interface Action {
   label: string;
@@ -12,20 +14,21 @@ interface Action {
   to: string;
 }
 
-const ACTIONS: Action[] = [
-  { label: 'Create pod', icon: <AddIcon />, to: '/create-pod' },
-  { label: 'Your Pods', icon: <DashboardIcon />, to: '/host/manage' },
-  { label: 'Verification', icon: <VerifiedUserIcon />, to: '/verification' },
-  { label: 'Wallet', icon: <AccountBalanceWalletIcon />, to: '/host/wallet' },
+const actions = (t: Translate): Action[] => [
+  { label: t('mweb.common.createPod'), icon: <AddIcon />, to: '/create-pod' },
+  { label: t('mweb.common.yourPods'), icon: <DashboardIcon />, to: '/host/manage' },
+  { label: t('mweb.common.verification'), icon: <VerifiedUserIcon />, to: '/verification' },
+  { label: t('mweb.common.wallet'), icon: <AccountBalanceWalletIcon />, to: '/host/wallet' },
 ];
 
 /** Host dashboard quick-action grid (B2-#5). */
 export default function QuickActions() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-      {ACTIONS.map((action) => (
+      {actions(t).map((action) => (
         <ButtonBase
           key={action.label}
           onClick={() => navigate(action.to)}

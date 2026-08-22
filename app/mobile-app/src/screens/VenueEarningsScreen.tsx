@@ -5,6 +5,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { EarningsSummaryTiles } from '@/components/earnings/EarningsSummaryTiles';
 import { useVenueEarnings, type VenuePayout } from '@/hooks/useVenueEarnings';
 import { formatDate } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const STATUS_BG: Record<string, string> = {
   PENDING: semantic.warning,
@@ -81,11 +82,12 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: 
 /** Venue Earnings — summary tiles + payout history for the venue studio.
  * mWeb twin of the Venue Earnings page. */
 export function VenueEarningsScreen() {
+  const { t } = useTranslation();
   const { summary, payouts, isLoading } = useVenueEarnings();
   const symbol = summary?.currency_symbol ?? '₹';
 
   return (
-    <StackScreen header title="Earnings" testID="venue-earnings-screen">
+    <StackScreen header title={t('mweb.venueEarnings.earnings')} testID="venue-earnings-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-earnings-loading" color="$primary" /> : null}

@@ -9,6 +9,7 @@ import PhotoActionMenu from './PhotoActionMenu';
 import PhotoViewerDialog from './PhotoViewerDialog';
 import { buildOwnStoryItem } from './storyViewerItem';
 import { useProfileAvatar } from './useProfileAvatar';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   photo?: string | null;
@@ -22,6 +23,7 @@ interface Props {
  * an edit pencil → View / Change / Remove menu, crop dialog and the own-story
  * viewer with a delete action. Shared by mWeb's Account and Profile pages. */
 export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const a = useProfileAvatar(onChanged);
   const initial = (name?.[0] ?? 'U').toUpperCase();
   const storyItem = useMemo(
@@ -95,9 +97,9 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
 
       <ConfirmDialog
         open={a.removeOpen}
-        title="Remove photo?"
-        message="Your profile picture will be removed."
-        confirmLabel="Remove"
+        title={t('mweb.common.removePhoto2')}
+        message={t('mweb.common.yourProfilePictureWillBeRemoved')}
+        confirmLabel={t('mweb.common.remove')}
         destructive
         onConfirm={() => void a.confirmRemove()}
         onClose={() => a.setRemoveOpen(false)}
@@ -113,9 +115,9 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
 
       <ConfirmDialog
         open={deleteId !== null}
-        title="Delete story?"
-        message="This story will be removed for everyone."
-        confirmLabel="Delete"
+        title={t('mweb.common.deleteStory')}
+        message={t('mweb.common.thisStoryWillBeRemovedFor')}
+        confirmLabel={t('mweb.common.delete')}
         destructive
         onConfirm={() => {
           if (deleteId)

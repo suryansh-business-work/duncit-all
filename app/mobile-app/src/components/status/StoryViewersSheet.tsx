@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { StoryViewersDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Viewer {
   user_id: string;
@@ -28,6 +29,7 @@ export function StoryViewersSheet({
   storyId,
   onClose,
 }: Readonly<{ storyId: string | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   const { color, muted } = useThemeColors();
   const [viewers, setViewers] = useState<Viewer[] | null>(null);
 
@@ -63,7 +65,7 @@ export function StoryViewersSheet({
                 <XStack
                   testID="story-viewers-close"
                   role="button"
-                  aria-label="Close viewers"
+                  aria-label={t('mweb.common.closeViewers')}
                   onPress={onClose}
                   width={34}
                   height={34}
@@ -86,7 +88,7 @@ export function StoryViewersSheet({
                   contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16, gap: 12 }}
                   ListEmptyComponent={
                     <YStack padding={16} alignItems="center">
-                      <Text color="$muted">No one has viewed this story yet.</Text>
+                      <Text color="$muted">{t('mweb.status.noOneHasViewedThisStory')}</Text>
                     </YStack>
                   }
                   renderItem={({ item }) => (

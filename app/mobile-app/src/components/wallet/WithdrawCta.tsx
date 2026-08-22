@@ -36,7 +36,7 @@ export function WithdrawCta({ minAmount, symbol, eligible, disabled, onPress }: 
       <XStack
         testID="wallet-withdraw"
         role="button"
-        aria-label="Withdraw"
+        aria-label={t('mweb.wallet.withdraw')}
         aria-disabled={disabled}
         onPress={disabled ? undefined : onPress}
         alignSelf="flex-start"

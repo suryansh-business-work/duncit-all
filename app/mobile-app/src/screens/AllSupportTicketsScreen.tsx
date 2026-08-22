@@ -6,6 +6,7 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
 import { useUnifiedTickets, type UnifiedTicket } from '@/hooks/useUnifiedTickets';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const SOURCE_LABEL: Record<string, string> = {
   TICKET: 'Support Ticket',
@@ -24,6 +25,7 @@ const SOURCE_TINT: Record<string, string> = {
 /** One list of every support request the user has raised — across SOS,
  * callbacks, support tickets and chat, with prefixed ticket numbers. */
 export function AllSupportTicketsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { rows, isLoading, error } = useUnifiedTickets();
 
@@ -92,7 +94,7 @@ export function AllSupportTicketsScreen() {
   }
 
   return (
-    <StackScreen title="All Support Tickets" testID="all-support-tickets-screen">
+    <StackScreen title={t('mweb.common.allSupportTickets')} testID="all-support-tickets-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
         <Text testID="all-tickets-subtitle" fontSize={13} color="$muted">
           Every request you have raised, in one list

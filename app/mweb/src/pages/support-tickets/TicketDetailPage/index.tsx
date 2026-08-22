@@ -24,8 +24,10 @@ import {
   type TicketDetail,
   type TranscriptFormat,
 } from '../queries';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 export default function TicketDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery<{ ticket: TicketDetail | null }>(TICKET, {
@@ -85,7 +87,7 @@ export default function TicketDetailPage() {
       await reopenTicket({ variables: { ticket_id: id, reason: reason || null } });
       setReopenOpen(false);
     } catch (e) {
-      setReopenError(e instanceof Error ? e.message : 'Could not re-open this ticket.');
+      setReopenError(e instanceof Error ? e.message : t('mweb.supportTickets.couldNotReOpenThisTicket'));
     }
   };
 
@@ -147,10 +149,10 @@ export default function TicketDetailPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Mark as resolved?"
-        message="Are you sure your issue has been resolved?"
-        confirmLabel="Yes, mark as resolved"
-        cancelLabel="No, continue conversation"
+        title={t('mweb.common.markAsResolved')}
+        message={t('mweb.common.areYouSureYourIssueHas')}
+        confirmLabel={t('mweb.common.yesMarkAsResolved')}
+        cancelLabel={t('mweb.common.noContinueConversation')}
         busy={resolving}
         onConfirm={onResolve}
         onClose={() => setConfirmOpen(false)}

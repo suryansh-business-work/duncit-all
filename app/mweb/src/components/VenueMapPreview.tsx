@@ -1,6 +1,7 @@
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { mapEmbedUrl, mapSearchUrl } from '../utils/mapEmbed';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   title?: string;
@@ -9,7 +10,9 @@ interface Props {
   lng?: number | null;
 }
 
-export default function VenueMapPreview({ title = 'Map preview', parts, lat, lng }: Readonly<Props>) {
+export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const titleText = title ?? t('mweb.venues.mapPreview');
   const query = lat != null && lng != null
     ? `${lat},${lng}`
     : parts.map((part) => part?.trim()).filter(Boolean).join(', ');
@@ -21,14 +24,14 @@ export default function VenueMapPreview({ title = 'Map preview', parts, lat, lng
   return (
     <Box sx={{ mt: 1.5 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.75 }}>
-        <Typography variant="caption" color="text.secondary">Map preview</Typography>
+        <Typography variant="caption" color="text.secondary">{t('mweb.venueMapPreview.mapPreview')}</Typography>
         <Button href={mapUrl} target="_blank" rel="noreferrer" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
           Open in Maps
         </Button>
       </Stack>
       <Box
         component="iframe"
-        title={title}
+        title={titleText}
         src={src}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"

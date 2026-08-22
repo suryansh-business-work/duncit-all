@@ -13,6 +13,7 @@ import {
   hostRangeOptions,
   type HostChartRange,
 } from '@/utils/host-insights';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ export function HostInsightsFilterSheet({
   onApply,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [draft, setDraft] = useState<HostChartRange>(initial);
 
@@ -46,7 +48,7 @@ export function HostInsightsFilterSheet({
         <YStack flex={1} justifyContent="flex-end" testID="insights-filter-sheet">
           <YStack
             role="button"
-            aria-label="Close filters"
+            aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -69,7 +71,7 @@ export function HostInsightsFilterSheet({
                 <XStack
                   testID="insights-filter-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -83,7 +85,7 @@ export function HostInsightsFilterSheet({
               </XStack>
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
-                  <Section title="Pods by month">
+                  <Section title={t('mweb.hostManage.podsByMonth')}>
                     <OptionChipRow<HostChartRange>
                       layout="column"
                       testIDPrefix="insights-range"
@@ -98,7 +100,7 @@ export function HostInsightsFilterSheet({
                 <XStack
                   testID="insights-filter-reset"
                   role="button"
-                  aria-label="Reset filters"
+                  aria-label={t('mweb.common.resetFilters')}
                   onPress={() => setDraft(DEFAULT_HOST_CHART_RANGE)}
                   flex={1}
                   height={46}
@@ -116,7 +118,7 @@ export function HostInsightsFilterSheet({
                 <XStack
                   testID="insights-filter-apply"
                   role="button"
-                  aria-label="Apply filters"
+                  aria-label={t('mweb.common.applyFilters')}
                   onPress={() => onApply(draft)}
                   flex={1}
                   height={46}

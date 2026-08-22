@@ -15,6 +15,7 @@ import {
   validateDeleteReason,
   type PodDeleteImpact,
 } from './pod-edit.form';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   podId: string | null;
@@ -46,6 +47,7 @@ function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
 
 /** Host's delete-pod sheet — a mandatory reason + refund impact preview (2B). */
 export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const [impact, setImpact] = useState<PodDeleteImpact | null>(null);
   const [subject, setSubject] = useState('');
@@ -86,7 +88,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
       );
       onDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not cancel the pod');
+      setError(err instanceof Error ? err.message : t('mweb.hostManage.couldNotCancelThePod'));
     } finally {
       setBusy(false);
     }
@@ -103,7 +105,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
           <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-delete-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={dismiss}
               position="absolute"
               top={0}
@@ -161,14 +163,14 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                         </XStack>
                       );
                     })}
-                    <Field label="Note for attendees">
+                    <Field label={t('mweb.hostManage.noteForAttendees')}>
                       <Input
                         testID="pod-delete-note"
                         value={note}
                         onChangeText={setNote}
-                        placeholder="Note (shared with attendees)"
+                        placeholder={t('mweb.hostManage.noteSharedWithAttendees')}
                         placeholderTextColor="$muted"
-                        aria-label="Note for attendees"
+                        aria-label={t('mweb.hostManage.noteForAttendees')}
                         multiline
                         size="$4"
                         backgroundColor="$surface"
@@ -187,7 +189,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                   <XStack
                     testID="pod-delete-cancel"
                     role="button"
-                    aria-label="Keep pod"
+                    aria-label={t('mweb.hostManage.keepPod')}
                     aria-disabled={busy}
                     onPress={dismiss}
                     flex={1}

@@ -3,6 +3,7 @@ import { Avatar, Button, Stack, Typography } from '@mui/material';
 import PetsIcon from '@mui/icons-material/Pets';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PetPhotoFieldProps {
   value: string;
@@ -12,6 +13,7 @@ interface PetPhotoFieldProps {
 }
 
 export default function PetPhotoField({ value, error, touched, onChange }: Readonly<PetPhotoFieldProps>) {
+  const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
     <>
@@ -65,7 +67,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder="/pets"
-        title="Upload pet photo"
+        title={t('mweb.profile.uploadPetPhoto')}
         onPicked={(url) => onChange(url)}
       />
     </>

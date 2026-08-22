@@ -8,6 +8,7 @@ import SearchFilterSheet from './SearchFilterSheet';
 import SearchEmptyState from './SearchEmptyState';
 import { sortClubResults, type SearchSort } from './searchSort';
 import type { SearchCategory } from './useSearchDiscovery';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ClubResult {
   is_following: boolean;
@@ -65,6 +66,7 @@ export default function SearchResults({
   onShareIdea,
   onEarn,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const isEmpty = happening.length === 0 && moreClubs.length === 0;
@@ -118,13 +120,13 @@ export default function SearchResults({
       ) : null}
 
       <SearchResultsSection
-        heading="🔥 Explore Experiences Happening Soon"
+        heading={t('mweb.search.exploreExperiencesHappeningSoon')}
         subheading="Find clubs hosting exciting experiences you can join this week."
         results={sortClubResults(happening, sort)}
         {...sectionProps}
       />
       <SearchResultsSection
-        heading="✨ More Clubs Worth Exploring"
+        heading={t('mweb.search.moreClubsWorthExploring')}
         subheading="Discover communities that match your interests and start your next experience."
         results={sortClubResults(moreClubs, sort)}
         {...sectionProps}

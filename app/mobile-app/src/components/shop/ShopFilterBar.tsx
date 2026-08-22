@@ -37,7 +37,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
           <MaterialIcons name="search" size={20} color={muted} />
           <Input
             testID="shop-search-input"
-            aria-label="Search products"
+            aria-label={t('mweb.shop.searchProducts')}
             flex={1}
             unstyled
             value={filters.query}
@@ -52,7 +52,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
         <XStack
           testID="shop-filter-toggle"
           role="button"
-          aria-label="Filters"
+          aria-label={t('mweb.common.filters')}
           onPress={() => setOpen((v) => !v)}
           width={46}
           height={46}
@@ -89,7 +89,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
       {open ? (
         <YStack gap={14} paddingBottom={4}>
           {filters.superOptions.length > 0 ? (
-            <Section title="Super category">
+            <Section title={t('mweb.common.superCategory')}>
               <OptionChipRow
                 testIDPrefix="shop-super"
                 options={[['', 'All'], ...filters.superOptions]}
@@ -100,7 +100,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
             </Section>
           ) : null}
           {filters.categoryOptions.length > 0 ? (
-            <Section title="Category">
+            <Section title={t('mweb.common.category')}>
               <OptionChipRow
                 testIDPrefix="shop-cat"
                 options={[['', 'All'], ...filters.categoryOptions]}
@@ -121,7 +121,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
               />
             </Section>
           ) : null}
-          <Section title="Rating">
+          <Section title={t('mweb.shop.rating')}>
             <OptionChipRow
               testIDPrefix="shop-rating"
               options={SHOP_RATING_OPTIONS}
@@ -149,7 +149,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
               {t('mweb.shop.includeOutOfStock')}
             </Text>
           </XStack>
-          <Section title="Sort">
+          <Section title={t('mweb.common.sort')}>
             <OptionChipRow
               testIDPrefix="shop-sort"
               options={sortOptions}

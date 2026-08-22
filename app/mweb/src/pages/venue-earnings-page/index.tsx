@@ -4,10 +4,12 @@ import PaidIcon from '@mui/icons-material/Paid';
 import StatCards from './StatCards';
 import PayoutList, { type VenuePayout } from './PayoutList';
 import { VENUE_EARNINGS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Venue Earnings — myVenueEarningsSummary stat cards + payout history across
  * every venue the signed-in owner has (Pod Finance Breakdown epic). */
 export default function VenueEarningsPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(VENUE_EARNINGS, { fetchPolicy: 'cache-and-network' });
 
   if (loading && !data) {
@@ -25,7 +27,7 @@ export default function VenueEarningsPage() {
 
   let history;
   if (payouts.length === 0) {
-    history = <Alert severity="info">Payouts appear here after a pod at your venue completes.</Alert>;
+    history = <Alert severity="info">{t('mweb.venueEarnings.payoutsAppearHereAfterAPod')}</Alert>;
   } else {
     history = <PayoutList payouts={payouts} symbol={symbol} />;
   }

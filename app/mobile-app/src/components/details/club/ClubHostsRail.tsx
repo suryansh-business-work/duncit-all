@@ -3,6 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import { ScrollView, Text, YStack } from 'tamagui';
 
 import type { ClubDetail } from '@/hooks/useDetails';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type ClubHost = ClubDetail['hosts'][number];
 
@@ -18,15 +19,19 @@ interface Props {
 /** Hosts who run this club's events — tap an avatar to open their profile. */
 export function ClubHostsRail({
   hosts,
-  title = 'Club Hosts',
+  title,
   testIdPrefix = 'club-host',
   onOpenHost,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as parameter defaults: a default is evaluated before
+  // any hook runs, so `t` would not exist yet.
+  const titleText = title ?? t('mweb.details.clubHosts');
   if (hosts.length === 0) return null;
   return (
     <YStack gap={8} testID={`${testIdPrefix}s`}>
       <Text fontSize={16} fontWeight="700" color="$color">
-        Club Hosts
+        {titleText}
       </Text>
       <ScrollView
         horizontal

@@ -16,6 +16,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -25,6 +26,7 @@ const oneLine = (a: UserAddress) =>
 /** Profile Settings › Address Book — saved delivery addresses, selectable at
  * checkout. RN twin of mWeb's AddressBookSection. */
 export function AddressBookSection() {
+  const { t } = useTranslation();
   const { muted, primary } = useThemeColors();
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -95,7 +97,7 @@ export function AddressBookSection() {
         <XStack
           testID="address-add"
           role="button"
-          aria-label="Add address"
+          aria-label={t('mweb.account.addAddress')}
           onPress={() => {
             setEditing(null);
             setFormOpen(true);

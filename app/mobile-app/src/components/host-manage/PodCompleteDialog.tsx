@@ -23,6 +23,7 @@ import {
   type HostPodForComplete,
   type PodCompleteValues,
 } from './pod-complete.form';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   pod: HostPodForComplete | null;
@@ -33,6 +34,7 @@ interface Props {
 /** Host completes a pod: enter the venue bill amount + upload party media. The
  * split is previewed live; on submit two payout releases are created for Finance. */
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const hasVenue = !!pod?.venue_id;
   const [busy, setBusy] = useState(false);
@@ -62,7 +64,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
       );
       onCompleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not complete the pod');
+      setError(err instanceof Error ? err.message : t('mweb.hostManage.couldNotCompleteThePod'));
     } finally {
       setBusy(false);
     }
@@ -77,7 +79,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-complete-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={dismiss}
               position="absolute"
               top={0}
@@ -108,7 +110,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                       <FormTextField
                         control={control}
                         name="venue_bill_amount"
-                        label="Venue Bill Amount"
+                        label={t('mweb.hostManage.venueBillAmount')}
                         keyboardType="numeric"
                         required
                       />
@@ -121,7 +123,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                           value={field.value}
                           onChange={field.onChange}
                           error={fieldState.error?.message}
-                          label="Pod Media"
+                          label={t('mweb.hostManage.podMedia')}
                           folder="/pod-completion"
                         />
                       )}
@@ -143,7 +145,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                   <XStack
                     testID="pod-complete-cancel"
                     role="button"
-                    aria-label="Cancel"
+                    aria-label={t('mweb.common.cancel')}
                     aria-disabled={busy}
                     onPress={dismiss}
                     flex={1}
@@ -163,7 +165,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                   <XStack
                     testID="pod-complete-submit"
                     role="button"
-                    aria-label="Complete pod"
+                    aria-label={t('mweb.hostManage.completePod')}
                     aria-disabled={busy}
                     onPress={busy ? undefined : () => fireAndForget(submit())}
                     flex={1}

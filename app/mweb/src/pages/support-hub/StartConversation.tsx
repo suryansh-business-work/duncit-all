@@ -2,9 +2,11 @@ import { Box, Paper, Stack, Typography } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Primary "Start a conversation" CTA → real-time agent chat. */
 export default function StartConversation() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <Paper
@@ -23,14 +25,14 @@ export default function StartConversation() {
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
         boxShadow: '0 14px 28px -14px rgba(255,79,115,0.6)',
       }}
-      aria-label="Start a conversation with support"
+      aria-label={t('mweb.common.startAConversationWithSupport')}
     >
       <Stack direction="row" alignItems="center" spacing={1.5}>
         <Box sx={{ width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,255,255,0.2)' }}>
           <ChatBubbleOutlineIcon />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 700 }}>Start a conversation</Typography>
+          <Typography sx={{ fontWeight: 700 }}>{t('mweb.common.startAConversation')}</Typography>
           <Typography variant="body2" sx={{ opacity: 0.9 }}>
             Chat with our support team in real time
           </Typography>

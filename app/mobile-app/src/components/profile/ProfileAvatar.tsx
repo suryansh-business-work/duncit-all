@@ -5,6 +5,7 @@ import { AvatarStoryButton } from './AvatarStoryButton';
 import { PhotoActionSheet } from './PhotoActionSheet';
 import { CropDialog } from './crop/CropDialog';
 import { useProfileAvatar } from './useProfileAvatar';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   photo?: string | null;
@@ -18,6 +19,7 @@ interface Props {
  * long-press/pencil photo menu (View / Change / Remove), crop dialog and the
  * own-story viewer with a delete action. Shared by both profile headers. */
 export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const a = useProfileAvatar(onChanged);
   const deleteId = a.deleteId;
 
@@ -56,10 +58,10 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
 
       <ConfirmDialog
         open={a.removeOpen}
-        title="Remove photo?"
-        message="Your profile picture will be removed."
-        confirmLabel="Remove"
-        cancelLabel="Cancel"
+        title={t('mweb.common.removePhoto2')}
+        message={t('mweb.common.yourProfilePictureWillBeRemoved')}
+        confirmLabel={t('mweb.common.remove')}
+        cancelLabel={t('mweb.common.cancel')}
         destructive
         onConfirm={() => void a.confirmRemove()}
         onCancel={() => a.setRemoveOpen(false)}
@@ -77,10 +79,10 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
       {deleteId === null ? null : (
         <ConfirmDialog
           open
-          title="Delete story?"
-          message="This story will be removed for everyone."
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          title={t('mweb.common.deleteStory')}
+          message={t('mweb.common.thisStoryWillBeRemovedFor')}
+          confirmLabel={t('mweb.common.delete')}
+          cancelLabel={t('mweb.common.cancel')}
           destructive
           onConfirm={() => void a.confirmDeleteStory(deleteId)}
           onCancel={() => a.setDeleteId(null)}

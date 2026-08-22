@@ -20,6 +20,7 @@ import {
   hostRangeMeta,
   type HostChartRange,
 } from './insights';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const ALL_TIME_FROM = '1970-01-01T00:00:00.000Z';
 const CHART_HEIGHT = 220;
@@ -58,6 +59,7 @@ function KpiTile({ label, value }: Readonly<{ label: string; value: string }>) {
  * pods created over time (filterable), monthly earnings, status donut and the
  * participant trend. Rendered below the Create-pod row on the Host Dashboard. */
 export default function HostInsights({ pods, currency }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [range, setRange] = useState<HostChartRange>(DEFAULT_HOST_CHART_RANGE);
   const [filterOpen, setFilterOpen] = useState(false);
   const now = useMemo(() => new Date().toISOString(), []);
@@ -90,8 +92,8 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1}>
-            <KpiTile label="Total Pods" value={String(totalPods)} />
-            <KpiTile label="Host Earnings" value={`${currency}${hostEarning.toFixed(2)}`} />
+            <KpiTile label={t('mweb.common.totalPods')} value={String(totalPods)} />
+            <KpiTile label={t('mweb.common.hostEarnings')} value={`${currency}${hostEarning.toFixed(2)}`} />
           </Stack>
         </CardContent>
       </Card>
@@ -101,8 +103,8 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
         subtitle={meta.description}
         empty={allZero(overTime)}
         action={
-          <Tooltip title="Filter">
-            <IconButton size="small" aria-label="Filter pods by month" onClick={() => setFilterOpen(true)}>
+          <Tooltip title={t('mweb.common.filter')}>
+            <IconButton size="small" aria-label={t('mweb.common.filterPodsByMonth')} onClick={() => setFilterOpen(true)}>
               <FilterListIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -115,7 +117,7 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
         />
       </InsightChartCard>
 
-      <InsightChartCard title="Monthly Host Earnings" subtitle="Approved payouts by month." empty={allZero(earnings)}>
+      <InsightChartCard title={t('mweb.common.monthlyHostEarnings')} subtitle={t('mweb.common.approvedPayoutsByMonth')} empty={allZero(earnings)}>
         <BarChart
           height={CHART_HEIGHT}
           xAxis={[{ scaleType: 'band', data: earnings.map((d) => d.label) }]}
@@ -123,7 +125,7 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
         />
       </InsightChartCard>
 
-      <InsightChartCard title="Pod Status Distribution" subtitle="Upcoming, ongoing, completed and cancelled." empty={allZero(statusSlices)}>
+      <InsightChartCard title={t('mweb.common.podStatusDistribution')} subtitle={t('mweb.common.upcomingOngoingCompletedAndCancelled')} empty={allZero(statusSlices)}>
         <PieChart
           height={CHART_HEIGHT}
           series={[
@@ -135,7 +137,7 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
         />
       </InsightChartCard>
 
-      <InsightChartCard title="Participant Trend" subtitle="Guests per pod over time." empty={allZero(participants)}>
+      <InsightChartCard title={t('mweb.common.participantTrend')} subtitle={t('mweb.common.guestsPerPodOverTime')} empty={allZero(participants)}>
         <LineChart
           height={CHART_HEIGHT}
           xAxis={[{ scaleType: 'point', data: participants.map((d) => d.label) }]}

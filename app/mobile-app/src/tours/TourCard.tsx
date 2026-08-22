@@ -3,6 +3,7 @@ import type { TooltipProps } from 'rn-tourguide';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useToursStore } from '@/stores/tours.store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * The tooltip for a native tour step.
@@ -26,6 +27,7 @@ export function TourCard({
   handlePrev,
   handleStop,
 }: Readonly<TooltipProps>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const steps = useToursStore((s) => s.activeSteps);
 
@@ -61,7 +63,7 @@ export function TourCard({
           <XStack
             testID="tour-skip"
             role="button"
-            aria-label="Skip tour"
+            aria-label={t('mweb.tours.skipTour')}
             onPress={handleStop}
             paddingVertical={8}
             paddingHorizontal={10}
@@ -75,7 +77,7 @@ export function TourCard({
             <XStack
               testID="tour-previous"
               role="button"
-              aria-label="Previous step"
+              aria-label={t('mweb.tours.previousStep')}
               onPress={handlePrev}
               paddingVertical={8}
               paddingHorizontal={12}

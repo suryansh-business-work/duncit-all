@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -44,11 +45,27 @@ interface Props {
 
 /** Zoom + rotate control row for the avatar crop dialog (item 9). */
 export function CropControls({ onZoomIn, onZoomOut, onRotate }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <XStack justifyContent="center" gap={28} paddingVertical={12}>
-      <Control icon="zoom-out" label="Zoom out" testID="crop-zoom-out" onPress={onZoomOut} />
-      <Control icon="zoom-in" label="Zoom in" testID="crop-zoom-in" onPress={onZoomIn} />
-      <Control icon="rotate-right" label="Rotate" testID="crop-rotate" onPress={onRotate} />
+      <Control
+        icon="zoom-out"
+        label={t('mweb.common.zoomOut')}
+        testID="crop-zoom-out"
+        onPress={onZoomOut}
+      />
+      <Control
+        icon="zoom-in"
+        label={t('mweb.common.zoomIn')}
+        testID="crop-zoom-in"
+        onPress={onZoomIn}
+      />
+      <Control
+        icon="rotate-right"
+        label={t('mweb.common.rotate')}
+        testID="crop-rotate"
+        onPress={onRotate}
+      />
     </XStack>
   );
 }

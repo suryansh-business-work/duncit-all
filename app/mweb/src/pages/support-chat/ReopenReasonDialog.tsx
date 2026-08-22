@@ -9,6 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -26,13 +27,14 @@ interface Props {
  * and the chat header flow.
  */
 export default function ReopenReasonDialog({ open, loading, error, onClose, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
 
   const submit = () => onSubmit(reason.trim());
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Re-open this conversation</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 1 }}>
@@ -46,7 +48,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
           autoFocus
           fullWidth
           size="small"
-          label="Reason (optional)"
+          label={t('mweb.common.reasonOptional')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           multiline
@@ -55,7 +57,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('mweb.common.cancel')}</Button>
         <Button variant="contained" disabled={loading} onClick={submit}>
           {loading ? 'Re-opening…' : 'Re-open'}
         </Button>

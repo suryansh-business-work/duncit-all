@@ -1,5 +1,6 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Host {
   id: string;
@@ -14,14 +15,18 @@ interface Props {
 }
 
 /** A rail of the hosts linked to the club. */
-export default function ClubHostsSection({ hosts, title = 'Hosts' }: Readonly<Props>) {
+export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as parameter defaults: a default is evaluated before
+  // any hook runs, so `t` would not exist yet.
+  const titleText = title ?? t('mweb.clubDetails.hosts');
   const navigate = useNavigate();
   if (hosts.length === 0) return null;
 
   return (
     <Box>
       <Typography variant="h6" fontWeight={700} gutterBottom>
-        {title}
+        {titleText}
       </Typography>
       <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (

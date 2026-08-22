@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { CategorySelect } from './CategorySelect';
 import { TicketAttachments } from './TicketAttachments';
 import { DEFAULT_TICKET_CATEGORY, toServerCategory } from './ticketCategories';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   onCreated: (id: string) => void;
@@ -37,6 +38,7 @@ export function TicketForm({
   podId,
   podTitle,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [category, setCategory] = useState<string>(DEFAULT_TICKET_CATEGORY);
   const [subject, setSubject] = useState('');
@@ -47,7 +49,7 @@ export function TicketForm({
 
   const submit = async () => {
     if (!subject.trim() || !message.trim()) {
-      setError('Subject and message are required.');
+      setError(t('mweb.support.subjectAndMessageAreRequired'));
       return;
     }
     setSubmitting(true);
@@ -63,9 +65,7 @@ export function TicketForm({
       onCreated(id);
     } catch (err) {
       // Surface the real server message (was swallowed) so failures are diagnosable.
-      setError(
-        err instanceof Error ? err.message : 'Could not create the ticket. Please try again.',
-      );
+      setError(err instanceof Error ? err.message : t('mweb.common.couldNotCreateTheTicketPlease'));
     } finally {
       setSubmitting(false);
     }
@@ -103,7 +103,7 @@ export function TicketForm({
         <FieldLabel>Name</FieldLabel>
         <Input
           testID="ticket-name"
-          aria-label="Name"
+          aria-label={t('mweb.support.name')}
           value={initialName}
           disabled
           autoComplete="name"
@@ -112,10 +112,10 @@ export function TicketForm({
         />
       </YStack>
       <YStack gap={4}>
-        <FieldLabel>Email</FieldLabel>
+        <FieldLabel>{t('mweb.common.email')}</FieldLabel>
         <Input
           testID="ticket-email"
-          aria-label="Email"
+          aria-label={t('mweb.common.email')}
           value={initialEmail}
           disabled
           autoCapitalize="none"
@@ -128,15 +128,15 @@ export function TicketForm({
         </Text>
       </YStack>
       <YStack gap={4}>
-        <FieldLabel>Category</FieldLabel>
+        <FieldLabel>{t('mweb.common.category')}</FieldLabel>
         <CategorySelect value={category} onChange={setCategory} />
       </YStack>
       <YStack gap={4}>
-        <FieldLabel>Subject</FieldLabel>
+        <FieldLabel>{t('mweb.common.subject')}</FieldLabel>
         <Input
           testID="ticket-subject"
-          aria-label="Subject"
-          placeholder="A short summary"
+          aria-label={t('mweb.common.subject')}
+          placeholder={t('mweb.support.aShortSummary')}
           placeholderTextColor="$muted"
           value={subject}
           onChangeText={setSubject}
@@ -145,10 +145,10 @@ export function TicketForm({
         />
       </YStack>
       <YStack gap={4}>
-        <FieldLabel>Message</FieldLabel>
+        <FieldLabel>{t('mweb.common.message')}</FieldLabel>
         <Input
           testID="ticket-message"
-          aria-label="Message"
+          aria-label={t('mweb.common.message')}
           placeholder="Tell us what's going on"
           placeholderTextColor="$muted"
           value={message}

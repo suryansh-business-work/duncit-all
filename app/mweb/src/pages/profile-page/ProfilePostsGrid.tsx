@@ -3,6 +3,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   posts: any[];
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <Stack direction="row" justifyContent="center" spacing={4}>
@@ -38,9 +40,9 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
           >
             <AddPhotoAlternateIcon fontSize="large" />
           </Box>
-          <Typography variant="h6">Share Photos</Typography>
-          <Typography variant="body2">When you share photos, they will appear on your profile.</Typography>
-          <Button onClick={onNewPost}>Share your first photo</Button>
+          <Typography variant="h6">{t('mweb.profile.sharePhotos')}</Typography>
+          <Typography variant="body2">{t('mweb.profile.whenYouSharePhotosTheyWill')}</Typography>
+          <Button onClick={onNewPost}>{t('mweb.profile.shareYourFirstPhoto')}</Button>
         </Stack>
       ) : (
         <ImageList cols={3} gap={4} sx={{ m: 0 }}>

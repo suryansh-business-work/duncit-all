@@ -6,6 +6,7 @@ import { ADD_POD_STATUS, CREATE_STATUS_POST } from './queries';
 import StatusCropDialog from './StatusCropDialog';
 import StatusVideoPreviewDialog from './StatusVideoPreviewDialog';
 import { mediaTypeOf, uploadStatusMedia, type StatusUploadKind } from './statusPipeline';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface StatusUploadState {
   active: boolean;
@@ -48,6 +49,7 @@ function validateFile(file: File, kind: StatusUploadKind) {
 }
 
 export function StatusUploadProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pendingRef = useRef<PendingPick | null>(null);
   const [accept, setAccept] = useState('image/*');
@@ -77,7 +79,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     trim: VideoTrim | null = null,
   ) => {
     const mediaType = mediaTypeOf(file);
-    setUpload({ active: true, kind: pending.kind, progress: 0, message: 'Preparing status upload...' });
+    setUpload({ active: true, kind: pending.kind, progress: 0, message: t('mweb.statusUpload.preparingStatusUpload') });
     try {
       const url = await uploadStatusMedia({
         file,
@@ -87,7 +89,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         trim,
         onStage: (stage) => setUpload((current) => ({ ...current, ...stage })),
       });
-      setUpload((current) => ({ ...current, progress: 96, message: 'Saving status...' }));
+      setUpload((current) => ({ ...current, progress: 96, message: t('mweb.statusUpload.savingStatus') }));
       if (pending.kind === 'pod') {
         await apolloClient.mutate({ mutation: ADD_POD_STATUS, variables: { podId: pending.podId, media: { url, type: mediaType } } });
       } else {
@@ -105,7 +107,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         });
       }
       await apolloClient.refetchQueries({ include: ['HomeFeed', 'MeAndMyPosts', 'PodDetails', 'ClubStories'] });
-      setUpload({ active: false, kind: null, progress: 100, message: 'Status uploaded.', profileUrl: pending.kind === 'profile' ? url : upload.profileUrl });
+      setUpload({ active: false, kind: null, progress: 100, message: t('mweb.statusUpload.statusUploaded'), profileUrl: pending.kind === 'profile' ? url : upload.profileUrl });
       setNotice('Status uploaded.');
     } catch (error: any) {
       setNotice(error?.message ?? 'Could not upload status');

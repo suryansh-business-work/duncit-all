@@ -3,6 +3,7 @@ import { Button, Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
 import { useReportProblemConfig } from '@/hooks/useReportProblemConfig';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FeedbackValues {
   category: string;
@@ -36,6 +37,7 @@ function FieldLabel({ children }: Readonly<{ children: string }>) {
  * of the form rather than an afterthought.
  */
 export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { config, loading } = useReportProblemConfig();
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
@@ -56,7 +58,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
 
   const submit = () => {
     if (!category) {
-      setError('Pick a category.');
+      setError(t('mweb.support.pickACategory'));
       return;
     }
     if (message.trim().length < config.message_min_length) {
@@ -78,7 +80,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
       backgroundColor="$surface"
     >
       <YStack gap={6}>
-        <FieldLabel>Category</FieldLabel>
+        <FieldLabel>{t('mweb.common.category')}</FieldLabel>
         {loading && config.categories.length === 0 ? (
           <Spinner testID="feedback-cats-loading" size="small" color="$primary" />
         ) : (
@@ -115,8 +117,8 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
         <FieldLabel>{config.message_label}</FieldLabel>
         <Input
           testID="feedback-message"
-          aria-label="Message"
-          placeholder="Describe the problem or share your idea"
+          aria-label={t('mweb.common.message')}
+          placeholder={t('mweb.common.describeTheProblemOrShareYour')}
           placeholderTextColor="$muted"
           value={message}
           onChangeText={setMessage}
@@ -133,7 +135,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
         <MediaUploadField
           value={mediaText}
           onChange={setMediaText}
-          label="Screenshots (optional)"
+          label={t('mweb.common.screenshotsOptional')}
           folder="/feedback"
         />
       ) : null}

@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { useTranslation } from '../i18n/useTranslation';
 
 const PUBLIC_PLANS = gql`
   query PublicPodPlans {
@@ -39,6 +40,7 @@ interface PublicPlan {
 }
 
 export default function PodPlansPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ publicPodPlans: PublicPlan[] }>(
     PUBLIC_PLANS
   );
@@ -92,7 +94,7 @@ export default function PodPlansPage() {
                       {p.name}
                     </Typography>
                     {p.is_coming_soon && (
-                      <Chip size="small" color="warning" label="Coming soon" />
+                      <Chip size="small" color="warning" label={t('mweb.podPlansPage.comingSoon')} />
                     )}
                   </Stack>
                   {p.price_label && (

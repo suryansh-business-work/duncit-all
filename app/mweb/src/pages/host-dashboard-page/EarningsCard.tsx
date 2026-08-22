@@ -3,6 +3,7 @@ import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import { useDateFormat } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** myHostEarningsSummary — lifetime/pending/this-month totals for the host. */
 export interface HostEarningsSummary {
@@ -37,6 +38,7 @@ function StatBox({ label, value }: Readonly<{ label: string; value: string }>) {
  * and withdraw shortcuts (B2-#5), plus the settled-earnings summary from
  * myHostEarningsSummary (Pod Finance Breakdown). */
 export default function EarningsCard({ balance, currency, nextPayoutAt, summary }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const symbol = summary?.currency_symbol ?? currency;
   const money = (value: number) => `${symbol}${value.toFixed(2)}`;
@@ -66,10 +68,10 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
         </Typography>
         {summary && (
           <Stack direction="row" sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
-            <StatBox label="Lifetime earnings" value={money(summary.lifetime_earnings)} />
-            <StatBox label="Pending approval" value={money(summary.pending_amount)} />
-            <StatBox label="This month" value={money(summary.this_month_earnings)} />
-            <StatBox label="Pods completed" value={String(summary.pods_completed)} />
+            <StatBox label={t('mweb.common.lifetimeEarnings')} value={money(summary.lifetime_earnings)} />
+            <StatBox label={t('mweb.common.pendingApproval')} value={money(summary.pending_amount)} />
+            <StatBox label={t('mweb.common.thisMonth')} value={money(summary.this_month_earnings)} />
+            <StatBox label={t('mweb.common.podsCompleted')} value={String(summary.pods_completed)} />
           </Stack>
         )}
         <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>

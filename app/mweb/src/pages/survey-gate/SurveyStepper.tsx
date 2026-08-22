@@ -3,6 +3,7 @@ import { Alert, Button, Stack, Step, StepLabel, Stepper, Typography } from '@mui
 import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
 import { splitSections } from './surveySections';
 import type { ActiveSurvey } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface SurveyAnswerInput {
   qid: string;
@@ -29,10 +30,14 @@ export default function SurveyStepper({
   survey,
   submitting,
   onSubmit,
-  submitLabel = 'Continue',
+  submitLabel,
   answers: answersProp,
   setAnswers: setAnswersProp,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const submitLabelText = submitLabel ?? t('mweb.common.continue');
   const sections = useMemo(() => splitSections(survey.questions, survey.title || 'Survey'), [survey]);
   const [localAnswers, setLocalAnswers] = useState<SurveyAnswerState>({});
   const answers = answersProp ?? localAnswers;
@@ -65,7 +70,7 @@ export default function SurveyStepper({
   };
 
   if (sections.length === 0) {
-    return <Button variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitLabel}</Button>;
+    return <Button variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitLabelText}</Button>;
   }
   const active = sections[step];
 

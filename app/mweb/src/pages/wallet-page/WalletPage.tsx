@@ -113,7 +113,7 @@ export default function WalletPage() {
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
           {withdrawals.length === 0 ? (
-            <Alert severity="info">No withdrawals yet.</Alert>
+            <Alert severity="info">{t('mweb.wallet.noWithdrawalsYet')}</Alert>
           ) : (
             <Stack spacing={1}>
               {withdrawals.map((w: any) => (
@@ -143,7 +143,7 @@ export default function WalletPage() {
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
           {transactions.length === 0 ? (
-            <Alert severity="info">Your pod payouts will show up here.</Alert>
+            <Alert severity="info">{t('mweb.wallet.yourPodPayoutsWillShowUp')}</Alert>
           ) : (
             <Stack spacing={1}>
               {transactions.map((t: any) => (

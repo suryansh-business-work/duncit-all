@@ -11,6 +11,7 @@ import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 import { ReelBackdrop } from '@/components/explore/ReelVideo';
 import { podSeatsTaken } from '@duncit/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ExplorePodCardProps {
   pod: ExplorePod;
@@ -50,6 +51,7 @@ export function ExplorePodCard({
   onOpenClub,
   onShowLikers,
 }: Readonly<ExplorePodCardProps>) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
   const ctaBottom = insets.bottom + 80;
@@ -124,7 +126,7 @@ export function ExplorePodCard({
               key: 'save',
               testID: `reel-save-${pod.pod_id}`,
               icon: saved ? 'bookmark' : 'bookmark-border',
-              label: 'Save',
+              label: t('mweb.explore.save'),
               active: saved,
               loading: savePending,
               onPress: onToggleSave,
@@ -133,14 +135,14 @@ export function ExplorePodCard({
               key: 'share',
               testID: `reel-share-${pod.pod_id}`,
               icon: 'share',
-              label: 'Share',
+              label: t('mweb.common.share'),
               onPress: share,
             },
             {
               key: 'open',
               testID: `reel-open-${pod.pod_id}`,
               icon: 'open-in-new',
-              label: 'Open',
+              label: t('mweb.explore.open'),
               onPress: onOpen,
             },
           ]}
@@ -182,7 +184,7 @@ export function ExplorePodCard({
           <XStack
             testID={`reel-go-${pod.pod_id}`}
             role="button"
-            aria-label="Open pod"
+            aria-label={t('mweb.common.openPod')}
             onPress={onOpen}
             alignItems="center"
             gap={4}

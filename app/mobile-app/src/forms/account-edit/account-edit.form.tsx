@@ -18,6 +18,7 @@ import {
   toDobInput,
   type AccountEditValues,
 } from './account-edit.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const ADDRESS_NAMES = {
   line1: 'address_line1',
@@ -51,6 +52,7 @@ export function AccountEditForm({
   onDirtyChange,
   onRegisterReset,
 }: Readonly<AccountEditFormProps>) {
+  const { t } = useTranslation();
   // The joining age is admin-configured, so the schema is built from it.
   const { minSignupAge } = useAppSettings();
   const storedDob = toDobInput(me?.dob);
@@ -95,7 +97,7 @@ export function AccountEditForm({
           <FormTextField
             control={control}
             name="first_name"
-            label="First name"
+            label={t('mweb.common.firstName')}
             required
             autoCapitalize="words"
           />
@@ -104,7 +106,7 @@ export function AccountEditForm({
           <FormTextField
             control={control}
             name="last_name"
-            label="Last name"
+            label={t('mweb.common.lastName')}
             autoCapitalize="words"
           />
         </YStack>
@@ -113,7 +115,7 @@ export function AccountEditForm({
       <FormTextField
         control={control}
         name="bio"
-        label="Bio"
+        label={t('mweb.common.bio')}
         hint="Up to 280 characters"
         multiline
         numberOfLines={3}
@@ -133,7 +135,7 @@ export function AccountEditForm({
       <XStack
         testID="account-edit-discard"
         role="button"
-        aria-label="Discard changes"
+        aria-label={t('mweb.accountEdit.discardChanges')}
         aria-disabled={discardDisabled}
         onPress={() => {
           if (!discardDisabled) discard();

@@ -311,7 +311,7 @@ export function StatusViewer({
               <XStack
                 testID="status-viewer-close"
                 role="button"
-                aria-label="Close status"
+                aria-label={t('mweb.common.closeStatus')}
                 onPress={onClose}
                 width={36}
                 height={36}
@@ -369,7 +369,7 @@ export function StatusViewer({
                 <XStack
                   testID="status-viewers"
                   role="button"
-                  aria-label="See who viewed this story"
+                  aria-label={t('mweb.common.seeWhoViewedThisStory')}
                   onPress={() => onViewers(current.id)}
                   alignItems="center"
                   gap={6}
@@ -387,7 +387,7 @@ export function StatusViewer({
                 <XStack
                   testID="status-open-target"
                   role="button"
-                  aria-label="Open details"
+                  aria-label={t('mweb.status.openDetails')}
                   onPress={() => onOpenTarget(status.target as StoryTarget)}
                   flex={1}
                   height={46}

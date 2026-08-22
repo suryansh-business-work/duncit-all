@@ -1,4 +1,5 @@
 import { Text, XStack, YStack } from 'tamagui';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** "Your profile is incomplete" nudge — RN port of mWeb's <IncompleteBanner/>.
  * Shown when profile completion < 100%; the dark pill opens Account. */
@@ -6,6 +7,7 @@ export function SidebarIncompleteBanner({
   percent,
   onComplete,
 }: Readonly<{ percent: number; onComplete: () => void }>) {
+  const { t } = useTranslation();
   return (
     <YStack paddingHorizontal={16} paddingBottom={10}>
       <XStack
@@ -34,7 +36,7 @@ export function SidebarIncompleteBanner({
         <XStack
           testID="profile-completion-cta"
           role="button"
-          aria-label="Complete your profile"
+          aria-label={t('mweb.sidebar.completeYourProfile')}
           onPress={onComplete}
           borderRadius={999}
           backgroundColor="$color"

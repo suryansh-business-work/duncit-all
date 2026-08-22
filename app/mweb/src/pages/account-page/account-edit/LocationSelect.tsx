@@ -3,6 +3,7 @@ import { useWatch, type Control, type UseFormSetValue } from 'react-hook-form';
 import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
 import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit/geo';
 import type { AccountEditValues } from './account-edit.types';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   control: Control<AccountEditValues>;
@@ -21,6 +22,7 @@ type LocationField = 'country' | 'state' | 'city';
  * admin locations); City is a custom value. Twin of the native LocationSelect.
  */
 export default function LocationSelect({ control, setValue }: Readonly<Props>) {
+  const { t } = useTranslation();
   const country = (useWatch({ control, name: 'country' }) as string) ?? '';
   const state = (useWatch({ control, name: 'state' }) as string) ?? '';
   const city = (useWatch({ control, name: 'city' }) as string) ?? '';
@@ -54,21 +56,21 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
           write('state', '');
           write('city', '');
         }}
-        renderInput={(params) => <TextField {...params} label="Country" />}
+        renderInput={(params) => <TextField {...params} label={t('mweb.common.country')} />}
       />
       <Autocomplete
         options={stateNames}
         value={state || null}
         disabled={!country}
         onChange={(_event, next) => write('state', next ?? '')}
-        renderInput={(params) => <TextField {...params} label="State" />}
+        renderInput={(params) => <TextField {...params} label={t('mweb.common.state')} />}
       />
       <TextField
-        label="City"
+        label={t('mweb.common.city')}
         value={city}
         onChange={(event) => write('city', event.target.value)}
-        placeholder="Enter your city"
-        helperText="Your city — used to surface pods and clubs near you."
+        placeholder={t('mweb.account.enterYourCity')}
+        helperText={t('mweb.account.yourCityUsedToSurfacePods')}
       />
     </Stack>
   );

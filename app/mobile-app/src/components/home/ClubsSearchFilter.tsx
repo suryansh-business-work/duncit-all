@@ -4,6 +4,7 @@ import { Input, XStack, YStack } from 'tamagui';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import type { CategoryOption } from '@/hooks/useClubsFilter';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ClubsSearchFilterProps {
   query: string;
@@ -21,6 +22,7 @@ export function ClubsSearchFilter({
   categoryOptions,
   onCategoryChange,
 }: Readonly<ClubsSearchFilterProps>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const options: CategoryOption[] = [['', 'All'], ...categoryOptions];
 
@@ -39,12 +41,12 @@ export function ClubsSearchFilter({
         <MaterialIcons name="search" size={20} color={muted} />
         <Input
           testID="clubs-search-input"
-          aria-label="Search clubs"
+          aria-label={t('mweb.common.searchClubs')}
           flex={1}
           unstyled
           value={query}
           onChangeText={onQueryChange}
-          placeholder="Search clubs by name or vibe…"
+          placeholder={t('mweb.home.searchClubsByNameOrVibe')}
           placeholderTextColor="$muted"
           color="$color"
           fontSize={15}

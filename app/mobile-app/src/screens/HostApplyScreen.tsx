@@ -13,9 +13,11 @@ import { useHostRequestFlow } from '@/components/survey-onboarding/useHostReques
 import { useBranding } from '@/hooks/useBranding';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Host applies to host in a new category: category → survey → request submitted. */
 export function HostApplyScreen() {
+  const { t } = useTranslation();
   const goBack = useGoBack();
   const { color: ink } = useThemeColors();
   const { data: brandingData } = useBranding();
@@ -42,7 +44,7 @@ export function HostApplyScreen() {
           <XStack
             testID="host-apply-back"
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={goBack}
             width={40}
             height={40}

@@ -60,7 +60,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
           <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-edit-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={dismiss}
               position="absolute"
               top={0}
@@ -90,14 +90,14 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   <FormTextField
                     control={control}
                     name="pod_title"
-                    label="Title"
+                    label={t('mweb.common.title')}
                     required
                     hint="3–120 characters"
                   />
                   <FormTextField
                     control={control}
                     name="pod_description"
-                    label="Description"
+                    label={t('mweb.common.description')}
                     multiline
                     required
                     hint="At least 10 characters"
@@ -110,7 +110,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                         value={field.value}
                         onChange={field.onChange}
                         error={fieldState.error?.message}
-                        label="Media"
+                        label={t('mweb.hostManage.media')}
                       />
                     )}
                   />
@@ -129,7 +129,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                 <XStack
                   testID="pod-edit-cancel"
                   role="button"
-                  aria-label="Cancel"
+                  aria-label={t('mweb.common.cancel')}
                   aria-disabled={busy}
                   onPress={dismiss}
                   flex={1}
@@ -149,7 +149,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                 <XStack
                   testID="pod-edit-save"
                   role="button"
-                  aria-label="Save changes"
+                  aria-label={t('mweb.hostManage.saveChanges')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : () => fireAndForget(submit())}
                   flex={1}

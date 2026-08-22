@@ -1,6 +1,7 @@
 import { Text, XStack } from 'tamagui';
 
 import { Backdrop, ModalButton } from './ModalBase';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -14,6 +15,7 @@ interface Props {
  * Alert.alert. Wording mirrors mWeb's ConfirmDialog for parity (rule 27).
  */
 export function ResolveConfirmModal({ open, busy, onConfirm, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!open) return null;
   return (
     <Backdrop testID="resolve-confirm-modal">
@@ -26,7 +28,7 @@ export function ResolveConfirmModal({ open, busy, onConfirm, onCancel }: Readonl
       <XStack gap={8} justifyContent="flex-end" flexWrap="wrap">
         <ModalButton
           testID="resolve-confirm-cancel"
-          label="No, continue conversation"
+          label={t('mweb.common.noContinueConversation')}
           onPress={onCancel}
         />
         <ModalButton

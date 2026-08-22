@@ -9,7 +9,7 @@ export {
 } from './create-pod.form';
 export {
   blankCreatePodForm,
-  POD_TYPES,
+  podTypes,
   type CreatePodClub,
   type CreatePodFormValues,
   type CreatePodHostCategory,

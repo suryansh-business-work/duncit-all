@@ -16,11 +16,13 @@ import {
   effectiveCategoryId,
   type SavedFilters,
 } from '@/utils/saved-filter';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Saved Items — the pods the user bookmarked, with a debounced server-side
  * search, a Super → Category → Sub filter and sort. RN twin of mWeb's
  * SavedItemsPage; all three inputs drive the one `mySavedPods` query. */
 export function SavedScreen() {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const { openPod } = useDetailNav();
   const categories = usePodHistoryCategories();
@@ -44,7 +46,7 @@ export function SavedScreen() {
   );
 
   return (
-    <StackScreen title="Saved Items" testID="saved-screen" right={toolbar}>
+    <StackScreen title={t('mweb.saved.savedItems')} testID="saved-screen" right={toolbar}>
       <YStack flex={1}>
         <XStack
           alignItems="center"
@@ -61,12 +63,12 @@ export function SavedScreen() {
           <MaterialIcons name="search" size={20} color={muted} />
           <Input
             testID="saved-search"
-            aria-label="Search saved pods"
+            aria-label={t('mweb.saved.searchSavedPods')}
             flex={1}
             unstyled
             value={searchText}
             onChangeText={setSearchText}
-            placeholder="Search saved pods…"
+            placeholder={t('mweb.common.searchSavedPods')}
             placeholderTextColor="$muted"
             color="$color"
             fontSize={15}
@@ -82,7 +84,7 @@ export function SavedScreen() {
             testID="saved-list"
             pods={pods}
             isLoading={isLoading}
-            emptyText="No saved pods yet. Tap the bookmark on a pod to save it."
+            emptyText={t('mweb.saved.noSavedPodsYetTapThe')}
             onOpen={(pod) => openPod(pod.club_slug, pod.pod_id)}
           />
         )}

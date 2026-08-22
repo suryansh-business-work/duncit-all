@@ -18,10 +18,12 @@ import { useProfilePostUpload } from '@/hooks/useProfilePostUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Profile — identity header, links/pet panels, host/venue shortcuts and the
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
 export function ProfileScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Profile'>>();
   const goBack = useGoBack();
@@ -95,7 +97,7 @@ export function ProfileScreen() {
           <XStack
             testID="profile-back"
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={goBack}
             width={40}
             height={40}
@@ -112,7 +114,7 @@ export function ProfileScreen() {
           <XStack
             testID="profile-settings"
             role="button"
-            aria-label="Profile settings"
+            aria-label={t('mweb.profile.profileSettings')}
             onPress={() => navigation.navigate('Account')}
             width={40}
             height={40}

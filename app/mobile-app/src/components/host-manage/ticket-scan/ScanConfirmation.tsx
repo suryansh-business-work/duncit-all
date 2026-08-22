@@ -78,7 +78,7 @@ export function ScanConfirmation({ result, text, onDone }: Readonly<Props>) {
         <XStack
           testID="scan-confirmation-done"
           role="button"
-          aria-label="Done"
+          aria-label={t('mweb.common.done')}
           onPress={onDone}
           alignSelf="stretch"
           height={46}

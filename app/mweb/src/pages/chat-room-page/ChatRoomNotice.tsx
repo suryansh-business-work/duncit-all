@@ -1,10 +1,12 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ChatRoomNoticeProps {
   ended?: boolean;
 }
 
 export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNoticeProps>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ mb: 1.5, mx: 'auto', maxWidth: 420, p: 1.25, borderRadius: '16px', bgcolor: 'rgba(112,70,255,0.12)', border: '1px solid rgba(112,70,255,0.24)' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
@@ -17,9 +19,9 @@ export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNotic
           </Typography>
         </Box>
         {ended ? (
-          <Chip size="small" label="Ended" sx={{ fontWeight: 700 }} />
+          <Chip size="small" label={t('mweb.chatRoom.ended')} sx={{ fontWeight: 700 }} />
         ) : (
-          <Chip size="small" label="Live" color="success" sx={{ fontWeight: 700 }} />
+          <Chip size="small" label={t('mweb.common.live')} color="success" sx={{ fontWeight: 700 }} />
         )}
       </Stack>
     </Box>

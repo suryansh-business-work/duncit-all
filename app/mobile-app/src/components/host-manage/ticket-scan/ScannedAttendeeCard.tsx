@@ -186,7 +186,7 @@ export function ScannedAttendeeCard({
       <XStack
         testID="scanned-attendee-profile"
         role="button"
-        aria-label="View profile"
+        aria-label={t('mweb.hostManage.viewProfile')}
         onPress={onOpenProfile}
         alignItems="center"
         justifyContent="center"

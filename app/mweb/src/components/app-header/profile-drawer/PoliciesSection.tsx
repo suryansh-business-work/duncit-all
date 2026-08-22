@@ -11,6 +11,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PoliciesSectionProps {
   publicPolicies: { id: string; slug: string; title: string }[];
@@ -23,6 +24,7 @@ export default function PoliciesSection({
   policiesOpen,
   setPoliciesOpen,
 }: Readonly<PoliciesSectionProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   if (publicPolicies.length === 0) return null;
 
@@ -37,7 +39,7 @@ export default function PoliciesSection({
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText
-            primary="Policies"
+            primary={t('mweb.common.policies')}
             primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
           />
           {policiesOpen ? (

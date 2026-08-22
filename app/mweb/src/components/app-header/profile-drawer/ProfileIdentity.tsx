@@ -1,5 +1,6 @@
 import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface ProfileIdentityProps {
   me: {
@@ -14,6 +15,7 @@ interface ProfileIdentityProps {
 /** Compact identity row — name + email on the left, avatar on the right,
  * the whole row opens the social profile. */
 export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentityProps>) {
+  const { t } = useTranslation();
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();
   return (
     <Box sx={{ px: 2, py: 1 }}>
@@ -31,7 +33,7 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
           borderRadius: '16px',
           '&:hover': { bgcolor: 'action.hover' },
         }}
-        aria-label="Open your profile"
+        aria-label={t('mweb.common.openYourProfile')}
       >
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Stack direction="row" alignItems="center" spacing={0.25}>

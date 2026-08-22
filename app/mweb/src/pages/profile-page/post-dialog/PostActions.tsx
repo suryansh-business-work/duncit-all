@@ -10,6 +10,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SendIcon from '@mui/icons-material/Send';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PostActionsProps {
   post: any;
@@ -28,6 +29,7 @@ export default function PostActions({
   onSend,
   submitting,
 }: Readonly<PostActionsProps>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ borderTop: 1, borderColor: 'divider', p: 1 }}>
       <Stack direction="row" spacing={0.5} alignItems="center">
@@ -45,7 +47,7 @@ export default function PostActions({
         fullWidth
         size="small"
         variant="standard"
-        placeholder="Add a comment…"
+        placeholder={t('mweb.common.addAComment')}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         onKeyDown={(e) => {

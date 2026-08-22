@@ -3,6 +3,7 @@ import { Box, Paper, Stack, Typography } from '@mui/material';
 import ForumIcon from '@mui/icons-material/Forum';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import SupportShell from './SupportShell';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * "Chat with Us" — a single entry point into the real-time agent chat. The
@@ -11,12 +12,13 @@ import SupportShell from './SupportShell';
  * sections in the Support hub).
  */
 export default function LiveTicketsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
     <SupportShell
-      title="Chat with Us"
-      subtitle="Real-time chat with our support team"
+      title={t('mweb.common.chatWithUs')}
+      subtitle={t('mweb.supportHub.realTimeChatWithOurSupport')}
       icon={<SensorsIcon fontSize="small" />}
       gradient="linear-gradient(135deg, #4caf50 0%, #2196f3 100%)"
       backTo="/support"

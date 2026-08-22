@@ -7,6 +7,7 @@ import { MapEmbed } from '@/components/MapEmbed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDistance, haversineKm } from '@/utils/distance';
 import { VenueCard, type ClubVenue } from './VenueCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Origin = { lat: number; lng: number };
 
@@ -44,6 +45,7 @@ async function currentOrigin(): Promise<Origin | null> {
  * ClubMeetupVenuesSection: venue rail, optional distances, the selected
  * venue's address and its map preview. */
 export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null);
@@ -80,7 +82,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
           <XStack
             testID="club-venues-locate"
             role="button"
-            aria-label="Show distance"
+            aria-label={t('mweb.details.showDistance')}
             onPress={locateMe}
             alignItems="center"
             gap={4}
@@ -114,7 +116,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
       <XStack
         testID="club-venue-open-selected"
         role="button"
-        aria-label="Open venue details"
+        aria-label={t('mweb.details.openVenueDetails')}
         onPress={() => onOpenVenue(selected.id)}
         alignItems="center"
         alignSelf="flex-start"

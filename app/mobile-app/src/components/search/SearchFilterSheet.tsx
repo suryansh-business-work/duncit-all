@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import type { SearchCategory } from '@/hooks/useSearch';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -29,6 +30,7 @@ export function SearchFilterSheet({
   onClose,
   onSelect,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const options = useMemo(
     () =>
       [
@@ -42,7 +44,7 @@ export function SearchFilterSheet({
     <XStack
       testID="search-filter-apply"
       role="button"
-      aria-label="Apply filters"
+      aria-label={t('mweb.common.applyFilters')}
       onPress={onClose}
       flex={1}
       height={46}
@@ -63,7 +65,7 @@ export function SearchFilterSheet({
       open={open}
       onClose={onClose}
       testID="search-filter-sheet"
-      title="Filter by Category"
+      title={t('mweb.search.filterByCategory')}
       closeLabel="Close"
       footer={footer}
     >

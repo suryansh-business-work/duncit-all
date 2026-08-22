@@ -17,7 +17,7 @@ export default function VenueImagesGrid({ images, venueName, onOpen }: Readonly<
 
   return (
     <Stack spacing={1}>
-      <Typography variant="h6" fontWeight={700}>Images</Typography>
+      <Typography variant="h6" fontWeight={700}>{t('mweb.venues.images')}</Typography>
       <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' } }}>
         {images.slice(1).map((url, tileIndex) => (
           <ButtonBase

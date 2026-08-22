@@ -11,6 +11,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { PublicEcommBrandDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Brand = NonNullable<ResultOf<typeof PublicEcommBrandDocument>['publicEcommBrand']>;
 
@@ -21,6 +22,7 @@ export function BrandDetailSheet({
   brandId,
   onClose,
 }: Readonly<{ brandId: string | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,7 +108,7 @@ export function BrandDetailSheet({
         <YStack flex={1} justifyContent="flex-end" testID="brand-detail-sheet">
           <YStack
             role="button"
-            aria-label="Close brand"
+            aria-label={t('mweb.details.closeBrand')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -129,7 +131,7 @@ export function BrandDetailSheet({
                 <XStack
                   testID="brand-detail-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={32}
                   height={32}

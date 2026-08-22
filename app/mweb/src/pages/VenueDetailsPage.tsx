@@ -108,7 +108,7 @@ export default function VenueDetailsPage() {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ alignSelf: 'flex-start' }}>
           Back
         </Button>
-        <Typography variant="h5" fontWeight={700}>Venue not found</Typography>
+        <Typography variant="h5" fontWeight={700}>{t('mweb.venueDetailsPage.venueNotFound')}</Typography>
         <Typography color="text.secondary">
           This venue link may be unavailable or the venue may not be approved yet.
         </Typography>
@@ -120,7 +120,7 @@ export default function VenueDetailsPage() {
     <Stack spacing={3} sx={{ pb: 4 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>Back</Button>
-        <Button startIcon={<ContentCopyIcon />} onClick={copyLink}>Copy link</Button>
+        <Button startIcon={<ContentCopyIcon />} onClick={copyLink}>{t('mweb.venueDetailsPage.copyLink')}</Button>
       </Stack>
 
       <Box sx={{ borderRadius: '16px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
@@ -156,7 +156,7 @@ export default function VenueDetailsPage() {
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} alignItems="center">
           <PlaceIcon color="primary" fontSize="small" />
-          <Typography variant="h6" fontWeight={700}>Location</Typography>
+          <Typography variant="h6" fontWeight={700}>{t('mweb.common.location')}</Typography>
         </Stack>
         <Typography color="text.secondary">
           {addressParts(venue).map((part) => part?.trim()).filter(Boolean).join(', ')}
@@ -166,9 +166,9 @@ export default function VenueDetailsPage() {
 
       <VenuePodsSection venueId={venue.id} />
 
-      <VenueChipsSection title="Amenities" items={venue.amenities} />
-      <VenueChipsSection title="Facilities" items={venue.facilities} />
-      <VenueChipsSection title="Venue Security" items={venue.security} />
+      <VenueChipsSection title={t('mweb.common.amenities')} items={venue.amenities} />
+      <VenueChipsSection title={t('mweb.common.facilities')} items={venue.facilities} />
+      <VenueChipsSection title={t('mweb.common.venueSecurity')} items={venue.security} />
 
       <VenueImagesGrid images={images} venueName={venue.venue_name} onOpen={setZoomIndex} />
 

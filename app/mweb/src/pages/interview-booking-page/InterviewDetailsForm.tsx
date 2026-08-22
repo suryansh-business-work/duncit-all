@@ -1,5 +1,6 @@
 import { Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface InterviewDetailsFormProps {
   isHost: boolean;
@@ -44,6 +45,7 @@ export default function InterviewDetailsForm({
   about,
   setAbout,
 }: Readonly<InterviewDetailsFormProps>) {
+  const { t } = useTranslation();
   const onlyDigits = (value: string) => value.replace(/\D/g, '').slice(0, 15);
 
   return (
@@ -55,14 +57,14 @@ export default function InterviewDetailsForm({
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Full name"
+              label={t('mweb.interviewBooking.fullName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               fullWidth
               required
             />
             <TextField
-              label="Email"
+              label={t('mweb.common.email')}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -71,9 +73,9 @@ export default function InterviewDetailsForm({
             />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <PhoneExtensionField value={phoneExtension} onChange={setPhoneExtension} label="Code" size="medium" />
+            <PhoneExtensionField value={phoneExtension} onChange={setPhoneExtension} label={t('mweb.common.code')} size="medium" />
             <TextField
-              label="Phone"
+              label={t('mweb.common.phone')}
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(onlyDigits(e.target.value))}
@@ -85,13 +87,13 @@ export default function InterviewDetailsForm({
           {!isHost && (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Venue name"
+                label={t('mweb.interviewBooking.venueName')}
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 fullWidth
               />
               <TextField
-                label="Venue address"
+                label={t('mweb.interviewBooking.venueAddress')}
                 value={businessAddress}
                 onChange={(e) => setBusinessAddress(e.target.value)}
                 fullWidth
@@ -100,13 +102,13 @@ export default function InterviewDetailsForm({
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="City"
+              label={t('mweb.common.city')}
               value={city}
               onChange={(e) => setCity(e.target.value)}
               fullWidth
             />
             <TextField
-              label="Zone / Area"
+              label={t('mweb.interviewBooking.zoneArea')}
               value={zone}
               onChange={(e) => setZone(e.target.value)}
               fullWidth

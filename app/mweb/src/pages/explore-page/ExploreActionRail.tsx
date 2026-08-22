@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ListItemIcon, ListItemText, Menu, MenuItem, Stack } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ExploreActionButton from './ExploreActionButton';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface ExploreAction {
   key: string;
@@ -34,6 +35,7 @@ export function railLayout(total: number, available: number, pitch = ITEM_PITCH)
  * remainder collapses into a "More" (⋮) menu. Fully dynamic on resize.
  */
 export default function ExploreActionRail({ actions }: Readonly<{ actions: ExploreAction[] }>) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState(0);
@@ -82,8 +84,8 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
         <div ref={moreRef}>
           <ExploreActionButton
             icon={<MoreVertIcon />}
-            label="More"
-            tooltip="More actions"
+            label={t('mweb.explore.more')}
+            tooltip={t('mweb.explore.moreActions')}
             onClick={() => setMenuOpen(true)}
           />
         </div>

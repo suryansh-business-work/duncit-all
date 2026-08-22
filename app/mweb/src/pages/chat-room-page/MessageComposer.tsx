@@ -2,6 +2,7 @@ import { IconButton, InputAdornment, Stack, TextField, Tooltip } from '@mui/mate
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface MessageComposerProps {
   text: string;
@@ -18,6 +19,7 @@ export default function MessageComposer({
   onOpenPicker,
   onOpenEmoji,
 }: Readonly<MessageComposerProps>) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
@@ -25,7 +27,7 @@ export default function MessageComposer({
       alignItems="center"
       sx={{ px: { xs: 1.25, sm: 2 }, py: 1, bgcolor: 'transparent' }}
     >
-      <Tooltip title="Image">
+      <Tooltip title={t('mweb.chatRoom.image')}>
         <IconButton onClick={onOpenPicker} sx={{ bgcolor: 'action.hover' }}>
           <ImageIcon />
         </IconButton>
@@ -33,7 +35,7 @@ export default function MessageComposer({
       <TextField
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Type a message"
+        placeholder={t('mweb.common.typeAMessage')}
         fullWidth
         size="small"
         multiline

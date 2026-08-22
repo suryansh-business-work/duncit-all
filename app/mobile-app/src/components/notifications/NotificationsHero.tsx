@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   total: number;
@@ -12,6 +13,7 @@ interface Props {
 
 /** The "Never Miss an Update" banner + the allow-notifications switch. */
 export function NotificationsHero({ total, enabled, onToggle }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color, primary } = useThemeColors();
   return (
     <YStack gap={10} marginHorizontal={12} marginBottom={10}>
@@ -62,7 +64,7 @@ export function NotificationsHero({ total, enabled, onToggle }: Readonly<Props>)
         </Text>
         <Switch
           testID="notifications-allow-switch"
-          aria-label="Allow notifications"
+          aria-label={t('mweb.notifications.allowNotifications')}
           value={enabled}
           onValueChange={onToggle}
           trackColor={{ true: primary }}

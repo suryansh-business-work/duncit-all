@@ -10,6 +10,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface HomeStatusViewerSlide {
   /** Post id — present for real stories so the slide can be recorded/liked/deleted. */
@@ -91,6 +92,7 @@ export default function HomeStatusViewer({
   onToggleLike,
   onRecordView,
 }: Readonly<HomeStatusViewerProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -297,7 +299,7 @@ export default function HomeStatusViewer({
             {onViewers && currentId && (
               <IconButton
                 onClick={() => onViewers(currentId)}
-                aria-label="See who viewed this story"
+                aria-label={t('mweb.common.seeWhoViewedThisStory')}
                 data-testid="status-viewers"
                 sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
@@ -307,7 +309,7 @@ export default function HomeStatusViewer({
             {onDelete && currentId && (
               <IconButton
                 onClick={(event) => setMenuAnchor(event.currentTarget)}
-                aria-label="Story options"
+                aria-label={t('mweb.home.storyOptions')}
                 data-testid="status-kebab"
                 sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
@@ -329,7 +331,7 @@ export default function HomeStatusViewer({
                 </MenuItem>
               </Menu>
             )}
-            <IconButton onClick={onClose} aria-label="Close status" sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
+            <IconButton onClick={onClose} aria-label={t('mweb.common.closeStatus')} sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Stack>

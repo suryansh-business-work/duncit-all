@@ -4,6 +4,7 @@ import { ScrollView, Text, YStack } from 'tamagui';
 import { StackScreen } from '@/components/StackScreen';
 import { FeedbackForm } from '@/components/support/FeedbackForm';
 import { submitAppFeedback } from '@/hooks/useFeedback';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Report a Problem — a quick feedback note that reaches the team on Slack. RN
@@ -11,6 +12,7 @@ import { submitAppFeedback } from '@/hooks/useFeedback';
  * identity, so the client only sends content.
  */
 export function FeedbackScreen() {
+  const { t } = useTranslation();
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -22,14 +24,16 @@ export function FeedbackScreen() {
       await submitAppFeedback(values.category, values.message, values.media_urls);
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send feedback. Please try again.');
+      setError(
+        err instanceof Error ? err.message : t('mweb.feedback.couldNotSendFeedbackPleaseTry'),
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <StackScreen title="Report a Problem" testID="feedback-screen">
+    <StackScreen title={t('mweb.common.reportAProblem')} testID="feedback-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
         <Text fontSize={13} color="$muted">
           Send feedback or report an issue — it reaches our team instantly

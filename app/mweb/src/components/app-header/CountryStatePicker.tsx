@@ -11,6 +11,7 @@ import { alpha, type Theme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import type { CountryNode } from '../../utils/location-tree';
 import { countryFlagUrl } from '../../utils/location-tree';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   tree: CountryNode[];
@@ -34,6 +35,7 @@ const chipSx = (active: boolean) => ({
 });
 
 export default function CountryStatePicker({ tree, country, state, onCountry, onState }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [stateQuery, setStateQuery] = useState('');
   const activeCountry = tree.find((c) => c.country === country) ?? tree[0];
   const states = useMemo(() => {
@@ -72,7 +74,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
         {(activeCountry?.states.length ?? 0) > 6 && (
           <TextField
             size="small"
-            placeholder="Search state"
+            placeholder={t('mweb.common.searchState')}
             value={stateQuery}
             onChange={(e) => setStateQuery(e.target.value)}
             InputProps={{

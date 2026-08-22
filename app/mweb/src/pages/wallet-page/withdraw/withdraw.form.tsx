@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { fallbackT, type Translate } from '../../../i18n/fallback';
 import { REQUEST_WITHDRAWAL } from '../queries';
 import { blankWithdrawValues, type WithdrawValues } from './withdraw.types';
 
@@ -26,14 +27,17 @@ import { blankWithdrawValues, type WithdrawValues } from './withdraw.types';
    let someone with a healthy balance submit an under-floor amount and meet a
    raw server error instead of a field message. 0 disables the floor.
  */
-export const buildWithdrawSchema = (max: number, min = 0) =>
+export const buildWithdrawSchema = (max: number, min = 0, t: Translate = fallbackT) =>
   z
     .object({
       amount: z
         .string()
-        .refine((v) => Number(v) > 0, 'Enter an amount')
-        .refine((v) => Number(v) <= max, `Max ${max}`)
-        .refine((v) => min <= 0 || Number(v) >= min, `Minimum ${min}`),
+        .refine((v) => Number(v) > 0, t('mweb.wallet.enterAnAmount'))
+        .refine((v) => Number(v) <= max, t('mweb.wallet.maxAmount', { vars: { max } }))
+        .refine(
+          (v) => min <= 0 || Number(v) >= min,
+          t('mweb.wallet.minimumAmount', { vars: { min } }),
+        ),
       payout_method: z.enum(['UPI', 'IMPS', 'NEFT']),
       upi_id: z.string().trim(),
       account_holder_name: z.string().trim(),
@@ -42,10 +46,10 @@ export const buildWithdrawSchema = (max: number, min = 0) =>
     })
     .superRefine((v, ctx) => {
       if (v.payout_method === 'UPI') {
-        if (!v.upi_id) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['upi_id'], message: 'Enter your UPI ID' });
+        if (!v.upi_id) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['upi_id'], message: t('mweb.wallet.enterYourUpiId') });
       } else {
-        if (!v.account_number) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['account_number'], message: 'Enter account number' });
-        if (!v.ifsc_code) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ifsc_code'], message: 'Enter IFSC code' });
+        if (!v.account_number) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['account_number'], message: t('mweb.wallet.enterAccountNumber') });
+        if (!v.ifsc_code) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ifsc_code'], message: t('mweb.wallet.enterIfscCode') });
       }
     });
 
@@ -78,7 +82,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
     reset,
     watch,
     formState: { errors },
-  } = useForm<WithdrawValues>({ resolver: zodResolver(buildWithdrawSchema(maxAmount, minAmount)), defaultValues: blankWithdrawValues });
+  } = useForm<WithdrawValues>({ resolver: zodResolver(buildWithdrawSchema(maxAmount, minAmount, t)), defaultValues: blankWithdrawValues });
   const [request, state] = useMutation(REQUEST_WITHDRAWAL);
   const method = watch('payout_method');
   const minHint =
@@ -97,18 +101,18 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Withdraw from wallet</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.wallet.withdrawFromWallet')}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="withdraw-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <TextField
-            label={`Amount (max ${currency}${maxAmount.toFixed(2)})`}
+            label={t('mweb.wallet.amountMax', { vars: { max: `${currency}${maxAmount.toFixed(2)}` } })}
             type="number"
             required
             {...register('amount')}
             error={!!errors.amount}
             helperText={errors.amount?.message ?? minHint}
           />
-          <TextField select label="Payout method" defaultValue="UPI" {...register('payout_method')}>
+          <TextField select label={t('mweb.wallet.payoutMethod')} defaultValue="UPI" {...register('payout_method')}>
             {['UPI', 'IMPS', 'NEFT'].map((m) => (
               <MenuItem key={m} value={m}>
                 {m}
@@ -116,12 +120,12 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
             ))}
           </TextField>
           {method === 'UPI' ? (
-            <TextField label="UPI ID" {...register('upi_id')} error={!!errors.upi_id} helperText={errors.upi_id?.message} />
+            <TextField label={t('mweb.wallet.upiId')} {...register('upi_id')} error={!!errors.upi_id} helperText={errors.upi_id?.message} />
           ) : (
             <>
-              <TextField label="Account holder name" {...register('account_holder_name')} />
-              <TextField label="Account number" {...register('account_number')} error={!!errors.account_number} helperText={errors.account_number?.message} />
-              <TextField label="IFSC code" {...register('ifsc_code')} error={!!errors.ifsc_code} helperText={errors.ifsc_code?.message} />
+              <TextField label={t('mweb.wallet.accountHolderName')} {...register('account_holder_name')} />
+              <TextField label={t('mweb.wallet.accountNumber')} {...register('account_number')} error={!!errors.account_number} helperText={errors.account_number?.message} />
+              <TextField label={t('mweb.wallet.ifscCode')} {...register('ifsc_code')} error={!!errors.ifsc_code} helperText={errors.ifsc_code?.message} />
             </>
           )}
           {state.error && <Alert severity="error">{state.error.message}</Alert>}
@@ -129,10 +133,10 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={state.loading}>
-          Cancel
+          {t('mweb.common.cancel')}
         </Button>
         <Button type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 700 }}>
-          {state.loading ? 'Requesting…' : 'Request withdrawal'}
+          {state.loading ? t('mweb.wallet.requesting') : t('mweb.wallet.requestWithdrawal')}
         </Button>
       </DialogActions>
     </Dialog>

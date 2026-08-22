@@ -4,6 +4,7 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import PeopleAltIcon from '@mui/icons-material/PeopleAltOutlined';
 import PodCard from '../home-page/PodCard';
 import FollowButton from '../../components/FollowButton';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ClubResult {
   is_following: boolean;
@@ -40,6 +41,7 @@ export default function SearchClubCard({
   onOpenClub,
   onOpenPod,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { club, upcoming_pods: pods } = result;
   return (
     <Box sx={{ minWidth: 0 }}>
@@ -75,7 +77,7 @@ export default function SearchClubCard({
             size="small"
             icon={<HowToRegIcon />}
             color="primary"
-            label="Following"
+            label={t('mweb.nav.following')}
             sx={{ fontWeight: 600, flex: '0 0 auto' }}
           />
         ) : (

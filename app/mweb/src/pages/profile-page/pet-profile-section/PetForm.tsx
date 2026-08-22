@@ -12,6 +12,7 @@ import {
 import { PET_SPECIES_OPTIONS, breedsForSpecies } from '../../../utils/petBreeds';
 import PetPhotoField from './PetPhotoField';
 import { PetFormValues, PetProfile, UPDATE_PET, petSchema } from './petQueries';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PetFormProps {
   pet?: PetProfile | null;
@@ -22,6 +23,7 @@ interface PetFormProps {
 const AGE_OPTIONS = Array.from({ length: 31 }, (_, i) => String(i));
 
 export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProps>) {
+  const { t } = useTranslation();
   const [updateMut, { loading, error }] = useMutation(UPDATE_PET);
 
   const { control, handleSubmit, watch, setValue, formState } = useForm<PetFormValues>({
@@ -79,7 +81,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
               <TextField
                 {...field}
                 fullWidth
-                label="Pet name"
+                label={t('mweb.profile.petName')}
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
               />
@@ -103,8 +105,8 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Species"
-                    placeholder="Dog, Cat, …"
+                    label={t('mweb.profile.species')}
+                    placeholder={t('mweb.profile.dogCat')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                   />
@@ -127,7 +129,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Age (yrs)"
+                    label={t('mweb.profile.ageYrs')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                   />
@@ -150,7 +152,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Breed (or type your own)"
+                    label={t('mweb.profile.breedOrTypeYourOwn')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                   />
@@ -167,7 +169,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
               <TextField
                 {...field}
                 fullWidth
-                label="About your pet"
+                label={t('mweb.profile.aboutYourPet')}
                 multiline
                 minRows={2}
                 error={!!fieldState.error}

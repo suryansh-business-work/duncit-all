@@ -15,6 +15,7 @@ import {
   type CurrentPasswordValues,
   type NewPasswordValues,
 } from './change-password.types';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface StepProps<T> {
   loading?: boolean;
@@ -52,6 +53,7 @@ export function CurrentPasswordForm({
   errorMessage,
   onSubmit,
 }: Readonly<StepProps<CurrentPasswordValues>>) {
+  const { t } = useTranslation();
   const [show, setShow] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<CurrentPasswordValues>({
@@ -65,7 +67,7 @@ export function CurrentPasswordForm({
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.common.somethingWentWrong'));
     }
   });
 
@@ -76,9 +78,9 @@ export function CurrentPasswordForm({
           control={control}
           name="current_password"
           type={show ? 'text' : 'password'}
-          label="Current password"
+          label={t('mweb.changePassword.currentPassword')}
           required
-          placeholder="Enter your current password"
+          placeholder={t('mweb.changePassword.enterYourCurrentPassword')}
           autoComplete="current-password"
           size="small"
           InputProps={passwordAdornments(show, () => setShow((v) => !v))}
@@ -107,6 +109,7 @@ export function NewPasswordForm({
   errorMessage,
   onSubmit,
 }: Readonly<StepProps<NewPasswordValues>>) {
+  const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -121,7 +124,7 @@ export function NewPasswordForm({
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.common.somethingWentWrong'));
     }
   });
 
@@ -149,10 +152,10 @@ export function NewPasswordForm({
           control={control}
           name="new_password"
           type={showPwd ? 'text' : 'password'}
-          label="New password"
+          label={t('mweb.changePassword.newPassword')}
           required
           hint="At least 8 characters"
-          placeholder="Create a new password"
+          placeholder={t('mweb.changePassword.createANewPassword')}
           autoComplete="new-password"
           size="small"
           InputProps={passwordAdornments(showPwd, () => setShowPwd((v) => !v))}
@@ -161,9 +164,9 @@ export function NewPasswordForm({
           control={control}
           name="confirm_password"
           type={showConfirm ? 'text' : 'password'}
-          label="Confirm new password"
+          label={t('mweb.changePassword.confirmNewPassword')}
           required
-          placeholder="Re-enter new password"
+          placeholder={t('mweb.changePassword.reEnterNewPassword')}
           autoComplete="new-password"
           size="small"
           InputProps={passwordAdornments(showConfirm, () => setShowConfirm((v) => !v))}

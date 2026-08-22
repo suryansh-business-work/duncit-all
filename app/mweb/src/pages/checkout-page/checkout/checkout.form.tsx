@@ -3,6 +3,7 @@ import { MenuItem, TextField, type SxProps, type Theme } from '@mui/material';
 import CheckoutContactFields from '../CheckoutContactFields';
 import type { CheckoutContact, CheckoutForm } from '../queries';
 import type { PostalAddressParts } from './checkout.types';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   control: Control<CheckoutForm>;
@@ -31,6 +32,7 @@ export default function CheckoutFields({
   contactLoading,
   addressRequired,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <CheckoutContactFields
@@ -49,16 +51,16 @@ export default function CheckoutFields({
           render={({ field }) => (
             <TextField
               select
-              label="Simulate"
+              label={t('mweb.checkout.simulate')}
               value={field.value ? 'fail' : 'success'}
               onChange={(e) => field.onChange(e.target.value === 'fail')}
               fullWidth
-              helperText="Dummy gateway only"
+              helperText={t('mweb.checkout.dummyGatewayOnly')}
               sx={fieldSx}
               SelectProps={{ MenuProps: selectMenuProps }}
             >
-              <MenuItem value="success">Successful Payment</MenuItem>
-              <MenuItem value="fail">Failed Payment</MenuItem>
+              <MenuItem value="success">{t('mweb.checkout.successfulPayment')}</MenuItem>
+              <MenuItem value="fail">{t('mweb.checkout.failedPayment')}</MenuItem>
             </TextField>
           )}
         />

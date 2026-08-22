@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import { EMAIL_TICKET_TRANSCRIPT } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -20,6 +21,7 @@ interface Props {
 
 /** Email a ticket transcript to an address (B15) — server defaults to .docx. */
 export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState(defaultEmail ?? '');
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +33,13 @@ export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClos
       await send({ variables: { ticket_id: ticketId, email: email.trim() } });
       setDone(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not email the transcript.');
+      setError(e instanceof Error ? e.message : t('mweb.supportTickets.couldNotEmailTheTranscript'));
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Email this ticket</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportTickets.emailThisTicket')}</DialogTitle>
       <DialogContent>
         {done ? (
           <Alert severity="success">Transcript sent to {email}.</Alert>
@@ -53,7 +55,7 @@ export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClos
               fullWidth
               size="small"
               type="email"
-              label="Email address"
+              label={t('mweb.common.emailAddress')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{ mt: 1 }}

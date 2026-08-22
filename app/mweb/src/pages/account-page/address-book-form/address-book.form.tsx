@@ -14,6 +14,7 @@ import {
   TextField,
 } from '@mui/material';
 import { blankAddressValues, type AddressFormValues } from './address-book.types';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 /** Validation for a saved address — mirrors the server's addressBook rules. */
 export const addressSchema = z.object({
@@ -48,6 +49,7 @@ export default function AddressForm({
   onCancel,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<AddressFormValues>({
     defaultValues: initial ?? blankAddressValues,
     resolver: zodResolver(addressSchema),
@@ -85,19 +87,19 @@ export default function AddressForm({
       <DialogTitle sx={{ fontWeight: 700 }}>{title}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-          {field('label', 'Label (Home, Office…)')}
-          {field('name', 'Receiver name')}
-          {field('phone', 'Phone')}
-          {field('line1', 'Address line 1')}
-          {field('line2', 'Address line 2')}
-          {field('landmark', 'Landmark')}
+          {field('label', t('mweb.address.labelHomeOffice'))}
+          {field('name', t('mweb.address.receiverName'))}
+          {field('phone', t('mweb.address.phone'))}
+          {field('line1', t('mweb.address.addressLine1'))}
+          {field('line2', t('mweb.address.addressLine2'))}
+          {field('landmark', t('mweb.address.landmark'))}
           <Stack direction="row" spacing={1.5}>
-            {field('city', 'City')}
-            {field('state', 'State')}
+            {field('city', t('mweb.address.city'))}
+            {field('state', t('mweb.address.state'))}
           </Stack>
           <Stack direction="row" spacing={1.5}>
-            {field('pincode', 'Pincode')}
-            {field('country', 'Country')}
+            {field('pincode', t('mweb.address.pincode'))}
+            {field('country', t('mweb.address.country'))}
           </Stack>
           <Controller
             name="is_default"
@@ -105,7 +107,7 @@ export default function AddressForm({
             render={({ field: f }) => (
               <FormControlLabel
                 control={<Checkbox checked={f.value} onChange={(e) => f.onChange(e.target.checked)} />}
-                label="Use as my default address"
+                label={t('mweb.address.useAsMyDefaultAddress')}
               />
             )}
           />

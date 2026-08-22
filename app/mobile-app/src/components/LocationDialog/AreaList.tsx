@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Zone {
   zone_name: string;
@@ -70,6 +71,7 @@ function Row({
 }
 
 export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
@@ -108,12 +110,12 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
             <MaterialIcons name="search" size={16} color={muted} />
             <Input
               testID="area-search"
-              aria-label="Search area or PIN code"
+              aria-label={t('mweb.location.searchAreaOrPinCode')}
               flex={1}
               unstyled
               value={query}
               onChangeText={setQuery}
-              placeholder="Search area or PIN code"
+              placeholder={t('mweb.location.searchAreaOrPinCode')}
               placeholderTextColor="$muted"
               fontSize={13}
               color="$color"
@@ -121,7 +123,7 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
           </XStack>
           <Row
             testID="area-all"
-            label="All areas"
+            label={t('mweb.common.allAreas')}
             sub={`${zones.length} localities`}
             active={!draftZone}
             onPress={() => onZone('')}

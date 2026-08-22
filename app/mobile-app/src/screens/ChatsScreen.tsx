@@ -13,12 +13,14 @@ import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { isPodActive } from '@/utils/pod-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Chats tab — the list of rooms (pods) the user is in. Rooms are classified by
  * the header Super Category (For You / For Your Pet) and can be narrowed to
  * Upcoming / Previous pods; the search box filters by pod title. Tapping opens
  * the room. RN twin of mWeb's ChatsPage. */
 export function ChatsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { rooms, isLoading, refetch } = useChatRooms();
   const { selectedSuperId } = useSuperCategories();
@@ -60,12 +62,12 @@ export function ChatsScreen() {
         <MaterialIcons name="search" size={20} color={muted} />
         <Input
           testID="chats-search-input"
-          aria-label="Search chats"
+          aria-label={t('mweb.chats.searchChats')}
           flex={1}
           unstyled
           value={query}
           onChangeText={setQuery}
-          placeholder="Search chats by pod name…"
+          placeholder={t('mweb.chats.searchChatsByPodName')}
           placeholderTextColor="$muted"
           color="$color"
           fontSize={15}

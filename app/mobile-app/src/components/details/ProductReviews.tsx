@@ -15,6 +15,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useUploadSettings, type MobileUploadSettings } from '@/hooks/useUploadSettings';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Review {
   id: string;
@@ -197,6 +198,7 @@ function ReviewCard({
 /** Ratings & reviews — the RN twin of mWeb's ProductReviews: summary, a write
  * form (stars + comment), the list with images + seller reply and thumbs voting. */
 export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
+  const { t } = useTranslation();
   const { color: ink, primary, muted, danger } = useThemeColors();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -227,7 +229,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
 
   const submit = async () => {
     if (!rating) {
-      setError('Please pick a star rating.');
+      setError(t('mweb.common.pleasePickAStarRating'));
       return;
     }
     setError('');
@@ -242,7 +244,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
       setImages([]);
       await load();
     } catch {
-      setError('Could not submit your review.');
+      setError(t('mweb.common.couldNotSubmitYourReview'));
     } finally {
       setSaving(false);
     }
@@ -280,7 +282,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
           testID="review-comment"
           value={comment}
           onChangeText={setComment}
-          placeholder="Share your experience (optional)"
+          placeholder={t('mweb.common.shareYourExperienceOptional')}
           minHeight={60}
         />
         <ReviewPhotos images={images} upload={upload} settings={settings} primary={primary} />

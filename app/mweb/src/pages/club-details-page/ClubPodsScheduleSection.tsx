@@ -1,6 +1,7 @@
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { clubPodPhase, type ClubPodPhase } from '../../utils/clubPodPhase';
 import ClubPodRailCard from './ClubPodRailCard';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pods: any[];
@@ -32,11 +33,12 @@ function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title:
 
 /** Pods Schedule segment — Happening Soon / Upcoming / Previous, each a side-by-side swipe rail. */
 export default function ClubPodsScheduleSection({ pods, priceFormat, onOpen }: Readonly<Props>) {
+  const { t } = useTranslation();
   const byPhase = (phase: ClubPodPhase) =>
     pods.filter((pod) => clubPodPhase(pod.pod_date_time, pod.pod_end_date_time) === phase);
 
   if (pods.length === 0) {
-    return <Alert severity="info">No pods scheduled for this club yet.</Alert>;
+    return <Alert severity="info">{t('mweb.clubDetails.noPodsScheduledForThisClub')}</Alert>;
   }
 
   return (

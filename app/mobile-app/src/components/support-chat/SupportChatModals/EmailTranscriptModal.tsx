@@ -4,6 +4,7 @@ import { Input, Text, XStack } from 'tamagui';
 import { Field } from '@/components/Field';
 
 import { Backdrop, ModalButton } from './ModalBase';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ export function EmailTranscriptModal({
   onSend,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   if (!open) return null;
   return (
@@ -51,18 +53,18 @@ export function EmailTranscriptModal({
           Transcript sent to {email}.
         </Text>
       ) : (
-        <Field label="Email address" gap={4}>
+        <Field label={t('mweb.common.emailAddress')} gap={4}>
           <Input
             testID="email-input"
             value={email}
             onChangeText={setEmail}
-            placeholder="Email address"
+            placeholder={t('mweb.common.emailAddress')}
             placeholderTextColor="$muted"
             keyboardType="email-address"
             autoCapitalize="none"
             backgroundColor="$surface"
             borderColor="$borderColor"
-            aria-label="Email address"
+            aria-label={t('mweb.common.emailAddress')}
           />
         </Field>
       )}

@@ -5,6 +5,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { describeAttachment } from '@/utils/attachment';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChipProps {
   url: string;
@@ -15,6 +16,7 @@ interface ChipProps {
 
 /** A staged (uploaded, not yet sent) attachment: file name + a remove button. */
 function AttachmentChip({ url, index, tint, onRemove }: Readonly<ChipProps>) {
+  const { t } = useTranslation();
   const { name } = describeAttachment(url);
   return (
     <XStack
@@ -36,7 +38,7 @@ function AttachmentChip({ url, index, tint, onRemove }: Readonly<ChipProps>) {
       <XStack
         testID={`support-chat-attach-remove-${index}`}
         role="button"
-        aria-label="Remove attachment"
+        aria-label={t('mweb.common.removeAttachment')}
         onPress={() => onRemove?.(url)}
         width={22}
         height={22}
@@ -75,6 +77,7 @@ export function SupportChatComposer({
   onAttachDocument,
   onTyping,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted, onPrimary, color: ink } = useThemeColors();
   const [text, setText] = useState('');
   const lastTyping = useRef(0);
@@ -112,7 +115,7 @@ export function SupportChatComposer({
         <XStack
           testID="support-chat-attach"
           role="button"
-          aria-label="Attach file"
+          aria-label={t('mweb.supportChat.attachFile')}
           onPress={busy ? undefined : onAttach}
           width={42}
           height={42}
@@ -133,7 +136,7 @@ export function SupportChatComposer({
         <XStack
           testID="support-chat-attach-doc"
           role="button"
-          aria-label="Attach document"
+          aria-label={t('mweb.supportChat.attachDocument')}
           onPress={busy ? undefined : onAttachDocument}
           width={42}
           height={42}
@@ -160,7 +163,7 @@ export function SupportChatComposer({
             testID="support-chat-input"
             value={text}
             onChangeText={change}
-            placeholder="Type a message…"
+            placeholder={t('mweb.supportChat.typeAMessage')}
             placeholderTextColor={muted}
             style={{ flex: 1, color: ink, paddingVertical: 8 }}
             multiline
@@ -169,7 +172,7 @@ export function SupportChatComposer({
         <XStack
           testID="support-chat-send"
           role="button"
-          aria-label="Send message"
+          aria-label={t('mweb.common.sendMessage')}
           onPress={send}
           width={42}
           height={42}

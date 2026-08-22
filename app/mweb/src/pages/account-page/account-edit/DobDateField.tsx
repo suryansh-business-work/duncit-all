@@ -3,6 +3,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format, parseISO, subYears } from 'date-fns';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import type { AccountEditValues } from './account-edit.types';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 /**
  * Full date-of-birth picker (bug 1) — opens on the year so the birth year can be
@@ -15,6 +16,7 @@ export default function DobDateField({
   control,
   minAge = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
 }: Readonly<{ control: Control<AccountEditValues>; minAge?: number }>) {
+  const { t } = useTranslation();
   const maxDate = latestEligibleDob(minAge);
   const minDate = subYears(maxDate, 120);
   return (
@@ -23,7 +25,7 @@ export default function DobDateField({
       name="dob"
       render={({ field, fieldState }) => (
         <DatePicker
-          label="Date of birth"
+          label={t('mweb.common.dateOfBirth')}
           openTo="year"
           views={['year', 'month', 'day']}
           value={field.value ? parseISO(field.value) : null}

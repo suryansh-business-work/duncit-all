@@ -11,6 +11,7 @@ import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { appVersion } from '@/utils/app-version';
 import { isOutdated } from '@/utils/semver';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Last-resort store URL used only if the server sends a blank one — the real URL
@@ -45,6 +46,7 @@ const FORCE_APP_UPDATE_FLAG = 'force_app_update';
  * database holds — blocks nobody.
  */
 export function ForceUpdateGate() {
+  const { t } = useTranslation();
   // Colours are selected from the SAME scheme source AppBackground uses
   // (`useThemeStore`), not Tamagui `$color` tokens — the two can desync for a
   // root-level overlay, which rendered the text invisible on the light backdrop.
@@ -116,7 +118,11 @@ export function ForceUpdateGate() {
         Current v{current} · Latest v{latest}
       </Text>
       <YStack width="100%" maxWidth={320} marginTop={8}>
-        <PrimaryButton testID="force-update-cta" label="Update now" onPress={openStore} />
+        <PrimaryButton
+          testID="force-update-cta"
+          label={t('mweb.forceUpdateGate.updateNow')}
+          onPress={openStore}
+        />
       </YStack>
     </YStack>
   );

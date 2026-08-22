@@ -13,6 +13,8 @@ import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import FollowButton from './FollowButton';
 import ResponsiveDialog from './ResponsiveDialog';
 import { CANCEL_FOLLOW_REQUEST, FOLLOW_USER, UNFOLLOW_USER } from '../pages/hosts-venues-page/queries';
+import { useTranslation } from '../i18n/useTranslation';
+import type { Translate } from '../i18n/fallback';
 
 export const FOLLOW_LISTS = gql`
   query FollowLists($userId: ID!) {
@@ -38,9 +40,9 @@ export const FOLLOW_LISTS = gql`
 `;
 
 type Tab = 'followers' | 'following';
-const TABS: DuncitTabItem<Tab>[] = [
-  { value: 'followers', label: 'Followers' },
-  { value: 'following', label: 'Following' },
+const followTabs = (t: Translate): DuncitTabItem<Tab>[] => [
+  { value: 'followers', label: t('mweb.followList.followers') },
+  { value: 'following', label: t('mweb.nav.following') },
 ];
 type Person = {
   user_id: string;
@@ -99,10 +101,11 @@ interface Props {
 /** Followers / Following list dialog (bug 9) — opened from the profile counts.
  * Lists each person's avatar, name, @handle + a follow toggle; rows open /u/:id. */
 export default function FollowListDialog({ open, onClose, userId, initialTab, viewerId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   // Own key: this dialog opens over pages that have their own tab strip.
   const tabs = useTabParam<Tab>({
-    items: TABS,
+    items: followTabs(t),
     fallback: initialTab,
     param: 'selectedtab_connections',
   });
@@ -160,7 +163,7 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
   );
 
   return (
-    <ResponsiveDialog open={open} onClose={onClose} title="Connections" sheetMaxHeight="80dvh">
+    <ResponsiveDialog open={open} onClose={onClose} title={t('mweb.followList.connections')} sheetMaxHeight="80dvh">
       <DuncitTabs {...tabs} variant="fullWidth" sx={{ mb: 1 }} />
       {loading && people.length === 0 ? (
         <Stack alignItems="center" sx={{ py: 4 }}>

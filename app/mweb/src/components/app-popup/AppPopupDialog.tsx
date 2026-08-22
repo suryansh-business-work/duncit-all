@@ -88,7 +88,7 @@ export default function AppPopupDialog() {
       open
       onClose={close}
       maxWidth={false}
-      aria-label="App popup"
+      aria-label={t('mweb.appPopup.appPopup')}
       PaperProps={{
         sx: {
           width: cardWidth(aspect),

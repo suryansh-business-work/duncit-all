@@ -14,6 +14,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import { gql, useQuery } from '@apollo/client';
 import { isTourCompleted, toursForRoles } from '@duncit/tours';
 import { useTours } from '../../tours/useTours';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * Tour Guide centre — every guided walkthrough, restartable at any time.
@@ -33,6 +34,7 @@ const TOUR_ROLES = gql`
 `;
 
 export default function TourGuidePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { completed, startTour } = useTours();
   const { data } = useQuery(TOUR_ROLES, { fetchPolicy: 'cache-first' });
@@ -75,7 +77,7 @@ export default function TourGuidePage() {
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         {tour.title}
                       </Typography>
-                      {done && <Chip size="small" label="Completed" color="success" />}
+                      {done && <Chip size="small" label={t('mweb.tourGuide.completed')} color="success" />}
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       {tour.caption}

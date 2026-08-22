@@ -4,6 +4,7 @@ import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit
 
 import { SelectSheet, type SelectOption } from './SelectSheet';
 import type { AccountEditValues } from './account-edit.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type LocationField = 'country' | 'state' | 'city';
 
@@ -15,6 +16,7 @@ function withCurrent(options: SelectOption[], current: string): SelectOption[] {
 
 /** Free-text city — the city is a custom value, not a fixed picklist. */
 function CityField({ control }: Readonly<{ control: Control<AccountEditValues> }>) {
+  const { t } = useTranslation();
   const { field } = useController({ control, name: 'city' });
   return (
     <YStack gap={6} flex={1}>
@@ -23,11 +25,11 @@ function CityField({ control }: Readonly<{ control: Control<AccountEditValues> }
       </Text>
       <Input
         testID="location-city"
-        aria-label="City"
+        aria-label={t('mweb.common.city')}
         value={String(field.value ?? '')}
         onChangeText={field.onChange}
         onBlur={field.onBlur}
-        placeholder="Enter city"
+        placeholder={t('mweb.accountEdit.enterCity')}
         placeholderTextColor="$muted"
         height={48}
         paddingHorizontal={12}
@@ -53,6 +55,7 @@ interface Props {
  * admin locations); City is a custom value. RN twin of mWeb's LocationSelect.
  */
 export function LocationSelect({ control, setValue }: Readonly<Props>) {
+  const { t } = useTranslation();
   const country = useWatch({ control, name: 'country' }) ?? '';
   const state = useWatch({ control, name: 'state' }) ?? '';
 
@@ -75,9 +78,9 @@ export function LocationSelect({ control, setValue }: Readonly<Props>) {
     <YStack gap={14}>
       <SelectSheet
         testID="location-country"
-        label="Country"
+        label={t('mweb.common.country')}
         value={country}
-        placeholder="Select country"
+        placeholder={t('mweb.accountEdit.selectCountry')}
         options={countryOptions}
         onPick={(value) => {
           reset('country', value);
@@ -88,9 +91,9 @@ export function LocationSelect({ control, setValue }: Readonly<Props>) {
       <XStack gap={12}>
         <SelectSheet
           testID="location-state"
-          label="State"
+          label={t('mweb.common.state')}
           value={state}
-          placeholder="Select state"
+          placeholder={t('mweb.accountEdit.selectState')}
           options={stateOptions}
           disabled={!country}
           onPick={(value) => reset('state', value)}

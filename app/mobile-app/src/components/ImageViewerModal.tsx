@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** A confirm button pinned over the bottom of the viewer — lets the viewer double
  * as a "look before you commit" step (the stock-photo picker previews a photo
@@ -29,6 +30,7 @@ interface Props {
 /** Full-screen, swipeable image viewer. Opened by tapping a details-hero image
  * so users can zoom into the full picture (contain-fit, dark backdrop). */
 export function ImageViewerModal({ images, index, onClose, action, caption }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const visible = index !== null;
 
@@ -52,7 +54,7 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
             <XStack
               testID="image-viewer-close"
               role="button"
-              aria-label="Close image"
+              aria-label={t('mweb.common.closeImage')}
               onPress={onClose}
               margin={12}
               width={40}

@@ -7,6 +7,7 @@ import EarningsCard from './EarningsCard';
 import QuickActions from './QuickActions';
 import HostInsights from './HostInsights';
 import { HOST_DASHBOARD_ME, HOST_DASHBOARD_PODS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const bandHint = (band?: HealthBand) => {
   if (band === 'GREEN') return 'Your host profile is in great shape.';
@@ -17,6 +18,7 @@ const bandHint = (band?: HealthBand) => {
 /** Host Dashboard — earnings, pod stats, quick actions and profile/verification
  * health. Split out from "Your Pods" (which is now just the pods list). B2-#5. */
 export default function HostDashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const meQ = useQuery(HOST_DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
   const userId = meQ.data?.me?.user_id;
@@ -44,9 +46,9 @@ export default function HostDashboardPage() {
   ).length;
   const paid = pods.filter((p: any) => p.pod_type !== 'FREE').length;
   const stats = [
-    { label: 'Pods', value: loadingPods ? '—' : pods.length },
-    { label: 'Upcoming', value: loadingPods ? '—' : upcoming },
-    { label: 'Paid', value: loadingPods ? '—' : paid },
+    { label: t('mweb.hostDashboard.pods'), value: loadingPods ? '—' : pods.length },
+    { label: t('mweb.common.upcoming'), value: loadingPods ? '—' : upcoming },
+    { label: t('mweb.common.paid'), value: loadingPods ? '—' : paid },
   ];
 
   return (
@@ -99,9 +101,9 @@ export default function HostDashboardPage() {
                 score={health.total_score}
                 band={health.band}
                 size={130}
-                label="Profile health"
+                label={t('mweb.hostDashboard.profileHealth')}
                 onClick={() => navigate('/account/health')}
-                caption="Tap for details"
+                caption={t('mweb.common.tapForDetails')}
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>

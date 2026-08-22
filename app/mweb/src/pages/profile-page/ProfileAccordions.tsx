@@ -17,6 +17,7 @@ import PetProfileSection from './PetProfileSection';
 import ProfileAboutSection from './ProfileAboutSection';
 import UserHostPanel from './UserHostPanel';
 import UserVenuePanel from './UserVenuePanel';
+import { useTranslation } from '../../i18n/useTranslation';
 
 function Title({ icon, label }: Readonly<{ icon: JSX.Element; label: string }>) {
   return (
@@ -32,11 +33,12 @@ export default function ProfileAccordions({
   onSaved,
   autoSendEmailOtp = false,
 }: Readonly<{ me: any; onSaved: () => void; autoSendEmailOtp?: boolean }>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1}>
       <Accordion defaultExpanded disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<PersonIcon color="primary" />} label="Your Profile" />
+          <Title icon={<PersonIcon color="primary" />} label={t('mweb.profile.yourProfile')} />
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
@@ -53,7 +55,7 @@ export default function ProfileAccordions({
 
       <Accordion disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<PetsIcon color="primary" />} label="Pet Profile" />
+          <Title icon={<PetsIcon color="primary" />} label={t('mweb.profile.petProfile2')} />
         </AccordionSummary>
         <AccordionDetails>
           <PetProfileSection pet={me.pet_profile} onSaved={onSaved} />
@@ -62,7 +64,7 @@ export default function ProfileAccordions({
 
       <Accordion disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<EmojiEventsIcon color="primary" />} label="Badges" />
+          <Title icon={<EmojiEventsIcon color="primary" />} label={t('mweb.profile.badges')} />
         </AccordionSummary>
         <AccordionDetails>
           <MyBadges />
@@ -71,7 +73,7 @@ export default function ProfileAccordions({
 
       <Accordion disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<WorkspacePremiumIcon color="primary" />} label="User Host" />
+          <Title icon={<WorkspacePremiumIcon color="primary" />} label={t('mweb.profile.userHost')} />
         </AccordionSummary>
         <AccordionDetails>
           <UserHostPanel />
@@ -80,7 +82,7 @@ export default function ProfileAccordions({
 
       <Accordion disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<StorefrontIcon color="primary" />} label="User Venues" />
+          <Title icon={<StorefrontIcon color="primary" />} label={t('mweb.profile.userVenues')} />
         </AccordionSummary>
         <AccordionDetails>
           <UserVenuePanel />

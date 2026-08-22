@@ -3,6 +3,7 @@ import { Box, Dialog, IconButton, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface Moment {
   url: string;
@@ -32,6 +33,7 @@ export default function MomentLightbox({
   onIndexChange,
   actions,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [current, setCurrent] = useState<number>(index ?? 0);
   const pushedHistory = useRef(false);
   const suppressNextPop = useRef(false);
@@ -103,7 +105,7 @@ export default function MomentLightbox({
       onClose={close}
       fullScreen
       PaperProps={{ sx: { bgcolor: 'rgba(0,0,0,0.94)' } }}
-      aria-label="Moment preview"
+      aria-label={t('mweb.moments.momentPreview')}
     >
       <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
         <Stack
@@ -114,7 +116,7 @@ export default function MomentLightbox({
           {actions}
           <IconButton
             onClick={close}
-            aria-label="Close preview"
+            aria-label={t('mweb.moments.closePreview')}
             sx={{
               color: 'common.white',
               bgcolor: 'rgba(0,0,0,0.4)',
@@ -130,14 +132,14 @@ export default function MomentLightbox({
           <>
             <IconButton
               onClick={prev}
-              aria-label="Previous moment"
+              aria-label={t('mweb.moments.previousMoment')}
               sx={navBtn('left')}
             >
               <ChevronLeftIcon />
             </IconButton>
             <IconButton
               onClick={next}
-              aria-label="Next moment"
+              aria-label={t('mweb.moments.nextMoment')}
               sx={navBtn('right')}
             >
               <ChevronRightIcon />

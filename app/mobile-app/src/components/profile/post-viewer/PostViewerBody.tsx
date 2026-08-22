@@ -4,6 +4,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import type { PostComment, PostDetail } from '@/hooks/usePostViewer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   post: PostDetail;
@@ -19,6 +20,7 @@ function PostCommentRow({
   canDelete,
   onDelete,
 }: Readonly<{ comment: PostComment; canDelete: boolean; onDelete: () => void }>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const author = comment.author;
   const initial = (author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase();
@@ -54,7 +56,7 @@ function PostCommentRow({
         <XStack
           testID={`post-comment-delete-${comment.id}`}
           role="button"
-          aria-label="Delete comment"
+          aria-label={t('mweb.common.deleteComment')}
           onPress={onDelete}
           padding={4}
           pressStyle={{ opacity: 0.6 }}
@@ -68,6 +70,7 @@ function PostCommentRow({
 
 /** Scrollable lower pane of the post viewer: like row + the comment thread. */
 export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted, danger } = useThemeColors();
 
   return (
@@ -82,7 +85,7 @@ export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Re
         <XStack
           testID="post-like"
           role="button"
-          aria-label="Like post"
+          aria-label={t('mweb.profile.likePost')}
           onPress={onToggleLike}
           alignItems="center"
           gap={6}

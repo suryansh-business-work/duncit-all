@@ -28,6 +28,7 @@ import {
   formatRelative,
 } from './queries';
 import IdeaCommentsList from './IdeaCommentsList';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface DetailsProps {
   id: string;
@@ -53,6 +54,7 @@ function IdeaDetailsBody({
   onDelete,
   onToggleLike,
 }: Readonly<BodyProps>) {
+  const { t } = useTranslation();
   if (loading && !hasData) {
     return (
       <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -62,7 +64,7 @@ function IdeaDetailsBody({
   }
 
   if (!idea) {
-    return <Alert severity="warning">Idea not found.</Alert>;
+    return <Alert severity="warning">{t('mweb.podIdeas.ideaNotFound')}</Alert>;
   }
 
   return (
@@ -120,6 +122,7 @@ function IdeaDetailsBody({
 }
 
 export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Readonly<DetailsProps>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(POD_IDEA_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -182,7 +185,7 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
           <TextField
             fullWidth
             size="small"
-            placeholder="Add a comment…"
+            placeholder={t('mweb.common.addAComment')}
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, 1000))}
             onKeyDown={(e) => {

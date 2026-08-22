@@ -17,6 +17,7 @@ import EventIcon from '@mui/icons-material/Event';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTime } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const MY_HOST = gql`
   query ProfileMyHost {
@@ -59,6 +60,7 @@ interface HostPodsSectionProps {
 
 /** Pods hosted by the approved host — list, empty state and loader. */
 function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const emptyOrList =
     pods.length === 0 ? (
@@ -96,7 +98,7 @@ function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
-        <Typography variant="subtitle2">Your Pods</Typography>
+        <Typography variant="subtitle2">{t('mweb.common.yourPods')}</Typography>
         <Chip size="small" label={pods.length} />
       </Stack>
       {loading ? <CircularProgress size={20} sx={{ mt: 1 }} /> : emptyOrList}
@@ -105,6 +107,7 @@ function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
 }
 
 export default function UserHostPanel() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(MY_HOST, { fetchPolicy: 'cache-and-network' });
   const host = data?.myHost;
   const myUserId: string | undefined = data?.me?.user_id || host?.user_id;
@@ -144,7 +147,7 @@ export default function UserHostPanel() {
           <WorkspacePremiumIcon fontSize="small" />
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Host application</Typography>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{t('mweb.profile.hostApplication')}</Typography>
           <Typography variant="caption" color="text.secondary">
             {isApproved ? 'Approved host profile' : `Step ${completed} of 4 completed`}
           </Typography>

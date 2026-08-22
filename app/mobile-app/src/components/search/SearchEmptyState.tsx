@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Glyph = keyof typeof MaterialIcons.glyphMap;
 
@@ -69,6 +70,7 @@ export function SearchEmptyState({
   onEarn,
   onExploreCategories,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const isCategory = variant === 'empty-category';
   const heading = isCategory ? 'Nothing Here Yet' : 'No Pods Match Your Search';
@@ -100,8 +102,8 @@ export function SearchEmptyState({
       {isCategory ? (
         <CtaBlock
           icon="explore"
-          title="Explore Other Interests"
-          description="Browse the full set of categories and discover communities that match what you love."
+          title={t('mweb.search.exploreOtherInterests')}
+          description={t('mweb.search.browseTheFullSetOfCategories')}
           cta="Explore More Categories"
           testID="search-cta-explore"
           onPress={onExploreCategories}
@@ -109,7 +111,7 @@ export function SearchEmptyState({
       ) : (
         <CtaBlock
           icon="storefront"
-          title="Turn Your Passion Into Something Bigger"
+          title={t('mweb.search.turnYourPassionIntoSomethingBigger')}
           description="If the experience you're searching for doesn't exist yet, why not create it? Host experiences, register your venue or list your products and start earning with Duncit."
           cta="Earn With Duncit"
           testID="search-cta-earn"

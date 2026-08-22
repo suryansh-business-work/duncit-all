@@ -25,6 +25,7 @@ import {
   filterHostPods,
   type HostPodsFilters,
 } from './hostPodsFilters';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface HostPodsCardProps {
   pods: any[];
@@ -41,6 +42,7 @@ export default function HostPodsCard({
   errorMessage,
   onChanged,
 }: Readonly<HostPodsCardProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { menuHandlers, dialogs } = useHostPodActions(onChanged);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
@@ -67,7 +69,7 @@ export default function HostPodsCard({
     );
   } else if (visible.length === 0) {
     body = (
-      <Alert severity="info">No pods match these filters. Try adjusting or resetting them.</Alert>
+      <Alert severity="info">{t('mweb.hostManage.noPodsMatchTheseFiltersTry')}</Alert>
     );
   } else {
     body = (
@@ -94,8 +96,8 @@ export default function HostPodsCard({
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             Your pods
           </Typography>
-          <Tooltip title="Filter pods">
-            <IconButton size="small" aria-label="Filter pods" onClick={() => setFilterOpen(true)}>
+          <Tooltip title={t('mweb.hostManage.filterPods')}>
+            <IconButton size="small" aria-label={t('mweb.hostManage.filterPods')} onClick={() => setFilterOpen(true)}>
               <Badge badgeContent={activeCount} color="primary">
                 <FilterListIcon fontSize="small" />
               </Badge>

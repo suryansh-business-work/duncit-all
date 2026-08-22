@@ -2,6 +2,7 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { locationMapQuery } from '../../utils/location-tree';
 import { getGoogleMapsApiKey } from '../../config/runtimeConfig';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   city?: string | null;
@@ -14,6 +15,7 @@ interface Props {
 // Renders nothing when the API key is missing or no city is chosen, so the
 // dialog stays clean — same graceful behaviour as the pod-details map.
 export default function LocationMapPreview({ city, zoneName, pincode, country }: Readonly<Props>) {
+  const { t } = useTranslation();
   const apiKey = getGoogleMapsApiKey();
   const query = locationMapQuery(city, zoneName, pincode, country);
   if (!apiKey || !query) return null;
@@ -45,7 +47,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
       </Stack>
       <Box
         component="iframe"
-        title="Selected location map"
+        title={t('mweb.common.selectedLocationMap')}
         src={src}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"

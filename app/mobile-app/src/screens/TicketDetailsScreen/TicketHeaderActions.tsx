@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   /** Show the resolve action (ticket is OPEN/PENDING). */
@@ -36,13 +37,14 @@ export function TicketHeaderActions({
   onDownloadDocx,
   onEmail,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink } = useThemeColors();
   return (
     <XStack gap={6} alignItems="center">
       {canResolve ? (
         <IconButton
           testID="ticket-action-resolve"
-          label="Mark resolved"
+          label={t('mweb.ticketDetails.markResolved')}
           icon="check-circle"
           color={ink}
           onPress={onResolve}
@@ -50,21 +52,21 @@ export function TicketHeaderActions({
       ) : null}
       <IconButton
         testID="ticket-action-download"
-        label="Download transcript"
+        label={t('mweb.common.downloadTranscript')}
         icon="file-download"
         color={ink}
         onPress={onDownloadTxt}
       />
       <IconButton
         testID="ticket-action-download-docx"
-        label="Download Word transcript"
+        label={t('mweb.common.downloadWordTranscript')}
         icon="description"
         color={ink}
         onPress={onDownloadDocx}
       />
       <IconButton
         testID="ticket-action-email"
-        label="Email transcript"
+        label={t('mweb.common.emailTranscript')}
         icon="email"
         color={ink}
         onPress={onEmail}

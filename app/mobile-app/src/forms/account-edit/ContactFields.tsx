@@ -7,6 +7,7 @@ import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { CountryCodeField } from './CountryCodeField';
 import type { AccountEditValues } from './account-edit.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   control: Control<AccountEditValues>;
@@ -20,6 +21,7 @@ interface Props {
  * of mWeb's ContactFields.
  */
 export function ContactFields({ control, setValue }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
   const phoneExtension = useWatch({ control, name: 'phone_extension' });
   const phoneNumber = useWatch({ control, name: 'phone_number' });
@@ -46,7 +48,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
           <CountryCodeField
             control={control}
             name="phone_extension"
-            label="Code"
+            label={t('mweb.common.code')}
             testID="phone-code"
           />
         </YStack>
@@ -54,7 +56,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
           <FormTextField
             control={control}
             name="phone_number"
-            label="Phone number"
+            label={t('mweb.common.phoneNumber')}
             hint="10-digit number"
             keyboardType="phone-pad"
             maxLength={15}
@@ -65,7 +67,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
       <XStack
         testID="whatsapp-same-toggle"
         role="checkbox"
-        aria-label="WhatsApp number same as contact number"
+        aria-label={t('mweb.common.whatsappNumberSameAsContactNumber')}
         aria-checked={sameAsContact}
         onPress={() => setSameAsContact((on) => !on)}
         alignItems="center"
@@ -90,7 +92,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
           <CountryCodeField
             control={control}
             name="whatsapp_extension"
-            label="Code"
+            label={t('mweb.common.code')}
             testID="whatsapp-code"
             disabled={sameAsContact}
           />
@@ -99,7 +101,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
           <FormTextField
             control={control}
             name="whatsapp_number"
-            label="WhatsApp number"
+            label={t('mweb.common.whatsappNumber')}
             hint="10-digit number"
             keyboardType="phone-pad"
             maxLength={15}

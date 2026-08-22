@@ -121,7 +121,7 @@ export default function MenuPanel({
                 <SwapHorizIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText
-                primary="Switch role"
+                primary={t('mweb.common.switchRole')}
                 secondary={STUDIO_LABEL[effectiveMode]}
                 primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
               />

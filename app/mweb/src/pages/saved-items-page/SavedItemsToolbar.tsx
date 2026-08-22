@@ -23,6 +23,7 @@ import {
   superCategories,
   type SavedFilters,
 } from './savedItemsFilter';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface LevelSelectProps {
   label: string;
@@ -67,6 +68,7 @@ interface Props {
 /** Saved Items toolbar: debounced search input + a Super→Category→Sub filter
  * popover + a sort menu. All selections drive the server-side query. */
 export default function SavedItemsToolbar({ search, onSearch, filters, onFilters, categories }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null);
   const filterCount = activeSavedFilterCount(filters);
@@ -81,7 +83,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
       <TextField
         size="small"
         fullWidth
-        placeholder="Search saved pods…"
+        placeholder={t('mweb.common.searchSavedPods')}
         value={search}
         onChange={(event) => onSearch(event.target.value)}
         InputProps={{
@@ -94,11 +96,11 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         inputProps={{ 'aria-label': 'Search saved pods' }}
       />
       <Badge color="primary" badgeContent={filterCount} overlap="circular">
-        <IconButton aria-label="Filter by category" onClick={(event) => setFilterAnchor(event.currentTarget)}>
+        <IconButton aria-label={t('mweb.savedItems.filterByCategory')} onClick={(event) => setFilterAnchor(event.currentTarget)}>
           <TuneIcon />
         </IconButton>
       </Badge>
-      <IconButton aria-label="Sort saved pods" onClick={(event) => setSortAnchor(event.currentTarget)}>
+      <IconButton aria-label={t('mweb.savedItems.sortSavedPods')} onClick={(event) => setSortAnchor(event.currentTarget)}>
         <SortIcon />
       </IconButton>
 
@@ -110,10 +112,10 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Stack spacing={2} sx={{ p: 2, width: 288 }}>
-          <Typography fontWeight={600}>Filter by category</Typography>
-          <LevelSelect label="Super category" value={filters.superId} options={superCategories(categories)} onChange={setSuper} />
+          <Typography fontWeight={600}>{t('mweb.savedItems.filterByCategory')}</Typography>
+          <LevelSelect label={t('mweb.common.superCategory')} value={filters.superId} options={superCategories(categories)} onChange={setSuper} />
           <LevelSelect
-            label="Category"
+            label={t('mweb.common.category')}
             value={filters.categoryId}
             options={categoriesUnder(categories, filters.superId)}
             disabled={!filters.superId}
@@ -121,7 +123,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
             onChange={setCategory}
           />
           <LevelSelect
-            label="Sub category"
+            label={t('mweb.savedItems.subCategory')}
             value={filters.subId}
             options={subsUnder(categories, filters.categoryId)}
             disabled={!filters.categoryId}

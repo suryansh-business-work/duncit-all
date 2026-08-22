@@ -9,6 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { shareProfile } from '@/utils/share';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function Stat({
   value,
@@ -43,6 +44,7 @@ export function ProfileHeader({
   me,
   onChanged,
 }: Readonly<{ me: ProfileMe; onChanged?: () => void | Promise<void> }>) {
+  const { t } = useTranslation();
   const { primary, color } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -128,7 +130,7 @@ export function ProfileHeader({
       <XStack
         testID="profile-share"
         role="button"
-        aria-label="Share profile"
+        aria-label={t('mweb.common.shareProfile')}
         onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
         height={44}
         alignItems="center"

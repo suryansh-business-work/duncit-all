@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SEARCH_SORT_OPTIONS, type SearchSort } from './searchSort';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -20,11 +21,12 @@ interface Props {
 }
 
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Sort Results</DialogTitle>
-        <IconButton aria-label="Close sort" onClick={onClose}>
+        <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.sortResults')}</DialogTitle>
+        <IconButton aria-label={t('mweb.search.closeSort')} onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Stack>

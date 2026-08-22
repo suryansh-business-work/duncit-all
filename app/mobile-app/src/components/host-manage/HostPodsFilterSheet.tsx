@@ -18,6 +18,7 @@ import {
   type HostTimeFilter,
   type HostTypeFilter,
 } from '@/utils/host-pods-filters';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -30,6 +31,7 @@ interface Props {
  * Reset restores the default (Upcoming), the ✕/backdrop closes without changes.
  * Mirrors mWeb's HostPodsFilterSheet. */
 export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [draft, setDraft] = useState<HostPodsFilters>(initial);
 
@@ -43,7 +45,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
         <YStack flex={1} justifyContent="flex-end" testID="host-pods-filter-sheet">
           <YStack
             role="button"
-            aria-label="Close filters"
+            aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -66,7 +68,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                 <XStack
                   testID="host-filter-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -80,7 +82,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
               </XStack>
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
-                  <Section title="Type">
+                  <Section title={t('mweb.hostManage.type')}>
                     <OptionChipRow
                       testIDPrefix="host-filter-type"
                       options={HOST_TYPE_OPTIONS}
@@ -88,7 +90,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                       onSelect={(v) => setDraft((d) => ({ ...d, type: v as HostTypeFilter }))}
                     />
                   </Section>
-                  <Section title="Time">
+                  <Section title={t('mweb.hostManage.time')}>
                     <OptionChipRow
                       testIDPrefix="host-filter-time"
                       options={HOST_TIME_OPTIONS}
@@ -96,7 +98,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                       onSelect={(v) => setDraft((d) => ({ ...d, time: v as HostTimeFilter }))}
                     />
                   </Section>
-                  <Section title="Price">
+                  <Section title={t('mweb.common.price')}>
                     <OptionChipRow
                       testIDPrefix="host-filter-price"
                       options={HOST_PRICE_OPTIONS}
@@ -110,7 +112,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                 <XStack
                   testID="host-filter-reset"
                   role="button"
-                  aria-label="Reset filters"
+                  aria-label={t('mweb.common.resetFilters')}
                   onPress={() => setDraft(DEFAULT_HOST_PODS_FILTERS)}
                   flex={1}
                   height={46}
@@ -128,7 +130,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                 <XStack
                   testID="host-filter-apply"
                   role="button"
-                  aria-label="Apply filters"
+                  aria-label={t('mweb.common.applyFilters')}
                   onPress={() => onApply(draft)}
                   flex={1}
                   height={46}

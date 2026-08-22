@@ -9,6 +9,7 @@ import {
   useUploadSettings,
 } from '@duncit/media-picker';
 import type { CropRect } from '@duncit/media-picker';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   file: File | null;
@@ -22,6 +23,7 @@ interface Props {
  * keeps the picked file untouched.
  */
 export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Mounted for the whole session by StatusUploadProvider — ask only once a
   // file is actually waiting to be cropped, so a signed-out visit stays quiet.
   const settings = useUploadSettings('MWEB', { skip: !file });
@@ -69,7 +71,7 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
         {file && <FileDetails file={file} dims={dims} />}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('mweb.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={() => onConfirm(croppable ? cropRect : null, croppable ? selectedKey : null)}

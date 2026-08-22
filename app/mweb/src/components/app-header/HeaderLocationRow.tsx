@@ -1,6 +1,7 @@
 import { Box, Skeleton, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   selectedLocationName?: string;
@@ -20,6 +21,7 @@ export default function HeaderLocationRow({
   hasData,
   onOpen,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const cityText = selectedZoneName
     ? `${selectedLocationName ?? 'Select city'} · ${selectedZoneName}`
     : (selectedLocationName ?? 'Select city');
@@ -32,7 +34,7 @@ export default function HeaderLocationRow({
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') onOpen();
       }}
-      aria-label="Change city or zone"
+      aria-label={t('mweb.appHeader.changeCityOrZone')}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',

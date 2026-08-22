@@ -8,6 +8,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '@/utils/studio-mode';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -39,6 +40,7 @@ interface Props {
  * choice; nothing switches until the Switch button below is pressed.
  * Identical to mWeb's StudioSwitchDialog (B3-5). */
 export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color, onPrimary, muted } = useThemeColors();
   const [pending, setPending] = useState<StudioMode>(current);
 
@@ -57,7 +59,7 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
           <YStack
             testID="studio-switch-backdrop"
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.common.close')}
             onPress={onClose}
             position="absolute"
             top={0}

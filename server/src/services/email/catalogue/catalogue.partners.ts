@@ -10,6 +10,13 @@ import { defineEmail, v, type EmailDef, type EmailVar } from './catalogue.types'
  * Every row mirrors a WhatsApp scenario that was already wired, and its `vars`
  * are in that event's `params` order so `notifyEvent` fills both channels off
  * the one array the call site already builds.
+ *
+ * There is deliberately NO `host-payment-sent` / `venue-payment-sent` /
+ * `club-admin-payment-sent` / `ecomm-payment-sent` here, even though the
+ * WhatsApp catalogue keeps four payout campaigns. `payout-statement` already
+ * emails all four the moment a release is approved — with the full split and
+ * the payout PDF attached — so a second, thinner payout email would arrive
+ * beside it and be the one nobody could reconcile from (rule 34).
  */
 
 /** `['Recipient name', 'Pod', 'Date', 'Time', 'Feedback']` — the feedback four. */
@@ -64,56 +71,6 @@ const podFeedback = (input: {
       ctaKey: CTA.giveFeedback,
       ctaVar: 'feedback_url',
       helpKey: HELP.feedbackWhy,
-    },
-  });
-
-/**
- * "Your payout is on its way", for the three parties a completed pod pays.
- *
- * The brand's is not here: a product payout names a product and an invoice
- * rather than a pod and a date, so its values are different enough that
- * sharing the builder would mean threading four optional fields through it.
- */
-const podPayout = (input: {
-  slug: string;
-  name: string;
-  audience: 'HOST' | 'VENUE';
-  who: string;
-  copyKey: string;
-  waEvent: string;
-  footer: string;
-}): EmailDef =>
-  defineEmail({
-    slug: input.slug,
-    name: input.name,
-    description: `The ${input.who}, when their share of a completed pod is approved for payout.`,
-    audience: input.audience,
-    category: 'billing',
-    fires: `A ${input.who} payout is approved in Finance`,
-    waEvent: input.waEvent,
-    subject: 'Payout approved — {{amount}}',
-    footerNote: input.footer,
-    vars: [
-      v('name', `The ${input.who}’s first name.`, 'Meera'),
-      v('pod_title', 'The pod’s title, as the heading names it.', 'Sunday Badminton Doubles'),
-      v('pod', 'The pod’s title again, for the details line.', 'Sunday Badminton Doubles'),
-      v('date', 'The date the pod ran, already formatted.', '24 Aug 2026'),
-      v('time', 'The start time, already formatted.', '7:00 AM'),
-      v('amount', 'The payout, pre-formatted with its currency.', '₹1,250'),
-    ],
-    body: {
-      copyKey: input.copyKey,
-      nameVar: 'name',
-      tone: LIVE,
-      calloutLabelKey: LABEL.payout,
-      calloutVar: 'amount',
-      rows: [
-        { labelKey: FIELD.pod, valueVar: 'pod' },
-        ...POD_ROWS,
-      ],
-      ctaKey: CTA.viewPayout,
-      ctaVar: 'app_url',
-      helpKey: HELP.payoutTiming,
     },
   });
 
@@ -342,16 +299,6 @@ export const HOST_EMAILS: readonly EmailDef[] = [
     },
   }),
 
-  podPayout({
-    slug: 'host-payment-sent',
-    name: 'Host: Payment Sent',
-    audience: 'HOST',
-    who: 'host',
-    copyKey: 'email.hostPaymentSent',
-    waEvent: 'HOST_PAYMENT_SENT',
-    footer: FOOTER.payout,
-  }),
-
   podFeedback({
     slug: 'host-pod-feedback',
     name: 'Host: Pod Feedback',
@@ -510,16 +457,6 @@ export const VENUE_EMAILS: readonly EmailDef[] = [
     },
   }),
 
-  podPayout({
-    slug: 'venue-payment-sent',
-    name: 'Venue: Payment Sent',
-    audience: 'VENUE',
-    who: 'venue owner',
-    copyKey: 'email.venuePaymentSent',
-    waEvent: 'VENUE_PAYMENT_SENT',
-    footer: FOOTER.payout,
-  }),
-
   podFeedback({
     slug: 'venue-pod-feedback',
     name: 'Venue: Pod Feedback',
@@ -652,40 +589,6 @@ export const ECOMM_EMAILS: readonly EmailDef[] = [
   }),
 
   defineEmail({
-    slug: 'ecomm-payment-sent',
-    name: 'Brand: Payment Sent',
-    description: 'The brand owner, when a product payout is approved.',
-    audience: 'ECOMM',
-    category: 'billing',
-    fires: 'A brand payout is approved in Finance',
-    waEvent: 'ECOMM_PAYMENT_SENT',
-    subject: 'Payout approved — {{amount}}',
-    footerNote: FOOTER.payout,
-    vars: [
-      v('name', 'The owner’s first name.', 'Ananya'),
-      v('product', 'What the payout covers.', 'Yonex Mavis 350 Shuttlecock'),
-      v('payment_id', 'The payout reference, for reconciliation.', 'DUN-INV-2091'),
-      v('date', 'The date it was approved, already formatted.', '24 Aug 2026'),
-      v('amount', 'The payout, pre-formatted with its currency.', '₹8,400'),
-    ],
-    body: {
-      copyKey: 'email.ecommPaymentSent',
-      nameVar: 'name',
-      tone: LIVE,
-      calloutLabelKey: LABEL.payout,
-      calloutVar: 'amount',
-      rows: [
-        { labelKey: FIELD.product, valueVar: 'product' },
-        { labelKey: FIELD.paymentId, valueVar: 'payment_id' },
-        { labelKey: FIELD.date, valueVar: 'date' },
-      ],
-      ctaKey: CTA.viewPayout,
-      ctaVar: 'app_url',
-      helpKey: HELP.payoutTiming,
-    },
-  }),
-
-  defineEmail({
     slug: 'ecomm-order-feedback',
     name: 'Brand: Order Feedback',
     description: 'The brand owner, when a pod carrying their product finishes — asks how the order went.',
@@ -788,40 +691,4 @@ export const CLUB_ADMIN_EMAILS: readonly EmailDef[] = [
     footer: FOOTER.clubAdmin,
   }),
 
-  defineEmail({
-    slug: 'club-admin-payment-sent',
-    name: 'Club Admin: Payment Sent',
-    description: 'The club admin, when their share of a completed pod is approved for payout.',
-    audience: 'CLUB_ADMIN',
-    category: 'billing',
-    fires: 'A club-admin payout is approved in Finance',
-    waEvent: 'CLUB_ADMIN_PAYMENT_SENT',
-    subject: 'Payout approved — {{amount}}',
-    footerNote: FOOTER.payout,
-    vars: [
-      v('name', 'The club admin’s first name.', 'Rohit'),
-      v('pod_title', 'The pod’s title, as the heading names it.', 'Sunday Badminton Doubles'),
-      v('club', 'The club the pod belongs to.', 'Kickstart Badminton Club'),
-      v('pod', 'The pod’s title again, for the details line.', 'Sunday Badminton Doubles'),
-      v('payment_id', 'The payout reference, for reconciliation.', 'DUN-PAY-3310'),
-      v('date', 'The date it was approved, already formatted.', '24 Aug 2026'),
-      v('amount', 'The payout, pre-formatted with its currency.', '₹600'),
-    ],
-    body: {
-      copyKey: 'email.clubAdminPaymentSent',
-      nameVar: 'name',
-      tone: LIVE,
-      calloutLabelKey: LABEL.payout,
-      calloutVar: 'amount',
-      rows: [
-        { labelKey: FIELD.pod, valueVar: 'pod' },
-        { labelKey: FIELD.club, valueVar: 'club' },
-        { labelKey: FIELD.paymentId, valueVar: 'payment_id' },
-        { labelKey: FIELD.date, valueVar: 'date' },
-      ],
-      ctaKey: CTA.viewPayout,
-      ctaVar: 'app_url',
-      helpKey: HELP.payoutTiming,
-    },
-  }),
 ];

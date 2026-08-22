@@ -42,6 +42,7 @@ import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.se
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { notifySocialActivity } from '@modules/engagement/notification/social-notify';
 import { logs } from '@observability/log';
+import { notifyEach, notifyEvent } from '@services/notify/notify.service';
 
 const slugify = (s: string) =>
   s
@@ -717,9 +718,13 @@ async function whatsappPodCancellation(
   ]);
   const path = podNotificationLink(doc, clubSlugById);
   const podLink = path ? `${mwebUrl.replace(/\/+$/, '')}${path}` : '';
-  await whatsappService.sendEach(
+  // `notifyEach`, not `sendEach`: the same fan-out now also sends
+  // `user-pod-cancelled-by-host` / `-venue` / `-duncit`, filled from this very
+  // array. `podAudience` already carries each attendee's address.
+  await notifyEach(
     audience.map((attendee) => ({
       event: WA_CANCEL_EVENT[initiatedBy],
+      email: attendee.email,
       entityId: String(doc._id),
       user: attendee.user,
       name: attendee.name,
@@ -744,13 +749,16 @@ async function whatsappPodCancellation(
  * host is excluded from that audience. */
 async function whatsappHostCancellationRequested(doc: any, hostUserId: string) {
   const host: any = await UserModel.findById(hostUserId)
-    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    // `auth.email` alongside the phone fields: the notify funnel reads the
+    // address off this document, and a narrower projection would send the
+    // WhatsApp message and skip the email without saying so.
+    .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
     .lean();
   const venue: any = doc.venue_id
     ? await VenueModel.findById(doc.venue_id).select('venue_name').lean()
     : null;
   const hostName = `${host?.profile?.first_name ?? ''} ${host?.profile?.last_name ?? ''}`.trim() || 'there';
-  await whatsappService.send({
+  await notifyEvent({
     event: 'HOST_POD_CANCELLATION_REQUESTED',
     entityId: String(doc._id),
     user: host,

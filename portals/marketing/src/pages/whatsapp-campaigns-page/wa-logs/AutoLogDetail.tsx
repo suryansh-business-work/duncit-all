@@ -99,8 +99,12 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
               <MetaRow label={t('adminWhatsapp.logColCampaign')}>
                 <Typography variant="body2">{log.campaign || EM_DASH}</Typography>
               </MetaRow>
+              {/* Two different vocabularies, so they get two rows: ours is the
+                  switch a person can turn off, Meta's is what set the rate. */}
               <MetaRow label={t('adminWhatsapp.logColCategory')}>
-                <Typography variant="body2">{category?.label}</Typography>
+                <Typography variant="body2">{category?.label || EM_DASH}</Typography>
+              </MetaRow>
+              <MetaRow label={t('marketingWhatsapp.categoryLabel')}>
                 <Chip size="small" label={categoryLabel(log.template_category)} />
               </MetaRow>
               <MetaRow label={t('adminWhatsapp.logColAudience')}>

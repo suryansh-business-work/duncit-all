@@ -19,6 +19,10 @@ import {
   type TranscriptFormat,
 } from '@modules/support/transcript';
 import { paginateDocs, paginateDocsRanked, supportSearchRegex } from '@modules/support/support.pagination';
+import { notifyEvent } from '@services/notify/notify.service';
+import { logs } from '@observability/log';
+import { sendEmail } from '@services/email/email.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const TICKET_SORTABLE = new Set([
   'last_message_at',
@@ -83,25 +87,82 @@ async function buildActor(userId: Types.ObjectId | string | null | undefined) {
 }
 
 /**
- * WhatsApp the person who raised the ticket. Loaded apart from `buildActor`
- * because a send prefers the saved WhatsApp number over the login phone and the
- * actor projection carries neither whole. A website message may have no account
- * behind it (`user_id` is null), and then there is nobody to reach.
+ * Tell the person who raised the ticket, on both channels.
+ *
+ * The account is loaded apart from `buildActor` because a send prefers the
+ * saved WhatsApp number over the login phone and the actor projection carries
+ * neither whole.
+ *
+ * A website message may have no account behind it (`user_id` is null). That
+ * used to return early and tell the guest nothing at all — which is backwards:
+ * a guest has no in-app notification and no chat thread to come back to, so the
+ * email is the ONLY thing they get. The lookup is skipped and `guest_email`
+ * carries it; the WhatsApp leg records a skip for having no number, as it
+ * should.
  */
 async function notifyTicketRaiser(event: string, doc: ITicket) {
-  if (!doc.user_id) return;
-  const user = await UserModel.findById(doc.user_id)
-    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
-    .lean();
-  if (!user) return;
-  const name = `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`.trim() || 'User';
-  await whatsappService.send({
+  const user = doc.user_id
+    ? await UserModel.findById(doc.user_id)
+        .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
+        .lean()
+    : null;
+  const name =
+    `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim() ||
+    doc.guest_name ||
+    'User';
+  await notifyEvent({
     event,
     entityId: String(doc._id),
     user,
     name,
     params: [name, ticketNo('ST', doc._id as Types.ObjectId), doc.subject],
+    // A website message may have no account behind it, and then `guest_email`
+    // is the only address there is — the WhatsApp leg has nothing at all for
+    // that person, which is exactly why the email leg matters most there.
+    email: (user as any)?.auth?.email || doc.guest_email || '',
   });
+}
+
+/**
+ * The three ticket moments WhatsApp has no campaign for.
+ *
+ * Resolved, reopened and "how did we do" are the end of the conversation, and
+ * the end is where a written record matters most — the person needs the
+ * reference and the thread days later, not a chat bubble that has scrolled
+ * away. They go straight through `sendEmail` rather than `notifyEvent`
+ * because there is no WhatsApp leg to pair them with; the three that DO have
+ * one still go through {@link notifyTicketRaiser}.
+ *
+ * Never throws: a support state change must not fail because a mailbox did.
+ */
+async function mailTicketRaiser(template: string, doc: ITicket, subject: string) {
+  try {
+    const user = doc.user_id
+      ? await UserModel.findById(doc.user_id).select('profile.first_name auth.email').lean()
+      : null;
+    // A website message may have no account behind it, and then the guest's own
+    // address is the only one there is.
+    const to = (user as any)?.auth?.email || doc.guest_email || '';
+    if (!to) return;
+    const ticket_no = ticketNo('ST', doc._id as Types.ObjectId);
+    const { appUrl } = await getUrlConfigs();
+    const base = appUrl.replace(/\/+$/, '');
+    await sendEmail({
+      to,
+      subject: `${subject} — ${ticket_no}`,
+      template,
+      category: 'support',
+      vars: {
+        name: (user as any)?.profile?.first_name || doc.guest_name || 'there',
+        ticket_no,
+        subject: doc.subject,
+        ticket_url: `${base}/support/tickets?ticket=${ticket_no}`,
+        feedback_url: `${base}/support/tickets?ticket=${ticket_no}&rate=1`,
+      },
+    });
+  } catch (error) {
+    logs.server.warn('supportTicket', 'mailTicketRaiser', { error, template });
+  }
 }
 
 async function toPub(doc: ITicket) {
@@ -356,6 +417,10 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    // RESOLVED still invites a reply; CLOSED is the end, which is the moment to
+    // ask how it went rather than while the person may still be waiting on us.
+    if (status === 'RESOLVED') await mailTicketRaiser('support-ticket-resolved', doc!, 'Resolved');
+    if (status === 'CLOSED') await mailTicketRaiser('support-feedback', doc!, 'How did we do');
     return pub;
   },
 
@@ -402,6 +467,7 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    await mailTicketRaiser('support-ticket-reopened', doc!, 'Reopened');
     return pub;
   },
 
@@ -431,6 +497,7 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    await mailTicketRaiser('support-ticket-resolved', doc!, 'Resolved');
     return pub;
   },
 

@@ -238,9 +238,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.hostCompletePodReminder.title': 'This pod still needs completing',
   'email.hostCompletePodReminder.body':
     'The pod below has finished but is not marked complete, and nobody is paid until it is. Completing it also locks the attendance, so check the roster first.',
-  'email.hostPaymentSent.title': 'Your payout is approved',
-  'email.hostPaymentSent.body':
-    'Your share of the pod below has been approved and is on its way to your Duncit wallet.',
   'email.hostPodFeedback.title': 'How did your pod go?',
   'email.hostPodFeedback.body':
     'You ran the pod below. Tell us how the venue, the turnout and the day itself went — it is what decides where we book you next.',
@@ -261,9 +258,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.venuePodPublished.title': 'A pod is live at your venue',
   'email.venuePodPublished.body':
     'The pod below is published and taking bookings at your venue. The club admin named here is who to reach on the day.',
-  'email.venuePaymentSent.title': 'Your payout is approved',
-  'email.venuePaymentSent.body':
-    'Your share of the pod below has been approved and is on its way to your Duncit wallet.',
   'email.venuePodFeedback.title': 'How did the pod go?',
   'email.venuePodFeedback.body':
     'The pod below ran at your venue. Tell us how the host and the group were — it is what decides who we send you next.',
@@ -281,9 +275,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.ecommStockOut.title': 'This product is out of stock',
   'email.ecommStockOut.body':
     'The product below has run out. It is no longer sellable and has dropped out of the pod product picker until you restock it.',
-  'email.ecommPaymentSent.title': 'Your payout is approved',
-  'email.ecommPaymentSent.body':
-    'The payout below has been approved and is on its way to your Duncit wallet. The statement behind it is in your Partners console.',
   'email.ecommOrderFeedback.title': 'How did that order go?',
   'email.ecommOrderFeedback.body':
     'A pod carrying your product has finished. Tell us how the order went — fulfilment, packaging, anything that slowed it down.',
@@ -298,9 +289,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.clubAdminPodFeedback.title': 'How did the pod go?',
   'email.clubAdminPodFeedback.body':
     'You looked after the pod below. Tell us how the host, the venue and the group were — it is what we act on.',
-  'email.clubAdminPaymentSent.title': 'Your payout is approved',
-  'email.clubAdminPaymentSent.body':
-    'Your share of the pod below has been approved and is on its way to your Duncit wallet.',
 
   // --- Support ----------------------------------------------------------------
   'email.supportTicketCreated.title': 'We have your request',

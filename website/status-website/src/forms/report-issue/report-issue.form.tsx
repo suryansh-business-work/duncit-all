@@ -4,10 +4,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, MenuItem, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { RhfTextField } from '@duncit/forms';
-import { submitStatusReport } from '../../api';
+import { captchaCopy } from '@duncit/i18n';
+import { captchaErrorCode } from '@duncit/captcha';
+import { CaptchaField, useCaptcha } from '@duncit/captcha/mui';
+import { submitStatusReport, type StatusReportOutcome } from '../../api';
+import { SERVER_BASE } from '../../config/server';
 import { useTranslation } from '../../i18n';
 import type { ServiceGroup } from '../../types';
 import { buildReportSchema } from './report-issue.schema';
+import ScreenshotField from './ScreenshotField';
+import { useScreenshots } from './useScreenshots';
 import {
   IMPACT_OPTIONS,
   REPORT_DEFAULTS,
@@ -21,6 +27,8 @@ interface ReportIssueFormProps {
   onCancel: () => void;
 }
 
+const GRAPHQL_URL = `${SERVER_BASE}/graphql`;
+
 export default function ReportIssueForm({
   groups,
   onSubmitted,
@@ -29,21 +37,49 @@ export default function ReportIssueForm({
   const { t } = useTranslation();
   const [failed, setFailed] = useState(false);
   const schema = useMemo(() => buildReportSchema(t), [t]);
-  const { control, handleSubmit, formState } = useForm<ReportIssueValues>({
+  const captcha = useCaptcha(GRAPHQL_URL);
+  const screenshots = useScreenshots(t);
+  const { control, handleSubmit, formState, resetField, setError } = useForm<ReportIssueValues>({
     resolver: zodResolver(schema),
     defaultValues: REPORT_DEFAULTS,
     mode: 'onTouched',
   });
 
+  const copy = useMemo(() => captchaCopy(t), [t]);
+
   const submit = handleSubmit(async (values) => {
     setFailed(false);
+    let outcome: StatusReportOutcome;
     try {
-      const ok = await submitStatusReport(values);
-      if (ok) onSubmitted();
-      else setFailed(true);
+      outcome = await submitStatusReport({
+        ...values,
+        images: screenshots.shots.map(({ file_name, data, mime_type }) => ({
+          file_name,
+          data,
+          mime_type,
+        })),
+        captcha_token: captcha.token,
+      });
     } catch {
       setFailed(true);
+      return;
     }
+    if (outcome.ok) {
+      // The form is unmounted from here, and a fresh mount mints its own code.
+      screenshots.clear();
+      onSubmitted();
+      return;
+    }
+    // A spent code cannot be reused, right or wrong, so the next attempt needs
+    // a new one — and the field it was typed into is cleared with it.
+    captcha.reload();
+    resetField('captcha_answer');
+    const code = captchaErrorCode(outcome.errors);
+    if (code) {
+      setError('captcha_answer', { message: copy[code] });
+      return;
+    }
+    setFailed(true);
   });
 
   const services = groups?.flatMap((group) => group.items) ?? [];
@@ -115,6 +151,14 @@ export default function ReportIssueForm({
         label={t('status.report.message')}
         hint={t('status.report.messageHelp')}
       />
+      <ScreenshotField
+        shots={screenshots.shots}
+        error={screenshots.error}
+        disabled={submitting}
+        onAdd={screenshots.add}
+        onRemove={screenshots.remove}
+      />
+      <CaptchaField control={control} name="captcha_answer" captcha={captcha} copy={copy} />
       <Stack direction="row" spacing={1.5} justifyContent="flex-end">
         <Button onClick={onCancel} disabled={submitting} color="inherit">
           {t('status.report.cancel')}

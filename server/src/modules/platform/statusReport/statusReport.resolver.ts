@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { identityFromRequest } from '@observability/requestIdentity';
+import { requireHuman } from '@modules/platform/captcha/captcha.guard';
 import type { TableQueryInput } from '@utils/table-query';
 import {
   statusReportService,
@@ -29,12 +30,17 @@ export const statusReportResolvers = {
      * still comes off the REQUEST — address, user agent, and the account only
      * if that browser happens to be signed in — so the row is attributable
      * without the body being able to claim anything.
+     *
+     * Unauthenticated does not mean unguarded: a signed-out caller answers the
+     * captcha first, so the board that exists to be honest about outages is not
+     * also a mailbox anyone can flood.
      */
     submitStatusReport: (
       _p: unknown,
       args: { input: SubmitStatusReportInput },
       ctx: GraphQLContext,
     ) => {
+      requireHuman(ctx, args.input);
       const identity = identityFromRequest(ctx.req);
       return statusReportService.submit(args.input, {
         ip: identity.ip ?? null,
@@ -44,11 +50,21 @@ export const statusReportResolvers = {
     },
     updateStatusReport: (
       _p: unknown,
-      args: { report_id: string; status: StatusReportStatus; note?: string | null },
+      args: {
+        report_id: string;
+        status: StatusReportStatus;
+        note?: string | null;
+        staff_images?: string[] | null;
+      },
       ctx: GraphQLContext,
     ) => {
       requireRole(ctx, STATUS_REPORT_ROLES);
-      return statusReportService.updateStatus(args.report_id, args.status, args.note);
+      return statusReportService.updateStatus(
+        args.report_id,
+        args.status,
+        args.note,
+        args.staff_images,
+      );
     },
     deleteStatusReports: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
       requireRole(ctx, STATUS_REPORT_ROLES);

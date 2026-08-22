@@ -3,6 +3,7 @@ import { faqSubmissionService } from './faqSubmission.service';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { requireHuman } from '@modules/platform/captcha/captcha.guard';
 
 // FAQs are authored from the Support portal, so its managers write them
 // alongside the admins who still hold every platform key.
@@ -65,7 +66,10 @@ export const faqResolvers = {
       requireRole(ctx, FAQ_RW);
       return faqService.remove(args.faq_doc_id);
     },
-    submitFaqQuestion: (_p: unknown, args: { input: any }) => faqSubmissionService.submit(args.input),
+    submitFaqQuestion: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireHuman(ctx, args.input);
+      return faqSubmissionService.submit(args.input);
+    },
     updateFaqSubmissionStatus: (
       _p: unknown,
       args: { faq_submission_id: string; status: any; converted_faq_id?: string | null },

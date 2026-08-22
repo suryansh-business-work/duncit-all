@@ -11,6 +11,9 @@
  * already resolved for its environment, so a local run posts to localhost and a
  * deploy posts to the real server without this component knowing either.
  */
+import type { CaptchaCopy } from '@duncit/i18n';
+import Captcha from '@duncit/captcha/Captcha.astro';
+
 interface Props {
   /** Where to POST. The site already has this resolved per environment. */
   graphqlUrl: string;
@@ -26,6 +29,11 @@ interface Props {
   consent?: string | null;
   consentLinkLabel?: string;
   consentLinkHref?: string;
+  /**
+   * Words for the human check. A site with a translator passes
+   * `captchaCopy(t)`; the rest get the shipped default language.
+   */
+  captcha?: CaptchaCopy;
   /** Status copy. The site passes its own translations; these are the fallback. */
   busyText?: string;
   okText?: string;
@@ -44,6 +52,7 @@ const {
   consent = null,
   consentLinkLabel = 'privacy policy',
   consentLinkHref = '',
+  captcha = undefined,
   busyText = 'Subscribing…',
   okText = 'You are on the list.',
   errorText = 'That did not go through — check your connection and try again.',
@@ -81,6 +90,11 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
     />
     <button type="submit" class="newsletter-button">{button}</button>
 
+    {/* One field and one tap is the whole appeal of this form, so on the
+        inline footer row the check waits until somebody has actually started
+        typing an address. */}
+    <Captcha graphqlUrl={graphqlUrl} copy={captcha} defer={!card} class="newsletter-captcha" />
+
     {
       consent && (
         <label class="newsletter-consent">
@@ -100,6 +114,8 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
 </div>
 
 <script>
+  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
+
   // Every instance on the page wires itself from its own data attributes, so
   // one script serves a footer form and a section form without either knowing
   // about the other.
@@ -138,10 +154,16 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
             query: `mutation Subscribe($input: SubscribeNewsletterInput!) {
               subscribeNewsletter(input: $input) { ok message }
             }`,
-            variables: { input: { email, source } },
+            variables: { input: { email, source, ...captchaFieldsFrom(form) } },
           }),
         });
         const json = await res.json();
+        // When the captcha was the reason, the widget says so itself and this
+        // handler stays quiet.
+        if (json?.errors?.length && showCaptchaFailure(form, json.errors)) {
+          say('', false);
+          return;
+        }
         const result = json?.data?.subscribeNewsletter;
         if (result?.ok) {
           form.reset();
@@ -149,7 +171,10 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
         } else {
           say(result?.message || json?.errors?.[0]?.message || copy.error, false);
         }
+        // A code is spent whether the answer was right or wrong.
+        reloadCaptcha(form);
       } catch {
+        reloadCaptcha(form);
         say(copy.error, false);
       } finally {
         button.disabled = false;
@@ -245,6 +270,10 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
   .newsletter-consent a {
     font-weight: 600;
     color: var(--color-primary, #ff5757);
+  }
+
+  .newsletter-captcha {
+    flex: 1 1 100%;
   }
 
   /* Reserved height, so a message appearing does not shift the page. */

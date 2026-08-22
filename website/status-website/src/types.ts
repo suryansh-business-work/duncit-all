@@ -155,6 +155,13 @@ export type StatusReportImpact =
   | 'PAYMENT'
   | 'OTHER';
 
+/** One screenshot, carried inside the mutation — the server does the upload. */
+export interface StatusReportImageInput {
+  file_name: string;
+  data: string;
+  mime_type: string;
+}
+
 /** Payload of the public `submitStatusReport` mutation. */
 export interface StatusReportInput {
   service_key: string;
@@ -163,4 +170,8 @@ export interface StatusReportInput {
   email: string;
   page_url: string;
   message: string;
+  images?: StatusReportImageInput[];
+  /** The human check. Nobody types the token; the widget holds it. */
+  captcha_token: string;
+  captcha_answer: string;
 }

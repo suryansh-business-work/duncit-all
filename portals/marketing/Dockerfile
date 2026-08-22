@@ -56,6 +56,7 @@ COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/forms/package.json ./packages/forms/
 COPY packages/coupons/package.json ./packages/coupons/
 COPY packages/location/package.json ./packages/location/
+COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 

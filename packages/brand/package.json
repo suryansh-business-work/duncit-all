@@ -22,5 +22,9 @@
   },
   "peerDependencies": {
     "astro": "^5.7.10"
+  },
+  "dependencies": {
+    "@duncit/captcha": "workspace:*",
+    "@duncit/i18n": "workspace:*"
   }
 }

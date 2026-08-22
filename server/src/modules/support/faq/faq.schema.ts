@@ -78,6 +78,9 @@ export const faqTypeDefs = /* GraphQL */ `
     question: String!
     email: String
     super_category_slug: String
+    "Human check, required only when nobody is signed in. See the captchaChallenge query."
+    captcha_token: String
+    captcha_answer: String
   }
 
   type FaqSubmitResult {

@@ -1,5 +1,6 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { requireHuman } from '@modules/platform/captcha/captcha.guard';
 import { contactService } from './contact.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'WEBSITE_MANAGER'];
@@ -16,7 +17,10 @@ export const contactResolvers = {
     },
   },
   Mutation: {
-    submitContactForm: (_p: unknown, args: { input: any }) => contactService.submit(args.input),
+    submitContactForm: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireHuman(ctx, args.input);
+      return contactService.submit(args.input);
+    },
     updateContactStatus: (_p: unknown, args: { contact_id: string; status: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return contactService.updateStatus(args.contact_id, args.status);

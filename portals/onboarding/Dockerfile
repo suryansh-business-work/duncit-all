@@ -58,6 +58,7 @@ COPY packages/slots/package.json ./packages/slots/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/dialogs/package.json ./packages/dialogs/
+COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 

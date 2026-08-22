@@ -45,6 +45,7 @@ COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/tabs/package.json ./packages/tabs/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
+COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 COPY packages/forms/package.json ./packages/forms/
@@ -60,6 +61,8 @@ COPY packages/utils ./packages/utils
 # The localization runtime + the shared RHF/MUI field the report form renders.
 COPY packages/i18n ./packages/i18n
 COPY packages/forms ./packages/forms
+# @duncit/captcha — the human check on the report form.
+COPY packages/captcha ./packages/captcha
 ARG VITE_SERVER_URL
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 RUN pnpm --filter status build

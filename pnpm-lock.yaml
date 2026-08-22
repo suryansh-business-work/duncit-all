@@ -705,6 +705,12 @@ importers:
 
   packages/brand:
     dependencies:
+      '@duncit/captcha':
+        specifier: workspace:*
+        version: link:../captcha
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       astro:
         specifier: ^5.7.10
         version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
@@ -750,6 +756,49 @@ importers:
       react-router-dom:
         specifier: ^6.23.1
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
+
+  packages/captcha:
+    dependencies:
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      astro:
+        specifier: ^5.7.10
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
+    devDependencies:
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../forms
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.54.0
+        version: 7.77.0(react@18.3.1)
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -4625,6 +4674,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -5158,6 +5210,9 @@ importers:
       '@duncit/brand':
         specifier: workspace:*
         version: link:../../packages/brand
+      '@duncit/captcha':
+        specifier: workspace:*
+        version: link:../../packages/captcha
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -5226,6 +5281,9 @@ importers:
 
   website/status-website:
     dependencies:
+      '@duncit/captcha':
+        specifier: workspace:*
+        version: link:../../packages/captcha
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms

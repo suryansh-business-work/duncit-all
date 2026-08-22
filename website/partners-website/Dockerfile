@@ -41,6 +41,7 @@ COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/table/package.json ./packages/table/
 COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 
@@ -67,6 +68,10 @@ COPY packages/utils ./packages/utils
 # @duncit/brand — the header/footer logo components. SOURCE, not just the
 # manifest: Astro resolves the .astro files during the build.
 COPY packages/brand ./packages/brand
+# @duncit/captcha + @duncit/i18n — reachable from @duncit/brand, which this
+# site builds against.
+COPY packages/i18n ./packages/i18n
+COPY packages/captcha ./packages/captcha
 RUN pnpm --filter partners-website build
 
 # --- runner ---

@@ -17,14 +17,18 @@ import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import { DetailBlock as Mono, DetailField as Field } from '../../components/DetailField';
+import StatusReportAttachments from './StatusReportAttachments';
 import {
   DELETE_STATUS_REPORTS,
   IMPACT_COLOR,
   STATUS_COLOR,
   UPDATE_STATUS_REPORT,
+  fromMediaList,
   impactLabel,
+  reportWebsite,
   statusLabel,
   statusOptions,
+  toMediaList,
   type StatusReportRow,
   type StatusReportStatus,
 } from './queries';
@@ -40,6 +44,9 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
   const { t } = useTranslation();
   const [status, setStatus] = useState<StatusReportStatus>('NEW');
   const [note, setNote] = useState('');
+  // MediaListField speaks newline-separated URLs, like every other media list
+  // in the portals — kept in that shape here and split on the way out.
+  const [staffImages, setStaffImages] = useState('');
   const [saving, setSaving] = useState(false);
   const [update] = useMutation(UPDATE_STATUS_REPORT);
   const [removeReports] = useMutation<{ deleteStatusReports: number }>(DELETE_STATUS_REPORTS);
@@ -51,14 +58,25 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
     if (!row) return;
     setStatus(row.status);
     setNote(row.note);
+    setStaffImages(toMediaList(row.staff_image_urls));
   }, [row]);
 
   if (!row) return null;
 
+  // Hoisted out of the JSX so the branch sits at nesting 0 (SonarQube S3776).
+  const website = reportWebsite(row) || t('tech.statusReports.unknownWebsite');
+
   const save = async () => {
     setSaving(true);
     try {
-      await update({ variables: { report_id: row.id, status, note } });
+      await update({
+        variables: {
+          report_id: row.id,
+          status,
+          note,
+          staff_images: fromMediaList(staffImages),
+        },
+      });
       notifySuccess(t('tech.statusReports.saved'));
       onSaved();
       onClose();
@@ -110,6 +128,7 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
             <Field label={t('tech.common.env')} value={row.environment} />
             <Field label={t('tech.statusReports.reporter')} value={row.name} />
             <Field label={t('shell.common.email')} value={row.email} />
+            <Field label={t('tech.statusReports.website')} value={website} />
             <Field label={t('tech.statusReports.pageAddress')} value={row.page_url} />
             <Field
               label={t('tech.statusReports.signedInAccount')}
@@ -120,6 +139,11 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
             <Field label={t('tech.statusReports.browser')} value={row.user_agent ?? ''} />
           </Box>
           <Mono label={t('tech.common.message')} value={row.message} />
+          <StatusReportAttachments
+            reporterImages={row.image_urls}
+            staffImages={staffImages}
+            onStaffImagesChange={setStaffImages}
+          />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
               select

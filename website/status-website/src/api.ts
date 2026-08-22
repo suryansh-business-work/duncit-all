@@ -1,4 +1,5 @@
 import type { FlatCatalogue, Locale } from '@duncit/i18n';
+import type { GraphqlErrorLike } from '@duncit/captcha';
 import { SERVER_BASE } from './config/server';
 import type {
   Branding,
@@ -58,11 +59,11 @@ export function fetchHealth(url: string, signal?: AbortSignal): Promise<HealthRe
  * fallback that is better than an exception on a page whose entire job is to
  * still be readable when things are broken.
  */
-async function graphqlRequest<T>(
+async function postGraphql<T>(
   query: string,
   variables?: Record<string, unknown>,
   signal?: AbortSignal,
-): Promise<T | null> {
+): Promise<GraphqlPayload<T> | null> {
   const res = await fetch(`${SERVER_BASE}/graphql`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -70,7 +71,21 @@ async function graphqlRequest<T>(
     signal,
   });
   if (!res.ok) return null;
-  const json = (await res.json()) as { data?: T; errors?: Array<{ message: string }> };
+  return (await res.json()) as GraphqlPayload<T>;
+}
+
+interface GraphqlPayload<T> {
+  data?: T | null;
+  errors?: GraphqlErrorLike[];
+}
+
+async function graphqlRequest<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<T | null> {
+  const json = await postGraphql<T>(query, variables, signal);
+  if (!json) return null;
   if (json.errors?.length) throw new Error(json.errors[0]?.message ?? 'Request failed');
   return json.data ?? null;
 }
@@ -119,18 +134,31 @@ const SUBMIT_REPORT_MUTATION =
   'mutation SubmitStatusReport($input: SubmitStatusReportInput!) {' +
   ' submitStatusReport(input: $input) { ok id } }';
 
+/** Whether it landed, and — when it did not — what the server said about it. */
+export interface StatusReportOutcome {
+  ok: boolean;
+  errors: GraphqlErrorLike[];
+}
+
 /**
  * File one problem report. Unauthenticated by design — the visitor this form
  * exists for may be the one who cannot sign in anywhere.
+ *
+ * The errors come back rather than being thrown, because one of them is
+ * routine: a mistyped verification code is answered by the captcha widget
+ * itself, not by the form's failure banner.
  */
 export async function submitStatusReport(
   input: StatusReportInput,
   signal?: AbortSignal,
-): Promise<boolean> {
-  const data = await graphqlRequest<{ submitStatusReport?: { ok: boolean } }>(
+): Promise<StatusReportOutcome> {
+  const json = await postGraphql<{ submitStatusReport?: { ok: boolean } }>(
     SUBMIT_REPORT_MUTATION,
     { input },
     signal,
   );
-  return data?.submitStatusReport?.ok === true;
+  return {
+    ok: json?.data?.submitStatusReport?.ok === true,
+    errors: json?.errors ?? [],
+  };
 }

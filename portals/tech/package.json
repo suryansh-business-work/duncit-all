@@ -27,6 +27,7 @@
     "@duncit/errors": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/slack": "workspace:*",
     "@duncit/table": "workspace:*",

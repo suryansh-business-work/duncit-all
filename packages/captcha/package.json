@@ -1,0 +1,68 @@
+{
+  "name": "@duncit/captcha",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The human check every public form uses: the framework-free client + DOM helpers at the root, the Astro widget as a component, the MUI field behind ./mui. One widget, one wire format, one set of words.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "react-native": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mui": "./src/mui/index.ts",
+    "./Captcha.astro": "./src/Captcha.astro"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/captcha"
+  },
+  "dependencies": {
+    "@duncit/i18n": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "astro": "^5.7.10",
+    "react": ">=18",
+    "react-hook-form": ">=7",
+    "@duncit/forms": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@mui/icons-material": {
+      "optional": true
+    },
+    "@mui/material": {
+      "optional": true
+    },
+    "astro": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-hook-form": {
+      "optional": true
+    },
+    "@duncit/forms": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@duncit/forms": "workspace:*",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.0",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  }
+}

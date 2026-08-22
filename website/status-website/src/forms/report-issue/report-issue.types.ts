@@ -7,6 +7,12 @@ export interface ReportIssueValues {
   email: string;
   page_url: string;
   message: string;
+  /**
+   * What the visitor typed into the human check. The TOKEN that goes with it
+   * is not here on purpose — nobody types it, and a form reset must not throw
+   * away a challenge that is still good.
+   */
+  captcha_answer: string;
 }
 
 export interface ImpactOption {
@@ -39,9 +45,15 @@ export const REPORT_DEFAULTS: ReportIssueValues = {
   email: '',
   page_url: '',
   message: '',
+  captcha_answer: '',
 };
 
 export const MESSAGE_MIN = 10;
 export const MESSAGE_MAX = 4000;
 export const NAME_MAX = 120;
 export const URL_MAX = 500;
+
+/** Enough for a page, a console and a network tab. The server caps it too. */
+export const MAX_SCREENSHOTS = 3;
+/** Per image. Upload Settings still apply on the server; this saves the trip. */
+export const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024;

@@ -31,6 +31,8 @@ export const statusReportTypeDefs = gql`
     service_key: String!
     "The catalogue's display name as it read when the report was filed."
     service_name: String!
+    "The affected service's address, as the catalogue held it when the report was filed."
+    service_url: String!
     impact: StatusReportImpact!
     name: String!
     email: String!
@@ -46,6 +48,10 @@ export const statusReportTypeDefs = gql`
     user_agent: String
     "Set only when the reporter happened to be signed in on that browser."
     user_id: String
+    "Screenshots the reporter attached."
+    image_urls: [String!]!
+    "Images an operator attached while triaging."
+    staff_image_urls: [String!]!
     "Triage note written from the Tech portal."
     note: String!
     created_at: String!
@@ -60,6 +66,20 @@ export const statusReportTypeDefs = gql`
     page_size: Int!
   }
 
+  """
+  One screenshot, sent inline with the report.
+
+  Base64 rather than an upload URL on purpose: handing an unauthenticated form
+  a credential that can put files on our storage is a bigger door than the one
+  it is meant to open. The server does the upload.
+  """
+  input StatusReportImageInput {
+    file_name: String!
+    "Raw base64, or a data: URI straight out of a FileReader."
+    data: String!
+    mime_type: String
+  }
+
   input SubmitStatusReportInput {
     "Catalogue slug from /status/services. Omit or leave empty when unsure."
     service_key: String
@@ -68,6 +88,11 @@ export const statusReportTypeDefs = gql`
     email: String!
     page_url: String
     message: String!
+    "Screenshots. Capped server-side — the rest are dropped, never the report."
+    images: [StatusReportImageInput!]
+    "Human check, required only when nobody is signed in. See the captchaChallenge query."
+    captcha_token: String
+    captcha_answer: String
   }
 
   type StatusReportSubmitResult {
@@ -86,7 +111,16 @@ export const statusReportTypeDefs = gql`
     console is exactly who this form exists for.
     """
     submitStatusReport(input: SubmitStatusReportInput!): StatusReportSubmitResult!
-    updateStatusReport(report_id: ID!, status: StatusReportStatus!, note: String): StatusReport!
+    """
+    Triage one report: its state, the note, and any images the operator added.
+    Omitting staff_images leaves the ones already there alone.
+    """
+    updateStatusReport(
+      report_id: ID!
+      status: StatusReportStatus!
+      note: String
+      staff_images: [String!]
+    ): StatusReport!
     deleteStatusReports(ids: [ID!]!): Int!
   }
 `;

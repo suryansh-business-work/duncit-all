@@ -47,6 +47,14 @@ export const STATUS_BUNDLE: NestedCatalogue = {
       messageShort: 'Please add a little more detail — at least 10 characters.',
       messageLong: 'Please keep the description under 4000 characters.',
       urlInvalid: 'That does not look like a web address.',
+      screenshots: 'Screenshots',
+      screenshotsHelp:
+        'Optional, and the most useful thing you can send: a picture carries the error, the address bar and the state of the page at once. Up to 3 images, 5 MB each.',
+      addScreenshot: 'Add an image',
+      removeScreenshot: 'Remove this image',
+      screenshotLimit: 'Up to 3 images can be attached to one report.',
+      screenshotTooLarge: 'That image is over 5 MB. Please attach a smaller one.',
+      screenshotUnreadable: 'That file could not be read. Please try a different image.',
     },
     impact: {
       cannotAccess: 'I cannot open it at all',

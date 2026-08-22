@@ -1,5 +1,6 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { requireHuman, type CaptchaCarrier } from '@modules/platform/captcha/captcha.guard';
 import { newsletterService } from './newsletter.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'WEBSITE_MANAGER'];
@@ -16,8 +17,14 @@ export const newsletterResolvers = {
     },
   },
   Mutation: {
-    subscribeNewsletter: (_p: unknown, args: { input: { email: string; source?: string } }) =>
-      newsletterService.subscribe(args.input),
+    subscribeNewsletter: (
+      _p: unknown,
+      args: { input: { email: string; source?: string } & CaptchaCarrier },
+      ctx: GraphQLContext
+    ) => {
+      requireHuman(ctx, args.input);
+      return newsletterService.subscribe(args.input);
+    },
     unsubscribeNewsletter: (_p: unknown, args: { email: string }) =>
       newsletterService.unsubscribe(args.email),
   },

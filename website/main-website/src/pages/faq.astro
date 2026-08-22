@@ -1,9 +1,14 @@
 ---
 // FAQs load client-side from the Support portal so new answers appear
 // without a redeploy; the support email comes from Admin branding.
+import { captchaCopy } from '@duncit/i18n';
+import Captcha from '@duncit/captcha/Captcha.astro';
 import PageLayout from '../layouts/PageLayout.astro';
 import { fetchBranding } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 
+const { t } = await getTranslator();
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
 ---
@@ -40,6 +45,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
       placeholder="Email for a reply"
       class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none"
     />
+    <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
     <p id="askFaqErr" class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
       Ask <i class="fa-solid fa-paper-plane"></i>
@@ -49,6 +55,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 </PageLayout>
 
 <script>
+  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
   import { urlConfigs } from '../config/url-configs';
 
   const GQL_URL = urlConfigs.graphqlUrl;
@@ -120,6 +127,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
     const payload = {
       question: String(fd.get('question') || '').trim(),
       email: String(fd.get('email') || '').trim(),
+      ...captchaFieldsFrom(form),
     };
     if (payload.question.length < 5) {
       if (errBox) {
@@ -152,15 +160,26 @@ const supportEmail = branding.support_email || 'support@duncit.com';
         }),
       });
       const json = await res.json();
-      if (json?.errors?.length) throw new Error(json.errors[0].message);
+      // A code is spent whether the answer was right or wrong, so the widget
+      // always gets a new one — and when the captcha WAS the reason, it says so
+      // itself and this handler stays quiet.
+      if (json?.errors?.length) {
+        if (showCaptchaFailure(form, json.errors)) {
+          if (btn) btn.innerHTML = orig || 'Ask';
+          return;
+        }
+        throw new Error(json.errors[0].message);
+      }
       if (!json?.data?.submitFaqQuestion?.ok) throw new Error('Could not send. Try again.');
       if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
       form.reset();
+      reloadCaptcha(form);
     } catch (err: any) {
       if (errBox) {
         errBox.classList.remove('hidden');
         errBox.textContent = err?.message || 'Could not send. Please try again.';
       }
+      reloadCaptcha(form);
       if (btn) btn.innerHTML = orig || 'Ask';
     } finally {
       window.setTimeout(() => {

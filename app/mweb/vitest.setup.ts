@@ -1,5 +1,19 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
+import pkg from './package.json' with { type: 'json' };
+
+/**
+ * The version the app shows in its footers (rule 33).
+ *
+ * vite.config.ts supplies it to the BUILD through `define`, which is a
+ * compile-time text substitution — doing the same here would bake the literal
+ * into the component and make `vi.stubGlobal('__APP_VERSION__', …)` silently
+ * inert, so a suite asserting a stubbed version would fail. Setting the real
+ * global instead means components resolve it at runtime: unstubbed suites read
+ * the true version rather than throwing "__APP_VERSION__ is not defined", and
+ * a suite that wants its own value can still stub over it.
+ */
+(globalThis as unknown as { __APP_VERSION__: string }).__APP_VERSION__ = pkg.version;
 
 /**
  * The parts of a browser jsdom does not implement.

@@ -50,6 +50,17 @@ if (!Element.prototype.scrollTo) {
   Element.prototype.scrollTo = vi.fn();
 }
 
+// The log/bug exporters build a Blob and hand it to a download link, and the
+// docs and container views open a tab. jsdom implements neither: it throws
+// rather than returning, so the suite died before asserting.
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = vi.fn(() => 'blob:mock');
+}
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = vi.fn();
+}
+window.open = vi.fn();
+
 // jsdom reports zero dimensions; AG Grid virtualises everything away at width 0,
 // so give every element a nominal size to make columns/rows render.
 const DIMENSIONS: Record<string, number> = {

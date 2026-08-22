@@ -28,6 +28,19 @@ export function InfoRow({ label, value }: any) {
 }
 
 /**
+ * The debounce hook is the real one — a stub that returned the value unchanged
+ * would quietly delete the delay these pages are built around, and one that
+ * omitted it made the import `undefined`.
+ */
+export { useDebouncedValue } from '../../../../../packages/ui/src/useDebouncedValue';
+
+/**
+ * The timeline is the shared account of what happened to a pod, and Backout
+ * Refunds asserts on its wording, so the real component renders here too.
+ */
+export { PodParticipationTimeline } from '../../../../../packages/ui/src/PodParticipationTimeline';
+
+/**
  * QueryGuard stub. Renders the loading/error branches from props; otherwise it
  * calls the render-prop children so the caller's own guard logic runs.
  */

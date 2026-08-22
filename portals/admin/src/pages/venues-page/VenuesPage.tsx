@@ -6,10 +6,12 @@ import { useApolloTableFetch } from '@duncit/table';
 import SuperCategoryFilter from '../../components/SuperCategoryFilter';
 import { VENUES_TABLE, type VenueRow } from './queries';
 import VenuesTable from './VenuesTable';
+import { useTranslation } from '@duncit/shell';
 
 /** Admin → Venues: a read-only list of every venue (server-side table). The
  * venue approval/edit workflow stays in the Onboarding portal. */
 export default function VenuesPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   // Page-level filter, pinned outside the table so it survives the table's own
@@ -31,7 +33,7 @@ export default function VenuesPage() {
           <StorefrontIcon color="primary" />
           <Box>
             <Typography variant="h5" fontWeight={700}>
-              Venues
+              {t('admin.clubs.venues')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Every registered venue. Approvals and edits are managed in the Onboarding portal.

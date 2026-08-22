@@ -55,7 +55,7 @@ export default function CategoryDeleteDialog({ target, busy, error, onClose, onC
           {t('shell.common.cancel')}
         </Button>
         <Button onClick={onConfirm} color="error" variant="contained" disabled={busy}>
-          {busy ? 'Deleting…' : 'Delete'}
+          {busy ? 'Deleting…' : t('shell.common.delete')}
         </Button>
       </DialogActions>
     </Dialog>

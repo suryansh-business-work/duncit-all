@@ -4,6 +4,7 @@ import { alpha } from '@mui/material/styles';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ModuleIcon, { type ModuleIconKind } from '../components/ModuleIcon';
 import TypingWelcome from './hub-page/TypingWelcome';
+import { useTranslation } from '@duncit/shell';
 
 interface HubCard {
   key: string;
@@ -14,51 +15,53 @@ interface HubCard {
   accent: string;
 }
 
-const CARDS: HubCard[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const hubCards = (t: Translate): HubCard[] => [
   {
     key: 'dashboard',
-    title: 'Dashboard',
-    description: 'Live KPIs, growth charts and platform health.',
+    title: t('admin.hub.dashboard'),
+    description: t('admin.hub.dashboardHint'),
     to: '/dashboard',
     icon: 'dashboard',
     accent: '#2563eb',
   },
   {
     key: 'users',
-    title: 'User Management',
-    description: 'Users and portal access roles.',
+    title: t('admin.hub.userManagement'),
+    description: t('admin.hub.userManagementHint'),
     to: '/users',
     icon: 'users',
     accent: '#0f766e',
   },
   {
     key: 'catalog',
-    title: 'Catalog',
-    description: 'Categories and locations.',
+    title: t('admin.hub.catalog'),
+    description: t('admin.hub.catalogHint'),
     to: '/categories',
     icon: 'catalog',
     accent: '#16a34a',
   },
   {
     key: 'community',
-    title: 'Community',
-    description: 'Clubs, pods and member-submitted ideas.',
+    title: t('admin.hub.community'),
+    description: t('admin.hub.communityHint'),
     to: '/clubs',
     icon: 'community',
     accent: '#d97706',
   },
   {
     key: 'engagement',
-    title: 'Engagement',
-    description: 'FAQs, email templates and badges.',
+    title: t('admin.hub.engagement'),
+    description: t('admin.hub.engagementHint'),
     to: '/faqs',
     icon: 'engagement',
     accent: '#dc2626',
   },
   {
     key: 'system',
-    title: 'System',
-    description: 'Branding and global settings.',
+    title: t('admin.hub.system'),
+    description: t('admin.hub.systemHint'),
     to: '/branding',
     icon: 'system',
     accent: '#475569',
@@ -123,7 +126,8 @@ function HubTile({ card }: Readonly<{ card: HubCard }>) {
  * they happened to be written in.
  */
 export default function HubPage() {
-  const widgets: DashboardWidget[] = CARDS.map((card, index) => ({
+  const { t } = useTranslation();
+  const widgets: DashboardWidget[] = hubCards(t).map((card, index) => ({
     id: card.key,
     bare: true,
     defaultLayout: { x: (index % 3) * 4, y: Math.floor(index / 3) * 3, w: 4, h: 3 },

@@ -28,7 +28,7 @@ export default function IdeaActionsBar({ status, onSetStatus, onClose }: Readonl
           {t('admin.podIdeas.approve')}
         </Button>
       )}
-      <Button onClick={onClose}>Close</Button>
+      <Button onClick={onClose}>{t('shell.common.close')}</Button>
     </DialogActions>
   );
 }

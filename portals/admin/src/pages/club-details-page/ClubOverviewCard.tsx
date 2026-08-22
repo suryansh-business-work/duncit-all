@@ -6,6 +6,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import StarIcon from '@mui/icons-material/Star';
 import PlaceIcon from '@mui/icons-material/Place';
 import type { ClubDetail } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   club: ClubDetail;
@@ -33,6 +34,7 @@ function Stat({ icon, label, value }: Readonly<{ icon: React.ReactNode; label: s
 
 /** Left column: club story + reach stats + WhatsApp entry points. */
 export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
+  const { t } = useTranslation();
   const ratingLabel = club.ratings_count > 0 ? `${club.rating.toFixed(1)} (${club.ratings_count})` : 'No ratings';
 
   return (
@@ -57,10 +59,10 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
         )}
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-          <Stat icon={<PeopleIcon fontSize="small" />} label="Followers" value={club.followers_count} />
-          <Stat icon={<StorefrontIcon fontSize="small" />} label="Venues" value={club.matched_venues_count} />
-          <Stat icon={<GroupsIcon fontSize="small" />} label="Pods" value={podCount} />
-          <Stat icon={<StarIcon fontSize="small" />} label="Rating" value={ratingLabel} />
+          <Stat icon={<PeopleIcon fontSize="small" />} label={t('admin.clubs.followers')} value={club.followers_count} />
+          <Stat icon={<StorefrontIcon fontSize="small" />} label={t('admin.clubs.venues')} value={club.matched_venues_count} />
+          <Stat icon={<GroupsIcon fontSize="small" />} label={t('admin.clubs.pods')} value={podCount} />
+          <Stat icon={<StarIcon fontSize="small" />} label={t('admin.clubs.rating')} value={ratingLabel} />
         </Box>
 
         {club.locality && (
@@ -81,7 +83,7 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
               target="_blank"
               rel="noreferrer"
             >
-              Community
+              {t('admin.hub.community')}
             </Button>
           )}
           {club.club_whats_app_group_link && (

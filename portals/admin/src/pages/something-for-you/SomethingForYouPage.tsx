@@ -71,7 +71,7 @@ export default function SomethingForYouPage() {
       title: t('admin.somethingForYou.deleteCard'),
       message: `Delete "${item.title}"? It disappears from Home on both mWeb and the app.`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     await deleteItem({ variables: { itemId: item.id } });

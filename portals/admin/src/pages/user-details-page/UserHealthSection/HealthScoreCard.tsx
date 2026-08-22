@@ -42,7 +42,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
     const ok = await confirm({
       title: t('admin.health.deleteAdjustment'),
       message: t('admin.health.deleteBody'),
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
       destructive: true,
     });
     if (!ok) return;

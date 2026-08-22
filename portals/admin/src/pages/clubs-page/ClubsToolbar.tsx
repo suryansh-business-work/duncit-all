@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import SuperCategoryFilter from '../../components/SuperCategoryFilter';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   superCategoryId: string;
@@ -11,6 +12,7 @@ export default function ClubsToolbar({
   superCategoryId,
   onSuperCategoryChange,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -21,7 +23,7 @@ export default function ClubsToolbar({
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <GroupsIcon color="primary" />
-          <Typography variant="h5">Clubs</Typography>
+          <Typography variant="h5">{t('admin.clubs.title')}</Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary">
           Manage clubs. Pods are organised inside a club.

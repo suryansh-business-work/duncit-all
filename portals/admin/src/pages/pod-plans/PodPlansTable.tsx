@@ -54,7 +54,7 @@ const renderStatus = (r: PlanRow, t: Translate) => (
   <Stack direction="row" spacing={0.5} component="span">
     <Chip
       size="small"
-      label={r.is_active ? 'Active' : 'Inactive'}
+      label={r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')}
       color={r.is_active ? 'success' : 'default'}
     />
     {r.is_coming_soon && <Chip size="small" label={t('admin.podPlans.comingSoon')} color="warning" />}
@@ -106,7 +106,7 @@ export default function PodPlansTable({
         filter: { type: 'boolean' },
         minWidth: 180,
         cellRenderer: (row: PlanRow) => renderStatus(row, t),
-        valueGetter: (r) => (r.is_active ? 'Active' : 'Inactive'),
+        valueGetter: (r) => (r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')),
       },
       {
         field: 'is_coming_soon',

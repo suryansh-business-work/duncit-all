@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   badge: any;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card variant="outlined">
       <CardContent>
@@ -44,7 +46,7 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
               <Typography variant="subtitle1" fontWeight={700} noWrap>
                 {badge.title}
               </Typography>
-              {!badge.is_active && <Chip size="small" label="Inactive" />}
+              {!badge.is_active && <Chip size="small" label={t('admin.profile.inactive')} />}
             </Stack>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
               {badge.condition_type} ≥ {badge.threshold}

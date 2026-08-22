@@ -105,7 +105,7 @@ export default function OccasionalIconRowFields({
               checked={row.is_active}
               onChange={(_, v) => onChange(index, { is_active: v })}
             />
-            <Typography variant="body2">{row.is_active ? 'Active' : 'Paused'}</Typography>
+            <Typography variant="body2">{row.is_active ? t('admin.profile.active') : 'Paused'}</Typography>
           </Stack>
           <TextField
             label={t('admin.branding.priority')}

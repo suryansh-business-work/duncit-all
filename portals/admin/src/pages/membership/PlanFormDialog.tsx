@@ -17,6 +17,7 @@ import {
   membershipPlanFormSchema,
   type MembershipPlanFormValues,
 } from './membership-plan';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -41,6 +42,7 @@ export default function PlanFormDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<MembershipPlanFormValues>({
     defaultValues: toFormValues(editing),
     resolver: zodResolver(membershipPlanFormSchema),
@@ -65,7 +67,7 @@ export default function PlanFormDialog({
             <RhfTextField
               control={control}
               name="key"
-              label="Key"
+              label={t('admin.podPlans.key')}
               hint={
                 editing
                   ? 'Locked — every comparison cell references this key.'
@@ -75,11 +77,11 @@ export default function PlanFormDialog({
               size="small"
               required
             />
-            <RhfTextField control={control} name="name" label="Display name" size="small" required />
+            <RhfTextField control={control} name="name" label={t('admin.membership.displayName')} size="small" required />
             <RhfTextField
               control={control}
               name="tagline"
-              label="Tagline"
+              label={t('admin.membership.tagline')}
               hint="One line under the name — who the tier is for."
               multiline
               minRows={2}
@@ -89,14 +91,14 @@ export default function PlanFormDialog({
               <RhfTextField
                 control={control}
                 name="price_label"
-                label="Price"
+                label={t('admin.membership.price')}
                 hint="Shown as typed, e.g. ₹1,499 or Invite only"
                 size="small"
               />
               <RhfTextField
                 control={control}
                 name="price_note"
-                label="Price note"
+                label={t('admin.membership.priceNote')}
                 hint="e.g. / year · or ₹199 / mo"
                 size="small"
               />
@@ -105,14 +107,14 @@ export default function PlanFormDialog({
               <RhfTextField
                 control={control}
                 name="badge_label"
-                label="Badge"
+                label={t('admin.membership.badge')}
                 hint="Ribbon on the card, e.g. Most popular. Blank hides it."
                 size="small"
               />
               <RhfTextField
                 control={control}
                 name="accent_color"
-                label="Accent colour"
+                label={t('admin.membership.accentColour')}
                 hint="Hex, e.g. #B4532A. Blank uses the app primary."
                 size="small"
               />
@@ -121,7 +123,7 @@ export default function PlanFormDialog({
               <RhfTextField
                 control={control}
                 name="cta_label"
-                label="Button text"
+                label={t('admin.membership.buttonText')}
                 hint="The button stays disabled while membership is coming soon."
                 size="small"
               />
@@ -129,7 +131,7 @@ export default function PlanFormDialog({
                 control={control}
                 name="sort_order"
                 type="number"
-                label="Sort order"
+                label={t('admin.podPlans.sortOrder')}
                 size="small"
                 fullWidth={false}
                 sx={{ width: 130 }}
@@ -143,14 +145,14 @@ export default function PlanFormDialog({
                   control={
                     <Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />
                   }
-                  label="Active (shown in the apps)"
+                  label={t('admin.membership.activeHint')}
                 />
               )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={loading}>
             {editing ? 'Save changes' : 'Create tier'}
           </Button>

@@ -146,7 +146,7 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </Button>

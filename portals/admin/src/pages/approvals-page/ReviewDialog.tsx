@@ -58,7 +58,7 @@ export default function ReviewDialog({
   const actions = isPending ? (
     <>
       <Button onClick={onClose} disabled={saving}>
-        Close
+        {t('shell.common.close')}
       </Button>
       <Button
         color="error"
@@ -81,7 +81,7 @@ export default function ReviewDialog({
     </>
   ) : (
     <Button onClick={onClose} variant="contained">
-      Close
+      {t('shell.common.close')}
     </Button>
   );
 
@@ -97,7 +97,7 @@ export default function ReviewDialog({
         <ReviewDetails request={request} formatDateTime={formatDateTime} />
         {denying && (
           <TextField
-            label="Reason for denial"
+            label={t('admin.approvals.denialReason')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline

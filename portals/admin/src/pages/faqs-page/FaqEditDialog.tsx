@@ -12,6 +12,7 @@ import {
   TextField,
 } from '@mui/material';
 import type { FormState } from './helpers';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   editing: any;
@@ -34,20 +35,21 @@ export default function FaqEditDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!editing} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{editing?.id ? 'Edit FAQ' : 'New FAQ'}</DialogTitle>
+      <DialogTitle>{editing?.id ? 'Edit FAQ' : t('admin.faqs.newFaq')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             select
-            label="Super Category"
+            label={t('admin.dashboard.superCategory')}
             value={form.super_category_id}
             onChange={(e) => setForm({ ...form, super_category_id: e.target.value })}
             fullWidth
-            helperText="Leave empty to make this a general FAQ"
+            helperText={t('admin.faqs.generalHint')}
           >
-            <MenuItem value="">General (no category)</MenuItem>
+            <MenuItem value="">{t('admin.faqs.generalOption')}</MenuItem>
             {supers.map((sc) => (
               <MenuItem key={sc.id} value={sc.id}>
                 {sc.name}
@@ -55,14 +57,14 @@ export default function FaqEditDialog({
             ))}
           </TextField>
           <TextField
-            label="Question"
+            label={t('admin.faqs.question')}
             value={form.question}
             onChange={(e) => setForm({ ...form, question: e.target.value })}
             fullWidth
             required
           />
           <TextField
-            label="Answer"
+            label={t('admin.faqs.answer')}
             value={form.answer}
             onChange={(e) => setForm({ ...form, answer: e.target.value })}
             multiline
@@ -72,7 +74,7 @@ export default function FaqEditDialog({
           />
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
-              label="Sort order"
+              label={t('admin.podPlans.sortOrder')}
               type="number"
               value={form.sort_order}
               onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
@@ -85,14 +87,14 @@ export default function FaqEditDialog({
                   onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
                 />
               }
-              label="Active"
+              label={t('admin.profile.active')}
             />
           </Stack>
           {error && <Alert severity="error">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={onSubmit} disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </Button>

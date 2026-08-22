@@ -13,6 +13,7 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import type { ClubPodRow } from './types';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const fmtDate = (iso?: string | null) =>
   iso ? formatDate(iso) : '—';
@@ -22,6 +23,7 @@ const priceLabel = (pod: ClubPodRow) =>
 
 /** Right column: the club's pods, each linking to its own detail page. */
 export default function ClubPodsCard({ pods }: Readonly<{ pods: ClubPodRow[] }>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -30,7 +32,7 @@ export default function ClubPodsCard({ pods }: Readonly<{ pods: ClubPodRow[] }>)
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <EventIcon color="primary" />
           <Typography variant="subtitle1" fontWeight={900}>
-            Pods
+            {t('admin.clubs.pods')}
           </Typography>
           <Chip size="small" label={pods.length} sx={{ ml: 0.5 }} />
         </Stack>
@@ -55,7 +57,7 @@ export default function ClubPodsCard({ pods }: Readonly<{ pods: ClubPodRow[] }>)
                 />
                 <Chip
                   size="small"
-                  label={pod.is_active ? 'Active' : 'Inactive'}
+                  label={pod.is_active ? t('admin.profile.active') : t('admin.profile.inactive')}
                   color={pod.is_active ? 'success' : 'default'}
                 />
               </ListItemButton>

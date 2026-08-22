@@ -104,9 +104,9 @@ export default function LocalesPage() {
               <TableRow>
                 <TableCell>Code</TableCell>
                 <TableCell>{t('admin.localization.language')}</TableCell>
-                <TableCell>English name</TableCell>
+                <TableCell>{t('admin.localization.englishName')}</TableCell>
                 <TableCell>{t('admin.localization.colFlags')}</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell align="right">{t('shell.common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -122,7 +122,7 @@ export default function LocalesPage() {
                       <Chip
                         size="small"
                         color={row.is_active ? 'success' : 'default'}
-                        label={row.is_active ? 'Active' : 'Off'}
+                        label={row.is_active ? t('admin.profile.active') : 'Off'}
                       />
                     </Stack>
                   </TableCell>

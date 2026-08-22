@@ -4,6 +4,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import { SUBSCRIBERS_TABLE } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface SubscriberRow {
   id: string;
@@ -24,6 +25,7 @@ const getSubscriberRowId = (r: SubscriberRow) => r.id;
  * admin to type or correct.
  */
 export default function MembershipSubscribersPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const { formatDateTime } = useDateFormat();
@@ -36,16 +38,16 @@ export default function MembershipSubscribersPage() {
 
   const columns = useMemo<DuncitColumn<SubscriberRow>[]>(
     () => [
-      { field: 'email', headerName: 'Email', flex: 1, minWidth: 240 },
+      { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 240 },
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: t('shell.common.name'),
         minWidth: 200,
         valueGetter: (r) => r.name || '—',
       },
       {
         field: 'created_at',
-        headerName: 'Signed up',
+        headerName: t('admin.membership.signedUp'),
         minWidth: 200,
         valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
       },
@@ -70,7 +72,7 @@ export default function MembershipSubscribersPage() {
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getSubscriberRowId}
-        emptyText="Nobody has signed up for membership news yet."
+        emptyText={t('admin.membership.subscribersEmpty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search email or name"
         refetchRef={refetchRef}

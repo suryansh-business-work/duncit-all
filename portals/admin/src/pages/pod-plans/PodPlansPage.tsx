@@ -45,7 +45,7 @@ export default function PodPlansPage() {
       title: t('admin.podPlans.deletePlan'),
       message: `Delete plan "${row.name}"?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {

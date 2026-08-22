@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Submission {
   id: string;
@@ -34,6 +35,7 @@ interface Props {
 const STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED', 'ARCHIVED'] as const;
 
 export default function ContactDetailsDialog({ submission, onClose, onUpdateStatus }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<string>('NEW');
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
           )}
           <TextField
             select
-            label="Status"
+            label={t('shell.common.status')}
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -93,7 +95,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Button
           variant="contained"
           onClick={() => {

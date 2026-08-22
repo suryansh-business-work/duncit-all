@@ -2,25 +2,32 @@ import { type MutableRefObject, type ReactNode } from 'react';
 import { Chip } from '@mui/material';
 import type { DuncitColumn, TableFetch } from '@duncit/table';
 import FaqsTableBase, { type FaqRow } from '../../components/FaqsTableBase';
-import { PARTNER_FAQ_TOPICS } from './partner-faq-form';
+import { partnerFaqTopics } from './partner-faq-form';
+import { useTranslation } from '@duncit/shell';
 
-const TOPIC_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', PRODUCTS: 'Products' };
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-const topicValue = (row: FaqRow) => TOPIC_LABELS[row.partner_topic ?? ''] || row.partner_topic || '—';
+/** Topic names come from the shared list so the chip, the filter and the
+ *  form cannot name a topic three different ways. */
+const topicLabels = (t: Translate): Record<string, string> =>
+  Object.fromEntries(partnerFaqTopics(t).map((topic) => [topic.value, topic.label]));
 
-const renderTopic = (row: FaqRow) => <Chip size="small" label={topicValue(row)} />;
+const topicValue = (row: FaqRow, t: Translate) =>
+  topicLabels(t)[row.partner_topic ?? ''] || row.partner_topic || '—';
 
-const TOPIC_COLUMN: DuncitColumn<FaqRow> = {
+const renderTopic = (row: FaqRow, t: Translate) => <Chip size="small" label={topicValue(row, t)} />;
+
+const topicColumn = (t: Translate): DuncitColumn<FaqRow> => ({
   field: 'partner_topic',
-  headerName: 'Topic',
+  headerName: t('admin.faqs.topic'),
   filter: {
     type: 'select',
-    options: PARTNER_FAQ_TOPICS.map((t) => ({ value: t.value, label: t.label })),
+    options: partnerFaqTopics(t),
   },
   minWidth: 140,
-  cellRenderer: renderTopic,
-  valueGetter: topicValue,
-};
+  cellRenderer: (row: FaqRow) => renderTopic(row, t),
+  valueGetter: (row: FaqRow) => topicValue(row, t),
+});
 
 interface Props {
   fetchRows: TableFetch<FaqRow>;
@@ -37,12 +44,13 @@ export default function PartnerFaqsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <FaqsTableBase
       tableId="admin-partner-faqs"
       fetchRows={fetchRows}
       refetchRef={refetchRef}
-      entityColumn={TOPIC_COLUMN}
+      entityColumn={topicColumn(t)}
       toolbarActions={toolbarActions}
       emptyText='No partner FAQs yet. Click "New FAQ" to create the first one.'
       onEdit={onEdit}

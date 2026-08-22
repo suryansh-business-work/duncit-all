@@ -73,7 +73,7 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
               if (next) update(splashTypeKey, next);
             }}
           >
-            <ToggleButton value="IMAGE">Image</ToggleButton>
+            <ToggleButton value="IMAGE">{t('admin.branding.assetImage')}</ToggleButton>
             <ToggleButton value="VIDEO">{t('admin.branding.assetVideo')}</ToggleButton>
           </ToggleButtonGroup>
         </Stack>

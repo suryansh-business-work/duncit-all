@@ -12,6 +12,7 @@ import {
   type TableFilterValue,
 } from '@duncit/table';
 import type { ClubRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<ClubRow>;
@@ -70,21 +71,22 @@ export default function ClubsTable({
   onRemove,
   onView,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ClubRow>[]>(() => {
     const renderCategory = (c: ClubRow) =>
       c.category_id ? <Chip size="small" label={catName(c.category_id)} /> : '—';
     const renderViewPods = (c: ClubRow) => (
-      <Tooltip title="View Pods">
+      <Tooltip title={t('admin.clubs.viewPods')}>
         <IconButton size="small" component={RouterLink} to={`/pods?club_id=${c.id}`}>
           <EventIcon fontSize="small" />
         </IconButton>
       </Tooltip>
     );
     return [
-      { field: 'cover', headerName: 'Cover', sortable: false, width: 80, cellRenderer: renderCover },
+      { field: 'cover', headerName: t('admin.clubs.colCover'), sortable: false, width: 80, cellRenderer: renderCover },
       {
         field: 'club_name',
-        headerName: 'Club',
+        headerName: t('admin.clubs.colClub'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderClub,
@@ -92,14 +94,14 @@ export default function ClubsTable({
       },
       {
         field: 'category_id',
-        headerName: 'Category',
+        headerName: t('admin.clubs.colCategory'),
         minWidth: 140,
         cellRenderer: renderCategory,
         valueGetter: (c) => (c.category_id ? catName(c.category_id) : '—'),
       },
       {
         field: 'matched_venues_count',
-        headerName: 'Venues',
+        headerName: t('admin.clubs.venues'),
         sortable: false,
         width: 96,
         valueGetter: (c) => c.matched_venues_count ?? 0,
@@ -112,11 +114,11 @@ export default function ClubsTable({
         cellRenderer: renderWhatsApp,
         valueGetter: whatsAppValue,
       },
-      { field: 'locality', headerName: 'Locality', filter: { type: 'text' }, hide: true, minWidth: 140 },
+      { field: 'locality', headerName: t('admin.clubs.colLocality'), filter: { type: 'text' }, hide: true, minWidth: 140 },
       activeChipColumn<ClubRow>({ inactiveLabel: 'Draft' }),
       {
         field: 'is_verified',
-        headerName: 'Verified',
+        headerName: t('admin.clubs.verified'),
         filter: { type: 'boolean' },
         hide: true,
         width: 110,

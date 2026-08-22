@@ -8,6 +8,7 @@ import BenefitFormDialog, { type BenefitDialogPlan } from './BenefitFormDialog';
 import BenefitsTable, { type BenefitRow } from './BenefitsTable';
 import { BENEFITS_TABLE, CREATE_BENEFIT, DELETE_BENEFIT, PLANS, UPDATE_BENEFIT } from './queries';
 import { toMembershipBenefitInput, type MembershipBenefitFormValues } from './membership-benefit';
+import { useTranslation } from '@duncit/shell';
 
 interface PlanOption {
   id: string;
@@ -19,6 +20,7 @@ interface PlanOption {
 
 /** Admin > Membership > Plans > Benefits — the comparison rows. */
 export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion: number }>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createMut, createState] = useMutation(CREATE_BENEFIT);
@@ -73,10 +75,10 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
 
   const onDelete = async (row: BenefitRow) => {
     const ok = await confirm({
-      title: 'Delete row',
+      title: t('admin.membership.deleteRow'),
       message: `Delete "${row.label}" from the comparison table?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {

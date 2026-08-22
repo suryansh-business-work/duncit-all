@@ -131,7 +131,7 @@ export default function LocationFormDialog({
                 checked={form.is_active}
                 onChange={(_, v) => setForm({ ...form, is_active: v })}
               />
-              <Typography variant="body2">{form.is_active ? 'Active' : 'Inactive'}</Typography>
+              <Typography variant="body2">{form.is_active ? t('admin.profile.active') : t('admin.profile.inactive')}</Typography>
             </Stack>
           )}
           <MediaPickerField
@@ -149,7 +149,7 @@ export default function LocationFormDialog({
               justifyContent="space-between"
               sx={{ mb: 1 }}
             >
-              <Typography variant="subtitle2">Localities / Areas</Typography>
+              <Typography variant="subtitle2">{t('admin.locations.localities')}</Typography>
               <Stack direction="row" spacing={1}>
                 <Button
                   size="small"
@@ -208,7 +208,7 @@ export default function LocationFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={onSubmit}

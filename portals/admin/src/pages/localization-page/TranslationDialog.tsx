@@ -117,7 +117,7 @@ export default function TranslationDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={submit}

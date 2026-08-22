@@ -20,7 +20,7 @@ export default function RolesSection({ user, roleByKey, onManageRoles }: Readonl
           sx={{ mb: 2 }}
         >
           <Box>
-            <Typography variant="subtitle1">Roles</Typography>
+            <Typography variant="subtitle1">{t('admin.roles.title')}</Typography>
             <Typography variant="body2" color="text.secondary">
               Roles determine what this user can do.
             </Typography>

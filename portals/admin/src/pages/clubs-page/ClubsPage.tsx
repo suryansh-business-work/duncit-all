@@ -31,10 +31,10 @@ export default function ClubsPage() {
 
   const remove = async (c: ClubRow) => {
     const ok = await confirm({
-      title: 'Delete club',
+      title: t('admin.clubs.deleteClub'),
       message: `Delete club "${c.club_name}"?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {

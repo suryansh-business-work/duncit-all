@@ -84,7 +84,7 @@ export default function ItemFormDialog({
                 onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
               />
             }
-            label="Show on Home"
+            label={t('admin.somethingForYou.showOnHome')}
           />
         </Stack>
       </DialogContent>

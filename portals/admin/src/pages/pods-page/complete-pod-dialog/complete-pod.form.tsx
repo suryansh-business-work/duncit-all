@@ -88,7 +88,7 @@ export default function CompletePodDialog({
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Complete this pod</DialogTitle>
+      <DialogTitle>{t('admin.completePod.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1}>
           <Typography variant="subtitle2">{pod?.pod_title}</Typography>
@@ -131,7 +131,7 @@ export default function CompletePodDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>Close</Button>
+        <Button onClick={onClose} disabled={busy}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

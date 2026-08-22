@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { partnerFaqSchema, toPartnerFaqInput, type PartnerFaqFormValues } from './partner-faq.form';
+import { buildPartnerFaqSchema, toPartnerFaqInput, type PartnerFaqFormValues } from './partner-faq.form';
+
+/** The spec reads keys back, so an identity translator keeps its assertions. */
+const t = (key: string) => key;
 
 const base: PartnerFaqFormValues = {
   partner_topic: 'VENUE',
@@ -10,11 +13,11 @@ const base: PartnerFaqFormValues = {
 };
 
 const messagesOf = (input: unknown) => {
-  const result = partnerFaqSchema.safeParse(input);
+  const result = buildPartnerFaqSchema(t).safeParse(input);
   return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
 };
 
-describe('partnerFaqSchema', () => {
+describe('buildPartnerFaqSchema', () => {
   it('requires a partner topic', () => {
     expect(messagesOf({ ...base, partner_topic: '' })).toMatch(/topic/i);
   });
@@ -24,6 +27,6 @@ describe('partnerFaqSchema', () => {
   });
 
   it('builds a partner FAQ input', () => {
-    expect(toPartnerFaqInput(base)).toMatchObject({ audience: 'PARTNERS', partner_topic: 'VENUE' });
+    expect(toPartnerFaqInput(base, t)).toMatchObject({ audience: 'PARTNERS', partner_topic: 'VENUE' });
   });
 });

@@ -95,7 +95,7 @@ export default function CategoryFormDialog({
               }}
             >
               <ToggleButton value="ICON">{t('admin.categories.muiIcon')}</ToggleButton>
-              <ToggleButton value="IMAGE">Image</ToggleButton>
+              <ToggleButton value="IMAGE">{t('admin.branding.assetImage')}</ToggleButton>
             </ToggleButtonGroup>
             {dialog.form.iconMode === 'ICON' ? (
               <IconPickerField
@@ -177,8 +177,8 @@ export default function CategoryFormDialog({
                   }
                   sx={{ minWidth: 160 }}
                 >
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
+                  <MenuItem value="active">{t('admin.profile.active')}</MenuItem>
+                  <MenuItem value="inactive">{t('admin.profile.inactive')}</MenuItem>
                 </TextField>
               )}
             </Stack>
@@ -244,7 +244,7 @@ export default function CategoryFormDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setDialog(null)}>Cancel</Button>
+        <Button onClick={() => setDialog(null)}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={onSubmit}

@@ -20,8 +20,10 @@ import {
 import BadgeCard from './BadgeCard';
 import BadgeFormDialog from './BadgeFormDialog';
 import { useConfirm } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/shell';
 
 export default function BadgesPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(BADGES);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<BadgeForm>(emptyBadge);
@@ -61,10 +63,10 @@ export default function BadgesPage() {
 
   const remove = async (b: any) => {
     const ok = await confirm({
-      title: 'Delete badge',
+      title: t('admin.badgesPage.deleteBadge'),
       message: `Delete badge "${b.title}"? This also revokes it from all users.`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     await deleteBadge({ variables: { id: b.id } });

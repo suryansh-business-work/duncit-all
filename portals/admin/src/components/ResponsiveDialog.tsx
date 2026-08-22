@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -43,6 +44,7 @@ export default function ResponsiveDialog({
   actions,
   children,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useSheet = bottomSheetOnly || (!desktopOnly && isMobile);
@@ -79,7 +81,7 @@ export default function ResponsiveDialog({
             <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ minWidth: 0 }}>
               {title}
             </Typography>
-            <IconButton size="small" onClick={onClose} aria-label="Close">
+            <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Stack>
@@ -113,7 +115,7 @@ export default function ResponsiveDialog({
             onClick={onClose}
             sx={{ position: 'absolute', right: 8, top: 8 }}
             size="small"
-            aria-label="Close"
+            aria-label={t('shell.common.close')}
           >
             <CloseIcon fontSize="small" />
           </IconButton>

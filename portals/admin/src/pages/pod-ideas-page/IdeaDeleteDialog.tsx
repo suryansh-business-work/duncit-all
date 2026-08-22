@@ -25,7 +25,7 @@ export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Readonl
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button color="error" variant="contained" onClick={onConfirm}>
           {t('shell.common.delete')}
         </Button>

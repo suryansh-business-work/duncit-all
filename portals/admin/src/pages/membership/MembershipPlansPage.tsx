@@ -3,6 +3,7 @@ import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import PlansPanel from './PlansPanel';
 import BenefitsPanel from './BenefitsPanel';
+import { useTranslation } from '@duncit/shell';
 
 type PlansTab = 'PLANS' | 'BENEFITS';
 
@@ -14,14 +15,15 @@ type PlansTab = 'PLANS' | 'BENEFITS';
  * job until its column is filled in.
  */
 export default function MembershipPlansPage() {
+  const { t } = useTranslation();
   // Bumped on every write in the Plans tab, so the Benefits tab rebuilds its
   // one-input-per-tier editor without a reload.
   const [plansVersion, setPlansVersion] = useState(0);
 
   const tabs = useTabParam<PlansTab>({
     items: [
-      { value: 'PLANS', label: 'Tiers' },
-      { value: 'BENEFITS', label: 'Comparison rows' },
+      { value: 'PLANS', label: t('admin.membership.tiers') },
+      { value: 'BENEFITS', label: t('admin.membership.comparisonRows') },
     ],
     fallback: 'PLANS',
   });
@@ -33,7 +35,7 @@ export default function MembershipPlansPage() {
           <Typography variant="h5" fontWeight={700}>
             Membership
           </Typography>
-          <Chip size="small" color="warning" label="Coming soon" />
+          <Chip size="small" color="warning" label={t('admin.membership.comingSoon')} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           The tiers and comparison table shown in the mobile app and mobile web. Toggle the{' '}
@@ -43,7 +45,7 @@ export default function MembershipPlansPage() {
 
       <Alert severity="info">
         Nothing here bills anyone yet — every plan&apos;s button is disabled in the apps. Members
-        who ask to be told when it opens land in <strong>Membership &rarr; Subscribers</strong>.
+        who ask to be told when it opens land in <strong>{t('admin.membership.subscribersPath')}</strong>.
       </Alert>
 
       <DuncitTabs {...tabs} />

@@ -105,7 +105,7 @@ export default function LocationsPage() {
       title: t('admin.locations.deleteLocation'),
       message: `Delete location "${loc.location_name}"?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {

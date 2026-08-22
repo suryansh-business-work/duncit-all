@@ -8,6 +8,7 @@ import {
   type DuncitColumn,
   type TableFetch,
 } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 
 /** Row shape shared by the App FAQs and Partner FAQs tables (one server entity). */
 export interface FaqRow {
@@ -60,19 +61,20 @@ export default function FaqsTableBase({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<FaqRow>[]>(() => {
     return [
       {
         field: 'question',
-        headerName: 'Question',
+        headerName: t('admin.faqs.question'),
         flex: 1.6,
         minWidth: 280,
         cellRenderer: renderQuestion,
         valueGetter: (row) => row.question,
       },
       entityColumn,
-      { field: 'sort_order', headerName: 'Sort', filter: { type: 'number' }, width: 90 },
-      activeChipColumn<FaqRow>({ headerName: 'Active', inactiveLabel: 'Hidden' }),
+      { field: 'sort_order', headerName: t('admin.podPlans.sort'), filter: { type: 'number' }, width: 90 },
+      activeChipColumn<FaqRow>({ headerName: t('admin.profile.active'), inactiveLabel: 'Hidden' }),
       dateColumn<FaqRow>(),
       actionsColumn<FaqRow>({ onEdit, onDelete }),
     ];

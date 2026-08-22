@@ -144,7 +144,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
             variant="contained"
             disabled={deletingComment}
           >
-            {deletingComment ? 'Deleting…' : 'Delete'}
+            {deletingComment ? 'Deleting…' : t('shell.common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

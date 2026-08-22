@@ -12,9 +12,11 @@ import {
   toMembershipPlanUpdateInput,
   type MembershipPlanFormValues,
 } from './membership-plan';
+import { useTranslation } from '@duncit/shell';
 
 /** Admin > Membership > Plans — the tier catalogue. */
 export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => void }>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createMut, createState] = useMutation(CREATE_PLAN);
@@ -53,10 +55,10 @@ export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => vo
 
   const onDelete = async (row: PlanRow) => {
     const ok = await confirm({
-      title: 'Delete tier',
-      message: `Delete "${row.name}"? Its column is removed from every comparison row.`,
+      title: t('admin.membership.deleteTier'),
+      message: t('admin.membership.deleteTierBody', { vars: { name: row.name } }),
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {

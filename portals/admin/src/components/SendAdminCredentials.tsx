@@ -139,7 +139,7 @@ export default function SendAdminCredentials() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)} disabled={loading}>
-            Cancel
+            {t('shell.common.cancel')}
           </Button>
           <Button variant="contained" onClick={confirm} disabled={loading || !entry.trim()}>
             {loading ? 'Sending…' : 'Send credentials'}

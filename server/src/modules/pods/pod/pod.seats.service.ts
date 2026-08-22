@@ -7,6 +7,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
+import { notifyEvent } from '@services/notify/notify.service';
 
 /** A pod or user id, however the caller happens to be holding it. */
 type PodRef = string | Types.ObjectId;
@@ -75,7 +76,10 @@ async function announcePodFilled(pod: any, gained: number): Promise<void> {
   // number from — a projection without them skips the send in silence.
   const [host, clubAdmin] = await Promise.all([
     UserModel.findById((pod.pod_hosts_id ?? [])[0])
-      .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+      // `auth.email` is selected for the same reason `auth.phone` is: the
+      // notify funnel reads the address off this document, so a narrower
+      // projection would send the WhatsApp message and quietly skip the email.
+      .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
       .lean(),
     UserModel.findById((club as any)?.admin_user_ids?.[0])
       .select('profile.first_name profile.last_name')
@@ -83,7 +87,7 @@ async function announcePodFilled(pod: any, gained: number): Promise<void> {
   ]);
   const hostName = fullName(host) || 'there';
   const clubSlug = (club as any)?.club_id ?? '';
-  await whatsappService.send({
+  await notifyEvent({
     event: 'HOST_POD_FULL',
     // The pod itself: one "your pod is full" per pod, however many times the
     // last spot changes hands.

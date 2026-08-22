@@ -14,6 +14,7 @@ import {
   cancellationPolicySchema,
   emptyTier,
   type CancellationPolicyValues,
+  type SubmitCancellationPolicy,
 } from './cancellation-policy.types';
 
 export interface CancellationPolicyFormProps {
@@ -21,7 +22,7 @@ export interface CancellationPolicyFormProps {
   saving: boolean;
   error: string | null;
   t: (key: string) => string;
-  onSubmit: (values: CancellationPolicyValues) => Promise<void>;
+  onSubmit: SubmitCancellationPolicy;
 }
 
 /**

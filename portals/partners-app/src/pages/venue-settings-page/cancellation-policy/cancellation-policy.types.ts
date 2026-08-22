@@ -19,6 +19,10 @@ export interface CancellationPolicyValues {
   tiers: CancellationTierValues[];
 }
 
+/** What the page does with a valid policy. Declared here rather than beside the
+ * form so the JSX file carries no bare type noise. */
+export type SubmitCancellationPolicy = (values: CancellationPolicyValues) => Promise<void>;
+
 /** A percent can never exceed the booking; a flat charge has no such ceiling. */
 const PERCENT_MAX = 100;
 

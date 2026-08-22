@@ -7,4 +7,5 @@ export {
   toPolicyValues,
   type CancellationPolicyValues,
   type CancellationTierValues,
+  type SubmitCancellationPolicy,
 } from './cancellation-policy.types';

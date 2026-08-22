@@ -46,6 +46,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.field.place': 'Location',
   'email.field.when': 'When',
   'email.field.orderNo': 'Order',
+  'email.field.notes': 'Notes',
   'email.field.campaign': 'Placement',
 
   // --- Shared callout captions --------------------------------------------

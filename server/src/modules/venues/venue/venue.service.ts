@@ -27,6 +27,7 @@ import {
   VENUE_SECURITY,
   VENUE_TYPES,
 } from './venue.constants';
+import { notifyEvent } from '@services/notify/notify.service';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -822,11 +823,12 @@ export const venueService = {
     await v.save();
     await assignApprovedVenueRole(v.owner_user_id);
     if (!wasApproved) {
-      await whatsappService.send({
+      await notifyEvent({
         event: 'VENUE_NEW_REQUESTED',
         user: await waRecipient(v.owner_user_id),
         name: v.owner_name,
         params: [v.owner_name, v.venue_name, v.venue_category?.sub_category_name],
+        email: v.owner_email ?? '',
       });
     }
     return toPub(v);

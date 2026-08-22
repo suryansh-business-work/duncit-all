@@ -44,6 +44,7 @@ export const FIELD = {
   place: 'email.field.place',
   when: 'email.field.when',
   orderNo: 'email.field.orderNo',
+  notes: 'email.field.notes',
   campaign: 'email.field.campaign',
 } as const;
 

@@ -20,6 +20,7 @@ import {
 import {
   MY_VENUES_SETTINGS,
   UPDATE_VENUE_CANCELLATION,
+  type VenueCancellationPolicy,
   type VenueSettingsVenue,
 } from './queries';
 
@@ -47,9 +48,13 @@ export default function VenueSettingsPage() {
     if (!selected && venues.length > 0) setVenueId(venues[0].id);
   }, [selected, venues, setVenueId]);
 
+  // The form resets whenever these change, so they key off the policy's
+  // CONTENT rather than its identity: a background refresh hands back a fresh
+  // object every time, and resetting on that would wipe what the owner typed.
+  const policyJson = JSON.stringify(selected?.settings?.cancellation ?? null);
   const initialValues = useMemo<CancellationPolicyValues>(
-    () => toPolicyValues(selected?.settings?.cancellation),
-    [selected]
+    () => toPolicyValues(JSON.parse(policyJson) as VenueCancellationPolicy | null),
+    [policyJson]
   );
 
   const submit = async (values: CancellationPolicyValues) => {

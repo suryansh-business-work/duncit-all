@@ -10,7 +10,7 @@ import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import { venueSideOf } from '@modules/finance/finance/breakdown.math';
 import { resolveEffectiveRates } from '@modules/finance/finance/settlement.service';
-import { whatsappService, type WaSendInput } from '@modules/platform/whatsapp/whatsapp.service';
+import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
 
 function fail(code: string, msg: string): never {
@@ -457,10 +457,11 @@ async function bulkShiftedWindow(
   return overlap ? null : { start, end };
 }
 
-/** `destinationFor` reads the number off these two fields, so a narrower
- * projection makes every WhatsApp send skip with "No WhatsApp number". */
+/** `destinationFor` reads the number off two of these fields and `notifyEvent`
+ * reads the address off a third, so a narrower projection makes every WhatsApp
+ * send skip with "No WhatsApp number" and every email skip in silence. */
 const WA_CONTACT_FIELDS =
-  'profile.first_name profile.last_name auth.phone communication.whatsapp';
+  'profile.first_name profile.last_name auth.email auth.phone communication.whatsapp';
 
 const contactName = (u: any) =>
   `${u?.profile?.first_name ?? ''} ${u?.profile?.last_name ?? ''}`.trim();
@@ -498,7 +499,7 @@ async function clubAdminName(clubId: unknown): Promise<string> {
 
 /** The decision to the pod's hosts — every one of them, matching the in-app
  * note, so a co-hosted pod costs one message per host. */
-function hostDecisionSends(facts: SlotDecisionFacts, approved: boolean): WaSendInput[] {
+function hostDecisionSends(facts: SlotDecisionFacts, approved: boolean): NotifyInput[] {
   const event = approved ? 'HOST_SLOT_APPROVED' : 'HOST_SLOT_REJECTED';
   return facts.hosts.map((host) => {
     const name = contactName(host);
@@ -514,7 +515,7 @@ function hostDecisionSends(facts: SlotDecisionFacts, approved: boolean): WaSendI
 
 /** The same decision back to the venue owner who made it — the approval also
  * carries the Venue Studio link, the rejection does not. */
-async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): Promise<WaSendInput[]> {
+async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): Promise<NotifyInput[]> {
   if (!facts.owner) return [];
   const name = contactName(facts.owner);
   const to = { entityId: facts.entityId, user: facts.owner, name };
@@ -528,6 +529,7 @@ async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): 
         ...to,
         event: 'VENUE_SLOT_APPROVED',
         params: [name, facts.podTitle, facts.podTitle, facts.date, facts.time, facts.hostName, studioUrl],
+        vars: { studio_url: studioUrl },
       },
     ];
   }
@@ -543,7 +545,7 @@ async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): 
 /** "Your pod is live" to both sides of the booking — one campaign, one key per
  * audience. Only the primary host is told; the co-hosts already have the
  * approval message above. */
-async function podPublishedSends(facts: SlotDecisionFacts): Promise<WaSendInput[]> {
+async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[]> {
   const clubAdmin = await clubAdminName(facts.clubId);
   // The template's whole point is naming the club admin the pod was handed to,
   // and a blank value would be recorded FAILED rather than sent.
@@ -557,7 +559,7 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<WaSendInput[
     facts.hostName,
     clubAdmin,
   ];
-  const sends: WaSendInput[] = [];
+  const sends: NotifyInput[] = [];
   if (facts.owner) {
     const ownerName = contactName(facts.owner);
     sends.push({
@@ -611,7 +613,11 @@ async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolea
       ...(await venueDecisionSends(facts, approved)),
     ];
     if (approved) sends.push(...(await podPublishedSends(facts)));
-    await whatsappService.sendEach(sends);
+    // `notifyEach`, not `sendEach`: the same four decisions now also go out as
+    // `host-slot-approved`, `venue-slot-approved`, `host-pod-published` and
+    // their declined twins, filled from the very same `params` array. The
+    // address comes off each account's own `auth.email`, already projected.
+    await notifyEach(sends);
   } catch (err) {
     logs.server.error('venueSlot', 'whatsappSlotDecision', {
       error: err,

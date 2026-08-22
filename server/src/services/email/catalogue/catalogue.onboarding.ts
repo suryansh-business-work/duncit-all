@@ -49,17 +49,29 @@ const PARTIES: readonly Party[] = [
   },
 ];
 
-/** `['Recipient name', 'Date', 'Time']`, in the WhatsApp event's order. */
-const BOOKED_VARS: readonly EmailVar[] = [
+const MEETING_NOTES = v('notes', 'Anything staff added for the applicant. Blank most of the time.', 'Please keep your GST certificate handy.');
+
+/** `['Recipient name', 'Date', 'Time']` in the WhatsApp event's order, then the
+ * email-only note — a 1024-character WhatsApp template has no room for it. */
+const MEETING_CORE: readonly EmailVar[] = [
   v('name', 'The applicant’s first name.', 'Meera'),
   v('date', 'The meeting date, already formatted.', '26 Aug 2026'),
   v('time', 'The meeting time, already formatted.', '4:30 PM'),
 ];
 
-/** `['Recipient name', 'Date', 'Time', 'Meet']`. */
+const BOOKED_VARS: readonly EmailVar[] = [...MEETING_CORE, MEETING_NOTES];
+
+/**
+ * `['Recipient name', 'Date', 'Time', 'Meet']`, then the note.
+ *
+ * `meeting_url` sits at index 3 because that is where the WhatsApp event's
+ * fourth param is. Appending the note to BOOKED_VARS instead would put it there
+ * and send the applicant the staff note as their call link.
+ */
 const SCHEDULED_VARS: readonly EmailVar[] = [
-  ...BOOKED_VARS,
+  ...MEETING_CORE,
   v('meeting_url', 'The video-call link for the interview.', 'https://meet.google.com/abc-defg-hij'),
+  MEETING_NOTES,
 ];
 
 /** `['Recipient name', 'Email']`. */
@@ -120,7 +132,7 @@ const STEPS: readonly Step[] = [
     subject: 'Your Duncit {party} onboarding interview is booked',
     tone: PAUSED,
     vars: BOOKED_VARS,
-    rows: MEETING_ROWS,
+    rows: [...MEETING_ROWS, { labelKey: FIELD.notes, valueVar: 'notes' }],
     helpKey: HELP.onboardingNext,
     fires: 'The applicant picks an onboarding interview slot',
     calloutLabelKey: LABEL.meeting,
@@ -135,7 +147,11 @@ const STEPS: readonly Step[] = [
     subject: 'Your Duncit {party} onboarding interview is confirmed',
     tone: LIVE,
     vars: SCHEDULED_VARS,
-    rows: [...MEETING_ROWS, { labelKey: FIELD.meetingLink, valueVar: 'meeting_url' }],
+    rows: [
+      ...MEETING_ROWS,
+      { labelKey: FIELD.meetingLink, valueVar: 'meeting_url' },
+      { labelKey: FIELD.notes, valueVar: 'notes' },
+    ],
     ctaKey: CTA.joinMeeting,
     ctaVar: 'meeting_url',
     fires: 'Staff confirms the interview and attaches the call link',

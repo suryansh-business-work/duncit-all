@@ -37,8 +37,16 @@ import { EMAIL_BY_WA_EVENT } from '@services/email/catalogue';
 
 export interface NotifyInput extends WaSendInput {
   /**
-   * Where the email leg goes. Blank or omitted sends WhatsApp only — which is
-   * right for a partner contact that is not a Duncit account.
+   * Where the email leg goes.
+   *
+   * Omitted falls back to `user.auth.email`, which most call sites already have
+   * in hand — the account was loaded for the WhatsApp number. Two things to
+   * know: the projection has to SELECT `auth.email` (a narrower one silently
+   * yields no address, exactly as a missing `auth.phone` silently yields no
+   * number), and a partner contact that is not a Duncit account has to pass the
+   * address explicitly because there is no account to read it off.
+   *
+   * Blank on both sends WhatsApp only.
    */
   email?: string | null;
   /**
@@ -75,8 +83,12 @@ function varsFrom(
  * logged rather than swallowed — an email nobody received and nobody can
  * explain is the exact failure the email log was built for.
  */
+/** The address on the account the WhatsApp leg was already given. */
+const accountEmail = (user: Record<string, any> | null | undefined): string =>
+  String(user?.auth?.email ?? '');
+
 async function mailLeg(input: NotifyInput): Promise<SendResult | null> {
-  const to = input.email?.trim();
+  const to = (input.email ?? accountEmail(input.user)).trim();
   if (!to) return null;
   const def = EMAIL_BY_WA_EVENT.get(input.event);
   if (!def) return null;

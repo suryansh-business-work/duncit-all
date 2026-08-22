@@ -8,6 +8,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
+import { notifyEvent } from '@services/notify/notify.service';
 
 const notFound = () =>
   new GraphQLError('Club Admin not found', { extensions: { code: 'NOT_FOUND' } });
@@ -243,11 +244,16 @@ export const clubAdminProfileService = {
     if (doc.is_active === is_active) return one(doc);
     doc.is_active = is_active;
     await doc.save();
-    await whatsappService.send({
+    // The club admin was the one partner kind with no email for this: a host,
+    // a venue and a brand each have their own activated/deactivated pair, and
+    // a club admin found out only if they had WhatsApp.
+    await notifyEvent({
       event: is_active ? 'CLUB_ADMIN_ACCOUNT_REACTIVATED' : 'CLUB_ADMIN_ACCOUNT_SUSPENDED',
       user: await waRecipient(doc.user_id),
       name: doc.full_name,
       params: [doc.full_name],
+      email: doc.email ?? '',
+      vars: { email: doc.email ?? '' },
     });
     return one(doc);
   },

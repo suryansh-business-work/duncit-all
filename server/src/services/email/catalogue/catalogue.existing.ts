@@ -360,10 +360,11 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
   describeEmail({
     slug: 'meeting-booked',
     name: 'Onboarding Meeting Booked',
-    description: 'The applicant, when they pick an onboarding slot themselves.',
+    description:
+      'Superseded by the per-party `<party>-onboarding-booked` templates, which is what the booking now sends. Kept so an existing row and its edits are not orphaned.',
     audience: 'HOST',
     category: 'notification',
-    fires: 'An applicant books an onboarding meeting',
+    fires: 'Nothing sends this any more — the per-party template does',
     subject: 'Your Duncit {{kind}} onboarding meeting is booked',
     footerNote: '',
     vars: meetingVars([MEETING_NOTES]),
@@ -371,10 +372,11 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
   describeEmail({
     slug: 'meeting-scheduled',
     name: 'Onboarding Meeting Scheduled',
-    description: 'The applicant, when staff confirms the meeting and attaches the call link.',
+    description:
+      'Superseded by the per-party `<party>-onboarding-interview` templates, which is what scheduling now sends. Kept so an existing row and its edits are not orphaned.',
     audience: 'HOST',
     category: 'notification',
-    fires: 'Staff schedules an onboarding meeting',
+    fires: 'Nothing sends this any more — the per-party template does',
     subject: 'Your Duncit {{kind}} onboarding meeting is scheduled',
     footerNote: '',
     vars: meetingVars([MEETING_LINK, MEETING_NOTES]),
@@ -428,10 +430,11 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
   describeEmail({
     slug: 'meeting-approved',
     name: 'Onboarding Approved',
-    description: 'The applicant, when onboarding is approved after the meeting.',
+    description:
+      'Superseded by the per-party `<party>-onboarding-approved` templates, which is what approval now sends. Kept so an existing row and its edits are not orphaned.',
     audience: 'HOST',
     category: 'notification',
-    fires: 'An onboarding application is approved',
+    fires: 'Nothing sends this any more — the per-party template does',
     subject: 'Your Duncit {{kind}} onboarding is approved 🎉',
     footerNote: '',
     vars: [
@@ -442,10 +445,11 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
   describeEmail({
     slug: 'meeting-rejected',
     name: 'Onboarding Rejected',
-    description: 'The applicant, when onboarding is not approved.',
+    description:
+      'Superseded by the per-party `<party>-onboarding-rejected` templates, which is what rejection now sends. Kept so an existing row and its edits are not orphaned.',
     audience: 'HOST',
     category: 'notification',
-    fires: 'An onboarding application is rejected',
+    fires: 'Nothing sends this any more — the per-party template does',
     subject: 'Update on your Duncit {{kind}} onboarding',
     footerNote: '',
     vars: [

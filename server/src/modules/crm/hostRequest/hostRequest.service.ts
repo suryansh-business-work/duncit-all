@@ -14,6 +14,7 @@ import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { notifyEvent } from '@services/notify/notify.service';
 
 // Schema defaults guarantee Date timestamps, so a direct toISOString is safe.
 const iso = (v: Date) => v.toISOString();
@@ -364,12 +365,15 @@ export const hostRequestService = {
     const hostUser = await UserModel.findById(String(h.host_user_id))
       .select('auth.phone communication.whatsapp')
       .lean();
-    await whatsappService.send({
+    await notifyEvent({
       event: 'HOST_CATEGORY_REQUESTED',
       entityId: String(h._id),
       user: hostUser,
       name: h.contact_name,
       params: [h.contact_name, catPath(h)],
+      // Beside `host-request-approved` rather than instead of it: that one is
+      // about the REQUEST closing, this one is about the category being usable.
+      email: h.contact_email ?? '',
     });
     return toPub(h);
   },

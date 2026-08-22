@@ -5,44 +5,31 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   Divider,
-  IconButton,
+  FormControlLabel,
   Snackbar,
   Stack,
   Switch,
-  FormControlLabel,
   TextField,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { PageHeader } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import {
   REPORT_PROBLEM_CONFIG,
   UPDATE_REPORT_PROBLEM_CONFIG,
-  type ReportProblemCategory,
   type ReportProblemConfig,
-} from '../../graphql/reported-problems';
-import { useTranslation } from '@duncit/shell';
-
-const renameCategory = (prev: ReportProblemCategory[], index: number, label: string) =>
-  prev.map((c, i) => (i === index ? { ...c, label } : c));
-
-const toggleCategory = (prev: ReportProblemCategory[], index: number, is_active: boolean) =>
-  prev.map((c, i) => (i === index ? { ...c, is_active } : c));
-
-const removeCategory = (prev: ReportProblemCategory[], index: number) =>
-  prev.filter((_, i) => i !== index);
+} from '../../../graphql/reported-problems';
+import CategoryList from './CategoryList';
+import { draftCategory, toEditable, type EditableCategory } from './categories';
 
 /**
  * What the app renders on Report a Problem.
  *
- * The chips and the prompt were hardcoded in the app, so adding a category meant
- * a release. Editing them here changes what every reporter sees on their next
- * open — the app reads this config rather than its own constants.
+ * The chips and the prompt were hardcoded in the app, so adding a category
+ * meant a release. Editing them here changes what every reporter sees on their
+ * next open — the app reads this config rather than its own constants.
  */
-export default function ReportProblemSettingsPage() {
+export default function FormFieldsCard() {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ reportProblemConfig: ReportProblemConfig }>(
     REPORT_PROBLEM_CONFIG,
@@ -52,37 +39,24 @@ export default function ReportProblemSettingsPage() {
     refetchQueries: [REPORT_PROBLEM_CONFIG],
   });
 
-  const [categories, setCategories] = useState<ReportProblemCategory[]>([]);
+  const [categories, setCategories] = useState<EditableCategory[]>([]);
   const [messageLabel, setMessageLabel] = useState('');
   const [messageHint, setMessageHint] = useState('');
   const [minLength, setMinLength] = useState(10);
   const [allowMedia, setAllowMedia] = useState(true);
   const [maxMedia, setMaxMedia] = useState(5);
-  const [newChip, setNewChip] = useState('');
   const [saved, setSaved] = useState(false);
 
   const config = data?.reportProblemConfig;
   useEffect(() => {
     if (!config) return;
-    setCategories(config.categories);
+    setCategories(toEditable(config.categories));
     setMessageLabel(config.message_label);
     setMessageHint(config.message_hint);
     setMinLength(config.message_min_length);
     setAllowMedia(config.allow_media);
     setMaxMedia(config.max_media);
   }, [config]);
-
-  const addChip = () => {
-    const label = newChip.trim();
-    if (!label) return;
-    setCategories((prev) => [
-      ...prev,
-      // No key: the server derives a stable one from the label. Renaming later
-      // keeps the key, so reports already filed under it are never orphaned.
-      { key: '', label, is_active: true, sort_order: prev.length },
-    ]);
-    setNewChip('');
-  };
 
   const submit = () => {
     save({
@@ -107,86 +81,24 @@ export default function ReportProblemSettingsPage() {
   };
 
   return (
-    <Stack spacing={2}>
-      <PageHeader
-        title={t('support.problemSettings.title')}
-        subtitle={t('support.problemSettings.subtitle')}
-      />
-
+    <>
       {error && <Alert severity="error">{error.message}</Alert>}
 
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="subtitle1" fontWeight={700}>
-              Categories
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              These are the chips a reporter picks from. Turning one off hides it from the app
-              without touching the reports already filed under it.
-            </Typography>
-
-            <Stack spacing={1}>
-              {categories.map((category, index) => (
-                <Stack
-                  key={category.key || `new-${index}`}
-                  direction="row"
-                  spacing={1.5}
-                  alignItems="center"
-                >
-                  <TextField
-                    size="small"
-                    value={category.label}
-                    onChange={(event) =>
-                      setCategories((prev) => renameCategory(prev, index, event.target.value))
-                    }
-                    sx={{ flex: 1 }}
-                  />
-                  {category.key && <Chip size="small" variant="outlined" label={category.key} />}
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={category.is_active}
-                        onChange={(event) =>
-                          setCategories((prev) => toggleCategory(prev, index, event.target.checked))
-                        }
-                      />
-                    }
-                    label={t('support.problemSettings.shown')}
-                  />
-                  <IconButton
-                    color="error"
-                    aria-label={`Remove ${category.label}`}
-                    onClick={() => setCategories((prev) => removeCategory(prev, index))}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Stack>
-              ))}
-            </Stack>
-
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <TextField
-                size="small"
-                label={t('support.problemSettings.newCategory')}
-                value={newChip}
-                onChange={(event) => setNewChip(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    addChip();
-                  }
-                }}
-              />
-              <Button startIcon={<AddIcon />} onClick={addChip} disabled={!newChip.trim()}>
-                Add
-              </Button>
-            </Stack>
+            <CategoryList
+              rows={categories}
+              onChange={setCategories}
+              onAdd={(label) =>
+                setCategories((prev) => [...prev, draftCategory(label, prev.length)])
+              }
+            />
 
             <Divider />
 
             <Typography variant="subtitle1" fontWeight={700}>
-              The prompt
+              {t('support.problemSettings.prompt')}
             </Typography>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
               <TextField
@@ -216,7 +128,7 @@ export default function ReportProblemSettingsPage() {
             <Divider />
 
             <Typography variant="subtitle1" fontWeight={700}>
-              Screenshots
+              {t('support.problemSettings.screenshots')}
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
               <FormControlLabel
@@ -247,7 +159,7 @@ export default function ReportProblemSettingsPage() {
               disabled={loading || saveState.loading || categories.length === 0}
               sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
             >
-              {saveState.loading ? 'Saving…' : 'Save changes'}
+              {saveState.loading ? t('shell.common.saving') : t('shell.common.save')}
             </Button>
           </Stack>
         </CardContent>
@@ -260,9 +172,9 @@ export default function ReportProblemSettingsPage() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert severity="success" variant="filled" onClose={() => setSaved(false)}>
-          Saved — the app picks this up on its next open.
+          {t('support.problemSettings.savedHint')}
         </Alert>
       </Snackbar>
-    </Stack>
+    </>
   );
 }

@@ -21,6 +21,12 @@ export const feedbackResolvers = {
       requireAuth(ctx);
       return feedbackService.config();
     },
+    // Support-only, unlike the config above: this one carries the workspace's
+    // channel list, which every reporter has no business reading.
+    reportProblemSlackSettings: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      return feedbackService.slackSettings();
+    },
   },
   Mutation: {
     setFeedbackReportStatus: (
@@ -34,6 +40,10 @@ export const feedbackResolvers = {
     updateReportProblemConfig: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, SUPPORT_ROLES);
       return feedbackService.updateConfig(args.input);
+    },
+    updateReportProblemSlack: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      return feedbackService.updateSlack(args.input);
     },
   },
 };

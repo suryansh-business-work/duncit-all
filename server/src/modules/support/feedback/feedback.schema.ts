@@ -89,6 +89,39 @@ export const feedbackTypeDefs = /* GraphQL */ `
     sort_order: Int
   }
 
+  """
+  Where a reported problem is announced on Slack.
+
+  Deliberately NOT part of ReportProblemConfig: that one is readable by every
+  signed-in user because the app renders its form from it, and the workspace's
+  channel list is not theirs to see.
+  """
+  type ReportProblemSlackSettings {
+    "False when no Slack bot token is configured — nothing can be announced then."
+    slack_configured: Boolean!
+    "Whether a new report is announced on Slack at all. Off still files the report."
+    enabled: Boolean!
+    "Channel the announcement is posted to. Empty falls back to the Tech portal's feedback / default channel."
+    channel_id: String!
+    """
+    The channel's name as it read when it was picked — display only, so this
+    page can still name a channel the bot has since lost sight of.
+    """
+    channel_name: String!
+    "Channels the bot can see, to pick from. Empty when Slack is unconfigured or unreachable."
+    channels: [SlackChannel!]!
+    "Why the channel list could not be read, when it could not. Empty otherwise."
+    error: String!
+  }
+
+  input UpdateReportProblemSlackInput {
+    enabled: Boolean
+    "Channel ID (e.g. C0123ABCD). Empty falls back to the configured feedback / default channel."
+    channel_id: String
+    "The channel's name as shown when it was picked."
+    channel_name: String
+  }
+
   input UpdateReportProblemConfigInput {
     categories: [ReportProblemCategoryInput!]
     message_label: String
@@ -104,6 +137,8 @@ export const feedbackTypeDefs = /* GraphQL */ `
     reportedProblem(id: ID!): FeedbackReport
     "The Report a Problem form config. Readable by any signed-in user — the app renders from it."
     reportProblemConfig: ReportProblemConfig!
+    "Support portal: where reports are announced on Slack, and the channels to choose from."
+    reportProblemSlackSettings: ReportProblemSlackSettings!
   }
 
   extend type Mutation {
@@ -111,5 +146,7 @@ export const feedbackTypeDefs = /* GraphQL */ `
     setFeedbackReportStatus(id: ID!, status: FeedbackStatus!): FeedbackReport!
     "Support portal: edit the chips and prompt the app renders."
     updateReportProblemConfig(input: UpdateReportProblemConfigInput!): ReportProblemConfig!
+    "Support portal: choose whether reports are announced on Slack, and where."
+    updateReportProblemSlack(input: UpdateReportProblemSlackInput!): ReportProblemSlackSettings!
   }
 `;

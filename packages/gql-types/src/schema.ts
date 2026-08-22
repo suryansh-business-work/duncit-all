@@ -4256,6 +4256,130 @@ export type DataCloneTargets = {
   targetDatabase: Scalars['String']['output'];
 };
 
+/**
+ * One backup run. The archive itself never appears here — it is downloaded
+ * through a short-lived signed link, never named by a URL this returns.
+ */
+export type DbBackup = {
+  __typename?: 'DbBackup';
+  collections: Array<DbBackupCollection>;
+  collectionsTotal: Scalars['Int']['output'];
+  currentCollection?: Maybe<Scalars['String']['output']>;
+  database: Scalars['String']['output'];
+  documentsTotal: Scalars['Int']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  fileName?: Maybe<Scalars['String']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  /** False once the archive is gone: pruned, deleted, or never written. */
+  hasFile: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Uncompressed size, so the compression ratio is readable. */
+  rawBytes: Scalars['Float']['output'];
+  /** Compressed size on disk. */
+  sizeBytes: Scalars['Float']['output'];
+  startedAt?: Maybe<Scalars['String']['output']>;
+  /** Email of the operator who ran it; null for a scheduled run. */
+  startedBy?: Maybe<Scalars['String']['output']>;
+  /** RUNNING | SUCCEEDED | FAILED */
+  status: Scalars['String']['output'];
+  /** SCHEDULED | MANUAL — only SCHEDULED archives are pruned by retention. */
+  trigger: Scalars['String']['output'];
+};
+
+/** What one collection contributed to an archive. */
+export type DbBackupCollection = {
+  __typename?: 'DbBackupCollection';
+  /** Uncompressed BSON size of that collection's documents. */
+  bytes: Scalars['Float']['output'];
+  documents: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** A download good for a few minutes, for exactly one archive. */
+export type DbBackupDownload = {
+  __typename?: 'DbBackupDownload';
+  expiresInSeconds: Scalars['Int']['output'];
+  fileName: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+/**
+ * The automatic backup schedule.
+ *
+ * timeOfDay is wall-clock time in the platform's configured timezone (Admin >
+ * Settings), not the server's UTC — an operator picking 03:00 means their own
+ * quiet hour.
+ */
+export type DbBackupSettings = {
+  __typename?: 'DbBackupSettings';
+  enabled: Scalars['Boolean']['output'];
+  /** DAILY | WEEKLY */
+  frequency: Scalars['String']['output'];
+  /** How many SCHEDULED archives to keep. Manual backups are never pruned. */
+  keepLast: Scalars['Int']['output'];
+  lastRunAt?: Maybe<Scalars['String']['output']>;
+  /** When the schedule next fires, or null when it is off. */
+  nextRunAt?: Maybe<Scalars['String']['output']>;
+  /** 24-hour HH:mm. */
+  timeOfDay: Scalars['String']['output'];
+  /** 0 = Sunday. Only meaningful when frequency is WEEKLY. */
+  weekday: Scalars['Int']['output'];
+};
+
+export type DbBackupSettingsInput = {
+  enabled: Scalars['Boolean']['input'];
+  frequency: Scalars['String']['input'];
+  keepLast: Scalars['Int']['input'];
+  timeOfDay: Scalars['String']['input'];
+  weekday: Scalars['Int']['input'];
+};
+
+export type DbBackupTablePage = {
+  __typename?: 'DbBackupTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<DbBackup>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * One restore run — the destructive direction. Every collection the archive
+ * carries is dropped and rewritten, so anything written since it was taken is
+ * gone.
+ */
+export type DbRestore = {
+  __typename?: 'DbRestore';
+  backupFile: Scalars['String']['output'];
+  backupId: Scalars['ID']['output'];
+  /** When the archive being restored was taken. */
+  backupTakenAt?: Maybe<Scalars['String']['output']>;
+  collections: Array<DbRestoreCollection>;
+  collectionsTotal: Scalars['Int']['output'];
+  currentCollection?: Maybe<Scalars['String']['output']>;
+  documentsRestored: Scalars['Int']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /**
+   * Collections a restore deliberately leaves alone: the backup rows, the
+   * schedule and the restore rows themselves. Restoring those would delete the
+   * row recording the restore while it is still being written to.
+   */
+  skipped: Array<Scalars['String']['output']>;
+  startedAt?: Maybe<Scalars['String']['output']>;
+  startedBy?: Maybe<Scalars['String']['output']>;
+  /** RUNNING | SUCCEEDED | FAILED */
+  status: Scalars['String']['output'];
+};
+
+/** What one collection got back during a restore. */
+export type DbRestoreCollection = {
+  __typename?: 'DbRestoreCollection';
+  documents: Scalars['Int']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+};
+
 export type DeleteMyAccountInput = {
   otp: Scalars['String']['input'];
 };
@@ -7809,6 +7933,11 @@ export type Mutation = {
   deleteCrmReminder: Scalars['Boolean']['output'];
   deleteCrmService: Scalars['Boolean']['output'];
   deleteCrmServiceOffered: Scalars['Boolean']['output'];
+  /**
+   * Delete one archive from disk. The row survives and loses its download — what
+   * was backed up and when is history, not a file pointer.
+   */
+  deleteDbBackup: DbBackup;
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products. */
   deleteEcommBrand: Scalars['Boolean']['output'];
   deleteEcommLead: Scalars['Boolean']['output'];
@@ -7870,6 +7999,7 @@ export type Mutation = {
   deleteSomethingForYouItem: Scalars['Boolean']['output'];
   /** Take back your own message. The row stays; the words go. */
   deleteStaffMessage: StaffMessage;
+  deleteStatusReports: Scalars['Int']['output'];
   deleteSurvey: Scalars['Boolean']['output'];
   deleteTranslation: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
@@ -8152,6 +8282,14 @@ export type Mutation = {
    * Returns the log with transcript_status flipped to PENDING.
    */
   requestCommunicationTranscript: CommunicationLog;
+  /**
+   * Mint a short-lived signed download link for one archive.
+   *
+   * A backup is the entire database in a file, so it is not served statically
+   * the way a build artifact is, and a browser download cannot carry the session
+   * header. The link names one backup and stops working within minutes.
+   */
+  requestDbBackupDownload: DbBackupDownload;
   requestEmailVerificationOtp: OtpRequestResult;
   requestMeeting: OnboardingMeeting;
   /** Auth-required: verify the current password and email a change-confirmation OTP. */
@@ -8191,6 +8329,13 @@ export type Mutation = {
   resolveTicket: Ticket;
   /** The invited user accepts or declines. */
   respondToCoHostInvite: Pod;
+  /**
+   * Restore the live database from one archive. DESTRUCTIVE: every collection
+   * the archive carries is dropped and rewritten, and anything written since it
+   * was taken is lost. Returns immediately; the walk continues server-side.
+   * SUPER_ADMIN only, and audited.
+   */
+  restoreDbBackup: DbRestore;
   restoreInventoryProduct: InventoryProduct;
   /** Re-attempt only the people this campaign did not reach. Returns immediately. */
   retryWaCampaign: WaCampaign;
@@ -8210,6 +8355,11 @@ export type Mutation = {
    * stops working the moment it returns — which is the entire point.
    */
   rotateTelemetryApiKey: TelemetrySettings;
+  /**
+   * Take a backup now and return the row immediately. The archive is written on
+   * the server, so closing the browser cannot interrupt it. SUPER_ADMIN only.
+   */
+  runDbBackup: DbBackup;
   saveBrandPickupLocation: BrandPickupLocation;
   /**
    * Store the caller's arrangement of one dashboard, replacing any previous
@@ -8222,6 +8372,8 @@ export type Mutation = {
    * saved. Returns both ends, so the caller never has to merge two shapes.
    */
   saveDataCloneConnection: DataCloneSettings;
+  /** Save the automatic schedule. SUPER_ADMIN only. */
+  saveDbBackupSettings: DbBackupSettings;
   /** Partner: create a new brand (omit brand_doc_id) or update an owned draft. */
   saveEcommBrand: EcommBrand;
   /** Register a native (Expo) push token for the signed-in device. */
@@ -8391,6 +8543,11 @@ export type Mutation = {
   /** Public — submit answers via a share token (no auth). */
   submitLeadSurveyByToken: Scalars['Boolean']['output'];
   submitProductListing: InventoryProduct;
+  /**
+   * PUBLIC and unauthenticated, on purpose: somebody locked out of every
+   * console is exactly who this form exists for.
+   */
+  submitStatusReport: StatusReportSubmitResult;
   /** Leave a 1-5 satisfaction rating + optional comment on a chat. */
   submitSupportChatFeedback: SupportChatSession;
   submitSurveyResponse: SurveyResponse;
@@ -8544,8 +8701,11 @@ export type Mutation = {
   updateReferralSettings: ReferralSettings;
   /** Support portal: edit the chips and prompt the app renders. */
   updateReportProblemConfig: ReportProblemConfig;
+  /** Support portal: choose whether reports are announced on Slack, and where. */
+  updateReportProblemSlack: ReportProblemSlackSettings;
   updateRole: Role;
   updateSomethingForYouItem: SomethingForYouItem;
+  updateStatusReport: StatusReport;
   updateSurvey: Survey;
   updateTelemetrySettings: TelemetrySettings;
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
@@ -9553,6 +9713,11 @@ export type MutationDeleteCrmServiceOfferedArgs = {
 };
 
 
+export type MutationDeleteDbBackupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   email: Scalars['String']['input'];
@@ -9783,6 +9948,11 @@ export type MutationDeleteSomethingForYouItemArgs = {
 
 export type MutationDeleteStaffMessageArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteStatusReportsArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -10418,6 +10588,11 @@ export type MutationRequestCommunicationTranscriptArgs = {
 };
 
 
+export type MutationRequestDbBackupDownloadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRequestMeetingArgs = {
   input: RequestMeetingInput;
   kind: SurveyKind;
@@ -10508,6 +10683,11 @@ export type MutationRespondToCoHostInviteArgs = {
 };
 
 
+export type MutationRestoreDbBackupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRestoreInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -10589,6 +10769,11 @@ export type MutationSaveDashboardLayoutArgs = {
 export type MutationSaveDataCloneConnectionArgs = {
   input: DataCloneConnectionInput;
   role: DataCloneRole;
+};
+
+
+export type MutationSaveDbBackupSettingsArgs = {
+  input: DbBackupSettingsInput;
 };
 
 
@@ -11079,6 +11264,11 @@ export type MutationSubmitLeadSurveyByTokenArgs = {
 
 export type MutationSubmitProductListingArgs = {
   input: ProductListingInput;
+};
+
+
+export type MutationSubmitStatusReportArgs = {
+  input: SubmitStatusReportInput;
 };
 
 
@@ -11658,6 +11848,11 @@ export type MutationUpdateReportProblemConfigArgs = {
 };
 
 
+export type MutationUpdateReportProblemSlackArgs = {
+  input: UpdateReportProblemSlackInput;
+};
+
+
 export type MutationUpdateRoleArgs = {
   input: UpdateRoleInput;
   role_id: Scalars['ID']['input'];
@@ -11667,6 +11862,13 @@ export type MutationUpdateRoleArgs = {
 export type MutationUpdateSomethingForYouItemArgs = {
   input: SomethingForYouInput;
   item_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateStatusReportArgs = {
+  note?: InputMaybe<Scalars['String']['input']>;
+  report_id: Scalars['ID']['input'];
+  status: StatusReportStatus;
 };
 
 
@@ -14808,6 +15010,12 @@ export type Query = {
   dataCloneSettings: DataCloneSettings;
   /** Source/target databases and the exclusion list, without starting anything. */
   dataCloneTargets: DataCloneTargets;
+  /** The automatic backup schedule, created with defaults on first read. */
+  dbBackupSettings: DbBackupSettings;
+  /** Every backup run, paged for the table. */
+  dbBackupsTable: DbBackupTablePage;
+  /** One restore by id, or the most recent one. Polled for progress. */
+  dbRestoreJob?: Maybe<DbRestore>;
   /**
    * Just the global default host commission % (Finance → Default Deductions).
    * Split out of financeSettings because the Onboarding console's Review Host
@@ -15363,6 +15571,8 @@ export type Query = {
   renderMarketingCampaign: MarketingCampaignRender;
   /** The Report a Problem form config. Readable by any signed-in user — the app renders from it. */
   reportProblemConfig: ReportProblemConfig;
+  /** Support portal: where reports are announced on Slack, and the channels to choose from. */
+  reportProblemSlackSettings: ReportProblemSlackSettings;
   reportedProblem?: Maybe<FeedbackReport>;
   /** Support portal: every reported problem, newest first. */
   reportedProblemsTable: FeedbackReportTablePage;
@@ -15447,6 +15657,8 @@ export type Query = {
   staffThreads: Array<StaffThread>;
   /** Everything anyone has sent you and you have not opened. */
   staffUnreadCount: Scalars['Int']['output'];
+  /** Tech portal only. Every report, through the shared table engine. */
+  statusReportsTable: StatusReportTablePage;
   /** Active (non-expired) stories, newest first. Optionally scoped to one author. */
   stories: Array<Post>;
   /** Owner-only list of who viewed a story, newest first (Bug 4). */
@@ -16184,6 +16396,16 @@ export type QueryDashboardTotalsArgs = {
 
 
 export type QueryDataCloneJobArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryDbBackupsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryDbRestoreJobArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -17446,6 +17668,11 @@ export type QueryStaffMessagesArgs = {
 };
 
 
+export type QueryStatusReportsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryStoriesArgs = {
   author_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -18058,6 +18285,32 @@ export type ReportProblemConfig = {
   message_hint: Scalars['String']['output'];
   message_label: Scalars['String']['output'];
   message_min_length: Scalars['Int']['output'];
+};
+
+/**
+ * Where a reported problem is announced on Slack.
+ *
+ * Deliberately NOT part of ReportProblemConfig: that one is readable by every
+ * signed-in user because the app renders its form from it, and the workspace's
+ * channel list is not theirs to see.
+ */
+export type ReportProblemSlackSettings = {
+  __typename?: 'ReportProblemSlackSettings';
+  /** Channel the announcement is posted to. Empty falls back to the Tech portal's feedback / default channel. */
+  channel_id: Scalars['String']['output'];
+  /**
+   * The channel's name as it read when it was picked — display only, so this
+   * page can still name a channel the bot has since lost sight of.
+   */
+  channel_name: Scalars['String']['output'];
+  /** Channels the bot can see, to pick from. Empty when Slack is unconfigured or unreachable. */
+  channels: Array<SlackChannel>;
+  /** Whether a new report is announced on Slack at all. Off still files the report. */
+  enabled: Scalars['Boolean']['output'];
+  /** Why the channel list could not be read, when it could not. Empty otherwise. */
+  error: Scalars['String']['output'];
+  /** False when no Slack bot token is configured — nothing can be announced then. */
+  slack_configured: Scalars['Boolean']['output'];
 };
 
 /** Why the reporter says it should not be there. */
@@ -19029,6 +19282,71 @@ export type StatusCount = {
   status: Scalars['String']['output'];
 };
 
+/**
+ * One problem report typed into the public status page.
+ *
+ * The probes answer "is the host returning an HTTP status"; this is everything
+ * they cannot see — a login that loops, a blank page, a payment that hangs.
+ */
+export type StatusReport = {
+  __typename?: 'StatusReport';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  impact: StatusReportImpact;
+  /**
+   * Read off the request by the server, never from the submitted body — the
+   * form is public, so a body could claim to be anyone.
+   */
+  ip?: Maybe<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** Triage note written from the Tech portal. */
+  note: Scalars['String']['output'];
+  page_url: Scalars['String']['output'];
+  /** Catalogue slug of the affected service, or empty when the reporter was not sure. */
+  service_key: Scalars['String']['output'];
+  /** The catalogue's display name as it read when the report was filed. */
+  service_name: Scalars['String']['output'];
+  status: StatusReportStatus;
+  updated_at: Scalars['String']['output'];
+  user_agent?: Maybe<Scalars['String']['output']>;
+  /** Set only when the reporter happened to be signed in on that browser. */
+  user_id?: Maybe<Scalars['String']['output']>;
+};
+
+/** What the reporter is actually seeing, so a row can be triaged unread. */
+export type StatusReportImpact =
+  | 'CANNOT_ACCESS'
+  | 'ERRORS'
+  | 'LOGIN'
+  | 'OTHER'
+  | 'PAYMENT'
+  | 'SLOW';
+
+/** How a report was triaged. NEW until somebody in Tech picks it up. */
+export type StatusReportStatus =
+  | 'CLOSED'
+  | 'IN_PROGRESS'
+  | 'NEW'
+  | 'RESOLVED';
+
+export type StatusReportSubmitResult = {
+  __typename?: 'StatusReportSubmitResult';
+  id?: Maybe<Scalars['ID']['output']>;
+  ok: Scalars['Boolean']['output'];
+};
+
+/** Server-side table page for the shared table engine (statusReportsTable). */
+export type StatusReportTablePage = {
+  __typename?: 'StatusReportTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StatusReport>;
+  total: Scalars['Int']['output'];
+};
+
 export type StockMovementInput = {
   quantity: Scalars['Int']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -19124,6 +19442,16 @@ export type SubmitJobApplicationInput = {
   resume_url?: InputMaybe<Scalars['String']['input']>;
   role_content_id?: InputMaybe<Scalars['ID']['input']>;
   role_title: Scalars['String']['input'];
+};
+
+export type SubmitStatusReportInput = {
+  email: Scalars['String']['input'];
+  impact?: InputMaybe<StatusReportImpact>;
+  message: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  page_url?: InputMaybe<Scalars['String']['input']>;
+  /** Catalogue slug from /status/services. Omit or leave empty when unsure. */
+  service_key?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SubscribeNewsletterInput = {
@@ -20465,6 +20793,14 @@ export type UpdateReportProblemConfigInput = {
   message_hint?: InputMaybe<Scalars['String']['input']>;
   message_label?: InputMaybe<Scalars['String']['input']>;
   message_min_length?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpdateReportProblemSlackInput = {
+  /** Channel ID (e.g. C0123ABCD). Empty falls back to the configured feedback / default channel. */
+  channel_id?: InputMaybe<Scalars['String']['input']>;
+  /** The channel's name as shown when it was picked. */
+  channel_name?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateRoleInput = {

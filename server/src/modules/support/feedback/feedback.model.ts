@@ -137,6 +137,22 @@ export interface IReportProblemConfig extends Document {
   /** Screenshots allowed, and how many. */
   allow_media: boolean;
   max_media: number;
+  /**
+   * Whether a new report is announced on Slack at all. Off still files the
+   * report — Slack is the notification, this row is the store of record.
+   */
+  slack_enabled: boolean;
+  /**
+   * The channel a report is announced in. Empty falls back to the Tech portal's
+   * SLACK_FEEDBACK_CHANNEL / SLACK_DEFAULT_CHANNEL, which is where an install
+   * that never picked one keeps landing.
+   */
+  slack_channel_id: string;
+  /**
+   * The channel's name as it read when it was picked — display only, so the
+   * settings page can still name a channel the bot has since lost sight of.
+   */
+  slack_channel_name: string;
   updated_at: Date;
 }
 
@@ -162,6 +178,9 @@ const reportProblemConfigSchema = new Schema<IReportProblemConfig>(
     message_min_length: { type: Number, default: 10 },
     allow_media: { type: Boolean, default: true },
     max_media: { type: Number, default: 5 },
+    slack_enabled: { type: Boolean, default: true },
+    slack_channel_id: { type: String, default: '', trim: true },
+    slack_channel_name: { type: String, default: '', trim: true },
   },
   { timestamps: { createdAt: false, updatedAt: 'updated_at' } }
 );

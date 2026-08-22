@@ -41,6 +41,25 @@ export interface ReportProblemConfig {
   max_media: number;
 }
 
+/** One channel the Slack bot can see, as offered in the routing picker. */
+export interface SlackChannelOption {
+  id: string;
+  name: string;
+  is_private: boolean;
+  is_member: boolean;
+}
+
+/** Where a reported problem is announced. Support-only — it carries the
+ * workspace's channel list, which the app's own config query must not. */
+export interface ReportProblemSlackSettings {
+  slack_configured: boolean;
+  enabled: boolean;
+  channel_id: string;
+  channel_name: string;
+  channels: SlackChannelOption[];
+  error: string;
+}
+
 const REPORT_FIELDS = `
   id
   user_id
@@ -127,6 +146,36 @@ export const UPDATE_REPORT_PROBLEM_CONFIG = gql`
       message_min_length
       allow_media
       max_media
+    }
+  }
+`;
+
+const SLACK_FIELDS = `
+  slack_configured
+  enabled
+  channel_id
+  channel_name
+  error
+  channels {
+    id
+    name
+    is_private
+    is_member
+  }
+`;
+
+export const REPORT_PROBLEM_SLACK = gql`
+  query ReportProblemSlackSettings {
+    reportProblemSlackSettings {
+      ${SLACK_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_REPORT_PROBLEM_SLACK = gql`
+  mutation UpdateReportProblemSlack($input: UpdateReportProblemSlackInput!) {
+    updateReportProblemSlack(input: $input) {
+      ${SLACK_FIELDS}
     }
   }
 `;

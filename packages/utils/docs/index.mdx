@@ -718,46 +718,67 @@ every resize and orientation change without a listener.
 browser surfaces use it: a campaign aimed at Android has to reach an Android phone whether
 the person opened mWeb or the native web build (rule 27).
 
-## The @handle and where codes are allowed to land
+## The @handle, and where a member may be messaged
 
-Two Profile Settings sections that mWeb and the native app render identically (rule 27), so
-their LOGIC lives here and only the MUI card and the Tamagui card differ (rule 40).
+Two things mWeb and the native app render identically (rule 27), so their LOGIC lives here
+and only the MUI card and the Tamagui card differ (rule 40).
 
-`usernameStatus` is the whole of what the username field says, decided in one place:
+### The @handle is assigned, never typed
+
+A handle is minted ONCE by the server from the member’s name (`generateUsername` in
+`server/src/modules/access/user/username.ts`, backfilled on `me` for accounts that predate
+handles). There is no field for it, no availability check and no save — a handle is the
+account’s address, it is already baked into every share link in circulation, and a settings
+screen inviting somebody to change it invites them to break their own links.
+
+What is left on the client is therefore the LINK, not the handle:
 
 ```ts
-usernameStatus({ value: '', current: 'ravi-9x3m', checking: false, available: null, reason: null });
-// 'IDLE'
-usernameStatus({ value: 'ravi-9x3m', current: 'ravi-9x3m', checking: false, available: null, reason: null });
-// 'CURRENT' — your OWN handle is never reported as taken
-usernameStatus({ value: 'Ravi Nair', current: null, checking: false, available: null, reason: null });
-// 'INVALID' — decidable here, so a malformed handle never costs a round trip
-usernameStatus({ value: 'ravi-nair', current: null, checking: false, available: false, reason: 'TAKEN' });
-// 'TAKEN'
+profileUrl('https://mweb.duncit.com', 'ravi-9x3m'); // 'https://mweb.duncit.com/u/ravi-9x3m'
+
+const labels = buildUsernameLabels(t);
+labels.handle('ravi-9x3m'); // '@ravi-9x3m'
+labels.copyLink;            // the button beside it
 ```
 
-`canSaveUsername` gates the Save button, `isUsernameError` drives the error styling, and
-`profileUrl(origin, handle)` builds the `/u/<handle>` link the section exists to hand over.
-`USERNAME_PATTERN` RESTATES `@duncit/regex`'s `USERNAME` rather than importing it — this
-package is zero-dependency, and the native app resolves it through a Metro workaround that
-breaks on any sibling `@duncit/*` import. The server mirrors both a third time in
-`server/src/modules/access/user/username.ts`, and the server is the only one of the three
-that decides anything.
+Both surfaces render that pair on the PROFILE, under the name and next to Share — not in
+Profile Settings, which is where you change things.
 
-`commRowState` answers what ONE communication channel's one-time-code switch may do:
+### Communication preferences
+
+One row in Profile Settings opens a hub listing Email / WhatsApp / SMS; each of those opens
+the screen that owns every switch for that channel, including its Authentication messages
+switch. Nothing is settable from two places, so `commChannelSummary` (the hub’s one line per
+channel) only ever reads.
+
+```ts
+const labels = buildCommPreferenceLabels(t);
+
+commChannelSummary({ channel: 'EMAIL', reachable: true, destination: 'ravi@duncit.com', otp_enabled: true, otp_can_disable: true }, labels);
+// 'ravi@duncit.com · Authentication messages on'
+commChannelSummary({ channel: 'SMS', reachable: false, destination: '', otp_enabled: false, otp_can_disable: true }, labels);
+// 'Add a phone number to get messages here.' — "off" and "no number" are different answers
+```
+
+`commRowState` answers what ONE channel’s switch may do, and `authMessageCardState` turns
+that into the whole card the channel screen renders — title, body, the status line under it,
+and whether a switch is offered at all:
 
 ```ts
 commRowState({ channel: 'SMS', reachable: false, destination: '', otp_enabled: true, otp_can_disable: false });
 // { canToggle: false, locked: false, unreachable: true } — nothing to send to, so no switch
 
-commRowState({ channel: 'EMAIL', reachable: true, destination: 'ravi@example.com', otp_enabled: true, otp_can_disable: false });
+commRowState({ channel: 'EMAIL', reachable: true, destination: 'ravi@duncit.com', otp_enabled: true, otp_can_disable: false });
 // { canToggle: false, locked: true, unreachable: false } — on, and the last channel that can reach them
 ```
 
 `locked` is the case worth naming: a disabled switch with no sentence beside it reads as a
-bug, so both surfaces render `labels.otpLocked` whenever it is true. The server decides
-`otp_can_disable`, because it is the only side that can see all three channels at once — an
-account with nowhere to receive a code cannot sign in.
+bug, so `authMessageCardState` puts `labels.authLocked` in `note` whenever it is true. The
+server decides `otp_can_disable`, because it is the only side that can see all three channels
+at once — an account with nowhere to receive a code cannot sign in.
+
+`findCommChannel(channels, channel)` is the one lookup both apps use, so a screen that wants
+one channel out of the sheet never writes its own `.find`.
 
 ## Adding a helper
 

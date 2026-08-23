@@ -11,6 +11,7 @@ import {
   Stack,
 } from '@mui/material';
 import { CANCEL_MY_MEETING } from './queries';
+import { useEarnSurface } from './EarnSurfaceProvider';
 import { MeetingReasonForm } from './meeting-reason';
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
 
 /** Cancel dialog — mandatory reason (no native confirm), frees the slot. */
 export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Readonly<Props>) {
+  const { meetingLabels: labels } = useEarnSurface();
   const [error, setError] = useState<string | null>(null);
   const [cancelMut, { loading: cancelling }] = useMutation(CANCEL_MY_MEETING);
 
@@ -31,29 +33,30 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
       await cancelMut({ variables: { kind, reason } });
       onDone();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not cancel — please try again.');
+      setError(e instanceof Error ? e.message : labels.cancelFailed);
     }
   };
 
   return (
     <Dialog open={open} onClose={() => !cancelling && onClose()} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>Cancel this meeting?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{labels.cancelTitle}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
-          <DialogContentText>
-            Your onboarding meeting will be cancelled and the slot freed. You can book a new one anytime.
-          </DialogContentText>
+          <DialogContentText>{labels.cancelBody}</DialogContentText>
           <MeetingReasonForm
             formId="cancel-reason-form"
-            label="Reason for cancelling"
-            helperText="Tell our onboarding team why you’re cancelling."
+            label={labels.cancelReasonLabel}
+            helperText={labels.cancelReasonHint}
+            labels={labels}
             onSubmit={submit}
           />
           {error && <Alert severity="warning">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={cancelling}>Keep meeting</Button>
+        <Button onClick={onClose} disabled={cancelling}>
+          {labels.keepMeeting}
+        </Button>
         <Button
           type="submit"
           form="cancel-reason-form"
@@ -62,7 +65,7 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
           disabled={cancelling}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {cancelling ? 'Cancelling…' : 'Cancel meeting'}
+          {cancelling ? labels.cancelling : labels.cancelCta}
         </Button>
       </DialogActions>
     </Dialog>

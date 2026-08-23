@@ -79,7 +79,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 700 }}>Edit &amp; resubmit pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{labels.resubmitTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack
           component="form"
@@ -88,12 +88,9 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
           spacing={2}
           sx={{ pt: 0.5 }}
         >
-          <Alert severity="info">
-            Select a different venue or choose a different time slot — your booking request is sent
-            to the venue again when you resubmit. Your pod is kept, no new pod is created.
-          </Alert>
+          <Alert severity="info">{labels.resubmitHint}</Alert>
           <TextField
-            label="Title"
+            label={labels.fieldTitle}
             required
             fullWidth
             {...register('pod_title')}
@@ -101,7 +98,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
             helperText={errors.pod_title?.message}
           />
           <TextField
-            label="Description"
+            label={labels.fieldDescription}
             required
             fullWidth
             multiline
@@ -147,7 +144,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
                 value: field.value,
                 onChange: field.onChange,
                 error: fieldState.error?.message,
-                label: 'Media',
+                label: labels.fieldMedia,
               })
             }
           />
@@ -157,7 +154,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          {labels.cancel}
         </Button>
         <Button
           type="submit"
@@ -166,7 +163,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
           disabled={busy}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {busy ? 'Resubmitting…' : 'Resubmit request'}
+          {busy ? labels.resubmitting : labels.resubmitCta}
         </Button>
       </DialogActions>
     </Dialog>

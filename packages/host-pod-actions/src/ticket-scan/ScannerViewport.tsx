@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { useQrScanner } from './useQrScanner';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 /** The live camera frame, plus the paste-the-code fallback for a device that has
  * no camera or has refused it (a desktop browser, or a denied permission). */
 export default function ScannerViewport({ active, onCode, onManualCode }: Readonly<Props>) {
+  const { labels } = useHostPodActionsConfig();
   const { videoRef, canvasRef, error } = useQrScanner(active, onCode);
   const [manual, setManual] = useState('');
 
@@ -51,7 +53,7 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
         <Alert severity="warning">{error}</Alert>
       ) : (
         <Typography variant="caption" color="text.secondary" textAlign="center">
-          Hold the attendee&apos;s ticket QR inside the frame.
+          {labels.scanFrameHint}
         </Typography>
       )}
 
@@ -59,7 +61,7 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
         <TextField
           size="small"
           fullWidth
-          label="Or paste the ticket code"
+          label={labels.pasteTicketCode}
           value={manual}
           onChange={(e) => setManual(e.target.value)}
         />
@@ -69,7 +71,7 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
           onClick={() => onManualCode(manual.trim())}
           sx={{ borderRadius: 999, fontWeight: 700, flex: '0 0 auto' }}
         >
-          Check
+          {labels.checkCode}
         </Button>
       </Stack>
     </Stack>

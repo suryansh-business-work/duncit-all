@@ -1,4 +1,8 @@
-import { blankMeetingReasonValues, meetingReasonSchema } from '@duncit/earn';
+import {
+  blankMeetingReasonValues,
+  buildEarnMeetingLabels,
+  buildMeetingReasonSchema,
+} from '@duncit/earn';
 import { defineDemo, defineDemos } from '../types';
 
 interface ReasonMock {
@@ -13,7 +17,11 @@ export default defineDemos('earn', [
       'Empty it and the form refuses. The reason is not paperwork: it is what the onboarding team reads before deciding whether to offer another slot.',
     mock: { reason: 'Something came up at the venue — can we move this to next week?' },
     compute: (mock) => {
-      const parsed = meetingReasonSchema.safeParse(mock);
+      // The messages come from the catalogue, so the schema takes the same
+      // labels the dialog renders — the key itself stands in for a translator.
+      const parsed = buildMeetingReasonSchema(
+        buildEarnMeetingLabels((key) => key, 'mweb'),
+      ).safeParse(mock);
       return {
         Valid: parsed.success,
         Errors: parsed.success

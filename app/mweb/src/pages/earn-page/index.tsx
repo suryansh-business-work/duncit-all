@@ -4,7 +4,12 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { partnerPortalUrl } from '@duncit/onboarding';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
-import { EarnJourneyList, EarnSurfaceProvider, type EarnSurfaceConfig } from '@duncit/earn';
+import {
+  EarnJourneyList,
+  EarnSurfaceProvider,
+  mwebEarnMeetingLabels,
+  type EarnSurfaceConfig,
+} from '@duncit/earn';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -30,6 +35,7 @@ export default function EarnPage() {
       },
       meetingSlotLabels: (rescheduling) => mwebMeetingLabels(t, rescheduling),
       currentSlotBadge: mwebCurrentLabel(t),
+      meetingLabels: mwebEarnMeetingLabels(t),
     }),
     [navigate, t],
   );
@@ -41,15 +47,15 @@ export default function EarnPage() {
     >
       <Box>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
-          Back
+          {t('mweb.common.back')}
         </Button>
       </Box>
       <Stack spacing={0.5}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          Earn with Duncit
+          {t('mweb.earn.earnWithDuncit')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-          Pick a way to start earning on Duncit.
+          {t('mweb.earn.subtitle')}
         </Typography>
       </Stack>
       <EarnSurfaceProvider config={config}>

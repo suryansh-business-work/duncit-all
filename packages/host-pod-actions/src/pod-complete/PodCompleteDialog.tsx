@@ -20,6 +20,7 @@ import TicketScanDialog from '../ticket-scan/TicketScanDialog';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { COMPLETE_POD } from '../queries';
 import { hasMediaLine, mediaTextToInput } from '../media-text';
+import type { HostPodActionLabels } from '../labels';
 import type { HostPodForComplete } from '../types';
 
 export interface PodCompleteValues {
@@ -33,11 +34,11 @@ export const blankPodCompleteValues: PodCompleteValues = {
 };
 
 /** Schema depends on whether the pod has a venue: only then is a bill amount required. */
-export const buildPodCompleteSchema = (hasVenue: boolean) =>
+export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionLabels) =>
   z
     .object({
       venue_bill_amount: z.string().trim(),
-      media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video'),
+      media_text: z.string().refine(hasMediaLine, labels.partyMediaRequired),
     })
     .superRefine((values, ctx) => {
       if (!hasVenue) return;
@@ -46,7 +47,7 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['venue_bill_amount'],
-          message: 'Enter the venue bill amount',
+          message: labels.venueBillRequired,
         });
       }
     });
@@ -69,7 +70,7 @@ interface Props {
 /** Host completes a pod: enter the venue bill amount + upload party media. The
  * split is previewed live; on submit the payout releases are created for Finance. */
 export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
-  const { renderMediaField } = useHostPodActionsConfig();
+  const { labels, renderMediaField } = useHostPodActionsConfig();
   const hasVenue = !!pod?.venue_id;
   const {
     register,
@@ -79,7 +80,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
     watch,
     formState: { errors },
   } = useForm<PodCompleteValues>({
-    resolver: zodResolver(buildPodCompleteSchema(hasVenue)),
+    resolver: zodResolver(buildPodCompleteSchema(hasVenue, labels)),
     defaultValues: blankPodCompleteValues,
   });
   const [complete, completeState] = useMutation(COMPLETE_POD);
@@ -102,7 +103,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 700 }}>Complete pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{labels.completePod}</DialogTitle>
       <DialogContent dividers>
         <Stack
           component="form"
@@ -112,12 +113,11 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           sx={{ pt: 0.5 }}
         >
           <Typography variant="body2" color="text.secondary">
-            Upload your party photos/videos (with the Duncit banner). Your payout is credited to
-            your wallet as soon as the pod is completed.
+            {labels.completeHint}
           </Typography>
           {hasVenue && (
             <TextField
-              label="Venue Bill Amount"
+              label={labels.venueBillAmount}
               required
               type="number"
               fullWidth
@@ -135,7 +135,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
                 value: field.value,
                 onChange: field.onChange,
                 error: fieldState.error?.message,
-                label: 'Pod Media',
+                label: labels.podMedia,
                 folder: '/pod-completion',
               })
             }
@@ -153,7 +153,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={completeState.loading}>
-          Cancel
+          {labels.cancel}
         </Button>
         <Button
           type="submit"
@@ -162,7 +162,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           disabled={completeState.loading}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {completeState.loading ? 'Completing…' : 'Complete pod'}
+          {completeState.loading ? labels.completing : labels.completePod}
         </Button>
       </DialogActions>
       {/* Attendance is only ever created by scanning a ticket — the same

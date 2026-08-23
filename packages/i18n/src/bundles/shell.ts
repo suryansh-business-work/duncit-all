@@ -1000,6 +1000,108 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
     // Word-for-word identical to `mweb.hostPodEdit` above — one console and one
     // app render the same dialog, and rule 27 forbids the two drifting.
+    /**
+     * The host's pod dialogs — @duncit/host-pod-actions. The menu on a pod row
+     * and the four dialogs it opens (scan, complete, edit, cancel), plus the
+     * edit-and-resubmit flow for a venue-declined pod.
+     */
+    hostPodActions: {
+      menuTooltip: 'Pod actions',
+      menuAria: 'Actions for {title}',
+      scanTickets: 'Scan attendee event tickets',
+      completePod: 'Complete pod',
+      editPod: 'Edit pod',
+      cancelPod: 'Cancel pod',
+      close: 'Close',
+      cancel: 'Cancel',
+      saving: 'Saving…',
+      saveChanges: 'Save changes',
+      fieldTitle: 'Title',
+      fieldDescription: 'Description',
+      fieldMedia: 'Media',
+      titleTooShort: 'Title is too short',
+      titleTooLong: 'Title is too long',
+      descriptionTooShort: 'Add a longer description',
+      imageRequired: 'Add at least one image URL',
+      resubmitTitle: 'Edit & resubmit pod',
+      resubmitHint:
+        'Select a different venue or choose a different time slot — your booking request is sent to the venue again when you resubmit. Your pod is kept, no new pod is created.',
+      resubmitting: 'Resubmitting…',
+      resubmitCta: 'Resubmit request',
+      venue: 'Venue',
+      venueHint: 'Pick the venue to request',
+      completeHint:
+        'Upload your party photos/videos (with the Duncit banner). Your payout is credited to your wallet as soon as the pod is completed.',
+      venueBillAmount: 'Venue Bill Amount',
+      venueBillRequired: 'Enter the venue bill amount',
+      podMedia: 'Pod Media',
+      completing: 'Completing…',
+      partyMediaRequired: 'Add at least one party photo or video',
+      cancelIntro: 'You are cancelling {title}. This cannot be undone.',
+      cancelNoOthers: 'No one else has joined this pod — it will be cancelled immediately.',
+      // Count-driven copy: the translator picks .one or .other from `count`.
+      cancelOthers: {
+        one: '{count} other attendee joined this pod.',
+        other: '{count} other attendees joined this pod.',
+      },
+      cancelRefund: {
+        one: 'Cancelling initiates a refund of {amount} across {count} payment (logged in the Finance portal). All attendees will be emailed.',
+        other: 'Cancelling initiates a refund of {amount} across {count} payments (logged in the Finance portal). All attendees will be emailed.',
+      },
+      cancelEmailOnly: 'All attendees will be emailed about the cancellation.',
+      reason: 'Reason',
+      reasonRequired: 'Select a reason',
+      // The reason dropdown. The VALUE stored on the pod stays the English
+      // the server's own list uses; only the wording shown is translated.
+      cancelReasons: {
+        eventCancelled: 'Event cancelled',
+        venueUnavailable: 'Venue unavailable',
+        lowAttendance: 'Low attendance',
+        rescheduling: 'Rescheduling',
+        other: 'Other',
+      },
+      note: 'Note',
+      noteHint: 'Shared with attendees in the cancellation email.',
+      noteTooLong: 'Keep the note under 500 characters',
+      noteRequired: 'Please describe the reason',
+      keepPod: 'Keep pod',
+      cancelling: 'Cancelling…',
+      initiateRefunds: 'Initiate refunds & cancel',
+      pasteTicketCode: 'Or paste the ticket code',
+      scanFrameHint: 'Hold the attendee’s ticket QR inside the frame.',
+      checkCode: 'Check',
+    },
+    /**
+     * The onboarding-meeting dialogs in @duncit/earn — reschedule and cancel,
+     * rendered on mWeb's /earn page and in the Partners console.
+     */
+    earnMeeting: {
+      cancelTitle: 'Cancel this meeting?',
+      cancelBody:
+        'Your onboarding meeting will be cancelled and the slot freed. You can book a new one anytime.',
+      cancelReasonLabel: 'Reason for cancelling',
+      cancelReasonHint: 'Tell our onboarding team why you’re cancelling.',
+      keepMeeting: 'Keep meeting',
+      cancelling: 'Cancelling…',
+      cancelCta: 'Cancel meeting',
+      cancelFailed: 'Could not cancel — please try again.',
+      rescheduleTitle: 'Reschedule your onboarding meeting',
+      currentlyBooked: 'Currently booked for {when}. You can reschedule once.',
+      noSlots: 'No slots are open right now — please check back soon.',
+      movingFromTo: 'Moving from {from} to {to}.',
+      rescheduleReasonLabel: 'Reason for rescheduling',
+      rescheduleReasonHint: 'Tell our onboarding team why you’re moving the meeting.',
+      close: 'Close',
+      moving: 'Moving…',
+      moveCta: 'Move to this slot',
+      pickSlot: 'Please pick an available slot.',
+      rescheduleFailed: 'Could not reschedule — please try again.',
+      reasonRequired: 'Please tell us a reason.',
+      reasonTooLong: 'Keep the reason under 500 characters.',
+      // Word-for-word the shared chip's label; this namespace carries its own
+      // row because @duncit/earn takes no dependency on @duncit/ai-monitoring.
+      aiMonitoring: 'AI Monitoring',
+    },
     hostPodEdit: {
       contentCheck: 'Content check',
     },

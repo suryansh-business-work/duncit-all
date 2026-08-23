@@ -7,6 +7,7 @@ import { shellCurrentLabel, shellMeetingLabels } from '@duncit/slots';
 import {
   EarnJourneyList,
   EarnSurfaceProvider,
+  shellEarnMeetingLabels,
   useEarnProductsVisible,
   type EarnSurfaceConfig,
 } from '@duncit/earn';
@@ -38,6 +39,7 @@ export default function EarnPage() {
       },
       meetingSlotLabels: (rescheduling) => shellMeetingLabels(t, rescheduling),
       currentSlotBadge: shellCurrentLabel(t),
+      meetingLabels: shellEarnMeetingLabels(t),
     }),
     [navigate, t],
   );

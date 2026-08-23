@@ -7,6 +7,7 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from '../i18n';
 
 export type StatusFilterValue = 'all' | 'operational' | 'issues';
 
@@ -23,6 +24,7 @@ interface FiltersProps {
 }
 
 export default function StatusFilters({ value, groupTitles, onChange }: Readonly<FiltersProps>) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -32,7 +34,7 @@ export default function StatusFilters({ value, groupTitles, onChange }: Readonly
     >
       <TextField
         size="small"
-        placeholder="Search services…"
+        placeholder={t('status.board.search')}
         value={value.query}
         onChange={(event) => onChange({ ...value, query: event.target.value })}
         sx={{ flex: 1 }}
@@ -43,17 +45,17 @@ export default function StatusFilters({ value, groupTitles, onChange }: Readonly
             </InputAdornment>
           ),
         }}
-        inputProps={{ 'aria-label': 'Search services' }}
+        inputProps={{ 'aria-label': t('status.board.searchAria') }}
       />
       <TextField
         size="small"
         select
-        label="Group"
+        label={t('status.board.group')}
         value={value.group}
         onChange={(event) => onChange({ ...value, group: event.target.value })}
         sx={{ minWidth: 140 }}
       >
-        <MenuItem value="all">All groups</MenuItem>
+        <MenuItem value="all">{t('status.board.allGroups')}</MenuItem>
         {groupTitles.map((title) => (
           <MenuItem key={title} value={title}>
             {title}
@@ -67,11 +69,11 @@ export default function StatusFilters({ value, groupTitles, onChange }: Readonly
         onChange={(_event, next: StatusFilterValue | null) => {
           if (next !== null) onChange({ ...value, status: next });
         }}
-        aria-label="Filter by status"
+        aria-label={t('status.board.filterByStatus')}
       >
-        <ToggleButton value="all">All</ToggleButton>
-        <ToggleButton value="operational">Operational</ToggleButton>
-        <ToggleButton value="issues">Issues</ToggleButton>
+        <ToggleButton value="all">{t('status.board.allStatuses')}</ToggleButton>
+        <ToggleButton value="operational">{t('status.board.operational')}</ToggleButton>
+        <ToggleButton value="issues">{t('status.board.issues')}</ToggleButton>
       </ToggleButtonGroup>
     </Stack>
   );

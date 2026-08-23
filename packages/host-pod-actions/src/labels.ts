@@ -15,7 +15,7 @@
 
 export type HostPodTranslate = (
   key: string,
-  options?: { vars?: Record<string, string | number> },
+  options?: { count?: number; vars?: Record<string, string | number> },
 ) => string;
 
 export interface HostPodActionLabels {
@@ -66,7 +66,80 @@ export interface HostPodActionLabels {
   confirmDone: string;
   /** Heads the list of guideline rules an edit broke. */
   contentCheck: string;
+  /** The pod-row menu and the dialogs it opens. */
+  menuTooltip: string;
+  scanTickets: string;
+  completePod: string;
+  editPod: string;
+  cancelPod: string;
+  close: string;
+  cancel: string;
+  saving: string;
+  saveChanges: string;
+  fieldTitle: string;
+  fieldDescription: string;
+  fieldMedia: string;
+  titleTooShort: string;
+  titleTooLong: string;
+  descriptionTooShort: string;
+  imageRequired: string;
+  resubmitTitle: string;
+  resubmitHint: string;
+  resubmitting: string;
+  resubmitCta: string;
+  venue: string;
+  venueHint: string;
+  completeHint: string;
+  venueBillAmount: string;
+  venueBillRequired: string;
+  podMedia: string;
+  completing: string;
+  partyMediaRequired: string;
+  cancelNoOthers: string;
+  cancelEmailOnly: string;
+  reason: string;
+  reasonRequired: string;
+  /** Display wording for one stored reason value. */
+  cancelReason: (value: string) => string;
+  note: string;
+  noteHint: string;
+  noteTooLong: string;
+  noteRequired: string;
+  keepPod: string;
+  cancelling: string;
+  initiateRefunds: string;
+  pasteTicketCode: string;
+  scanFrameHint: string;
+  checkCode: string;
+  /** aria-label naming the pod the menu belongs to. */
+  menuAria: (title: string) => string;
+  cancelIntro: (title: string) => string;
+  cancelOthers: (count: number) => string;
+  cancelRefund: (amount: string, count: number) => string;
 }
+
+/**
+ * The stored reason value -> its catalogue key.
+ *
+ * Written out per namespace rather than composed, because the key-verification
+ * gate greps source for the literal key and a computed one reads as shipped but
+ * never rendered.
+ */
+const MWEB_CANCEL_REASON_KEYS: Record<string, string> = {
+  'Event cancelled': 'mweb.hostPodActions.cancelReasons.eventCancelled',
+  'Venue unavailable': 'mweb.hostPodActions.cancelReasons.venueUnavailable',
+  'Low attendance': 'mweb.hostPodActions.cancelReasons.lowAttendance',
+  Rescheduling: 'mweb.hostPodActions.cancelReasons.rescheduling',
+  Other: 'mweb.hostPodActions.cancelReasons.other',
+};
+
+const SHELL_CANCEL_REASON_KEYS: Record<string, string> = {
+  'Event cancelled': 'shell.hostPodActions.cancelReasons.eventCancelled',
+  'Venue unavailable': 'shell.hostPodActions.cancelReasons.venueUnavailable',
+  'Low attendance': 'shell.hostPodActions.cancelReasons.lowAttendance',
+  Rescheduling: 'shell.hostPodActions.cancelReasons.rescheduling',
+  Other: 'shell.hostPodActions.cancelReasons.other',
+};
 
 /** `mweb.*` — mWeb and the native app (rule 27: one namespace for both). */
 export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
@@ -102,6 +175,54 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     checkedInList: t('mweb.hostScan.checkedInList'),
     confirmDone: t('mweb.hostScan.confirmDone'),
     contentCheck: t('mweb.hostPodEdit.contentCheck'),
+    menuTooltip: t('mweb.hostPodActions.menuTooltip'),
+    scanTickets: t('mweb.hostPodActions.scanTickets'),
+    completePod: t('mweb.hostPodActions.completePod'),
+    editPod: t('mweb.hostPodActions.editPod'),
+    cancelPod: t('mweb.hostPodActions.cancelPod'),
+    close: t('mweb.hostPodActions.close'),
+    cancel: t('mweb.hostPodActions.cancel'),
+    saving: t('mweb.hostPodActions.saving'),
+    saveChanges: t('mweb.hostPodActions.saveChanges'),
+    fieldTitle: t('mweb.hostPodActions.fieldTitle'),
+    fieldDescription: t('mweb.hostPodActions.fieldDescription'),
+    fieldMedia: t('mweb.hostPodActions.fieldMedia'),
+    titleTooShort: t('mweb.hostPodActions.titleTooShort'),
+    titleTooLong: t('mweb.hostPodActions.titleTooLong'),
+    descriptionTooShort: t('mweb.hostPodActions.descriptionTooShort'),
+    imageRequired: t('mweb.hostPodActions.imageRequired'),
+    resubmitTitle: t('mweb.hostPodActions.resubmitTitle'),
+    resubmitHint: t('mweb.hostPodActions.resubmitHint'),
+    resubmitting: t('mweb.hostPodActions.resubmitting'),
+    resubmitCta: t('mweb.hostPodActions.resubmitCta'),
+    venue: t('mweb.hostPodActions.venue'),
+    venueHint: t('mweb.hostPodActions.venueHint'),
+    completeHint: t('mweb.hostPodActions.completeHint'),
+    venueBillAmount: t('mweb.hostPodActions.venueBillAmount'),
+    venueBillRequired: t('mweb.hostPodActions.venueBillRequired'),
+    podMedia: t('mweb.hostPodActions.podMedia'),
+    completing: t('mweb.hostPodActions.completing'),
+    partyMediaRequired: t('mweb.hostPodActions.partyMediaRequired'),
+    cancelNoOthers: t('mweb.hostPodActions.cancelNoOthers'),
+    cancelEmailOnly: t('mweb.hostPodActions.cancelEmailOnly'),
+    reason: t('mweb.hostPodActions.reason'),
+    reasonRequired: t('mweb.hostPodActions.reasonRequired'),
+    cancelReason: (value) => t(MWEB_CANCEL_REASON_KEYS[value] ?? 'mweb.hostPodActions.cancelReasons.other'),
+    note: t('mweb.hostPodActions.note'),
+    noteHint: t('mweb.hostPodActions.noteHint'),
+    noteTooLong: t('mweb.hostPodActions.noteTooLong'),
+    noteRequired: t('mweb.hostPodActions.noteRequired'),
+    keepPod: t('mweb.hostPodActions.keepPod'),
+    cancelling: t('mweb.hostPodActions.cancelling'),
+    initiateRefunds: t('mweb.hostPodActions.initiateRefunds'),
+    pasteTicketCode: t('mweb.hostPodActions.pasteTicketCode'),
+    scanFrameHint: t('mweb.hostPodActions.scanFrameHint'),
+    checkCode: t('mweb.hostPodActions.checkCode'),
+    menuAria: (title) => t('mweb.hostPodActions.menuAria', { vars: { title } }),
+    cancelIntro: (title) => t('mweb.hostPodActions.cancelIntro', { vars: { title } }),
+    cancelOthers: (count) => t('mweb.hostPodActions.cancelOthers', { count }),
+    cancelRefund: (amount, count) =>
+      t('mweb.hostPodActions.cancelRefund', { count, vars: { amount, count } }),
   };
 }
 
@@ -139,6 +260,54 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     checkedInList: t('shell.hostScan.checkedInList'),
     confirmDone: t('shell.hostScan.confirmDone'),
     contentCheck: t('shell.hostPodEdit.contentCheck'),
+    menuTooltip: t('shell.hostPodActions.menuTooltip'),
+    scanTickets: t('shell.hostPodActions.scanTickets'),
+    completePod: t('shell.hostPodActions.completePod'),
+    editPod: t('shell.hostPodActions.editPod'),
+    cancelPod: t('shell.hostPodActions.cancelPod'),
+    close: t('shell.hostPodActions.close'),
+    cancel: t('shell.hostPodActions.cancel'),
+    saving: t('shell.hostPodActions.saving'),
+    saveChanges: t('shell.hostPodActions.saveChanges'),
+    fieldTitle: t('shell.hostPodActions.fieldTitle'),
+    fieldDescription: t('shell.hostPodActions.fieldDescription'),
+    fieldMedia: t('shell.hostPodActions.fieldMedia'),
+    titleTooShort: t('shell.hostPodActions.titleTooShort'),
+    titleTooLong: t('shell.hostPodActions.titleTooLong'),
+    descriptionTooShort: t('shell.hostPodActions.descriptionTooShort'),
+    imageRequired: t('shell.hostPodActions.imageRequired'),
+    resubmitTitle: t('shell.hostPodActions.resubmitTitle'),
+    resubmitHint: t('shell.hostPodActions.resubmitHint'),
+    resubmitting: t('shell.hostPodActions.resubmitting'),
+    resubmitCta: t('shell.hostPodActions.resubmitCta'),
+    venue: t('shell.hostPodActions.venue'),
+    venueHint: t('shell.hostPodActions.venueHint'),
+    completeHint: t('shell.hostPodActions.completeHint'),
+    venueBillAmount: t('shell.hostPodActions.venueBillAmount'),
+    venueBillRequired: t('shell.hostPodActions.venueBillRequired'),
+    podMedia: t('shell.hostPodActions.podMedia'),
+    completing: t('shell.hostPodActions.completing'),
+    partyMediaRequired: t('shell.hostPodActions.partyMediaRequired'),
+    cancelNoOthers: t('shell.hostPodActions.cancelNoOthers'),
+    cancelEmailOnly: t('shell.hostPodActions.cancelEmailOnly'),
+    reason: t('shell.hostPodActions.reason'),
+    reasonRequired: t('shell.hostPodActions.reasonRequired'),
+    cancelReason: (value) => t(SHELL_CANCEL_REASON_KEYS[value] ?? 'shell.hostPodActions.cancelReasons.other'),
+    note: t('shell.hostPodActions.note'),
+    noteHint: t('shell.hostPodActions.noteHint'),
+    noteTooLong: t('shell.hostPodActions.noteTooLong'),
+    noteRequired: t('shell.hostPodActions.noteRequired'),
+    keepPod: t('shell.hostPodActions.keepPod'),
+    cancelling: t('shell.hostPodActions.cancelling'),
+    initiateRefunds: t('shell.hostPodActions.initiateRefunds'),
+    pasteTicketCode: t('shell.hostPodActions.pasteTicketCode'),
+    scanFrameHint: t('shell.hostPodActions.scanFrameHint'),
+    checkCode: t('shell.hostPodActions.checkCode'),
+    menuAria: (title) => t('shell.hostPodActions.menuAria', { vars: { title } }),
+    cancelIntro: (title) => t('shell.hostPodActions.cancelIntro', { vars: { title } }),
+    cancelOthers: (count) => t('shell.hostPodActions.cancelOthers', { count }),
+    cancelRefund: (amount, count) =>
+      t('shell.hostPodActions.cancelRefund', { count, vars: { amount, count } }),
   };
 }
 

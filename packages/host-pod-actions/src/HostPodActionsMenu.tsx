@@ -81,12 +81,12 @@ export default function HostPodActionsMenu({
 
   return (
     <>
-      <Tooltip title="Pod actions">
+      <Tooltip title={labels.menuTooltip}>
         <span>
           <IconButton
             size="small"
             disabled={disabled}
-            aria-label={`Actions for ${podTitle}`}
+            aria-label={labels.menuAria(podTitle)}
             onClick={(e) => setAnchorEl(e.currentTarget)}
           >
             <MoreVertIcon fontSize="small" />
@@ -105,7 +105,7 @@ export default function HostPodActionsMenu({
             <ListItemIcon>
               <QrCodeScannerIcon fontSize="small" color="primary" />
             </ListItemIcon>
-            <ListItemText primary="Scan attendee event tickets" />
+            <ListItemText primary={labels.scanTickets} />
           </MenuItem>
         )}
         {showAttendeeActions && onSeeAttendance && (
@@ -129,14 +129,14 @@ export default function HostPodActionsMenu({
             <ListItemIcon>
               <TaskAltIcon fontSize="small" color="success" />
             </ListItemIcon>
-            <ListItemText primary="Complete pod" />
+            <ListItemText primary={labels.completePod} />
           </MenuItem>
         )}
         <MenuItem onClick={pick(onEdit)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Edit pod" />
+          <ListItemText primary={labels.editPod} />
         </MenuItem>
         {/* The rating link: clicking the row opens the form, and the two icons
             beside it hand the link to the people who came. */}
@@ -159,7 +159,7 @@ export default function HostPodActionsMenu({
           <ListItemIcon>
             <CancelIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText primary="Cancel pod" />
+          <ListItemText primary={labels.cancelPod} />
         </MenuItem>
       </Menu>
     </>

@@ -20,7 +20,7 @@ import {
   buildHostUpdateInput,
   buildPodEditModerationInput,
   podEditInitialValues,
-  podEditSchema,
+  buildPodEditSchema,
   type PodEditValues,
 } from './pod-edit.form';
 import type { HostPodTarget } from './types';
@@ -49,7 +49,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     setError,
     formState: { errors },
   } = useForm<PodEditValues>({
-    resolver: zodResolver(podEditSchema),
+    resolver: zodResolver(buildPodEditSchema(labels)),
     defaultValues: podEditInitialValues(pod),
   });
   const [save, saveState] = useMutation(HOST_UPDATE_POD);
@@ -72,11 +72,11 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 700 }}>Edit pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{labels.editPod}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-edit-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <TextField
-            label="Title"
+            label={labels.fieldTitle}
             required
             fullWidth
             {...register('pod_title')}
@@ -84,7 +84,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
             helperText={errors.pod_title?.message}
           />
           <TextField
-            label="Description"
+            label={labels.fieldDescription}
             required
             fullWidth
             multiline
@@ -101,7 +101,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
                 value: field.value,
                 onChange: field.onChange,
                 error: fieldState.error?.message,
-                label: 'Media',
+                label: labels.fieldMedia,
               })
             }
           />
@@ -111,7 +111,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          {labels.cancel}
         </Button>
         <Button
           type="submit"
@@ -120,7 +120,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
           disabled={busy}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {busy ? 'Saving…' : 'Save changes'}
+          {busy ? labels.saving : labels.saveChanges}
         </Button>
       </DialogActions>
     </Dialog>

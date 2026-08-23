@@ -186,7 +186,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>Close</Button>
+        <Button onClick={close}>{labels.close}</Button>
         {result && (
           <Button
             variant="contained"

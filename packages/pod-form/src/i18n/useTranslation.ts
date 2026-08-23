@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
 import {
+  createBundleTranslation,
   createTranslator,
   flattenCatalogue,
   POD_FORM_BUNDLE,
-  useTranslation as useSharedTranslation,
 } from '@duncit/app-settings';
 
 /**
@@ -22,28 +21,17 @@ export type Translate = ReturnType<typeof useTranslation>['t'];
 /**
  * Translate inside the shared pod form.
  *
- * The bundle is layered here rather than left to the host surface for a reason
- * the shared hook makes easy to miss: inside a LocaleProvider it returns the
- * PROVIDER's translator and ignores the fallback passed to it. Every portal and
- * mWeb mount that provider with their own bundle, none of which knows
- * `podForm.*` — so without this the package would render raw keys on every
- * surface until an admin happened to import them. Provider copy still wins,
- * which is what lets a translated entry reach it; the local bundle only answers
- * the keys the provider has never heard of.
+ * The bundle is layered over the host surface's rather than left to it: every
+ * portal and mWeb mount the provider with their own bundle, none of which knows
+ * `podForm.*`. See `createBundleTranslation` for why that matters.
  */
-export function useTranslation() {
-  const outer = useSharedTranslation(PODFORM_FALLBACK_FLAT);
+export const useTranslation = createBundleTranslation(POD_FORM_BUNDLE);
 
-  return useMemo(() => {
-    const local = createTranslator({
-      locale: outer.locale,
-      fallback: PODFORM_FALLBACK_FLAT,
-    });
-    return {
-      ...outer,
-      has: (key: string) => outer.has(key) || local.has(key),
-      t: (key: string, options?: Parameters<typeof outer.t>[1]) =>
-        outer.has(key) ? outer.t(key, options) : local.t(key, options),
-    };
-  }, [outer]);
-}
+/**
+ * A provider-free translator over the bundled copy, for the code in this
+ * package that runs outside the React tree.
+ */
+export const fallbackT: Translate = createTranslator({
+  locale: 'en-IN',
+  fallback: PODFORM_FALLBACK_FLAT,
+}).t as Translate;

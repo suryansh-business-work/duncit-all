@@ -12,6 +12,7 @@ import { SectionTitle } from './DetailRow';
 import ProbeSection from './ProbeSection';
 import HealthSection from './HealthSection';
 import HistoryCharts from './HistoryCharts';
+import { useTranslation } from '../../i18n';
 import { useServiceDetails } from './useServiceDetails';
 import type { StatusService } from '../../types';
 
@@ -21,6 +22,7 @@ interface DialogProps {
 }
 
 export default function ServiceDetailsDialog({ service, onClose }: Readonly<DialogProps>) {
+  const { t } = useTranslation();
   const details = useServiceDetails(service);
 
   let dotState: DotState = 'info';
@@ -39,21 +41,21 @@ export default function ServiceDetailsDialog({ service, onClose }: Readonly<Dial
                   {service.name}
                 </Typography>
               </Stack>
-              <IconButton onClick={onClose} aria-label="Close details" size="small">
+              <IconButton onClick={onClose} aria-label={t('status.detail.close')} size="small">
                 <CloseIcon />
               </IconButton>
             </Stack>
           </DialogTitle>
           <DialogContent dividers>
-            <SectionTitle>Endpoint</SectionTitle>
+            <SectionTitle>{t('status.detail.endpoint')}</SectionTitle>
             <ProbeSection probe={details.probe} error={details.probeError} />
             {service.health && (
               <>
-                <SectionTitle>Server health</SectionTitle>
+                <SectionTitle>{t('status.detail.serverHealth')}</SectionTitle>
                 <HealthSection health={details.health} failed={details.healthError} />
               </>
             )}
-            <SectionTitle>History</SectionTitle>
+            <SectionTitle>{t('status.detail.history')}</SectionTitle>
             <HistoryCharts history={details.history} failed={details.historyError} />
           </DialogContent>
         </>

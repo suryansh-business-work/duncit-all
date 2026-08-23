@@ -23,7 +23,8 @@ exports:
   - 'CANCEL_MY_MEETING'
   - 'PUBLIC_FEATURE_FLAGS'
   - 'MeetingReasonForm'
-  - 'meetingReasonSchema'
+  - 'buildMeetingReasonSchema'
+  - 'buildEarnMeetingLabels'
 ---
 
 The **rendered** Earn with Duncit feature for MUI surfaces: journey cards,
@@ -43,7 +44,12 @@ Wrap the list in an `EarnSurfaceProvider`. The config is the full list of
 things the two surfaces disagree on:
 
 ```tsx
-import { EarnJourneyList, EarnSurfaceProvider, type EarnSurfaceConfig } from '@duncit/earn';
+import {
+  EarnJourneyList,
+  EarnSurfaceProvider,
+  mwebEarnMeetingLabels,
+  type EarnSurfaceConfig,
+} from '@duncit/earn';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
 
 const config: EarnSurfaceConfig = {
@@ -57,6 +63,9 @@ const config: EarnSurfaceConfig = {
   // Slot-picker copy from the surface's namespace (portal: shellMeetingLabels).
   meetingSlotLabels: (rescheduling) => mwebMeetingLabels(t, rescheduling),
   currentSlotBadge: mwebCurrentLabel(t),
+  // The dialogs' own copy, from the same namespace (portal:
+  // shellEarnMeetingLabels).
+  meetingLabels: mwebEarnMeetingLabels(t),
 };
 
 <EarnSurfaceProvider config={config}>

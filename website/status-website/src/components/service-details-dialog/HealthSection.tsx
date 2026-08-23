@@ -1,5 +1,6 @@
 import { Box, LinearProgress, Skeleton, Stack, Typography } from '@mui/material';
 import { DetailRow, StatusPill } from './DetailRow';
+import { useTranslation } from '../../i18n';
 import { formatBytes, formatDuration } from '../../utils/format';
 import type { HealthReport } from '../../types';
 
@@ -9,10 +10,11 @@ interface HealthSectionProps {
 }
 
 export default function HealthSection({ health, failed }: Readonly<HealthSectionProps>) {
+  const { t } = useTranslation();
   if (failed) {
     return (
       <Typography variant="body2" color="text.secondary" py={1}>
-        Health details unavailable.
+        {t('status.detail.healthUnavailable')}
       </Typography>
     );
   }
@@ -25,19 +27,31 @@ export default function HealthSection({ health, failed }: Readonly<HealthSection
 
   return (
     <Box>
-      <DetailRow label="Status" value={<StatusPill ok={health.status === 'ok'} label={health.status} />} />
-      <DetailRow label="Database" value={<StatusPill ok={dbOk} label={health.checks.database} />} />
-      <DetailRow label="Version" value={health.version} />
-      <DetailRow label="Environment" value={health.environment} />
-      <DetailRow label="Process uptime" value={formatDuration(health.uptime.processSeconds)} />
-      <DetailRow label="System uptime" value={formatDuration(health.uptime.systemSeconds)} />
-      <DetailRow label="Node" value={health.node} />
-      <DetailRow label="Platform" value={health.platform} />
-      <DetailRow label="Hostname" value={health.hostname} />
+      <DetailRow
+        label={t('status.detail.status')}
+        value={<StatusPill ok={health.status === 'ok'} label={health.status} />}
+      />
+      <DetailRow
+        label={t('status.detail.database')}
+        value={<StatusPill ok={dbOk} label={health.checks.database} />}
+      />
+      <DetailRow label={t('status.detail.version')} value={health.version} />
+      <DetailRow label={t('status.detail.environment')} value={health.environment} />
+      <DetailRow
+        label={t('status.detail.processUptime')}
+        value={formatDuration(health.uptime.processSeconds)}
+      />
+      <DetailRow
+        label={t('status.detail.systemUptime')}
+        value={formatDuration(health.uptime.systemSeconds)}
+      />
+      <DetailRow label={t('status.detail.node')} value={health.node} />
+      <DetailRow label={t('status.detail.platform')} value={health.platform} />
+      <DetailRow label={t('status.detail.hostname')} value={health.hostname} />
       <Box pt={1.5}>
         <Stack direction="row" justifyContent="space-between" mb={0.5}>
           <Typography variant="body2" fontWeight={700} color="text.secondary">
-            Memory
+            {t('status.detail.memory')}
           </Typography>
           <Typography variant="body2">
             {formatBytes(used)} / {formatBytes(total)}

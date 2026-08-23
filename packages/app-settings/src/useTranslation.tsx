@@ -2,9 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { gql, useQuery } from '@apollo/client';
 import {
   createTranslator,
+  flattenCatalogue,
   resolveLocale,
   type FlatCatalogue,
   type Locale,
+  type NestedCatalogue,
+  type TranslateOptions,
   type Translator,
 } from '@duncit/i18n';
 
@@ -174,5 +177,37 @@ export function useTranslation(fallback?: FlatCatalogue): LocaleContextValue {
     isRtl: false,
     locales: [],
     setLocale: () => undefined,
+  };
+}
+
+/**
+ * A package-scoped `useTranslation`, bound to that package's own bundle.
+ *
+ * Every shared package that owns a namespace needs the same three things: its
+ * bundle flattened once, the shared hook called for the provider's translator,
+ * and a local translator layered UNDER it. The layering is the part that is easy
+ * to miss — inside a LocaleProvider the shared hook returns the PROVIDER's
+ * translator and ignores the fallback handed to it, so a package whose namespace
+ * the host surface never mounted would render raw keys until an admin happened
+ * to import them. Provider copy still wins, which is what lets a translated
+ * entry reach the package; the local bundle only answers the keys the provider
+ * has never heard of.
+ *
+ * It lives here rather than in each package because it was five hand-kept copies
+ * of the same twenty lines (rule 40).
+ */
+export function createBundleTranslation(bundle: NestedCatalogue) {
+  const fallback = flattenCatalogue(bundle);
+  return function usePackageTranslation(): LocaleContextValue {
+    const outer = useTranslation(fallback);
+    return useMemo(() => {
+      const local = createTranslator({ locale: outer.locale, fallback });
+      return {
+        ...outer,
+        has: (key: string) => outer.has(key) || local.has(key),
+        t: (key: string, options?: TranslateOptions) =>
+          outer.has(key) ? outer.t(key, options) : local.t(key, options),
+      };
+    }, [outer]);
   };
 }

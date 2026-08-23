@@ -56,6 +56,7 @@ export {
   type TimeSource,
 } from '@duncit/datetime';
 export {
+  createBundleTranslation,
   LocaleProvider,
   PUBLIC_LOCALES,
   PUBLIC_TRANSLATIONS,
@@ -111,6 +112,7 @@ export {
   type Locale,
   type MailCategoryCopy,
   type NestedCatalogue,
+  type TranslateOptions,
   type PolicyMethodTranslate,
   type Translator,
   type WaCategoryCopy,

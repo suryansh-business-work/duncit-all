@@ -2,6 +2,7 @@ import '../../charts/setup';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import { Bar, Line } from 'react-chartjs-2';
+import { useTranslation } from '../../i18n';
 import { formatUptime } from '../../utils/format';
 import { dayStateColor } from '../../utils/status';
 import type { DailyUptime, HistoryPoint, HistoryResponse } from '../../types';
@@ -21,11 +22,12 @@ const axisOptions = (theme: Theme) => ({
 
 function UptimeBar({ daily }: Readonly<{ daily: DailyUptime[] }>) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const data = {
     labels: daily.map((day) => day.date.slice(5)),
     datasets: [
       {
-        label: 'Uptime %',
+        label: t('status.detail.uptimePct'),
         data: daily.map((day) => day.uptime),
         backgroundColor: daily.map((day) => uptimeBarColor(day, theme)),
         borderRadius: 2,
@@ -40,7 +42,10 @@ function UptimeBar({ daily }: Readonly<{ daily: DailyUptime[] }>) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (item: { raw: unknown }) => `Uptime ${formatUptime(Number(item.raw ?? 0))}`,
+          label: (item: { raw: unknown }) =>
+            t('status.detail.uptimeTooltip', {
+              vars: { value: formatUptime(Number(item.raw ?? 0)) },
+            }),
         },
       },
     },
@@ -58,13 +63,14 @@ function UptimeBar({ daily }: Readonly<{ daily: DailyUptime[] }>) {
 
 function LatencyLine({ points }: Readonly<{ points: HistoryPoint[] }>) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const data = {
     labels: points.map((point) =>
       new Date(point.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     ),
     datasets: [
       {
-        label: 'Latency (ms)',
+        label: t('status.detail.latencyMs'),
         data: points.map((point) => point.latency_ms),
         borderColor: theme.palette.primary.main,
         backgroundColor: alpha(theme.palette.primary.main, 0.15),
@@ -98,10 +104,11 @@ interface HistoryChartsProps {
 }
 
 export default function HistoryCharts({ history, failed }: Readonly<HistoryChartsProps>) {
+  const { t } = useTranslation();
   if (failed) {
     return (
       <Alert severity="warning" variant="outlined">
-        History is unavailable right now.
+        {t('status.detail.historyUnavailable')}
       </Alert>
     );
   }
@@ -112,7 +119,7 @@ export default function HistoryCharts({ history, failed }: Readonly<HistoryChart
   if (!hasDaily && !hasLatency) {
     return (
       <Typography variant="body2" color="text.secondary" py={1}>
-        No history recorded yet — checks run every 5 minutes.
+        {t('status.detail.noHistory')}
       </Typography>
     );
   }
@@ -122,7 +129,7 @@ export default function HistoryCharts({ history, failed }: Readonly<HistoryChart
       {hasDaily && (
         <Box>
           <Typography variant="caption" color="text.secondary">
-            Daily uptime — last 90 days
+            {t('status.detail.dailyUptime')}
           </Typography>
           <UptimeBar daily={history.daily} />
         </Box>
@@ -130,13 +137,13 @@ export default function HistoryCharts({ history, failed }: Readonly<HistoryChart
       {hasLatency ? (
         <Box>
           <Typography variant="caption" color="text.secondary">
-            Latency — last 24 hours
+            {t('status.detail.latency24h')}
           </Typography>
           <LatencyLine points={history.points} />
         </Box>
       ) : (
         <Typography variant="caption" color="text.secondary">
-          No latency samples in the last 24 hours.
+          {t('status.detail.noLatency')}
         </Typography>
       )}
     </Stack>

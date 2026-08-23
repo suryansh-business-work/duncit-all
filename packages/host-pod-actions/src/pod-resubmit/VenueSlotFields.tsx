@@ -14,16 +14,17 @@ interface VenueFieldProps {
 
 /** Approved-venue picker for the resubmission — any partner venue is bookable. */
 export function VenueField({ venues, value, error, onChange }: Readonly<VenueFieldProps>) {
+  const { labels } = useHostPodActionsConfig();
   return (
     <TextField
       select
-      label="Venue"
+      label={labels.venue}
       required
       fullWidth
       value={value}
       onChange={(e) => onChange(e.target.value)}
       error={!!error}
-      helperText={error ?? 'Pick the venue to request'}
+      helperText={error ?? labels.venueHint}
     >
       {venues.map((venue) => (
         <MenuItem key={venue.id} value={venue.id}>

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { meetingReasonSchema } from './meeting-reason.form';
+import { buildEarnMeetingLabels } from '../labels';
+import { buildMeetingReasonSchema } from './meeting-reason.form';
 import { blankMeetingReasonValues, type MeetingReasonValues } from './meeting-reason.types';
+
+// The schema reads its messages from the surface's labels; outside React the
+// key itself stands in for a translator.
+const meetingReasonSchema = buildMeetingReasonSchema(
+  buildEarnMeetingLabels((key) => key, 'mweb'),
+);
 
 const issuesOf = (values: MeetingReasonValues) => {
   const result = meetingReasonSchema.safeParse(values);

@@ -2549,7 +2549,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
-      { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@tailwindcss/vite", range: "^4.2.2", kind: "dependencies" },
@@ -2565,7 +2564,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
-      { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@tailwindcss/vite", range: "^4.2.2", kind: "dependencies" },
@@ -2600,7 +2598,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
-      { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@fortawesome/fontawesome-free", range: "^7.2.0", kind: "dependencies" },

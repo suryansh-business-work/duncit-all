@@ -6,6 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { PUBLIC_APP_SETTINGS, resetServerTimeStamp } from '@duncit/app-settings';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import TimeSourceSection from '../TimeSourceSection';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 /**
  * Restated from the component (the documents are private to it), so a renamed
@@ -121,9 +122,11 @@ const theme = createTheme();
 const renderSection = (mocks: readonly MockedResponse[], onToast = vi.fn()) => {
   render(
     <MockedProvider mocks={mocks as MockedResponse[]}>
-      <ThemeProvider theme={theme}>
-        <TimeSourceSection onToast={onToast} />
-      </ThemeProvider>
+      <DuncitLocalizationProvider>
+        <ThemeProvider theme={theme}>
+          <TimeSourceSection onToast={onToast} />
+        </ThemeProvider>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
   return { onToast };

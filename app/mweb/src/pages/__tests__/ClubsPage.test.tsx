@@ -13,6 +13,7 @@ import ClubsPage, { ALL_CLUBS } from '../ClubsPage';
 import { ACTIVE_ADS } from '../../components/ads/useActiveAds';
 import { SEARCH_CATEGORIES } from '../search-page/queries';
 import { OPEN_LOCATION_PICKER_EVENT } from '../../components/app-header/queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const club = (id: string, over: Record<string, unknown> = {}) => ({
   id,
@@ -61,7 +62,9 @@ const noVars = { locationId: undefined, locality: undefined };
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
     <MockedProvider mocks={mocks as never} addTypename={false}>
-      {ui}
+      <DuncitLocalizationProvider>
+        {ui}
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 

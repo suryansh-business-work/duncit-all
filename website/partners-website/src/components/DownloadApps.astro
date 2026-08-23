@@ -3,19 +3,37 @@
 // the "coming soon" state and the phone live in @duncit/brand — four sites had
 // four versions of the same two store listings.
 import AppDownload from '@duncit/brand/AppDownload.astro';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
 import { fetchBranding } from '../lib/site-data';
+import { urlConfigs } from '../config/url-configs';
 
 const branding = await fetchBranding();
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
 const stores = [
-  { icon: 'fa-google-play', eyebrow: 'Get it on', name: 'Google Play', url: branding.android_app_url },
-  { icon: 'fa-apple', eyebrow: 'Download on the', name: 'App Store', url: branding.ios_app_url },
+  {
+    icon: 'fa-google-play',
+    eyebrow: t('website.partners.download.googlePlayEyebrow'),
+    name: t('website.partners.download.googlePlayName'),
+    url: branding.android_app_url,
+  },
+  {
+    icon: 'fa-apple',
+    eyebrow: t('website.partners.download.appStoreEyebrow'),
+    name: t('website.partners.download.appStoreName'),
+    url: branding.ios_app_url,
+  },
+];
+const perks = [
+  t('website.partners.download.perkBookings'),
+  t('website.partners.download.perkOps'),
+  t('website.partners.download.perkTrust'),
 ];
 ---
 
 <AppDownload
-  heading="Your partners,"
-  headingAccent="in their pocket"
-  text="Members book your venue and join your pods from the Duncit app on Android and iOS."
-  perks={['Real bookings', 'Clean operations', 'Duncit\'s trust layer']}
+  heading={t('website.partners.download.heading')}
+  headingAccent={t('website.partners.download.headingAccent')}
+  text={t('website.partners.download.text')}
+  perks={perks}
   stores={stores}
 />

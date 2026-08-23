@@ -6,20 +6,25 @@ import BrandLogo from '@duncit/brand/BrandLogo.astro';
 import SiteMenu from '@duncit/brand/SiteMenu.astro';
 import { fetchBranding } from '../lib/site-data';
 import { urlConfigs } from '../config/url-configs';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
 
 const branding = await fetchBranding();
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
 
 // Every one of these goes somewhere that exists. The page has two sections and
 // a download band, so the nav names those and the two real destinations in the
 // partner app — not four anchors to headings nobody wrote.
 const links = [
-  { label: 'How it works', href: '#ways' },
-  { label: 'List your venue', href: `${urlConfigs.partnersAppUrl}/register-venue` },
-  { label: 'Become a host', href: `${urlConfigs.partnersAppUrl}/become-host` },
-  { label: 'Get the app', href: '#download' },
+  { label: t('website.partners.nav.how'), href: '#ways' },
+  { label: t('website.partners.nav.listVenue'), href: `${urlConfigs.partnersAppUrl}/register-venue` },
+  { label: t('website.partners.nav.becomeHost'), href: `${urlConfigs.partnersAppUrl}/become-host` },
+  { label: t('website.partners.nav.getApp'), href: '#download' },
 ];
-const login = { label: 'Partner login', href: urlConfigs.partnersAppUrl };
-const join = { label: 'Become a partner', href: `${urlConfigs.partnersAppUrl}/register-venue` };
+const login = { label: t('website.partners.nav.login'), href: urlConfigs.partnersAppUrl };
+const join = {
+  label: t('website.partners.nav.join'),
+  href: `${urlConfigs.partnersAppUrl}/register-venue`,
+};
 ---
 
 <!-- Rendered INSIDE the hero card, not absolutely over the page. The page is a
@@ -31,7 +36,7 @@ const join = { label: 'Become a partner', href: `${urlConfigs.partnersAppUrl}/re
     <!-- No white pill behind the mark. It was there to keep a logo legible on
          the photograph, and it read as a sticker stuck on the banner; the
          scrim under the header does that job without boxing the brand in. -->
-    <a href={urlConfigs.mainSiteUrl} class="partner-brand" aria-label="Duncit">
+    <a href={urlConfigs.mainSiteUrl} class="partner-brand" aria-label={t('website.partners.nav.brandAria')}>
       <BrandLogo
         src={branding.website_header_logo_url}
         name={branding.app_name}
@@ -39,7 +44,7 @@ const join = { label: 'Become a partner', href: `${urlConfigs.partnersAppUrl}/re
         href={null}
         graphqlUrl={urlConfigs.graphqlUrl}
       />
-      <span class="partner-brand-word">Partners</span>
+      <span class="partner-brand-word">{t('website.partners.brand.word')}</span>
     </a>
 
     <div class="hidden items-center gap-7 lg:flex">
@@ -51,7 +56,7 @@ const join = { label: 'Become a partner', href: `${urlConfigs.partnersAppUrl}/re
         <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
         <span class="hidden sm:inline">{login.label}</span>
       </a>
-      <SiteMenu links={links} actions={[join, login]} onDark />
+      <SiteMenu links={links} actions={[join, login]} onDark t={t} />
     </div>
   </nav>
 </header>

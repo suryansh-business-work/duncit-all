@@ -3,7 +3,9 @@
 // status handling live in @duncit/brand — three sites had written them three
 // times, each with its own idea of what happens when the API says no.
 import SharedNewsletter from '@duncit/brand/NewsletterSignup.astro';
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
 
 const { newsletter, graphqlUrl, mainSiteUrl } = siteConfig;
 ---

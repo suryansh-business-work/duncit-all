@@ -9,6 +9,7 @@ import {
   MY_CALLBACK_REQUESTS,
   type SupportPodOption,
 } from '../queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const selectedPod: SupportPodOption = {
   membershipId: 'm1',
@@ -65,7 +66,9 @@ const populatedHistoryMock = {
 function renderContent(mocks: any[], selected: SupportPodOption | null = null) {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <CallbackContent selected={selected} />
+      <DuncitLocalizationProvider>
+        <CallbackContent selected={selected} />
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 }

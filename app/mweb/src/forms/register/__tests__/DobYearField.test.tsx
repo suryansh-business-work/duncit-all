@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import DobYearField from '../DobYearField';
 import type { RegisterFormValues } from '../register.types';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
+import { MockedProvider } from '@apollo/client/testing';
 
 function Harness({
   initialDob = '',
@@ -20,16 +22,20 @@ function Harness({
   });
   const dob = watch('dob');
   return (
-    <div>
-      <DobYearField control={control} minAge={18} />
-      <span data-testid="dob-value">{dob}</span>
-      <button
-        type="button"
-        onClick={() => setError('dob', { message: 'Boom bad year' })}
-      >
-        trigger-error
-      </button>
-    </div>
+    <MockedProvider mocks={[]}>
+      <DuncitLocalizationProvider>
+        <div>
+          <DobYearField control={control} minAge={18} />
+          <span data-testid="dob-value">{dob}</span>
+          <button
+            type="button"
+            onClick={() => setError('dob', { message: 'Boom bad year' })}
+          >
+            trigger-error
+          </button>
+        </div>
+      </DuncitLocalizationProvider>
+    </MockedProvider>
   );
 }
 

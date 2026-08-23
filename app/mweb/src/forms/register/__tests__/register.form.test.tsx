@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import RegisterForm from '../register.form';
 import { PUBLIC_APP_SETTINGS } from '../../../utils/dateFormat';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const settingsMock = {
   request: { query: PUBLIC_APP_SETTINGS },
@@ -26,9 +27,11 @@ function renderForm(props: Partial<React.ComponentProps<typeof RegisterForm>> = 
   const onSubmit = props.onSubmit ?? vi.fn();
   const utils = render(
     <MockedProvider mocks={[settingsMock]}>
-      <MemoryRouter initialEntries={['/register']}>
-        <RegisterForm onSubmit={onSubmit} {...props} />
-      </MemoryRouter>
+      <DuncitLocalizationProvider>
+        <MemoryRouter initialEntries={['/register']}>
+          <RegisterForm onSubmit={onSubmit} {...props} />
+        </MemoryRouter>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
   return { onSubmit, ...utils };

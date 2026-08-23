@@ -1,0 +1,56 @@
+i18n: localize eleven shared packages, and take the hardcoded-copy floor to 390
+
+Rule 38 says no user-facing string may be a literal. The ratchet that enforces
+it stood at 645 hits; this is the shared-package half of clearing it, 645 -> 390.
+
+The detector was counting `=> Promise<void>` as JSX text — 144 of those 645 hits
+were a TypeScript arrow return type, not copy anybody reads. A negative
+lookbehind on `=` drops them, which is what makes the remaining number mean
+something.
+
+What moved, and where its copy now lives:
+
+  @duncit/table      shell.table.*     the toolbar, column menu, filter popover
+                                       and the two default column headers. A
+                                       column now carries `headerKey` when the
+                                       caller names no header, because a factory
+                                       hands back a definition before there is a
+                                       React tree to ask; the grid resolves it at
+                                       render. `filterChipLabel` takes the
+                                       translator for the same reason.
+  @duncit/dialogs    shell.common.*    Confirm / Cancel, when a caller names none.
+  @duncit/coupons    shell.coupons.*   whole console + the Zod messages.
+  @duncit/portal-pod-form shell.podContent.*
+  @duncit/availability-calendar shell.availability.* — the recurring dialog, the
+                                       day drawer and the slot list, which had
+                                       far more English in it than the gate saw.
+  @duncit/auto-pods  shell.autoPodForm.* — the template form's validation.
+  @duncit/ad-request-form adRequest.*  own namespace: the Partners console ships
+                                       it and does not carry `ads.*`.
+  @duncit/ai-prompts ai.library.*      PROMPT_COPY was a documented constant
+                                       "until the portals get localised". They
+                                       are localised; it is now promptCopy(t).
+  @duncit/ui         ui.*              new namespace — mWeb and the portals both
+                                       render these, so neither bundle owns them.
+  @duncit/location   location.*        same reason.
+  @duncit/user-context session.*       same reason, with a twist: this package
+                                       sits BELOW @duncit/app-settings in the
+                                       graph (the locale provider reads the
+                                       signed-in user from it), so its screens
+                                       take `t` as a prop. mWeb and the shell each
+                                       hand it their live one.
+
+Every schema that carried English messages became a factory over the caller's
+translator (login, coupon, auto-pod, ad-request, pod-content). Each package that
+owns a namespace layers it locally the way @duncit/media-picker already does —
+inside a provider the shared hook returns the PROVIDER's translator and ignores
+the fallback handed to it, so without that layer these would render raw keys on
+every surface until an admin happened to import them.
+
+Docs and demos moved with the signatures they document (rule 42), and the
+generated shipped-keys / package-manifest copies were regenerated.
+
+Post-deploy: Admin > Localization > Translations > Import app keys, to seed the
+new rows against the default locale.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

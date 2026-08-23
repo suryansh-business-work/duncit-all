@@ -4,14 +4,6 @@
   "app/mweb/src/pages/account-page/address-book-form/address-book.types.tsx": 1,
   "app/mweb/src/pages/create-pod-page/create-pod/steps/VenueSlotStep.tsx": 1,
   "packages/brand/src/SocialLinks.astro": 2,
-  "website/ads-website/src/components/DownloadApps.astro": 1,
-  "website/ads-website/src/components/Features.astro": 2,
-  "website/ads-website/src/components/PlacementPreview.astro": 8,
-  "website/ads-website/src/components/Placements.astro": 1,
-  "website/ads-website/src/components/SiteFooter.astro": 1,
-  "website/ads-website/src/components/SiteHeader.astro": 2,
-  "website/ads-website/src/components/Steps.astro": 2,
-  "website/ads-website/src/pages/404.astro": 2,
   "website/earnwith-website/src/components/CtaBand.astro": 1,
   "website/earnwith-website/src/components/DownloadApps.astro": 1,
   "website/earnwith-website/src/components/EarningsCalculator.astro": 1,
@@ -45,10 +37,5 @@
   "website/main-website/src/pages/safety/advice.astro": 18,
   "website/main-website/src/pages/safety/approach.astro": 16,
   "website/main-website/src/pages/safety/resources.astro": 6,
-  "website/main-website/src/pages/safety/tools.astro": 8,
-  "website/partners-website/src/components/DownloadApps.astro": 1,
-  "website/partners-website/src/components/SiteFooter.astro": 5,
-  "website/partners-website/src/components/SiteHeader.astro": 8,
-  "website/partners-website/src/layouts/Layout.astro": 1,
-  "website/partners-website/src/pages/index.astro": 4
+  "website/main-website/src/pages/safety/tools.astro": 8
 }

@@ -1,0 +1,50 @@
+    /**
+     * The public board itself — the banner, the filters and the per-service
+     * detail dialog. The Tech portal does not render these, but they live in
+     * the same namespace so a status word is written once (rule 40).
+     */
+    board: {
+      checking: 'Checking services…',
+      awaiting: 'Awaiting the first checks.',
+      allOperational: 'All systems operational',
+      outage: '{issues} of {total} services experiencing an outage',
+      reportingIssues: '{issues} of {total} services reporting issues',
+      lastChecked: 'Last checked {time}',
+      staging: 'Staging',
+      title: '{app} Status',
+      subtitle: 'Live availability of every {app} console, the API and our websites.',
+      overallUptime: 'Overall uptime %',
+      noIncidents: 'No incidents reported in the last 90 days.',
+      search: 'Search services…',
+      group: 'Group',
+      allGroups: 'All groups',
+      filterByStatus: 'Filter by status',
+      operational: 'Operational',
+      issues: 'Issues',
+    },
+    /** One service's detail dialog: its endpoint, its health payload and its
+     * TLS certificate. */
+    detail: {
+      close: 'Close details',
+      endpoint: 'Endpoint',
+      serverHealth: 'Server health',
+      history: 'History',
+      status: 'Status',
+      database: 'Database',
+      version: 'Version',
+      environment: 'Environment',
+      processUptime: 'Process uptime',
+      systemUptime: 'System uptime',
+      node: 'Node',
+      platform: 'Platform',
+      hostname: 'Hostname',
+      issuer: 'Issuer',
+      subject: 'Subject',
+      protocol: 'Protocol',
+      validFrom: 'Valid from',
+      expires: 'Expires',
+      httpStatus: 'HTTP status',
+      noCertificate: 'No certificate',
+      uptimePct: 'Uptime %',
+      latencyMs: 'Latency (ms)',
+    },

@@ -7,13 +7,30 @@ import FooterLogo from '@duncit/brand/FooterLogo.astro';
 import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
 import SocialLinks from '@duncit/brand/SocialLinks.astro';
 import SharedNewsletter from '@duncit/brand/NewsletterSignup.astro';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
 
 const FALLBACK_GROUPS: SiteNavGroup[] = [
   {
-    label: 'Duncit',
+    label: t('website.partners.footer.duncitGroup'),
     links: [
-      { id: 'f-main', area: 'FOOTER', group_label: 'Duncit', label: 'duncit.com', url: urlConfigs.mainSiteUrl, sort_order: 0 },
-      { id: 'f-support', area: 'FOOTER', group_label: 'Duncit', label: 'Support', url: `${urlConfigs.mainSiteUrl}/help`, sort_order: 1 },
+      {
+        id: 'f-main',
+        area: 'FOOTER',
+        group_label: t('website.partners.footer.duncitGroup'),
+        label: t('website.partners.footer.mainSite'),
+        url: urlConfigs.mainSiteUrl,
+        sort_order: 0,
+      },
+      {
+        id: 'f-support',
+        area: 'FOOTER',
+        group_label: t('website.partners.footer.duncitGroup'),
+        label: t('website.partners.footer.support'),
+        url: `${urlConfigs.mainSiteUrl}/help`,
+        sort_order: 1,
+      },
     ],
   },
 ];
@@ -40,10 +57,10 @@ const year = new Date().getFullYear();
         height={96}
         graphqlUrl={urlConfigs.graphqlUrl}
       />
-      <p class="mt-2 font-head text-xl font-black leading-none text-ink">Duncit Partners</p>
-      <p class="mt-3 text-sm text-ink-soft max-w-xs">
-        Real bookings for venues and hosts, backed by Duncit's trust layer.
+      <p class="mt-2 font-head text-xl font-black leading-none text-ink">
+        {t('website.partners.brand.footerName')}
       </p>
+      <p class="mt-3 text-sm text-ink-soft max-w-xs">{t('website.partners.footer.blurb')}</p>
       <a href={`mailto:${branding.support_email || 'support@duncit.com'}`} class="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
         {branding.support_email || 'support@duncit.com'}
       </a>
@@ -55,8 +72,9 @@ const year = new Date().getFullYear();
     <SharedNewsletter
       graphqlUrl={urlConfigs.graphqlUrl}
       source="PARTNERS_WEBSITE_FOOTER"
-      heading="Partner updates"
-      text="New venue tools, payout changes and what is working for hosts."
+      heading={t('website.partners.footer.newsletterHeading')}
+      text={t('website.partners.footer.newsletterText')}
+      t={t}
     />
   </div>
 
@@ -80,11 +98,12 @@ const year = new Date().getFullYear();
   <PolicyStrip
     policies={policies}
     baseUrl={urlConfigs.mainSiteUrl}
-    heading="Policy Hub"
+    heading={t('website.partners.footer.policyHub')}
+    t={t}
     class="max-w-6xl mx-auto mt-10"
   />
 
   <div class="max-w-6xl mx-auto mt-10 pt-5 border-t border-ink/10 text-xs text-ink-soft text-center">
-    © {year} Duncit. All rights reserved.
+    {t('website.partners.footer.rights', { vars: { year } })}
   </div>
 </footer>

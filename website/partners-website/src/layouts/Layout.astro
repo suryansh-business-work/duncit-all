@@ -5,12 +5,12 @@ interface Props {
 }
 
 import { fetchBranding } from '../lib/site-data';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+import { urlConfigs } from '../config/url-configs';
 import '../styles/global.css';
 
-const {
-  title,
-  description = 'Duncit Partners helps hosts and venues create real social moments.',
-} = Astro.props;
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
+const { title, description = t('website.partners.brand.description') } = Astro.props;
 
 const branding = await fetchBranding();
 const favicon =

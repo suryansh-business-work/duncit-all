@@ -1,5 +1,7 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
 import { fetchAdRateCard } from '../lib/site-data';
 import PlacementPreview from './PlacementPreview.astro';
 import SmartLink from './SmartLink.astro';

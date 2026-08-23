@@ -2,7 +2,9 @@
 // Footer — links managed from the Website portal (Navigation → ADS) and the
 // Policy Hub from the Legal portal; branding assets from Admin. The configured
 // groups are the fallback the portal overrides.
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
 import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
 import NewsletterSignup from './NewsletterSignup.astro';
 import SmartLink from './SmartLink.astro';
@@ -104,8 +106,8 @@ const year = new Date().getFullYear();
     <div
       class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-5 text-xs text-ink-soft"
     >
-      <span>© {year} Duncit. All rights reserved.</span>
-      <span>Advertising on the Duncit network.</span>
+      <span>{footer.rights}</span>
+      <span>{footer.note}</span>
     </div>
   </div>
 </footer>

@@ -6,6 +6,7 @@ import { MockedProvider } from '@apollo/client/testing';
 import SupportTicketsPage from '../SupportTicketsPage';
 import { HEADER_DATA } from '../../../components/app-header/queries';
 import { CREATE_TICKET, MY_TICKETS } from '../../support-tickets/queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -78,9 +79,11 @@ const ticketsMock = {
 function renderPage(initialEntries: string[], mocks: any[]) {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <MemoryRouter initialEntries={initialEntries}>
-        <SupportTicketsPage />
-      </MemoryRouter>
+      <DuncitLocalizationProvider>
+        <MemoryRouter initialEntries={initialEntries}>
+          <SupportTicketsPage />
+        </MemoryRouter>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 }

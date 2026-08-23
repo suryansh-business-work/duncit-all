@@ -1,5 +1,7 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
 import { fetchAdRateCard } from '../lib/site-data';
 
 const { placements } = siteConfig;
@@ -36,7 +38,7 @@ const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('e
        data attribute rather than a second query here. -->
   <div class="mt-10 overflow-hidden rounded-2xl border border-line">
     <table class="w-full border-collapse text-left">
-      <caption class="sr-only">Duncit advertising rate card, per placement per day</caption>
+      <caption class="sr-only">{placements.rateCardCaption}</caption>
       <thead>
         <tr class="bg-surface">
           <th scope="col" class="px-5 py-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft">

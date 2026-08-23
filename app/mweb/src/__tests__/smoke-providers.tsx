@@ -26,6 +26,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 import { CartProvider } from '../components/cart/CartContext';
 import { TourProvider } from '../tours/TourContext';
+import { StatusUploadProvider } from '../components/status-upload/StatusUploadProvider';
 
 /**
  * MUI's `useTheme()` returns NULL outside a provider rather than falling back
@@ -71,16 +72,25 @@ export interface SmokeRouteProps {
  * current location, exactly as they do under `App.tsx`.
  */
 export function SmokeRoute({ pattern, concrete, children, link }: Readonly<SmokeRouteProps>) {
+  // A pressed control may navigate. The real route table always has a
+  // catch-all; without one the router matches nothing and renders an EMPTY
+  // container, which the smoke assertion reads as a broken page rather than a
+  // page that simply went somewhere else.
+  const catchAll = pattern === '*' ? null : <Route path="*" element={<div data-testid="smoke-elsewhere" />} />;
+
   return (
     <SmokeProviders link={link}>
       <MemoryRouter initialEntries={[concrete]}>
-        <CartProvider>
-          <TourProvider>
-            <Routes>
-              <Route path={pattern} element={children} />
-            </Routes>
-          </TourProvider>
-        </CartProvider>
+        <StatusUploadProvider>
+          <CartProvider>
+            <TourProvider>
+              <Routes>
+                <Route path={pattern} element={children} />
+                {catchAll}
+              </Routes>
+            </TourProvider>
+          </CartProvider>
+        </StatusUploadProvider>
       </MemoryRouter>
     </SmokeProviders>
   );

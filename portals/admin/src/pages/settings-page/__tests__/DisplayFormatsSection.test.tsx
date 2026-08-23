@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import DisplayFormatsSection from '../DisplayFormatsSection';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 /**
  * Both documents live inside the component, so restating them here is the
@@ -102,9 +103,11 @@ const theme = createTheme();
 const renderSection = (mocks: readonly MockedResponse[], onToast = vi.fn()) => {
   render(
     <MockedProvider mocks={mocks as MockedResponse[]}>
-      <ThemeProvider theme={theme}>
-        <DisplayFormatsSection onToast={onToast} />
-      </ThemeProvider>
+      <DuncitLocalizationProvider>
+        <ThemeProvider theme={theme}>
+          <DisplayFormatsSection onToast={onToast} />
+        </ThemeProvider>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
   return { onToast };

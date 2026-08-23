@@ -5393,9 +5393,6 @@ importers:
       '@duncit/brand':
         specifier: workspace:*
         version: link:../../packages/brand
-      '@duncit/i18n':
-        specifier: workspace:*
-        version: link:../../packages/i18n
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -5424,9 +5421,6 @@ importers:
       '@duncit/brand':
         specifier: workspace:*
         version: link:../../packages/brand
-      '@duncit/i18n':
-        specifier: workspace:*
-        version: link:../../packages/i18n
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -5495,9 +5489,6 @@ importers:
       '@duncit/brand':
         specifier: workspace:*
         version: link:../../packages/brand
-      '@duncit/i18n':
-        specifier: workspace:*
-        version: link:../../packages/i18n
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

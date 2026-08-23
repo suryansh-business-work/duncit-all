@@ -1,5 +1,5 @@
 import { Alert, Box, Chip, Divider, Stack, Tooltip, Typography } from '@mui/material';
-import { PROMPT_COPY } from '../copy';
+import { usePromptCopy } from '../i18n/useCopy';
 import { braced, exampleValues, renderPrompt } from '../render';
 import type { AiPrompt, PromptKind, PromptVariable } from '../types';
 
@@ -29,23 +29,24 @@ const copyPlaceholder = (text: string) => {
 };
 
 export function PromptVariables({ kind, variables }: Readonly<VariablesProps>) {
+  const copy = usePromptCopy();
   return (
     <Box>
       <Typography variant="subtitle2" fontWeight={700}>
-        {PROMPT_COPY.variablesTitle}
+        {copy.variablesTitle}
       </Typography>
       <Typography variant="caption" color="text.secondary" component="p">
-        {kind === 'CODE' ? PROMPT_COPY.variablesHintCode : PROMPT_COPY.variablesHintAi}
+        {kind === 'CODE' ? copy.variablesHintCode : copy.variablesHintAi}
       </Typography>
       {variables.length === 0 ? (
         <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5 }}>
-          {PROMPT_COPY.variablesEmpty}
+          {copy.variablesEmpty}
         </Typography>
       ) : (
         <Stack spacing={0.75} sx={{ mt: 1 }}>
           {variables.map((v) => (
             <Stack key={v.name} direction="row" spacing={1} alignItems="flex-start">
-              <Tooltip title={PROMPT_COPY.copyVariable}>
+              <Tooltip title={copy.copyVariable}>
                 <Chip
                   size="small"
                   label={braced(v.name)}
@@ -81,14 +82,15 @@ export function PromptVariables({ kind, variables }: Readonly<VariablesProps>) {
 
 /** Where a code prompt is wired in — file, surface and what a person did to fire it. */
 export function PromptUsage({ usage }: Readonly<{ usage: AiPrompt['usage'] }>) {
+  const copy = usePromptCopy();
   return (
     <Box>
       <Typography variant="subtitle2" fontWeight={700}>
-        {PROMPT_COPY.usageTitle}
+        {copy.usageTitle}
       </Typography>
       {usage.length === 0 ? (
         <Typography variant="body2" color="text.disabled">
-          {PROMPT_COPY.usageEmpty}
+          {copy.usageEmpty}
         </Typography>
       ) : (
         <Stack spacing={1} sx={{ mt: 0.5 }}>
@@ -124,13 +126,14 @@ interface PreviewProps {
 
 /** The prompt as the model receives it, with every placeholder filled in. */
 export function PromptPreview({ content, variables }: Readonly<PreviewProps>) {
+  const copy = usePromptCopy();
   return (
     <Box>
       <Typography variant="subtitle2" fontWeight={700}>
-        {PROMPT_COPY.previewTitle}
+        {copy.previewTitle}
       </Typography>
       <Typography variant="caption" color="text.secondary" component="p">
-        {PROMPT_COPY.previewHint}
+        {copy.previewHint}
       </Typography>
       <Box
         component="pre"
@@ -159,11 +162,12 @@ export function PromptContext({
   prompt,
   content,
 }: Readonly<{ prompt: AiPrompt; content: string }>) {
+  const copy = usePromptCopy();
   return (
     <Stack spacing={1.5} divider={<Divider flexItem />}>
       {prompt.kind === 'CODE' && (
         <Alert severity="info" sx={{ py: 0.5 }}>
-          {PROMPT_COPY.roleHints[prompt.role]}
+          {copy.roleHints[prompt.role]}
         </Alert>
       )}
       {prompt.kind === 'CODE' && <PromptUsage usage={prompt.usage} />}

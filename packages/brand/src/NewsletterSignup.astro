@@ -13,6 +13,7 @@
  */
 import type { CaptchaCopy } from '@duncit/i18n';
 import Captcha from '@duncit/captcha/Captcha.astro';
+import { siteT, type SiteTranslate } from './site-i18n';
 
 interface Props {
   /** Where to POST. The site already has this resolved per environment. */
@@ -38,26 +39,37 @@ interface Props {
   busyText?: string;
   okText?: string;
   errorText?: string;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
   class?: string;
 }
 
 const {
   graphqlUrl,
   source,
-  heading = 'Get Duncit updates',
+  heading,
   text = '',
-  placeholder = 'you@example.com',
-  button = 'Subscribe',
+  placeholder,
+  button,
   variant = 'card',
   consent = null,
-  consentLinkLabel = 'privacy policy',
+  consentLinkLabel,
   consentLinkHref = '',
   captcha = undefined,
-  busyText = 'Subscribing…',
-  okText = 'You are on the list.',
-  errorText = 'That did not go through — check your connection and try again.',
+  busyText,
+  okText,
+  errorText,
+  t = siteT,
   class: className = '',
 } = Astro.props;
+
+const headingText = heading ?? t('website.footer.newsletterTitle');
+const placeholderText = placeholder ?? t('website.brand.newsletter.placeholder');
+const buttonText = button ?? t('website.brand.newsletter.button');
+const consentLinkText = consentLinkLabel ?? t('website.brand.newsletter.consentLink');
+const busy = busyText ?? t('website.brand.newsletter.busy');
+const ok = okText ?? t('website.brand.newsletter.ok');
+const error = errorText ?? t('website.brand.newsletter.error');
 
 const card = variant === 'card';
 // One id per instance, so two forms on a page cannot capture each other's
@@ -70,25 +82,25 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
   data-newsletter-root
   data-graphql={graphqlUrl}
   data-source={source}
-  data-busy={busyText}
-  data-ok={okText}
-  data-error={errorText}
+  data-busy={busy}
+  data-ok={ok}
+  data-error={error}
 >
-  <h3 class="newsletter-heading">{heading}</h3>
+  <h3 class="newsletter-heading">{headingText}</h3>
   {text && <p class="newsletter-text">{text}</p>}
 
   <form class="newsletter-form" data-newsletter novalidate>
-    <label class="newsletter-sr" for={id}>Email address</label>
+    <label class="newsletter-sr" for={id}>{t('website.footer.emailPlaceholder')}</label>
     <input
       id={id}
       name="email"
       type="email"
       required
       autocomplete="email"
-      placeholder={placeholder}
+      placeholder={placeholderText}
       class="newsletter-input"
     />
-    <button type="submit" class="newsletter-button">{button}</button>
+    <button type="submit" class="newsletter-button">{buttonText}</button>
 
     {/* One field and one tap is the whole appeal of this form, so the check
         waits until somebody has actually started typing an address. It also
@@ -103,7 +115,7 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
           <span>
             {consent}{' '}
             <a href={consentLinkHref} target="_blank" rel="noopener noreferrer">
-              {consentLinkLabel}
+              {consentLinkText}
             </a>
             .
           </span>

@@ -12,7 +12,8 @@
     "./SocialLinks.astro": "./src/SocialLinks.astro",
     "./SiteMenu.astro": "./src/SiteMenu.astro",
     "./AppDownload.astro": "./src/AppDownload.astro",
-    "./AppPhone.astro": "./src/AppPhone.astro"
+    "./AppPhone.astro": "./src/AppPhone.astro",
+    "./site-i18n": "./src/site-i18n.ts"
   },
   "files": [
     "src"

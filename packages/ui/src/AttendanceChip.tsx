@@ -1,4 +1,5 @@
 import { Chip, Tooltip } from '@mui/material';
+import { useTranslation } from './i18n/useTranslation';
 
 export interface PodAttendanceSummary {
   attended_seats: number;
@@ -23,24 +24,32 @@ interface Props {
  * everybody was absent, and showing it as 0/12 would say exactly that.
  */
 export default function AttendanceChip({ attendance, size = 'small' }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!attendance || attendance.booked_seats === 0) {
     return <Chip size={size} variant="outlined" label="—" />;
   }
   if (!attendance.recorded) {
     return (
-      <Tooltip title="No ticket on this pod has been scanned yet">
-        <Chip size={size} variant="outlined" color="warning" label="Not scanned" />
+      <Tooltip title={t('ui.attendance.notScannedHint')}>
+        <Chip
+          size={size}
+          variant="outlined"
+          color="warning"
+          label={t('ui.attendance.notScanned')}
+        />
       </Tooltip>
     );
   }
   const full = attendance.attended_seats >= attendance.booked_seats;
   return (
-    <Tooltip title="Seats scanned in at the door — a completed pod is settled on these">
+    <Tooltip title={t('ui.attendance.scannedHint')}>
       <Chip
         size={size}
         variant={full ? 'filled' : 'outlined'}
         color={full ? 'success' : 'info'}
-        label={`${attendance.attended_seats}/${attendance.booked_seats} scanned`}
+        label={t('ui.attendance.scannedCount', {
+          vars: { attended: attendance.attended_seats, booked: attendance.booked_seats },
+        })}
       />
     </Tooltip>
   );

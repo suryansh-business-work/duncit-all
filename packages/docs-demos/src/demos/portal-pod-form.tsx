@@ -1,4 +1,4 @@
-import { podContentSchema } from '@duncit/portal-pod-form';
+import { buildPodContentSchema } from '@duncit/portal-pod-form';
 import { defineDemo, defineDemos } from '../types';
 
 interface ContentMock {
@@ -22,7 +22,9 @@ export default defineDemos('portal-pod-form', [
       ],
     },
     compute: (mock) => {
-      const parsed = podContentSchema.safeParse(mock);
+      // The messages come from the catalogue, so the schema takes a
+      // translator — the console's live one inside a portal, the key itself here.
+      const parsed = buildPodContentSchema((key) => key).safeParse(mock);
       return {
         Valid: parsed.success,
         Errors: parsed.success

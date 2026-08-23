@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import VenueEarningsPage from '../index';
 import { VENUE_EARNINGS } from '../queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const payout = (over: Record<string, unknown> = {}) => ({
   id: 'r1',
@@ -44,9 +45,11 @@ const mocks = [
 function setup() {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <MemoryRouter>
-        <VenueEarningsPage />
-      </MemoryRouter>
+      <DuncitLocalizationProvider>
+        <MemoryRouter>
+          <VenueEarningsPage />
+        </MemoryRouter>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 }

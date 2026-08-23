@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@duncit/app-settings": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/media-picker": "workspace:*",
     "@duncit/ui": "workspace:*",

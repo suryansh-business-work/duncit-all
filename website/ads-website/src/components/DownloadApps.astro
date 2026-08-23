@@ -4,18 +4,30 @@
 // four versions of the same two store listings.
 import AppDownload from '@duncit/brand/AppDownload.astro';
 import { fetchBranding } from '../lib/site-data';
+import { siteContent } from '../config/site-config';
 
 const branding = await fetchBranding();
+const { download } = await siteContent();
 const stores = [
-  { icon: 'fa-google-play', eyebrow: 'Get it on', name: 'Google Play', url: branding.android_app_url },
-  { icon: 'fa-apple', eyebrow: 'Download on the', name: 'App Store', url: branding.ios_app_url },
+  {
+    icon: 'fa-google-play',
+    eyebrow: download.googlePlayEyebrow,
+    name: download.googlePlayName,
+    url: branding.android_app_url,
+  },
+  {
+    icon: 'fa-apple',
+    eyebrow: download.appStoreEyebrow,
+    name: download.appStoreName,
+    url: branding.ios_app_url,
+  },
 ];
 ---
 
 <AppDownload
-  heading="Your audience"
-  headingAccent="lives in the app"
-  text="Every placement you book runs here — the feed people open when they are deciding what to do."
-  perks={['Nine placements', 'Live within a day', 'Impressions and clicks']}
+  heading={download.heading}
+  headingAccent={download.headingAccent}
+  text={download.text}
+  perks={download.perks}
   stores={stores}
 />

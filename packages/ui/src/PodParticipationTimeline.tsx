@@ -11,6 +11,7 @@ import {
   type PodTimelineNode,
   type TimelineCopy,
 } from '@duncit/utils';
+import { useTranslation } from './i18n/useTranslation';
 
 const TONE_ICON: Record<TimelineCopy['tone'], ReactElement> = {
   good: <CheckCircleIcon color="success" fontSize="small" />,
@@ -36,6 +37,7 @@ interface NodeProps {
  * "why was I not refunded" is a question only the shape answers.
  */
 function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Readonly<NodeProps>) {
+  const { t } = useTranslation();
   const copy = timelineCopy(node);
   const children = node.children ?? [];
   const isThisRequest = !!highlightBackoutNo && node.backoutNo === highlightBackoutNo;
@@ -61,7 +63,7 @@ function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Reado
                 size="small"
                 variant="outlined"
                 color="info"
-                label="In progress"
+                label={t('ui.timeline.inProgress')}
                 sx={{ height: 20, fontSize: 11 }}
               />
             )}

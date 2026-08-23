@@ -24,6 +24,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
      */
     common: {
       cancel: 'Cancel',
+      confirm: 'Confirm',
       save: 'Save',
       saving: 'Saving…',
       delete: 'Delete',
@@ -54,6 +55,42 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // translator decision should cover every one of them (rule 40).
       active: 'Active',
       inactive: 'Inactive',
+    },
+
+    /**
+     * @duncit/table's own chrome — the toolbar, the column menu, the filter
+     * popover and the two default column headers its factories produce.
+     *
+     * It sits in the SHELL bundle rather than in a namespace of its own
+     * because the table is portal-only and every portal already ships the
+     * shell: one translator decision covers all seventeen consoles instead of
+     * seventeen rows saying 'Export CSV' (rule 40).
+     */
+    table: {
+      search: 'Search…',
+      clearSearch: 'Clear search',
+      filters: 'Filters',
+      columns: 'Columns',
+      resetColumns: 'Reset columns',
+      exportCsv: 'Export CSV',
+      refresh: 'Refresh',
+      densityStandard: 'Standard density',
+      densityCompact: 'Compact density',
+      empty: 'No rows to display',
+      selectRow: 'Select row',
+      selectAllRows: 'Select every row on this page',
+      // The filter popover. `any` is the unset option of a select filter;
+      // `yes`/`no` are how a boolean column reads in a chip and a dropdown.
+      any: 'Any',
+      yes: 'Yes',
+      no: 'No',
+      clearAll: 'Clear all',
+      apply: 'Apply',
+      rangeMin: '{label} min',
+      rangeMax: '{label} max',
+      rangeFrom: '{label} from',
+      rangeTo: '{label} to',
+      opContains: 'contains',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,
@@ -442,6 +479,98 @@ export const SHELL_BUNDLE: NestedCatalogue = {
 
     /** Auto Pods in the Partners portal — the same copy mWeb and native render
      * under mweb.autoPods (rule 27 keeps them identical). */
+    /**
+     * The config-driven pod content editor — @duncit/portal-pod-form, opened
+     * by Admin and by the Partners console. The shell's namespace because both
+     * ship it and neither owns it (rule 40).
+     */
+    podContent: {
+      title: 'Edit pod',
+      readOnlyHeading: 'Pod details (read-only)',
+      name: 'Name',
+      description: 'Description',
+      images: 'Images',
+      addImage: 'Add image',
+      mediaAlt: 'Pod media',
+      noImages: 'No images yet.',
+      nameMin: 'Name must be at least 2 characters',
+      descriptionRequired: 'Description is required',
+    },
+
+    /**
+     * Discount codes — @duncit/coupons, rendered by the Admin console's
+     * /coupons page and by Marketing's per-pod offer codes. The shell's
+     * namespace because both consoles ship it and neither owns it (rule 40).
+     */
+    coupons: {
+      title: 'Coupons',
+      subtitle:
+        'Global discount codes + per-pod offer codes. Discounts apply on the payment step.',
+      newCta: 'New coupon',
+      newTitle: 'New coupon',
+      editTitle: 'Edit coupon',
+      create: 'Create',
+      empty: 'No coupons yet.',
+      search: 'Search code or description',
+      created: 'Coupon created',
+      updated: 'Coupon updated',
+      deleted: 'Coupon deleted',
+      deleteTitle: 'Delete coupon',
+      deleteMessage: 'Delete coupon "{code}"?',
+      deleteFailed: 'Could not delete coupon',
+      saveFailed: 'Could not save coupon',
+      editAria: 'Edit coupon',
+      deleteAria: 'Delete coupon',
+      // Fields.
+      code: 'Code',
+      codeHint: '3–30 chars: A–Z, 0–9, - or _',
+      description: 'Description',
+      discountPct: 'Discount %',
+      discountHint: 'Between 1 and 100',
+      minOrder: 'Min order ₹',
+      scope: 'Scope',
+      scopeGlobal: 'Global (all pods)',
+      scopePod: 'Pod-specific',
+      pod: 'Pod',
+      validFrom: 'Valid from',
+      validUntil: 'Valid until',
+      maxUses: 'Max total uses',
+      perUserLimit: 'Per-user limit',
+      active: 'Active',
+      // Columns.
+      colDiscount: 'Discount',
+      colValidity: 'Validity',
+      colUsed: 'Used',
+      filterGlobal: 'Global',
+      filterPod: 'Pod',
+      // Validation.
+      codeInvalid: 'Code must be 3-30 chars: A-Z, 0-9, - or _',
+      discountNumber: 'Discount must be a number',
+      discountMin: 'Minimum 1%',
+      discountMax: 'Maximum 100%',
+      amountNumber: 'Must be a number',
+      amountMin: 'Must be 0 or greater',
+      wholeNumber: 'Must be a whole number',
+      atLeastOne: 'Must be at least 1',
+      podRequired: 'Pick a pod for a pod-scoped coupon',
+    },
+
+    /** The Auto Pod TEMPLATE form's validation messages (@duncit/auto-pods).
+     * Admin and the Partners console both open it, so the copy is the shell's
+     * rather than either console's (rule 40). */
+    autoPodForm: {
+      titleMin: 'Title must be at least 3 characters',
+      subCategoryRequired: 'Sub category is required',
+      descriptionRequired: 'Description is required',
+      mediaRequired: 'At least one image URL is required',
+      priceRequired: 'Ticket price is required',
+      priceRange: 'Ticket price must be between 1 and 1999',
+      spotsRequired: 'Spots are required',
+      spotsWhole: 'Spots must be a whole number',
+      spotsMin: 'An Auto Pod needs at least 2 spots',
+      spotsMax: 'An Auto Pod cannot have more than 999 spots',
+      occurrenceRequired: 'Occurrence is required',
+    },
     autoPods: {
       venueTitle: 'Auto Pods for your venue',
       hostTitle: 'Auto Pods to host',
@@ -678,6 +807,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       space: 'Space',
       spaceHint: 'Each space is booked separately — two spaces can share the same time.',
       spaceHolds: '{label} · holds {capacity}',
+      holdsCapacity: 'holds {capacity}',
       wholeDayHint: 'Book the entire date(s) — no time selection needed.',
       startDate: 'Start date',
       startTime: 'Start time',
@@ -688,6 +818,45 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       price: 'Price (₹)',
       priceHint: 'Leave 0 for a free slot',
       notes: 'Notes (optional)',
+      // The calendar grid + its day drawer.
+      onLeave: 'Venue on leave',
+      leaveTag: 'LEAVE',
+      // The existing-slot list inside the day drawer.
+      existingSlots: 'Existing slots',
+      noSlotsForDate: 'No slots for this date yet.',
+      free: 'Free',
+      wholeDayRange: 'Whole day · {from} – {to}',
+      timeRange: '{from} – {to}',
+      requestedByPod: 'Requested by pod',
+      bookedByPod: 'Booked by pod',
+      awaitingDecision:
+        'Awaiting your decision — approve or decline it under Slot Requests.',
+      block: 'Block',
+      unblock: 'Unblock',
+      createFailed: 'Could not create slot',
+      updateFailed: 'Could not update slot',
+      deleteFailed: 'Could not delete slot',
+      endAfterStart: 'End must be after start.',
+      startInFuture: 'Start time must be in the future.',
+      deleteTitle: 'Delete this slot?',
+      deleteBody:
+        'This permanently removes the time slot. Booked slots cannot be deleted.',
+      // The "same window every day" bulk dialog.
+      recurringTitle: 'Recurring availability',
+      recurringHint:
+        'Add the same daily time window across a date range (up to {days} days ahead).',
+      recurringWholeDayHint: 'Each day becomes one whole-day slot — no time selection needed.',
+      dailyStart: 'Daily start',
+      dailyEnd: 'Daily end',
+      recurringPriceHint: 'Applied to every slot. 0 = free.',
+      addToCalendar: 'Add to calendar',
+      adding: 'Adding…',
+      pickDates: 'Pick the start and end date.',
+      endDateAfterStart: 'End date must be on or after the start date.',
+      pickTimes: 'Pick the daily start and end time.',
+      dailyEndAfterStart: 'Daily end time must be after the start time.',
+      noUpcomingSlots: 'That range has no upcoming slots.',
+      addFailed: 'Could not add slots',
     },
     /**
      * The host's per-pod actions, rendered by @duncit/host-pod-actions.
@@ -831,6 +1000,108 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
     // Word-for-word identical to `mweb.hostPodEdit` above — one console and one
     // app render the same dialog, and rule 27 forbids the two drifting.
+    /**
+     * The host's pod dialogs — @duncit/host-pod-actions. The menu on a pod row
+     * and the four dialogs it opens (scan, complete, edit, cancel), plus the
+     * edit-and-resubmit flow for a venue-declined pod.
+     */
+    hostPodActions: {
+      menuTooltip: 'Pod actions',
+      menuAria: 'Actions for {title}',
+      scanTickets: 'Scan attendee event tickets',
+      completePod: 'Complete pod',
+      editPod: 'Edit pod',
+      cancelPod: 'Cancel pod',
+      close: 'Close',
+      cancel: 'Cancel',
+      saving: 'Saving…',
+      saveChanges: 'Save changes',
+      fieldTitle: 'Title',
+      fieldDescription: 'Description',
+      fieldMedia: 'Media',
+      titleTooShort: 'Title is too short',
+      titleTooLong: 'Title is too long',
+      descriptionTooShort: 'Add a longer description',
+      imageRequired: 'Add at least one image URL',
+      resubmitTitle: 'Edit & resubmit pod',
+      resubmitHint:
+        'Select a different venue or choose a different time slot — your booking request is sent to the venue again when you resubmit. Your pod is kept, no new pod is created.',
+      resubmitting: 'Resubmitting…',
+      resubmitCta: 'Resubmit request',
+      venue: 'Venue',
+      venueHint: 'Pick the venue to request',
+      completeHint:
+        'Upload your party photos/videos (with the Duncit banner). Your payout is credited to your wallet as soon as the pod is completed.',
+      venueBillAmount: 'Venue Bill Amount',
+      venueBillRequired: 'Enter the venue bill amount',
+      podMedia: 'Pod Media',
+      completing: 'Completing…',
+      partyMediaRequired: 'Add at least one party photo or video',
+      cancelIntro: 'You are cancelling {title}. This cannot be undone.',
+      cancelNoOthers: 'No one else has joined this pod — it will be cancelled immediately.',
+      // Count-driven copy: the translator picks .one or .other from `count`.
+      cancelOthers: {
+        one: '{count} other attendee joined this pod.',
+        other: '{count} other attendees joined this pod.',
+      },
+      cancelRefund: {
+        one: 'Cancelling initiates a refund of {amount} across {count} payment (logged in the Finance portal). All attendees will be emailed.',
+        other: 'Cancelling initiates a refund of {amount} across {count} payments (logged in the Finance portal). All attendees will be emailed.',
+      },
+      cancelEmailOnly: 'All attendees will be emailed about the cancellation.',
+      reason: 'Reason',
+      reasonRequired: 'Select a reason',
+      // The reason dropdown. The VALUE stored on the pod stays the English
+      // the server's own list uses; only the wording shown is translated.
+      cancelReasons: {
+        eventCancelled: 'Event cancelled',
+        venueUnavailable: 'Venue unavailable',
+        lowAttendance: 'Low attendance',
+        rescheduling: 'Rescheduling',
+        other: 'Other',
+      },
+      note: 'Note',
+      noteHint: 'Shared with attendees in the cancellation email.',
+      noteTooLong: 'Keep the note under 500 characters',
+      noteRequired: 'Please describe the reason',
+      keepPod: 'Keep pod',
+      cancelling: 'Cancelling…',
+      initiateRefunds: 'Initiate refunds & cancel',
+      pasteTicketCode: 'Or paste the ticket code',
+      scanFrameHint: 'Hold the attendee’s ticket QR inside the frame.',
+      checkCode: 'Check',
+    },
+    /**
+     * The onboarding-meeting dialogs in @duncit/earn — reschedule and cancel,
+     * rendered on mWeb's /earn page and in the Partners console.
+     */
+    earnMeeting: {
+      cancelTitle: 'Cancel this meeting?',
+      cancelBody:
+        'Your onboarding meeting will be cancelled and the slot freed. You can book a new one anytime.',
+      cancelReasonLabel: 'Reason for cancelling',
+      cancelReasonHint: 'Tell our onboarding team why you’re cancelling.',
+      keepMeeting: 'Keep meeting',
+      cancelling: 'Cancelling…',
+      cancelCta: 'Cancel meeting',
+      cancelFailed: 'Could not cancel — please try again.',
+      rescheduleTitle: 'Reschedule your onboarding meeting',
+      currentlyBooked: 'Currently booked for {when}. You can reschedule once.',
+      noSlots: 'No slots are open right now — please check back soon.',
+      movingFromTo: 'Moving from {from} to {to}.',
+      rescheduleReasonLabel: 'Reason for rescheduling',
+      rescheduleReasonHint: 'Tell our onboarding team why you’re moving the meeting.',
+      close: 'Close',
+      moving: 'Moving…',
+      moveCta: 'Move to this slot',
+      pickSlot: 'Please pick an available slot.',
+      rescheduleFailed: 'Could not reschedule — please try again.',
+      reasonRequired: 'Please tell us a reason.',
+      reasonTooLong: 'Keep the reason under 500 characters.',
+      // Word-for-word the shared chip's label; this namespace carries its own
+      // row because @duncit/earn takes no dependency on @duncit/ai-monitoring.
+      aiMonitoring: 'AI Monitoring',
+    },
     hostPodEdit: {
       contentCheck: 'Content check',
     },

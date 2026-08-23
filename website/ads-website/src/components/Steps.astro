@@ -1,13 +1,15 @@
 ---
-import { siteConfig } from '../config/site-config';
-const { steps } = siteConfig;
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
+const { steps, stepsSection } = siteConfig;
 ---
 
 <section id="how" class="scroll-mt-24 bg-surface/60 py-16">
   <div class="mx-auto max-w-6xl px-5">
     <div class="mx-auto max-w-2xl text-center">
-      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">How it works</p>
-      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">Four steps to live</h2>
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{stepsSection.eyebrow}</p>
+      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{stepsSection.heading}</h2>
     </div>
     <ol class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {

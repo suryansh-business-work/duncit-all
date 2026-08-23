@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { PROMPT_COPY } from '../copy';
+import { usePromptCopy } from '../i18n/useCopy';
 
 interface Props {
   url: string;
@@ -18,9 +18,10 @@ interface Props {
  * somewhere needs that sentence in front of them at the moment they copy.
  */
 export function FeedUrlBar({ url, label }: Readonly<Props>) {
+  const copy = usePromptCopy();
   const [copied, setCopied] = useState(false);
 
-  const copy = () => {
+  const copyUrl = () => {
     globalThis.navigator?.clipboard
       ?.writeText(url)
       .then(() => {
@@ -33,10 +34,10 @@ export function FeedUrlBar({ url, label }: Readonly<Props>) {
   return (
     <Alert severity="warning" icon={false} sx={{ py: 1 }}>
       <Typography variant="subtitle2" fontWeight={700}>
-        {PROMPT_COPY.apiTitle}
+        {copy.apiTitle}
       </Typography>
       <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0.75 }}>
-        {PROMPT_COPY.apiHint}
+        {copy.apiHint}
       </Typography>
       <Stack direction="row" alignItems="center" spacing={0.5}>
         <Box
@@ -55,15 +56,15 @@ export function FeedUrlBar({ url, label }: Readonly<Props>) {
         >
           {url}
         </Box>
-        <Tooltip title={copied ? PROMPT_COPY.apiCopied : label}>
-          <IconButton size="small" aria-label={label} onClick={copy}>
+        <Tooltip title={copied ? copy.apiCopied : label}>
+          <IconButton size="small" aria-label={label} onClick={copyUrl}>
             <ContentCopyIcon fontSize="small" color={copied ? 'success' : 'inherit'} />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Open in a new tab">
+        <Tooltip title={copy.apiOpenInNewTab}>
           <IconButton
             size="small"
-            aria-label="Open feed in a new tab"
+            aria-label={copy.apiOpenFeed}
             component="a"
             href={url}
             target="_blank"

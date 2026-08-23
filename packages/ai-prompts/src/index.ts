@@ -18,7 +18,9 @@ export {
 } from './render';
 export { promptFormSchema, promptInitialValues } from './schema';
 export type { PromptFormValues } from './schema';
-export { PROMPT_COPY, apiOriginFromGraphqlUrl, promptFeedUrl } from './copy';
+export { promptCopy, apiOriginFromGraphqlUrl, promptFeedUrl } from './copy';
+export type { PromptCopy, PromptTranslate } from './copy';
+export { usePromptCopy } from './i18n/useCopy';
 export { promptSearchText } from './search';
 export {
   AI_PROMPTS,

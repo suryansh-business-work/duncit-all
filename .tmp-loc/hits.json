@@ -2,3007 +2,1863 @@
  {
   "file": "app/mobile-app/src/components/account/AddressFormSheet.tsx",
   "line": 34,
+  "kind": "obj",
   "text": "Home",
   "src": "label: 'Home',"
  },
  {
   "file": "app/mobile-app/src/components/create-pod/steps/VenueSlotStep.tsx",
   "line": 40,
+  "kind": "obj",
   "text": "Whole venue",
   "src": "return [{ label: 'Whole venue', capacity: venue.capacity ?? 0, slotSpaceLabel: '' }];"
  },
  {
   "file": "app/mweb/src/pages/account-page/address-book-form/address-book.types.tsx",
   "line": 23,
+  "kind": "obj",
   "text": "Home",
   "src": "label: 'Home',"
  },
  {
   "file": "app/mweb/src/pages/create-pod-page/create-pod/steps/VenueSlotStep.tsx",
   "line": 29,
+  "kind": "obj",
   "text": "Whole venue",
   "src": "return [{ label: 'Whole venue', capacity: venue.capacity ?? 0, slotSpaceLabel: '' }];"
  },
  {
-  "file": "packages/ad-request-form/src/AdMediaField.tsx",
-  "line": 62,
-  "text": "Ad media preview",
-  "src": "<Box component=\"img\" src={value} alt=\"Ad media preview\" sx={PREVIEW_SX} />"
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 45,
-  "text": "Submit Ad Request",
-  "src": "submitLabel = 'Submit Ad Request',"
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 82,
-  "text": "Ad Title",
-  "src": "<RhfTextField control={control} name=\"ad_title\" label=\"Ad Title\" required hint=\"3–120 characters\" />"
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 88,
-  "text": "Ad Description",
-  "src": "label=\"Ad Description\""
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 101,
-  "text": "Ad Type",
-  "src": "label=\"Ad Type\""
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 110,
-  "text": "Changing the type clears the uploaded media",
-  "src": "helperText=\"Changing the type clears the uploaded media\""
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 122,
-  "text": "Ad Position",
-  "src": "<RhfTextField control={control} name=\"position\" label=\"Ad Position\" select hint=\"Auto shows the ad across every placement\">"
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 136,
-  "text": "Ad Start Date",
-  "src": "label=\"Ad Start Date\""
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 193,
-  "text": "Redirect URL",
-  "src": "<RhfTextField control={control} name=\"redirect_url\" label=\"Redirect URL\" hint=\"Optional — where the ad opens; must be an http(s) link\" />"
- },
- {
-  "file": "packages/ad-request-form/src/AdRequestForm.tsx",
-  "line": 196,
-  "text": "Target Audience",
-  "src": "<RhfTextField control={control} name=\"target_audience\" label=\"Target Audience\" multiline minRows={2} hint=\"Optional — describe who the ad should reach\" />"
- },
- {
-  "file": "packages/ad-request-form/src/EstimateCard.tsx",
-  "line": 41,
-  "text": "Duration",
-  "src": "<InfoRow variant=\"split\" label=\"Duration\" value={daysLabel} />"
- },
- {
-  "file": "packages/ad-request-form/src/EstimateCard.tsx",
-  "line": 43,
-  "text": "Total estimate",
-  "src": "<InfoRow variant=\"split\" bold label=\"Total estimate\" value={formatAdCost(perDay * durationDays, symbol)} />"
- },
- {
-  "file": "packages/ai-prompts/src/mui/FeedUrlBar.tsx",
-  "line": 63,
-  "text": "Open in a new tab",
-  "src": "<Tooltip title=\"Open in a new tab\">"
- },
- {
-  "file": "packages/ai-prompts/src/mui/FeedUrlBar.tsx",
-  "line": 66,
-  "text": "Open feed in a new tab",
-  "src": "aria-label=\"Open feed in a new tab\""
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptForm.tsx",
-  "line": 39,
-  "text": "Save",
-  "src": "submitLabel = 'Save',"
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptsTable.tsx",
-  "line": 78,
-  "text": "Estimated token size of the prompt content",
-  "src": "<Tooltip title=\"Estimated token size of the prompt content\">"
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptsTable.tsx",
-  "line": 27,
-  "text": "Name",
-  "src": "const renderName = (p: AiPrompt) => ("
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptsTable.tsx",
-  "line": 49,
-  "text": "Key",
-  "src": "const renderKey = (p: AiPrompt) => ("
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptsTable.tsx",
-  "line": 69,
-  "text": "Category",
-  "src": "const renderCategory = (p: AiPrompt) => <Chip size=\"small\" variant=\"outlined\" label={p.category} />;"
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptsTable.tsx",
-  "line": 71,
-  "text": "Model",
-  "src": "const renderModel = (p: AiPrompt) => ("
- },
- {
-  "file": "packages/ai-prompts/src/mui/PromptsTable.tsx",
-  "line": 77,
-  "text": "Tokens",
-  "src": "const renderTokens = (p: AiPrompt) => ("
- },
- {
-  "file": "packages/auto-pods/src/form/AutoPodForm.tsx",
-  "line": 45,
-  "text": "Ticket price is required",
-  "src": ".number({ message: 'Ticket price is required' })"
- },
- {
-  "file": "packages/auto-pods/src/form/AutoPodForm.tsx",
-  "line": 49,
-  "text": "Spots are required",
-  "src": ".number({ message: 'Spots are required' })"
- },
- {
-  "file": "packages/availability-calendar/src/AvailabilityCalendar.tsx",
-  "line": 124,
-  "text": "Venue on leave",
-  "src": "<Typography variant=\"caption\" sx={{ fontSize: 9, fontWeight: 800 }} aria-label=\"Venue on leave\">"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/AddSlotForm.tsx",
-  "line": 107,
-  "text": "Could not create slot",
-  "src": "setError(e instanceof Error ? e.message : 'Could not create slot');"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/AddSlotForm.tsx",
-  "line": 123,
-  "text": "End must be after start.",
-  "src": "setError('End must be after start.');"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/AddSlotForm.tsx",
-  "line": 127,
-  "text": "Start time must be in the future.",
-  "src": "setError('Start time must be in the future.');"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/index.tsx",
-  "line": 2,
-  "text": "Close",
-  "src": "import CloseIcon from '@mui/icons-material/Close';"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/SlotList.tsx",
-  "line": 65,
-  "text": "Could not update slot",
-  "src": "setError(e instanceof Error ? e.message : 'Could not update slot');"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/SlotList.tsx",
-  "line": 76,
-  "text": "Could not delete slot",
-  "src": "setError(e instanceof Error ? e.message : 'Could not delete slot');"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/SlotList.tsx",
-  "line": 150,
-  "text": "Delete this slot?",
-  "src": "<DialogTitle>Delete this slot?</DialogTitle>"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/SlotList.tsx",
-  "line": 152,
-  "text": "This permanently removes the time slot. Booked slots cannot be deleted.",
-  "src": "<DialogContentText>This permanently removes the time slot. Booked slots cannot be deleted.</DialogContentText>"
- },
- {
-  "file": "packages/availability-calendar/src/DayDrawer/SlotList.tsx",
-  "line": 155,
-  "text": "Cancel",
-  "src": "<Button onClick={() => setConfirmDeleteId(null)}>Cancel</Button>"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 17,
-  "text": "Close",
-  "src": "import CloseIcon from '@mui/icons-material/Close';"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 183,
-  "text": "Start date",
-  "src": "label=\"Start date\""
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 116,
-  "text": "End date",
-  "src": "if (isBefore(endDate, startDate)) return 'End date must be on or after the start date.';"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 200,
-  "text": "Daily start",
-  "src": "<TimePicker label=\"Daily start\" value={startTime} onChange={setStartTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 120,
-  "text": "Daily end",
-  "src": "return 'Daily end time must be after the start time.';"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 207,
-  "text": "Price (₹)",
-  "src": "label=\"Price (₹)\""
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 211,
-  "text": "Applied to every slot. 0 = free.",
-  "src": "helperText=\"Applied to every slot. 0 = free.\""
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 150,
-  "text": "Could not add slots",
-  "src": "setError(e instanceof Error ? e.message : 'Could not add slots');"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 140,
-  "text": "That range has no upcoming slots.",
-  "src": "setError('That range has no upcoming slots.');"
- },
- {
-  "file": "packages/availability-calendar/src/RecurringAvailabilityDialog.tsx",
-  "line": 221,
-  "text": "Cancel",
-  "src": "<Button onClick={handleClose}>Cancel</Button>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 3,
-  "text": "The Duncit app",
-  "src": "* The Duncit app, in a phone."
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 27,
-  "text": "Tonight",
-  "src": "<p class=\"app-phone-title\">Tonight</p>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 36,
-  "text": "Sunset football, 6pm",
-  "src": "<p class=\"app-phone-card-title\">Sunset football, 6pm</p>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 37,
-  "text": "Turf 9 · 4 spots left",
-  "src": "<p class=\"app-phone-sub\">Turf 9 · 4 spots left</p>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 50,
-  "text": "Weekend crew",
-  "src": "<p class=\"app-phone-row-title\">Weekend crew</p>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 51,
-  "text": "See you at 6! 🔥",
-  "src": "<p class=\"app-phone-sub\">See you at 6! 🔥</p>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 59,
-  "text": "Board game night",
-  "src": "<p class=\"app-phone-row-title\">Board game night</p>"
- },
- {
-  "file": "packages/brand/src/AppPhone.astro",
-  "line": 60,
-  "text": "Anyone bringing snacks?",
-  "src": "<p class=\"app-phone-sub\">Anyone bringing snacks?</p>"
- },
- {
-  "file": "packages/brand/src/NewsletterSignup.astro",
-  "line": 3,
-  "text": "Get Duncit updates",
-  "src": "* \"Get Duncit updates\" — the subscribe form, once."
- },
- {
-  "file": "packages/brand/src/NewsletterSignup.astro",
-  "line": 58,
-  "text": "That did not go through — check your connection and try again.",
-  "src": "errorText = 'That did not go through — check your connection and try again.',"
- },
- {
-  "file": "packages/brand/src/NewsletterSignup.astro",
-  "line": 81,
-  "text": "Email address",
-  "src": "<label class=\"newsletter-sr\" for={id}>Email address</label>"
- },
- {
-  "file": "packages/brand/src/PolicyStrip.astro",
-  "line": 32,
-  "text": "Policies",
-  "src": "heading = 'Policies',"
- },
- {
-  "file": "packages/brand/src/SiteMenu.astro",
-  "line": 28,
-  "text": "Menu",
-  "src": "const { links, actions = [], label = 'Menu', onDark = false, class: className = '' } = Astro.props;"
- },
- {
-  "file": "packages/brand/src/SiteMenu.astro",
-  "line": 47,
-  "text": "Close menu",
-  "src": "<button type=\"button\" class=\"site-menu-close\" data-site-menu-close aria-label=\"Close menu\">"
- },
- {
   "file": "packages/brand/src/SocialLinks.astro",
   "line": 30,
+  "kind": "obj",
   "text": "Instagram",
   "src": "{ icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },"
  },
  {
   "file": "packages/brand/src/SocialLinks.astro",
   "line": 32,
+  "kind": "obj",
   "text": "Facebook",
   "src": "{ icon: 'fa-facebook-f', label: 'Facebook', href: 'https://facebook.com/duncitapp' },"
  },
  {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 91,
-  "text": "Code",
-  "src": "label=\"Code\""
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 97,
-  "text": "Description",
-  "src": "<RhfTextField control={control} name=\"description\" label=\"Description\" size=\"small\" multiline minRows={2} />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 99,
-  "text": "Discount %",
-  "src": "<RhfTextField control={control} name=\"discount_pct\" type=\"number\" label=\"Discount %\" size=\"small\" required hint=\"Between 1 and 100\" />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 100,
-  "text": "Min order ₹",
-  "src": "<RhfTextField control={control} name=\"min_order_amount\" type=\"number\" label=\"Min order ₹\" size=\"small\" />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 103,
-  "text": "Scope",
-  "src": "<RhfTextField control={control} name=\"scope\" select label=\"Scope\" size=\"small\" disabled={!!lockedPod}>"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 20,
-  "text": "Pod",
-  "src": "import { CREATE_COUPON, UPDATE_COUPON, type CouponPodOption, type CouponRow } from './queries';"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 122,
-  "text": "Valid from",
-  "src": "<CouponDateField control={control} name=\"valid_from\" label=\"Valid from\" />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 123,
-  "text": "Valid until",
-  "src": "<CouponDateField control={control} name=\"valid_until\" label=\"Valid until\" />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 126,
-  "text": "Max total uses",
-  "src": "<RhfTextField control={control} name=\"max_uses\" type=\"number\" label=\"Max total uses\" size=\"small\" />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 127,
-  "text": "Per-user limit",
-  "src": "<RhfTextField control={control} name=\"per_user_limit\" type=\"number\" label=\"Per-user limit\" size=\"small\" />"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 135,
-  "text": "Active",
-  "src": "label=\"Active\""
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 104,
-  "text": "Global (all pods)",
-  "src": "<MenuItem value=\"GLOBAL\">Global (all pods)</MenuItem>"
- },
- {
-  "file": "packages/coupons/src/CouponFormDialog.tsx",
-  "line": 142,
-  "text": "Cancel",
-  "src": "<Button onClick={onClose}>Cancel</Button>"
- },
- {
-  "file": "packages/coupons/src/CouponsPage.tsx",
-  "line": 36,
-  "text": "Delete coupon",
-  "src": "const ok = await confirm({ title: 'Delete coupon', message: `Delete coupon \"${c.code}\"?` });"
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 116,
-  "text": "No coupons yet.",
-  "src": "emptyText=\"No coupons yet.\""
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 25,
-  "text": "Global",
-  "src": "{ value: 'GLOBAL', label: 'Global' },"
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 26,
-  "text": "Pod",
-  "src": "{ value: 'POD', label: 'Pod' },"
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 33,
-  "text": "Code",
-  "src": "const renderCode = (c: CouponRow) => ("
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 76,
-  "text": "Discount",
-  "src": "headerName: 'Discount',"
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 48,
-  "text": "Scope",
-  "src": "const renderScope = (c: CouponRow) => ("
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 91,
-  "text": "Validity",
-  "src": "headerName: 'Validity',"
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 96,
-  "text": "Valid until",
-  "src": "dateColumn<CouponRow>({ field: 'valid_until', headerName: 'Valid until', formatDate: localeDate }),"
- },
- {
-  "file": "packages/coupons/src/CouponsTable.tsx",
-  "line": 97,
-  "text": "Used",
-  "src": "{ field: 'used_count', headerName: 'Used', width: 100, valueGetter: usedValue },"
- },
- {
-  "file": "packages/dialogs/src/ConfirmDialog.tsx",
-  "line": 13,
-  "text": "Confirm",
-  "src": "export type ConfirmColor = 'primary' | 'error' | 'warning' | 'success' | 'inherit';"
- },
- {
-  "file": "packages/dialogs/src/ConfirmDialog.tsx",
-  "line": 40,
-  "text": "Cancel",
-  "src": "onCancel?: () => void;"
- },
- {
-  "file": "packages/earn/src/CancelMeetingDialog.tsx",
-  "line": 48,
-  "text": "Reason for cancelling",
-  "src": "label=\"Reason for cancelling\""
- },
- {
-  "file": "packages/earn/src/CancelMeetingDialog.tsx",
-  "line": 49,
-  "text": "Tell our onboarding team why you’re cancelling.",
-  "src": "helperText=\"Tell our onboarding team why you’re cancelling.\""
- },
- {
-  "file": "packages/earn/src/CancelMeetingDialog.tsx",
-  "line": 34,
-  "text": "Could not cancel — please try again.",
-  "src": "setError(e instanceof Error ? e.message : 'Could not cancel — please try again.');"
- },
- {
-  "file": "packages/earn/src/CancelMeetingDialog.tsx",
-  "line": 40,
-  "text": "Cancel this meeting?",
-  "src": "<DialogTitle sx={{ fontWeight: 700 }}>Cancel this meeting?</DialogTitle>"
- },
- {
-  "file": "packages/earn/src/CancelMeetingDialog.tsx",
-  "line": 56,
-  "text": "Keep meeting",
-  "src": "<Button onClick={onClose} disabled={cancelling}>Keep meeting</Button>"
- },
- {
-  "file": "packages/earn/src/meeting-reason/meeting-reason.form.tsx",
-  "line": 52,
-  "text": "AI Monitoring",
-  "src": "<Typography variant=\"caption\">AI Monitoring</Typography>"
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 83,
-  "text": "Reason for rescheduling",
-  "src": "label=\"Reason for rescheduling\""
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 84,
-  "text": "Tell our onboarding team why you’re moving the meeting.",
-  "src": "helperText=\"Tell our onboarding team why you’re moving the meeting.\""
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 51,
-  "text": "Could not reschedule — please try again.",
-  "src": "setError(e instanceof Error ? e.message : 'Could not reschedule — please try again.');"
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 44,
-  "text": "Please pick an available slot.",
-  "src": "if (!slot) { setError('Please pick an available slot.'); return; }"
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 60,
-  "text": "Reschedule your onboarding meeting",
-  "src": "<DialogTitle sx={{ fontWeight: 700 }}>Reschedule your onboarding meeting</DialogTitle>"
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 72,
-  "text": "No slots are open right now — please check back soon.",
-  "src": "<Alert severity=\"info\">No slots are open right now — please check back soon.</Alert>"
- },
- {
-  "file": "packages/earn/src/RescheduleMeetingDialog.tsx",
-  "line": 23,
-  "text": "Close",
-  "src": "onClose: () => void;"
- },
- {
-  "file": "packages/host-pod-actions/src/HostPodActionsMenu.tsx",
-  "line": 84,
-  "text": "Pod actions",
-  "src": "<Tooltip title=\"Pod actions\">"
- },
- {
-  "file": "packages/host-pod-actions/src/HostPodActionsMenu.tsx",
-  "line": 108,
-  "text": "Scan attendee event tickets",
-  "src": "<ListItemText primary=\"Scan attendee event tickets\" />"
- },
- {
-  "file": "packages/host-pod-actions/src/HostPodActionsMenu.tsx",
-  "line": 132,
-  "text": "Complete pod",
-  "src": "<ListItemText primary=\"Complete pod\" />"
- },
- {
-  "file": "packages/host-pod-actions/src/HostPodActionsMenu.tsx",
-  "line": 139,
-  "text": "Edit pod",
-  "src": "<ListItemText primary=\"Edit pod\" />"
- },
- {
-  "file": "packages/host-pod-actions/src/HostPodActionsMenu.tsx",
-  "line": 162,
-  "text": "Cancel pod",
-  "src": "<ListItemText primary=\"Cancel pod\" />"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-complete/PodCompleteDialog.tsx",
-  "line": 120,
-  "text": "Venue Bill Amount",
-  "src": "label=\"Venue Bill Amount\""
- },
- {
-  "file": "packages/host-pod-actions/src/pod-complete/PodCompleteDialog.tsx",
-  "line": 49,
-  "text": "Enter the venue bill amount",
-  "src": "message: 'Enter the venue bill amount',"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-complete/PodCompleteDialog.tsx",
-  "line": 138,
-  "text": "Pod Media",
-  "src": "label: 'Pod Media',"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-complete/PodCompleteDialog.tsx",
-  "line": 105,
-  "text": "Complete pod",
-  "src": "<DialogTitle sx={{ fontWeight: 700 }}>Complete pod</DialogTitle>"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-resubmit/PodResubmitDialog.tsx",
-  "line": 11,
-  "text": "Title",
-  "src": "DialogTitle,"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-resubmit/PodResubmitDialog.tsx",
-  "line": 104,
-  "text": "Description",
-  "src": "label=\"Description\""
- },
- {
-  "file": "packages/host-pod-actions/src/pod-resubmit/PodResubmitDialog.tsx",
-  "line": 39,
-  "text": "Media",
-  "src": "const { labels, renderMediaField } = useHostPodActionsConfig();"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-resubmit/PodResubmitDialog.tsx",
-  "line": 82,
-  "text": "Edit &amp; resubmit pod",
-  "src": "<DialogTitle sx={{ fontWeight: 700 }}>Edit &amp; resubmit pod</DialogTitle>"
- },
- {
-  "file": "packages/host-pod-actions/src/pod-resubmit/VenueSlotFields.tsx",
-  "line": 6,
-  "text": "Venue",
-  "src": "import type { ResubmitSlotOption, ResubmitVenueOption } from '../types';"
- },
- {
-  "file": "packages/host-pod-actions/src/PodCancelDialog.tsx",
-  "line": 149,
-  "text": "Reason",
-  "src": "label=\"Reason\""
- },
- {
-  "file": "packages/host-pod-actions/src/PodCancelDialog.tsx",
-  "line": 164,
-  "text": "Note",
-  "src": "label=\"Note\""
- },
- {
-  "file": "packages/host-pod-actions/src/PodCancelDialog.tsx",
-  "line": 45,
-  "text": "Please describe the reason",
-  "src": "ctx.addIssue({ code: 'custom', path: ['reason_note'], message: 'Please describe the reason' });"
- },
- {
-  "file": "packages/host-pod-actions/src/PodCancelDialog.tsx",
-  "line": 75,
-  "text": "All attendees will be emailed about the cancellation.",
-  "src": "<> All attendees will be emailed about the cancellation.</>"
- },
- {
-  "file": "packages/host-pod-actions/src/PodCancelDialog.tsx",
-  "line": 119,
-  "text": "Cancel pod",
-  "src": "const confirmLabel = hasRefunds ? 'Initiate refunds & cancel' : 'Cancel pod';"
- },
- {
-  "file": "packages/host-pod-actions/src/PodEditDialog.tsx",
-  "line": 11,
-  "text": "Title",
-  "src": "DialogTitle,"
- },
- {
-  "file": "packages/host-pod-actions/src/PodEditDialog.tsx",
-  "line": 87,
-  "text": "Description",
-  "src": "label=\"Description\""
- },
- {
-  "file": "packages/host-pod-actions/src/PodEditDialog.tsx",
-  "line": 43,
-  "text": "Media",
-  "src": "const { labels, renderMediaField } = useHostPodActionsConfig();"
- },
- {
-  "file": "packages/host-pod-actions/src/PodEditDialog.tsx",
-  "line": 75,
-  "text": "Edit pod",
-  "src": "<DialogTitle sx={{ fontWeight: 700 }}>Edit pod</DialogTitle>"
- },
- {
-  "file": "packages/host-pod-actions/src/ticket-scan/ScannerViewport.tsx",
-  "line": 62,
-  "text": "Or paste the ticket code",
-  "src": "label=\"Or paste the ticket code\""
- },
- {
-  "file": "packages/host-pod-actions/src/ticket-scan/TicketScanDialog.tsx",
-  "line": 28,
-  "text": "Close",
-  "src": "onClose: () => void;"
- },
- {
-  "file": "packages/location/src/MapEmbedCard.tsx",
-  "line": 74,
-  "text": "Map preview",
-  "src": "title = 'Map preview',"
- },
- {
-  "file": "packages/media-picker/src/media-list-field/MediaListField.tsx",
-  "line": 25,
-  "text": "Add image",
-  "src": "buttonLabel = 'Add image',"
- },
- {
-  "file": "packages/media-picker/src/media-list-field/MediaListRow.tsx",
-  "line": 13,
-  "text": "Replace",
-  "src": "onReplace: () => void;"
- },
- {
-  "file": "packages/media-picker/src/media-list-field/MediaListRow.tsx",
-  "line": 86,
-  "text": "Move up",
-  "src": "<Tooltip title=\"Move up\">"
- },
- {
-  "file": "packages/media-picker/src/media-list-field/MediaListRow.tsx",
-  "line": 93,
-  "text": "Move down",
-  "src": "<Tooltip title=\"Move down\">"
- },
- {
-  "file": "packages/media-picker/src/media-list-field/MediaListRow.tsx",
-  "line": 15,
-  "text": "Remove",
-  "src": "onRemove: () => void;"
- },
- {
-  "file": "packages/media-picker/src/PexelsVideosTab.tsx",
-  "line": 91,
-  "text": "This video has no downloadable mp4",
-  "src": "setError('This video has no downloadable mp4');"
- },
- {
-  "file": "packages/media-picker/src/single-image/AvatarVariant.tsx",
-  "line": 111,
-  "text": "remove image",
-  "src": "aria-label=\"remove image\""
- },
- {
-  "file": "packages/pod-form/src/components/ChipArrayField.tsx",
-  "line": 20,
-  "text": "Type and press Enter",
-  "src": "placeholder = 'Type and press Enter',"
- },
- {
-  "file": "packages/pod-form/src/components/GoogleMapPreview.tsx",
-  "line": 12,
-  "text": "Map preview",
-  "src": "export default function GoogleMapPreview({ title = 'Map preview', parts, lat, lng }: Readonly<Props>) {"
- },
- {
-  "file": "packages/portal-pod-form/src/PodContentFormDialog.tsx",
-  "line": 41,
-  "text": "Edit pod",
-  "src": "title = 'Edit pod',"
- },
- {
-  "file": "packages/portal-pod-form/src/PodContentFormDialog.tsx",
-  "line": 98,
-  "text": "Name",
-  "src": "label=\"Name\""
- },
- {
-  "file": "packages/portal-pod-form/src/PodContentFormDialog.tsx",
-  "line": 107,
-  "text": "Description",
-  "src": "label=\"Description\""
- },
- {
-  "file": "packages/portal-pod-form/src/PodContentFormDialog.tsx",
-  "line": 136,
-  "text": "Pod media",
-  "src": "alt=\"Pod media\""
- },
- {
-  "file": "packages/portal-pod-form/src/PodContentFormDialog.tsx",
-  "line": 168,
-  "text": "Cancel",
-  "src": "<Button onClick={onClose}>Cancel</Button>"
- },
- {
-  "file": "packages/shell/src/staff-chat/EmojiPicker.tsx",
-  "line": 18,
-  "text": "Reactions",
-  "src": "title: 'Reactions',"
- },
- {
-  "file": "packages/shell/src/staff-chat/EmojiPicker.tsx",
-  "line": 23,
-  "text": "Faces",
-  "src": "title: 'Faces',"
- },
- {
-  "file": "packages/shell/src/staff-chat/EmojiPicker.tsx",
-  "line": 28,
-  "text": "Work",
-  "src": "title: 'Work',"
- },
- {
-  "file": "packages/table/src/cells.tsx",
-  "line": 50,
-  "text": "Created",
-  "src": "headerName?: string; // default 'Created'"
- },
- {
-  "file": "packages/table/src/cells.tsx",
-  "line": 141,
-  "text": "Status",
-  "src": "headerName?: string; // default 'Status'"
- },
- {
-  "file": "packages/table/src/cells.tsx",
-  "line": 237,
-  "text": "Actions",
-  "src": "export interface ActionsColumnOptions<T> {"
- },
- {
-  "file": "packages/table/src/toolbar/ColumnMenu.tsx",
-  "line": 41,
-  "text": "Reset columns",
-  "src": "<ListItemText primary=\"Reset columns\" />"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 73,
-  "text": "Clear search",
-  "src": "<Tooltip title=\"Clear search\">"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 73,
-  "text": "Clear search",
-  "src": "<Tooltip title=\"Clear search\">"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 35,
-  "text": "Columns",
-  "src": "resetColumns: () => void;"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 35,
-  "text": "Columns",
-  "src": "resetColumns: () => void;"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 133,
-  "text": "Export CSV",
-  "src": "<Tooltip title=\"Export CSV\">"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 133,
-  "text": "Export CSV",
-  "src": "<Tooltip title=\"Export CSV\">"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 7,
-  "text": "Refresh",
-  "src": "import RefreshIcon from '@mui/icons-material/Refresh';"
- },
- {
-  "file": "packages/table/src/toolbar/DuncitTableToolbar.tsx",
-  "line": 7,
-  "text": "Refresh",
-  "src": "import RefreshIcon from '@mui/icons-material/Refresh';"
- },
- {
-  "file": "packages/ui/src/AttendanceChip.tsx",
-  "line": 31,
-  "text": "No ticket on this pod has been scanned yet",
-  "src": "<Tooltip title=\"No ticket on this pod has been scanned yet\">"
- },
- {
-  "file": "packages/ui/src/AttendanceChip.tsx",
-  "line": 21,
-  "text": "Not scanned",
-  "src": "* \"Not scanned\" is deliberately its own state: a pod where nobody was scanned"
- },
- {
-  "file": "packages/ui/src/AttendanceChip.tsx",
-  "line": 38,
-  "text": "Seats scanned in at the door — a completed pod is settled on these",
-  "src": "<Tooltip title=\"Seats scanned in at the door — a completed pod is settled on these\">"
- },
- {
-  "file": "packages/ui/src/LanguageSelect.tsx",
-  "line": 4,
-  "text": "Language",
-  "src": "export interface LanguageOption {"
- },
- {
-  "file": "packages/ui/src/PodParticipationTimeline.tsx",
-  "line": 64,
-  "text": "In progress",
-  "src": "label=\"In progress\""
- },
- {
-  "file": "packages/user-context/src/login-screen/login.form.tsx",
-  "line": 26,
-  "text": "e-mail address",
-  "src": ".email('Enter a valid e-mail address')"
- },
- {
-  "file": "packages/user-context/src/login-screen/login.form.tsx",
-  "line": 89,
-  "text": "toggle password visibility",
-  "src": "<IconButton onClick={() => setShowPwd((v) => !v)} edge=\"end\" size=\"small\" aria-label=\"toggle password visibility\">"
- },
- {
-  "file": "packages/user-context/src/login-screen/login.form.tsx",
-  "line": 113,
-  "text": "sign in",
-  "src": "aria-label=\"sign in\""
- },
- {
-  "file": "packages/user-context/src/login-screen/LoginScreen.tsx",
-  "line": 67,
-  "text": "toggle color mode",
-  "src": "aria-label=\"toggle color mode\""
- },
- {
-  "file": "packages/user-context/src/login-screen/OtherPortalsDialog.tsx",
-  "line": 52,
-  "text": "Search portals…",
-  "src": "placeholder=\"Search portals…\""
- },
- {
-  "file": "packages/user-context/src/portal-mode/screens.tsx",
-  "line": 41,
-  "text": "We’ll be back soon",
-  "src": "title=\"We’ll be back soon\""
- },
- {
-  "file": "packages/user-context/src/portal-mode/screens.tsx",
-  "line": 51,
-  "text": "Under development",
-  "src": "title=\"Under development\""
- },
- {
-  "file": "packages/user-context/src/UserDataNotLoadedDialog.tsx",
-  "line": 33,
-  "text": "User data not loaded",
-  "src": "<DialogTitle sx={{ fontWeight: 900, pb: 1 }}>User data not loaded</DialogTitle>"
- },
- {
-  "file": "website/ads-website/src/components/DownloadApps.astro",
-  "line": 16,
-  "text": "Your audience",
-  "src": "heading=\"Your audience\""
- },
- {
-  "file": "website/ads-website/src/components/Features.astro",
-  "line": 8,
-  "text": "Everything you need to run ads",
-  "src": "<h2 class=\"text-3xl text-ink sm:text-4xl\">Everything you need to run ads</h2>"
- },
- {
-  "file": "website/ads-website/src/components/Features.astro",
-  "line": 9,
-  "text": "One console for the full campaign lifecycle.",
-  "src": "<p class=\"mt-4 text-ink-soft\">One console for the full campaign lifecycle.</p>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 17,
-  "text": "Stories",
-  "src": "<div class=\"zone h-11\" data-zone=\"STATUS\"><span>Stories</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 21,
-  "text": "Explore scroll",
-  "src": "<div class=\"zone h-16\" data-zone=\"EXPLORE_SCROLL\"><span>Explore scroll</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 22,
-  "text": "Pod listings",
-  "src": "<div class=\"zone h-10\" data-zone=\"POD_LIST\"><span>Pod listings</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 23,
-  "text": "Venue listings",
-  "src": "<div class=\"zone h-10\" data-zone=\"VENUE_LIST\"><span>Venue listings</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 24,
-  "text": "Club listings",
-  "src": "<div class=\"zone h-10\" data-zone=\"CLUB_LIST\"><span>Club listings</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 25,
-  "text": "Pod details",
-  "src": "<div class=\"zone flex-1\" data-zone=\"POD_DETAILS\"><span>Pod details</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 27,
-  "text": "Sidebar",
-  "src": "<div class=\"zone w-9 shrink-0\" data-zone=\"SIDEBAR\"><span class=\"vertical\">Sidebar</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/PlacementPreview.astro",
-  "line": 30,
-  "text": "Home feed",
-  "src": "<div class=\"zone h-12\" data-zone=\"HOME_BOTTOM\"><span>Home feed</span></div>"
- },
- {
-  "file": "website/ads-website/src/components/Placements.astro",
-  "line": 39,
-  "text": "Duncit advertising rate card, per placement per day",
-  "src": "<caption class=\"sr-only\">Duncit advertising rate card, per placement per day</caption>"
- },
- {
-  "file": "website/ads-website/src/components/SiteFooter.astro",
-  "line": 108,
-  "text": "Advertising on the Duncit network.",
-  "src": "<span>Advertising on the Duncit network.</span>"
- },
- {
-  "file": "website/ads-website/src/components/SiteHeader.astro",
-  "line": 61,
-  "text": "Switch between light and dark",
-  "src": "aria-label=\"Switch between light and dark\""
- },
- {
-  "file": "website/ads-website/src/components/SiteHeader.astro",
-  "line": 39,
-  "text": "Duncit",
-  "src": "<span class=\"hidden sm:inline\">Duncit <span class=\"text-primary\">Ads</span></span>"
- },
- {
-  "file": "website/ads-website/src/components/Steps.astro",
-  "line": 9,
-  "text": "How it works",
-  "src": "<p class=\"text-xs font-black uppercase tracking-[0.2em] text-primary\">How it works</p>"
- },
- {
-  "file": "website/ads-website/src/components/Steps.astro",
-  "line": 10,
-  "text": "Four steps to live",
-  "src": "<h2 class=\"mt-2 text-3xl text-ink sm:text-4xl\">Four steps to live</h2>"
- },
- {
-  "file": "website/ads-website/src/pages/404.astro",
-  "line": 12,
-  "text": "This page wandered off.",
-  "src": "<h1 class=\"mt-4 text-3xl text-ink\">This page wandered off.</h1>"
- },
- {
-  "file": "website/ads-website/src/pages/404.astro",
-  "line": 13,
-  "text": "The page you’re looking for doesn’t exist or has moved.",
-  "src": "<p class=\"mt-3 text-ink-soft\">The page you’re looking for doesn’t exist or has moved.</p>"
- },
- {
   "file": "website/earnwith-website/src/components/CtaBand.astro",
   "line": 20,
+  "kind": "jsx",
   "text": "Community",
   "src": "India's <span class=\"text-primary\">Community</span><br />Earning Platform"
  },
  {
   "file": "website/earnwith-website/src/components/DownloadApps.astro",
   "line": 16,
+  "kind": "prop",
   "text": "Run your pods",
   "src": "heading=\"Run your pods\""
  },
  {
   "file": "website/earnwith-website/src/components/EarningsCalculator.astro",
   "line": 21,
+  "kind": "prop",
   "text": "Whose earnings",
   "src": "<div class=\"mt-6 flex flex-wrap gap-2\" role=\"tablist\" aria-label=\"Whose earnings\">"
  },
  {
   "file": "website/earnwith-website/src/components/EarnPaths.astro",
   "line": 9,
+  "kind": "jsx",
   "text": "Earn with Duncit",
   "src": "<p class=\"text-center text-xs font-black uppercase tracking-[0.2em] text-primary\">Earn with Duncit</p>"
  },
  {
   "file": "website/earnwith-website/src/components/SiteFooter.astro",
   "line": 117,
+  "kind": "jsx",
   "text": "Built for communities in India.",
   "src": "<span>Built for communities in India.</span>"
  },
  {
   "file": "website/earnwith-website/src/components/SiteHeader.astro",
   "line": 33,
+  "kind": "prop",
   "text": "Duncit",
   "src": "<a href=\"/\" class=\"flex items-center gap-2\" aria-label=\"Duncit\">"
  },
  {
   "file": "website/earnwith-website/src/components/SiteHeader.astro",
   "line": 62,
+  "kind": "prop",
   "text": "Switch between light and dark",
   "src": "aria-label=\"Switch between light and dark\""
  },
  {
   "file": "website/earnwith-website/src/pages/404.astro",
   "line": 12,
+  "kind": "jsx",
   "text": "This page wandered off.",
   "src": "<h1 class=\"mt-4 text-3xl text-ink\">This page wandered off.</h1>"
  },
  {
   "file": "website/earnwith-website/src/pages/404.astro",
   "line": 13,
+  "kind": "jsx",
   "text": "The page you’re looking for doesn’t exist or has moved.",
   "src": "<p class=\"mt-3 text-ink-soft\">The page you’re looking for doesn’t exist or has moved.</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
-  "line": 3,
+  "line": 15,
+  "kind": "prop",
   "text": "The Duncit app",
-  "src": "* The Duncit app, in a phone."
+  "src": "const { src = null, alt = 'The Duncit app' } = Astro.props;"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 30,
+  "kind": "jsx",
   "text": "Tonight",
   "src": "<p class=\"font-head text-[13px] font-extrabold text-ink\">Tonight</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 40,
+  "kind": "jsx",
   "text": "Sunset football, 6pm",
   "src": "<p class=\"font-head text-[11px] font-extrabold text-ink\">Sunset football, 6pm</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 41,
+  "kind": "jsx",
   "text": "Turf 9 · 4 spots left",
   "src": "<p class=\"mt-0.5 text-[9px] text-ink-soft\">Turf 9 · 4 spots left</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 59,
+  "kind": "jsx",
   "text": "Weekend crew",
   "src": "<p class=\"font-head text-[10px] font-extrabold text-ink\">Weekend crew</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 60,
+  "kind": "jsx",
   "text": "See you at 6! 🔥",
   "src": "<p class=\"truncate text-[9px] text-ink-soft\">See you at 6! 🔥</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 70,
+  "kind": "jsx",
   "text": "Board game night",
   "src": "<p class=\"font-head text-[10px] font-extrabold text-ink\">Board game night</p>"
  },
  {
   "file": "website/main-website/src/components/AppPhone.astro",
   "line": 71,
+  "kind": "jsx",
   "text": "Anyone bringing snacks?",
   "src": "<p class=\"truncate text-[9px] text-ink-soft\">Anyone bringing snacks?</p>"
  },
  {
   "file": "website/main-website/src/components/DownloadApps.astro",
   "line": 16,
+  "kind": "prop",
   "text": "One app,",
   "src": "heading=\"One app,\""
  },
  {
   "file": "website/main-website/src/components/DuncitNetwork.astro",
   "line": 15,
+  "kind": "obj",
   "text": "Earn with Duncit",
   "src": "title: 'Earn with Duncit',"
  },
  {
   "file": "website/main-website/src/components/DuncitNetwork.astro",
   "line": 25,
+  "kind": "obj",
   "text": "Duncit Ads",
   "src": "title: 'Duncit Ads',"
  },
  {
   "file": "website/main-website/src/components/DuncitNetwork.astro",
   "line": 35,
+  "kind": "obj",
   "text": "Duncit Partners",
   "src": "title: 'Duncit Partners',"
  },
  {
   "file": "website/main-website/src/components/DuncitNetwork.astro",
   "line": 53,
+  "kind": "jsx",
   "text": "There is more than the app",
   "src": "<h2 class=\"mt-5 text-4xl text-ink sm:text-5xl\">There is more than the app</h2>"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 22,
+  "kind": "obj",
   "text": "About",
   "src": "label: 'About',"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 24,
+  "kind": "obj",
   "text": "About us",
   "src": "{ id: 'f-about', label: 'About us', url: '/about' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 25,
+  "kind": "obj",
   "text": "Newsroom",
   "src": "{ id: 'f-newsroom', label: 'Newsroom', url: '/newsroom' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 26,
+  "kind": "obj",
   "text": "Careers",
   "src": "{ id: 'f-careers', label: 'Careers', url: '/careers' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 27,
+  "kind": "obj",
   "text": "Contact us",
   "src": "{ id: 'f-contact', label: 'Contact us', url: '/contact' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 31,
+  "kind": "obj",
   "text": "Community",
   "src": "label: 'Community',"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
-  "line": 31,
+  "line": 33,
+  "kind": "obj",
   "text": "Community",
-  "src": "label: 'Community',"
+  "src": "{ id: 'f-community', label: 'Community', url: '/community' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 34,
+  "kind": "obj",
   "text": "Guidelines",
   "src": "{ id: 'f-guidelines', label: 'Guidelines', url: '/guidelines' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 35,
+  "kind": "obj",
   "text": "Blog",
   "src": "{ id: 'f-blog', label: 'Blog', url: '/blog' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 39,
+  "kind": "obj",
   "text": "Safety Hub",
   "src": "label: 'Safety Hub',"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 41,
+  "kind": "obj",
   "text": "Our approach",
   "src": "{ id: 'f-approach', label: 'Our approach', url: '/safety/approach' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 42,
+  "kind": "obj",
   "text": "Advice",
   "src": "{ id: 'f-advice', label: 'Advice', url: '/safety/advice' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 43,
+  "kind": "obj",
   "text": "Safety Tools",
   "src": "{ id: 'f-tools', label: 'Safety Tools', url: '/safety/tools' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 44,
+  "kind": "obj",
   "text": "Resources",
   "src": "{ id: 'f-resources', label: 'Resources', url: '/safety/resources' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 48,
+  "kind": "obj",
   "text": "Support",
   "src": "label: 'Support',"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 50,
+  "kind": "obj",
   "text": "Help Center",
   "src": "{ id: 'f-help', label: 'Help Center', url: '/help' },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 52,
+  "kind": "obj",
   "text": "Email support",
   "src": "{ id: 'f-support-mail', label: 'Email support', url: `mailto:${branding.support_email}` },"
  },
  {
   "file": "website/main-website/src/components/Footer.astro",
   "line": 111,
+  "kind": "jsx",
   "text": "Follow Duncit",
   "src": "<h4 class=\"font-head font-extrabold mb-3\">Follow Duncit</h4>"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 16,
+  "kind": "obj",
   "text": "About",
   "src": "label: 'About',"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 18,
+  "kind": "obj",
   "text": "About us",
   "src": "{ id: 'n-about', label: 'About us', url: '/about' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 19,
+  "kind": "obj",
   "text": "Newsroom",
   "src": "{ id: 'n-newsroom', label: 'Newsroom', url: '/newsroom' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 20,
+  "kind": "obj",
   "text": "Careers",
   "src": "{ id: 'n-careers', label: 'Careers', url: '/careers' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 21,
+  "kind": "obj",
   "text": "Contact us",
   "src": "{ id: 'n-contact', label: 'Contact us', url: '/contact' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 25,
+  "kind": "obj",
   "text": "Community",
   "src": "label: 'Community',"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
-  "line": 25,
+  "line": 27,
+  "kind": "obj",
   "text": "Community",
-  "src": "label: 'Community',"
+  "src": "{ id: 'n-community', label: 'Community', url: '/community' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 28,
+  "kind": "obj",
   "text": "Guidelines",
   "src": "{ id: 'n-guidelines', label: 'Guidelines', url: '/guidelines' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 29,
+  "kind": "obj",
   "text": "Blog",
   "src": "{ id: 'n-blog', label: 'Blog', url: '/blog' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 33,
+  "kind": "obj",
   "text": "Safety Hub",
   "src": "label: 'Safety Hub',"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 35,
+  "kind": "obj",
   "text": "Our approach",
   "src": "{ id: 'n-approach', label: 'Our approach', url: '/safety/approach' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 36,
+  "kind": "obj",
   "text": "Advice",
   "src": "{ id: 'n-advice', label: 'Advice', url: '/safety/advice' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 37,
+  "kind": "obj",
   "text": "Safety Tools",
   "src": "{ id: 'n-tools', label: 'Safety Tools', url: '/safety/tools' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 38,
+  "kind": "obj",
   "text": "Resources",
   "src": "{ id: 'n-resources', label: 'Resources', url: '/safety/resources' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 42,
+  "kind": "obj",
   "text": "Support",
   "src": "label: 'Support',"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 44,
+  "kind": "obj",
   "text": "Help Center",
   "src": "{ id: 'n-help', label: 'Help Center', url: '/help' },"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
-  "line": 4,
+  "line": 67,
+  "kind": "obj",
   "text": "Policy Hub",
-  "src": "// manager); the Policy Hub group is the Legal portal's active policies."
+  "src": "title: 'Policy Hub',"
  },
  {
   "file": "website/main-website/src/components/SiteNav.astro",
   "line": 71,
+  "kind": "obj",
   "text": "All policies",
   "src": "{ href: '/policies', label: 'All policies' },"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
+  "line": 46,
+  "kind": "jsx",
+  "text": "Apply for",
+  "src": "<p class=\"text-xs uppercase tracking-wider font-extrabold text-primary\">Apply for</p>"
+ },
+ {
+  "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 53,
+  "kind": "prop",
   "text": "Close",
   "src": "aria-label=\"Close\""
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 59,
+  "kind": "prop",
   "text": "Full name *",
-  "src": "<input name=\"name\" required minlength=\"2\" maxlength=\"120\" placeholder=\"Full name *\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus"
+  "src": "<input name=\"name\" required minlength=\"2\" maxlength=\"120\" placeholder=\"Full name *\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-pr"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 60,
+  "kind": "prop",
   "text": "Email *",
-  "src": "<input name=\"email\" type=\"email\" required maxlength=\"254\" placeholder=\"Email *\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:bor"
+  "src": "<input name=\"email\" type=\"email\" required maxlength=\"254\" placeholder=\"Email *\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primar"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 61,
+  "kind": "prop",
   "text": "Phone (digits, optional +)",
-  "src": "<input name=\"phone\" pattern=\"\\+?\\d{6,15}\" placeholder=\"Phone (digits, optional +)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:"
+  "src": "<input name=\"phone\" pattern=\"\\+?\\d{6,15}\" placeholder=\"Phone (digits, optional +)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-pri"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 62,
+  "kind": "prop",
   "text": "Resume / CV link (Drive, LinkedIn…)",
-  "src": "<input name=\"resume_url\" type=\"url\" placeholder=\"Resume / CV link (Drive, LinkedIn…)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 foc"
+  "src": "<input name=\"resume_url\" type=\"url\" placeholder=\"Resume / CV link (Drive, LinkedIn…)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 63,
+  "kind": "prop",
   "text": "Portfolio link (optional)",
-  "src": "<input name=\"portfolio_url\" type=\"url\" placeholder=\"Portfolio link (optional)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:bord"
+  "src": "<input name=\"portfolio_url\" type=\"url\" placeholder=\"Portfolio link (optional)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 64,
+  "kind": "prop",
   "text": "Why you? (optional)",
-  "src": "<textarea name=\"cover_note\" rows=\"3\" maxlength=\"4000\" placeholder=\"Why you? (optional)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 f"
- },
- {
-  "file": "website/main-website/src/components/WebsiteContentList.astro",
-  "line": 46,
-  "text": "Apply for",
-  "src": "<p class=\"text-xs uppercase tracking-wider font-extrabold text-primary\">Apply for</p>"
+  "src": "<textarea name=\"cover_note\" rows=\"3\" maxlength=\"4000\" placeholder=\"Why you? (optional)\" class=\"w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:borde"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 205,
+  "kind": "jsx",
   "text": "No published items yet.",
   "src": "root.innerHTML = '<div class=\"p-5 rounded-2xl bg-surface sticker text-ink-soft\">No published items yet.</div>';"
  },
  {
   "file": "website/main-website/src/components/WebsiteContentList.astro",
   "line": 211,
+  "kind": "jsx",
   "text": "Content is temporarily unavailable.",
   "src": "root.innerHTML = '<div class=\"p-5 rounded-2xl bg-surface sticker text-ink-soft\">Content is temporarily unavailable.</div>';"
  },
  {
   "file": "website/main-website/src/layouts/Layout.astro",
   "line": 14,
+  "kind": "prop",
   "text": "Duncit — the friendship platform that matches people by energy, not algorithms.",
   "src": "description = 'Duncit — the friendship platform that matches people by energy, not algorithms.',"
  },
  {
   "file": "website/main-website/src/layouts/PageLayout.astro",
   "line": 64,
+  "kind": "prop",
   "text": "Menu",
   "src": "aria-label=\"Menu\""
  },
  {
   "file": "website/main-website/src/layouts/PageLayout.astro",
   "line": 69,
+  "kind": "prop",
   "text": "Home",
   "src": "<a href=\"/\" class=\"w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition\" aria-label=\"Home\">"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 19,
+  "kind": "prop",
   "text": "Menu",
   "src": "<button data-nav-toggle class=\"w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition\" aria-label=\"Menu\">"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
+  "line": 24,
+  "kind": "jsx",
+  "text": "Duncit",
+  "src": "<span class=\"font-head font-black text-ink text-lg leading-none\">Duncit</span>"
+ },
+ {
+  "file": "website/main-website/src/pages/404.astro",
   "line": 26,
+  "kind": "prop",
   "text": "Home",
   "src": "<a href=\"/\" class=\"w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition\" aria-label=\"Home\">"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
-  "line": 7,
-  "text": "Duncit",
-  "src": "<Layout title=\"404 — Lost in the Vibe | Duncit\">"
- },
- {
-  "file": "website/main-website/src/pages/404.astro",
   "line": 90,
+  "kind": "jsx",
   "text": "Where do you want to",
   "src": "<h2 class=\"text-3xl sm:text-4xl mb-8\">Where do you want to <span class=\"text-primary\">go?</span></h2>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 98,
+  "kind": "jsx",
   "text": "The Duncit launch page",
   "src": "<div class=\"text-sm text-ink-soft\">The Duncit launch page</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 104,
+  "kind": "jsx",
   "text": "About us",
   "src": "<div class=\"font-head font-black text-lg text-ink\">About us</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 105,
+  "kind": "jsx",
   "text": "What we're building",
   "src": "<div class=\"text-sm text-ink-soft\">What we're building</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 111,
+  "kind": "jsx",
   "text": "Community",
   "src": "<div class=\"font-head font-black text-lg text-ink\">Community</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 112,
+  "kind": "jsx",
   "text": "Join the tribe",
   "src": "<div class=\"text-sm text-ink-soft\">Join the tribe</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 118,
+  "kind": "jsx",
   "text": "Help Center",
   "src": "<div class=\"font-head font-black text-lg text-ink\">Help Center</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 119,
+  "kind": "jsx",
   "text": "Find answers fast",
   "src": "<div class=\"text-sm text-ink-soft\">Find answers fast</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 125,
+  "kind": "jsx",
   "text": "Contact",
   "src": "<div class=\"font-head font-black text-lg text-ink\">Contact</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 126,
+  "kind": "jsx",
   "text": "Talk to a human",
   "src": "<div class=\"text-sm text-ink-soft\">Talk to a human</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 132,
+  "kind": "jsx",
   "text": "Get the app",
   "src": "<div class=\"font-head font-black text-lg text-ink\">Get the app</div>"
  },
  {
   "file": "website/main-website/src/pages/404.astro",
   "line": 133,
+  "kind": "jsx",
   "text": "Android &amp; iOS",
   "src": "<div class=\"text-sm text-ink-soft\">Android &amp; iOS</div>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 6,
+  "kind": "prop",
   "text": "About us",
   "src": "title=\"About us\""
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 8,
+  "kind": "prop",
   "text": "About Duncit",
   "src": "heading=\"About Duncit\""
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 12,
+  "kind": "jsx",
   "text": "Why we exist",
   "src": "<h2>Why we exist</h2>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 19,
+  "kind": "jsx",
   "text": "What we believe",
   "src": "<h2>What we believe</h2>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "Real over polished.",
   "src": "<li><strong>Real over polished.</strong> Authenticity beats algorithms.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "Authenticity beats algorithms.",
   "src": "<li><strong>Real over polished.</strong> Authenticity beats algorithms.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "Energy over ego.",
   "src": "<li><strong>Energy over ego.</strong> The right vibe matters more than the right filter.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "The right vibe matters more than the right filter.",
   "src": "<li><strong>Energy over ego.</strong> The right vibe matters more than the right filter.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "Safety first.",
   "src": "<li><strong>Safety first.</strong> Always, no exceptions.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "Always, no exceptions.",
   "src": "<li><strong>Safety first.</strong> Always, no exceptions.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "Joy is the metric.",
   "src": "<li><strong>Joy is the metric.</strong> If you didn't smile today, we failed.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "If you didn't smile today, we failed.",
   "src": "<li><strong>Joy is the metric.</strong> If you didn't smile today, we failed.</li>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 27,
+  "kind": "jsx",
   "text": "Where we're going",
   "src": "<h2>Where we're going</h2>"
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 31,
+  "kind": "jsx",
   "text": "Get the app",
   "src": "<a href=\"/#download\">Get the app</a>."
  },
  {
   "file": "website/main-website/src/pages/about.astro",
   "line": 34,
+  "kind": "jsx",
   "text": "The team",
   "src": "<h2>The team</h2>"
  },
  {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 2,
-  "text": "Blog",
-  "src": "// Blog detail (?slug=…) — fully dynamic from the Website portal's blog"
- },
- {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 11,
-  "text": "Story",
-  "src": "heading=\"Story\""
- },
- {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 27,
-  "text": "Suggested posts",
-  "src": "<h3 class=\"font-head font-extrabold text-lg text-ink mb-3\">Suggested posts</h3>"
- },
- {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 34,
-  "text": "Related posts",
-  "src": "<h3 class=\"font-head font-extrabold text-lg text-ink mb-3\">Related posts</h3>"
- },
- {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 4,
-  "text": "Archive",
-  "src": "// others) and a month-by-month Archive. New posts appear without a redeploy."
- },
- {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 108,
-  "text": "This post could not be found. It may have been unpublished.",
-  "src": "if (postBody) postBody.innerHTML = '<p class=\"text-ink-soft\">This post could not be found. It may have been unpublished.</p>';"
- },
- {
-  "file": "website/main-website/src/pages/blog/post.astro",
-  "line": 160,
-  "text": "The post could not be loaded right now. Please try again later.",
-  "src": "if (postBody) postBody.innerHTML = '<p class=\"text-ink-soft\">The post could not be loaded right now. Please try again later.</p>';"
- },
- {
   "file": "website/main-website/src/pages/blog.astro",
   "line": 7,
+  "kind": "prop",
   "text": "Blog",
   "src": "title=\"Blog\""
  },
  {
   "file": "website/main-website/src/pages/blog.astro",
   "line": 9,
+  "kind": "prop",
   "text": "The Duncit Blog",
   "src": "heading=\"The Duncit Blog\""
  },
  {
   "file": "website/main-website/src/pages/blog.astro",
   "line": 16,
+  "kind": "jsx",
   "text": "Subscribe",
   "src": "<h2>Subscribe</h2>"
  },
  {
   "file": "website/main-website/src/pages/blog.astro",
   "line": 17,
+  "kind": "jsx",
   "text": "Get one short email a week. No spam, just the good stuff.",
   "src": "<p>Get one short email a week. No spam, just the good stuff. <a href=\"/\">Join the list →</a></p>"
  },
  {
   "file": "website/main-website/src/pages/blog.astro",
   "line": 17,
+  "kind": "jsx",
   "text": "Join the list →",
   "src": "<p>Get one short email a week. No spam, just the good stuff. <a href=\"/\">Join the list →</a></p>"
  },
  {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 9,
+  "kind": "prop",
+  "text": "Blog",
+  "src": "title=\"Blog\""
+ },
+ {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 11,
+  "kind": "prop",
+  "text": "Story",
+  "src": "heading=\"Story\""
+ },
+ {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 27,
+  "kind": "jsx",
+  "text": "Suggested posts",
+  "src": "<h3 class=\"font-head font-extrabold text-lg text-ink mb-3\">Suggested posts</h3>"
+ },
+ {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 34,
+  "kind": "jsx",
+  "text": "Related posts",
+  "src": "<h3 class=\"font-head font-extrabold text-lg text-ink mb-3\">Related posts</h3>"
+ },
+ {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 41,
+  "kind": "jsx",
+  "text": "Archive",
+  "src": "<h3 class=\"font-head font-extrabold text-lg text-ink mb-3\">Archive</h3>"
+ },
+ {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 108,
+  "kind": "jsx",
+  "text": "This post could not be found. It may have been unpublished.",
+  "src": "if (postBody) postBody.innerHTML = '<p class=\"text-ink-soft\">This post could not be found. It may have been unpublished.</p>';"
+ },
+ {
+  "file": "website/main-website/src/pages/blog/post.astro",
+  "line": 160,
+  "kind": "jsx",
+  "text": "The post could not be loaded right now. Please try again later.",
+  "src": "if (postBody) postBody.innerHTML = '<p class=\"text-ink-soft\">The post could not be loaded right now. Please try again later.</p>';"
+ },
+ {
   "file": "website/main-website/src/pages/careers.astro",
-  "line": 2,
+  "line": 13,
+  "kind": "prop",
   "text": "Careers",
-  "src": "// Careers — open roles come live from the Website portal (CAREERS content)"
+  "src": "title=\"Careers\""
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 15,
+  "kind": "prop",
   "text": "Build Duncit with us",
   "src": "heading=\"Build Duncit with us\""
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 20,
+  "kind": "jsx",
   "text": "Why Duncit?",
   "src": "<h2>Why Duncit?</h2>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "Real impact.",
   "src": "<li><strong>Real impact.</strong> Everything you ship goes straight into how people meet, host and earn together.</li>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "Everything you ship goes straight into how people meet, host and earn together.",
   "src": "<li><strong>Real impact.</strong> Everything you ship goes straight into how people meet, host and earn together.</li>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "Small team, big ownership.",
   "src": "<li><strong>Small team, big ownership.</strong> You'll own whole surfaces — apps, portals, the platform itself.</li>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "You'll own whole surfaces — apps, portals, the platform itself.",
   "src": "<li><strong>Small team, big ownership.</strong> You'll own whole surfaces — apps, portals, the platform itself.</li>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "Energy over ego.",
   "src": "<li><strong>Energy over ego.</strong> The same vibe-first culture we build for our community, inside the team.</li>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "The same vibe-first culture we build for our community, inside the team.",
   "src": "<li><strong>Energy over ego.</strong> The same vibe-first culture we build for our community, inside the team.</li>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 27,
+  "kind": "jsx",
   "text": "Open roles",
   "src": "<h2>Open roles</h2>"
  },
  {
   "file": "website/main-website/src/pages/careers.astro",
   "line": 30,
+  "kind": "jsx",
   "text": "Don't see your role?",
   "src": "<h2>Don't see your role?</h2>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 6,
+  "kind": "prop",
   "text": "Community",
   "src": "title=\"Community\""
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 8,
+  "kind": "prop",
   "text": "The Duncit Community",
   "src": "heading=\"The Duncit Community\""
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 12,
+  "kind": "jsx",
   "text": "What's the vibe?",
   "src": "<h2>What's the vibe?</h2>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 19,
+  "kind": "jsx",
   "text": "Ways to plug in",
   "src": "<h2>Ways to plug in</h2>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "Hang out, share memes, and meet the team in real time.",
   "src": "<li><strong>Discord.</strong> Hang out, share memes, and meet the team in real time.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "Beta program.",
   "src": "<li><strong>Beta program.</strong> Get early access and shape the app.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "Get early access and shape the app.",
   "src": "<li><strong>Beta program.</strong> Get early access and shape the app.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "Local hosts.",
   "src": "<li><strong>Local hosts.</strong> Run small meetups in your city — we'll help.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "Run small meetups in your city — we'll help.",
   "src": "<li><strong>Local hosts.</strong> Run small meetups in your city — we'll help.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "Creator collective.",
   "src": "<li><strong>Creator collective.</strong> If you make stuff and want to collaborate, hi.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "If you make stuff and want to collaborate, hi.",
   "src": "<li><strong>Creator collective.</strong> If you make stuff and want to collaborate, hi.</li>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 30,
+  "kind": "jsx",
   "text": "Get the app",
   "src": "<div class=\"font-head font-bold text-xl\">Get the app</div>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 31,
+  "kind": "jsx",
   "text": "Match by energy on Android &amp; iOS",
   "src": "<div class=\"text-sm opacity-90 mt-1\">Match by energy on Android &amp; iOS</div>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 35,
+  "kind": "jsx",
   "text": "Say hi",
   "src": "<div class=\"font-head font-bold text-xl\">Say hi</div>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 36,
+  "kind": "jsx",
   "text": "Hosts, creators &amp; collaborators welcome",
   "src": "<div class=\"text-sm opacity-90 mt-1\">Hosts, creators &amp; collaborators welcome</div>"
  },
  {
   "file": "website/main-website/src/pages/community.astro",
   "line": 40,
+  "kind": "jsx",
   "text": "Read the rules",
   "src": "<h2>Read the rules</h2>"
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
   "line": 18,
+  "kind": "prop",
   "text": "Contact us",
   "src": "title=\"Contact us\""
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
   "line": 20,
+  "kind": "prop",
   "text": "Get in touch",
   "src": "heading=\"Get in touch\""
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
-  "line": 48,
-  "text": "Your name",
-  "src": "<input name=\"name\" required placeholder=\"Your name\" class=\"px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none\" />"
- },
- {
-  "file": "website/main-website/src/pages/contact.astro",
-  "line": 49,
-  "text": "Your email",
-  "src": "<input name=\"email\" required type=\"email\" placeholder=\"Your email\" class=\"px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-no"
- },
- {
-  "file": "website/main-website/src/pages/contact.astro",
-  "line": 50,
-  "text": "Subject (optional)",
-  "src": "<input name=\"subject\" placeholder=\"Subject (optional)\" class=\"px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none\" />"
- },
- {
-  "file": "website/main-website/src/pages/contact.astro",
   "line": 28,
+  "kind": "jsx",
   "text": "Email us",
   "src": "<div class=\"font-head font-bold text-ink\">Email us</div>"
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
   "line": 34,
+  "kind": "jsx",
   "text": "Call us",
   "src": "<div class=\"font-head font-bold text-ink\">Call us</div>"
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
   "line": 40,
+  "kind": "jsx",
   "text": "Help Center",
   "src": "<div class=\"font-head font-bold text-ink\">Help Center</div>"
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
   "line": 41,
+  "kind": "jsx",
   "text": "Browse answered topics",
   "src": "<div class=\"text-sm text-ink-soft mt-1\">Browse answered topics</div>"
  },
  {
   "file": "website/main-website/src/pages/contact.astro",
   "line": 46,
+  "kind": "jsx",
   "text": "Send us a message",
   "src": "<h2>Send us a message</h2>"
  },
  {
+  "file": "website/main-website/src/pages/contact.astro",
+  "line": 48,
+  "kind": "prop",
+  "text": "Your name",
+  "src": "<input name=\"name\" required placeholder=\"Your name\" class=\"px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none\" />"
+ },
+ {
+  "file": "website/main-website/src/pages/contact.astro",
+  "line": 49,
+  "kind": "prop",
+  "text": "Your email",
+  "src": "<input name=\"email\" required type=\"email\" placeholder=\"Your email\" class=\"px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none\" />"
+ },
+ {
+  "file": "website/main-website/src/pages/contact.astro",
+  "line": 50,
+  "kind": "prop",
+  "text": "Subject (optional)",
+  "src": "<input name=\"subject\" placeholder=\"Subject (optional)\" class=\"px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none\" />"
+ },
+ {
   "file": "website/main-website/src/pages/faq.astro",
   "line": 19,
+  "kind": "prop",
   "text": "Frequently Asked",
   "src": "heading=\"Frequently Asked\""
  },
  {
   "file": "website/main-website/src/pages/faq.astro",
-  "line": 38,
-  "text": "Type your question…",
-  "src": "placeholder=\"Type your question…\""
- },
- {
-  "file": "website/main-website/src/pages/faq.astro",
-  "line": 45,
-  "text": "Email for a reply",
-  "src": "placeholder=\"Email for a reply\""
- },
- {
-  "file": "website/main-website/src/pages/faq.astro",
   "line": 31,
+  "kind": "jsx",
   "text": "Didn't find your answer?",
   "src": "<h2>Didn't find your answer?</h2>"
  },
  {
   "file": "website/main-website/src/pages/faq.astro",
   "line": 32,
+  "kind": "jsx",
   "text": "Ask us directly — if it's a common one, we'll add it to this page.",
   "src": "<p>Ask us directly — if it's a common one, we'll add it to this page.</p>"
  },
  {
   "file": "website/main-website/src/pages/faq.astro",
+  "line": 38,
+  "kind": "prop",
+  "text": "Type your question…",
+  "src": "placeholder=\"Type your question…\""
+ },
+ {
+  "file": "website/main-website/src/pages/faq.astro",
+  "line": 45,
+  "kind": "prop",
+  "text": "Email for a reply",
+  "src": "placeholder=\"Email for a reply\""
+ },
+ {
+  "file": "website/main-website/src/pages/faq.astro",
   "line": 54,
+  "kind": "jsx",
   "text": "Or email",
   "src": "<p class=\"mt-4\">Or email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>"
  },
  {
   "file": "website/main-website/src/pages/faq.astro",
   "line": 94,
+  "kind": "jsx",
   "text": "No FAQs published yet — ask your question below and we\\'ll answer.",
   "src": "'<p class=\"text-ink-soft\">No FAQs published yet — ask your question below and we\\'ll answer.</p>';"
  },
  {
   "file": "website/main-website/src/pages/faq.astro",
   "line": 112,
+  "kind": "jsx",
   "text": "FAQs could not be loaded right now. Please try again later.",
   "src": "'<p class=\"text-ink-soft\">FAQs could not be loaded right now. Please try again later.</p>';"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 10,
+  "kind": "prop",
   "text": "Community Guidelines",
   "src": "title=\"Community Guidelines\""
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
-  "line": 10,
+  "line": 12,
+  "kind": "prop",
   "text": "Community Guidelines",
-  "src": "title=\"Community Guidelines\""
+  "src": "heading=\"Community Guidelines\""
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 18,
+  "kind": "jsx",
   "text": "Treat people the way you'd want to be treated on your worst Monday. Hate, harassment, or threats of any kind earn an instant exit.",
   "src": "<p>Treat people the way you'd want to be treated on your worst Monday. Hate, harassment, or threats of any kind earn an instant exit.</p>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "Use a real photo and a name people can call you. Catfishing, impersonation, and bots are removed on sight.",
   "src": "<p>Use a real photo and a name people can call you. Catfishing, impersonation, and bots are removed on sight.</p>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "No nudity, no doxxing, no sharing private info without consent. If a chat feels off, hit the report button — a human will respond.",
   "src": "<p>No nudity, no doxxing, no sharing private info without consent. If a chat feels off, hit the report button — a human will respond.</p>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 27,
+  "kind": "jsx",
   "text": "Duncit isn't a marketplace or an MLM funnel. Promo links and recruitment messages get filtered.",
   "src": "<p>Duncit isn't a marketplace or an MLM funnel. Promo links and recruitment messages get filtered.</p>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 30,
+  "kind": "jsx",
   "text": "What's shared in chat stays in chat. Screenshots without permission are not the move.",
   "src": "<p>What's shared in chat stays in chat. Screenshots without permission are not the move.</p>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 33,
+  "kind": "jsx",
   "text": "Block, mute, and report exist for a reason. Use them freely — and we'll back you up.",
   "src": "<p>Block, mute, and report exist for a reason. Use them freely — and we'll back you up.</p>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 35,
+  "kind": "jsx",
   "text": "If something goes wrong",
   "src": "<h2>If something goes wrong</h2>"
  },
  {
   "file": "website/main-website/src/pages/guidelines.astro",
   "line": 36,
+  "kind": "jsx",
   "text": "Reach out to",
-  "src": "<p>Reach out to <a href={`mailto:${supportEmail}`}>{supportEmail}</a> or use the in-app report flow. Our Trust & Safety team reviews every report, every time.</"
+  "src": "<p>Reach out to <a href={`mailto:${supportEmail}`}>{supportEmail}</a> or use the in-app report flow. Our Trust & Safety team reviews every report, every time.</p>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
-  "line": 2,
+  "line": 14,
+  "kind": "prop",
   "text": "Help Center",
-  "src": "// Help Center — topics come live from the Support portal's FAQ groups and"
+  "src": "title=\"Help Center\""
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 16,
+  "kind": "prop",
   "text": "How can we help?",
   "src": "heading=\"How can we help?\""
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 27,
+  "kind": "prop",
   "text": "Search help topics…",
   "src": "placeholder=\"Search help topics…\""
  },
  {
   "file": "website/main-website/src/pages/help.astro",
-  "line": 27,
+  "line": 28,
+  "kind": "prop",
   "text": "Search help topics",
-  "src": "placeholder=\"Search help topics…\""
+  "src": "aria-label=\"Search help topics\""
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 41,
+  "kind": "jsx",
   "text": "Still need help?",
   "src": "<h2>Still need help?</h2>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 49,
+  "kind": "jsx",
   "text": "Email support",
   "src": "<div class=\"font-head font-bold text-ink mb-0.5\">Email support</div>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 61,
+  "kind": "jsx",
   "text": "Call us",
   "src": "<div class=\"font-head font-bold text-ink mb-0.5\">Call us</div>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 73,
+  "kind": "jsx",
   "text": "Contact form",
   "src": "<div class=\"font-head font-bold text-ink mb-0.5\">Contact form</div>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 74,
+  "kind": "jsx",
   "text": "Send us a message — it lands straight with the team.",
   "src": "<div class=\"text-sm text-ink-soft\">Send us a message — it lands straight with the team.</div>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 84,
+  "kind": "jsx",
   "text": "Ask a question",
   "src": "<div class=\"font-head font-bold text-ink mb-0.5\">Ask a question</div>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 85,
+  "kind": "jsx",
   "text": "Can't find it? Submit your question and we'll answer.",
   "src": "<div class=\"text-sm text-ink-soft\">Can't find it? Submit your question and we'll answer.</div>"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 120,
+  "kind": "jsx",
   "text": "No help topics published yet — reach us directly below.",
   "src": "'<p class=\"text-ink-soft sm:col-span-2\">No help topics published yet — reach us directly below.</p>';"
  },
  {
   "file": "website/main-website/src/pages/help.astro",
   "line": 145,
+  "kind": "jsx",
   "text": "Topics could not be loaded right now — reach us directly below.",
   "src": "'<p class=\"text-ink-soft sm:col-span-2\">Topics could not be loaded right now — reach us directly below.</p>';"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
-  "line": 39,
-  "text": "Duncit — Friends who match your energy",
-  "src": "<Layout title=\"Duncit — Friends who match your energy\">"
- },
- {
-  "file": "website/main-website/src/pages/index.astro",
-  "line": 88,
-  "text": "Menu",
-  "src": "<button data-nav-toggle class=\"w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition\" aria-label=\"Menu\">"
- },
- {
-  "file": "website/main-website/src/pages/index.astro",
-  "line": 172,
-  "text": "Explore Earn with Duncit",
-  "src": "label=\"Explore Earn with Duncit\""
- },
- {
-  "file": "website/main-website/src/pages/index.astro",
-  "line": 224,
-  "text": "Friends chatting",
-  "src": "<img src={vibesImg} alt=\"Friends chatting\" class=\"w-full aspect-[4/5] object-cover rounded-3xl sticker\" />"
- },
- {
-  "file": "website/main-website/src/pages/index.astro",
   "line": 23,
+  "kind": "obj",
   "text": "Host pods",
   "src": "title: 'Host pods',"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 28,
+  "kind": "obj",
   "text": "List your venue",
   "src": "title: 'List your venue',"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 33,
+  "kind": "obj",
   "text": "Sell at gatherings",
   "src": "title: 'Sell at gatherings',"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
+  "line": 39,
+  "kind": "prop",
+  "text": "Duncit — Friends who match your energy",
+  "src": "<Layout title=\"Duncit — Friends who match your energy\">"
+ },
+ {
+  "file": "website/main-website/src/pages/index.astro",
+  "line": 88,
+  "kind": "prop",
+  "text": "Menu",
+  "src": "<button data-nav-toggle class=\"w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition\" aria-label=\"Menu\">"
+ },
+ {
+  "file": "website/main-website/src/pages/index.astro",
   "line": 112,
+  "kind": "jsx",
   "text": "Match your",
   "src": "Find your people.<br />Match your <span class=\"text-primary\">energy</span>."
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 165,
+  "kind": "jsx",
   "text": "Turn gatherings into income",
   "src": "<h2 class=\"text-4xl sm:text-5xl md:text-6xl mb-4\">Turn gatherings into income</h2>"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
+  "line": 172,
+  "kind": "prop",
+  "text": "Explore Earn with Duncit",
+  "src": "label=\"Explore Earn with Duncit\""
+ },
+ {
+  "file": "website/main-website/src/pages/index.astro",
   "line": 209,
+  "kind": "jsx",
   "text": "No bots.",
   "src": "<span class=\"text-primary\">No bots.</span><br />"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 210,
+  "kind": "jsx",
   "text": "No fakes.",
   "src": "<span class=\"text-secondary\">No fakes.</span><br />"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 218,
+  "kind": "jsx",
   "text": "Verified people",
-  "src": "<span class=\"glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink\"><i class=\"fa-solid fa-user-check text-primary\"></i> Verified"
+  "src": "<span class=\"glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink\"><i class=\"fa-solid fa-user-check text-primary\"></i> Verified people</s"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 219,
+  "kind": "jsx",
   "text": "Matched by energy",
-  "src": "<span class=\"glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink\"><i class=\"fa-solid fa-bolt text-secondary\"></i> Matched by e"
+  "src": "<span class=\"glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink\"><i class=\"fa-solid fa-bolt text-secondary\"></i> Matched by energy</spa"
  },
  {
   "file": "website/main-website/src/pages/index.astro",
   "line": 220,
+  "kind": "jsx",
   "text": "Real gatherings",
-  "src": "<span class=\"glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink\"><i class=\"fa-solid fa-champagne-glasses text-tertiary-dark\">"
+  "src": "<span class=\"glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink\"><i class=\"fa-solid fa-champagne-glasses text-tertiary-dark\"></i> Real "
+ },
+ {
+  "file": "website/main-website/src/pages/index.astro",
+  "line": 224,
+  "kind": "prop",
+  "text": "Friends chatting",
+  "src": "<img src={vibesImg} alt=\"Friends chatting\" class=\"w-full aspect-[4/5] object-cover rounded-3xl sticker\" />"
  },
  {
   "file": "website/main-website/src/pages/newsroom.astro",
   "line": 11,
+  "kind": "prop",
   "text": "Newsroom",
   "src": "title=\"Newsroom\""
  },
  {
   "file": "website/main-website/src/pages/newsroom.astro",
   "line": 13,
+  "kind": "prop",
   "text": "Duncit Newsroom",
   "src": "heading=\"Duncit Newsroom\""
  },
  {
   "file": "website/main-website/src/pages/newsroom.astro",
   "line": 18,
+  "kind": "jsx",
   "text": "Latest stories",
   "src": "<h2>Latest stories</h2>"
  },
  {
   "file": "website/main-website/src/pages/newsroom.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "Press inquiries",
   "src": "<h2>Press inquiries</h2>"
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
-  "line": 2,
+  "line": 8,
+  "kind": "prop",
   "text": "Policy Hub",
-  "src": "// Policy Hub — every active policy from the Legal portal. Fetched in the"
+  "src": "title=\"Policy Hub\""
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
   "line": 10,
+  "kind": "prop",
   "text": "Duncit policies",
   "src": "heading=\"Duncit policies\""
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
-  "line": 27,
-  "text": "Search policies…",
-  "src": "placeholder=\"Search policies…\""
- },
- {
-  "file": "website/main-website/src/pages/policies.astro",
   "line": 18,
+  "kind": "jsx",
   "text": "Search policies",
   "src": "<label class=\"sr-only\" for=\"policySearch\">Search policies</label>"
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
+  "line": 27,
+  "kind": "prop",
+  "text": "Search policies…",
+  "src": "placeholder=\"Search policies…\""
+ },
+ {
+  "file": "website/main-website/src/pages/policies.astro",
   "line": 65,
+  "kind": "jsx",
   "text": "Read the current version",
   "src": "<span class=\"block text-xs text-ink-soft mt-1\">Read the current version</span>"
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
   "line": 92,
+  "kind": "jsx",
   "text": "Show all policies",
-  "src": ": `<p class=\"text-ink-soft col-span-full\">Nothing matches “${esc(query.trim())}”. <button type=\"button\" data-clear-search class=\"font-bold text-primary underlin"
+  "src": ": `<p class=\"text-ink-soft col-span-full\">Nothing matches “${esc(query.trim())}”. <button type=\"button\" data-clear-search class=\"font-bold text-primary underline\">Show al"
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
   "line": 107,
+  "kind": "jsx",
   "text": "No policies are published yet — check back soon.",
   "src": "'<p class=\"text-ink-soft col-span-full\">No policies are published yet — check back soon.</p>';"
  },
  {
   "file": "website/main-website/src/pages/policies.astro",
   "line": 114,
+  "kind": "jsx",
   "text": "Policies could not be loaded right now. Please try again later.",
   "src": "'<p class=\"text-ink-soft col-span-full\">Policies could not be loaded right now. Please try again later.</p>';"
  },
  {
-  "file": "website/main-website/src/pages/policy/[slug].astro",
-  "line": 74,
-  "text": "This policy could not be found. It may have been renamed or retired.",
-  "src": "'<p>This policy could not be found. It may have been renamed or retired.</p>';"
- },
- {
-  "file": "website/main-website/src/pages/policy/[slug].astro",
-  "line": 81,
-  "text": "No content published yet.",
-  "src": "body.innerHTML = policy.content || '<p>No content published yet.</p>';"
- },
- {
-  "file": "website/main-website/src/pages/policy/[slug].astro",
-  "line": 83,
-  "text": "The policy could not be loaded right now. Please try again later.",
-  "src": "body.innerHTML = '<p>The policy could not be loaded right now. Please try again later.</p>';"
- },
- {
   "file": "website/main-website/src/pages/policy.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "Policies moved to their own addresses.",
   "src": "<p>Policies moved to their own addresses. <a href=\"/policies\">See all policies</a>.</p>"
  },
  {
   "file": "website/main-website/src/pages/policy.astro",
   "line": 22,
+  "kind": "jsx",
   "text": "See all policies",
   "src": "<p>Policies moved to their own addresses. <a href=\"/policies\">See all policies</a>.</p>"
  },
  {
+  "file": "website/main-website/src/pages/policy/[slug].astro",
+  "line": 74,
+  "kind": "jsx",
+  "text": "This policy could not be found. It may have been renamed or retired.",
+  "src": "'<p>This policy could not be found. It may have been renamed or retired.</p>';"
+ },
+ {
+  "file": "website/main-website/src/pages/policy/[slug].astro",
+  "line": 81,
+  "kind": "jsx",
+  "text": "No content published yet.",
+  "src": "body.innerHTML = policy.content || '<p>No content published yet.</p>';"
+ },
+ {
+  "file": "website/main-website/src/pages/policy/[slug].astro",
+  "line": 83,
+  "kind": "jsx",
+  "text": "The policy could not be loaded right now. Please try again later.",
+  "src": "body.innerHTML = '<p>The policy could not be loaded right now. Please try again later.</p>';"
+ },
+ {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 10,
+  "kind": "prop",
   "text": "Safety Advice",
   "src": "title=\"Safety Advice\""
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 12,
+  "kind": "prop",
   "text": "Stay safe, stay you",
   "src": "heading=\"Stay safe, stay you\""
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 17,
+  "kind": "jsx",
   "text": "Before you connect",
   "src": "<h2>Before you connect</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 19,
+  "kind": "jsx",
   "text": "Use a recent photo and a name you're comfortable with.",
   "src": "<li>Use a recent photo and a name you're comfortable with.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 20,
+  "kind": "jsx",
   "text": "Don't share your home address, workplace, or financial info.",
   "src": "<li>Don't share your home address, workplace, or financial info.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "Trust your gut — if something feels off, it probably is.",
   "src": "<li>Trust your gut — if something feels off, it probably is.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 24,
+  "kind": "jsx",
   "text": "Meeting up IRL",
   "src": "<h2>Meeting up IRL</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 26,
+  "kind": "jsx",
   "text": "Pick a public place for first meets — a café, a park, a busy spot.",
   "src": "<li>Pick a public place for first meets — a café, a park, a busy spot.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 27,
+  "kind": "jsx",
   "text": "Tell a friend where you're going and when you'll check in.",
   "src": "<li>Tell a friend where you're going and when you'll check in.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 28,
+  "kind": "jsx",
   "text": "Arrange your own transport. Don't rely on the other person.",
   "src": "<li>Arrange your own transport. Don't rely on the other person.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 29,
+  "kind": "jsx",
   "text": "Stay sober enough to leave whenever you want.",
   "src": "<li>Stay sober enough to leave whenever you want.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 32,
+  "kind": "jsx",
   "text": "Red flags",
   "src": "<h2>Red flags</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 34,
+  "kind": "jsx",
   "text": "Someone asking for money, gifts, or financial help.",
   "src": "<li>Someone asking for money, gifts, or financial help.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 35,
+  "kind": "jsx",
   "text": "Pressure to move off Duncit to another platform too quickly.",
   "src": "<li>Pressure to move off Duncit to another platform too quickly.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 36,
+  "kind": "jsx",
   "text": "Inconsistent stories or refusing to video chat.",
   "src": "<li>Inconsistent stories or refusing to video chat.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 37,
+  "kind": "jsx",
   "text": "Anyone making you uncomfortable — block, report, move on.",
   "src": "<li>Anyone making you uncomfortable — block, report, move on.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 40,
+  "kind": "jsx",
   "text": "Need help?",
   "src": "<h2>Need help?</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/advice.astro",
   "line": 41,
+  "kind": "jsx",
   "text": "Visit",
   "src": "<p>Visit <a href=\"/safety/resources\">our resources page</a> for crisis hotlines, or email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 6,
+  "kind": "prop",
   "text": "Our Safety Approach",
   "src": "title=\"Our Safety Approach\""
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 8,
+  "kind": "prop",
   "text": "Our approach to safety",
   "src": "heading=\"Our approach to safety\""
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 12,
+  "kind": "jsx",
   "text": "Our principles",
   "src": "<h2>Our principles</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 14,
+  "kind": "jsx",
   "text": "Prevention over reaction.",
   "src": "<li><strong>Prevention over reaction.</strong> Smart defaults, smart limits, smart matching.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 14,
+  "kind": "jsx",
   "text": "Smart defaults, smart limits, smart matching.",
   "src": "<li><strong>Prevention over reaction.</strong> Smart defaults, smart limits, smart matching.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 15,
+  "kind": "jsx",
   "text": "Humans in the loop.",
   "src": "<li><strong>Humans in the loop.</strong> Every report goes to a real person, fast.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 15,
+  "kind": "jsx",
   "text": "Every report goes to a real person, fast.",
   "src": "<li><strong>Humans in the loop.</strong> Every report goes to a real person, fast.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 16,
+  "kind": "jsx",
   "text": "Clear rules, clear consequences, no shadow bans.",
   "src": "<li><strong>Transparency.</strong> Clear rules, clear consequences, no shadow bans.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 17,
+  "kind": "jsx",
   "text": "User control.",
   "src": "<li><strong>User control.</strong> You decide who sees you, what you share, and when.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 17,
+  "kind": "jsx",
   "text": "You decide who sees you, what you share, and when.",
   "src": "<li><strong>User control.</strong> You decide who sees you, what you share, and when.</li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 20,
+  "kind": "jsx",
   "text": "How we do it",
   "src": "<h2>How we do it</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 21,
+  "kind": "jsx",
   "text": "We combine machine learning for pattern detection with a 24/7 human review team trained in trauma-informed care. We partner with leading non-profits and report transparently every quarter.",
-  "src": "<p>We combine machine learning for pattern detection with a 24/7 human review team trained in trauma-informed care. We partner with leading non-profits and repo"
+  "src": "<p>We combine machine learning for pattern detection with a 24/7 human review team trained in trauma-informed care. We partner with leading non-profits and report transpa"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 23,
+  "kind": "jsx",
   "text": "Read more",
   "src": "<h2>Read more</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 25,
+  "kind": "jsx",
   "text": "Safety advice for users",
   "src": "<li><a href=\"/safety/advice\">Safety advice for users</a></li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 26,
+  "kind": "jsx",
   "text": "In-app safety tools",
   "src": "<li><a href=\"/safety/tools\">In-app safety tools</a></li>"
  },
  {
   "file": "website/main-website/src/pages/safety/approach.astro",
   "line": 27,
+  "kind": "jsx",
   "text": "Crisis resources",
   "src": "<li><a href=\"/safety/resources\">Crisis resources</a></li>"
  },
  {
   "file": "website/main-website/src/pages/safety/resources.astro",
   "line": 19,
+  "kind": "prop",
   "text": "Crisis Resources",
   "src": "title=\"Crisis Resources\""
  },
  {
   "file": "website/main-website/src/pages/safety/resources.astro",
   "line": 21,
+  "kind": "prop",
   "text": "Help is here",
   "src": "heading=\"Help is here\""
  },
  {
   "file": "website/main-website/src/pages/safety/resources.astro",
   "line": 25,
+  "kind": "jsx",
   "text": "If you're in immediate danger, call your local emergency number first.",
   "src": "<p>If you're in immediate danger, call your local emergency number first.</p>"
  },
  {
   "file": "website/main-website/src/pages/safety/resources.astro",
-  "line": 12,
+  "line": 27,
+  "kind": "jsx",
   "text": "Helplines",
-  "src": "{ region: 'EU', name: 'Mental Health Europe Helplines', contact: 'mhe-sme.org/helplines' },"
+  "src": "<h2>Helplines</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/resources.astro",
   "line": 43,
+  "kind": "jsx",
   "text": "On-platform support",
   "src": "<h2>On-platform support</h2>"
  },
  {
   "file": "website/main-website/src/pages/safety/resources.astro",
   "line": 44,
+  "kind": "jsx",
   "text": "For Duncit-specific issues, contact",
-  "src": "<p>For Duncit-specific issues, contact <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. We don't replace professional help, but we'll listen and act on wh"
- },
- {
-  "file": "website/main-website/src/pages/safety/tools.astro",
-  "line": 15,
-  "text": "Safety Tools",
-  "src": "title=\"Safety Tools\""
- },
- {
-  "file": "website/main-website/src/pages/safety/tools.astro",
-  "line": 17,
-  "text": "Tools to stay safe",
-  "src": "heading=\"Tools to stay safe\""
+  "src": "<p>For Duncit-specific issues, contact <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. We don't replace professional help, but we'll listen and act on what we can."
  },
  {
   "file": "website/main-website/src/pages/safety/tools.astro",
   "line": 5,
+  "kind": "obj",
   "text": "Block",
   "src": "{ icon: 'fa-ban', title: 'Block', desc: 'Instantly remove someone from your world. They won\\'t know.' },"
  },
  {
   "file": "website/main-website/src/pages/safety/tools.astro",
   "line": 6,
+  "kind": "obj",
   "text": "Mute",
   "src": "{ icon: 'fa-volume-xmark', title: 'Mute', desc: 'Silence notifications without blocking them.' },"
  },
  {
   "file": "website/main-website/src/pages/safety/tools.astro",
   "line": 7,
+  "kind": "obj",
   "text": "Report",
   "src": "{ icon: 'fa-flag', title: 'Report', desc: 'Send a flag to our T&S team. Reviewed within hours.' },"
  },
  {
   "file": "website/main-website/src/pages/safety/tools.astro",
   "line": 8,
+  "kind": "obj",
   "text": "Hide profile",
   "src": "{ icon: 'fa-eye-slash', title: 'Hide profile', desc: 'Pause discoverability without deleting your account.' },"
  },
  {
   "file": "website/main-website/src/pages/safety/tools.astro",
   "line": 9,
+  "kind": "obj",
   "text": "Photo verify",
   "src": "{ icon: 'fa-image', title: 'Photo verify', desc: 'Optional selfie verification to prove you\\'re you.' },"
  },
  {
   "file": "website/main-website/src/pages/safety/tools.astro",
+  "line": 15,
+  "kind": "prop",
+  "text": "Safety Tools",
+  "src": "title=\"Safety Tools\""
+ },
+ {
+  "file": "website/main-website/src/pages/safety/tools.astro",
+  "line": 17,
+  "kind": "prop",
+  "text": "Tools to stay safe",
+  "src": "heading=\"Tools to stay safe\""
+ },
+ {
+  "file": "website/main-website/src/pages/safety/tools.astro",
   "line": 34,
+  "kind": "jsx",
   "text": "How reports work",
   "src": "<h2>How reports work</h2>"
- },
- {
-  "file": "website/partners-website/src/components/DownloadApps.astro",
-  "line": 16,
-  "text": "Your partners,",
-  "src": "heading=\"Your partners,\""
- },
- {
-  "file": "website/partners-website/src/components/SiteFooter.astro",
-  "line": 58,
-  "text": "Partner updates",
-  "src": "heading=\"Partner updates\""
- },
- {
-  "file": "website/partners-website/src/components/SiteFooter.astro",
-  "line": 3,
-  "text": "Policy Hub",
-  "src": "// the Policy Hub from the Legal portal; branding assets from Admin."
- },
- {
-  "file": "website/partners-website/src/components/SiteFooter.astro",
-  "line": 13,
-  "text": "Duncit",
-  "src": "label: 'Duncit',"
- },
- {
-  "file": "website/partners-website/src/components/SiteFooter.astro",
-  "line": 16,
-  "text": "Support",
-  "src": "{ id: 'f-support', area: 'FOOTER', group_label: 'Duncit', label: 'Support', url: `${urlConfigs.mainSiteUrl}/help`, sort_order: 1 },"
- },
- {
-  "file": "website/partners-website/src/components/SiteFooter.astro",
-  "line": 43,
-  "text": "Duncit Partners",
-  "src": "<p class=\"mt-2 font-head text-xl font-black leading-none text-ink\">Duncit Partners</p>"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 34,
-  "text": "Duncit",
-  "src": "<a href={urlConfigs.mainSiteUrl} class=\"partner-brand\" aria-label=\"Duncit\">"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 16,
-  "text": "How it works",
-  "src": "{ label: 'How it works', href: '#ways' },"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 17,
-  "text": "List your venue",
-  "src": "{ label: 'List your venue', href: `${urlConfigs.partnersAppUrl}/register-venue` },"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 18,
-  "text": "Become a host",
-  "src": "{ label: 'Become a host', href: `${urlConfigs.partnersAppUrl}/become-host` },"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 19,
-  "text": "Get the app",
-  "src": "{ label: 'Get the app', href: '#download' },"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 21,
-  "text": "Partner login",
-  "src": "const login = { label: 'Partner login', href: urlConfigs.partnersAppUrl };"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 22,
-  "text": "Become a partner",
-  "src": "const join = { label: 'Become a partner', href: `${urlConfigs.partnersAppUrl}/register-venue` };"
- },
- {
-  "file": "website/partners-website/src/components/SiteHeader.astro",
-  "line": 42,
-  "text": "Partners",
-  "src": "<span class=\"partner-brand-word\">Partners</span>"
- },
- {
-  "file": "website/partners-website/src/layouts/Layout.astro",
-  "line": 12,
-  "text": "Duncit Partners helps hosts and venues create real social moments.",
-  "src": "description = 'Duncit Partners helps hosts and venues create real social moments.',"
- },
- {
-  "file": "website/partners-website/src/pages/index.astro",
-  "line": 15,
-  "text": "Duncit Partners — Host and venue growth",
-  "src": "<Layout title=\"Duncit Partners — Host and venue growth\">"
- },
- {
-  "file": "website/partners-website/src/pages/index.astro",
-  "line": 19,
-  "text": "Venue partners planning an event",
-  "src": "<img src={partnerLanding.heroImage} alt=\"Venue partners planning an event\" class=\"w-full h-full object-cover\" />"
- },
- {
-  "file": "website/partners-website/src/pages/index.astro",
-  "line": 53,
-  "text": "Partners reviewing bookings",
-  "src": "<img src={partnerLanding.proofImage} alt=\"Partners reviewing bookings\" class=\"w-full h-72 sm:h-80 object-cover rounded-2xl sticker\" />"
- },
- {
-  "file": "website/partners-website/src/pages/index.astro",
-  "line": 73,
-  "text": "Two ways into the same growth engine.",
-  "src": "<h2 class=\"text-4xl sm:text-5xl text-ink\">Two ways into the same growth engine.</h2>"
- },
- {
-  "file": "website/status-website/src/components/GlobalUptimeChart.tsx",
-  "line": 14,
-  "text": "Overall uptime %",
-  "src": "label: 'Overall uptime %',"
- },
- {
-  "file": "website/status-website/src/components/Header.tsx",
-  "line": 45,
-  "text": "Staging",
-  "src": "{environment === 'staging' && <Chip label=\"Staging\" color=\"warning\" size=\"small\" />}"
- },
- {
-  "file": "website/status-website/src/components/IncidentsSection.tsx",
-  "line": 59,
-  "text": "No incidents reported in the last 90 days.",
-  "src": "<Typography variant=\"body2\">No incidents reported in the last 90 days.</Typography>"
- },
- {
-  "file": "website/status-website/src/components/OverallStatusBanner.tsx",
-  "line": 13,
-  "text": "Checking services…",
-  "src": "if (!overall) return { severity: 'info', message: 'Checking services…' };"
- },
- {
-  "file": "website/status-website/src/components/OverallStatusBanner.tsx",
-  "line": 15,
-  "text": "Awaiting the first checks.",
-  "src": "if (total === 0) return { severity: 'info', message: 'Awaiting the first checks.' };"
- },
- {
-  "file": "website/status-website/src/components/OverallStatusBanner.tsx",
-  "line": 16,
-  "text": "All systems operational",
-  "src": "if (operational === total) return { severity: 'success', message: 'All systems operational' };"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 2,
-  "text": "Status",
-  "src": "import { DetailRow, StatusPill } from './DetailRow';"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 29,
-  "text": "Database",
-  "src": "<DetailRow label=\"Database\" value={<StatusPill ok={dbOk} label={health.checks.database} />} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 30,
-  "text": "Version",
-  "src": "<DetailRow label=\"Version\" value={health.version} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 31,
-  "text": "Environment",
-  "src": "<DetailRow label=\"Environment\" value={health.environment} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 32,
-  "text": "Process uptime",
-  "src": "<DetailRow label=\"Process uptime\" value={formatDuration(health.uptime.processSeconds)} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 33,
-  "text": "System uptime",
-  "src": "<DetailRow label=\"System uptime\" value={formatDuration(health.uptime.systemSeconds)} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 34,
-  "text": "Node",
-  "src": "<DetailRow label=\"Node\" value={health.node} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 35,
-  "text": "Platform",
-  "src": "<DetailRow label=\"Platform\" value={health.platform} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HealthSection.tsx",
-  "line": 36,
-  "text": "Hostname",
-  "src": "<DetailRow label=\"Hostname\" value={health.hostname} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HistoryCharts.tsx",
-  "line": 28,
-  "text": "Uptime %",
-  "src": "label: 'Uptime %',"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/HistoryCharts.tsx",
-  "line": 67,
-  "text": "Latency (ms)",
-  "src": "label: 'Latency (ms)',"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 14,
-  "text": "Issuer",
-  "src": "<DetailRow label=\"Issuer\" value={ssl.issuer ?? '—'} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 15,
-  "text": "Subject",
-  "src": "<DetailRow label=\"Subject\" value={ssl.subject ?? '—'} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 16,
-  "text": "Protocol",
-  "src": "<DetailRow label=\"Protocol\" value={ssl.protocol ?? '—'} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 17,
-  "text": "Valid from",
-  "src": "<DetailRow label=\"Valid from\" value={formatDate(ssl.validFrom)} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 18,
-  "text": "Expires",
-  "src": "<DetailRow label=\"Expires\" value={expiry} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 45,
-  "text": "HTTP status",
-  "src": "<DetailRow label=\"HTTP status\" value={<StatusPill ok={probe.ok} label={codeLabel} />} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ProbeSection.tsx",
-  "line": 49,
-  "text": "No certificate",
-  "src": "<DetailRow label=\"SSL\" value={<StatusPill ok={false} label=\"No certificate\" />} />"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ServiceDetailsDialog.tsx",
-  "line": 42,
-  "text": "Close details",
-  "src": "<IconButton onClick={onClose} aria-label=\"Close details\" size=\"small\">"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ServiceDetailsDialog.tsx",
-  "line": 48,
-  "text": "Endpoint",
-  "src": "<SectionTitle>Endpoint</SectionTitle>"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ServiceDetailsDialog.tsx",
-  "line": 52,
-  "text": "Server health",
-  "src": "<SectionTitle>Server health</SectionTitle>"
- },
- {
-  "file": "website/status-website/src/components/service-details-dialog/ServiceDetailsDialog.tsx",
-  "line": 14,
-  "text": "History",
-  "src": "import HistoryCharts from './HistoryCharts';"
- },
- {
-  "file": "website/status-website/src/components/StatusFilters.tsx",
-  "line": 35,
-  "text": "Search services…",
-  "src": "placeholder=\"Search services…\""
- },
- {
-  "file": "website/status-website/src/components/StatusFilters.tsx",
-  "line": 7,
-  "text": "Group",
-  "src": "ToggleButtonGroup,"
- },
- {
-  "file": "website/status-website/src/components/StatusFilters.tsx",
-  "line": 70,
-  "text": "Filter by status",
-  "src": "aria-label=\"Filter by status\""
- },
- {
-  "file": "website/status-website/src/components/StatusFilters.tsx",
-  "line": 56,
-  "text": "All groups",
-  "src": "<MenuItem value=\"all\">All groups</MenuItem>"
- },
- {
-  "file": "website/status-website/src/components/StatusFilters.tsx",
-  "line": 73,
-  "text": "Operational",
-  "src": "<ToggleButton value=\"operational\">Operational</ToggleButton>"
- },
- {
-  "file": "website/status-website/src/components/StatusFilters.tsx",
-  "line": 74,
-  "text": "Issues",
-  "src": "<ToggleButton value=\"issues\">Issues</ToggleButton>"
  }
 ]

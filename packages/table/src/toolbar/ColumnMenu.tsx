@@ -3,7 +3,8 @@ import Divider from '@mui/material/Divider';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { isColumnHidden } from '../columnDefs';
+import { columnHeader, isColumnHidden } from '../columnDefs';
+import { useTranslation } from '../i18n';
 import type { DuncitColumn } from '../types';
 
 interface ColumnMenuProps<T> {
@@ -19,6 +20,7 @@ interface ColumnMenuProps<T> {
 /** Checkbox menu to show/hide columns (persisted via useTablePrefs), plus a reset item. */
 export function ColumnMenu<T>(props: Readonly<ColumnMenuProps<T>>) {
   const { open, anchorEl, onClose, columns, hiddenOverrides, toggleColumn, resetColumns } = props;
+  const { t } = useTranslation();
 
   const handleReset = () => {
     resetColumns();
@@ -32,13 +34,13 @@ export function ColumnMenu<T>(props: Readonly<ColumnMenuProps<T>>) {
         return (
           <MenuItem key={column.field} dense onClick={() => toggleColumn(column.field, hidden)}>
             <Checkbox size="small" edge="start" disableRipple checked={!hidden} tabIndex={-1} />
-            <ListItemText primary={column.headerName} />
+            <ListItemText primary={columnHeader(column, t)} />
           </MenuItem>
         );
       })}
       <Divider />
       <MenuItem dense onClick={handleReset}>
-        <ListItemText primary="Reset columns" />
+        <ListItemText primary={t('shell.table.resetColumns')} />
       </MenuItem>
     </Menu>
   );

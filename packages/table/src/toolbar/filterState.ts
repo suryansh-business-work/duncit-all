@@ -1,3 +1,5 @@
+import { columnHeader } from '../columnDefs';
+import type { Translate } from '../i18n';
 import type { DuncitColumn, TableFilterValue } from '../types';
 
 export interface FilterDraft {
@@ -103,10 +105,15 @@ export function filtersToDraft<T>(
   return drafts;
 }
 
-const OP_LABELS: Record<string, string> = {
+/**
+ * The comparison shown on an active-filter chip.
+ *
+ * Only `contains` is a word; the rest are mathematical symbols that read the
+ * same in every language, so `contains` is the one entry that takes a key.
+ */
+const OP_SYMBOLS: Record<string, string> = {
   eq: '=',
   ne: '≠',
-  contains: 'contains',
   gte: '≥',
   lte: '≤',
 };
@@ -115,14 +122,16 @@ const OP_LABELS: Record<string, string> = {
 export function filterChipLabel<T>(
   columns: ReadonlyArray<DuncitColumn<T>>,
   filter: TableFilterValue,
+  t: Translate,
 ): string {
-  const header = columns.find((c) => c.field === filter.field)?.headerName ?? filter.field;
-  if (filter.op === 'is_true') return `${header}: Yes`;
-  if (filter.op === 'is_false') return `${header}: No`;
+  const column = columns.find((c) => c.field === filter.field);
+  const header = column ? columnHeader(column, t) : filter.field;
+  if (filter.op === 'is_true') return `${header}: ${t('shell.table.yes')}`;
+  if (filter.op === 'is_false') return `${header}: ${t('shell.table.no')}`;
   if (filter.op === 'in') return `${header}: ${(filter.values ?? []).join(', ')}`;
   if (filter.op === 'between') {
     return `${header}: ${(filter.values ?? []).join(' – ')}`;
   }
-  const op = OP_LABELS[filter.op] ?? filter.op;
+  const op = OP_SYMBOLS[filter.op] ?? t('shell.table.opContains');
   return `${header} ${op} ${filter.value ?? ''}`.trim();
 }

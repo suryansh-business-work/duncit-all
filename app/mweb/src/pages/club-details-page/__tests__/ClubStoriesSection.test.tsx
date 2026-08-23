@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ClubStoriesSection from '../ClubStoriesSection';
 import { RECORD_STORY_VIEW } from '../../home-page/queries';
 import { CLUB_STORIES } from '../../ClubDetailsPage/clubDetailsQueries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 vi.mock('../../../components/moments/MomentLightbox', () => ({
   default: () => null,
@@ -42,7 +43,9 @@ describe('ClubStoriesSection', () => {
     ];
     render(
       <MockedProvider mocks={mocks} addTypename={false}>
-        <ClubStoriesSection clubId="c1" canPost />
+        <DuncitLocalizationProvider>
+          <ClubStoriesSection clubId="c1" canPost />
+        </DuncitLocalizationProvider>
       </MockedProvider>,
     );
 

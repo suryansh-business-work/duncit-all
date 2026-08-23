@@ -1,6 +1,7 @@
 import {
   AD_DURATION_FALLBACK,
-  adRequestSchema,
+  adRequestT,
+  buildAdRequestSchema,
   blankAdRequestValues,
   makeAdRequestSchema,
   toSubmitAdRequestInput,
@@ -29,8 +30,13 @@ export default defineDemos('ad-request-form', [
       window_max: AD_DURATION_FALLBACK.max,
     },
     compute: (mock) => {
-      const windowed = makeAdRequestSchema({ min: mock.window_min, max: mock.window_max });
-      const base = adRequestSchema.safeParse(mock);
+      // The messages come from the catalogue, so the schema takes a translator
+      // — the console's live one inside a portal, the package's own here.
+      const windowed = makeAdRequestSchema(
+        { min: mock.window_min, max: mock.window_max },
+        adRequestT,
+      );
+      const base = buildAdRequestSchema(adRequestT).safeParse(mock);
       const bounded = windowed.safeParse(mock);
       return {
         'Admin-configured window': `${mock.window_min}–${mock.window_max} days`,

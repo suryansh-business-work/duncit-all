@@ -45,7 +45,7 @@ export default function AdSummaryCard({ ad }: Readonly<{ ad: AdRequestDetail }>)
             variant="inline"
             labelWidth={140}
             label={t('ads.detail.position')}
-            value={adPositionLabel(ad.position)}
+            value={adPositionLabel(ad.position, t)}
           />
           <InfoRow
             variant="inline"

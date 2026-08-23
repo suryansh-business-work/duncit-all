@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import CategoryStep, { type CategoryScope } from '../CategoryStep';
 import { CATEGORIES, type CategoryOption } from '../queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const SUPERS: CategoryOption[] = [
   { id: 's1', name: 'Food', level: 'SUPER', parent_id: null, is_active: true, sort_order: 1 },
@@ -31,7 +32,9 @@ const renderStep = (props: Partial<React.ComponentProps<typeof CategoryStep>> = 
   const onContinue = props.onContinue ?? vi.fn();
   render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <CategoryStep submitting={false} onContinue={onContinue} {...props} />
+      <DuncitLocalizationProvider>
+        <CategoryStep submitting={false} onContinue={onContinue} {...props} />
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
   return { onContinue };
@@ -138,7 +141,9 @@ describe('CategoryStep', () => {
   it('disables the Continue button and shows the loading label while submitting', () => {
     render(
       <MockedProvider mocks={fullMocks} addTypename={false}>
-        <CategoryStep submitting onContinue={vi.fn()} />
+        <DuncitLocalizationProvider>
+          <CategoryStep submitting onContinue={vi.fn()} />
+        </DuncitLocalizationProvider>
       </MockedProvider>,
     );
     const btn = screen.getByRole('button', { name: 'Loading…' });

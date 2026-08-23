@@ -15,13 +15,16 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { glass } from './glass';
 import { PORTALS, PORTAL_CATEGORIES, resolvePortalUrl } from './portals';
+import { sessionT, type SessionTranslate } from '../i18n';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** The mounting surface's translator; the shipped English when omitted. */
+  t?: SessionTranslate;
 }
 
-export default function OtherPortalsDialog({ open, onClose }: Readonly<Props>) {
+export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Readonly<Props>) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string>('All');
 
@@ -39,17 +42,17 @@ export default function OtherPortalsDialog({ open, onClose }: Readonly<Props>) {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
       <DialogTitle sx={{ pb: 0.5 }}>
         <Typography component="span" variant="h6" fontWeight={800}>
-          Other portals
+          {t('session.portals.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          One Duncit account — jump to any console below.
+          {t('session.portals.subtitle')}
         </Typography>
       </DialogTitle>
       <DialogContent dividers>
         <TextField
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search portals…"
+          placeholder={t('session.portals.search')}
           fullWidth
           size="small"
           sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 999 } }}
@@ -65,7 +68,7 @@ export default function OtherPortalsDialog({ open, onClose }: Readonly<Props>) {
           {['All', ...PORTAL_CATEGORIES].map((cat) => (
             <Chip
               key={cat}
-              label={cat}
+              label={cat === 'All' ? t('session.portals.all') : cat}
               size="small"
               color={category === cat ? 'primary' : 'default'}
               variant={category === cat ? 'filled' : 'outlined'}
@@ -106,7 +109,7 @@ export default function OtherPortalsDialog({ open, onClose }: Readonly<Props>) {
           ))}
           {!results.length && (
             <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-              No portals match “{query}”.
+              {t('session.portals.noMatch', { vars: { query } })}
             </Typography>
           )}
         </Box>

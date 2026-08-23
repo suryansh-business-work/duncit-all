@@ -323,6 +323,9 @@ importers:
 
   packages/ad-request-form:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
       '@duncit/forms':
         specifier: workspace:*
         version: link:../forms
@@ -437,6 +440,10 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/ai-prompts:
+    dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -956,6 +963,9 @@ importers:
 
   packages/coupons:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
@@ -1110,6 +1120,10 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/dialogs:
+    dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
     devDependencies:
       '@mui/material':
         specifier: ^5.15.18
@@ -1602,6 +1616,10 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/location:
+    dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -1966,6 +1984,10 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/portal-pod-form:
+    dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.9.1
@@ -2278,6 +2300,9 @@ importers:
 
   packages/table:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
@@ -2438,6 +2463,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
@@ -2490,6 +2518,9 @@ importers:
 
   packages/user-context:
     dependencies:
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@duncit/user-core':
         specifier: workspace:*
         version: link:../user-core

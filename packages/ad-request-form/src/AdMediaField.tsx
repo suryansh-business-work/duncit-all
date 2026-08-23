@@ -3,6 +3,7 @@ import { Box, Button, FormHelperText, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { MediaPickerDialog } from '@duncit/media-picker';
 import type { AdMediaType } from './ad-options';
+import { useTranslation } from './i18n/useTranslation';
 
 interface AdMediaFieldProps {
   adType: AdMediaType;
@@ -28,10 +29,18 @@ const PREVIEW_SX = {
  * ImageKit or Pexels) scoped to the selected ad type, with an inline preview.
  */
 export default function AdMediaField({ adType, value, onChange, error, helperText, required }: Readonly<AdMediaFieldProps>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const isVideo = adType === 'VIDEO';
-  const mediaLabel = isVideo ? 'video' : 'image';
-  const defaultHint = isVideo ? 'Upload the ad video (up to 100MB)' : 'Upload the ad image';
+  // Each wording is its own catalogue row rather than a noun slotted into a
+  // sentence: a language that inflects the verb for the noun cannot be built
+  // by concatenation.
+  const uploadLabel = isVideo ? t('adRequest.media.uploadVideo') : t('adRequest.media.uploadImage');
+  const replaceLabel = isVideo
+    ? t('adRequest.media.replaceVideo')
+    : t('adRequest.media.replaceImage');
+  const chooseLabel = isVideo ? t('adRequest.media.chooseVideo') : t('adRequest.media.chooseImage');
+  const defaultHint = isVideo ? t('adRequest.media.hintVideo') : t('adRequest.media.hintImage');
 
   const handlePicked = (url: string) => {
     onChange(url);
@@ -41,12 +50,12 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        Ad Media
+        {t('adRequest.media.label')}
         {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}
       </Typography>
       <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
         <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
-          {value ? `Replace ${mediaLabel}` : `Upload ${mediaLabel}`}
+          {value ? replaceLabel : uploadLabel}
         </Button>
         {value && (
           <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
@@ -59,7 +68,7 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
           {isVideo ? (
             <Box component="video" src={value} controls sx={PREVIEW_SX} />
           ) : (
-            <Box component="img" src={value} alt="Ad media preview" sx={PREVIEW_SX} />
+            <Box component="img" src={value} alt={t('adRequest.media.previewAlt')} sx={PREVIEW_SX} />
           )}
         </Box>
       )}
@@ -69,7 +78,7 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
         onClose={() => setOpen(false)}
         onPicked={handlePicked}
         folder="/ads"
-        title={`Choose ad ${mediaLabel}`}
+        title={chooseLabel}
         accept={isVideo ? 'video/*' : 'image/*'}
       />
     </Box>

@@ -9,7 +9,9 @@ import {
   type DuncitColumn,
   type TableFetch,
 } from '@duncit/table';
-import { PROMPT_COPY } from '../copy';
+import { useTranslation } from '@duncit/app-settings';
+import { usePromptCopy } from '../i18n/useCopy';
+import type { PromptCopy } from '../copy';
 import type { AiPrompt, PromptKind } from '../types';
 
 interface Props {
@@ -24,7 +26,7 @@ interface Props {
 
 const getPromptRowId = (p: AiPrompt) => p.id;
 
-const renderName = (p: AiPrompt) => (
+const renderName = (p: AiPrompt, copy: PromptCopy) => (
   <Box sx={{ lineHeight: 1.3, py: 0.5 }}>
     <Stack direction="row" alignItems="center" spacing={0.75}>
       <Typography variant="body2" fontWeight={700} component="div">
@@ -34,7 +36,7 @@ const renderName = (p: AiPrompt) => (
         size="small"
         variant="outlined"
         color={p.role === 'USER' ? 'info' : 'secondary'}
-        label={PROMPT_COPY.roles[p.role]}
+        label={copy.roles[p.role]}
       />
     </Stack>
     {p.description && (
@@ -57,9 +59,15 @@ function ResetAction({
   prompt,
   onReset,
 }: Readonly<{ prompt: AiPrompt; onReset: (p: AiPrompt) => void }>) {
+  const copy = usePromptCopy();
+  const { t } = useTranslation();
   return (
-    <Tooltip title={PROMPT_COPY.resetHint}>
-      <IconButton size="small" aria-label={`Reset ${prompt.name}`} onClick={() => onReset(prompt)}>
+    <Tooltip title={copy.resetHint}>
+      <IconButton
+        size="small"
+        aria-label={t('ai.library.resetAria', { vars: { name: prompt.name } })}
+        onClick={() => onReset(prompt)}
+      >
         <RestartAltIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -68,14 +76,14 @@ function ResetAction({
 
 const renderCategory = (p: AiPrompt) => <Chip size="small" variant="outlined" label={p.category} />;
 
-const renderModel = (p: AiPrompt) => (
+const renderModel = (p: AiPrompt, defaultModel: string) => (
   <Typography variant="body2" color={p.target_model ? 'text.primary' : 'text.disabled'}>
-    {p.target_model || 'Default'}
+    {p.target_model || defaultModel}
   </Typography>
 );
 
-const renderTokens = (p: AiPrompt) => (
-  <Tooltip title="Estimated token size of the prompt content">
+const renderTokens = (p: AiPrompt, hint: string) => (
+  <Tooltip title={hint}>
     <Chip size="small" color="primary" variant="outlined" label={`≈ ${p.token_count}`} />
   </Tooltip>
 );
@@ -94,43 +102,48 @@ export function PromptsTable({
   onDelete,
   onReset,
 }: Readonly<Props>) {
+  const copy = usePromptCopy();
+  const { t } = useTranslation();
   const code = kind === 'CODE';
+  const defaultModel = t('ai.library.defaultModel');
+  // Rebuilt when the catalogue changes — a column set frozen at module load
+  // would keep the language the console first rendered in.
   const columns = useMemo<DuncitColumn<AiPrompt>[]>(
     () => [
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: copy.fields.name,
         flex: 1,
         minWidth: 240,
-        cellRenderer: renderName,
+        cellRenderer: (p) => renderName(p, copy),
         valueGetter: (p) => p.name,
       },
       {
         field: 'key',
-        headerName: 'Key',
+        headerName: copy.fields.key,
         minWidth: 190,
         cellRenderer: renderKey,
         valueGetter: (p) => p.key ?? '',
       },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: copy.fields.category,
         minWidth: 130,
         cellRenderer: renderCategory,
         valueGetter: (p) => p.category,
       },
       {
         field: 'target_model',
-        headerName: 'Model',
+        headerName: copy.fields.model,
         width: 150,
-        cellRenderer: renderModel,
-        valueGetter: (p) => p.target_model || 'Default',
+        cellRenderer: (p) => renderModel(p, defaultModel),
+        valueGetter: (p) => p.target_model || defaultModel,
       },
       {
         field: 'token_count',
-        headerName: 'Tokens',
+        headerName: t('ai.library.colTokens'),
         width: 110,
-        cellRenderer: renderTokens,
+        cellRenderer: (p) => renderTokens(p, t('ai.library.tokensHint')),
         valueGetter: (p) => p.token_count,
       },
       activeChipColumn<AiPrompt>(),
@@ -140,15 +153,15 @@ export function PromptsTable({
         onEdit,
         onDelete,
         renderExtra: (p) => (code ? <ResetAction prompt={p} onReset={onReset} /> : null),
-        edit: { ariaLabel: (p) => `Edit ${p.name}` },
+        edit: { ariaLabel: (p) => t('ai.library.editAria', { vars: { name: p.name } }) },
         delete: {
-          ariaLabel: (p) => `Delete ${p.name}`,
+          ariaLabel: (p) => t('ai.library.deleteAria', { vars: { name: p.name } }),
           disabled: () => code,
-          disabledTitle: PROMPT_COPY.codeDeleteHint,
+          disabledTitle: copy.codeDeleteHint,
         },
       }),
     ],
-    [code, onEdit, onDelete, onReset],
+    [code, copy, defaultModel, t, onEdit, onDelete, onReset],
   );
 
   return (
@@ -158,8 +171,8 @@ export function PromptsTable({
       fetchRows={fetchRows}
       getRowId={getPromptRowId}
       toolbarActions={toolbarActions}
-      emptyText={code ? PROMPT_COPY.emptyCode : PROMPT_COPY.emptyAi}
-      searchPlaceholder={PROMPT_COPY.searchPlaceholder}
+      emptyText={code ? copy.emptyCode : copy.emptyAi}
+      searchPlaceholder={copy.searchPlaceholder}
       refetchRef={refetchRef}
     />
   );

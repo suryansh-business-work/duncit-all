@@ -1,6 +1,7 @@
 import {
   EM_DASH,
   clientTableFetch,
+  fallbackT,
   filterChipLabel,
   formatDateCell,
   tableQueryToGql,
@@ -47,8 +48,10 @@ export default defineDemos('table', [
     },
     compute: (mock) => ({
       'GraphQL variables': tableQueryToGql(mock.query),
+      // The chip words ("Yes", "contains") come from the catalogue, so the
+      // label takes a translator; outside React that is the package's own.
       'Toolbar chips': mock.query.filters.map((filter) =>
-        filterChipLabel(mock.columns, filter)
+        filterChipLabel(mock.columns, filter, fallbackT)
       ),
       'A blank date cell': formatDateCell(null),
       'The em dash it uses': EM_DASH,

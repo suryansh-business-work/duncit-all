@@ -3,12 +3,14 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import type { TypographyProps } from '@mui/material/Typography';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useTranslation } from './i18n/useTranslation';
 import { buildMapQuery, mapEmbedUrl, mapSearchUrl, type MapQueryPart } from './mapEmbed';
 
 type Sx = SxProps<Theme>;
 
 export interface MapEmbedCardProps {
-  /** iframe title (accessibility). Also the default heading text. */
+  /** iframe title (accessibility). Also the default heading text. Defaults to
+   * the shared `Map preview` copy in the reader's language. */
   title?: string;
   /** Address fragments joined with ", " (empty/blank entries dropped). */
   parts?: readonly MapQueryPart[];
@@ -31,7 +33,7 @@ export interface MapEmbedCardProps {
   headingVariant?: TypographyProps['variant'];
   headingColor?: TypographyProps['color'];
   headingSx?: Sx;
-  /** "Open in Maps" (default) / "Open Map" etc. */
+  /** "Open in Maps" (the default, translated) / "Open Map" etc. */
   buttonLabel?: ReactNode;
   /** Where the open-in-new icon sits on the button. Default 'end'. */
   iconPosition?: 'start' | 'end';
@@ -58,11 +60,15 @@ const DEFAULT_FRAME_SX: Sx = {
   borderRadius: 2,
 };
 
-const DEFAULT_MISSING_KEY_FALLBACK = (
-  <Typography variant="body2" color="text.secondary">
-    Add VITE_GOOGLE_MAP_API to preview the map here.
-  </Typography>
-);
+/** What stands in for the map when the embed key is required but absent. */
+function MissingKeyNotice() {
+  const { t } = useTranslation();
+  return (
+    <Typography variant="body2" color="text.secondary">
+      {t('location.map.keyMissing')}
+    </Typography>
+  );
+}
 
 /**
  * Read-only Google Maps embed preview card: heading + "Open in Maps" deep
@@ -71,7 +77,7 @@ const DEFAULT_MISSING_KEY_FALLBACK = (
  * mWeb LocationMapPreview) — see prop defaults above for the common style.
  */
 export function MapEmbedCard({
-  title = 'Map preview',
+  title,
   parts = [],
   lat,
   lng,
@@ -83,17 +89,19 @@ export function MapEmbedCard({
   headingVariant = 'caption',
   headingColor = 'text.secondary',
   headingSx,
-  buttonLabel = 'Open in Maps',
+  buttonLabel,
   iconPosition = 'end',
   buttonSx,
   hideWhenKeyMissing = false,
-  missingKeyFallback = DEFAULT_MISSING_KEY_FALLBACK,
+  missingKeyFallback,
   allowFullScreen = true,
   sx,
   stackSx,
   stackSpacing,
   frameSx,
 }: Readonly<MapEmbedCardProps>) {
+  const { t } = useTranslation();
+  const frameTitle = title ?? t('location.map.title');
   const resolvedQuery = query ?? buildMapQuery(parts, lat, lng);
   if (!resolvedQuery) return null;
 
@@ -106,7 +114,7 @@ export function MapEmbedCard({
   }
   const mapUrl = mapSearchUrl(resolvedQuery);
 
-  const headingNode = heading ?? title;
+  const headingNode = heading ?? frameTitle;
   const icon = <OpenInNewIcon fontSize="small" />;
 
   return (
@@ -134,13 +142,13 @@ export function MapEmbedCard({
           endIcon={iconPosition === 'end' ? icon : undefined}
           sx={buttonSx}
         >
-          {buttonLabel}
+          {buttonLabel ?? t('location.map.openInMaps')}
         </Button>
       </Stack>
       {src ? (
         <Box
           component="iframe"
-          title={title}
+          title={frameTitle}
           src={src}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
@@ -148,7 +156,7 @@ export function MapEmbedCard({
           sx={frameSx ?? DEFAULT_FRAME_SX}
         />
       ) : (
-        missingKeyFallback
+        (missingKeyFallback ?? <MissingKeyNotice />)
       )}
     </Box>
   );

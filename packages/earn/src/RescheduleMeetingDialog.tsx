@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import EarnSlotPicker from './EarnSlotPicker';
+import { useEarnSurface } from './EarnSurfaceProvider';
 import { MEETING_SLOTS, RESCHEDULE_MY_MEETING, type MeetingSlot } from './queries';
 import { MeetingReasonForm } from './meeting-reason';
 
@@ -29,6 +30,7 @@ const formatSlot = (iso: string | null) =>
 
 /** Reschedule dialog — shows the current slot, a new-slot picker and a mandatory reason. */
 export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose, onDone }: Readonly<Props>) {
+  const { meetingLabels: labels } = useEarnSurface();
   const [slot, setSlot] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -41,14 +43,14 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
   const slots = data?.meetingSlots ?? [];
 
   const submit = async (reason: string) => {
-    if (!slot) { setError('Please pick an available slot.'); return; }
+    if (!slot) { setError(labels.pickSlot); return; }
     setError(null);
     try {
       await rescheduleMut({ variables: { kind, requested_at: slot, reason } });
       setSlot('');
       onDone();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not reschedule — please try again.');
+      setError(e instanceof Error ? e.message : labels.rescheduleFailed);
       await refetch();
     }
   };
@@ -57,7 +59,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
 
   return (
     <Dialog open={open} onClose={() => !rescheduling && onClose()} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>Reschedule your onboarding meeting</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{labels.rescheduleTitle}</DialogTitle>
       <DialogContent>
         {showLoader ? (
           <Box sx={{ display: 'grid', placeItems: 'center', py: 4 }}><CircularProgress size={24} /></Box>
@@ -65,23 +67,24 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
           <Stack spacing={1.5}>
             {bookedAt && (
               <Typography variant="body2" color="text.secondary">
-                Currently booked for <strong>{formatSlot(bookedAt)}</strong>. You can reschedule once.
+                {labels.currentlyBooked(formatSlot(bookedAt))}
               </Typography>
             )}
             {slots.length === 0 ? (
-              <Alert severity="info">No slots are open right now — please check back soon.</Alert>
+              <Alert severity="info">{labels.noSlots}</Alert>
             ) : (
               <EarnSlotPicker slots={slots} value={slot} onChange={setSlot} currentSlot={bookedAt} />
             )}
             {slot && (
               <Typography variant="body2">
-                Moving from <strong>{formatSlot(bookedAt)}</strong> to <strong>{formatSlot(slot)}</strong>.
+                {labels.movingFromTo(formatSlot(bookedAt), formatSlot(slot))}
               </Typography>
             )}
             <MeetingReasonForm
               formId="reschedule-reason-form"
-              label="Reason for rescheduling"
-              helperText="Tell our onboarding team why you’re moving the meeting."
+              label={labels.rescheduleReasonLabel}
+              helperText={labels.rescheduleReasonHint}
+              labels={labels}
               onSubmit={submit}
             />
             {error && <Alert severity="warning">{error}</Alert>}
@@ -89,7 +92,9 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={rescheduling}>Close</Button>
+        <Button onClick={onClose} disabled={rescheduling}>
+          {labels.close}
+        </Button>
         <Button
           type="submit"
           form="reschedule-reason-form"
@@ -97,7 +102,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
           disabled={rescheduling || slots.length === 0}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {rescheduling ? 'Moving…' : 'Move to this slot'}
+          {rescheduling ? labels.moving : labels.moveCta}
         </Button>
       </DialogActions>
     </Dialog>

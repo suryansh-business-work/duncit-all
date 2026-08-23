@@ -1,5 +1,5 @@
-export { default as AutoPodForm, autoPodSchema, toAutoPodInput } from './AutoPodForm';
-export type { AutoPodFormProps } from './AutoPodForm';
+export { default as AutoPodForm, buildAutoPodSchema, toAutoPodInput } from './AutoPodForm';
+export type { AutoPodFormProps, AutoPodTranslate } from './AutoPodForm';
 export type { AutoPodMediaFieldProps, AutoPodOccurrence } from './AutoPodFields';
 export {
   EMPTY_AUTO_POD_CATEGORY,

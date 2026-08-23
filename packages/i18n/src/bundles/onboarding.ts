@@ -173,11 +173,6 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
     lifecycleActions: {
       deletePermanentlyDeveloper: 'Delete permanently (developer)',
     },
-    mediaListField: {
-      addImage: 'Add image',
-      remove: 'Remove',
-      replace: 'Replace',
-    },
     mediaPickerField: {
       clickTheImageIconToUpload: 'Click the image icon to upload, or paste a URL…',
       open: 'Open',

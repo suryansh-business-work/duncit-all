@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { PaletteMode } from '@mui/material';
+import type { SessionTranslate } from '../i18n';
 
 export interface LoginFormValues {
   email: string;
@@ -53,4 +54,10 @@ export interface LoginScreenProps {
   altSlot?: ReactNode;
   /** Optional extra content rendered below the form (e.g. Google sign-in). */
   footerSlot?: ReactNode;
+  /**
+   * The mounting surface's translator. `@duncit/shell` passes the live one, so
+   * the screen follows the reader's language; the shipped English stands in
+   * when a caller has none (rule 38).
+   */
+  t?: SessionTranslate;
 }

@@ -2,16 +2,17 @@ import '../charts/setup';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import { useTheme, type Theme } from '@mui/material/styles';
 import { Bar } from 'react-chartjs-2';
+import { useTranslation } from '../i18n';
 import { dayStateColor } from '../utils/status';
 import { formatUptime } from '../utils/format';
 import type { GlobalDaily } from '../types';
 
-function buildData(global: GlobalDaily[], theme: Theme) {
+function buildData(global: GlobalDaily[], theme: Theme, label: string) {
   return {
     labels: global.map((day) => day.date.slice(5)),
     datasets: [
       {
-        label: 'Overall uptime %',
+        label,
         data: global.map((day) => day.uptime),
         backgroundColor: global.map((day) => dayStateColor(day.state, theme)),
         borderRadius: 2,
@@ -57,19 +58,23 @@ interface GlobalChartProps {
 
 export default function GlobalUptimeChart({ global, overallUptime }: Readonly<GlobalChartProps>) {
   const theme = useTheme();
+  const { t } = useTranslation();
   if (!global || global.length === 0) return null;
   return (
     <Paper variant="outlined" sx={{ p: 2.5, mb: 4 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="baseline" flexWrap="wrap" gap={1}>
         <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.12em', fontWeight: 700 }}>
-          Overall uptime — last 90 days
+          {t('status.board.overallUptimeHeading')}
         </Typography>
         <Typography variant="h6" fontWeight={800} sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {formatUptime(overallUptime)}
         </Typography>
       </Stack>
       <Box height={120} mt={1}>
-        <Bar data={buildData(global, theme)} options={buildOptions(theme, global)} />
+        <Bar
+          data={buildData(global, theme, t('status.board.overallUptime'))}
+          options={buildOptions(theme, global)}
+        />
       </Box>
     </Paper>
   );

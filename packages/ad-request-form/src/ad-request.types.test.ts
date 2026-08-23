@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  adRequestSchema,
+  buildAdRequestSchema,
   blankAdRequestValues,
   makeAdRequestSchema,
   toSubmitAdRequestInput,
 } from './ad-request.types';
+import { adRequestT as t } from './i18n/useTranslation';
+
+const adRequestSchema = buildAdRequestSchema(t);
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -51,8 +54,8 @@ describe('adRequestSchema', () => {
   it('caps the duration at the window it is given, not at a constant', () => {
     // The ceiling is a Marketing setting now: a 90-day campaign is valid when
     // that is what they sell, and 31 is not when it is not.
-    const short = makeAdRequestSchema({ min: 1, max: 30 });
-    const long = makeAdRequestSchema({ min: 1, max: 90 });
+    const short = makeAdRequestSchema({ min: 1, max: 30 }, t);
+    const long = makeAdRequestSchema({ min: 1, max: 90 }, t);
     expect(messages(short.safeParse({ ...valid, duration_days: 31 }))).toMatch(/at most 30 days/i);
     expect(long.safeParse({ ...valid, duration_days: 31 }).success).toBe(true);
     expect(messages(long.safeParse({ ...valid, duration_days: 91 }))).toMatch(/at most 90 days/i);

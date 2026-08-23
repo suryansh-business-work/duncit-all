@@ -32,6 +32,15 @@ export const MEDIA_BUNDLE: NestedCatalogue = {
       add: 'Add',
       uploadFailed: 'Upload failed',
     },
+    /** The multi-image list field — a row per URL, reorderable. */
+    list: {
+      addImage: 'Add image',
+      empty: 'No images yet. Click {action} to upload or pick from Pexels.',
+      replace: 'Replace',
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+      noVideoFile: 'This video has no downloadable mp4',
+    },
     crop: {
       title: 'Crop',
       suggested: 'Suggested',

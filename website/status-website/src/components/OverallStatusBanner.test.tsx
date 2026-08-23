@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import OverallStatusBanner, { deriveOverallStatus } from './OverallStatusBanner';
+import { createTranslator } from '@duncit/i18n';
+import { STATUS_FALLBACK } from '../i18n';
 import type { OverallRoll, ServiceState } from '../types';
+
+// The banner's sentences come from the catalogue; outside React this is the
+// shipped copy, which is what the assertions below are written against.
+const { t } = createTranslator({ locale: 'en-IN', fallback: STATUS_FALLBACK });
 
 const roll = (over: Partial<OverallRoll>): OverallRoll => ({
   state: 'operational',
@@ -15,23 +21,24 @@ const roll = (over: Partial<OverallRoll>): OverallRoll => ({
 
 describe('deriveOverallStatus', () => {
   it('is pending while data loads', () => {
-    expect(deriveOverallStatus(null).severity).toBe('info');
+    expect(deriveOverallStatus(null, t).severity).toBe('info');
   });
 
   it('reports awaiting first checks when the catalog is empty', () => {
-    const status = deriveOverallStatus(roll({ total: 0 }));
+    const status = deriveOverallStatus(roll({ total: 0 }), t);
     expect(status.severity).toBe('info');
     expect(status.message).toContain('Awaiting');
   });
 
   it('reports all operational when every service is up', () => {
-    const status = deriveOverallStatus(roll({ operational: 2, total: 2, state: 'operational' }));
+    const status = deriveOverallStatus(roll({ operational: 2, total: 2, state: 'operational' }), t);
     expect(status).toEqual({ severity: 'success', message: 'All systems operational' });
   });
 
   it('reports a degraded state as a warning with counts', () => {
     const status = deriveOverallStatus(
-      roll({ operational: 1, degraded: 1, total: 2, state: 'degraded' as ServiceState })
+      roll({ operational: 1, degraded: 1, total: 2, state: 'degraded' as ServiceState }),
+      t
     );
     expect(status.severity).toBe('warning');
     expect(status.message).toBe('1 of 2 services reporting issues');
@@ -39,7 +46,8 @@ describe('deriveOverallStatus', () => {
 
   it('reports an outage as an error', () => {
     const status = deriveOverallStatus(
-      roll({ operational: 0, down: 2, total: 2, state: 'major_outage' as ServiceState })
+      roll({ operational: 0, down: 2, total: 2, state: 'major_outage' as ServiceState }),
+      t
     );
     expect(status.severity).toBe('error');
     expect(status.message).toBe('2 of 2 services experiencing an outage');

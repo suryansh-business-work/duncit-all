@@ -1,9 +1,13 @@
-// Single source of truth for the Duncit Ads marketing site. Content lives here
-// as reusable configuration (not business data), and the portal URL is resolved
-// from the environment so deployments stay dynamic without a code change.
+// Single source of truth for the Duncit Ads marketing site. The URLs are
+// resolved from the environment so deployments stay dynamic without a code
+// change; the WORDS come from Admin > Localization, like every other surface
+// (rule 38) — see `siteContent` below.
+//
 // `astro dev` is local by definition — a dev server targets the local API
 // without anyone remembering a flag. PUBLIC_IS_DEVELOPMENT still forces the
 // dev targets for a built preview.
+import { getSiteTranslator, type SiteTranslate } from '@duncit/brand/site-i18n';
+
 const isDevelopment = import.meta.env.DEV || import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 
 // Localhost targets in dev, production hosts otherwise — every cross-site
@@ -37,144 +41,237 @@ export interface WhyItem {
   label: string;
 }
 
-export const siteConfig = {
-  isDevelopment,
-  portalUrl,
-  graphqlUrl,
-  mainSiteUrl,
+/** Everything that is not copy: the environment, and where each link goes. */
+export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl };
+
+const build = (t: SiteTranslate) => ({
+  ...siteUrls,
   brand: {
-    name: 'Duncit Ads',
-    title: 'Duncit Ads — advertise where your audience actually shows up',
-    description:
-      'Put your brand in front of people who came out to do something. Pick your placements, pick your days, see the price before you sign in.',
+    name: t('website.ads.brand.name'),
+    title: t('website.ads.brand.title'),
+    description: t('website.ads.brand.description'),
   },
   nav: {
     links: [
-      { label: 'Placements', href: '#placements' },
-      { label: 'Pricing', href: '#calculator' },
-      { label: 'We design your ads', href: '#design' },
-      { label: 'How it works', href: '#how' },
-      { label: 'Why Duncit', href: '#why' },
+      { label: t('website.ads.nav.placements'), href: '#placements' },
+      { label: t('website.ads.nav.pricing'), href: '#calculator' },
+      { label: t('website.ads.nav.design'), href: '#design' },
+      { label: t('website.ads.nav.how'), href: '#how' },
+      { label: t('website.ads.nav.why'), href: '#why' },
     ],
-    login: { label: 'Sign in', href: portalUrl },
-    signup: { label: 'Start advertising', href: portalUrl },
+    login: { label: t('website.ads.nav.login'), href: portalUrl },
+    signup: { label: t('website.ads.nav.signup'), href: portalUrl },
   },
   hero: {
-    eyebrow: 'Duncit Ads',
-    heading: 'Reach the crowd that already showed up.',
-    subheading:
-      'Duncit is where people book the evening they are actually going to. Put your brand in that moment — on the home feed, in stories, beside the pod they just joined.',
-    primaryCta: { label: 'Start advertising', href: portalUrl },
-    secondaryCta: { label: 'See what it costs', href: '#calculator' },
-    image: 'https://images.pexels.com/photos/6406691/pexels-photo-6406691.jpeg?auto=compress&cs=tinysrgb&w=1600',
-    imageAlt: 'A brand team planning a campaign',
+    eyebrow: t('website.ads.hero.eyebrow'),
+    heading: t('website.ads.hero.heading'),
+    subheading: t('website.ads.hero.subheading'),
+    primaryCta: { label: t('website.ads.hero.primaryCta'), href: portalUrl },
+    secondaryCta: { label: t('website.ads.hero.secondaryCta'), href: '#calculator' },
+    image:
+      'https://images.pexels.com/photos/6406691/pexels-photo-6406691.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    imageAlt: t('website.ads.hero.imageAlt'),
   },
   /** Numbers that describe the network, not any one campaign. */
   proof: [
-    { value: '9', label: 'placements', hint: 'From the home feed to pod detail pages.' },
-    { value: '30', label: 'days max', hint: 'Book a day or a month — you choose.' },
-    { value: '24h', label: 'to go live', hint: 'Once Marketing approves your creative.' },
+    {
+      value: '9',
+      label: t('website.ads.proof.placementsLabel'),
+      hint: t('website.ads.proof.placementsHint'),
+    },
+    { value: '30', label: t('website.ads.proof.daysLabel'), hint: t('website.ads.proof.daysHint') },
+    { value: '24h', label: t('website.ads.proof.liveLabel'), hint: t('website.ads.proof.liveHint') },
   ],
+  featuresSection: {
+    heading: t('website.ads.features.heading'),
+    text: t('website.ads.features.text'),
+  },
   features: [
-    { icon: 'fa-bullhorn', title: 'Campaigns', text: 'Create, schedule and manage ad campaigns across every placement.' },
-    { icon: 'fa-image', title: 'Creatives', text: 'Upload image or video creatives and swap them without re-booking.' },
-    { icon: 'fa-chart-line', title: 'Performance', text: 'Track impressions, clicks and spend while the campaign is running.' },
-    { icon: 'fa-users', title: 'Audiences', text: 'Target the placement your audience is already looking at.' },
+    {
+      icon: 'fa-bullhorn',
+      title: t('website.ads.features.campaignsTitle'),
+      text: t('website.ads.features.campaignsText'),
+    },
+    {
+      icon: 'fa-image',
+      title: t('website.ads.features.creativesTitle'),
+      text: t('website.ads.features.creativesText'),
+    },
+    {
+      icon: 'fa-chart-line',
+      title: t('website.ads.features.performanceTitle'),
+      text: t('website.ads.features.performanceText'),
+    },
+    {
+      icon: 'fa-users',
+      title: t('website.ads.features.audiencesTitle'),
+      text: t('website.ads.features.audiencesText'),
+    },
   ] as Feature[],
   placements: {
-    eyebrow: 'Where your ad lives',
-    heading: 'Nine places to be seen',
-    text: 'Every placement is priced per day and bookable on its own. The prices below are the live rate card — the same one the Ads console quotes.',
+    eyebrow: t('website.ads.placements.eyebrow'),
+    heading: t('website.ads.placements.heading'),
+    text: t('website.ads.placements.text'),
+    rateCardCaption: t('website.ads.placements.rateCardCaption'),
     /** Copy for the placements the rate card returns. A placement with no note
      * still renders — the server owns the list, this only enriches it. */
     notes: {
-      AUTO: 'Rotates through every placement below.',
-      HOME_BOTTOM: 'The feed everyone opens the app on.',
-      SIDEBAR: 'Alongside browsing, on every screen.',
-      EXPLORE_SCROLL: 'In the scroll where people are looking for something to do.',
-      STATUS: 'Full-screen, between the stories people are already watching.',
-      VENUE_LIST: 'While they are choosing where to go.',
-      CLUB_LIST: 'While they are choosing who to go with.',
-      POD_LIST: 'While they are choosing what to do.',
-      POD_DETAILS: 'On the page where they decide to book.',
+      AUTO: t('website.ads.placements.auto'),
+      HOME_BOTTOM: t('website.ads.placements.homeBottom'),
+      SIDEBAR: t('website.ads.placements.sidebar'),
+      EXPLORE_SCROLL: t('website.ads.placements.exploreScroll'),
+      STATUS: t('website.ads.placements.status'),
+      VENUE_LIST: t('website.ads.placements.venueList'),
+      CLUB_LIST: t('website.ads.placements.clubList'),
+      POD_LIST: t('website.ads.placements.podList'),
+      POD_DETAILS: t('website.ads.placements.podDetails'),
     } as Record<string, string>,
   },
+  /** The phone mock beside the rate card, labelled zone by zone. */
+  preview: {
+    STATUS: t('website.ads.preview.stories'),
+    EXPLORE_SCROLL: t('website.ads.preview.exploreScroll'),
+    POD_LIST: t('website.ads.preview.podListings'),
+    VENUE_LIST: t('website.ads.preview.venueListings'),
+    CLUB_LIST: t('website.ads.preview.clubListings'),
+    POD_DETAILS: t('website.ads.preview.podDetails'),
+    SIDEBAR: t('website.ads.preview.sidebar'),
+    HOME_BOTTOM: t('website.ads.preview.homeFeed'),
+    caption: t('website.ads.preview.caption'),
+  } as Record<string, string>,
   /** Creative services. The most common reason a small brand never books an ad
    * is that it has nothing to run — so this answers that before the price does. */
   design: {
-    eyebrow: 'No creative? No problem',
-    heading: 'We design your ads',
-    text: 'Send us your logo, a photo and what you want to say. Our team builds the creative to the exact size each placement needs — image or video — and you approve it before anything goes live.',
+    eyebrow: t('website.ads.design.eyebrow'),
+    heading: t('website.ads.design.heading'),
+    text: t('website.ads.design.text'),
     image:
       'https://images.pexels.com/photos/36731439/pexels-photo-36731439.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    imageAlt: 'A designer working on an ad creative',
+    imageAlt: t('website.ads.design.imageAlt'),
     items: [
-      { icon: 'fa-pen-ruler', title: 'Built to the placement', text: 'Every slot has its own size and safe area. We cut for the ones you booked.' },
-      { icon: 'fa-photo-film', title: 'Image or video', text: 'A still for the feed, a short vertical for stories — whatever the placement takes.' },
-      { icon: 'fa-wand-magic-sparkles', title: 'Two rounds of changes', text: 'You see it before it runs, and you say what to change.' },
-      { icon: 'fa-rotate', title: 'Swap it mid-campaign', text: 'A new creative on a running campaign, without re-booking the slot.' },
+      {
+        icon: 'fa-pen-ruler',
+        title: t('website.ads.design.builtTitle'),
+        text: t('website.ads.design.builtText'),
+      },
+      {
+        icon: 'fa-photo-film',
+        title: t('website.ads.design.formatTitle'),
+        text: t('website.ads.design.formatText'),
+      },
+      {
+        icon: 'fa-wand-magic-sparkles',
+        title: t('website.ads.design.roundsTitle'),
+        text: t('website.ads.design.roundsText'),
+      },
+      {
+        icon: 'fa-rotate',
+        title: t('website.ads.design.swapTitle'),
+        text: t('website.ads.design.swapText'),
+      },
     ],
-    cta: { label: 'Ask for a creative', href: portalUrl },
+    cta: { label: t('website.ads.design.cta'), href: portalUrl },
     /** Priced by the Marketing team per brief, so the page does not invent one. */
-    note: 'Design is quoted separately with your campaign — tell us what you need when you submit it.',
+    note: t('website.ads.design.note'),
   },
   calculator: {
-    eyebrow: 'What it costs',
-    heading: 'Price your campaign before you sign up',
-    text: 'Tick the placements you want and choose how long to run. These are live rates from Duncit — not a brochure figure.',
-    placementsLabel: 'Placements',
-    placementsHint: 'Pick as many as you like. Each one is booked and billed on its own.',
-    daysLabel: 'How many days',
-    daysHint: 'The same window applies to every placement you picked.',
-    totalLabel: 'Campaign total',
-    perDaySuffix: '/day',
-    emptyNote: 'Pick at least one placement to see a price.',
-    note: 'Live rates, straight from Duncit. The final cost is confirmed when Marketing approves your creative.',
-    failedNote:
-      'The rate card could not be loaded right now. The prices come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.',
-    disclaimer:
-      'This is an estimate at today’s published rates. Rates can change, and the cost is frozen at the figure quoted when your campaign is approved.',
-    cta: { label: 'Book this campaign', href: portalUrl },
+    eyebrow: t('website.ads.calculator.eyebrow'),
+    heading: t('website.ads.calculator.heading'),
+    text: t('website.ads.calculator.text'),
+    placementsLabel: t('website.ads.calculator.placementsLabel'),
+    placementsHint: t('website.ads.calculator.placementsHint'),
+    daysLabel: t('website.ads.calculator.daysLabel'),
+    daysHint: t('website.ads.calculator.daysHint'),
+    totalLabel: t('website.ads.calculator.totalLabel'),
+    perDaySuffix: t('website.ads.calculator.perDaySuffix'),
+    emptyNote: t('website.ads.calculator.emptyNote'),
+    note: t('website.ads.calculator.note'),
+    failedNote: t('website.ads.calculator.failedNote'),
+    disclaimer: t('website.ads.calculator.disclaimer'),
+    cta: { label: t('website.ads.calculator.cta'), href: portalUrl },
+  },
+  stepsSection: {
+    eyebrow: t('website.ads.steps.eyebrow'),
+    heading: t('website.ads.steps.heading'),
   },
   steps: [
-    { icon: 'fa-user-plus', title: 'Create an account', text: 'Sign in to the Ads console — no sales call, no minimum spend.' },
-    { icon: 'fa-rectangle-ad', title: 'Upload your creative', text: 'An image or a video, a headline, and where the tap should go.' },
-    { icon: 'fa-calendar-check', title: 'Pick placement and dates', text: 'The console quotes the same price you saw here.' },
-    { icon: 'fa-rocket', title: 'Go live', text: 'Marketing reviews it, and your ad starts on the day you chose.' },
+    {
+      icon: 'fa-user-plus',
+      title: t('website.ads.steps.accountTitle'),
+      text: t('website.ads.steps.accountText'),
+    },
+    {
+      icon: 'fa-rectangle-ad',
+      title: t('website.ads.steps.creativeTitle'),
+      text: t('website.ads.steps.creativeText'),
+    },
+    {
+      icon: 'fa-calendar-check',
+      title: t('website.ads.steps.bookTitle'),
+      text: t('website.ads.steps.bookText'),
+    },
+    { icon: 'fa-rocket', title: t('website.ads.steps.liveTitle'), text: t('website.ads.steps.liveText') },
   ] as Step[],
   why: {
-    heading: 'Why advertise on Duncit',
-    text: 'Not another feed of strangers scrolling. People on Duncit are deciding what to do this weekend — and paying for it.',
+    heading: t('website.ads.why.heading'),
+    text: t('website.ads.why.text'),
     items: [
-      { icon: 'fa-location-dot', label: 'An audience with intent, not just impressions' },
-      { icon: 'fa-indian-rupee-sign', label: 'Per-day pricing with no minimum spend' },
-      { icon: 'fa-sliders', label: 'Nine placements, bookable one at a time' },
-      { icon: 'fa-clock', label: 'Live within a day of approval' },
-      { icon: 'fa-chart-simple', label: 'Impressions and clicks while it runs' },
-      { icon: 'fa-ban', label: 'Stop a campaign early, whenever you want' },
+      { icon: 'fa-location-dot', label: t('website.ads.why.intent') },
+      { icon: 'fa-indian-rupee-sign', label: t('website.ads.why.pricing') },
+      { icon: 'fa-sliders', label: t('website.ads.why.placements') },
+      { icon: 'fa-clock', label: t('website.ads.why.speed') },
+      { icon: 'fa-chart-simple', label: t('website.ads.why.metrics') },
+      { icon: 'fa-ban', label: t('website.ads.why.stop') },
     ] as WhyItem[],
   },
   cta: {
-    heading: 'Ready to launch your first campaign?',
-    text: 'Sign in to the Ads console and go live in minutes.',
-    button: { label: 'Get started', href: portalUrl },
+    heading: t('website.ads.cta.heading'),
+    text: t('website.ads.cta.text'),
+    button: { label: t('website.ads.cta.button'), href: portalUrl },
   },
   newsletter: {
-    heading: 'What is working on Duncit',
-    text: 'Which placements are performing, and what advertisers are doing with them.',
-    placeholder: 'you@example.com',
-    button: 'Subscribe',
+    heading: t('website.ads.newsletter.heading'),
+    text: t('website.ads.newsletter.text'),
+    placeholder: t('website.brand.newsletter.placeholder'),
+    button: t('website.brand.newsletter.button'),
     /** Consent is taken before the address is sent, not assumed from typing
      * one in — and it names what is being agreed to. */
-    consent: 'I agree to receive emails from Duncit and accept the',
-    consentLinkLabel: 'privacy policy',
+    consent: t('website.ads.newsletter.consent'),
+    consentLinkLabel: t('website.brand.newsletter.consentLink'),
     /** Where the subscription came from, for the CRM's own reporting. */
     source: 'ADS_WEBSITE_FOOTER',
   },
+  notFound: {
+    heading: t('website.ads.notFound.heading'),
+    text: t('website.ads.notFound.text'),
+  },
+  download: {
+    heading: t('website.ads.download.heading'),
+    headingAccent: t('website.ads.download.headingAccent'),
+    text: t('website.ads.download.text'),
+    perks: [
+      t('website.ads.download.perkPlacements'),
+      t('website.ads.download.perkSpeed'),
+      t('website.ads.download.perkMetrics'),
+    ],
+    googlePlayEyebrow: t('website.ads.download.googlePlayEyebrow'),
+    googlePlayName: t('website.ads.download.googlePlayName'),
+    appStoreEyebrow: t('website.ads.download.appStoreEyebrow'),
+    appStoreName: t('website.ads.download.appStoreName'),
+  },
+  header: {
+    wordmarkAds: t('website.ads.header.wordmarkAds'),
+    themeToggle: t('website.ads.header.themeToggle'),
+  },
   footer: {
-    tagline: 'Advertising for the Duncit network.',
+    tagline: t('website.ads.footer.tagline'),
+    note: t('website.ads.footer.note'),
+    /** The copyright line. The year is a build-time value, like every other
+     *  date on a static page. */
+    rights: t('website.ads.footer.rights', { vars: { year: new Date().getFullYear() } }),
     /** Font Awesome brand marks; every one leaves the site, so SmartLink gives
-     * them the new tab and the accessible name. */
+     * them the new tab and the accessible name. A handle is a proper noun, so
+     * none of these labels is a translation key. */
     social: [
       { icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },
       { icon: 'fa-linkedin-in', label: 'LinkedIn', href: 'https://linkedin.com/company/duncit' },
@@ -184,23 +281,41 @@ export const siteConfig = {
      * the portal's groups win whenever they exist. */
     groups: [
       {
-        label: 'Advertise',
+        label: t('website.ads.footer.advertiseGroup'),
         links: [
-          { label: 'Placements', href: '#placements' },
-          { label: 'Pricing', href: '#calculator' },
-          { label: 'We design your ads', href: '#design' },
-          { label: 'How it works', href: '#how' },
-          { label: 'Ads console', href: portalUrl },
+          { label: t('website.ads.nav.placements'), href: '#placements' },
+          { label: t('website.ads.nav.pricing'), href: '#calculator' },
+          { label: t('website.ads.nav.design'), href: '#design' },
+          { label: t('website.ads.nav.how'), href: '#how' },
+          { label: t('website.ads.footer.adsConsole'), href: portalUrl },
         ],
       },
       {
-        label: 'Duncit',
+        label: t('website.ads.footer.duncitGroup'),
         links: [
-          { label: 'Duncit', href: mainSiteUrl },
-          { label: 'Earn with Duncit', href: `${mainSiteUrl}/earn` },
-          { label: 'Support', href: `${mainSiteUrl}/help` },
+          { label: t('website.ads.footer.duncit'), href: mainSiteUrl },
+          { label: t('website.ads.footer.earnWithDuncit'), href: `${mainSiteUrl}/earn` },
+          { label: t('website.ads.footer.support'), href: `${mainSiteUrl}/help` },
         ],
       },
     ],
   },
-};
+});
+
+export type SiteContent = ReturnType<typeof build>;
+
+/**
+ * The site's content, in the visitor's language.
+ *
+ * Awaited in each component's frontmatter rather than threaded down as a prop:
+ * Astro renders the whole page on the server, so a component can await the same
+ * memoised promise the one above it did. The catalogue is therefore fetched
+ * ONCE for the whole build, and a component's body reads exactly as it did when
+ * this was a plain constant.
+ */
+let content: Promise<SiteContent> | null = null;
+
+export function siteContent(): Promise<SiteContent> {
+  content ??= getSiteTranslator(graphqlUrl).then(({ t }) => build(t));
+  return content;
+}

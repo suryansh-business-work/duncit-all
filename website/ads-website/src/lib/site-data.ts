@@ -1,4 +1,4 @@
-import { siteConfig } from '../config/site-config';
+import { siteUrls } from '../config/site-config';
 
 /** Build-time GraphQL helpers for the static site. Every call degrades to a
  * safe fallback so an unreachable API can never break a deploy — the site
@@ -31,7 +31,7 @@ async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): 
 
   const request = (async (): Promise<T | null> => {
     try {
-      const res = await fetch(siteConfig.graphqlUrl, {
+      const res = await fetch(siteUrls.graphqlUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, variables }),

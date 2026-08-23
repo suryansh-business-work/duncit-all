@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import type { EarnJourney, EarnJourneyCta } from '@duncit/onboarding';
 import type { SlotLabels } from '@duncit/slots';
+import type { EarnMeetingLabels } from './labels';
 
 /**
  * The bits that differ between the surfaces rendering the Earn feature (mWeb's
@@ -17,6 +18,8 @@ export interface EarnSurfaceConfig {
   meetingSlotLabels: (rescheduling: boolean) => SlotLabels;
   /** Badge shown on the currently-booked slot in the reschedule picker. */
   currentSlotBadge: string;
+  /** The meeting dialogs' copy, from `buildEarnMeetingLabels(t, <ns>)`. */
+  meetingLabels: EarnMeetingLabels;
 }
 
 const EarnSurfaceContext = createContext<EarnSurfaceConfig | null>(null);

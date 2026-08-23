@@ -104,7 +104,7 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
       reset();
     } catch (e) {
       setClashing(isSlotConflictError(e) && !overwrite ? payload : null);
-      setError(e instanceof Error ? e.message : 'Could not create slot');
+      setError(e instanceof Error ? e.message : t('shell.availability.createFailed'));
     } finally {
       setCreating(false);
     }
@@ -120,11 +120,11 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
     }
     const { start, end } = window;
     if (!isAfter(end, start)) {
-      setError('End must be after start.');
+      setError(t('shell.availability.endAfterStart'));
       return;
     }
     if (!draft.wholeDay && isAfter(new Date(), start)) {
-      setError('Start time must be in the future.');
+      setError(t('shell.availability.startInFuture'));
       return;
     }
     if (isAfter(start, maxDate)) {

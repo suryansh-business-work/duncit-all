@@ -23,5 +23,12 @@ export {
 } from './queries';
 export type { MeetingSlot } from './queries';
 
-export { MeetingReasonForm, blankMeetingReasonValues, meetingReasonSchema } from './meeting-reason';
+export { MeetingReasonForm, blankMeetingReasonValues, buildMeetingReasonSchema } from './meeting-reason';
 export type { MeetingReasonValues } from './meeting-reason';
+
+export {
+  buildEarnMeetingLabels,
+  mwebEarnMeetingLabels,
+  shellEarnMeetingLabels,
+} from './labels';
+export type { EarnMeetingLabels, EarnTranslate } from './labels';

@@ -21,7 +21,7 @@ export {
   buildHostUpdateInput,
   buildPodEditModerationInput,
   podEditInitialValues,
-  podEditSchema,
+  buildPodEditSchema,
 } from './pod-edit.form';
 export type { PodEditValues } from './pod-edit.form';
 
@@ -29,7 +29,7 @@ export {
   default as PodCancelDialog,
   POD_DELETE_REASON_SUBJECTS,
   blankPodCancelValues,
-  podCancelSchema,
+  buildPodCancelSchema,
 } from './PodCancelDialog';
 export type { PodCancelValues } from './PodCancelDialog';
 

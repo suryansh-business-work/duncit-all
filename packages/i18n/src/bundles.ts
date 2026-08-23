@@ -13,6 +13,10 @@ import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { LEGAL_BUNDLE } from './bundles/legal';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
+import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
+import { UI_BUNDLE } from './bundles/ui';
+import { SESSION_BUNDLE } from './bundles/session';
+import { LOCATION_BUNDLE } from './bundles/location';
 import { MWEB_BUNDLE } from './bundles/mweb';
 import { PARTNERS_BUNDLE } from './bundles/partners';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
@@ -58,6 +62,7 @@ export {
   AI_BUNDLE,
   AI_MONITORING_BUNDLE,
   CAPTCHA_BUNDLE,
+  AD_REQUEST_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
   CRM_BUNDLE,
@@ -67,11 +72,13 @@ export {
   LEGAL_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
+  LOCATION_BUNDLE,
   MWEB_BUNDLE,
   PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
   PRODUCTS_BUNDLE,
+  SESSION_BUNDLE,
   SHELL_BUNDLE,
   STATUS_BUNDLE,
   MARKETING_BUNDLE,
@@ -81,6 +88,7 @@ export {
   POD_DETAILS_BUNDLE,
   SUPPORT_BUNDLE,
   TECH_BUNDLE,
+  UI_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -102,6 +110,10 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   legal: LEGAL_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
+  adRequest: AD_REQUEST_BUNDLE,
+  ui: UI_BUNDLE,
+  session: SESSION_BUNDLE,
+  location: LOCATION_BUNDLE,
   mweb: MWEB_BUNDLE,
   partners: PARTNERS_BUNDLE,
   podProduct: POD_PRODUCT_BUNDLE,

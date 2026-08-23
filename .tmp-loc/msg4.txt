@@ -1,0 +1,33 @@
+i18n: the Ads and Partners marketing sites now read their words from the catalogue
+
+Both sites kept every sentence in a `siteConfig` constant. The URLs still do —
+they are environment, not copy — but the WORDS are now `website.ads.*` and
+`website.partners.*` rows an admin can translate, like every other surface
+(rule 38). 304 -> 266 on the ratchet, and roughly 250 strings that the detector
+never saw.
+
+The mechanism is worth a note. `siteConfig` became `siteContent()`: the same
+object, built from the site's build-time translator, behind a memoised promise.
+Astro renders on the server, so each component simply awaits it in its
+frontmatter and its body reads exactly as it did when this was a constant —
+no prop threading, and the catalogue is fetched ONCE for the whole build.
+
+Two places deliberately do NOT await it: `lib/site-data.ts` and the attribution
+snippet in `Layout.astro`. The first would make every data fetch wait on the
+catalogue; the second runs in the BROWSER and would pull the build-time
+translator into the client bundle. Both read the new `siteUrls` export instead,
+which is the endpoint and nothing else.
+
+What is NOT keyed, on purpose: Instagram, LinkedIn and Facebook. A handle is a
+proper noun and a translator has nothing to do with it.
+
+Verified: all five websites build, and the built HTML carries real sentences
+rather than raw keys. Gates green — translation keys, hardcoded-copy ratchet,
+duplication, shipped keys, package manifest, demo registry, GraphQL documents.
+
+Remaining, and now a straight continuation of this pattern: earn-with-duncit's
+`site-config.ts` and main-website's twenty pages.
+
+Post-deploy: Admin > Localization > Translations > Import app keys.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

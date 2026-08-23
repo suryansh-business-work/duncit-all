@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
 import OccasionalIconRowFields, { toLocalInput } from '../OccasionalIconRowFields';
 import type { OccasionalIconRow } from '../queries';
+import { MockedProvider } from '@apollo/client/testing';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 /** The real field mounts the shared ImageKit/Pexels dialog (its own queries and
  * uploads). This row only cares that picking a URL patches `icon_url`. */
@@ -35,13 +37,17 @@ const renderRow = (over: Partial<OccasionalIconRow> = {}, index = 3) => {
   const onChange = vi.fn();
   const onRemove = vi.fn();
   render(
-    <OccasionalIconRowFields
-      row={makeRow(over)}
-      index={index}
-      bundledSlugs={BUNDLED}
-      onChange={onChange}
-      onRemove={onRemove}
-    />,
+    <MockedProvider mocks={[]}>
+      <DuncitLocalizationProvider>
+        <OccasionalIconRowFields
+          row={makeRow(over)}
+          index={index}
+          bundledSlugs={BUNDLED}
+          onChange={onChange}
+          onRemove={onRemove}
+        />
+      </DuncitLocalizationProvider>
+    </MockedProvider>,
   );
   return { onChange, onRemove };
 };

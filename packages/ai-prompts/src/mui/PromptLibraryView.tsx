@@ -8,17 +8,15 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { clientTableFetch, type TableQueryState } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
 import { AI_PROMPTS, DELETE_AI_PROMPT, RESET_AI_PROMPT } from '../queries';
-import { PROMPT_COPY, promptFeedUrl } from '../copy';
+import { promptFeedUrl } from '../copy';
+import { useTranslation } from '@duncit/app-settings';
+import { usePromptCopy } from '../i18n/useCopy';
 import { promptSearchText } from '../search';
 import type { AiPrompt, PromptKind } from '../types';
 import { PromptsTable } from './PromptsTable';
 import { PromptDialog } from './PromptDialog';
 import { FeedUrlBar } from './FeedUrlBar';
 
-const TABS = [
-  { value: 'CODE' as PromptKind, label: PROMPT_COPY.kinds.CODE.label },
-  { value: 'AI' as PromptKind, label: PROMPT_COPY.kinds.AI.label },
-];
 
 export interface PromptLibraryViewProps {
   /** Origin of the API that serves the public feed, e.g. https://server.duncit.com. */
@@ -41,9 +39,20 @@ export interface PromptLibraryViewProps {
  * table query for it would be machinery with nothing to do.
  */
 export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps>) {
+  const copy = usePromptCopy();
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const tabs = useTabParam({ items: TABS, fallback: 'CODE' as PromptKind });
+  // Rebuilt when the catalogue changes — a tab strip frozen at module load
+  // would keep the language the console first rendered in.
+  const tabStrip = useMemo(
+    () => [
+      { value: 'CODE' as PromptKind, label: copy.kinds.CODE.label },
+      { value: 'AI' as PromptKind, label: copy.kinds.AI.label },
+    ],
+    [copy],
+  );
+  const tabs = useTabParam({ items: tabStrip, fallback: 'CODE' as PromptKind });
   const kind = tabs.value;
 
   const [editing, setEditing] = useState<AiPrompt | null>(null);
@@ -98,7 +107,7 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
   };
 
   const listUrl = useMemo(() => promptFeedUrl(apiOrigin, { kind }), [apiOrigin, kind]);
-  const blurb = PROMPT_COPY.kinds[kind].blurb;
+  const blurb = copy.kinds[kind].blurb;
 
   return (
     <Stack spacing={2.5}>
@@ -106,11 +115,11 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
         <Stack direction="row" alignItems="center" spacing={1}>
           <AutoStoriesIcon color="primary" />
           <Typography variant="h5" fontWeight={800}>
-            {PROMPT_COPY.pageTitle}
+            {copy.pageTitle}
           </Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary">
-          {PROMPT_COPY.pageSubtitle}
+          {copy.pageSubtitle}
         </Typography>
       </Box>
 
@@ -120,7 +129,7 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
         {blurb}
       </Typography>
 
-      <FeedUrlBar url={listUrl} label={PROMPT_COPY.apiCopyAll} />
+      <FeedUrlBar url={listUrl} label={copy.apiCopyAll} />
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)}>
@@ -135,7 +144,7 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
         toolbarActions={
           kind === 'AI' ? (
             <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
-              {PROMPT_COPY.addPrompt}
+              {copy.addPrompt}
             </Button>
           ) : undefined
         }
@@ -153,12 +162,12 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
       />
       <ConfirmDialog
         open={!!toDelete}
-        title={PROMPT_COPY.deleteTitle}
-        message={`Delete "${toDelete?.name ?? ''}"? This cannot be undone, and anything fetching it by key stops finding it.`}
-        confirmLabel={PROMPT_COPY.deleteConfirm}
+        title={copy.deleteTitle}
+        message={t('ai.library.deleteMessage', { vars: { name: toDelete?.name ?? '' } })}
+        confirmLabel={copy.deleteConfirm}
         destructive
         loading={deleting}
-        busyLabel={PROMPT_COPY.busy}
+        busyLabel={copy.busy}
         onConfirm={() =>
           runRowAction(
             toDelete,
@@ -170,11 +179,11 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
       />
       <ConfirmDialog
         open={!!toReset}
-        title={PROMPT_COPY.resetTitle}
-        message={`Restore the shipped default for "${toReset?.name ?? ''}"? Your edits to this prompt will be lost, and the next call uses the original text.`}
-        confirmLabel={PROMPT_COPY.resetConfirm}
+        title={copy.resetTitle}
+        message={t('ai.library.resetMessage', { vars: { name: toReset?.name ?? '' } })}
+        confirmLabel={copy.resetConfirm}
         loading={resetting}
-        busyLabel={PROMPT_COPY.busy}
+        busyLabel={copy.busy}
         onConfirm={() =>
           runRowAction(
             toReset,

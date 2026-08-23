@@ -10,6 +10,8 @@
  * outside every site's Tailwind scan, and the script is inline and
  * dependency-free so the menu still opens if another bundle on the page throws.
  */
+import { siteT, type SiteTranslate } from './site-i18n';
+
 interface Link {
   label: string;
   href: string;
@@ -22,17 +24,27 @@ interface Props {
   label?: string;
   /** Match the header's own text colour when it sits over a banner. */
   onDark?: boolean;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
   class?: string;
 }
 
-const { links, actions = [], label = 'Menu', onDark = false, class: className = '' } = Astro.props;
+const {
+  links,
+  actions = [],
+  label,
+  onDark = false,
+  t = siteT,
+  class: className = '',
+} = Astro.props;
+const menuLabel = label ?? t('website.nav.menu');
 ---
 
 <button
   type="button"
   class:list={['site-menu-button', onDark && 'on-dark', className]}
   data-site-menu-open
-  aria-label={label}
+  aria-label={menuLabel}
   aria-expanded="false"
   aria-controls="siteMenuDrawer"
 >
@@ -41,10 +53,10 @@ const { links, actions = [], label = 'Menu', onDark = false, class: className = 
 
 <div class="site-menu-backdrop" data-site-menu-close hidden></div>
 
-<aside id="siteMenuDrawer" class="site-menu-drawer" aria-hidden="true" aria-label={label}>
+<aside id="siteMenuDrawer" class="site-menu-drawer" aria-hidden="true" aria-label={menuLabel}>
   <div class="site-menu-head">
-    <span class="site-menu-title">{label}</span>
-    <button type="button" class="site-menu-close" data-site-menu-close aria-label="Close menu">
+    <span class="site-menu-title">{menuLabel}</span>
+    <button type="button" class="site-menu-close" data-site-menu-close aria-label={t('website.nav.closeMenu')}>
       <i class="fa-solid fa-xmark" aria-hidden="true"></i>
     </button>
   </div>

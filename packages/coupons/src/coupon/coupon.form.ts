@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+/** The translator a schema reads its messages from (rule 38). */
+export type CouponTranslate = (key: string) => string;
+
 const CODE_PATTERN = /^[A-Z0-9][A-Z0-9_-]{2,29}$/;
 
 export interface CouponFormValues {
@@ -17,45 +20,54 @@ export interface CouponFormValues {
 }
 
 /** Empty string / null -> null, otherwise a positive integer. */
-const optionalPositiveInt = z
-  .union([z.literal(''), z.null(), z.coerce.number()])
-  .transform((value) => (value === '' || value === null ? null : value))
-  .refine((value) => value === null || Number.isInteger(value), 'Must be a whole number')
-  .refine((value) => value === null || value >= 1, 'Must be at least 1');
+const optionalPositiveInt = (t: CouponTranslate) =>
+  z
+    .union([z.literal(''), z.null(), z.coerce.number()])
+    .transform((value) => (value === '' || value === null ? null : value))
+    .refine((value) => value === null || Number.isInteger(value), t('shell.coupons.wholeNumber'))
+    .refine((value) => value === null || value >= 1, t('shell.coupons.atLeastOne'));
 
-export const couponFormSchema: z.ZodType<CouponFormValues, z.ZodTypeDef, unknown> = z
-  .object({
-    code: z
-      .string()
-      .trim()
-      .transform((value) => value.toUpperCase())
-      .refine((value) => CODE_PATTERN.test(value), 'Code must be 3-30 chars: A-Z, 0-9, - or _'),
-    description: z.string().trim().max(300).default(''),
-    discount_pct: z.coerce
-      .number({ invalid_type_error: 'Discount must be a number' })
-      .min(1, 'Minimum 1%')
-      .max(100, 'Maximum 100%'),
-    scope: z.enum(['GLOBAL', 'POD']),
-    pod_id: z.string().trim().default(''),
-    valid_from: z.string().trim().default(''),
-    valid_until: z.string().trim().default(''),
-    max_uses: optionalPositiveInt,
-    per_user_limit: optionalPositiveInt,
-    min_order_amount: z.coerce
-      .number({ invalid_type_error: 'Must be a number' })
-      .min(0, 'Must be 0 or greater')
-      .default(0),
-    is_active: z.boolean().default(true),
-  })
-  .superRefine((values, ctx) => {
-    if (values.scope === 'POD' && !values.pod_id) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['pod_id'],
-        message: 'Pick a pod for a pod-scoped coupon',
-      });
-    }
-  });
+/**
+ * Built from the console's translator rather than exported ready-made: a
+ * validation message is copy the admin reads, so it follows their language like
+ * every other string on the screen (rule 38).
+ */
+export const buildCouponFormSchema = (
+  t: CouponTranslate,
+): z.ZodType<CouponFormValues, z.ZodTypeDef, unknown> =>
+  z
+    .object({
+      code: z
+        .string()
+        .trim()
+        .transform((value) => value.toUpperCase())
+        .refine((value) => CODE_PATTERN.test(value), t('shell.coupons.codeInvalid')),
+      description: z.string().trim().max(300).default(''),
+      discount_pct: z.coerce
+        .number({ invalid_type_error: t('shell.coupons.discountNumber') })
+        .min(1, t('shell.coupons.discountMin'))
+        .max(100, t('shell.coupons.discountMax')),
+      scope: z.enum(['GLOBAL', 'POD']),
+      pod_id: z.string().trim().default(''),
+      valid_from: z.string().trim().default(''),
+      valid_until: z.string().trim().default(''),
+      max_uses: optionalPositiveInt(t),
+      per_user_limit: optionalPositiveInt(t),
+      min_order_amount: z.coerce
+        .number({ invalid_type_error: t('shell.coupons.amountNumber') })
+        .min(0, t('shell.coupons.amountMin'))
+        .default(0),
+      is_active: z.boolean().default(true),
+    })
+    .superRefine((values, ctx) => {
+      if (values.scope === 'POD' && !values.pod_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['pod_id'],
+          message: t('shell.coupons.podRequired'),
+        });
+      }
+    });
 
 export const couponFormDefaults: CouponFormValues = {
   code: '',
@@ -71,9 +83,15 @@ export const couponFormDefaults: CouponFormValues = {
   is_active: true,
 };
 
-/** Map the form values to the GraphQL CreateCouponInput / UpdateCouponInput. */
+/**
+ * Map the form values to the GraphQL CreateCouponInput / UpdateCouponInput.
+ *
+ * Runs the schema again for its coercions and defaults, never for its messages
+ * — the form has already blocked anything invalid — so the key itself is a fine
+ * stand-in for a translator here.
+ */
 export function toCouponInput(values: CouponFormValues) {
-  const cast = couponFormSchema.parse(values);
+  const cast = buildCouponFormSchema((key) => key).parse(values);
   return {
     code: cast.code,
     description: cast.description || '',

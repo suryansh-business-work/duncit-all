@@ -171,6 +171,7 @@ export default function PortalLoginPage({
   return (
     <LoginScreen
       config={config}
+      t={t}
       mode={mode}
       onToggleMode={toggle}
       loading={loading}

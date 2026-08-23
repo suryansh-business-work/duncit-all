@@ -28,6 +28,7 @@ import type {
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
+import { useTranslation } from './i18n';
 import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
@@ -170,6 +171,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     externalFilters,
     selection,
   } = props;
+  const { t } = useTranslation();
   const table = useTableQuery({ fetchRows, defaultSort, defaultPageSize, externalFilters });
   const prefs = useTablePrefs(tableId);
   const muiTheme = useTheme();
@@ -195,9 +197,9 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     };
   }, [prefs.density]);
   const columnDefs = useMemo(() => {
-    const defs = buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir);
+    const defs = buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir, t);
     return selection ? [SELECT_COLUMN, ...defs] : defs;
-  }, [columns, prefs.hiddenOverrides, sortBy, sortDir, selection]);
+  }, [columns, prefs.hiddenOverrides, sortBy, sortDir, selection, t]);
 
   useEffect(() => {
     if (!refetchRef) return undefined;
@@ -305,8 +307,8 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   }, [tableId]);
 
   const noRowsTemplate = useMemo(
-    () => `<span>${escapeHtml(emptyText ?? 'No rows to display')}</span>`,
-    [emptyText],
+    () => `<span>${escapeHtml(emptyText ?? t('shell.table.empty'))}</span>`,
+    [emptyText, t],
   );
   const gridOpacity = table.loading ? LOADING_DIM_OPACITY : 1;
 

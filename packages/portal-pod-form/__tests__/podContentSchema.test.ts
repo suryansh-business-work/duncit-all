@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { podContentSchema } from '../src/types';
+import { buildPodContentSchema } from '../src/types';
+
+// The schema takes the console's translator; outside React the key is the copy.
+const podContentSchema = buildPodContentSchema((key) => key);
 
 const validInput = {
   pod_title: 'Valid title',

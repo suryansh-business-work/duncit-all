@@ -11,21 +11,22 @@ import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt
  * same three dozen every day, and anything else they can paste. No new package
  * on seventeen portal bundles for that.
  */
-/** `titleKey` is a literal so the build gate can see it; `title` stays the
- *  stable English name the React key and the `:` search use. */
-const GROUPS: Array<{ title: string; titleKey: string; emoji: string[] }> = [
+/** `titleKey` is a literal so the build gate can see it; `name` stays the
+ *  stable English identifier the React key and the `:` search use — it is never
+ *  rendered, so it is not copy. */
+const GROUPS: Array<{ name: string; titleKey: string; emoji: string[] }> = [
   {
-    title: 'Reactions',
+    name: 'Reactions',
     titleKey: 'shell.emoji.reactions',
     emoji: ['👍', '👎', '👌', '🙏', '👏', '🙌', '💪', '🤝', '❤️', '🔥', '🎉', '✨'],
   },
   {
-    title: 'Faces',
+    name: 'Faces',
     titleKey: 'shell.emoji.faces',
     emoji: ['😀', '😄', '😅', '😂', '🙂', '😉', '😍', '🤔', '😐', '😴', '😬', '😢', '😡', '🤯', '🥳', '😎'],
   },
   {
-    title: 'Work',
+    name: 'Work',
     titleKey: 'shell.emoji.work',
     emoji: ['✅', '❌', '⚠️', '📌', '📎', '📝', '📅', '⏰', '🚀', '🐛', '🔧', '📊', '💡', '☕', '👀', '🆗'],
   },
@@ -113,7 +114,7 @@ export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
       >
         <Stack spacing={1} sx={{ p: 1.25, width: 268 }}>
           {GROUPS.map((group) => (
-            <Box key={group.title}>
+            <Box key={group.name}>
               <Typography
                 variant="caption"
                 color="text.secondary"

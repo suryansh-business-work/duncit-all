@@ -16,7 +16,13 @@ import {
 } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { podContentSchema, type PodContentValues, type PodField, type ReadOnlyContextItem } from './types';
+import { useTranslation } from '@duncit/app-settings';
+import {
+  buildPodContentSchema,
+  type PodContentValues,
+  type PodField,
+  type ReadOnlyContextItem,
+} from './types';
 
 interface Props {
   open: boolean;
@@ -38,7 +44,7 @@ interface Props {
 // portal both render it; `editableFields` decides what each can change.
 export default function PodContentFormDialog({
   open,
-  title = 'Edit pod',
+  title,
   defaultValues,
   editableFields,
   readOnlyContext = [],
@@ -48,13 +54,17 @@ export default function PodContentFormDialog({
   onSubmit,
   onPickImage,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     register,
     control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<PodContentValues>({ resolver: zodResolver(podContentSchema), defaultValues });
+  } = useForm<PodContentValues>({
+    resolver: zodResolver(buildPodContentSchema(t)),
+    defaultValues,
+  });
   const { fields, append, remove } = useFieldArray({ control, name: 'pod_images_and_videos' });
 
   useEffect(() => {
@@ -72,14 +82,14 @@ export default function PodContentFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>{title ?? t('shell.podContent.title')}</DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogContent dividers>
           <Stack spacing={2}>
             {readOnlyContext.length > 0 && (
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="overline" color="text.secondary" fontWeight={800}>
-                  Pod details (read-only)
+                  {t('shell.podContent.readOnlyHeading')}
                 </Typography>
                 <Stack spacing={0.25} sx={{ mt: 0.5 }}>
                   {readOnlyContext.map((item) => (
@@ -95,7 +105,7 @@ export default function PodContentFormDialog({
             )}
 
             <TextField
-              label="Name"
+              label={t('shell.podContent.name')}
               fullWidth
               required={canEdit('pod_title')}
               disabled={!canEdit('pod_title')}
@@ -104,7 +114,7 @@ export default function PodContentFormDialog({
               {...register('pod_title')}
             />
             <TextField
-              label="Description"
+              label={t('shell.podContent.description')}
               fullWidth
               multiline
               minRows={3}
@@ -118,11 +128,11 @@ export default function PodContentFormDialog({
             <Box>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Images
+                  {t('shell.podContent.images')}
                 </Typography>
                 {!imagesDisabled && onPickImage && (
                   <Button size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addImage}>
-                    Add image
+                    {t('shell.podContent.addImage')}
                   </Button>
                 )}
               </Stack>
@@ -133,7 +143,7 @@ export default function PodContentFormDialog({
                       <Box
                         component="img"
                         src={field.url}
-                        alt="Pod media"
+                        alt={t('shell.podContent.mediaAlt')}
                         sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 1 }}
                       />
                       {!imagesDisabled && (
@@ -150,7 +160,7 @@ export default function PodContentFormDialog({
                 </Box>
               ) : (
                 <Typography variant="caption" color="text.secondary">
-                  No images yet.
+                  {t('shell.podContent.noImages')}
                 </Typography>
               )}
             </Box>
@@ -165,9 +175,9 @@ export default function PodContentFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={busy}>
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? t('shell.common.saving') : t('shell.common.save')}
           </Button>
         </DialogActions>
       </form>

@@ -1,15 +1,18 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { glass, inkCta } from './glass';
+import { sessionT, type SessionTranslate } from '../i18n';
 
 interface Props {
   title: string;
   text: string;
   brandName: string;
+  /** The mounting surface's translator; the shipped English when omitted. */
+  t?: SessionTranslate;
 }
 
 /** Right-hand glass promo card (hidden on mobile by the parent). */
-export default function PromoCard({ title, text, brandName }: Readonly<Props>) {
+export default function PromoCard({ title, text, brandName, t = sessionT }: Readonly<Props>) {
   const [firstWord, ...rest] = title.split(' ');
   return (
     <Box
@@ -67,7 +70,7 @@ export default function PromoCard({ title, text, brandName }: Readonly<Props>) {
       </Typography>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 'auto', pt: 3 }}>
         <Typography variant="caption" color="text.secondary">
-          By {brandName}
+          {t('session.promo.by', { vars: { brand: brandName } })}
         </Typography>
         <Button
           size="small"
@@ -80,7 +83,7 @@ export default function PromoCard({ title, text, brandName }: Readonly<Props>) {
             '&:hover': { bgcolor: inkCta.hoverBgcolor },
           }}
         >
-          Explore
+          {t('session.promo.explore')}
         </Button>
       </Stack>
     </Box>

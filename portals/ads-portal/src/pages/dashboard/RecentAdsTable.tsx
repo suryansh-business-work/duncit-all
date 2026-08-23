@@ -42,7 +42,7 @@ export default function RecentAdsTable() {
         field: 'position',
         headerName: t('ads.myAds.colPosition'),
         minWidth: 150,
-        valueGetter: (row) => adPositionLabel(row.position),
+        valueGetter: (row) => adPositionLabel(row.position, t),
       },
       dateColumn<AdRequestRow>({
         field: 'start_at',

@@ -49,7 +49,17 @@ export type DuncitColumnFilter =
 
 export interface DuncitColumn<T> {
   field: string; // server-side sort/filter key AND row accessor
-  headerName: string;
+  /** The header, already translated by whoever built the column. */
+  headerName?: string;
+  /**
+   * A translation key for the header, resolved by the grid at render time.
+   *
+   * It exists for the column FACTORIES in `cells.tsx`: they hand back a column
+   * before there is a React tree, so they cannot call `t` themselves, and a
+   * caller that does not name a header would otherwise get an English literal
+   * baked into a definition (rule 38). Pass one or the other, never both.
+   */
+  headerKey?: string;
   sortable?: boolean; // default true
   filter?: DuncitColumnFilter; // absent => not filterable
   width?: number;

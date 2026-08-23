@@ -1,9 +1,9 @@
 import {
   POD_DELETE_REASON_SUBJECTS,
   blankPodEditValues,
-  buildHostPodActionLabels,
+  buildHostPodActionLabels as buildLabels,
   buildHostUpdateInput,
-  podEditSchema,
+  buildPodEditSchema,
 } from '@duncit/host-pod-actions';
 import { defineDemo, defineDemos } from '../types';
 
@@ -23,7 +23,9 @@ export default defineDemos('host-pod-actions', [
       media_text: 'https://ik.imagekit.io/duncit/pods/badminton-1.jpg',
     },
     compute: (mock) => {
-      const parsed = podEditSchema.safeParse(mock);
+      // The messages come from the catalogue, so the schema takes the same
+      // labels the dialog renders — the key itself stands in for a translator.
+      const parsed = buildPodEditSchema(buildLabels((key) => key, 'mweb')).safeParse(mock);
       return {
         Valid: parsed.success,
         Errors: parsed.success
@@ -46,7 +48,7 @@ export default defineDemos('host-pod-actions', [
     compute: (mock) => ({
       // A surface passes its own `t`; echoing the key back makes it obvious
       // WHICH key each label reads, which is the thing that drifts.
-      'Labels used': buildHostPodActionLabels((key: string) => key, mock.surface),
+      'Labels used': buildLabels((key: string) => key, mock.surface),
     }),
   }),
 ]);

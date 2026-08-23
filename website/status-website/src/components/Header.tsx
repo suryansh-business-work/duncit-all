@@ -2,6 +2,7 @@ import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import type { ColorMode } from '../hooks/useColorMode';
+import { useTranslation } from '../i18n';
 import type { StatusEnvironment } from '../types';
 
 interface HeaderProps {
@@ -19,7 +20,9 @@ export default function Header({
   mode,
   onToggleMode,
 }: Readonly<HeaderProps>) {
-  const toggleLabel = mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  const { t } = useTranslation();
+  const toggleLabel =
+    mode === 'dark' ? t('status.board.switchToLight') : t('status.board.switchToDark');
   return (
     <Stack
       direction="row"
@@ -40,12 +43,14 @@ export default function Header({
         <Box>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h4" component="h1">
-              {appName} Status
+              {t('status.board.title', { vars: { app: appName } })}
             </Typography>
-            {environment === 'staging' && <Chip label="Staging" color="warning" size="small" />}
+            {environment === 'staging' && (
+              <Chip label={t('status.board.staging')} color="warning" size="small" />
+            )}
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            Live availability of every {appName} console, the API and our websites.
+            {t('status.board.subtitle', { vars: { app: appName } })}
           </Typography>
         </Box>
       </Stack>

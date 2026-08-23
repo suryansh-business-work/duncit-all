@@ -10,7 +10,7 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'PodContentFormDialog'
-  - 'podContentSchema'
+  - 'buildPodContentSchema'
   - 'PodContentValues'
   - 'PodField'
   - 'PodMedia'
@@ -99,7 +99,7 @@ export const readOnlyContext = [
 
 ## Worked examples
 
-### `podContentSchema.parse(...)` on valid values
+### `buildPodContentSchema(t).parse(...)` on valid values
 
 Passing the sample with a padded title (`'  Sunday Sourdough Workshop  '`) returns:
 
@@ -164,8 +164,8 @@ untranslated next to the two hand-written messages — worth knowing before you 
 
 | Export | Shape | Meaning |
 | --- | --- | --- |
-| `podContentSchema` | `ZodObject` | The three-field contract; `.parse` trims title and description. |
-| `PodContentValues` | `z.infer<typeof podContentSchema>` | `{ pod_title, pod_description, pod_images_and_videos }`. |
+| `buildPodContentSchema` | `(t: PodContentTranslate) => ZodObject` | The three-field contract; `.parse` trims title and description. Its messages come from `shell.podContent.*`. |
+| `PodContentValues` | `z.infer<ReturnType<typeof buildPodContentSchema>>` | `{ pod_title, pod_description, pod_images_and_videos }`. |
 | `PodField` | `'pod_title' \| 'pod_description' \| 'pod_images_and_videos'` | The `editableFields` vocabulary — all three values, no more. |
 | `PodMedia` | `{ url: string; type?: string \| null }` | One media row. |
 | `ReadOnlyContextItem` | `{ label: string; value: string }` | One context line; both already-formatted strings. |

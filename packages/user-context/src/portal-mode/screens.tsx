@@ -1,10 +1,13 @@
 import { Box, Stack, Typography } from '@mui/material';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import { sessionT, type SessionTranslate } from '../i18n';
 
 interface ScreenProps {
   /** Friendly app name shown in the heading. */
   appName?: string;
+  /** The mounting surface's translator; the shipped English when omitted. */
+  t?: SessionTranslate;
 }
 
 const Shell = ({
@@ -34,22 +37,24 @@ const Shell = ({
   </Box>
 );
 
-export function MaintenanceScreen({ appName }: Readonly<ScreenProps>) {
+export function MaintenanceScreen({ appName, t = sessionT }: Readonly<ScreenProps>) {
+  const app = appName ?? t('session.portalMode.thisService');
   return (
     <Shell
       icon={<BuildCircleIcon sx={{ fontSize: 72 }} color="warning" />}
-      title="We’ll be back soon"
-      subtitle={`${appName ?? 'This service'} is temporarily down for maintenance. Please check back in a little while.`}
+      title={t('session.portalMode.maintenanceTitle')}
+      subtitle={t('session.portalMode.maintenanceBody', { vars: { app } })}
     />
   );
 }
 
-export function UnderDevelopmentScreen({ appName }: Readonly<ScreenProps>) {
+export function UnderDevelopmentScreen({ appName, t = sessionT }: Readonly<ScreenProps>) {
+  const app = appName ?? t('session.portalMode.thisService');
   return (
     <Shell
       icon={<RocketLaunchIcon sx={{ fontSize: 72 }} color="info" />}
-      title="Under development"
-      subtitle={`${appName ?? 'This service'} is being built and isn’t available yet. It will go live soon.`}
+      title={t('session.portalMode.developmentTitle')}
+      subtitle={t('session.portalMode.developmentBody', { vars: { app } })}
     />
   );
 }

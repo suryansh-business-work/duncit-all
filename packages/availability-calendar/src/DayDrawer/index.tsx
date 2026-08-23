@@ -5,6 +5,7 @@ import AddSlotForm from './AddSlotForm';
 import SlotList from './SlotList';
 import type { NewSlotInput, VenueSlotRow, VenueSpace } from '../types';
 import { formatDate } from '@duncit/datetime';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -40,6 +41,7 @@ export default function DayDrawer({
   isHoliday = false,
   spaces = [],
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Drawer anchor="right" open={open && !!date} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
       <Stack spacing={2} sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
@@ -52,7 +54,7 @@ export default function DayDrawer({
               {date ? formatDate(date) : ''}
             </Typography>
           </Box>
-          <IconButton size="small" onClick={onClose} aria-label="Close">
+          <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
             <CloseIcon />
           </IconButton>
         </Stack>

@@ -1,0 +1,65 @@
+i18n: the host + earn dialogs, the status board, and the websites' shared translator
+
+Second half of the rule-38 sweep: 390 -> 304 hardcoded hits, and the copy that
+was left in the two biggest shared dialogs.
+
+  @duncit/host-pod-actions  Every sentence in the pod-row menu, the edit,
+                            resubmit, complete, cancel and scan dialogs — plus
+                            the three Zod schemas, which were carrying English
+                            validation messages. The cancel reasons are now
+                            translated where they are SHOWN while the value
+                            stored on the pod stays the English the server's own
+                            list uses.
+  @duncit/earn              Same shape: a labels contract per namespace, wired
+                            through EarnSurfaceProvider so mWeb and Partners
+                            hand it their own `t`.
+  website/status-website    The board, the filters and the service detail
+                            dialog. The site already had a translator; the
+                            chrome around the report form had never been given
+                            to it.
+  @duncit/brand             The shared Astro chrome — the illustrated phone, the
+                            newsletter form, the policy strip and the mobile
+                            menu — now take the site's translator and default to
+                            the shipped copy. Account names in the social row
+                            stay as they are: Instagram is a proper noun.
+
+Two pieces of duplication went the other way while I was in here:
+
+  - The five packages that own a namespace each had the same twenty-line
+    layering hook copied out. That is now `createBundleTranslation(BUNDLE)` in
+    @duncit/app-settings, and each package's module is three lines over it. The
+    layering itself is the subtle part and is documented there once: inside a
+    LocaleProvider the shared hook returns the PROVIDER's translator and ignores
+    the fallback handed to it, so a package whose namespace the host never
+    mounted would render raw keys.
+  - `portals/onboarding` kept a hand-copy of @duncit/media-picker's media list
+    field. The package's version had gained the AI Monitoring notice every
+    upload field is supposed to carry and the copy had not — which is the drift
+    rule 40 exists to stop. The copy is deleted and the console re-exports the
+    package's; its now-unused `onboarding.mediaListField.*` rows go with it.
+
+The websites' build-time translator moved into @duncit/brand
+(`@duncit/brand/site-i18n`) so all four marketing sites share one implementation
+rather than four copies of the same forty-line fetch; main-website's lib is now
+a thin binding to its own API URL.
+
+The duplication baseline rises for ONE workspace, @duncit/host-pod-actions
+(70 -> 165), and that is deliberate. `mwebHostPodLabels` and
+`shellHostPodLabels` are near-identical by construction: the key-verification
+gate greps source for the LITERAL key, so a namespace composed at runtime is
+reported as shipped-but-never-rendered, and the server stores one row per key
+path so the two namespaces cannot collapse into one. Every other workspace in
+that file goes down; the repo total falls from 10578 to 10357 lines.
+
+Verified: all 18 portals + mWeb typecheck, all five websites build, the docs
+site builds, and the shared gates (translation keys, hardcoded-copy ratchet,
+shipped keys, package manifest, demo registry, GraphQL documents, fallback
+icons, duplication) pass.
+
+Still English, and the next tranche: the marketing pages themselves —
+main-website's 20 pages, and the ads / earn-with / partners sites, whose copy
+lives in their `site-config.ts`. The translator is now in place on all four.
+
+Post-deploy: Admin > Localization > Translations > Import app keys.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

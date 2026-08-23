@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { MaintenanceScreen, UnderDevelopmentScreen } from './screens';
+import type { SessionTranslate } from '../i18n';
 
 export type PortalModeState = 'LIVE' | 'MAINTENANCE' | 'DEVELOPMENT';
 
@@ -12,6 +13,8 @@ export interface PortalModeGateProps {
   appName?: string;
   /** Poll interval in ms; defaults to 60s. */
   pollMs?: number;
+  /** The mounting surface's translator; the shipped English when omitted. */
+  t?: SessionTranslate;
   children: ReactNode;
 }
 
@@ -29,6 +32,7 @@ export default function PortalModeGate({
   graphqlUrl,
   appName,
   pollMs = 60000,
+  t,
   children,
 }: Readonly<PortalModeGateProps>) {
   const [mode, setMode] = useState<PortalModeState>('LIVE');
@@ -58,7 +62,7 @@ export default function PortalModeGate({
     };
   }, [portalKey, graphqlUrl, pollMs]);
 
-  if (mode === 'MAINTENANCE') return <MaintenanceScreen appName={appName} />;
-  if (mode === 'DEVELOPMENT') return <UnderDevelopmentScreen appName={appName} />;
+  if (mode === 'MAINTENANCE') return <MaintenanceScreen appName={appName} t={t} />;
+  if (mode === 'DEVELOPMENT') return <UnderDevelopmentScreen appName={appName} t={t} />;
   return <>{children}</>;
 }

@@ -17,22 +17,29 @@ interface Policy {
   title: string;
 }
 
+import { siteT, type SiteTranslate } from './site-i18n';
+
 interface Props {
   policies: Policy[];
   /** Where policy pages live. Empty on the main site, its origin elsewhere. */
   baseUrl?: string;
   heading?: string;
   allLabel?: string;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
   class?: string;
 }
 
 const {
   policies = [],
   baseUrl = '',
-  heading = 'Policies',
-  allLabel = 'All policies',
+  heading,
+  allLabel,
+  t = siteT,
   class: className = '',
 } = Astro.props;
+const headingText = heading ?? t('website.brand.policyStrip.heading');
+const allText = allLabel ?? t('website.footer.allPolicies');
 
 const root = baseUrl.replace(/\/+$/, '');
 // A link that leaves this site says so; on the main site these are local.
@@ -43,7 +50,7 @@ const outward = away ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 {
   policies.length > 0 && (
     <div class:list={['policy-strip', className]}>
-      <h3 class="policy-strip-heading">{heading}</h3>
+      <h3 class="policy-strip-heading">{headingText}</h3>
       <ul class="policy-strip-list">
         {policies.map((policy) => (
           <li>
@@ -54,7 +61,7 @@ const outward = away ? { target: '_blank', rel: 'noopener noreferrer' } : {};
         ))}
         <li>
           <a class="policy-strip-all" href={`${root}/policies`} {...outward}>
-            {allLabel}
+            {allText}
           </a>
         </li>
       </ul>

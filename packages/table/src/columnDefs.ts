@@ -4,7 +4,20 @@ import type {
   ITooltipParams,
   ValueGetterParams,
 } from 'ag-grid-community';
+import type { Translate } from './i18n';
 import type { DuncitColumn, TableSortDir } from './types';
+
+/**
+ * The text a column's header shows.
+ *
+ * The single place `headerKey` is turned into copy, so the grid header, the
+ * column menu, the filter controls and the active-filter chips can never
+ * disagree about what a column is called.
+ */
+export function columnHeader<T>(column: DuncitColumn<T>, t: Translate): string {
+  if (column.headerKey) return t(column.headerKey);
+  return column.headerName ?? column.field;
+}
 
 /** Class applied to plain-text cells so a global CSS rule can ellipsize them. */
 export const TRUNCATE_CELL_CLASS = 'duncit-truncate-cell';
@@ -87,10 +100,11 @@ export function buildColDefs<T>(
   hiddenOverrides: Record<string, boolean>,
   sortBy: string | null,
   sortDir: TableSortDir,
+  t: Translate,
 ): ColDef<T>[] {
   return columns.map((column) => ({
     colId: column.field,
-    headerName: column.headerName,
+    headerName: columnHeader(column, t),
     sortable: column.sortable ?? true,
     hide: isColumnHidden(column, hiddenOverrides),
     width: column.width,

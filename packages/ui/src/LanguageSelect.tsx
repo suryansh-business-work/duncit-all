@@ -1,5 +1,6 @@
 import { InputAdornment, MenuItem, TextField } from '@mui/material';
 import TranslateIcon from '@mui/icons-material/Translate';
+import { useTranslation } from './i18n/useTranslation';
 
 export interface LanguageOption {
   code: string;
@@ -11,6 +12,7 @@ export interface LanguageSelectProps {
   value: string;
   options: readonly LanguageOption[];
   onChange: (code: string) => void;
+  /** Defaults to the shared `Language` copy in the reader's language. */
   label?: string;
   helperText?: string;
   disabled?: boolean;
@@ -32,18 +34,19 @@ export function LanguageSelect({
   value,
   options,
   onChange,
-  label = 'Language',
+  label,
   helperText,
   disabled = false,
   size = 'small',
   fullWidth = true,
 }: Readonly<LanguageSelectProps>) {
+  const { t } = useTranslation();
   if (options.length < 2) return null;
 
   return (
     <TextField
       select
-      label={label}
+      label={label ?? t('ui.language.label')}
       value={options.some((o) => o.code === value) ? value : options[0].code}
       onChange={(event) => onChange(event.target.value)}
       helperText={helperText}

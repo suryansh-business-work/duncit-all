@@ -2,6 +2,7 @@ import {
   allFallbackEntries,
   createTranslator,
   flattenCatalogue,
+  SESSION_BUNDLE,
   SHELL_BUNDLE,
   type FlatCatalogue,
   type NestedCatalogue,
@@ -20,7 +21,12 @@ import {
  * admin panel can offer every shipped key for translation; it is compiled into
  * each portal's build all the same.
  */
-export const SHELL_FALLBACK: NestedCatalogue = SHELL_BUNDLE;
+// `session.*` is @duncit/user-context's — the login screen, the maintenance /
+// under-development gates and the "user data not loaded" dialog. It renders in
+// mWeb as well, so it is its own namespace rather than a second copy inside
+// `shell.*` (rule 40); the two are disjoint, so a shallow merge is the whole of
+// it.
+export const SHELL_FALLBACK: NestedCatalogue = { ...SHELL_BUNDLE, ...SESSION_BUNDLE };
 
 /** Flat, runtime-ready form of the bundle above. */
 export const SHELL_FALLBACK_FLAT = flattenCatalogue(SHELL_FALLBACK);

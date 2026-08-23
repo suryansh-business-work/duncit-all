@@ -8,6 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { format as formatWithDateFns } from 'date-fns';
 import { ambientDateFormat } from '@duncit/datetime';
+import { fallbackT, useTranslation } from './i18n';
 import type { DuncitColumn } from './types';
 
 export const EM_DASH = '—';
@@ -47,7 +48,8 @@ export function formatDateCell(
 
 export interface DateColumnOptions<T> {
   field?: string; // default 'created_at'
-  headerName?: string; // default 'Created'
+  /** The header. Omit it and the grid renders the shared `Created` copy. */
+  headerName?: string;
   hide?: boolean; // default true (the usual hidden created_at column)
   width?: number; // default 130
   flex?: number;
@@ -66,7 +68,7 @@ export interface DateColumnOptions<T> {
 export function dateColumn<T>(options: DateColumnOptions<T> = {}): DuncitColumn<T> {
   const {
     field = 'created_at',
-    headerName = 'Created',
+    headerName,
     hide = true,
     width = 130,
     flex,
@@ -88,6 +90,7 @@ export function dateColumn<T>(options: DateColumnOptions<T> = {}): DuncitColumn<
   return {
     field,
     headerName,
+    headerKey: headerName ? undefined : 'shell.common.created',
     hide,
     width,
     flex,
@@ -136,12 +139,43 @@ export function entityIdColumn<T>(options: EntityIdColumnOptions<T>): DuncitColu
   };
 }
 
+/** The two words an is_active chip shows, resolved outside the React tree. */
+function activeChipText(
+  active: boolean,
+  activeLabel: string | undefined,
+  inactiveLabel: string | undefined,
+): string {
+  if (active) return activeLabel ?? fallbackT('shell.common.active');
+  return inactiveLabel ?? fallbackT('shell.common.inactive');
+}
+
+/** The chip itself, so the words follow the reader's language. */
+function ActiveChip(
+  props: Readonly<{
+    active: boolean;
+    activeLabel?: string;
+    inactiveLabel?: string;
+    variant: 'filled' | 'outlined';
+  }>,
+) {
+  const { active, activeLabel, inactiveLabel, variant } = props;
+  const { t } = useTranslation();
+  let label: string;
+  if (active) label = activeLabel ?? t('shell.common.active');
+  else label = inactiveLabel ?? t('shell.common.inactive');
+  return (
+    <Chip size="small" color={active ? 'success' : 'default'} label={label} variant={variant} />
+  );
+}
+
 export interface ActiveChipColumnOptions<T> {
   field?: string; // default 'is_active'
-  headerName?: string; // default 'Status'
+  /** The header. Omit it and the grid renders the shared `Status` copy. */
+  headerName?: string;
   width?: number; // default 110
-  activeLabel?: string; // default 'Active'
-  inactiveLabel?: string; // default 'Inactive'
+  /** Omit either one and the chip renders the shared `Active` / `Inactive` copy. */
+  activeLabel?: string;
+  inactiveLabel?: string;
   /** Render the inactive chip with variant "outlined" (challenge-portal style). */
   outlineInactive?: boolean;
   filterable?: boolean; // default true -> { type: 'boolean' }
@@ -153,16 +187,15 @@ export interface ActiveChipColumnOptions<T> {
 export function activeChipColumn<T>(options: ActiveChipColumnOptions<T> = {}): DuncitColumn<T> {
   const {
     field = 'is_active',
-    headerName = 'Status',
+    headerName,
     width = 110,
-    activeLabel = 'Active',
-    inactiveLabel = 'Inactive',
+    activeLabel,
+    inactiveLabel,
     outlineInactive = false,
     filterable = true,
     getActive,
   } = options;
   const readActive = getActive ?? ((row: T) => Boolean((row as Record<string, unknown>)[field]));
-  const labelOf = (active: boolean) => (active ? activeLabel : inactiveLabel);
   const variantOf = (active: boolean): 'filled' | 'outlined' => {
     if (outlineInactive && !active) return 'outlined';
     return 'filled';
@@ -170,20 +203,21 @@ export function activeChipColumn<T>(options: ActiveChipColumnOptions<T> = {}): D
   return {
     field,
     headerName,
+    headerKey: headerName ? undefined : 'shell.common.status',
     width,
     filter: filterable ? { type: 'boolean' } : undefined,
-    cellRenderer: (row) => {
-      const active = readActive(row);
-      return (
-        <Chip
-          size="small"
-          color={active ? 'success' : 'default'}
-          label={labelOf(active)}
-          variant={variantOf(active)}
-        />
-      );
-    },
-    valueGetter: (row) => labelOf(readActive(row)),
+    cellRenderer: (row) => (
+      <ActiveChip
+        active={readActive(row)}
+        activeLabel={activeLabel}
+        inactiveLabel={inactiveLabel}
+        variant={variantOf(readActive(row))}
+      />
+    ),
+    // The sort/export value follows the chip, so it needs the same words —
+    // resolved through the provider-free translator because a value getter runs
+    // outside the React tree.
+    valueGetter: (row) => activeChipText(readActive(row), activeLabel, inactiveLabel),
   };
 }
 
@@ -201,7 +235,8 @@ export interface RowActionOptions<T> {
 
 interface RowActionButtonProps<T> {
   row: T;
-  fallbackTitle: string;
+  /** Translation key for the tooltip when the caller names none. */
+  fallbackTitleKey: string;
   icon: ReactNode;
   color?: ActionColor;
   config?: RowActionOptions<T>;
@@ -209,9 +244,10 @@ interface RowActionButtonProps<T> {
 }
 
 function RowActionButton<T>(props: Readonly<RowActionButtonProps<T>>): JSX.Element {
-  const { row, fallbackTitle, icon, color, config, onClick } = props;
+  const { row, fallbackTitleKey, icon, color, config, onClick } = props;
+  const { t } = useTranslation();
   const disabled = config?.disabled?.(row) ?? false;
-  const baseTitle = resolveLabel(config?.title, row, fallbackTitle);
+  const baseTitle = resolveLabel(config?.title, row, t(fallbackTitleKey));
   let title = baseTitle;
   if (disabled && config?.disabledTitle) {
     title = resolveLabel(config.disabledTitle, row, baseTitle);
@@ -236,7 +272,8 @@ function RowActionButton<T>(props: Readonly<RowActionButtonProps<T>>): JSX.Eleme
 
 export interface ActionsColumnOptions<T> {
   field?: string; // default 'actions'
-  headerName?: string; // default 'Actions'
+  /** The header. Omit it and the grid renders the shared `Actions` copy. */
+  headerName?: string;
   width?: number; // default 110
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
@@ -250,7 +287,7 @@ export interface ActionsColumnOptions<T> {
 export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn<T> {
   const {
     field = 'actions',
-    headerName = 'Actions',
+    headerName,
     width = 110,
     onEdit,
     onDelete,
@@ -261,6 +298,7 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
   return {
     field,
     headerName,
+    headerKey: headerName ? undefined : 'shell.common.actions',
     width,
     sortable: false,
     cellRenderer: (row) => (
@@ -269,7 +307,7 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
         {onEdit && (
           <RowActionButton
             row={row}
-            fallbackTitle="Edit"
+            fallbackTitleKey="shell.common.edit"
             icon={<EditIcon fontSize="small" />}
             config={edit}
             onClick={onEdit}
@@ -278,7 +316,7 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
         {onDelete && (
           <RowActionButton
             row={row}
-            fallbackTitle="Delete"
+            fallbackTitleKey="shell.common.delete"
             icon={<DeleteIcon fontSize="small" />}
             color="error"
             config={deleteConfig}

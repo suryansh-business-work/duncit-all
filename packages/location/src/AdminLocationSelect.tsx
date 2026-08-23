@@ -10,14 +10,16 @@ import {
   stateOptions,
   type Option,
 } from './locationOptions';
+import { useTranslation } from './i18n/useTranslation';
 import { EMPTY_LOCATION, type AdminLocationValue, type LocationLevel } from './types';
 
 const ALL_LEVELS: LocationLevel[] = ['country', 'state', 'city', 'locality'];
-const DEFAULT_LABELS: Record<LocationLevel, string> = {
-  country: 'Country',
-  state: 'State',
-  city: 'City',
-  locality: 'Locality',
+/** Label keys, so an unlabelled level still reads in the viewer's language. */
+const DEFAULT_LABEL_KEYS: Record<LocationLevel, string> = {
+  country: 'location.select.country',
+  state: 'location.select.state',
+  city: 'location.select.city',
+  locality: 'location.select.locality',
 };
 
 interface LevelSelectProps {
@@ -104,6 +106,7 @@ export function AdminLocationSelect({
   legend,
   hint,
 }: Readonly<AdminLocationSelectProps>) {
+  const { t } = useTranslation();
   const { locations, loading } = useAdminLocations();
 
   const options = useMemo(
@@ -160,7 +163,7 @@ export function AdminLocationSelect({
       {active.map((level) => (
         <LevelSelect
           key={level}
-          label={labels?.[level] ?? DEFAULT_LABELS[level]}
+          label={labels?.[level] ?? t(DEFAULT_LABEL_KEYS[level])}
           options={options[level]}
           value={selectedValue[level]}
           disabled={disabled || !parentReady[level]}

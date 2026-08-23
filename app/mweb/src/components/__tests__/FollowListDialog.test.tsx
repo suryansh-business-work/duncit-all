@@ -4,6 +4,7 @@ import { MockedProvider } from '@apollo/client/testing';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import FollowListDialog, { FOLLOW_LISTS } from '../FollowListDialog';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const person = (id: string, following = false) => ({
   __typename: 'PublicProfile',
@@ -30,15 +31,17 @@ const mocks = [
 function setup() {
   return render(
     <MockedProvider mocks={mocks}>
-      <MemoryRouter>
-        <FollowListDialog
-          open
-          onClose={vi.fn()}
-          userId="target"
-          initialTab="followers"
-          viewerId="me"
-        />
-      </MemoryRouter>
+      <DuncitLocalizationProvider>
+        <MemoryRouter>
+          <FollowListDialog
+            open
+            onClose={vi.fn()}
+            userId="target"
+            initialTab="followers"
+            viewerId="me"
+          />
+        </MemoryRouter>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 }

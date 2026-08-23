@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Checkbox from '@mui/material/Checkbox';
 import type { CustomCellRendererProps, CustomHeaderProps } from 'ag-grid-react';
+import { useTranslation } from './i18n';
 
 /**
  * The selection column drawn in MUI, like the rest of this table's chrome.
@@ -11,6 +12,7 @@ import type { CustomCellRendererProps, CustomHeaderProps } from 'ag-grid-react';
  * grid's would win on every page change.
  */
 export function SelectionCheckbox({ node }: Readonly<CustomCellRendererProps>) {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState(() => node.isSelected() ?? false);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export function SelectionCheckbox({ node }: Readonly<CustomCellRendererProps>) {
       size="small"
       checked={checked}
       onChange={(event) => node.setSelected(event.target.checked)}
-      inputProps={{ 'aria-label': 'Select row' }}
+      inputProps={{ 'aria-label': t('shell.table.selectRow') }}
       sx={{ p: 0.5 }}
     />
   );
@@ -36,6 +38,7 @@ export function SelectionCheckbox({ node }: Readonly<CustomCellRendererProps>) {
  * calling it "select all" would promise rows the grid has never seen.
  */
 export function SelectionHeaderCheckbox({ api }: Readonly<CustomHeaderProps>) {
+  const { t } = useTranslation();
   const [state, setState] = useState({ selected: 0, total: 0 });
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export function SelectionHeaderCheckbox({ api }: Readonly<CustomHeaderProps>) {
         if (event.target.checked) api.selectAll();
         else api.deselectAll();
       }}
-      inputProps={{ 'aria-label': 'Select every row on this page' }}
+      inputProps={{ 'aria-label': t('shell.table.selectAllRows') }}
       sx={{ p: 0.5 }}
     />
   );

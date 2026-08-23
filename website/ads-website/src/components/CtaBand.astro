@@ -1,5 +1,7 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
 const { cta } = siteConfig;
 ---
 

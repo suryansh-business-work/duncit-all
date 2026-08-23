@@ -16,6 +16,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useHostPodActionsConfig } from './HostPodActionsProvider';
+import type { HostPodActionLabels } from './labels';
 import { HOST_DELETE_POD, HOST_POD_DELETE_IMPACT } from './queries';
 import type { PodDeleteImpact } from './types';
 
@@ -35,45 +37,38 @@ export interface PodCancelValues {
 
 export const blankPodCancelValues: PodCancelValues = { reason_subject: '', reason_note: '' };
 
-export const podCancelSchema = z
-  .object({
-    reason_subject: z.string().min(1, 'Select a reason'),
-    reason_note: z.string().trim().max(500, 'Keep the note under 500 characters'),
-  })
-  .superRefine((values, ctx) => {
-    if (values.reason_subject === 'Other' && !values.reason_note.trim()) {
-      ctx.addIssue({ code: 'custom', path: ['reason_note'], message: 'Please describe the reason' });
-    }
-  });
+/** Built from the surface's labels: a validation message is copy the host
+ *  reads, so it follows their language like the rest of the dialog (rule 38). */
+export const buildPodCancelSchema = (labels: HostPodActionLabels) =>
+  z
+    .object({
+      reason_subject: z.string().min(1, labels.reasonRequired),
+      reason_note: z.string().trim().max(500, labels.noteTooLong),
+    })
+    .superRefine((values, ctx) => {
+      if (values.reason_subject === 'Other' && !values.reason_note.trim()) {
+        ctx.addIssue({ code: 'custom', path: ['reason_note'], message: labels.noteRequired });
+      }
+    });
 
 /** Summarises who is affected — direct cancel vs. refund-initiating cancel. */
 function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
+  const { labels } = useHostPodActionsConfig();
   if (impact.other_attendee_count === 0) {
-    return (
-      <Alert severity="info">
-        No one else has joined this pod — it will be cancelled immediately.
-      </Alert>
-    );
+    return <Alert severity="info">{labels.cancelNoOthers}</Alert>;
   }
-  const attendeePlural = impact.other_attendee_count === 1 ? '' : 's';
-  const paymentPlural = impact.refundable_payment_count === 1 ? '' : 's';
+  // One sentence per row rather than fragments joined in JSX: a language that
+  // orders the clause differently cannot be built by concatenation.
+  const refundLine =
+    impact.refundable_payment_count > 0
+      ? labels.cancelRefund(
+          `${impact.currency_symbol}${impact.refund_total}`,
+          impact.refundable_payment_count,
+        )
+      : labels.cancelEmailOnly;
   return (
     <Alert severity="warning">
-      {impact.other_attendee_count} other attendee{attendeePlural} joined this pod.
-      {impact.refundable_payment_count > 0 ? (
-        <>
-          {' '}
-          Cancelling initiates a refund of{' '}
-          <b>
-            {impact.currency_symbol}
-            {impact.refund_total}
-          </b>{' '}
-          across {impact.refundable_payment_count} payment{paymentPlural} (logged in the Finance
-          portal). All attendees will be emailed.
-        </>
-      ) : (
-        <> All attendees will be emailed about the cancellation.</>
-      )}
+      {labels.cancelOthers(impact.other_attendee_count)} {refundLine}
     </Alert>
   );
 }
@@ -92,6 +87,7 @@ export default function PodCancelDialog({
   onClose,
   onCancelled,
 }: Readonly<Props>) {
+  const { labels } = useHostPodActionsConfig();
   const {
     register,
     handleSubmit,
@@ -99,7 +95,7 @@ export default function PodCancelDialog({
     watch,
     formState: { errors },
   } = useForm<PodCancelValues>({
-    resolver: zodResolver(podCancelSchema),
+    resolver: zodResolver(buildPodCancelSchema(labels)),
     defaultValues: blankPodCancelValues,
   });
   const impactQ = useQuery(HOST_POD_DELETE_IMPACT, {
@@ -116,7 +112,7 @@ export default function PodCancelDialog({
 
   const impact: PodDeleteImpact | null = impactQ.data?.hostPodDeleteImpact ?? null;
   const hasRefunds = (impact?.refundable_payment_count ?? 0) > 0;
-  const confirmLabel = hasRefunds ? 'Initiate refunds & cancel' : 'Cancel pod';
+  const confirmLabel = hasRefunds ? labels.initiateRefunds : labels.cancelPod;
 
   const submit = handleSubmit(async (values) => {
     await remove({
@@ -131,12 +127,10 @@ export default function PodCancelDialog({
 
   return (
     <Dialog open={!!podId} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Cancel pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{labels.cancelPod}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-cancel-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
-          <Typography variant="body2">
-            You&apos;re cancelling <b>{podTitle}</b>. This can&apos;t be undone.
-          </Typography>
+          <Typography variant="body2">{labels.cancelIntro(podTitle)}</Typography>
           {impactQ.loading && (
             <Stack alignItems="center" sx={{ py: 1 }}>
               <CircularProgress size={20} />
@@ -146,7 +140,7 @@ export default function PodCancelDialog({
           {impact && <ImpactSummary impact={impact} />}
           <TextField
             select
-            label="Reason"
+            label={labels.reason}
             required
             fullWidth
             defaultValue=""
@@ -156,12 +150,12 @@ export default function PodCancelDialog({
           >
             {POD_DELETE_REASON_SUBJECTS.map((item) => (
               <MenuItem key={item} value={item}>
-                {item}
+                {labels.cancelReason(item)}
               </MenuItem>
             ))}
           </TextField>
           <TextField
-            label="Note"
+            label={labels.note}
             required={subject === 'Other'}
             fullWidth
             multiline
@@ -169,7 +163,7 @@ export default function PodCancelDialog({
             {...register('reason_note')}
             error={!!errors.reason_note}
             helperText={
-              errors.reason_note?.message ?? 'Shared with attendees in the cancellation email.'
+              errors.reason_note?.message ?? labels.noteHint
             }
           />
           {removeState.error && <Alert severity="error">{removeState.error.message}</Alert>}
@@ -177,7 +171,7 @@ export default function PodCancelDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={removeState.loading}>
-          Keep pod
+          {labels.keepPod}
         </Button>
         <Button
           type="submit"
@@ -187,7 +181,7 @@ export default function PodCancelDialog({
           disabled={removeState.loading || impactQ.loading}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {removeState.loading ? 'Cancelling…' : confirmLabel}
+          {removeState.loading ? labels.cancelling : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>

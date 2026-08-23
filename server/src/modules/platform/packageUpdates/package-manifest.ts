@@ -261,6 +261,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/ad-request-form/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
@@ -324,6 +325,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/ai-prompts/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.10.4", kind: "devDependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "devDependencies" },
@@ -620,6 +622,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/coupons/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
@@ -716,6 +719,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/dialogs/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/material", range: "^5.15.18", kind: "devDependencies" },
       { name: "@testing-library/dom", range: "^10.4.0", kind: "devDependencies" },
       { name: "@testing-library/jest-dom", range: "^6.4.5", kind: "devDependencies" },
@@ -959,6 +963,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/location/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.10.4", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^5.15.18", kind: "devDependencies" },
       { name: "@mui/material", range: "^5.15.18", kind: "devDependencies" },
@@ -1163,6 +1168,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/portal-pod-form/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@hookform/resolvers", range: "^3.9.1", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^5.15.18", kind: "devDependencies" },
       { name: "@mui/material", range: "^5.15.18", kind: "devDependencies" },
@@ -1330,6 +1336,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/table/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^5.15.18", kind: "devDependencies" },
       { name: "@mui/material", range: "^5.15.18", kind: "devDependencies" },
@@ -1422,6 +1429,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/ui/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^5.15.18", kind: "devDependencies" },
       { name: "@mui/material", range: "^5.15.18", kind: "devDependencies" },
@@ -1450,6 +1458,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/user-context/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.10.4", kind: "devDependencies" },

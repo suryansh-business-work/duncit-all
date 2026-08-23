@@ -1,6 +1,7 @@
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { formatDate } from '../utils/format';
+import { useTranslation } from '../i18n';
 import { stateChipColor, stateLabel } from '../utils/status';
 import type { Incident, IncidentImpact } from '../types';
 
@@ -42,6 +43,7 @@ function IncidentRow({ incident, divider }: Readonly<{ incident: Incident; divid
 }
 
 export default function IncidentsSection({ incidents }: Readonly<{ incidents: Incident[] | null }>) {
+  const { t } = useTranslation();
   if (incidents === null) return null;
   return (
     <Box component="section" mb={4}>
@@ -50,13 +52,13 @@ export default function IncidentsSection({ incidents }: Readonly<{ incidents: In
         color="text.secondary"
         sx={{ letterSpacing: '0.12em', fontWeight: 700 }}
       >
-        Past incidents — last 90 days
+        {t('status.board.pastIncidents')}
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, px: 2.5, py: incidents.length ? 0.5 : 2.5 }}>
         {incidents.length === 0 ? (
           <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
             <CheckCircleOutlineIcon fontSize="small" color="success" />
-            <Typography variant="body2">No incidents reported in the last 90 days.</Typography>
+            <Typography variant="body2">{t('status.board.noIncidents')}</Typography>
           </Stack>
         ) : (
           incidents.map((incident, index) => (

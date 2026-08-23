@@ -7,6 +7,9 @@
  * placement is ticked, so choosing a placement and seeing where it lands are
  * the same action.
  */
+import { siteContent } from '../config/site-config';
+
+const { preview } = await siteContent();
 ---
 
 <div class="phone-shell mx-auto w-full max-w-[280px]">
@@ -14,24 +17,24 @@
     <span class="absolute left-1/2 top-0 z-10 h-4 w-20 -translate-x-1/2 rounded-b-xl bg-[#16131a]"></span>
 
     <div class="flex h-[430px] flex-col gap-1.5 overflow-hidden rounded-[1.4rem] p-2 pt-5">
-      <div class="zone h-11" data-zone="STATUS"><span>Stories</span></div>
+      <div class="zone h-11" data-zone="STATUS"><span>{preview.STATUS}</span></div>
 
       <div class="flex min-h-0 flex-1 gap-1.5">
         <div class="flex min-h-0 flex-1 flex-col gap-1.5">
-          <div class="zone h-16" data-zone="EXPLORE_SCROLL"><span>Explore scroll</span></div>
-          <div class="zone h-10" data-zone="POD_LIST"><span>Pod listings</span></div>
-          <div class="zone h-10" data-zone="VENUE_LIST"><span>Venue listings</span></div>
-          <div class="zone h-10" data-zone="CLUB_LIST"><span>Club listings</span></div>
-          <div class="zone flex-1" data-zone="POD_DETAILS"><span>Pod details</span></div>
+          <div class="zone h-16" data-zone="EXPLORE_SCROLL"><span>{preview.EXPLORE_SCROLL}</span></div>
+          <div class="zone h-10" data-zone="POD_LIST"><span>{preview.POD_LIST}</span></div>
+          <div class="zone h-10" data-zone="VENUE_LIST"><span>{preview.VENUE_LIST}</span></div>
+          <div class="zone h-10" data-zone="CLUB_LIST"><span>{preview.CLUB_LIST}</span></div>
+          <div class="zone flex-1" data-zone="POD_DETAILS"><span>{preview.POD_DETAILS}</span></div>
         </div>
-        <div class="zone w-9 shrink-0" data-zone="SIDEBAR"><span class="vertical">Sidebar</span></div>
+        <div class="zone w-9 shrink-0" data-zone="SIDEBAR"><span class="vertical">{preview.SIDEBAR}</span></div>
       </div>
 
-      <div class="zone h-12" data-zone="HOME_BOTTOM"><span>Home feed</span></div>
+      <div class="zone h-12" data-zone="HOME_BOTTOM"><span>{preview.HOME_BOTTOM}</span></div>
     </div>
   </div>
   <p class="mt-3 text-center text-xs text-ink-soft" data-preview-caption>
-    Tick a placement to see where it lands.
+    {preview.caption}
   </p>
 </div>
 

@@ -4,6 +4,8 @@ export { useTablePrefs } from './useTablePrefs';
 export { buildAgTheme } from './theme';
 export { tableQueryToGql } from './gql';
 export { filterChipLabel } from './toolbar/filterState';
+export { fallbackT, useTranslation } from './i18n';
+export type { Translate } from './i18n';
 export { makeApolloTableFetch, useApolloTableFetch } from './apolloFetch';
 export type { ApolloTableFetchOptions, TableGqlClient } from './apolloFetch';
 export { clientTableFetch } from './clientFetch';

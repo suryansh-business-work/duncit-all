@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Alert, CircularProgress, Stack } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from './i18n/useTranslation';
 import { mergeSx } from './mergeSx';
 
 export interface QueryGuardProps {
@@ -13,7 +14,7 @@ export interface QueryGuardProps {
   errorText?: string;
   /** True when the query finished but the entity is missing. */
   notFound?: boolean;
-  /** Default 'Not found.'. */
+  /** Defaults to the shared `Not found.` copy in the reader's language. */
   notFoundText?: ReactNode;
   /** Default 'info' (crm convention); admin/onboarding pass 'warning'. */
   notFoundSeverity?: 'info' | 'warning';
@@ -34,12 +35,13 @@ export function QueryGuard({
   error,
   errorText,
   notFound,
-  notFoundText = 'Not found.',
+  notFoundText,
   notFoundSeverity = 'info',
   spinnerSize,
   spinnerSx,
   children,
 }: Readonly<QueryGuardProps>) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <Stack alignItems="center" sx={mergeSx({ py: 6 }, spinnerSx)}>
@@ -51,7 +53,7 @@ export function QueryGuard({
     return <Alert severity="error">{errorText ?? parseApiError(error)}</Alert>;
   }
   if (notFound) {
-    return <Alert severity={notFoundSeverity}>{notFoundText}</Alert>;
+    return <Alert severity={notFoundSeverity}>{notFoundText ?? t('ui.queryGuard.notFound')}</Alert>;
   }
   if (typeof children === 'function') return <>{children()}</>;
   return <>{children}</>;

@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useTranslation } from './i18n/useTranslation';
 
 /** One flagged issue, resolved to the wizard step the user must fix it on. */
 export interface BlockedViolation {
@@ -30,9 +31,6 @@ export interface ModerationBlockedDialogProps {
   description?: string;
 }
 
-const DEFAULT_TITLE = 'Fix these before publishing';
-const DEFAULT_DESCRIPTION =
-  'Our AI check found content that breaks the community guidelines, so it was not saved. Fix the items below and try again.';
 
 /** Shown when the AI + rules preflight blocks publishing: lists what to fix and
  * links each issue to the step it lives on (click → jump there). Shared by the
@@ -41,9 +39,10 @@ export function ModerationBlockedDialog({
   violations,
   onJump,
   onClose,
-  title = DEFAULT_TITLE,
-  description = DEFAULT_DESCRIPTION,
+  title,
+  description,
 }: Readonly<ModerationBlockedDialogProps>) {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={violations.length > 0}
@@ -53,11 +52,11 @@ export function ModerationBlockedDialog({
       data-testid="moderation-blocked-dialog"
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 900 }}>
-        <GppMaybeIcon color="error" /> {title}
+        <GppMaybeIcon color="error" /> {title ?? t('ui.moderation.title')}
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          {description}
+          {description ?? t('ui.moderation.description')}
         </Typography>
         <Stack spacing={1.25}>
           {violations.map((violation) => (

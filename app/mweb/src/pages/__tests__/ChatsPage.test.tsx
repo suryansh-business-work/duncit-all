@@ -11,6 +11,7 @@ vi.mock('react-router-dom', () => ({
 }));
 
 import ChatsPage from '../ChatsPage';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 // Identical document to the (unexported) query the component fires; MockedProvider
 // matches by the printed AST so the text must match exactly.
@@ -65,7 +66,9 @@ const chatMock = (rooms: unknown[], supers: unknown[] = [{ id: 's1', slug: 'spor
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
     <MockedProvider mocks={mocks as never} addTypename={false}>
-      {ui}
+      <DuncitLocalizationProvider>
+        {ui}
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 

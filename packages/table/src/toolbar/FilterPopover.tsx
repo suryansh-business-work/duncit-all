@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
+import { useTranslation } from '../i18n';
 import type { DuncitColumn, TableFilterValue } from '../types';
 import { FilterControl } from './filterControls';
 import {
@@ -28,6 +29,7 @@ interface FilterPopoverProps<T> {
  */
 export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
   const { open, anchorEl, onClose, columns, filters, setFilters } = props;
+  const { t } = useTranslation();
   const [drafts, setDrafts] = useState<FilterDraftMap>({});
   const filterable = columns.filter((column) => column.filter);
 
@@ -68,10 +70,10 @@ export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
         ))}
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button size="small" onClick={handleClearAll}>
-            Clear all
+            {t('shell.table.clearAll')}
           </Button>
           <Button size="small" variant="contained" onClick={handleApply}>
-            Apply
+            {t('shell.table.apply')}
           </Button>
         </Stack>
       </Stack>

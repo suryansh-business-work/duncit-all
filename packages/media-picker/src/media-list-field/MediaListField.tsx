@@ -3,6 +3,7 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
+import { useTranslation } from '../i18n/useTranslation';
 import MediaPickerDialog from '../MediaPickerDialog';
 import MediaListRow from './MediaListRow';
 
@@ -13,6 +14,7 @@ interface Props {
   onChange: (next: string) => void;
   folder?: string;
   helperText?: string;
+  /** Defaults to the shared `Add image` copy in the reader's language. */
   buttonLabel?: string;
 }
 
@@ -22,8 +24,10 @@ export default function MediaListField({
   onChange,
   folder,
   helperText,
-  buttonLabel = 'Add image',
+  buttonLabel,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const addLabel = buttonLabel ?? t('media.list.addImage');
   const items = value
     .split('\n')
     .map((s) => s.trim())
@@ -55,7 +59,7 @@ export default function MediaListField({
         <Stack direction="row" alignItems="center" spacing={1}>
           <AiMonitoringChip />
           <Button size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
-            {buttonLabel}
+            {addLabel}
           </Button>
         </Stack>
       </Stack>
@@ -78,7 +82,7 @@ export default function MediaListField({
         >
           <ImageIcon sx={{ opacity: 0.5 }} />
           <Typography variant="caption" sx={{ display: 'block' }}>
-            No images yet. Click <b>Add image</b> to upload or pick from Pexels.
+            {t('media.list.empty', { vars: { action: addLabel } })}
           </Typography>
         </Box>
       ) : (

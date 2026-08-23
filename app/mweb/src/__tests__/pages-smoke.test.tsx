@@ -14,13 +14,11 @@
  * Generated from the route table in src/app/AppRoutes.tsx.
  */
 import type { ComponentType } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { schemaMockLink, serverSchema } from './schema-mock';
+import { SmokeRoute } from './smoke-providers';
 
 type PageEntry = [pattern: string, concrete: string, load: () => Promise<Record<string, unknown>>];
 
@@ -243,17 +241,6 @@ beforeAll(() => {
 });
 
 /**
- * A theme, because MUI's `useTheme()` returns NULL outside a provider.
- *
- * It does not fall back to the default one, so any component reading the theme
- * through a callback — `useMediaQuery((theme) => theme.breakpoints.down('sm'))`
- * is the common shape — throws "Cannot read properties of null" and takes the
- * page down with it. In the app the theme comes from the chrome, which these
- * suites stub out; this puts one back.
- */
-const smokeTheme = createTheme();
-
-/**
  * Longer than the 5-second default, because these tests are deliberately slow.
  *
  * Each one mounts a whole page, waits for its data and then presses every
@@ -367,15 +354,9 @@ describe('every routed page mounts with no data behind it', () => {
     expect(Page, `${pattern} has no default export`).toBeDefined();
 
     const { container, unmount } = render(
-      <MockedProvider mocks={[]}>
-        <ThemeProvider theme={smokeTheme}>
-        <MemoryRouter initialEntries={[concrete]}>
-          <Routes>
-            <Route path={pattern} element={<Page {...PAGE_PROPS} />} />
-          </Routes>
-        </MemoryRouter>
-        </ThemeProvider>
-      </MockedProvider>
+      <SmokeRoute pattern={pattern} concrete={concrete}>
+        <Page {...PAGE_PROPS} />
+      </SmokeRoute>
     );
 
     expect(container).toBeDefined();
@@ -388,15 +369,9 @@ describe('every routed page mounts with no data behind it', () => {
     const Page = module.default as ComponentType<typeof PAGE_PROPS>;
 
     const { unmount } = render(
-      <MockedProvider mocks={[]}>
-        <ThemeProvider theme={smokeTheme}>
-        <MemoryRouter initialEntries={[concrete]}>
-          <Routes>
-            <Route path={pattern} element={<Page {...PAGE_PROPS} />} />
-          </Routes>
-        </MemoryRouter>
-        </ThemeProvider>
-      </MockedProvider>
+      <SmokeRoute pattern={pattern} concrete={concrete}>
+        <Page {...PAGE_PROPS} />
+      </SmokeRoute>
     );
 
     await settle();
@@ -425,15 +400,9 @@ describe('every routed page mounts with no data behind it', () => {
     const Page = module.default as ComponentType<typeof PAGE_PROPS>;
 
     const { container, unmount } = render(
-      <MockedProvider link={schemaMockLink()}>
-        <ThemeProvider theme={smokeTheme}>
-        <MemoryRouter initialEntries={[concrete]}>
-          <Routes>
-            <Route path={pattern} element={<Page {...PAGE_PROPS} />} />
-          </Routes>
-        </MemoryRouter>
-        </ThemeProvider>
-      </MockedProvider>
+      <SmokeRoute pattern={pattern} concrete={concrete} link={schemaMockLink()}>
+        <Page {...PAGE_PROPS} />
+      </SmokeRoute>
     );
 
     await settle();

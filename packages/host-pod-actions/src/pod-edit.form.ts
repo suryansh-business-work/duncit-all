@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { podModerationImageUrls } from '@duncit/utils';
 import { hasImageLine, mediaTextToInput, mediaToText } from './media-text';
+import type { HostPodActionLabels } from './labels';
 import type { HostPodTarget } from './types';
 
 /** Shapes for the host's limited pod edit (title, images, description). */
@@ -16,11 +17,14 @@ export const blankPodEditValues: PodEditValues = {
   media_text: '',
 };
 
-export const podEditSchema = z.object({
-  pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
-  pod_description: z.string().trim().min(10, 'Add a longer description'),
-  media_text: z.string().refine(hasImageLine, 'Add at least one image URL'),
-});
+/** Built from the surface's labels: a validation message is copy the host
+ *  reads, so it follows their language like the rest of the dialog (rule 38). */
+export const buildPodEditSchema = (labels: HostPodActionLabels) =>
+  z.object({
+    pod_title: z.string().trim().min(3, labels.titleTooShort).max(120, labels.titleTooLong),
+    pod_description: z.string().trim().min(10, labels.descriptionTooShort),
+    media_text: z.string().refine(hasImageLine, labels.imageRequired),
+  });
 
 /** Maps the validated values onto the server's HostUpdatePodInput. */
 export function buildHostUpdateInput(values: PodEditValues) {

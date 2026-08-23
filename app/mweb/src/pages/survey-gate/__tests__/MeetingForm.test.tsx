@@ -5,6 +5,7 @@ import { MockedProvider } from '@apollo/client/testing';
 import { gql } from '@apollo/client';
 import MeetingForm from '../MeetingForm';
 import { MEETING_SLOTS } from '../queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -52,9 +53,11 @@ const populatedSlots = [
 const renderForm = (mocks: unknown[], props: Partial<React.ComponentProps<typeof MeetingForm>> = {}) =>
   render(
     <MockedProvider mocks={mocks as never} addTypename={false}>
-      <MemoryRouter>
-        <MeetingForm kind="VENUE" submitting={false} onSubmit={vi.fn()} {...props} />
-      </MemoryRouter>
+      <DuncitLocalizationProvider>
+        <MemoryRouter>
+          <MeetingForm kind="VENUE" submitting={false} onSubmit={vi.fn()} {...props} />
+        </MemoryRouter>
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 

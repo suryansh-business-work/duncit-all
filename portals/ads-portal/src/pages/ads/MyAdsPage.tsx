@@ -7,10 +7,10 @@ import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from 
 import { PageHeader, StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import {
-  AD_MEDIA_TYPE_OPTIONS,
-  AD_POSITION_OPTIONS,
   AD_STATUS_COLORS,
-  AD_STATUS_OPTIONS,
+  adMediaTypeOptions,
+  adPositionOptions,
+  adStatusOptions,
   adPositionLabel,
   adTypeLabel,
   formatAdCost,
@@ -50,16 +50,16 @@ export default function MyAdsPage() {
         field: 'position',
         headerName: t('ads.myAds.colPosition'),
         minWidth: 170,
-        filter: { type: 'select', options: AD_POSITION_OPTIONS },
-        valueGetter: (row) => adPositionLabel(row.position),
+        filter: { type: 'select', options: adPositionOptions(t) },
+        valueGetter: (row) => adPositionLabel(row.position, t),
       },
       {
         field: 'ad_type',
         headerName: t('ads.myAds.colType'),
         width: 100,
         sortable: false,
-        filter: { type: 'select', options: AD_MEDIA_TYPE_OPTIONS },
-        valueGetter: (row) => adTypeLabel(row.ad_type),
+        filter: { type: 'select', options: adMediaTypeOptions(t) },
+        valueGetter: (row) => adTypeLabel(row.ad_type, t),
       },
       dateColumn<AdRequestRow>({
         field: 'start_at',
@@ -83,7 +83,7 @@ export default function MyAdsPage() {
         field: 'status',
         headerName: t('ads.myAds.colStatus'),
         width: 120,
-        filter: { type: 'select', options: AD_STATUS_OPTIONS },
+        filter: { type: 'select', options: adStatusOptions(t) },
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },

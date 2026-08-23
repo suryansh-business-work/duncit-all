@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import OccasionalIconsSection from '../OccasionalIconsSection';
 import { OCCASIONAL_ICONS, UPDATE_OCCASIONAL_ICONS, type OccasionalIconRow } from '../queries';
+import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 /** The real field mounts the shared ImageKit/Pexels dialog (its own queries and
  * uploads); this section only passes a URL through it. */
@@ -39,7 +40,9 @@ const iconsQuery = (rows: SavedRow[]): MockedResponse => ({
 const renderSection = (mocks: MockedResponse[]) =>
   render(
     <MockedProvider mocks={mocks}>
-      <OccasionalIconsSection />
+      <DuncitLocalizationProvider>
+        <OccasionalIconsSection />
+      </DuncitLocalizationProvider>
     </MockedProvider>,
   );
 

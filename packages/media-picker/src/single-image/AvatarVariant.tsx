@@ -108,7 +108,7 @@ export default function AvatarVariant({
                   color="error"
                   onClick={remove}
                   disabled={disabled || busy}
-                  aria-label="remove image"
+                  aria-label={t('media.picker.removeImage')}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>

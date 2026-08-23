@@ -31,6 +31,16 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       remove: 'Remove',
       startDateAndTime: 'Start date & time',
     },
+    /** The free-text chip editor (hashtags, perks). */
+    chipArrayField: {
+      placeholder: 'Type and press Enter',
+    },
+    /** The read-only map beside the venue address. */
+    mapPreview: {
+      title: 'Map preview',
+      openMap: 'Open Map',
+      keyMissing: 'Add VITE_GOOGLE_MAP_API to preview the map here.',
+    },
     hostsField: {
       hosts: 'Hosts',
       searchHosts: 'Search hosts…',

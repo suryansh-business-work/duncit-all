@@ -7,6 +7,7 @@ import {
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  SESSION_BUNDLE,
   WHATSAPP_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -29,8 +30,10 @@ import {
 // WhatsApp categories across mWeb, native and the admin console, and the signup
 // policy gate across mWeb, native and the Legal portal's log page. The
 // namespaces are disjoint (`mweb`, `grievance`, `podProduct`,
-// `whatsappPreference`, `policyAcceptance`), so a shallow merge is the whole of
-// it — no key can shadow another.
+// `whatsappPreference`, `policyAcceptance`, `session`), so a shallow merge is
+// the whole of it — no key can shadow another. `session.*` is
+// @duncit/user-context's: the portal-mode gate and the "user data not loaded"
+// dialog render here too.
 export const MWEB_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
   ...CONTENT_REPORT_BUNDLE,
@@ -38,6 +41,7 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
   ...POLICY_ACCEPTANCE_BUNDLE,
+  ...SESSION_BUNDLE,
   ...WHATSAPP_BUNDLE,
 };
 

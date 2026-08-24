@@ -7,6 +7,10 @@ build/
 *.log
 .DS_Store
 coverage/
+# Working dirs of the coverage pipeline (scripts/ci-coverage-run.sh writes the
+# per-workspace logs, scripts/coverage-surfaces.mjs writes the surface totals).
+test-logs/
+cov-summary/
 .vite/
 .turbo/
 generated/

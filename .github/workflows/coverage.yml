@@ -1,0 +1,290 @@
+name: Coverage
+
+# Coverage for the four product surfaces — Portal, mWeb, Native app, Website —
+# uploaded to Codecov and posted back as ONE sticky comment from
+# github-actions[bot] on every staging and production PR.
+#
+# WHY A DEDICATED WORKFLOW
+# ------------------------
+# Coverage already ran in sonar.yml, but it could never answer a PR: that
+# workflow fires on push to main/staging only, and every job is gated behind a
+# probe of the manually-managed SonarQube VPS — so when the box is down (which is
+# routine) there is no coverage at all. The number a reviewer needs must not
+# depend on a third-party server being up, so it is produced here and the two
+# consumers share one runner script (scripts/ci-coverage-run.sh, rule 34).
+#
+# THIS WORKFLOW NEVER FAILS A PR ON COVERAGE.
+# The per-surface CI workflows keep their test steps paused (see the TEST PAUSE
+# banners in apps-ci.yml / portals-ci.yml / websites-ci.yml), so a large number
+# of suites are red today. Every coverage step is therefore best-effort: a red
+# suite lowers the reported number rather than blocking the merge. Codecov's own
+# statuses are `informational` for the same reason (see codecov.yml).
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+  workflow_dispatch:
+
+# The sticky comment is written with the default GITHUB_TOKEN, which needs write
+# on pull-requests. Everything else is read-only.
+permissions:
+  contents: read
+  pull-requests: write
+
+# A PR branch takes a push every few minutes and a full run is expensive, so a
+# superseded run is cancelled — unlike sonar.yml, nothing here has to publish
+# once per commit, the comment is always rewritten in place from the latest run.
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The three pnpm-workspace surfaces. One runner each: `portal` is 17
+  # workspaces and `website` is 5, so they cannot share a time box.
+  # ---------------------------------------------------------------------------
+  surface:
+    name: Coverage — ${{ matrix.surface.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        surface:
+          # `filters` are pnpm --filter selectors; `dir` is where this surface's
+          # lcov reports are collected from afterwards.
+          - { key: portal, label: Portal, filters: './portals/**', dir: portals }
+          - { key: mweb, label: mWeb, filters: './app/mweb', dir: app/mweb }
+          - { key: website, label: Website, filters: './website/**', dir: website }
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4.4.0
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Shared with sonar.yml. Exits 0 always — see the CONTRACT note in the
+      # script: a workspace whose threshold is unmet, or whose suites are red,
+      # must still hand up the lcov it wrote (every vitest config here sets
+      # `reportOnFailure: true`), and a non-zero exit would discard the rest.
+      - name: Run coverage
+        run: bash scripts/ci-coverage-run.sh ${{ matrix.surface.key }} ${{ matrix.surface.filters }}
+
+      # Each runner writes `SF:` paths relative to its OWN workspace
+      # (`SF:src/pages/Foo.tsx`), which Codecov resolves against the repo root
+      # and therefore matches to nothing. This is the same rewrite sonar.yml
+      # depends on; without it the upload lands but every file is orphaned.
+      # continue-on-error because the script exits 1 when it finds no report at
+      # all — which is a real outcome for a surface whose suites all died, and
+      # the collect step below reports it properly.
+      - name: Normalize lcov paths
+        continue-on-error: true
+        run: node scripts/normalize-lcov.mjs
+
+      - name: Upload to Codecov
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          # Only this surface's tree was run, so scoping the search keeps a
+          # stray report from another workspace out of the flag.
+          directory: ${{ matrix.surface.dir }}
+          flags: ${{ matrix.surface.key }}
+          name: ${{ matrix.surface.label }}
+          # Coverage is evidence, not a gate — an upload hiccup must not red a PR.
+          fail_ci_if_error: false
+
+      - name: Warn when Codecov is not configured
+        if: env.CODECOV_TOKEN == ''
+        run: echo "::warning::CODECOV_TOKEN is not set — skipping the Codecov upload. The PR comment below still reports coverage."
+
+      - name: Collect the surface summary
+        run: node scripts/coverage-surfaces.mjs collect --surface ${{ matrix.surface.key }} --out cov-summary/${{ matrix.surface.key }}.json ${{ matrix.surface.dir }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: coverage-summary-${{ matrix.surface.key }}
+          path: cov-summary
+          if-no-files-found: warn
+
+      # The full per-workspace output. A suite that DIES contributes no coverage
+      # for everything it would have exercised, so this log is what explains a
+      # drop in the comment.
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-logs-${{ matrix.surface.key }}
+          path: test-logs
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # The native app. A standalone npm project (NOT a pnpm workspace member), so
+  # it cannot use the shared runner above.
+  # ---------------------------------------------------------------------------
+  native:
+    name: Coverage — Native app
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/mobile-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: app/mobile-app
+        run: npm ci
+
+      # src/generated/** is gitignored, so `@/generated/graphql` does not exist
+      # in a fresh checkout — without this, most suites die on "Could not locate
+      # module" and the app reports a figure about the checkout, not the tests.
+      # The schema is read from the server sources in the checkout, so no running
+      # server is needed. apps-ci.yml runs the same step for the same reason.
+      - name: Generate GraphQL types
+        working-directory: app/mobile-app
+        run: npm run codegen
+
+      # 400+ React Native suites on a 2-core / 7 GB runner is exactly where jest
+      # workers run out of heap and the run ends early with whatever coverage it
+      # had. A bounded heap plus a worker memory limit (so a leaking worker is
+      # recycled rather than killed) is what keeps the report complete.
+      - name: Run coverage
+        continue-on-error: true
+        working-directory: app/mobile-app
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB 2>&1 | tee jest-coverage.log | tail -120
+
+      # A partial report must never be indistinguishable from a complete one.
+      - name: Coverage produced
+        working-directory: app/mobile-app
+        run: |
+          echo "--- jest summary ---"
+          grep -E '^(Test Suites|Tests|Statements|Branches|Functions|Lines)\s*:' jest-coverage.log || echo "(no summary lines — the run did not finish)"
+          if [ ! -f coverage/lcov.info ]; then
+            echo "::warning::app/mobile-app/coverage/lcov.info was not written — the jest run died before reporting."
+          fi
+
+      # jest writes ABSOLUTE paths, so the same rewrite applies here: Codecov
+      # would otherwise key every file on this runner's checkout directory.
+      - name: Normalize lcov paths
+        continue-on-error: true
+        run: node scripts/normalize-lcov.mjs
+
+      - name: Upload to Codecov
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: app/mobile-app
+          flags: native
+          name: Native app
+          fail_ci_if_error: false
+
+      - name: Warn when Codecov is not configured
+        if: env.CODECOV_TOKEN == ''
+        run: echo "::warning::CODECOV_TOKEN is not set — skipping the Codecov upload. The PR comment below still reports coverage."
+
+      - name: Collect the surface summary
+        run: node scripts/coverage-surfaces.mjs collect --surface native --out cov-summary/native.json app/mobile-app
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: coverage-summary-native
+          path: cov-summary
+          if-no-files-found: warn
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-logs-native
+          path: app/mobile-app/jest-coverage.log
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # One comment, all four surfaces.
+  #
+  # `!cancelled()` and NOT `always()`: a surface that FAILED still needs its row
+  # (reading "no report" — a missing row would read as "fine"), but a run the
+  # concurrency group cancelled mid-flight has no summaries at all, and letting
+  # it comment would overwrite the previous good table with four empty rows.
+  # ---------------------------------------------------------------------------
+  report:
+    name: Coverage report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [surface, native]
+    if: ${{ !cancelled() }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Download the surface summaries
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          pattern: coverage-summary-*
+          merge-multiple: true
+          path: cov-summary
+
+      - name: Build the report
+        env:
+          COVERAGE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          COVERAGE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/coverage-surfaces.mjs comment --dir cov-summary --out coverage-comment.md
+
+      # The run page gets the same table, so a push to staging (which has no PR
+      # to comment on) is not a dead end.
+      - name: Job summary
+        run: cat coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      # Sticky: the marker comment is REWRITTEN, never appended, so a PR with 30
+      # pushes carries one coverage comment rather than 30.
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const body = fs.readFileSync('coverage-comment.md', 'utf8');
+            const marker = '<!-- duncit-coverage-report -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.user?.type === 'Bot' && (c.body ?? '').includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              core.info(`updated coverage comment ${existing.id}`);
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info('created the coverage comment');
+            }

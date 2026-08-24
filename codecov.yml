@@ -1,0 +1,101 @@
+# Codecov configuration for the duncit monorepo.
+#
+# Uploads come from .github/workflows/coverage.yml — one flag per product
+# surface, one runner each. The PR comment itself is written by
+# github-actions[bot] from scripts/coverage-surfaces.mjs; Codecov owns the
+# storage, the file-level view and the diff against the base branch.
+
+codecov:
+  # The per-surface CI workflows keep their test steps paused (see the TEST
+  # PAUSE banners in apps-ci.yml / portals-ci.yml / websites-ci.yml), so waiting
+  # for a green CI before processing would mean never processing.
+  require_ci_to_pass: false
+  notify:
+    wait_for_ci: false
+
+coverage:
+  precision: 1
+  round: down
+  range: '60...90'
+
+  status:
+    # informational on BOTH, deliberately. A large number of suites are red
+    # while the test steps are paused, so a coverage target here would red every
+    # PR for a reason no reviewer can act on. Codecov reports the movement; the
+    # merge decision stays with the reviewer.
+    #
+    # When the suites are repaired and the pause is lifted, dropping
+    # `informational` (and setting a `target`) is what turns this into a gate.
+    project:
+      default:
+        informational: true
+        flags: [portal, mweb, native, website]
+    patch:
+      default:
+        informational: true
+
+# One comment per PR, from github-actions[bot], written by the workflow — so
+# Codecov's own comment is off. Two bots reporting the same numbers on every PR
+# is how a coverage comment gets muted.
+#
+# To also get Codecov's diff comment, replace this line with the commented block
+# below it.
+comment: false
+# comment:
+#   layout: 'condensed_header, diff, flags, components'
+#   behavior: default
+#   require_changes: true
+
+# One flag per surface. `carryforward` is what keeps a surface's number on the
+# report when its job did not run (a cancelled matrix leg, a timeout) — without
+# it that surface would read 0% rather than "unchanged", which looks like a
+# catastrophic regression.
+flags:
+  portal:
+    paths:
+      - portals/
+    carryforward: true
+  mweb:
+    paths:
+      - app/mweb/
+    carryforward: true
+  native:
+    paths:
+      - app/mobile-app/
+    carryforward: true
+  website:
+    paths:
+      - website/
+    carryforward: true
+
+# The same four surfaces as browsable components in the Codecov UI.
+component_management:
+  individual_components:
+    - component_id: portal
+      name: Portal
+      paths: [portals/**]
+    - component_id: mweb
+      name: mWeb
+      paths: [app/mweb/**]
+    - component_id: native
+      name: Native app
+      paths: [app/mobile-app/**]
+    - component_id: website
+      name: Website
+      paths: [website/**]
+
+ignore:
+  # Vendored third party — CLAUDE.md rule 36 exempts it from this repo's
+  # standards, so it must not drag a surface's number around either.
+  - 'portals/crm/open-wa-server/**'
+  # Codegen output: not hand-written, validated by the compiler.
+  - '**/generated/**'
+  - '**/*.d.ts'
+  # Tests and build output.
+  - '**/__tests__/**'
+  - '**/*.test.*'
+  - '**/*.spec.*'
+  - '**/*.cy.*'
+  - '**/dist/**'
+  - '**/build/**'
+  - '**/node_modules/**'

@@ -183,7 +183,11 @@ function normalizeCancellationInput(base: ReturnType<typeof toCancellationPub>, 
     if (windows.size !== tiers.length) {
       fail('BAD_USER_INPUT', 'each cancellation band needs its own "hours before" window');
     }
-    next.tiers = tiers.sort((a, b) => b.hours_before - a.hours_before);
+    // A statement, not an expression: `sort` returns the SAME array it just
+    // reordered, so `x = y.sort(...)` reads as a copy and is not one (S4043).
+    // The server's lib is ES2022, which has no `toSorted` to reach for.
+    tiers.sort((a, b) => b.hours_before - a.hours_before);
+    next.tiers = tiers;
   }
   return next;
 }

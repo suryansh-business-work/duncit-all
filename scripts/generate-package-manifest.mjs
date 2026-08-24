@@ -77,7 +77,7 @@ function* manifestFiles(dir) {
   for (const entry of entries.sort((a, b) => a.localeCompare(b))) {
     if (SKIP_DIR.has(entry)) continue;
     const full = join(dir, entry);
-    if (SKIP_PATH.some((skip) => repoPath(full) === skip)) continue;
+    if (SKIP_PATH.includes(repoPath(full))) continue;
     let stat;
     try {
       stat = statSync(full);

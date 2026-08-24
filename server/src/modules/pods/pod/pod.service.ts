@@ -631,7 +631,6 @@ async function refundAndNotifyCancellation(
   reason: string,
   initiatedBy: PodCancelInitiator
 ): Promise<number | null> {
-  const when = podWhenLabel(doc);
   const podTitle = doc.pod_title;
   const logComponent = CANCEL_LOG_COMPONENT[initiatedBy];
 
@@ -678,8 +677,8 @@ async function refundAndNotifyCancellation(
   // the array the WhatsApp message was already built from. Sending both would
   // put two cancellation emails in front of every attendee.
   try {
-    await Promise.allSettled([
-      ...payments.map((payment) =>
+    await Promise.allSettled(
+      payments.map((payment) =>
         sendPodRefundEmail({
           to: payment.user_email,
           name: payment.user_name,
@@ -687,8 +686,8 @@ async function refundAndNotifyCancellation(
           amount: `${payment.currency_symbol}${payment.total}`,
           reason,
         })
-      ),
-    ]);
+      )
+    );
   } catch (err) {
     logs.server.error('pod', logComponent, {
       error: err,

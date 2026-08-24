@@ -3,6 +3,7 @@ import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { UserModel } from './user.model';
+import { joinUrl } from '@utils/url';
 
 /**
  * "A new sign-in to your account" — the notice, and the rule for when it is one.
@@ -49,20 +50,39 @@ export interface SignInContext {
 export function deviceLabel(userAgent?: string | null): string {
   const ua = (userAgent ?? '').trim();
   if (!ua) return 'An unrecognised device';
-  const browser =
-    /edg\//i.test(ua) ? 'Edge' :
-    /chrome|crios/i.test(ua) ? 'Chrome' :
-    /firefox|fxios/i.test(ua) ? 'Firefox' :
-    /safari/i.test(ua) ? 'Safari' :
-    /okhttp|expo|duncit/i.test(ua) ? 'the Duncit app' : 'A browser';
-  const platform =
-    /android/i.test(ua) ? 'Android' :
-    /iphone|ipad|ios/i.test(ua) ? 'iOS' :
-    /windows/i.test(ua) ? 'Windows' :
-    /mac os|macintosh/i.test(ua) ? 'macOS' :
-    /linux/i.test(ua) ? 'Linux' : '';
+  const browser = firstLabel(ua, BROWSERS, 'A browser');
+  const platform = firstLabel(ua, PLATFORMS, '');
   return platform ? `${browser} on ${platform}` : browser;
 }
+
+type UserAgentRule = readonly [RegExp, string];
+
+/**
+ * ORDER IS THE LOGIC, which is why these are lists and not a map.
+ *
+ * Every Chromium browser's user agent also says "Safari", and Edge's says
+ * "Chrome" as well — so the only thing separating them is which pattern is
+ * asked first. The Duncit app is last because a webview inside it still names
+ * its engine, and naming the engine is more useful than naming the shell.
+ */
+const BROWSERS: readonly UserAgentRule[] = [
+  [/edg\//i, 'Edge'],
+  [/chrome|crios/i, 'Chrome'],
+  [/firefox|fxios/i, 'Firefox'],
+  [/safari/i, 'Safari'],
+  [/okhttp|expo|duncit/i, 'the Duncit app'],
+];
+
+const PLATFORMS: readonly UserAgentRule[] = [
+  [/android/i, 'Android'],
+  [/iphone|ipad|ios/i, 'iOS'],
+  [/windows/i, 'Windows'],
+  [/mac os|macintosh/i, 'macOS'],
+  [/linux/i, 'Linux'],
+];
+
+const firstLabel = (ua: string, rules: readonly UserAgentRule[], fallback: string): string =>
+  rules.find(([pattern]) => pattern.test(ua))?.[1] ?? fallback;
 
 /** Record the device and say whether the account had never been used from it. */
 async function claimDevice(userId: string, fingerprint: string): Promise<'new' | 'known' | 'first'> {
@@ -122,7 +142,7 @@ export async function noteSignIn(
         when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
         device: deviceLabel(context.userAgent),
         place: context.place?.trim() || 'Unknown location',
-        security_url: `${appUrl.replace(/\/+$/, '')}/profile`,
+        security_url: joinUrl(appUrl, '/profile'),
       },
     });
   } catch (error) {

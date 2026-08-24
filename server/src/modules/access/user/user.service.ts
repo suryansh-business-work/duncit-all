@@ -69,6 +69,7 @@ import { toPostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
+import { joinUrl } from '@utils/url';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
@@ -523,7 +524,7 @@ async function mailPasswordChanged(email: string, firstName: string): Promise<vo
         name: firstName || 'there',
         email,
         when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
-        security_url: `${appUrl.replace(/\/+$/, '')}/profile`,
+        security_url: joinUrl(appUrl, '/profile'),
       },
     });
   } catch (error) {

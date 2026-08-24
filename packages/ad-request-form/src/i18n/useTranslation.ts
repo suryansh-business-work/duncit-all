@@ -34,7 +34,7 @@ export const useTranslation = createBundleTranslation(AD_REQUEST_BUNDLE);
 export const fallbackT: Translate = createTranslator({
   locale: 'en-IN',
   fallback: AD_REQUEST_FALLBACK_FLAT,
-}).t as Translate;
+}).t;
 
 /**
  * The package's own name for `fallbackT`.

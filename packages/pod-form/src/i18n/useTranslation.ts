@@ -34,4 +34,4 @@ export const useTranslation = createBundleTranslation(POD_FORM_BUNDLE);
 export const fallbackT: Translate = createTranslator({
   locale: 'en-IN',
   fallback: PODFORM_FALLBACK_FLAT,
-}).t as Translate;
+}).t;

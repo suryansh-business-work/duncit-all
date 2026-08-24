@@ -115,7 +115,7 @@ export async function directUploadToImagekit(
   if (!ticket) throw new Error('Upload is not available right now');
   const uploaded = await uploadFileWithTicket(file, ticket, onProgress);
   if (typeof uploaded.url !== 'string') {
-    throw new Error('Upload succeeded but no file URL came back');
+    throw new TypeError('Upload succeeded but no file URL came back');
   }
   return uploaded.url;
 }

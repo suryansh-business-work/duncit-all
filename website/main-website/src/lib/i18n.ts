@@ -3,7 +3,6 @@ import {
   fetchSiteLocales,
   getSiteTranslator,
   WEBSITE_FALLBACK as SHARED_FALLBACK,
-  WEBSITE_FALLBACK_FLAT as SHARED_FALLBACK_FLAT,
   type SiteLocale,
 } from '@duncit/brand/site-i18n';
 import { urlConfigs } from '../config/url-configs';
@@ -22,7 +21,7 @@ import { urlConfigs } from '../config/url-configs';
  * AND in Admin > Localization > Translations before using it. */
 export const WEBSITE_FALLBACK: NestedCatalogue = SHARED_FALLBACK;
 
-export const WEBSITE_FALLBACK_FLAT = SHARED_FALLBACK_FLAT;
+export { WEBSITE_FALLBACK_FLAT } from '@duncit/brand/site-i18n';
 
 export type { SiteLocale };
 

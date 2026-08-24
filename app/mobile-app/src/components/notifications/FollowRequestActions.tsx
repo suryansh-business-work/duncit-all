@@ -32,6 +32,61 @@ interface Props {
   onAnswered: () => void;
 }
 
+interface FollowBackRowProps {
+  /** Follow Back, or the flat "Requested" when the ask is already open. */
+  label: string;
+  /** The outcome line above the button; absent on a NEW_FOLLOWER row. */
+  settledLabel: string | null;
+  pending: boolean;
+  /** Both inks are decided by the parent — see the note where they are built. */
+  accentInk: string;
+  quietInk: string;
+  /** Absent when there is nothing left to send, which is what greys the row. */
+  onPress?: () => void;
+}
+
+/**
+ * The Follow Back row.
+ *
+ * Hoisted rather than written inline (rule 26g): it is the one branch of this
+ * component with a layout of its own, and leaving it in place put the whole
+ * file over the complexity ceiling. Every colour and label arrives as a prop,
+ * so no decision moved down here with it.
+ */
+function FollowBackRow({
+  label,
+  settledLabel,
+  pending,
+  accentInk,
+  quietInk,
+  onPress,
+}: Readonly<FollowBackRowProps>) {
+  return (
+    <XStack gap={10} paddingTop={10} alignItems="center">
+      {settledLabel ? (
+        <Text fontSize={12.5} fontWeight="700" color={quietInk}>
+          {settledLabel}
+        </Text>
+      ) : null}
+      <XStack
+        testID="follow-request-follow-back"
+        role="button"
+        aria-label={label}
+        gap={5}
+        alignItems="center"
+        opacity={pending ? 0.6 : 1}
+        onPress={onPress}
+        pressStyle={{ opacity: 0.6 }}
+      >
+        <MaterialIcons name="person-add-alt-1" size={15} color={accentInk} />
+        <Text fontSize={13.5} fontWeight="800" color={accentInk}>
+          {label}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+}
+
 /**
  * The inline actions on an actionable follow notification.
  *
@@ -76,9 +131,12 @@ export function FollowRequestActions({
   // A new-follower row has no request behind it, so there is no outcome to
   // state above the button — only a FOLLOW_REQUEST row carries this line.
   const settledLabel = status ? answeredLabel : null;
-  // Hoisted to nesting 0 (rule 26g): the accent ink is the same decision in
-  // every branch below, and computing it once keeps them all on one value.
+  // Hoisted to nesting 0 (rule 26g): both inks are the same decision in every
+  // branch below, and computing them once keeps them all on one value — and
+  // out of a child, where the branch would only run on that child's path and
+  // leave the other side uncovered.
   const accentInk = unreadRow ? onPrimary : primary;
+  const quietInk = unreadRow ? onPrimary : muted;
 
   // Answered elsewhere (another device), denied, or already followed back —
   // state the outcome instead of offering buttons that would now fail.
@@ -117,34 +175,19 @@ export function FollowRequestActions({
     // REQUESTED renders as a flat "Requested": the ask is already open, so a
     // second tap has nothing to send.
     const pending = !canFollowBack(followBackStatus);
-    const label = t(followBackLabelKey(followBackStatus));
     const sendFollowBack = () =>
       run(() =>
         graphqlRequest(MobileFollowUserDocument, { user_id: actorId as string }, { auth: true }),
       );
     return (
-      <XStack gap={10} paddingTop={10} alignItems="center">
-        {settledLabel ? (
-          <Text fontSize={12.5} fontWeight="700" color={unreadRow ? onPrimary : muted}>
-            {settledLabel}
-          </Text>
-        ) : null}
-        <XStack
-          testID="follow-request-follow-back"
-          role="button"
-          aria-label={label}
-          gap={5}
-          alignItems="center"
-          opacity={pending ? 0.6 : 1}
-          onPress={pending || !actorId ? undefined : sendFollowBack}
-          pressStyle={{ opacity: 0.6 }}
-        >
-          <MaterialIcons name="person-add-alt-1" size={15} color={accentInk} />
-          <Text fontSize={13.5} fontWeight="800" color={accentInk}>
-            {label}
-          </Text>
-        </XStack>
-      </XStack>
+      <FollowBackRow
+        label={t(followBackLabelKey(followBackStatus))}
+        settledLabel={settledLabel}
+        pending={pending}
+        accentInk={accentInk}
+        quietInk={quietInk}
+        onPress={pending || !actorId ? undefined : sendFollowBack}
+      />
     );
   }
 
@@ -172,7 +215,7 @@ export function FollowRequestActions({
         onPress={() => void answer(false)}
         fontSize={13.5}
         fontWeight="800"
-        color={unreadRow ? onPrimary : muted}
+        color={quietInk}
         opacity={unreadRow ? 0.75 : 1}
         pressStyle={{ opacity: 0.6 }}
       >

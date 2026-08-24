@@ -221,7 +221,7 @@ export const dbBackupUploadService = {
    */
   async complete(id: string): Promise<PublicBackup> {
     const doc = await DbBackupModel.findById(id).lean<DbBackupDoc>().exec();
-    if (!doc || doc.trigger !== 'UPLOADED') throw badInput('That upload no longer exists.');
+    if (doc?.trigger !== 'UPLOADED') throw badInput('That upload no longer exists.');
     if (doc.status !== 'RUNNING') throw badInput('That archive has already been checked.');
     const fileName = doc.file_name ?? null;
     const size = fileName ? await backupSize(fileName) : null;

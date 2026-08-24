@@ -20,6 +20,7 @@ import {
 import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { trimTrailingSlash } from '@utils/url';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -336,7 +337,7 @@ async function mailAdvertiser(doc: IAdRequest, template: string, subject: string
     const to = (owner as any)?.auth?.email ?? '';
     if (!to) return;
     const { adsUrl } = await getUrlConfigs();
-    const base = adsUrl.replace(/\/+$/, '');
+    const base = trimTrailingSlash(adsUrl);
     const runWindow = `${dayLabel(doc.start_at)} – ${dayLabel(doc.end_at)}`;
     await sendEmail({
       to,

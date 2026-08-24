@@ -5,7 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { CountryCodeField } from './CountryCodeField';
+import { CountryCodeField } from '../components/CountryCodeField';
 import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '@/hooks/useTranslation';
 

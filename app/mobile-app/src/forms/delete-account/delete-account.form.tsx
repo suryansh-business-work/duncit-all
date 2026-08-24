@@ -1,12 +1,14 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   deleteAccountDefaults,
-  deleteAccountSchema,
+  makeDeleteAccountSchema,
   type DeleteAccountValues,
 } from './delete-account.types';
 
@@ -16,15 +18,18 @@ export interface DeleteAccountFormProps {
   onSubmit: (values: DeleteAccountValues) => void | Promise<void>;
 }
 
-/** OTP step that confirms permanent account deletion — RN twin of mWeb's form. */
+/** Confirms the emailed code and sends the deletion request — RN twin of
+ * mWeb's form, same rules and same copy. */
 export function DeleteAccountForm({
   loading,
   errorMessage,
   onSubmit,
 }: Readonly<DeleteAccountFormProps>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => makeDeleteAccountSchema(t), [t]);
   const { control, handleSubmit } = useForm<DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
-    resolver: zodResolver(deleteAccountSchema),
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
 
@@ -33,12 +38,22 @@ export function DeleteAccountForm({
       <FormTextField
         control={control}
         name="otp"
-        label="6-digit OTP"
-        placeholder="123456"
+        label={t('mweb.account.deletion.otpLabel')}
+        placeholder={t('mweb.account.deletion.otpPlaceholder')}
         keyboardType="number-pad"
+        digitsOnly
         maxLength={6}
         required
-        hint="6-digit code"
+        hint={t('mweb.account.deletion.otpHint')}
+      />
+      <FormTextField
+        control={control}
+        name="reason"
+        label={t('mweb.account.deletion.reasonLabel')}
+        placeholder={t('mweb.account.deletion.reasonPlaceholder')}
+        hint={t('mweb.account.deletion.reasonHint')}
+        multiline
+        numberOfLines={3}
       />
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="delete-account-error">
@@ -47,7 +62,7 @@ export function DeleteAccountForm({
       ) : null}
       <PrimaryButton
         testID="delete-account-submit"
-        label={loading ? 'Deleting…' : 'Delete my account'}
+        label={loading ? t('mweb.account.deletion.submitting') : t('mweb.account.deletion.submit')}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />

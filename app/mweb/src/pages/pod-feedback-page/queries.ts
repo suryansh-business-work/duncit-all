@@ -12,6 +12,7 @@ export const POD_FEEDBACK_FORM = gql`
         title
         feedback_aspects
       }
+      can_rate
       mine {
         rating
         ratings {
@@ -28,6 +29,7 @@ export const POD_FEEDBACK_FORM = gql`
 export interface PodFeedbackFormData {
   podFeedbackForm: {
     pod: { id: string; title: string; feedback_aspects: string[] };
+    can_rate: boolean;
     mine: {
       rating: number;
       ratings: Array<{ aspect: string; rating: number }>;

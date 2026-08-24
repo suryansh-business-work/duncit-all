@@ -48,11 +48,11 @@ beforeEach(() => {
 });
 
 describe('CartScreen', () => {
-  it('shows the empty state and routes to Home from its CTA', () => {
+  it('shows the empty state and routes to the Pod Shop from its CTA', () => {
     renderWithProviders(<CartScreen />);
     expect(screen.getByTestId('cart-empty')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('cart-find-pod'));
-    expect(mockNavigate).toHaveBeenCalledWith('Home');
+    fireEvent.press(screen.getByTestId('cart-explore-shop'));
+    expect(mockNavigate).toHaveBeenCalledWith('Shop');
   });
 
   it('groups lines by pod, steps quantities, removes lines and clears the cart', () => {

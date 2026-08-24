@@ -19,7 +19,7 @@ import {
 } from './bouncer.feedback';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { hasMarkedAttendance, markedPodIdsFor } from '@modules/pods/ticket/attendance.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -181,6 +181,18 @@ async function toFeedbackPub(doc: any) {
     message: doc.message ?? '',
     created_at: doc.created_at?.toISOString?.() ?? '',
   };
+}
+
+/**
+ * The one door onto a pod's rating: the host marked this person present.
+ *
+ * Both the form and the submit ask it, because the link outlives the evening
+ * and gets forwarded — a read that allowed what the write refuses would only
+ * be a form that throws when someone finally uses it.
+ */
+async function assertAttended(userId: string, podId: string) {
+  if (await hasMarkedAttendance(podId, userId)) return;
+  fail('FORBIDDEN', 'Only an attendee the host has marked present can rate this pod');
 }
 
 async function loadPodOrFail(podId: string) {
@@ -444,6 +456,7 @@ export const bouncerService = {
   ) {
     if (input.rating < 1 || input.rating > 5) fail('BAD_USER_INPUT', 'Rating must be 1-5');
     const pod = await loadPodOrFail(input.pod_id);
+    await assertAttended(userId, String(pod._id));
     const hostId = (pod.pod_hosts_id?.[0] as any) ?? null;
 
     // Only the parts this pod actually has are kept — a rating for a venue a
@@ -510,13 +523,20 @@ export const bouncerService = {
     const pod = await buildPodInfo(new Types.ObjectId(podId));
     if (!pod) fail('NOT_FOUND', 'Pod not found');
 
-    const mine = await BouncerFeedbackModel.findOne({
-      user_id: new Types.ObjectId(userId),
-      pod_id: new Types.ObjectId(podId),
-    }).lean();
+    // The link is pasted into a group chat, so the page itself has to say who
+    // may answer it. Anyone else is told why, rather than shown a form the
+    // submit is going to refuse.
+    const can_rate = await hasMarkedAttendance(podId, userId);
+    const mine = can_rate
+      ? await BouncerFeedbackModel.findOne({
+          user_id: new Types.ObjectId(userId),
+          pod_id: new Types.ObjectId(podId),
+        }).lean()
+      : null;
 
     return {
       pod: pod,
+      can_rate,
       mine: mine
         ? {
             rating: mine.rating,
@@ -557,16 +577,14 @@ export const bouncerService = {
 
   /**
    * The most recently-attended pod the user has NOT yet rated — drives the
-   * "how was the pod?" feedback pop-up shown on next login (Bug 6). A pod is
-   * "attended" once it has been JOINED and its start time is in the past.
+   * "how was the pod?" feedback pop-up shown on next login (Bug 6). "Attended"
+   * is the host's mark and not a booking, the same rule the shared link runs
+   * on: prompting someone who cannot submit would open a form that throws.
    */
   async getPendingPodFeedback(userId: string) {
     const uid = new Types.ObjectId(userId);
-    const memberships = await PodMemberModel.find({ user_id: uid, status: 'JOINED' })
-      .select('pod_id')
-      .lean();
-    if (memberships.length === 0) return null;
-    const podIds = memberships.map((m) => m.pod_id);
+    const podIds = await markedPodIdsFor(userId);
+    if (podIds.length === 0) return null;
     const fed = await BouncerFeedbackModel.find({ user_id: uid, pod_id: { $in: podIds } })
       .select('pod_id')
       .lean();

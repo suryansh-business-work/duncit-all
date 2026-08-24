@@ -85,7 +85,7 @@ export function PodFeedbackScreen() {
   let body;
   if (loading) {
     body = <Spinner testID="pod-feedback-loading" color="$primary" />;
-  } else if (form) {
+  } else if (form?.can_rate) {
     body = (
       <PodFeedbackCard
         podTitle={form.pod.title}
@@ -106,6 +106,15 @@ export function PodFeedbackScreen() {
         onSubmit={submit}
         onLeave={goBack}
       />
+    );
+  } else if (form) {
+    // The link travels further than the pod did: whoever opens it without
+    // having been marked present is told why, rather than shown stars the
+    // submit would refuse.
+    body = (
+      <Text testID="pod-feedback-no-access" color="$warning" fontSize={13}>
+        {t('mweb.podFeedback.noAccess')}
+      </Text>
     );
   } else {
     body = (

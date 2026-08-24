@@ -1,44 +1,21 @@
-import type { Translate } from '@/i18n/fallback';
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { MobileRequestAccountDeletionOtpDocument } from '@/graphql/account';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useLogout } from '@/hooks/useLogout';
-import { graphqlRequest } from '@/services/graphql.client';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
-import { DeleteAccountDialog } from './DeleteAccountDialog';
+import { DeletionRequestPanel } from './DeletionRequestPanel';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const errMsg = (e: unknown, t: Translate) =>
-  e instanceof Error ? e.message : t('mweb.account.somethingWentWrong');
-
-/** Account security — change password + the de-emphasised, danger-styled delete
- * action at the bottom of Profile Settings. RN twin of mWeb's SecuritySection. */
+/** Account security — change password + the de-emphasised deletion corner at
+ * the bottom of Profile Settings. RN twin of mWeb's SecuritySection. */
 export function SecuritySection() {
   const { t } = useTranslation();
-  const { color, danger } = useThemeColors();
-  const logout = useLogout();
+  const { color } = useThemeColors();
   const [changeOpen, setChangeOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [changedOpen, setChangedOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [requesting, setRequesting] = useState(false);
-
-  const confirmDeletion = () => {
-    setRequesting(true);
-    setError(null);
-    graphqlRequest(MobileRequestAccountDeletionOtpDocument, undefined, { auth: true })
-      .then(() => {
-        setConfirmOpen(false);
-        setDeleteOpen(true);
-      })
-      .catch((e) => setError(errMsg(e, t)))
-      .finally(() => setRequesting(false));
-  };
+  const [notice, setNotice] = useState<string | null>(null);
 
   return (
     <YStack
@@ -75,25 +52,7 @@ export function SecuritySection() {
 
       <YStack height={1} backgroundColor="$borderColor" />
 
-      <XStack
-        testID="open-delete-account"
-        role="button"
-        aria-label={t('mweb.account.deleteAccount')}
-        onPress={() => setConfirmOpen(true)}
-        alignItems="center"
-        gap={10}
-        pressStyle={{ opacity: 0.7 }}
-      >
-        <MaterialIcons name="delete-forever" size={18} color={danger} />
-        <Text fontSize={13.5} fontWeight="600" color="$danger">
-          Delete account
-        </Text>
-      </XStack>
-      {error ? (
-        <Text fontSize={12.5} color="$danger" testID="security-section-error">
-          {error}
-        </Text>
-      ) : null}
+      <DeletionRequestPanel onDone={setNotice} />
 
       <ChangePasswordDialog
         open={changeOpen}
@@ -113,20 +72,14 @@ export function SecuritySection() {
       />
 
       <ConfirmDialog
-        open={confirmOpen}
-        title={t('mweb.account.deleteYourAccount')}
-        message={t('mweb.account.thisPermanentlyDeletesYourAccountAnd')}
-        confirmLabel={requesting ? 'Sending…' : 'Send code'}
-        cancelLabel={t('mweb.common.cancel')}
-        destructive
-        onConfirm={confirmDeletion}
-        onCancel={() => setConfirmOpen(false)}
-      />
-
-      <DeleteAccountDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onDeleted={() => void logout()}
+        open={!!notice}
+        title={t('mweb.account.deletion.pendingTitle')}
+        message={notice ?? ''}
+        confirmLabel={t('mweb.common.done')}
+        cancelLabel={t('mweb.common.close')}
+        onConfirm={() => setNotice(null)}
+        onCancel={() => setNotice(null)}
+        testID="deletion-notice-dialog"
       />
     </YStack>
   );

@@ -26,7 +26,6 @@ import type {
   ResetPasswordDTO,
   RequestPasswordChangeDTO,
   ChangePasswordDTO,
-  DeleteMyAccountDTO,
 } from '@modules/access/auth/auth.validator';
 import type { UpdateMyProfileDTO, PetProfileDTO } from '@modules/access/profile/profile.validator';
 import type {
@@ -642,9 +641,8 @@ async function replaceUserRoles(
 
 // Soft-delete writes for a user: flag the doc (deleted_at + INACTIVE) and hard
 // delete the relation rows so counters do not drift. Session-optional so the
-// admin remove() can run it inside a transaction (prod replica set) while the
-// self-serve deleteMyAccount runs it directly (standalone mongo has no
-// transactions). The relation deletes are independent, so any-order is fine.
+// admin remove() can run it inside a transaction (prod replica set). The
+// relation deletes are independent, so any-order is fine.
 async function softDeleteUserWrites(oid: Types.ObjectId, session?: any) {
   const opts = session ? { session } : {};
   await UserModel.updateOne(
@@ -1131,26 +1129,25 @@ export const userService = {
   toPublic,
 
   async register(input: RegisterDTO, acceptance?: PolicyAcceptanceIntent) {
-    if (input.phone_number && isPlaceholderPhone(input.phone_number)) {
+    if (isPlaceholderPhone(input.phone_number)) {
       throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const existing = await UserModel.findOne({ 'auth.email': input.email });
     if (existing) {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
-    // Only enforce phone uniqueness when a phone was supplied — otherwise the
-    // query would match the many users that have no phone at all.
-    if (input.phone_number) {
-      const phoneExists = await UserModel.findOne({
-        'auth.phone.number': input.phone_number,
-        'auth.phone.extension': input.phone_extension,
-      });
-      if (phoneExists) {
-        throw new GraphQLError(
-          'This phone number is already registered. Please use a different number or login.',
-          { extensions: { code: 'CONFLICT' } }
-        );
-      }
+    // Signup always carries a phone, so this always runs. It is a friendlier
+    // read of the same rule the unique index enforces — the index is still what
+    // decides, and registerDuplicateError catches the race that gets past here.
+    const phoneExists = await UserModel.findOne({
+      'auth.phone.number': input.phone_number,
+      'auth.phone.extension': input.phone_extension,
+    });
+    if (phoneExists) {
+      throw new GraphQLError(
+        'This phone number is already registered. Please use a different number or login.',
+        { extensions: { code: 'CONFLICT' } }
+      );
     }
     const hashed = await bcrypt.hash(input.password, 10);
     let created: any;
@@ -1910,14 +1907,21 @@ export const userService = {
     return { ok: true, dev_otp: isDev ? otp : null };
   },
 
-  // Auth-required self-serve deletion: confirm the OTP, then soft-delete the
-  // account using the same soft-delete writes as the admin remove() path.
-  // Invalidating the session is implicit — the soft-delete sets status INACTIVE
-  // so login() (status !== ACTIVE) rejects, the email/phone/password are scrubbed
-  // so the credentials can never re-authenticate, and roles are stripped so every
-  // gated resolver denies the stale JWT.
-  async deleteMyAccount(user_id: string, input: DeleteMyAccountDTO) {
-    const code = String(input.otp || '').trim();
+  /**
+   * Check and spend the emailed account-deletion code, answering the user doc.
+   *
+   * All that is left here of the old self-serve delete. Deleting an account is
+   * no longer something this service does: it reaches into every collection the
+   * member appears in and cannot be undone, so it is queued as a request and a
+   * human in the Tech portal carries it out. What has NOT changed is the proof
+   * required to ask, which is this — and it stays here because hashOtp and the
+   * OTP fields are this module's, not the queue's.
+   *
+   * Single use: the hash is cleared as soon as it matches, so one code files
+   * one request.
+   */
+  async consumeAccountDeletionOtp(user_id: string, otp: string) {
+    const code = String(otp || '').trim();
     const user = await UserModel.findById(user_id).select(
       '+auth.account_deletion_otp_hash +auth.account_deletion_otp_expires_at'
     );
@@ -1932,30 +1936,16 @@ export const userService = {
     if (hashOtp(code) !== storedHash) {
       throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    // Soft-delete (deleted_at + INACTIVE) and strip relation rows. Self-serve,
-    // so no transaction wrapper — the deletes are independent and idempotent.
-    const oid = new Types.ObjectId(user_id);
-    const before = await UserModel.findById(user_id).lean();
-    await softDeleteUserWrites(oid);
-    // Anonymize the login identifiers + clear roles/OTP so the freed email/phone
-    // can be reused and the stale JWT can never re-authenticate.
     await UserModel.updateOne(
-      { _id: oid },
+      { _id: user._id },
       {
-        $set: { 'metadata.role_keys': [] },
         $unset: {
-          'auth.email': '',
-          'auth.google_id': '',
-          'auth.phone': '',
-          'auth.password': '',
           'auth.account_deletion_otp_hash': '',
           'auth.account_deletion_otp_expires_at': '',
         },
       }
     );
-    const after = await UserModel.findById(user_id).lean();
-    await userAuditService.record({ userId: user_id, before, after, action: 'DELETE' });
-    return true;
+    return user;
   },
 
   async updateMyInterests(user_id: string, categoryIds: string[]) {

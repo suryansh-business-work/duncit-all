@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fireEvent, screen } from '@testing-library/react-native';
 
-import { SelectSheet, type SelectOption } from '@/forms/account-edit/SelectSheet';
+import { SelectSheet, type SelectOption } from '@/forms/components/SelectSheet';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const options: SelectOption[] = [

@@ -2,7 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { useForm } from 'react-hook-form';
 import { Text } from 'tamagui';
 
-import { CountryCodeField } from '@/forms/account-edit/CountryCodeField';
+import { CountryCodeField } from '@/forms/components/CountryCodeField';
 import type { AccountEditValues } from '@/forms/account-edit/account-edit.types';
 import { renderWithProviders } from '@/utils/test-utils';
 

@@ -159,7 +159,7 @@ export const MobileChangePasswordWithOtpDocument = gql(`
   }
 `);
 
-/** Step 1 of delete-account — email a confirmation OTP. */
+/** Step 1 of the deletion flow — email a confirmation code. */
 export const MobileRequestAccountDeletionOtpDocument = gql(`
   mutation MobileRequestAccountDeletionOtp {
     requestAccountDeletionOtp {
@@ -168,10 +168,41 @@ export const MobileRequestAccountDeletionOtpDocument = gql(`
   }
 `);
 
-/** Step 2 of delete-account — permanently delete the account with the OTP. */
-export const MobileDeleteMyAccountDocument = gql(`
-  mutation MobileDeleteMyAccount($input: DeleteMyAccountInput!) {
-    deleteMyAccount(input: $input)
+/*
+  Step 2 FILES A REQUEST; it does not delete. The code proves who is asking,
+  and what it buys is a row in the Tech portal's queue — the account keeps
+  working until somebody there acts on it.
+*/
+export const MobileSubmitAccountDeletionRequestDocument = gql(`
+  mutation MobileSubmitAccountDeletionRequest($input: SubmitAccountDeletionRequestInput!) {
+    submitAccountDeletionRequest(input: $input) {
+      id
+      request_id
+      status
+      requested_at
+    }
+  }
+`);
+
+/** The member's own open request — what the banner in Profile Settings reads. */
+export const MobileMyAccountDeletionRequestDocument = gql(`
+  query MobileMyAccountDeletionRequest {
+    myAccountDeletionRequest {
+      id
+      request_id
+      status
+      requested_at
+    }
+  }
+`);
+
+/** Withdraw an open request. */
+export const MobileCancelAccountDeletionRequestDocument = gql(`
+  mutation MobileCancelAccountDeletionRequest {
+    cancelMyAccountDeletionRequest {
+      id
+      status
+    }
   }
 `);
 

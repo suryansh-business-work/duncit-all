@@ -19,7 +19,12 @@ export const dbBackupTypeDefs = gql`
     id: ID!
     "RUNNING | SUCCEEDED | FAILED"
     status: String!
-    "SCHEDULED | MANUAL — only SCHEDULED archives are pruned by retention."
+    """
+    SCHEDULED | MANUAL | UPLOADED. Only SCHEDULED archives are pruned by
+    retention. UPLOADED is an archive this server did not take — it was sent in
+    from an operator's machine and read end to end before it was allowed to
+    count as one.
+    """
     trigger: String!
     database: String!
     fileName: String
@@ -37,6 +42,12 @@ export const dbBackupTypeDefs = gql`
     "Email of the operator who ran it; null for a scheduled run."
     startedBy: String
     startedAt: String
+    """
+    When the archive was TAKEN, read from its own header. Only an uploaded
+    archive carries one, and for those it is not startedAt — that is the day it
+    was sent here, this is the day the data is from.
+    """
+    archiveTakenAt: String
     finishedAt: String
   }
 
@@ -55,6 +66,19 @@ export const dbBackupTypeDefs = gql`
   quiet hour.
   """
   type DbBackupSettings {
+    """
+    The database a restore would REPLACE. Not part of the schedule: the page
+    needs it and this is the query it already makes. It is not the same as a
+    row's own database once an archive from somewhere else has been uploaded,
+    and the restore warning has to name the one being destroyed.
+    """
+    liveDatabase: String!
+    """
+    The largest archive this server accepts in one upload, in bytes. The same
+    number nginx enforces, so the picker can refuse a file before spending
+    minutes sending it.
+    """
+    uploadMaxBytes: Float!
     enabled: Boolean!
     "DAILY | WEEKLY"
     frequency: String!
@@ -113,6 +137,19 @@ export const dbBackupTypeDefs = gql`
     finishedAt: String
   }
 
+  """
+  A single-use pass to POST one archive to the server's upload route.
+
+  The browser cannot put its session header on a raw file POST, so the pass is
+  what authorises it. The row it belongs to already exists — RUNNING, and
+  pointing at the name the bytes must land on.
+  """
+  type DbBackupUploadPass {
+    uploadUrl: String!
+    ticket: String!
+    backupId: ID!
+  }
+
   "A download good for a few minutes, for exactly one archive."
   type DbBackupDownload {
     url: String!
@@ -153,6 +190,22 @@ export const dbBackupTypeDefs = gql`
     header. The link names one backup and stops working within minutes.
     """
     requestDbBackupDownload(id: ID!): DbBackupDownload!
+
+    """
+    Claim a name for an archive being sent in, and hand back a one-shot pass for
+    the upload route. Creates the backup row up front so an abandoned upload
+    leaves something the stale sweep can clean. SUPER_ADMIN only.
+    """
+    dbBackupUploadAuth(fileName: String!): DbBackupUploadPass!
+
+    """
+    The upload finished: read the archive end to end and, if it is whole, turn
+    it into a restorable backup. Returns immediately — the read continues
+    server-side and the row stays RUNNING until it is through. An archive that
+    cannot be read is failed and deleted rather than left where someone could
+    restore from it.
+    """
+    completeDbBackupUpload(id: ID!): DbBackup!
 
     """
     Restore the live database from one archive. DESTRUCTIVE: every collection

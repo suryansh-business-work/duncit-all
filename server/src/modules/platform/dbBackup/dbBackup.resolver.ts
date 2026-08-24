@@ -7,6 +7,7 @@ import type { TableQueryInput } from '@utils/table-query';
 // at the portal's top role.
 import { TECH_EXEC } from '../tech/tech.resolver';
 import { dbRestoreService } from './dbBackup.restore';
+import { dbBackupUploadService } from './dbBackup.upload';
 import { dbBackupService, type SaveBackupSettingsInput } from './dbBackup.service';
 import { DOWNLOAD_TTL_SECONDS, downloadRoutePath } from './dbBackup.router';
 
@@ -72,6 +73,14 @@ export const dbBackupResolvers = {
         fileName: backup?.file_name ?? '',
         expiresInSeconds: DOWNLOAD_TTL_SECONDS,
       };
+    },
+    dbBackupUploadAuth: (_p: unknown, args: { fileName: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, TECH_EXEC);
+      return dbBackupUploadService.auth(user, args.fileName);
+    },
+    completeDbBackupUpload: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_EXEC);
+      return dbBackupUploadService.complete(args.id);
     },
     restoreDbBackup: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, TECH_EXEC);

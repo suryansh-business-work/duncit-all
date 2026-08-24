@@ -316,6 +316,8 @@ export const financeTypeDefs = /* GraphQL */ `
     gst_collected: FinanceStat!
     pending_payouts: FinanceStat!
     completed_payouts: FinanceStat!
+    "What Duncit itself spent to run pods (Finance > Pod Expenses)."
+    pod_expenses: FinanceStat!
   }
 
   type PaymentReleaseRequest {

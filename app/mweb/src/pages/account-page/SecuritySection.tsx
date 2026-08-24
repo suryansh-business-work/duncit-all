@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { useUserData } from '@duncit/user-context';
 import {
   Alert,
   Button,
@@ -11,36 +9,16 @@ import {
   Typography,
 } from '@mui/material';
 import LockResetIcon from '@mui/icons-material/LockReset';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import ConfirmDialog from '../../components/ConfirmDialog';
-import { parseApiError } from '../../utils/parseApiError';
 import ChangePasswordDialog from './ChangePasswordDialog';
-import DeleteAccountDialog from './DeleteAccountDialog';
-import { REQUEST_ACCOUNT_DELETION_OTP } from './security-queries';
+import DeletionRequestPanel from './DeletionRequestPanel';
 import { useTranslation } from '../../i18n/useTranslation';
 
-/** Account security: change password + the de-emphasised, danger-styled delete
- * action at the bottom of Profile → Settings. */
+/** Account security: change password, plus the de-emphasised deletion corner
+ * at the bottom of Profile → Settings. */
 export default function SecuritySection() {
   const { t } = useTranslation();
-  const { logout } = useUserData();
   const [changeOpen, setChangeOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [requestDeletionOtp, { loading: requesting }] = useMutation(REQUEST_ACCOUNT_DELETION_OTP);
-
-  const confirmDeletion = async () => {
-    setDeleteError(null);
-    try {
-      await requestDeletionOtp();
-      setConfirmOpen(false);
-      setDeleteOpen(true);
-    } catch (e) {
-      setDeleteError(parseApiError(e));
-    }
-  };
 
   return (
     <Card>
@@ -71,20 +49,7 @@ export default function SecuritySection() {
             </Button>
           </Stack>
 
-          <Button
-            color="error"
-            startIcon={<DeleteForeverIcon />}
-            onClick={() => setConfirmOpen(true)}
-            data-testid="open-delete-account"
-            sx={{ textTransform: 'none', fontWeight: 700, alignSelf: 'flex-start' }}
-          >
-            Delete account
-          </Button>
-          {deleteError && (
-            <Alert severity="error" onClose={() => setDeleteError(null)}>
-              {deleteError}
-            </Alert>
-          )}
+          <DeletionRequestPanel onToast={setToast} />
         </Stack>
       </CardContent>
 
@@ -92,25 +57,6 @@ export default function SecuritySection() {
         open={changeOpen}
         onClose={() => setChangeOpen(false)}
         onChanged={() => setToast(t('mweb.account.passwordUpdated'))}
-      />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title={t('mweb.account.deleteYourAccount')}
-        message={t('mweb.account.thisPermanentlyDeletesYourAccountAnd')}
-        confirmLabel={t('mweb.account.sendCode')}
-        destructive
-        busy={requesting}
-        onConfirm={() => {
-          confirmDeletion().catch(() => undefined);
-        }}
-        onClose={() => setConfirmOpen(false)}
-      />
-
-      <DeleteAccountDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onDeleted={logout}
       />
 
       <Snackbar

@@ -1,8 +1,8 @@
 {
   "maxPercent": 1.9,
   "areas": {
-    "app/mobile-app": 2695,
-    "app/mweb": 2957,
+    "app/mobile-app": 2710,
+    "app/mweb": 2892,
     "packages/ai-prompts": 15,
     "packages/app-settings": 17,
     "packages/category": 103,
@@ -31,7 +31,7 @@
     "portals/support": 188,
     "portals/tech": 482,
     "portals/website-app": 184,
-    "server": 3724,
+    "server": 3720,
     "website/ads-website": 162,
     "website/earnwith-website": 158,
     "website/main-website": 127,

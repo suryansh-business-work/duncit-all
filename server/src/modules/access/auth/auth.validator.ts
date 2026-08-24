@@ -19,15 +19,14 @@ export const registerSchema = yup.object({
     .matches(personNameRegex, { message: 'Invalid last name', excludeEmptyString: true })
     .optional(),
   email: yup.string().email().required(),
-  // Phone is no longer collected at signup; it is gathered later (profile).
-  phone_number: yup
-    .string()
-    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
-    .optional(),
+  // Phone is collected at signup again, and required: it is the second thing an
+  // account is identified by, and the unique index on it only means anything if
+  // every account created through this door actually carries one.
+  phone_number: yup.string().matches(phoneRegex, { message: 'Invalid phone' }).required(),
   phone_extension: yup
     .string()
-    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
-    .optional(),
+    .matches(extRegex, { message: 'Invalid extension' })
+    .required(),
   password: yup.string().min(8).max(100).required(),
   dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
   city: yup.string().optional(),
@@ -83,14 +82,6 @@ export const changePasswordSchema = yup.object({
   new_password: yup.string().min(8).max(100).required(),
 });
 
-// Self-serve account deletion: confirmed with a 6-digit email OTP.
-export const deleteMyAccountSchema = yup.object({
-  otp: yup
-    .string()
-    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
-    .required(),
-});
-
 export const googleSignupSchema = yup.object({
   id_token: yup.string().min(20).required(),
   // Token-only Google signup: the account is created from the verified Google
@@ -115,5 +106,4 @@ export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetS
 export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
 export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
 export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;
-export type DeleteMyAccountDTO = yup.InferType<typeof deleteMyAccountSchema>;
 export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;

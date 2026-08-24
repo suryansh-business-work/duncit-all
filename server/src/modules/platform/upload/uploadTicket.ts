@@ -21,7 +21,7 @@ const MAX_OPEN = 5000;
  * authenticated call that knows what is being uploaded — never inferred from
  * the raw POST, which carries nothing but the ticket.
  */
-export type UploadStore = 'imagekit' | 'builds';
+export type UploadStore = 'imagekit' | 'builds' | 'db-backups';
 
 interface Ticket {
   userId: string;
@@ -33,6 +33,14 @@ interface Ticket {
    * attributed to has to be decided by the authenticated call that knows it.
    */
   surface: string;
+  /**
+   * The exact basename the bytes must land on, for a store that writes ONE
+   * known file. A database archive is claimed before the upload starts — its
+   * row exists, pointing at this name — so the route is told where to write
+   * rather than inventing a name the row would then have to be told about.
+   * Empty for stores that name the file themselves.
+   */
+  destination: string;
   expiresAt: number;
 }
 
@@ -50,14 +58,15 @@ export function issueUploadTicket(
   userId: string,
   folder: string,
   store: UploadStore = 'imagekit',
-  surface = ''
+  surface = '',
+  destination = ''
 ): string {
   sweep();
   // Refuse rather than grow without bound: something is very wrong if five
   // thousand tickets are open at once, and quietly eating memory hides it.
   if (tickets.size >= MAX_OPEN) throw new Error('Too many uploads in flight');
   const id = crypto.randomUUID();
-  tickets.set(id, { userId, folder, store, surface, expiresAt: Date.now() + TTL_MS });
+  tickets.set(id, { userId, folder, store, surface, destination, expiresAt: Date.now() + TTL_MS });
   return id;
 }
 
@@ -67,7 +76,13 @@ export function issueUploadTicket(
  */
 export function spendUploadTicket(
   id: string
-): { userId: string; folder: string; store: UploadStore; surface: string } | null {
+): {
+  userId: string;
+  folder: string;
+  store: UploadStore;
+  surface: string;
+  destination: string;
+} | null {
   sweep();
   const ticket = tickets.get(id);
   if (!ticket) return null;
@@ -77,6 +92,7 @@ export function spendUploadTicket(
     folder: ticket.folder,
     store: ticket.store,
     surface: ticket.surface,
+    destination: ticket.destination,
   };
 }
 

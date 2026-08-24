@@ -18,7 +18,7 @@ export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const findPodLabel = t('mweb.cart.findPod');
+  const exploreShopLabel = t('mweb.cart.exploreShop');
   const checkoutLabel = t('mweb.cart.checkout');
   const clearLabel = t('mweb.cart.clear');
   const lines = useCartStore((s) => s.lines);
@@ -41,10 +41,10 @@ export function CartScreen() {
           {t('mweb.cart.emptyBody')}
         </Text>
         <XStack
-          testID="cart-find-pod"
+          testID="cart-explore-shop"
           role="button"
-          aria-label={findPodLabel}
-          onPress={() => navigation.navigate('Home')}
+          aria-label={exploreShopLabel}
+          onPress={() => navigation.navigate('Shop')}
           paddingHorizontal={24}
           height={44}
           alignItems="center"
@@ -54,7 +54,7 @@ export function CartScreen() {
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            {findPodLabel}
+            {exploreShopLabel}
           </Text>
         </XStack>
       </YStack>

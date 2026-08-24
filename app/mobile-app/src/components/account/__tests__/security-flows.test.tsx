@@ -3,8 +3,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { ChangePasswordDialog, DeleteAccountDialog, SecuritySection } from '@/components/account';
 import {
   MobileChangePasswordWithOtpDocument,
-  MobileDeleteMyAccountDocument,
   MobileRequestAccountDeletionOtpDocument,
+  MobileSubmitAccountDeletionRequestDocument,
   MobileRequestPasswordChangeOtpDocument,
 } from '@/graphql/account';
 import { useLogout } from '@/hooks/useLogout';
@@ -110,28 +110,30 @@ describe('ChangePasswordDialog', () => {
 describe('DeleteAccountDialog', () => {
   it('is hidden when closed', () => {
     renderWithProviders(
-      <DeleteAccountDialog open={false} onClose={jest.fn()} onDeleted={jest.fn()} />,
+      <DeleteAccountDialog open={false} onClose={jest.fn()} onSubmitted={jest.fn()} />,
     );
     expect(screen.queryByTestId('delete-account-submit')).toBeNull();
   });
 
-  it('deletes with the entered OTP and reports back', async () => {
-    const onDeleted = jest.fn();
-    mockRequest.mockResolvedValue({ deleteMyAccount: true });
-    renderWithProviders(<DeleteAccountDialog open onClose={jest.fn()} onDeleted={onDeleted} />);
+  it('files the request with the entered OTP and reports back', async () => {
+    const onSubmitted = jest.fn();
+    mockRequest.mockResolvedValue({
+      submitAccountDeletionRequest: { id: 'r1', request_id: 'DUN-ADR-1A2B3C' },
+    });
+    renderWithProviders(<DeleteAccountDialog open onClose={jest.fn()} onSubmitted={onSubmitted} />);
     fireEvent.changeText(screen.getByTestId('field-otp'), '123456');
     fireEvent.press(screen.getByTestId('delete-account-submit'));
-    await waitFor(() => expect(onDeleted).toHaveBeenCalled());
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalled());
     expect(mockRequest).toHaveBeenCalledWith(
-      MobileDeleteMyAccountDocument,
-      { input: { otp: '123456' } },
+      MobileSubmitAccountDeletionRequestDocument,
+      { input: { otp: '123456', reason: '', surface: 'APP' } },
       { auth: true },
     );
   });
 
   it('resends the OTP', async () => {
     mockRequest.mockResolvedValue({ requestAccountDeletionOtp: { ok: true } });
-    renderWithProviders(<DeleteAccountDialog open onClose={jest.fn()} onDeleted={jest.fn()} />);
+    renderWithProviders(<DeleteAccountDialog open onClose={jest.fn()} onSubmitted={jest.fn()} />);
     fireEvent.press(screen.getByTestId('delete-account-resend'));
     await waitFor(() =>
       expect(mockRequest).toHaveBeenCalledWith(MobileRequestAccountDeletionOtpDocument, undefined, {
@@ -140,9 +142,9 @@ describe('DeleteAccountDialog', () => {
     );
   });
 
-  it('surfaces a resend error and a delete error', async () => {
+  it('surfaces a resend error and a submit error', async () => {
     mockRequest.mockRejectedValueOnce(new Error('rate limited'));
-    renderWithProviders(<DeleteAccountDialog open onClose={jest.fn()} onDeleted={jest.fn()} />);
+    renderWithProviders(<DeleteAccountDialog open onClose={jest.fn()} onSubmitted={jest.fn()} />);
     fireEvent.press(screen.getByTestId('delete-account-resend'));
     await waitFor(() =>
       expect(screen.getByTestId('delete-account-error')).toHaveTextContent('rate limited'),
@@ -157,7 +159,7 @@ describe('DeleteAccountDialog', () => {
 
   it('closes via the sheet header', () => {
     const onClose = jest.fn();
-    renderWithProviders(<DeleteAccountDialog open onClose={onClose} onDeleted={jest.fn()} />);
+    renderWithProviders(<DeleteAccountDialog open onClose={onClose} onSubmitted={jest.fn()} />);
     fireEvent.press(screen.getByTestId('delete-account-dialog-close'));
     expect(onClose).toHaveBeenCalled();
   });

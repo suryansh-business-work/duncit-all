@@ -11,33 +11,44 @@ import {
 } from '@mui/material';
 import { DeleteAccountForm, type DeleteAccountValues } from '../../forms/delete-account';
 import { parseApiError } from '../../utils/parseApiError';
-import { DELETE_MY_ACCOUNT, REQUEST_ACCOUNT_DELETION_OTP } from './security-queries';
+import {
+  REQUEST_ACCOUNT_DELETION_OTP,
+  SUBMIT_ACCOUNT_DELETION_REQUEST,
+} from './security-queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onDeleted: () => void;
+  onSubmitted: () => void;
 }
 
-/** OTP step of the delete-account flow (the danger confirmation lives in the
- * parent ConfirmDialog, which requests the OTP before opening this). */
-export default function DeleteAccountDialog({ open, onClose, onDeleted }: Readonly<Props>) {
+/**
+ * The code step of the deletion flow — the warning lives in the parent
+ * ConfirmDialog, which emails the code before opening this.
+ *
+ * Submitting FILES a request; it does not delete. The copy says so, because a
+ * dialog that still said "permanently delete" would be describing something
+ * that no longer happens here.
+ */
+export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [info, setInfo] = useState<string | null>('OTP sent to your email.');
+  const [info, setInfo] = useState<string | null>(t('mweb.account.deletion.otpSent'));
   const [requestOtp, { loading: requesting }] = useMutation(REQUEST_ACCOUNT_DELETION_OTP);
-  const [deleteAccount, { loading: deleting }] = useMutation(DELETE_MY_ACCOUNT);
+  const [submitRequest, { loading: submitting }] = useMutation(SUBMIT_ACCOUNT_DELETION_REQUEST);
 
   const handleResend = () => {
     requestOtp()
-      .then(() => setInfo('OTP sent to your email.'))
+      .then(() => setInfo(t('mweb.account.deletion.otpSent')))
       .catch((e) => setInfo(parseApiError(e)));
   };
 
-  const handleDelete = async (values: DeleteAccountValues) => {
+  const handleSubmit = async (values: DeleteAccountValues) => {
     try {
-      await deleteAccount({ variables: { input: { otp: values.otp } } });
-      onDeleted();
+      await submitRequest({
+        variables: { input: { otp: values.otp, reason: values.reason, surface: 'MWEB' } },
+      });
+      onSubmitted();
     } catch (e) {
       throw new Error(parseApiError(e));
     }
@@ -45,16 +56,16 @@ export default function DeleteAccountDialog({ open, onClose, onDeleted }: Readon
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>{t('mweb.account.deleteAccount')}</DialogTitle>
+      <DialogTitle>{t('mweb.account.deletion.action')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           {info && <Alert severity="info">{info}</Alert>}
           <Typography variant="body2" color="text.secondary">
-            Enter the one-time code to permanently delete your account.
+            {t('mweb.account.deletion.otpIntro')}
           </Typography>
-          <DeleteAccountForm loading={deleting} onSubmit={handleDelete} />
+          <DeleteAccountForm loading={submitting} onSubmit={handleSubmit} />
           <Typography variant="body2" color="text.secondary" textAlign="center">
-            Didn’t get it?{' '}
+            {t('mweb.account.deletion.didntGetIt')}{' '}
             <Link
               component="button"
               type="button"
@@ -62,7 +73,9 @@ export default function DeleteAccountDialog({ open, onClose, onDeleted }: Readon
               disabled={requesting}
               underline="hover"
             >
-              {requesting ? 'Resending…' : 'Resend OTP'}
+              {requesting
+                ? t('mweb.account.deletion.resending')
+                : t('mweb.account.deletion.resend')}
             </Link>
           </Typography>
         </Stack>

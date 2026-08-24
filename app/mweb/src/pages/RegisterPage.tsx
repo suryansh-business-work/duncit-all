@@ -83,6 +83,8 @@ export default function RegisterPage() {
             first_name,
             last_name,
             email: values.email,
+            phone_number: values.phoneNumber,
+            phone_extension: values.phoneExtension,
             password: values.password,
             dob: new Date(values.dob).toISOString(),
             ...(code ? { referral_code: code } : {}),

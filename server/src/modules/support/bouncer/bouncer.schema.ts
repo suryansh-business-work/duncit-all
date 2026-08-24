@@ -161,6 +161,14 @@ export const bouncerTypeDefs = /* GraphQL */ `
   """
   type PodFeedbackForm {
     pod: BouncerPodInfo!
+    """
+    Whether this guest may answer the form: the host marked them present at
+    this pod. False is the shared link having reached somebody who was not
+    there — the page says so instead of rendering stars the submit would
+    refuse.
+    """
+    can_rate: Boolean!
+    "Null until they rate it, and null for anyone who may not."
     mine: MyPodFeedback
   }
 

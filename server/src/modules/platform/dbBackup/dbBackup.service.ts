@@ -17,6 +17,7 @@ import { GraphQLError } from 'graphql';
 import mongoose, { mongo } from 'mongoose';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { UPLOAD_MAX_BYTES } from '@modules/platform/upload/uploadLimits';
 import type { AuthUser } from '@context';
 import { createArchiveWriter, type ArchiveWriter } from './dbBackup.archive';
 import {
@@ -90,12 +91,18 @@ export interface PublicBackup {
   error: string | null;
   startedBy: string | null;
   startedAt: string | null;
+  /**
+   * When the archive was taken, off its own header. Only an uploaded archive
+   * carries one, and for those it is NOT startedAt: that is the day it was
+   * dragged in, this is the day the data is from.
+   */
+  archiveTakenAt: string | null;
   finishedAt: string | null;
 }
 
 const iso = (value: Date | null | undefined): string | null => (value ? value.toISOString() : null);
 
-function toPublic(doc: DbBackupDoc): PublicBackup {
+export function toPublicBackup(doc: DbBackupDoc): PublicBackup {
   const collections = doc.collections ?? [];
   return {
     id: String(doc._id),
@@ -113,6 +120,7 @@ function toPublic(doc: DbBackupDoc): PublicBackup {
     error: doc.error ?? null,
     startedBy: doc.started_by ?? null,
     startedAt: iso(doc.started_at),
+    archiveTakenAt: iso(doc.archive_taken_at),
     finishedAt: iso(doc.finished_at),
   };
 }
@@ -272,11 +280,29 @@ async function repairIfStale(doc: DbBackupDoc): Promise<DbBackupDoc> {
   return { ...doc, ...repaired, file_name: null };
 }
 
-/** True while any backup is still walking, so a second one cannot start. */
-async function backupInFlight(): Promise<boolean> {
+/**
+ * Flip every abandoned RUNNING row to FAILED and answer with what is left.
+ *
+ * Split out of the in-flight check because an upload produces RUNNING rows too,
+ * and one abandoned half way — a browser closed mid-transfer — leaves a real
+ * file in the backups directory that nothing else would ever clean up.
+ */
+export async function sweepRunningBackups(): Promise<DbBackupDoc[]> {
   const running = await DbBackupModel.find({ status: 'RUNNING' }).lean<DbBackupDoc[]>().exec();
-  const repaired = await Promise.all(running.map(repairIfStale));
-  return repaired.some((doc) => doc.status === 'RUNNING');
+  return Promise.all(running.map(repairIfStale));
+}
+
+/**
+ * True while a backup is still WALKING the database, so a second walk cannot
+ * start and a restore cannot begin under one.
+ *
+ * An upload is deliberately not one: its bytes arrive over HTTP and its
+ * read-through only reads a file on disk, so it competes with nothing. Blocking
+ * on it would mean a 10-minute upload blocks the nightly backup for no reason.
+ */
+export async function walkInFlight(): Promise<boolean> {
+  const repaired = await sweepRunningBackups();
+  return repaired.some((doc) => doc.status === 'RUNNING' && doc.trigger !== 'UPLOADED');
 }
 
 const SETTINGS_KEY = 'db-backup';
@@ -318,6 +344,14 @@ export interface SaveBackupSettingsInput {
 
 function toPublicSettings(doc: DbBackupSettingsDoc) {
   return {
+    /**
+     * Neither of these belongs to the schedule; they are what the page needs
+     * and this is the query it already makes. liveDatabase is the database a
+     * restore would REPLACE — which for an uploaded archive is not the one the
+     * archive came from, so the warning cannot be built from the row alone.
+     */
+    liveDatabase: liveDb().databaseName,
+    uploadMaxBytes: UPLOAD_MAX_BYTES,
     enabled: doc.enabled,
     frequency: doc.frequency,
     timeOfDay: doc.time_of_day,
@@ -361,7 +395,7 @@ async function startBackup(
   trigger: 'SCHEDULED' | 'MANUAL',
   startedBy: string | null,
 ): Promise<PublicBackup> {
-  if (await backupInFlight()) {
+  if (await walkInFlight()) {
     throw badInput('A backup is already running — wait for it to finish.');
   }
   await ensureBackupsDir();
@@ -380,7 +414,7 @@ async function startBackup(
   runBackup(id, fileName, startedAt).catch((err) =>
     logs.server.error('dbBackup', 'start', { error: err, backupId: id }),
   );
-  return toPublic(doc.toObject() as DbBackupDoc);
+  return toPublicBackup(doc.toObject() as DbBackupDoc);
 }
 
 export const dbBackupService = {
@@ -391,7 +425,12 @@ export const dbBackupService = {
       input,
       DB_BACKUP_TABLE_CONFIG,
     );
-    return { rows: docs.map(toPublic), total, page, page_size };
+    // Repaired on the way out, like dbRestoreJob already does when it is read.
+    // A run whose process was killed — a deploy mid-backup, a browser closed
+    // mid-upload — otherwise sits at RUNNING until somebody happens to start
+    // another one, with the page politely polling a corpse every five seconds.
+    const repaired = await Promise.all(docs.map(repairIfStale));
+    return { rows: repaired.map(toPublicBackup), total, page, page_size };
   },
 
   settings: async () => toPublicSettings(await settingsDoc()),
@@ -421,7 +460,7 @@ export const dbBackupService = {
     if (doc.status === 'RUNNING') throw badInput('That backup is still running.');
     if (doc.file_name) await deleteBackupFile(doc.file_name);
     await DbBackupModel.updateOne({ _id: id }, { $set: { file_name: null } }).exec();
-    return toPublic({ ...doc, file_name: null });
+    return toPublicBackup({ ...doc, file_name: null });
   },
 
   /** A link that downloads one archive, good for the next few minutes. */
@@ -441,7 +480,7 @@ export const dbBackupService = {
   async runIfDue(now: Date = new Date()): Promise<PublicBackup | null> {
     const doc = await settingsDoc();
     if (!isDue(scheduleOf(doc), doc.last_run_at, now)) return null;
-    if (await backupInFlight()) return null;
+    if (await walkInFlight()) return null;
     // Stamped BEFORE the walk, and whether or not it succeeds: a database that
     // cannot be read will not be readable a minute later either, and retrying
     // every tick would bury the one failure worth reading under a hundred more.

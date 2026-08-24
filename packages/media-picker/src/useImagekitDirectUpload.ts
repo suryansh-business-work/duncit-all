@@ -10,10 +10,20 @@ interface UploadTicket {
   urlEndpoint: string;
 }
 
+/**
+ * The half of a pass that the POST actually needs. Anything the server hands
+ * out — an ImageKit pass, a database-archive pass — satisfies it.
+ */
+export interface UploadPass {
+  uploadUrl: string;
+  ticket: string;
+}
+
 export type UploadProgress = (pct: number) => void;
 
 /**
- * Send the file to OUR server, which passes it to ImageKit.
+ * Send one file to OUR server on a single-use pass, and answer with whatever
+ * JSON the route replies.
  *
  * It used to go straight to ImageKit with a signature the server generated.
  * That scheme only works while the account's public and private keys are a
@@ -25,11 +35,11 @@ export type UploadProgress = (pct: number) => void;
  * and still one round trip for the pass — which is single-use, so it is fetched
  * per upload rather than cached.
  */
-function postToServer(
+export function uploadFileWithTicket(
   file: File,
-  ticket: UploadTicket,
+  ticket: UploadPass,
   onProgress?: UploadProgress,
-): Promise<string> {
+): Promise<Record<string, unknown>> {
   // A DOM FormData stringifies any non-Blob part to "[object Object]"; the raw
   // body has the same problem in a worse way, so fail fast with a clear message.
   if (!(file instanceof Blob)) {
@@ -45,7 +55,7 @@ function postToServer(
   const form = new FormData();
   form.append('file', file, name);
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<Record<string, unknown>>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
     // Clamped, and guarded against a zero total.
@@ -67,11 +77,10 @@ function postToServer(
         // Non-JSON body — fall through to the generic error below.
       }
       if (xhr.status >= 200 && xhr.status < 300) {
-        if (json.url) {
-          resolve(json.url as string);
-        } else {
-          reject(new Error('Upload succeeded but no file URL came back'));
-        }
+        // What "succeeded" looks like differs per store — a CDN url for
+        // ImageKit, a file name for a database archive — so the caller reads
+        // the field it asked for rather than this deciding for it.
+        resolve(json ?? {});
       } else {
         reject(new Error(json?.message || 'Upload failed'));
       }
@@ -104,7 +113,11 @@ export async function directUploadToImagekit(
   });
   const ticket = (data as { getImagekitAuth?: UploadTicket } | null)?.getImagekitAuth;
   if (!ticket) throw new Error('Upload is not available right now');
-  return postToServer(file, ticket, onProgress);
+  const uploaded = await uploadFileWithTicket(file, ticket, onProgress);
+  if (typeof uploaded.url !== 'string') {
+    throw new Error('Upload succeeded but no file URL came back');
+  }
+  return uploaded.url;
 }
 
 /**

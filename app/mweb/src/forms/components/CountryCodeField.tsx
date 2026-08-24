@@ -1,12 +1,11 @@
-import { Controller, type Control, type Path } from 'react-hook-form';
+import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { Autocomplete, Box, TextField } from '@mui/material';
 import { COUNTRY_CODES, countryByDial, type CountryCode } from './country-codes';
-import { countryFlagUrl } from '../../../utils/location-tree';
-import type { AccountEditValues } from './account-edit.types';
+import { countryFlagUrl } from '../../utils/location-tree';
 
-interface Props {
-  control: Control<AccountEditValues>;
-  name: Path<AccountEditValues>;
+interface Props<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
   label: string;
   disabled?: boolean;
 }
@@ -22,11 +21,20 @@ const matches = (option: CountryCode, query: string) => {
 };
 
 /**
- * Searchable country-dial-code dropdown (bug 4) bound to react-hook-form. The
- * field stores the dial string (e.g. '+91'); the box can be searched by country
- * name or code. An off-list value is preserved in form state (just not shown).
+ * Searchable country-dial-code dropdown bound to react-hook-form. The field
+ * stores the dial string (e.g. '+91'); the box can be searched by country name
+ * or code. An off-list value is preserved in form state (just not shown).
+ *
+ * Generic over the form it is bound to: signup and the profile editor both
+ * render it, so it cannot name a single values type. Its native twin is
+ * app/mobile-app/src/forms/components/CountryCodeField.tsx.
  */
-export default function CountryCodeField({ control, name, label, disabled }: Readonly<Props>) {
+export default function CountryCodeField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  disabled,
+}: Readonly<Props<T>>) {
   return (
     <Controller
       control={control}

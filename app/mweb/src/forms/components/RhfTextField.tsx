@@ -1,5 +1,6 @@
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { TextField, type TextFieldProps } from '@mui/material';
+import { toDigits } from '@duncit/regex';
 
 type Omitted = 'name' | 'value' | 'onChange' | 'onBlur' | 'error' | 'helperText';
 
@@ -10,6 +11,15 @@ export interface RhfTextFieldProps<T extends FieldValues> extends Omit<TextField
   name: Path<T>;
   /** Helper text shown when the field has no validation error. */
   hint?: string;
+  /**
+   * Keep only digits in what the field stores.
+   *
+   * `inputMode` is a request, not a rule — a desktop keyboard, a paste and an
+   * autofill all get past it — so a number-only box strips on change rather
+   * than objecting afterwards. The stripping itself is `toDigits` from
+   * @duncit/regex, the same rule the Zod schema then checks the length of.
+   */
+  digitsOnly?: boolean;
 }
 
 /**
@@ -23,6 +33,7 @@ export default function RhfTextField<T extends FieldValues>({
   control,
   name,
   hint,
+  digitsOnly,
   ...rest
 }: Readonly<RhfTextFieldProps<T>>) {
   return (
@@ -33,6 +44,9 @@ export default function RhfTextField<T extends FieldValues>({
         <TextField
           {...rest}
           {...field}
+          onChange={(event) =>
+            field.onChange(digitsOnly ? toDigits(event.target.value) : event.target.value)
+          }
           value={field.value ?? ''}
           fullWidth={rest.fullWidth ?? true}
           error={!!fieldState.error}

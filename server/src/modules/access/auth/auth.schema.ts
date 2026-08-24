@@ -10,8 +10,17 @@ export const authTypeDefs = gql`
     first_name: String!
     last_name: String
     email: String!
-    phone_number: String
-    phone_extension: String
+    """
+    The account's phone number — digits only, without the dial code.
+
+    Required and unique: it is the second way an account is identified, so a
+    number already registered fails the signup instead of creating a second
+    person behind the same phone. Google signup collects it later; this door
+    asks for it up front.
+    """
+    phone_number: String!
+    "The dial code the number belongs to, such as +91. Chosen from a list."
+    phone_extension: String!
     password: String!
     dob: String!
     city: String
@@ -53,10 +62,6 @@ export const authTypeDefs = gql`
   input ChangePasswordInput {
     otp: String!
     new_password: String!
-  }
-
-  input DeleteMyAccountInput {
-    otp: String!
   }
 
   input GoogleAuthInput {
@@ -181,10 +186,14 @@ export const authTypeDefs = gql`
     requestPasswordChangeOtp(input: RequestPasswordChangeInput!): OtpRequestResult!
     "Auth-required: confirm the OTP and set the new password."
     changePasswordWithOtp(input: ChangePasswordInput!): Boolean!
-    "Auth-required: email a confirmation OTP before self-serve account deletion."
+    """
+    Auth-required: email a confirmation code before asking to be deleted.
+
+    The code is spent by submitAccountDeletionRequest, which FILES a request
+    for the Tech portal rather than deleting anything — see the accountDeletion
+    module. Nothing in this module deletes an account any more.
+    """
     requestAccountDeletionOtp: OtpRequestResult!
-    "Auth-required: confirm the OTP and soft-delete (and anonymize) the account."
-    deleteMyAccount(input: DeleteMyAccountInput!): Boolean!
     seedSuperAdmin: SeedAdminResult!
   }
 `;

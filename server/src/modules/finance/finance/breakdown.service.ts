@@ -15,6 +15,7 @@ import {
   type SettlementWaterfall,
 } from './settlement.service';
 import { payableSpots } from './breakdown.math';
+import { podExpenseSpend } from '@modules/finance/podExpense/podExpense.totals';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
@@ -99,6 +100,8 @@ export interface FinanceDashboardStats {
   gst_collected: FinanceStat;
   pending_payouts: FinanceStat;
   completed_payouts: FinanceStat;
+  /** What Duncit itself spent to run pods (Finance > Pod Expenses). */
+  pod_expenses: FinanceStat;
 }
 
 const monthWindows = (now = new Date()) => {
@@ -517,6 +520,13 @@ export const breakdownService = {
       releaseAgg(approvedAll, approvedExpr, 'reviewed_at', thisStart),
       releaseAgg(approvedAll, approvedExpr, 'reviewed_at', lastStart, thisStart),
     ]);
+    // Pod spend is dated by when the money LEFT (the expense date), not when
+    // the row was typed — a bill entered late still belongs to its own month.
+    const [podExAll, podExThis, podExLast] = await Promise.all([
+      podExpenseSpend(),
+      podExpenseSpend(thisStart),
+      podExpenseSpend(lastStart, thisStart),
+    ]);
 
     return {
       currency_symbol: fs.currency_symbol,
@@ -525,6 +535,7 @@ export const breakdownService = {
       duncit_revenue: stat(duncitAll, duncitThis, duncitLast),
       pending_payouts: stat(pendAll, pendThis, pendLast),
       completed_payouts: stat(doneAll, doneThis, doneLast),
+      pod_expenses: stat(podExAll, podExThis, podExLast),
     };
   },
 };

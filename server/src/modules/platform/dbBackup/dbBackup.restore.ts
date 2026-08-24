@@ -28,7 +28,7 @@ import {
   type DbBackupDoc,
   type DbRestoreDoc,
 } from './dbBackup.model';
-import { liveDb } from './dbBackup.service';
+import { liveDb, walkInFlight } from './dbBackup.service';
 import { backupPath } from './dbBackup.store';
 
 const HEARTBEAT_STALE_MS = 120_000;
@@ -261,8 +261,10 @@ export const dbRestoreService = {
     const archive = backupPath(backup.file_name);
     if (!archive) throw badInput('That backup archive is not in the backups directory.');
     if (await restoreInFlight()) throw badInput('A restore is already running.');
-    const backupRunning = await DbBackupModel.exists({ status: 'RUNNING' });
-    if (backupRunning) throw badInput('A backup is running — wait for it to finish.');
+    // walkInFlight rather than a bare exists(): it SWEEPS abandoned rows on the
+    // way past, so a backup whose process was killed cannot block every restore
+    // after it — which is exactly when a restore is most likely to be wanted.
+    if (await walkInFlight()) throw badInput('A backup is running — wait for it to finish.');
 
     logs.server.warn('dbBackup', 'startRestore', {
       userId: user.id,
@@ -273,7 +275,9 @@ export const dbRestoreService = {
       status: 'RUNNING',
       backup_id: backup._id,
       backup_file: backup.file_name,
-      backup_taken_at: backup.started_at,
+      // An uploaded archive was taken elsewhere, often long before it was
+      // sent here; started_at is only the day it arrived.
+      backup_taken_at: backup.archive_taken_at ?? backup.started_at,
       skipped: SKIPPED_COLLECTIONS,
       started_by: user.email ?? user.id,
     });

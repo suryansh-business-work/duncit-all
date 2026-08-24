@@ -68,6 +68,8 @@ describe('RegisterForm — rendering', () => {
       initialValues: {
         name: 'Seed User',
         email: 'seed@x.com',
+        phoneExtension: '+91',
+        phoneNumber: '9845012345',
         password: 'seedpass1',
         confirmPassword: 'seedpass1',
         dob: '2000-01-01',

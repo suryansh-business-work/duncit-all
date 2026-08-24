@@ -26,6 +26,7 @@ exports:
   - 'useImagekitDirectUpload'
   - 'useImagekitBase64Upload'
   - 'directUploadToImagekit'
+  - 'uploadFileWithTicket'
   - 'uploadImageToImagekit'
   - 'compressUploadedVideo'
   - 'useUploadSettings'
@@ -305,6 +306,7 @@ rule with Tamagui components (rules 27 and 40).
 | `uploadImageToImagekit` | `(client, file, options?) => Promise<ImagekitUploadResult>` | Base64 through the server `uploadImage` mutation. Throws when the server returns no URL. |
 | `useImagekitBase64Upload` | `() => { upload(file, options?), uploading }` | Hook form; takes the client from Apollo context. |
 | `directUploadToImagekit` | `(client, file, folder, onProgress?) => Promise<string>` | Signed `getImagekitAuth` then a direct XHR. Rejects with *"Cannot upload: a real file (Blob) is required."* for a non-Blob. |
+| `uploadFileWithTicket` | `(file, { uploadUrl, ticket }, onProgress?) => Promise<Record<string, unknown>>` | The XHR underneath it, for a pass this package did not mint — the Tech portal sends a database archive on one. Answers with the route's raw JSON, because what success looks like differs per store. |
 | `useImagekitDirectUpload` | `() => { upload(file, folder, onProgress?), uploading }` | Real byte progress, for videos/reels. |
 | `UploadImageOptions` | `{ folder?, allowDocuments?, fileName?, fallbackMimeType?, onProgress?, surface?, crop?, cropPreset? }` | `onProgress` is cosmetic on this path — it fires once with `55` after the read. |
 | `ImagekitUploadResult` | `{ url: string; fileId?: string \| null; thumbnailUrl?: string \| null }` | — |

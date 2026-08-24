@@ -14,6 +14,8 @@ import {
   ensureArtifactsDir,
   newArtifactDestination,
 } from '@modules/platform/upload/buildArtifactStore';
+import { UPLOAD_MAX_BYTES } from '@modules/platform/upload/uploadLimits';
+import { backupPath, ensureBackupsDir } from '@modules/platform/dbBackup/dbBackup.store';
 
 /**
  * The one route that accepts a file — browser, native app and CI all use it.
@@ -36,8 +38,8 @@ import {
  * memory is flat no matter how big the file is.
  */
 
-/** Hard ceiling. Sized for a build artifact; per-surface Upload Settings gate the rest. */
-const MAX_BYTES = 300 * 1024 * 1024;
+/** Hard ceiling, shared with nginx. Per-surface Upload Settings gate the rest. */
+const MAX_BYTES = UPLOAD_MAX_BYTES;
 
 /** Extensions AI Monitoring reviews. The multipart body carries no reliable
  * mime type, so the name is what there is to go on. */
@@ -126,7 +128,12 @@ export function buildUploadRouter(): Router {
     // write it twice — and worse, the move would be a cross-device copy: in the
     // container /tmp and the bind-mounted artifacts dir are different mounts, so
     // fs.rename fails there with EXDEV.
+    // A database archive lands the same way and for the same reason, except
+    // that its name was decided when the pass was issued: the backup row
+    // already exists and already points at it. Resolving through backupPath
+    // means a tampered destination cannot write outside the directory.
     const toBuilds = ticket.store === 'builds';
+    const toBackups = ticket.store === 'db-backups';
     let storedName = '';
     let destPath = path.join(os.tmpdir(), `duncit-upload-${crypto.randomUUID()}`);
     if (toBuilds) {
@@ -134,6 +141,15 @@ export function buildUploadRouter(): Router {
       const dest = newArtifactDestination(String(req.query.fileName ?? '').trim() || 'artifact');
       storedName = dest.name;
       destPath = dest.path;
+    } else if (toBackups) {
+      const resolved = backupPath(ticket.destination);
+      if (!resolved) {
+        res.status(400).json({ message: 'That upload link does not name a backup archive.' });
+        return;
+      }
+      await ensureBackupsDir();
+      storedName = ticket.destination;
+      destPath = resolved;
     }
 
     let keep = false;
@@ -162,6 +178,14 @@ export function buildUploadRouter(): Router {
           // deleteAppBuild removes it by.
           keep = true;
           res.json({ url: await artifactUrl(storedName), fileId: storedName });
+          return;
+        }
+        if (toBackups) {
+          // In place too, but nothing here reads it: an archive is only a
+          // backup once it has been read end to end, which the mutation the
+          // caller sends next starts. Until then the row stays RUNNING.
+          keep = true;
+          res.json({ fileName: storedName });
           return;
         }
         const uploaded = await uploadFileToImagekit({

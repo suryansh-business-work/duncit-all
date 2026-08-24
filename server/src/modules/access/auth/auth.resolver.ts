@@ -8,7 +8,6 @@ import {
   resetPasswordSchema,
   requestPasswordChangeSchema,
   changePasswordSchema,
-  deleteMyAccountSchema,
   googleSignupSchema,
 } from './auth.validator';
 import { validate } from '@utils/validate';
@@ -148,16 +147,6 @@ export const authResolvers = {
         });
       }
       return userService.requestAccountDeletionOtp(ctx.user.id);
-    },
-    deleteMyAccount: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
-      if (!ctx.user) {
-        const { GraphQLError } = await import('graphql');
-        throw new GraphQLError('Authentication required', {
-          extensions: { code: 'UNAUTHENTICATED' },
-        });
-      }
-      const data = await validate(deleteMyAccountSchema, args.input);
-      return userService.deleteMyAccount(ctx.user.id, data);
     },
     loginWithGoogle: async (
       _p: unknown,

@@ -38,6 +38,7 @@ exports:
   - 'isUpiId'
   - 'isBankAccountNumber'
   - 'isGstin'
+  - 'toDigits'
   - 'isReferralCode'
 ---
 
@@ -140,8 +141,15 @@ const payoutSchema = z.object({
 
 ## API
 
-Every pattern is a plain `RegExp` with no flags; every validator is
-`(value: string) => boolean` and has no default arguments.
+Every pattern is a plain `RegExp` with no flags, so `.test()` is safe to reuse on any of
+them; every validator is `(value: string) => boolean` and has no default arguments.
+
+`toDigits(value)` is the only transform here: it keeps the digits and drops everything
+else, and it accepts `unknown` so a null field value answers `''` rather than throwing.
+It is what a number-only input calls on every change — `inputMode` and `keyboardType`
+are requests that a paste, an autofill or a hardware keyboard walks straight past. The
+global pattern it strips with stays inside the module precisely so the no-flags guarantee
+above holds for everything you can import.
 
 | Pattern | Source | Validator | Accepts |
 | --- | --- | --- | --- |

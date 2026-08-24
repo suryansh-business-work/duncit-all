@@ -101,6 +101,7 @@ export const MobilePodFeedbackFormDocument = gql(`
         title
         feedback_aspects
       }
+      can_rate
       mine {
         rating
         ratings {

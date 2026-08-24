@@ -22,6 +22,7 @@ import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
+import AccountDeletionsPage from './pages/account-deletions';
 import DbBackupsPage from './pages/database/backups';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AppBuildsPage from './pages/app-builds';
@@ -84,6 +85,7 @@ export default function App() {
         {/* What people reported by hand on status.duncit.com — the breakage the
             probes on that page cannot see. */}
         <Route path="/status-reports" element={authed(<StatusReportsPage />)} />
+        <Route path="/account-deletions" element={authed(<AccountDeletionsPage />)} />
         <Route path="/app-builds" element={<Navigate to="/app-builds/android" replace />} />
         {/* Keyed per platform: the two routes render the same component shape, so
             without a key React reconciles in place and the table would keep the

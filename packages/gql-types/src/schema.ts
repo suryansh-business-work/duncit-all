@@ -14,6 +14,88 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AccountDeletionDetail = {
+  __typename?: 'AccountDeletionDetail';
+  /** False once the account document itself has been removed. */
+  account_exists: Scalars['Boolean']['output'];
+  request: AccountDeletionRequest;
+  /** Only the references that still match something; a cleared one drops out. */
+  trace: Array<AccountDeletionTraceGroup>;
+};
+
+/** One collection cleared while carrying a request out, and when. */
+export type AccountDeletionPurgeEntry = {
+  __typename?: 'AccountDeletionPurgeEntry';
+  collection_name: Scalars['String']['output'];
+  field_path: Scalars['String']['output'];
+  model_name: Scalars['String']['output'];
+  purged_at: Scalars['String']['output'];
+  removed: Scalars['Int']['output'];
+};
+
+/**
+ * A member asking to be removed.
+ *
+ * The identity fields are a SNAPSHOT taken when they asked, not a join onto
+ * the account — carrying the request out destroys the account, and a finished
+ * row that can no longer say who it was about is a useless record.
+ */
+export type AccountDeletionRequest = {
+  __typename?: 'AccountDeletionRequest';
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  purge_log: Array<AccountDeletionPurgeEntry>;
+  reason: Scalars['String']['output'];
+  request_id: Scalars['String']['output'];
+  requested_at: Scalars['String']['output'];
+  reviewed_at?: Maybe<Scalars['String']['output']>;
+  reviewed_by?: Maybe<Scalars['ID']['output']>;
+  status: AccountDeletionStatus;
+  surface: AccountDeletionSurface;
+  user_id: Scalars['ID']['output'];
+};
+
+export type AccountDeletionRequestPage = {
+  __typename?: 'AccountDeletionRequestPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AccountDeletionRequest>;
+  total: Scalars['Int']['output'];
+};
+
+export type AccountDeletionStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'PENDING'
+  | 'REJECTED';
+
+export type AccountDeletionSurface =
+  | 'APP'
+  | 'MWEB'
+  | 'UNKNOWN';
+
+/**
+ * One place this member still appears, found by reading the schemas rather
+ * than a hand-kept list — so a collection added next week is covered without
+ * anyone remembering to register it.
+ */
+export type AccountDeletionTraceGroup = {
+  __typename?: 'AccountDeletionTraceGroup';
+  /** The underlying collection, which is what a DB console shows. */
+  collection_name: Scalars['String']['output'];
+  /** How many documents match right now. */
+  count: Scalars['Int']['output'];
+  /** The field pointing at the member, e.g. `pod_attendees`. */
+  field_path: Scalars['String']['output'];
+  /** Whether the stored value is an ObjectId or a stringified id. */
+  id_kind: Scalars['String']['output'];
+  /** The mongoose model, e.g. `Ticket`. */
+  model_name: Scalars['String']['output'];
+};
+
 export type ActiveUserBucket = {
   __typename?: 'ActiveUserBucket';
   bucket: Scalars['String']['output'];
@@ -1259,7 +1341,8 @@ export type AudienceInterestOption = {
 /**
  * A saved Target Audience list. It stores the filter CRITERIA, not the people —
  * opening it re-runs them, so the membership and the count are always current
- * rather than a snapshot of the day it was built.
+ * rather than a snapshot of the day it was built. People added by hand are
+ * unioned on top of whoever the criteria match.
  */
 export type AudienceList = {
   __typename?: 'AudienceList';
@@ -1267,7 +1350,12 @@ export type AudienceList = {
   description: Scalars['String']['output'];
   filters: Array<AudienceListFilter>;
   id: Scalars['ID']['output'];
-  /** How many people match the criteria right now. */
+  /** How many people were added to this list by hand. */
+  manual_member_count: Scalars['Int']['output'];
+  /**
+   * How many people are in the list right now: everyone matching the criteria,
+   * plus everyone added by hand. Somebody who is both is counted once.
+   */
   member_count: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   owner: Scalars['String']['output'];
@@ -2019,6 +2107,8 @@ export type BugTablePage = {
 };
 
 export type BulkCreateVenueSlotsInput = {
+  /** What to do when a new slot overlaps an existing one (defaults to FAIL). */
+  on_conflict?: InputMaybe<VenueSlotConflictMode>;
   slots: Array<CreateVenueSlotInput>;
   venue_id: Scalars['ID']['input'];
 };
@@ -2060,12 +2150,37 @@ export type CampaignDelivery = {
   rejected_addresses: Array<Scalars['String']['output']>;
 };
 
+/**
+ * One human check, minted on demand.
+ *
+ * The token is the whole challenge — it carries a nonce, an expiry and a hash
+ * of the answer, signed by the server. Nothing is stored per challenge, so the
+ * check still works on the status page while the database is the thing being
+ * reported as broken.
+ */
+export type CaptchaChallenge = {
+  __typename?: 'CaptchaChallenge';
+  /** Seconds the token stays good for. */
+  expires_in: Scalars['Int']['output'];
+  /** The code drawn as an SVG data URI, ready for an <img> tag. */
+  image: Scalars['String']['output'];
+  /** Send this back with the form, beside the answer the visitor typed. */
+  token: Scalars['String']['output'];
+};
+
 export type Category = {
   __typename?: 'Category';
   /** SUB level only: may a host invite co-hosts to a pod in this sub-category? */
   allow_co_hosts: Scalars['Boolean']['output'];
   created_at: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  /** Back face of the gift card sold under this category. Empty means no artwork. */
+  gift_card_image_back: Scalars['String']['output'];
+  /**
+   * Front face of the gift card sold under this category. Empty means no artwork
+   * was uploaded, and the clients render their generated gradient card instead.
+   */
+  gift_card_image_front: Scalars['String']['output'];
   icon?: Maybe<Scalars['String']['output']>;
   /** CATEGORY level only: icon layout for the mWeb vibe tabber. */
   icon_layout_mweb?: Maybe<CategoryIconLayout>;
@@ -2838,6 +2953,49 @@ export type CoinUserOption = {
   id: Scalars['ID']['output'];
 };
 
+/** A way Duncit can reach a person. Channel and kind are different axes. */
+export type CommChannel =
+  | 'EMAIL'
+  | 'SMS'
+  | 'WHATSAPP';
+
+/**
+ * One channel on the Communication Preferences section of Profile Settings.
+ *
+ * The marketing side of each channel lives on its own screen — Mail Preference,
+ * WhatsApp Preference, SMS Preference — because there are nine categories with
+ * a sentence each and inlining them would push the account's own information
+ * off the first screen. What IS inline is the switch below: whether this
+ * channel may carry a one-time code.
+ */
+export type CommChannelPreference = {
+  __typename?: 'CommChannelPreference';
+  channel: CommChannel;
+  /** The address or number, for the screen to name. Blank when unreachable. */
+  destination: Scalars['String']['output'];
+  /**
+   * False when the switch must stay on: this is the last channel that both
+   * accepts codes AND can be reached, and an account with nowhere to receive a
+   * code cannot sign in. Enabling is never blocked, only disabling.
+   */
+  otp_can_disable: Scalars['Boolean']['output'];
+  /** Whether one-time codes may be carried on this channel. */
+  otp_enabled: Scalars['Boolean']['output'];
+  /**
+   * Whether a message could reach this person here at all — an address for
+   * EMAIL, a WhatsApp number, a phone number for SMS. Both apps render an
+   * "add your number" state off this rather than re-deriving it.
+   */
+  reachable: Scalars['Boolean']['output'];
+};
+
+export type CommPreference = {
+  __typename?: 'CommPreference';
+  channels: Array<CommChannelPreference>;
+  /** ISO instant the OTP switches last moved. Null while they are all default. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
 export type CommsLogEntity =
   | 'ECOMM_LEAD'
   | 'HOST_LEAD'
@@ -3089,10 +3247,36 @@ export type Contract = {
   effective_from?: Maybe<Scalars['String']['output']>;
   effective_to?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** A signed contract is closed to edits — the lock IS the signature. */
+  is_locked: Scalars['Boolean']['output'];
+  /** Everyone who must sign, and their signature once they have. */
+  signatories: Array<ContractSignatory>;
+  signed_at?: Maybe<Scalars['String']['output']>;
+  /** UNSIGNED until every required signatory has signed, then SIGNED. */
+  signing_status: SigningStatus;
   status: ContractStatus;
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
   updated_by_name: Scalars['String']['output'];
+};
+
+/**
+ * One person who must sign a contract, and their signature once they have.
+ *
+ * The same shape a legal document's signatory carries, because both sign
+ * through one service — a separate type is what would let the two drift.
+ */
+export type ContractSignatory = {
+  __typename?: 'ContractSignatory';
+  designation: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  initials: Scalars['String']['output'];
+  /** A data URL for a drawn or typed signature, or the uploaded image URL. */
+  signature_image: Scalars['String']['output'];
+  signature_method?: Maybe<SignatureMethod>;
+  signed_at?: Maybe<Scalars['String']['output']>;
 };
 
 /** Where a contract is in its life. */
@@ -3253,6 +3437,8 @@ export type CreateBadgeInput = {
 export type CreateCategoryInput = {
   allow_co_hosts?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  gift_card_image_back?: InputMaybe<Scalars['String']['input']>;
+  gift_card_image_front?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   icon_layout_mweb?: InputMaybe<CategoryIconLayoutInput>;
   icon_layout_native?: InputMaybe<CategoryIconLayoutInput>;
@@ -4262,6 +4448,12 @@ export type DataCloneTargets = {
  */
 export type DbBackup = {
   __typename?: 'DbBackup';
+  /**
+   * When the archive was TAKEN, read from its own header. Only an uploaded
+   * archive carries one, and for those it is not startedAt — that is the day it
+   * was sent here, this is the day the data is from.
+   */
+  archiveTakenAt?: Maybe<Scalars['String']['output']>;
   collections: Array<DbBackupCollection>;
   collectionsTotal: Scalars['Int']['output'];
   currentCollection?: Maybe<Scalars['String']['output']>;
@@ -4282,7 +4474,12 @@ export type DbBackup = {
   startedBy?: Maybe<Scalars['String']['output']>;
   /** RUNNING | SUCCEEDED | FAILED */
   status: Scalars['String']['output'];
-  /** SCHEDULED | MANUAL — only SCHEDULED archives are pruned by retention. */
+  /**
+   * SCHEDULED | MANUAL | UPLOADED. Only SCHEDULED archives are pruned by
+   * retention. UPLOADED is an archive this server did not take — it was sent in
+   * from an operator's machine and read end to end before it was allowed to
+   * count as one.
+   */
   trigger: Scalars['String']['output'];
 };
 
@@ -4318,10 +4515,23 @@ export type DbBackupSettings = {
   /** How many SCHEDULED archives to keep. Manual backups are never pruned. */
   keepLast: Scalars['Int']['output'];
   lastRunAt?: Maybe<Scalars['String']['output']>;
+  /**
+   * The database a restore would REPLACE. Not part of the schedule: the page
+   * needs it and this is the query it already makes. It is not the same as a
+   * row's own database once an archive from somewhere else has been uploaded,
+   * and the restore warning has to name the one being destroyed.
+   */
+  liveDatabase: Scalars['String']['output'];
   /** When the schedule next fires, or null when it is off. */
   nextRunAt?: Maybe<Scalars['String']['output']>;
   /** 24-hour HH:mm. */
   timeOfDay: Scalars['String']['output'];
+  /**
+   * The largest archive this server accepts in one upload, in bytes. The same
+   * number nginx enforces, so the picker can refuse a file before spending
+   * minutes sending it.
+   */
+  uploadMaxBytes: Scalars['Float']['output'];
   /** 0 = Sunday. Only meaningful when frequency is WEEKLY. */
   weekday: Scalars['Int']['output'];
 };
@@ -4340,6 +4550,20 @@ export type DbBackupTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<DbBackup>;
   total: Scalars['Int']['output'];
+};
+
+/**
+ * A single-use pass to POST one archive to the server's upload route.
+ *
+ * The browser cannot put its session header on a raw file POST, so the pass is
+ * what authorises it. The row it belongs to already exists — RUNNING, and
+ * pointing at the name the bytes must land on.
+ */
+export type DbBackupUploadPass = {
+  __typename?: 'DbBackupUploadPass';
+  backupId: Scalars['ID']['output'];
+  ticket: Scalars['String']['output'];
+  uploadUrl: Scalars['String']['output'];
 };
 
 /**
@@ -4378,10 +4602,6 @@ export type DbRestoreCollection = {
   documents: Scalars['Int']['output'];
   error?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
-};
-
-export type DeleteMyAccountInput = {
-  otp: Scalars['String']['input'];
 };
 
 export type DummyCheckoutInput = {
@@ -5474,6 +5694,13 @@ export type GiftCard = {
   redeemed: Scalars['Boolean']['output'];
   redeemed_at?: Maybe<Scalars['String']['output']>;
   scope_category_id?: Maybe<Scalars['ID']['output']>;
+  /** The back face of the card artwork. Empty when the category ships none. */
+  scope_image_back_url: Scalars['String']['output'];
+  /**
+   * The category's card artwork, frozen at purchase — the front face. Empty when
+   * the category ships none, and the client then draws its gradient card.
+   */
+  scope_image_front_url: Scalars['String']['output'];
   scope_image_url: Scalars['String']['output'];
   /** Snapshot of the category name — empty for SHOP cards (clients localize it). */
   scope_name: Scalars['String']['output'];
@@ -5504,6 +5731,8 @@ export type GiftCardAdminCard = {
   redeemer_email: Scalars['String']['output'];
   redeemer_name: Scalars['String']['output'];
   scope_category_id?: Maybe<Scalars['ID']['output']>;
+  scope_image_back_url: Scalars['String']['output'];
+  scope_image_front_url: Scalars['String']['output'];
   scope_image_url: Scalars['String']['output'];
   scope_name: Scalars['String']['output'];
   scope_type: GiftCardScopeType;
@@ -5745,6 +5974,13 @@ export type GrievanceTicket = {
   source: GrievanceSource;
   status: GrievanceStatus;
   subject: Scalars['String']['output'];
+  /**
+   * The support ticket this grievance escalates (ST-/CB-/CH-/SOS-).
+   *
+   * Blank means the complainant reached the officer without going through
+   * support first — the ground the officer rejects on.
+   */
+  support_ticket_ref: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
 };
 
@@ -6833,6 +7069,15 @@ export type LegalDocumentVersion = {
  */
 export type LinkPreview = {
   __typename?: 'LinkPreview';
+  /**
+   * The address this entity should be indexed under, when that is not
+   * necessarily the address the request came in on.
+   *
+   * A profile is reachable both as /u/<handle> and as /u/<id> — the same
+   * page at two URLs, which is duplicate content until one of them names the
+   * other as canonical. Null means "the requested path is already canonical".
+   */
+  canonical_path?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   image_url?: Maybe<Scalars['String']['output']>;
   title: Scalars['String']['output'];
@@ -7613,6 +7858,12 @@ export type Mutation = {
   acceptPolicies: Scalars['Boolean']['output'];
   acknowledgeBouncerSos: BouncerSosAlert;
   acknowledgeHostRequest: HostRequest;
+  /**
+   * Add hand-picked people to a saved list, on top of its criteria. Adding
+   * somebody already in the list is a no-op, and ids of closed accounts are
+   * dropped rather than stored.
+   */
+  addAudienceListMembers: AudienceList;
   /** Submit or update a star rating (1-5) on a club. Requires authentication. */
   addClubRating: Club;
   /** Append an uploaded image to the template's library (persists immediately). */
@@ -7697,7 +7948,12 @@ export type Mutation = {
   approveVenueSlotRequest: VenueSlot;
   /** Products portal: approve a partner warehouse so it goes live (usable for shipping). */
   approveWarehouseRequest: ApprovalRequest;
-  /** Shorthand for setting the status to ARCHIVED. */
+  /**
+   * Shorthand for setting the status to ARCHIVED.
+   *
+   * Works on a SIGNED contract, unlike updateContract: filing something away is
+   * not editing what it says.
+   */
   archiveContract: Contract;
   archiveInventoryProduct: InventoryProduct;
   /**
@@ -7749,6 +8005,8 @@ export type Mutation = {
   cancelFollowRequest: User;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
+  /** Withdraw an open request. The member's own, and only while it is open. */
+  cancelMyAccountDeletionRequest: AccountDeletionRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
   /** Call off a scheduled send before it runs. */
@@ -7788,6 +8046,14 @@ export type Mutation = {
   clubAdminUpdatePod: Pod;
   /** Club Admin enrols: claims a venue-accepted Auto Pod for one of their clubs. */
   clubClaimAutoPod: AutoPod;
+  /**
+   * The upload finished: read the archive end to end and, if it is whole, turn
+   * it into a restorable backup. Returns immediately — the read continues
+   * server-side and the row stays RUNNING until it is through. An archive that
+   * cannot be read is failed and deleted rather than left where someone could
+   * restore from it.
+   */
+  completeDbBackupUpload: DbBackup;
   completePodSettlement: PodSettlementResult;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
@@ -7874,6 +8140,12 @@ export type Mutation = {
   crmLeadAiChat: Scalars['String']['output'];
   /** Discover up to `limit` pages from the lead's website and save them. */
   crmScrapeWebsitePages: CrmWebsiteScrapeResult;
+  /**
+   * Claim a name for an archive being sent in, and hand back a one-shot pass for
+   * the upload route. Creates the backup row up front so an abandoned upload
+   * leaves something the stale sweep can clean. SUPER_ADMIN only.
+   */
+  dbBackupUploadAuth: DbBackupUploadPass;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
   decideMeeting: OnboardingMeeting;
   /** Owner declines a pending booking request — the slot frees up again. */
@@ -7975,8 +8247,6 @@ export type Mutation = {
   deleteMediaFiles: Scalars['Int']['output'];
   deleteMembershipBenefit: Scalars['Boolean']['output'];
   deleteMembershipPlan: Scalars['Boolean']['output'];
-  /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
-  deleteMyAccount: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
   /** Delete an own-brand warehouse. Blocked while any product still ships from it. */
   deleteMyBrandPickupLocation: Scalars['Boolean']['output'];
@@ -8178,12 +8448,28 @@ export type Mutation = {
   moderatePodContent: ModerationResult;
   /** Deep-analyses a product listing's content against community guidelines before submit. */
   moderateProductContent: ModerationResult;
+  /**
+   * Send the change notice on its own, without editing anything.
+   *
+   * The same mail the update checkbox sends, for when Legal decides afterwards
+   * that people should have been told. Returns how many accounts it reached.
+   */
+  notifyPolicyAcceptedUsers: Scalars['Int']['output'];
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   /** Pin, or take the pin off. Pins belong to the thread, so both people see them. */
   pinStaffMessage: StaffMessage;
   /** Finance-only: process the refund for a Spot Filled Backout request (one refund per request). */
   processBackoutRefund: BackoutRefundRequest;
   publishPodDraft: Pod;
+  /**
+   * Clear every remaining trace and then the account itself. Permanent.
+   *
+   * The account goes last: a run that dies halfway leaves a request that still
+   * names a user the next attempt can search by.
+   */
+  purgeAccountCompletely: AccountDeletionDetail;
+  /** Clear this member's rows behind ONE reference. Permanent. */
+  purgeAccountTrace: AccountDeletionDetail;
   /** Drop a URL from ImageKit's CDN cache, after replacing what sits behind it. */
   purgeMediaCache: Scalars['String']['output'];
   raiseBouncerSos: BouncerSosAlert;
@@ -8227,6 +8513,8 @@ export type Mutation = {
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
+  /** Turn a request down, with a reason. */
+  rejectAccountDeletionRequest: AccountDeletionDetail;
   /** Reject the Club Admin. A reason is required. */
   rejectClubAdminProfile: ClubAdminProfile;
   /** Onboarding/admin: reject a brand with notes. */
@@ -8274,7 +8562,13 @@ export type Mutation = {
    * story never showed.
    */
   reportStory: ContentReport;
-  /** Auth-required: email a confirmation OTP before self-serve account deletion. */
+  /**
+   * Auth-required: email a confirmation code before asking to be deleted.
+   *
+   * The code is spent by submitAccountDeletionRequest, which FILES a request
+   * for the Tech portal rather than deleting anything — see the accountDeletion
+   * module. Nothing in this module deletes an account any more.
+   */
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
   /**
@@ -8337,6 +8631,14 @@ export type Mutation = {
    */
   restoreDbBackup: DbRestore;
   restoreInventoryProduct: InventoryProduct;
+  /**
+   * Re-run the checkout work that did not land, and answer with the fresh audit.
+   *
+   * Omit step_keys to re-run everything the payment still owes; pass one to
+   * re-run a single row. A payment whose booking core never committed is re-run
+   * whole instead — every leg guards its own replay, so nothing is created twice.
+   */
+  retryPaymentSteps: PaymentDetail;
   /** Re-attempt only the people this campaign did not reach. Returns immediately. */
   retryWaCampaign: WaCampaign;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
@@ -8435,6 +8737,14 @@ export type Mutation = {
   setHostDeductions: Scalars['Boolean']['output'];
   /** Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle). */
   setInventoryProductActive: InventoryProduct;
+  /**
+   * Show or hide a document without editing it.
+   *
+   * Works on a SIGNED document, unlike updateLegalDocument: taking something
+   * down is the remedy for a signed document that turns out to be wrong, so the
+   * signature lock must not block it.
+   */
+  setLegalDocumentActive: LegalDocument;
   /** The same two actions from an unsubscribe link, with no sign-in. */
   setMailPreferenceByToken: MailPreference;
   /** Partner: temporarily deactivate/reactivate an OWN brand — same reversible hide as setEcommBrandActive; placed orders are unaffected. */
@@ -8443,10 +8753,19 @@ export type Mutation = {
   setMyLocale: User;
   /** Switch one category on or off for the signed-in person. */
   setMyMailPreference: MailPreference;
+  /**
+   * Turn one-time codes on or off for one channel.
+   *
+   * Refuses the write that would leave the account with no reachable channel
+   * for a code — that is a lockout, not a preference.
+   */
+  setMyOtpChannel: CommPreference;
   /** Partner: temporarily deactivate/reactivate an OWN approved listing (reversible; hidden from the shop while paused, placed orders unaffected). */
   setMyProductListingActive: InventoryProduct;
   /** Persist the user's selected header location (pass null to clear). */
   setMySelectedLocation: User;
+  /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
+  setMyUsername: User;
   setMyWhatsappPreference: WaPreference;
   setPodIdeaStatus: PodIdea;
   /**
@@ -8468,6 +8787,8 @@ export type Mutation = {
   /** Set the admin's own header asset for one scenario; an empty url clears it. Reconcile never overwrites it. */
   setWhatsappScenarioMedia: WaScenarioBoard;
   /** Email the signed contract, with the PDF attached. */
+  shareContract: Scalars['Boolean']['output'];
+  /** Email the signed contract, with the PDF attached. */
   shareLegalDocument: Scalars['Boolean']['output'];
   /**
    * The tracked link for something being shared out of mWeb or the app.
@@ -8478,6 +8799,11 @@ export type Mutation = {
    */
   shareLink: ShareLink;
   sharePodIdea: PodIdea;
+  /**
+   * Sign as the acting user. Locks the contract once nobody is left to sign,
+   * and moves a DRAFT to ACTIVE — a signed contract is in force.
+   */
+  signContract: Contract;
   /** Sign as the acting user. Locks the contract once nobody is left to sign. */
   signLegalDocument: LegalDocument;
   signupWithGoogle: AuthPayload;
@@ -8507,6 +8833,14 @@ export type Mutation = {
    * which is what actually takes it off the slots.
    */
   stopAdRequest: AdRequest;
+  /**
+   * Ask for the account to be removed.
+   *
+   * This does NOT delete anything. It files a request for the Tech portal and
+   * leaves the account fully usable, so a mis-tap costs nothing and the member
+   * can withdraw it. Asking twice returns the request already open.
+   */
+  submitAccountDeletionRequest: AccountDeletionRequest;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
@@ -8570,6 +8904,8 @@ export type Mutation = {
   supportCreateUser: User;
   /** Run a shell command in the API container and return its output. SUPER_ADMIN only — host-root-equivalent via the mounted docker socket, and audited. */
   techExec: TechExecResult;
+  /** Re-ask the registry now, ignoring the cache. */
+  techRefreshPackageUpdates: TechPackageUpdatesReport;
   /** Restart one Docker container by name (SUPER_ADMIN / TECH_MANAGER). Audited. */
   techRestartContainer: TechRestartResult;
   testCommsProvider: CommsProviderTestResult;
@@ -8705,6 +9041,10 @@ export type Mutation = {
   updateReportProblemSlack: ReportProblemSlackSettings;
   updateRole: Role;
   updateSomethingForYouItem: SomethingForYouItem;
+  /**
+   * Triage one report: its state, the note, and any images the operator added.
+   * Omitting staff_images leaves the ones already there alone.
+   */
   updateStatusReport: StatusReport;
   updateSurvey: Survey;
   updateTelemetrySettings: TelemetrySettings;
@@ -8791,6 +9131,12 @@ export type MutationAcknowledgeBouncerSosArgs = {
 
 export type MutationAcknowledgeHostRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddAudienceListMembersArgs = {
+  id: Scalars['ID']['input'];
+  user_ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -9230,6 +9576,11 @@ export type MutationClubClaimAutoPodArgs = {
 };
 
 
+export type MutationCompleteDbBackupUploadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCompletePodSettlementArgs = {
   input: CompletePodInput;
 };
@@ -9578,6 +9929,11 @@ export type MutationCrmScrapeWebsitePagesArgs = {
 };
 
 
+export type MutationDbBackupUploadAuthArgs = {
+  fileName: Scalars['String']['input'];
+};
+
+
 export type MutationDecideMeetingArgs = {
   decision: MeetingDecision;
   feedback: Scalars['String']['input'];
@@ -9839,11 +10195,6 @@ export type MutationDeleteMembershipBenefitArgs = {
 
 export type MutationDeleteMembershipPlanArgs = {
   plan_id: Scalars['ID']['input'];
-};
-
-
-export type MutationDeleteMyAccountArgs = {
-  input: DeleteMyAccountInput;
 };
 
 
@@ -10337,6 +10688,12 @@ export type MutationModerateProductContentArgs = {
 };
 
 
+export type MutationNotifyPolicyAcceptedUsersArgs = {
+  policy_doc_id: Scalars['ID']['input'];
+  summary?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationPermanentlyDeleteInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -10355,6 +10712,16 @@ export type MutationProcessBackoutRefundArgs = {
 export type MutationPublishPodDraftArgs = {
   draft_id: Scalars['ID']['input'];
   input: CreatePodInput;
+};
+
+
+export type MutationPurgeAccountCompletelyArgs = {
+  request_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationPurgeAccountTraceArgs = {
+  input: PurgeAccountTraceInput;
 };
 
 
@@ -10456,6 +10823,12 @@ export type MutationRegisterArgs = {
 
 export type MutationRegisterBrandPickupWithShiprocketArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRejectAccountDeletionRequestArgs = {
+  note: Scalars['String']['input'];
+  request_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -10690,6 +11063,12 @@ export type MutationRestoreDbBackupArgs = {
 
 export type MutationRestoreInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryPaymentStepsArgs = {
+  payment_doc_id: Scalars['ID']['input'];
+  step_keys?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 
@@ -11002,6 +11381,12 @@ export type MutationSetInventoryProductActiveArgs = {
 };
 
 
+export type MutationSetLegalDocumentActiveArgs = {
+  id: Scalars['ID']['input'];
+  is_active: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetMailPreferenceByTokenArgs = {
   category: Scalars['String']['input'];
   e: Scalars['String']['input'];
@@ -11027,6 +11412,12 @@ export type MutationSetMyMailPreferenceArgs = {
 };
 
 
+export type MutationSetMyOtpChannelArgs = {
+  channel: CommChannel;
+  enabled: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetMyProductListingActiveArgs = {
   active: Scalars['Boolean']['input'];
   product_doc_id: Scalars['ID']['input'];
@@ -11035,6 +11426,11 @@ export type MutationSetMyProductListingActiveArgs = {
 
 export type MutationSetMySelectedLocationArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationSetMyUsernameArgs = {
+  username: Scalars['String']['input'];
 };
 
 
@@ -11108,6 +11504,13 @@ export type MutationSetWhatsappScenarioMediaArgs = {
 };
 
 
+export type MutationShareContractArgs = {
+  id: Scalars['ID']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
+  to: Scalars['String']['input'];
+};
+
+
 export type MutationShareLegalDocumentArgs = {
   id: Scalars['ID']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
@@ -11123,6 +11526,12 @@ export type MutationShareLinkArgs = {
 
 export type MutationSharePodIdeaArgs = {
   pod_idea_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSignContractArgs = {
+  id: Scalars['ID']['input'];
+  input: SignContractInput;
 };
 
 
@@ -11178,6 +11587,11 @@ export type MutationStartVideoCompressionArgs = {
 
 export type MutationStopAdRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSubmitAccountDeletionRequestArgs = {
+  input: SubmitAccountDeletionRequestInput;
 };
 
 
@@ -11868,6 +12282,7 @@ export type MutationUpdateSomethingForYouItemArgs = {
 export type MutationUpdateStatusReportArgs = {
   note?: InputMaybe<Scalars['String']['input']>;
   report_id: Scalars['ID']['input'];
+  staff_images?: InputMaybe<Array<Scalars['String']['input']>>;
   status: StatusReportStatus;
 };
 
@@ -12148,13 +12563,17 @@ export type NewsletterSubscriberTablePage = {
 export type Notification = {
   __typename?: 'Notification';
   /**
-   * The other user this row is about — the requester behind a FOLLOW_REQUEST.
-   * What the recipient's Follow Back acts on.
+   * The other user this row is about — the requester behind a FOLLOW_REQUEST,
+   * the new follower behind a NEW_FOLLOWER. What the recipient's Follow Back
+   * acts on.
    */
   action_actor_id?: Maybe<Scalars['ID']['output']>;
   /** The document the actions operate on — a FollowRequest id for FOLLOW_REQUEST. */
   action_ref_id?: Maybe<Scalars['ID']['output']>;
-  /** Live status of action_ref_id, so an answered request stops offering buttons. */
+  /**
+   * Live status of action_ref_id, so an answered request stops offering buttons.
+   * Always null on a NEW_FOLLOWER row: there is no request behind it.
+   */
   action_status?: Maybe<Scalars['String']['output']>;
   /** Set when this row carries inline actions instead of only being readable. */
   action_type?: Maybe<NotificationAction>;
@@ -12185,10 +12604,14 @@ export type Notification = {
 
 /**
  * Notifications the recipient can act on inline. FOLLOW_REQUEST renders
- * Accept / Reject against the FollowRequest in action_ref_id.
+ * Accept / Deny against the FollowRequest in action_ref_id. NEW_FOLLOWER has
+ * no document to answer — it renders Follow Back alone, which is the only way
+ * a public profile (one that never receives a follow request) can follow a new
+ * follower back from the inbox.
  */
 export type NotificationAction =
-  | 'FOLLOW_REQUEST';
+  | 'FOLLOW_REQUEST'
+  | 'NEW_FOLLOWER';
 
 export type NotificationScope =
   /** Everybody currently matching a saved marketing audience list. */
@@ -12613,6 +13036,9 @@ export type PaymentArtifact = {
   not_applicable: Scalars['Boolean']['output'];
   /** Human-readable ids (ticket code, order no, membership id...). */
   refs: Array<Scalars['String']['output']>;
+  /** The pipeline step that would re-create this row; null when only re-running the whole booking core would. */
+  retry_key?: Maybe<Scalars['String']['output']>;
+  segment: PaymentSegment;
 };
 
 /** One Duncit Coin ledger movement caused by this payment. */
@@ -12643,6 +13069,8 @@ export type PaymentCouponInfo = {
 export type PaymentDetail = {
   __typename?: 'PaymentDetail';
   artifacts: Array<PaymentArtifact>;
+  /** True when the money landed but the booking core never did — the one state where the whole finalization can be re-run. */
+  can_retry_finalize: Scalars['Boolean']['output'];
   coins: Array<PaymentCoinLine>;
   /** Coins this payment earned the buyer back. */
   coins_earned: Scalars['Float']['output'];
@@ -12653,12 +13081,15 @@ export type PaymentDetail = {
   finalize_error?: Maybe<Scalars['String']['output']>;
   finalize_state: Scalars['String']['output'];
   finalized_at?: Maybe<Scalars['String']['output']>;
+  gift_card?: Maybe<PaymentGiftCard>;
   needs_refund: Scalars['Boolean']['output'];
   /** Gross before coupon + coins, taken from the frozen checkout metadata. */
   original_total: Scalars['Float']['output'];
   payment: Payment;
   pod_booking?: Maybe<PaymentPodBooking>;
   product_orders: Array<PaymentProductOrderLine>;
+  /** Every deferred step still owed. What the page's Retry all sends. */
+  retryable_step_keys: Array<Scalars['String']['output']>;
   steps: Array<PaymentStep>;
 };
 
@@ -12667,6 +13098,22 @@ export type PaymentFilterInput = {
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<PaymentStatus>;
   user_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The gift card a GIFT_CARD payment bought, read back by its payment id. */
+export type PaymentGiftCard = {
+  __typename?: 'PaymentGiftCard';
+  balance: Scalars['Float']['output'];
+  code: Scalars['String']['output'];
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  initial_amount: Scalars['Float']['output'];
+  /** Empty on a self-purchase — the buyer is the recipient. */
+  recipient_email: Scalars['String']['output'];
+  recipient_name: Scalars['String']['output'];
+  redeemed_at?: Maybe<Scalars['String']['output']>;
+  scope_name: Scalars['String']['output'];
+  status: Scalars['String']['output'];
 };
 
 /** The pod booking this payment produced. */
@@ -12802,6 +13249,17 @@ export type PaymentReleaseStatus =
   | 'PENDING'
   | 'REJECTED';
 
+/**
+ * Which part of checkout a step or artifact belongs to — one per thing a
+ * checkout can buy, plus the PAYMENT work every checkout does whatever it bought.
+ * The Finance detail page draws a tab per purchase kind.
+ */
+export type PaymentSegment =
+  | 'GIFT_CARD'
+  | 'PAYMENT'
+  | 'POD'
+  | 'PRODUCT';
+
 export type PaymentStatus =
   | 'FAILED'
   | 'PENDING'
@@ -12812,6 +13270,8 @@ export type PaymentStatus =
 export type PaymentStep = {
   __typename?: 'PaymentStep';
   at?: Maybe<Scalars['String']['output']>;
+  /** True when Finance can re-run this step on its own from the detail page. */
+  can_retry: Scalars['Boolean']['output'];
   /** Why it was skipped, or the failure message. */
   detail: Scalars['String']['output'];
   key: Scalars['String']['output'];
@@ -12819,6 +13279,7 @@ export type PaymentStep = {
   label: Scalars['String']['output'];
   /** Ids of the documents this step created. */
   refs: Array<Scalars['String']['output']>;
+  segment: PaymentSegment;
   status: PaymentStepStatus;
 };
 
@@ -13440,6 +13901,14 @@ export type PodEarningsProjection = {
  */
 export type PodFeedbackForm = {
   __typename?: 'PodFeedbackForm';
+  /**
+   * Whether this guest may answer the form: the host marked them present at
+   * this pod. False is the shared link having reached somebody who was not
+   * there — the page says so instead of rendering stars the submit would
+   * refuse.
+   */
+  can_rate: Scalars['Boolean']['output'];
+  /** Null until they rate it, and null for anyone who may not. */
   mine?: Maybe<MyPodFeedback>;
   pod: BouncerPodInfo;
 };
@@ -14065,9 +14534,15 @@ export type PodWithdrawalStatus =
 export type Policy = {
   __typename?: 'Policy';
   content: Scalars['String']['output'];
+  /** sha256 of the CURRENT wording — what a fresh acceptance records. */
+  content_hash: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  /** When Legal last emailed everyone who had accepted it. */
+  last_notified_at?: Maybe<Scalars['String']['output']>;
+  /** How many accounts that notice reached. */
+  last_notified_count: Scalars['Int']['output'];
   /** Permanent, globally unique handle (POL-000001). Never edited, never reused. */
   policy_no: Scalars['String']['output'];
   /** What kind of policy this is — the grouping the dashboard counts by. */
@@ -14078,6 +14553,8 @@ export type Policy = {
   sort_order: Scalars['Int']['output'];
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
+  /** Every wording it has had, the live one included. Never fewer than 1. */
+  version_count: Scalars['Int']['output'];
 };
 
 /**
@@ -14105,6 +14582,57 @@ export type PolicyAcceptance = {
   user_id: Scalars['ID']['output'];
   /** Resolved at read time, so a renamed account still reads correctly. */
   user_name: Scalars['String']['output'];
+};
+
+/**
+ * The accepting account as it reads TODAY.
+ *
+ * Resolved rather than copied, so a renamed or closed account reads correctly —
+ * and null when the account has been erased entirely, which the row itself
+ * survives.
+ */
+export type PolicyAcceptanceAccount = {
+  __typename?: 'PolicyAcceptanceAccount';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** True when the account has been deleted. Its acceptance rows remain. */
+  is_deleted: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  /** Blank when no phone was ever collected — signup stopped asking. */
+  phone: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/**
+ * Everything behind ONE row of the acceptance log.
+ *
+ * A row on its own carries a sha256 and a user id. This is what turns those
+ * into an answer: who they are now, what the policy says now, the exact wording
+ * they agreed to, every wording it has had, their own trail through this policy,
+ * and what else they have accepted.
+ */
+export type PolicyAcceptanceDetail = {
+  __typename?: 'PolicyAcceptanceDetail';
+  /** The row that was opened. */
+  acceptance: PolicyAcceptance;
+  /**
+   * The wording behind this row's content_hash.
+   *
+   * Null when the policy predates version history, which is honest: the hash is
+   * on the record, the words behind it are not on file.
+   */
+  accepted_version?: Maybe<PolicyVersion>;
+  /** Null when the account has been erased. */
+  account?: Maybe<PolicyAcceptanceAccount>;
+  /** Null when the policy has been deleted — the row still reads correctly. */
+  policy?: Maybe<Policy>;
+  /** This account's other acceptances of THIS policy, newest first. */
+  policy_history: Array<PolicyAcceptance>;
+  /** Everything else this account has accepted, newest first. Capped at 50. */
+  user_acceptances: Array<PolicyAcceptance>;
+  /** Every wording the policy has had, oldest first. */
+  versions: Array<PolicyVersion>;
 };
 
 /** How a policy acceptance was given. */
@@ -14166,6 +14694,32 @@ export type PolicyTypeCountTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<PolicyTypeCount>;
   total: Scalars['Int']['output'];
+};
+
+/**
+ * One wording a policy has had.
+ *
+ * The stored history holds only SUPERSEDED wordings; the live document is
+ * returned as the newest entry, flagged `is_current`. `content_hash` is what
+ * makes an acceptance row readable — the log records the hash of what somebody
+ * agreed to and nothing else.
+ */
+export type PolicyVersion = {
+  __typename?: 'PolicyVersion';
+  content: Scalars['String']['output'];
+  content_hash: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** True for the wording in force right now. */
+  is_current: Scalars['Boolean']['output'];
+  policy_type: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  updated_by?: Maybe<Scalars['ID']['output']>;
+  /** Resolved at read time, so a renamed account still reads correctly. */
+  updated_by_name: Scalars['String']['output'];
+  /** 1 for the earliest wording, counting up. The newest is the live one. */
+  version_no: Scalars['Int']['output'];
 };
 
 /** One staff console in the Jump to Portal directory, with the signed-in user's standing. */
@@ -14707,7 +15261,12 @@ export type PublicProfile = {
   last_name?: Maybe<Scalars['String']['output']>;
   profile_photo?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
-  /** Derived @handle (no real username field exists yet) for the follow lists. */
+  /**
+   * The stored, globally unique @handle — what /u/<username> carries and
+   * what the follow lists render. Accounts that predate the field fall back to
+   * a handle derived from the name until the migrate:usernames script has run,
+   * so this is never blank.
+   */
   username: Scalars['String']['output'];
   zone?: Maybe<Scalars['String']['output']>;
 };
@@ -14717,6 +15276,12 @@ export type PublicRole = {
   description?: Maybe<Scalars['String']['output']>;
   key: Scalars['String']['output'];
   name: Scalars['String']['output'];
+};
+
+export type PurgeAccountTraceInput = {
+  field_path: Scalars['String']['input'];
+  model_name: Scalars['String']['input'];
+  request_doc_id: Scalars['ID']['input'];
 };
 
 export type PushConfig = {
@@ -14733,6 +15298,10 @@ export type PushSubscriptionInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** One request plus a live count of where that member still appears. */
+  accountDeletionRequest: AccountDeletionDetail;
+  /** Tech console queue. */
+  accountDeletionRequestsTable: AccountDeletionRequestPage;
   /** Live ads for a placement (includes AUTO ads). Public — powers the app ad slots. */
   activeAds: Array<PublicAd>;
   /**
@@ -14796,6 +15365,12 @@ export type Query = {
   audienceFilterOptions: AudienceFilterOptions;
   /** One saved list, with its member count recomputed. */
   audienceList?: Maybe<AudienceList>;
+  /**
+   * Who is in one saved list right now — the criteria re-run, plus everyone
+   * added by hand. The union is resolved here so a list's detail page can never
+   * show a membership that differs from what the next send reaches.
+   */
+  audienceListMembersTable: AudienceTablePage;
   /** Everybody who can open this portal — the assignable owners for a list. */
   audienceListOwners: Array<AudienceListOwner>;
   /** Every saved list, for the audience dropdowns. Each carries its live reach. */
@@ -14839,6 +15414,11 @@ export type Query = {
   /** Every bug, unpaginated, for the JSON export. */
   bugsExport: Array<Bug>;
   bugsTable: BugTablePage;
+  /**
+   * PUBLIC. Every form anyone on the internet can post asks for one of these
+   * first, so this cannot itself require a session.
+   */
+  captchaChallenge: CaptchaChallenge;
   categories: Array<Category>;
   category?: Maybe<Category>;
   categoryTree: Array<Category>;
@@ -14972,6 +15552,11 @@ export type Query = {
   /** Legal-only queue of everything users have reported. */
   contentReportsTable: ContentReportTablePage;
   contract?: Maybe<Contract>;
+  /**
+   * The contract as a PDF (base64) — the same document before and after
+   * signing, with a signature block appended once it has been signed.
+   */
+  contractPdfBase64: Scalars['String']['output'];
   contractsTable: ContractTablePage;
   coupon?: Maybe<Coupon>;
   coupons: Array<Coupon>;
@@ -15258,6 +15843,8 @@ export type Query = {
   membershipPlansTable: MembershipPlanTablePage;
   /** The membership pricing screen — mWeb and the native app render this. */
   membershipPricing: MembershipPricing;
+  /** The signed-in member's own open request, or null. */
+  myAccountDeletionRequest?: Maybe<AccountDeletionRequest>;
   /**  Account health for the signed-in user. Always returns a record (default base = 100).  */
   myAccountHealth: HealthScore;
   myActiveBouncerSos?: Maybe<BouncerSosAlert>;
@@ -15299,6 +15886,8 @@ export type Query = {
   myCoHostedPods: Array<Pod>;
   myCoinBalance: CoinBalance;
   myCoinTransactions: Array<CoinTransaction>;
+  /** Every channel, whether it can reach this account, and its code switch. */
+  myCommunicationPreference: CommPreference;
   /**
    * Auth-required: what the signed-in account can sign in with.
    *
@@ -15496,13 +16085,25 @@ export type Query = {
   policies: Array<Policy>;
   policiesTable: PolicyTablePage;
   policy?: Maybe<Policy>;
+  /** Legal: everything behind one row of that log. */
+  policyAcceptanceDetail: PolicyAcceptanceDetail;
   /** Legal: who accepted what, and when. Newest first. */
   policyAcceptancesTable: PolicyAcceptanceTablePage;
   policyBySlug?: Maybe<Policy>;
+  /**
+   * Legal: how many accounts a change notice would reach right now.
+   *
+   * Counted from the acceptance log rather than stored, because the answer
+   * changes every time somebody accepts. It is what lets the notify checkbox
+   * say what pressing it does before anyone presses it.
+   */
+  policyNotifyRecipientCount: Scalars['Int']['output'];
   /** The policy rendered as a downloadable PDF (base64). */
   policyPdfBase64: Scalars['String']['output'];
   policyStats: PolicyStats;
   policyStatsTable: PolicyTypeCountTablePage;
+  /** Legal: every wording this policy has had, oldest first. */
+  policyVersions: Array<PolicyVersion>;
   portalMode: PortalModePublic;
   portalModes: Array<PortalMode>;
   portalModesTable: PortalModeTablePage;
@@ -15558,6 +16159,11 @@ export type Query = {
    * over their bundled fallback, so a key missing here still renders.
    */
   publicTranslations: Array<TranslationEntry>;
+  /**
+   * One public profile. user_id accepts EITHER the @handle or a raw user id
+   * — every link shared before handles existed carries an id, and those links
+   * live in inboxes nobody can rewrite.
+   */
   publicUserProfile?: Maybe<PublicProfile>;
   publicUsersByIds: Array<PublicProfile>;
   /** Public single-venue detail (APPROVED + active only). */
@@ -15699,6 +16305,8 @@ export type Query = {
   techDockerContainersTable: TechDockerContainerTablePage;
   /** Docker daemon + container status (requires the docker socket mounted into the API container). */
   techDockerInfo: TechDockerInfo;
+  /** Every package.json in the repo beside what npm publishes (SUPER_ADMIN / TECH_MANAGER). Cached; use techRefreshPackageUpdates to force a re-check. */
+  techPackageUpdates: TechPackageUpdatesReport;
   /** Live host metrics for the Tech portal Server > Info page. Pass sslHost to include that domain's TLS certificate. */
   techServerInfo: TechServerInfo;
   telemetryDashboard: TelemetryDashboard;
@@ -15741,6 +16349,12 @@ export type Query = {
   userVerifications: Array<Verification>;
   /** Server-side table page over a user's verifications — admin review (user details). */
   userVerificationsTable: VerificationTablePage;
+  /**
+   * Is this @handle free for the signed-in account? Debounced from the
+   * username field on Profile Settings; the save re-checks it anyway, because
+   * two people can be typing the same handle at once.
+   */
+  usernameAvailability: UsernameAvailability;
   users: Array<User>;
   usersTable: UserTablePage;
   venue?: Maybe<Venue>;
@@ -15806,6 +16420,8 @@ export type Query = {
   waGroups: WaGroupPage;
   /** Dashboard counters (leads / communities / groups / contacts). */
   waLeadStats: WaLeadStats;
+  /** Every WhatsApp send in one feed: campaign sends and the messages the platform sent on its own. */
+  waLogs: WaLogPage;
   /** What a WhatsApp message costs, by category. */
   waPricing: WaPricing;
   /** Current QR data URL to scan + session status. */
@@ -15821,13 +16437,23 @@ export type Query = {
   websiteContentTable: WebsiteContentItemTablePage;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
-  /** Every send attempt, newest first. */
-  whatsappMessageLogs: WaMessageLogPage;
+  /** One send attempt in full — the detail behind a row of the merged WhatsApp log. */
+  whatsappMessageLog?: Maybe<WaMessageLogRow>;
   /** Every automatic message, its switch, and what AiSensy holds for it. */
   whatsappScenarios: WaScenarioBoard;
   withdrawalMinimums: WithdrawalMinimums;
   withdrawalRequests: Array<WalletWithdrawal>;
   withdrawalRequestsTable: WalletWithdrawalTablePage;
+};
+
+
+export type QueryAccountDeletionRequestArgs = {
+  request_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAccountDeletionRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -15928,6 +16554,12 @@ export type QueryApprovalRequestsTableArgs = {
 
 export type QueryAudienceListArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryAudienceListMembersTableArgs = {
+  list_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -16269,6 +16901,11 @@ export type QueryContentReportsTableArgs = {
 
 
 export type QueryContractArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryContractPdfBase64Args = {
   id: Scalars['ID']['input'];
 };
 
@@ -17389,6 +18026,11 @@ export type QueryPolicyArgs = {
 };
 
 
+export type QueryPolicyAcceptanceDetailArgs = {
+  acceptance_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPolicyAcceptancesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -17399,6 +18041,11 @@ export type QueryPolicyBySlugArgs = {
 };
 
 
+export type QueryPolicyNotifyRecipientCountArgs = {
+  policy_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPolicyPdfBase64Args = {
   slug: Scalars['String']['input'];
 };
@@ -17406,6 +18053,11 @@ export type QueryPolicyPdfBase64Args = {
 
 export type QueryPolicyStatsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPolicyVersionsArgs = {
+  policy_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -17875,6 +18527,11 @@ export type QueryUserVerificationsTableArgs = {
 };
 
 
+export type QueryUsernameAvailabilityArgs = {
+  username: Scalars['String']['input'];
+};
+
+
 export type QueryUsersArgs = {
   filter?: InputMaybe<UsersFilter>;
 };
@@ -18028,6 +18685,11 @@ export type QueryWaGroupsArgs = {
 };
 
 
+export type QueryWaLogsArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryWaUserLeadArgs = {
   id: Scalars['ID']['input'];
 };
@@ -18063,8 +18725,8 @@ export type QueryWebsiteNavTableArgs = {
 };
 
 
-export type QueryWhatsappMessageLogsArgs = {
-  query?: InputMaybe<TableQueryInput>;
+export type QueryWhatsappMessageLogArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -18207,8 +18869,17 @@ export type RegisterInput = {
   first_name: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
   password: Scalars['String']['input'];
-  phone_extension?: InputMaybe<Scalars['String']['input']>;
-  phone_number?: InputMaybe<Scalars['String']['input']>;
+  /** The dial code the number belongs to, such as +91. Chosen from a list. */
+  phone_extension: Scalars['String']['input'];
+  /**
+   * The account's phone number — digits only, without the dial code.
+   *
+   * Required and unique: it is the second way an account is identified, so a
+   * number already registered fails the signup instead of creating a second
+   * person behind the same phone. Google signup collects it later; this door
+   * asks for it up front.
+   */
+  phone_number: Scalars['String']['input'];
   /**
    * A friend's referral code. Optional, and checked before the account is
    * created: a code that does not exist fails the signup rather than quietly
@@ -18903,6 +19574,15 @@ export type ShortLinkTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type SignContractInput = {
+  designation: Scalars['String']['input'];
+  full_name: Scalars['String']['input'];
+  initials: Scalars['String']['input'];
+  /** Data URL or hosted image. Must be under 5 MB. */
+  signature_image: Scalars['String']['input'];
+  signature_method: SignatureMethod;
+};
+
 export type SignLegalDocumentInput = {
   designation: Scalars['String']['input'];
   full_name: Scalars['String']['input'];
@@ -19306,6 +19986,8 @@ export type StatusReport = {
   email: Scalars['String']['output'];
   environment: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Screenshots the reporter attached. */
+  image_urls: Array<Scalars['String']['output']>;
   impact: StatusReportImpact;
   /**
    * Read off the request by the server, never from the submitted body — the
@@ -19321,11 +20003,29 @@ export type StatusReport = {
   service_key: Scalars['String']['output'];
   /** The catalogue's display name as it read when the report was filed. */
   service_name: Scalars['String']['output'];
+  /** The affected service's address, as the catalogue held it when the report was filed. */
+  service_url: Scalars['String']['output'];
+  /** Images an operator attached while triaging. */
+  staff_image_urls: Array<Scalars['String']['output']>;
   status: StatusReportStatus;
   updated_at: Scalars['String']['output'];
   user_agent?: Maybe<Scalars['String']['output']>;
   /** Set only when the reporter happened to be signed in on that browser. */
   user_id?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * One screenshot, sent inline with the report.
+ *
+ * Base64 rather than an upload URL on purpose: handing an unauthenticated form
+ * a credential that can put files on our storage is a bigger door than the one
+ * it is meant to open. The server does the upload.
+ */
+export type StatusReportImageInput = {
+  /** Raw base64, or a data: URI straight out of a FileReader. */
+  data: Scalars['String']['input'];
+  file_name: Scalars['String']['input'];
+  mime_type?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** What the reporter is actually seeing, so a row can be triaged unread. */
@@ -19381,6 +20081,14 @@ export type StoryView = {
   viewed_at: Scalars['String']['output'];
 };
 
+export type SubmitAccountDeletionRequestInput = {
+  /** The 6-digit code from requestAccountDeletionOtp. */
+  otp: Scalars['String']['input'];
+  /** Optional: why they are leaving. Shown to whoever reviews it. */
+  reason?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<AccountDeletionSurface>;
+};
+
 export type SubmitAdRequestInput = {
   ad_description: Scalars['String']['input'];
   /** PLACEMENT (default) for the Ads portal; PRODUCT_AD / BRAND_AD from the Partner portal (requires product_id). */
@@ -19415,6 +20123,9 @@ export type SubmitBouncerFeedbackInput = {
 
 export type SubmitContactInput = {
   attachments?: InputMaybe<Array<Scalars['String']['input']>>;
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
   message: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -19422,6 +20133,9 @@ export type SubmitContactInput = {
 };
 
 export type SubmitFaqQuestionInput = {
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   question: Scalars['String']['input'];
   super_category_slug?: InputMaybe<Scalars['String']['input']>;
@@ -19429,12 +20143,21 @@ export type SubmitFaqQuestionInput = {
 
 export type SubmitGrievanceInput = {
   address?: InputMaybe<Scalars['String']['input']>;
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
   description: Scalars['String']['input'];
   email: Scalars['String']['input'];
   name: Scalars['String']['input'];
   phone: Scalars['String']['input'];
   source?: InputMaybe<GrievanceSource>;
   subject: Scalars['String']['input'];
+  /**
+   * The support ticket being escalated. Nullable in the SCHEMA only so a build
+   * that predates the field, or a grievance forwarded from the mailbox, is still
+   * recorded — every form requires it.
+   */
+  support_ticket_ref?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SubmitHostRequestInput = {
@@ -19457,7 +20180,12 @@ export type SubmitJobApplicationInput = {
 };
 
 export type SubmitStatusReportInput = {
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
+  /** Screenshots. Capped server-side — the rest are dropped, never the report. */
+  images?: InputMaybe<Array<StatusReportImageInput>>;
   impact?: InputMaybe<StatusReportImpact>;
   message: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -19467,6 +20195,9 @@ export type SubmitStatusReportInput = {
 };
 
 export type SubscribeNewsletterInput = {
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
   source?: InputMaybe<NewsletterSource>;
 };
@@ -19717,6 +20448,19 @@ export type TechCpuInfo = {
   usagePercent: Scalars['Float']['output'];
 };
 
+/** One dependency, as one `package.json` declares it. */
+export type TechDependencyUpdate = {
+  __typename?: 'TechDependencyUpdate';
+  /** dependencies | devDependencies | peerDependencies | optionalDependencies */
+  kind: Scalars['String']['output'];
+  /** Newest published version, or null when the registry was never asked. */
+  latest?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** Exactly what the manifest declares — the range, not a resolved version. */
+  range: Scalars['String']['output'];
+  updateType: TechUpdateType;
+};
+
 export type TechDiskInfo = {
   __typename?: 'TechDiskInfo';
   freeBytes: Scalars['Float']['output'];
@@ -19783,6 +20527,40 @@ export type TechOsInfo = {
   type: Scalars['String']['output'];
 };
 
+/** One `package.json`, with its dependency rows and their counts. */
+export type TechPackageUpdate = {
+  __typename?: 'TechPackageUpdate';
+  dependencies: Array<TechDependencyUpdate>;
+  major: Scalars['Int']['output'];
+  minor: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  outdated: Scalars['Int']['output'];
+  patch: Scalars['Int']['output'];
+  /** Repo-relative path to the manifest. */
+  path: Scalars['String']['output'];
+  private: Scalars['Boolean']['output'];
+  total: Scalars['Int']['output'];
+};
+
+/** Every manifest in the repo against the registry, as of one sweep. */
+export type TechPackageUpdatesReport = {
+  __typename?: 'TechPackageUpdatesReport';
+  /** ISO time of the last successful sweep; null when none has succeeded. */
+  checkedAt?: Maybe<Scalars['String']['output']>;
+  /** Why the last sweep failed, when it did. */
+  error?: Maybe<Scalars['String']['output']>;
+  major: Scalars['Int']['output'];
+  minor: Scalars['Int']['output'];
+  outdated: Scalars['Int']['output'];
+  packages: Array<TechPackageUpdate>;
+  patch: Scalars['Int']['output'];
+  registry: Scalars['String']['output'];
+  totalDependencies: Scalars['Int']['output'];
+  totalPackages: Scalars['Int']['output'];
+  /** Distinct dependency names the registry was asked about. */
+  uniqueDependencies: Scalars['Int']['output'];
+};
+
 export type TechRestartResult = {
   __typename?: 'TechRestartResult';
   error?: Maybe<Scalars['String']['output']>;
@@ -19813,6 +20591,21 @@ export type TechSslInfo = {
   validFrom?: Maybe<Scalars['String']['output']>;
   validTo?: Maybe<Scalars['String']['output']>;
 };
+
+/**
+ * How far a declared range is behind what npm publishes.
+ *
+ * INTERNAL is a `workspace:`/`file:` range that resolves inside the repo, and
+ * UNKNOWN is a range no registry can answer for — an alias, a git host, a
+ * tarball URL — or a name the registry did not return.
+ */
+export type TechUpdateType =
+  | 'INTERNAL'
+  | 'MAJOR'
+  | 'MINOR'
+  | 'PATCH'
+  | 'UNKNOWN'
+  | 'UP_TO_DATE';
 
 /** The machine the surface was running on, as it described itself. */
 export type TelemetryClient = {
@@ -20419,6 +21212,8 @@ export type UpdateBrandingInput = {
 export type UpdateCategoryInput = {
   allow_co_hosts?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  gift_card_image_back?: InputMaybe<Scalars['String']['input']>;
+  gift_card_image_front?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   icon_layout_mweb?: InputMaybe<CategoryIconLayoutInput>;
   icon_layout_native?: InputMaybe<CategoryIconLayoutInput>;
@@ -20791,6 +21586,16 @@ export type UpdatePodInput = {
 export type UpdatePolicyInput = {
   content?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   * Email everyone who has already accepted this policy that it changed.
+   *
+   * A deliberate tick, never inferred: a typo fix in a heading is not a reason
+   * to write to everybody. Ignored unless the CONTENT actually changed, because
+   * a notice about an unchanged policy is a notice nobody can act on.
+   */
+  notify_accepted_users?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Legal's own note on what changed, shown in the notice. Optional. */
+  notify_summary?: InputMaybe<Scalars['String']['input']>;
   policy_type?: InputMaybe<Scalars['String']['input']>;
   requires_signup_acceptance?: InputMaybe<Scalars['Boolean']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
@@ -21028,6 +21833,12 @@ export type User = {
   timezone?: Maybe<Scalars['String']['output']>;
   updated_at?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
+  /**
+   * The globally unique @handle this profile is shared as — what
+   * /u/<username> carries. Null only on accounts created before handles
+   * existed and not yet migrated; readers fall back to user_id for those.
+   */
+  username?: Maybe<Scalars['String']['output']>;
   whatsapp_extension?: Maybe<Scalars['String']['output']>;
   whatsapp_number?: Maybe<Scalars['String']['output']>;
   whatsapp_verified_at?: Maybe<Scalars['String']['output']>;
@@ -21207,6 +22018,27 @@ export type UserTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type UsernameAvailability = {
+  __typename?: 'UsernameAvailability';
+  available: Scalars['Boolean']['output'];
+  /** Null when available. */
+  reason?: Maybe<UsernameRejection>;
+  /** What the server actually checked — trimmed and lower-cased. */
+  username: Scalars['String']['output'];
+};
+
+/**
+ * Why a typed handle was refused. Codes rather than sentences: the client owns
+ * the copy (rule 38), and this is answered on every keystroke.
+ */
+export type UsernameRejection =
+  /** Not 3-30 lowercase letters, numbers and single hyphens. */
+  | 'FORMAT'
+  /** One of the words the platform keeps for itself (admin, support, …). */
+  | 'RESERVED'
+  /** Somebody else already has it. */
+  | 'TAKEN';
+
 export type UsersFilter = {
   city?: InputMaybe<Scalars['String']['input']>;
   role?: InputMaybe<Scalars['String']['input']>;
@@ -21310,6 +22142,40 @@ export type VenueCancelPodResult = {
   refunded_count: Scalars['Int']['output'];
   /** The venue's Account Health score after the deduction. */
   venue_health_score: Scalars['Int']['output'];
+};
+
+export type VenueCancellationChargeType =
+  | 'AMOUNT'
+  | 'PERCENT';
+
+/** What a venue owner charges for a late cancellation, or whether they take one at all. */
+export type VenueCancellationPolicy = {
+  __typename?: 'VenueCancellationPolicy';
+  /** Bookings may only be rescheduled, never cancelled. The bands do not apply while this is on. */
+  reschedule_only: Scalars['Boolean']['output'];
+  /** Ordered widest window first. */
+  tiers: Array<VenueCancellationTier>;
+};
+
+export type VenueCancellationPolicyInput = {
+  reschedule_only?: InputMaybe<Scalars['Boolean']['input']>;
+  tiers?: InputMaybe<Array<VenueCancellationTierInput>>;
+};
+
+/** One band of a venue's cancellation policy — cancelling INSIDE hours_before of the slot start costs this much. */
+export type VenueCancellationTier = {
+  __typename?: 'VenueCancellationTier';
+  charge_type: VenueCancellationChargeType;
+  /** Hours before the slot start this band covers. The tightest matching band wins. */
+  hours_before: Scalars['Int']['output'];
+  /** A percent of the slot price (0-100), or a flat amount. */
+  value: Scalars['Float']['output'];
+};
+
+export type VenueCancellationTierInput = {
+  charge_type: VenueCancellationChargeType;
+  hours_before: Scalars['Int']['input'];
+  value: Scalars['Float']['input'];
 };
 
 /** One named capacity the venue offers (e.g. 'Banquet hall' seats 120). */
@@ -21574,6 +22440,7 @@ export type VenueRulesInput = {
 export type VenueSettings = {
   __typename?: 'VenueSettings';
   auto_extend: VenueAutoExtend;
+  cancellation: VenueCancellationPolicy;
   holidays: Array<Scalars['String']['output']>;
   operating_hours: VenueOperatingHours;
   rules: VenueRules;
@@ -21582,6 +22449,7 @@ export type VenueSettings = {
 
 export type VenueSettingsInput = {
   auto_extend?: InputMaybe<VenueAutoExtendInput>;
+  cancellation?: InputMaybe<VenueCancellationPolicyInput>;
   holidays?: InputMaybe<Array<Scalars['String']['input']>>;
   operating_hours?: InputMaybe<VenueOperatingHoursInput>;
   rules?: InputMaybe<VenueRulesInput>;
@@ -21608,6 +22476,22 @@ export type VenueSlot = {
   /** True for a whole-day / whole-date-range booking — render 'Whole day' instead of clock times. */
   whole_day: Scalars['Boolean']['output'];
 };
+
+/**
+ * How a new slot that overlaps an existing one in the SAME space is resolved.
+ * Slots in different spaces never conflict — two courts may share a time window.
+ */
+export type VenueSlotConflictMode =
+  /** Reject the whole request — nothing is created. The default. */
+  | 'FAIL'
+  /**
+   * Delete the colliding slots and create the new ones in their place. A BOOKED
+   * slot, or one holding a PENDING request, is never deleted: the new slots
+   * that collide with one are dropped instead.
+   */
+  | 'REPLACE'
+  /** Drop the colliding new slots and create the rest. */
+  | 'SKIP';
 
 /**
  * One booking request with the venue's money on it — powers the decision page
@@ -22060,6 +22944,48 @@ export type WaLeadStats = {
   total_leads: Scalars['Int']['output'];
 };
 
+export type WaLogPage = {
+  __typename?: 'WaLogPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<WaLogRow>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * One WhatsApp send, whichever way it started.
+ *
+ * A marketing send is one row per CAMPAIGN, because it is planned, billed and
+ * retried as a unit. A message the platform sent by itself is one row per
+ * MESSAGE, because there is nothing above it — its counters are simply 1 or 0.
+ * The row's kind is what decides which detail view opens behind it.
+ */
+export type WaLogRow = {
+  __typename?: 'WaLogRow';
+  /** Meta's category, which is what the per-message rate was read from. */
+  category: Scalars['String']['output'];
+  /** The frozen rate times the messages that actually went out. */
+  cost: Scalars['Float']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  failed_count: Scalars['Int']['output'];
+  /** The campaign id for a campaign send; the message log id for an automatic one. */
+  id: Scalars['ID']['output'];
+  /** CAMPAIGN or AUTOMATIC. */
+  kind: Scalars['String']['output'];
+  msg_rate: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  /** The campaign's error, or why one message was skipped or failed. */
+  reason: Scalars['String']['output'];
+  recipient_count: Scalars['Int']['output'];
+  /** The AiSensy campaign name for a campaign send; the scenario key for an automatic one. */
+  reference: Scalars['String']['output'];
+  sent_count: Scalars['Int']['output'];
+  skipped_count: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+  /** The audience for a campaign send; the number reached for an automatic one. */
+  target: Scalars['String']['output'];
+};
+
 /** One typed-in recipient. The country code is its own field so it is never guessed. */
 export type WaManualContact = {
   __typename?: 'WaManualContact';
@@ -22080,14 +23006,6 @@ export type WaMember = {
   jid: Scalars['String']['output'];
   name: Scalars['String']['output'];
   phone: Scalars['String']['output'];
-};
-
-export type WaMessageLogPage = {
-  __typename?: 'WaMessageLogPage';
-  page: Scalars['Int']['output'];
-  page_size: Scalars['Int']['output'];
-  rows: Array<WaMessageLogRow>;
-  total: Scalars['Int']['output'];
 };
 
 export type WaMessageLogRow = {

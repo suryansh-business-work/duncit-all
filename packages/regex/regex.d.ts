@@ -15,6 +15,16 @@ export const EMAIL: RegExp;
 /** One or more digits, nothing else. */
 export const DIGITS: RegExp;
 
+/**
+ * Keep only the digits in a string.
+ *
+ * The rule behind every number-only box: a phone field is typed into, pasted
+ * into and autofilled, and the last two are how letters get in. Applied on
+ * change, it makes "digits only" a property of the input rather than a message
+ * shown after the fact.
+ */
+export function toDigits(value: unknown): string;
+
 /** Phone digits only, 6–15 long — the ITU E.164 range without a dial code. */
 export const PHONE_INTL: RegExp;
 /** {@link PHONE_INTL} tolerating a leading `+` for a pasted full number. */

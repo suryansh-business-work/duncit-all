@@ -47,6 +47,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import PeopleIcon from '@mui/icons-material/People';
 import PercentIcon from '@mui/icons-material/Percent';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
@@ -129,6 +130,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   payments: PaymentsIcon,
   people: PeopleIcon,
   percent: PercentIcon,
+  personRemove: PersonRemoveIcon,
   personSearch: PersonSearchIcon,
   phone: PhoneInTalkIcon,
   policy: GavelIcon,

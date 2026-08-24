@@ -13,8 +13,15 @@ import { Schema, model } from 'mongoose';
 export const DB_BACKUP_STATUSES = ['RUNNING', 'SUCCEEDED', 'FAILED'] as const;
 export type DbBackupStatus = (typeof DB_BACKUP_STATUSES)[number];
 
-/** Who asked for it. SCHEDULED rows are what retention prunes. */
-export const DB_BACKUP_TRIGGERS = ['SCHEDULED', 'MANUAL'] as const;
+/**
+ * Who asked for it. SCHEDULED rows are what retention prunes.
+ *
+ * UPLOADED is an archive this server did not take: it was sent in from an
+ * operator's machine — production's nightly carried to staging, a copy pulled
+ * before a migration. It is never pruned, for the same reason a MANUAL one is
+ * not, and it only becomes restorable once it has been read end to end.
+ */
+export const DB_BACKUP_TRIGGERS = ['SCHEDULED', 'MANUAL', 'UPLOADED'] as const;
 export type DbBackupTrigger = (typeof DB_BACKUP_TRIGGERS)[number];
 
 export const DB_BACKUP_FREQUENCIES = ['DAILY', 'WEEKLY'] as const;
@@ -34,7 +41,13 @@ const dbBackupSchema = new Schema(
   {
     status: { type: String, enum: DB_BACKUP_STATUSES, default: 'RUNNING', index: true },
     trigger: { type: String, enum: DB_BACKUP_TRIGGERS, default: 'MANUAL', index: true },
-    database: { type: String, required: true },
+    /**
+     * The database the archive holds. Not required: an upload's row exists
+     * before a byte of it has been read, and the name is whatever the archive's
+     * own header says — which is the point of an upload, since it is usually
+     * not this server's database.
+     */
+    database: { type: String, default: '' },
     /**
      * Basename of the archive on disk, or null once the file is gone — pruned
      * by retention, deleted by hand, or never written because the run failed.
@@ -51,6 +64,13 @@ const dbBackupSchema = new Schema(
     error: { type: String, default: null },
     started_by: { type: String, default: null },
     started_at: { type: Date, default: Date.now },
+    /**
+     * When the archive was TAKEN, read from its own header — only meaningful on
+     * an uploaded one, where it is not the same thing as started_at at all.
+     * A restore has to say how old the data is, and for an upload started_at is
+     * the day someone dragged the file in, not the day the data is from.
+     */
+    archive_taken_at: { type: Date, default: null },
     finished_at: { type: Date, default: null },
     heartbeat_at: { type: Date, default: Date.now },
   },
@@ -84,6 +104,7 @@ export interface DbBackupDoc {
   error?: string | null;
   started_by?: string | null;
   started_at: Date;
+  archive_taken_at?: Date | null;
   finished_at?: Date | null;
   heartbeat_at?: Date | null;
   created_at?: Date;

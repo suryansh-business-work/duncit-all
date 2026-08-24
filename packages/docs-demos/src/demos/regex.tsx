@@ -8,6 +8,7 @@ import {
   isReferralCode,
   isUpiId,
   isUsername,
+  toDigits,
 } from '@duncit/regex';
 import { defineDemo, defineDemos } from '../types';
 
@@ -17,6 +18,10 @@ interface CandidateMock {
   pincode: string;
   username: string;
   referral_code: string;
+}
+
+interface TypedPhoneMock {
+  typed: string;
 }
 
 interface BankMock {
@@ -45,6 +50,20 @@ export default defineDemos('regex', [
       'isPincode(pincode)': isPincode(mock.pincode),
       'isUsername(username)': isUsername(mock.username),
       'isReferralCode(referral_code)': isReferralCode(mock.referral_code),
+    }),
+  }),
+
+  defineDemo<TypedPhoneMock>({
+    id: 'digits-only',
+    title: 'What a number-only box actually stores',
+    note:
+      'toDigits runs on every change, so this is what the form holds after a paste. Type letters, spaces or a dial code into "typed" — the stored value keeps only the digits, and isPhoneNumber then judges that.',
+    mock: {
+      typed: '+91 98450-12345',
+    },
+    compute: (mock) => ({
+      'toDigits(typed)': toDigits(mock.typed),
+      'isPhoneNumber(toDigits(typed))': isPhoneNumber(toDigits(mock.typed)),
     }),
   }),
 

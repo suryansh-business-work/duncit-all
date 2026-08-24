@@ -2551,6 +2551,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       selectCountry: 'Select country',
       selectState: 'Select state',
       typeAYear: 'Type a year',
+      // The character rule is the same PERSON_NAME from @duncit/regex that
+      // signup runs, so a profile edit cannot save a name signup would have
+      // rejected. mWeb and native render these identically (rule 27).
+      validation: {
+        firstNamePattern: 'First name can use letters, spaces, apostrophes and periods only',
+        lastNamePattern: 'Last name can use letters, spaces, apostrophes and periods only',
+      },
     },
     addressBook: {
       addressBook: 'Address Book',

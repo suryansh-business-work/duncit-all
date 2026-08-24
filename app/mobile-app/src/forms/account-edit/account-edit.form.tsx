@@ -58,8 +58,8 @@ export function AccountEditForm({
   const storedDob = toDobInput(me?.dob);
   const { datePlaceholder } = useDateFormat();
   const schema = useMemo(
-    () => makeAccountEditSchema(minSignupAge, storedDob, datePlaceholder),
-    [minSignupAge, storedDob, datePlaceholder],
+    () => makeAccountEditSchema(minSignupAge, storedDob, datePlaceholder, t),
+    [minSignupAge, storedDob, datePlaceholder, t],
   );
   const {
     control,

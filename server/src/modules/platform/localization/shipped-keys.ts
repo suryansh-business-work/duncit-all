@@ -2866,6 +2866,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.accountEdit.selectCountry": "Select country",
   "mweb.accountEdit.selectState": "Select state",
   "mweb.accountEdit.typeAYear": "Type a year",
+  "mweb.accountEdit.validation.firstNamePattern": "First name can use letters, spaces, apostrophes and periods only",
+  "mweb.accountEdit.validation.lastNamePattern": "Last name can use letters, spaces, apostrophes and periods only",
   "mweb.address.addressLine1": "Address line 1",
   "mweb.address.addressLine2": "Address line 2",
   "mweb.address.city": "City",

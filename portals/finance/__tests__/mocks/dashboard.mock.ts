@@ -20,6 +20,10 @@ export const makeFinanceStat = (over: Partial<FinanceStat> = {}): FinanceStat =>
 /**
  * A complete dashboard: total_revenue trends up (+5), duncit_revenue down (-3),
  * gst flat (0) — exercising both trend signs and the up/down colour branches.
+ *
+ * `pod_expenses` is the one tile where a FALL is the good news, so it trends
+ * down here: what Duncit spends to run pods going up is not a win, and the
+ * trend colour has to say so.
  */
 export const makeFinanceDashboardStats = (
   over: Partial<FinanceDashboardStats> = {},
@@ -31,6 +35,7 @@ export const makeFinanceDashboardStats = (
   gst_collected: makeFinanceStat({ total: 100, mom_change_pct: 0 }),
   pending_payouts: makeFinanceStat({ total: 200, mom_change_pct: 2 }),
   completed_payouts: makeFinanceStat({ total: 800, mom_change_pct: 1 }),
+  pod_expenses: makeFinanceStat({ total: 300, mom_change_pct: -8 }),
   ...over,
 });
 

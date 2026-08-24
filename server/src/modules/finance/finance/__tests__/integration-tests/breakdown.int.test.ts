@@ -11,6 +11,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PodExpenseModel } from '@modules/finance/podExpense/podExpense.model';
 import { makeContext } from '@test/harness';
 
 let seq = 0;
@@ -491,6 +492,28 @@ describe('breakdownService.dashboardStats', () => {
     const hostRel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
     expect(hostRel!.status).toBe('APPROVED');
 
+    // What Duncit itself spent to put this pod on: one bill dated this month,
+    // one dated last month. Pod spend is dated by when the money LEFT, so the
+    // second belongs to last month however late the row was typed.
+    const spentLastMonth = new Date();
+    spentLastMonth.setMonth(spentLastMonth.getMonth() - 1, 15);
+    await PodExpenseModel.create([
+      {
+        expense_id: `pex_int_${++seq}a`,
+        pod_id: pod._id,
+        date: new Date(),
+        category: 'VENUE_RENT',
+        amount: 300,
+      },
+      {
+        expense_id: `pex_int_${++seq}b`,
+        pod_id: pod._id,
+        date: spentLastMonth,
+        category: 'REFRESHMENTS',
+        amount: 120,
+      },
+    ]);
+
     let stats = await breakdownService.dashboardStats();
     expect(stats.total_revenue.total).toBeGreaterThanOrEqual(1000);
     expect(stats.total_revenue.this_month).toBeGreaterThanOrEqual(1000);
@@ -500,6 +523,9 @@ describe('breakdownService.dashboardStats', () => {
     expect(stats.completed_payouts.this_month).toBeGreaterThanOrEqual(724.58);
     // Nothing last month yet → +100% growth branch.
     expect(stats.total_revenue.mom_change_pct).toBe(100);
+    expect(stats.pod_expenses.total).toBe(420);
+    expect(stats.pod_expenses.this_month).toBe(300);
+    expect(stats.pod_expenses.last_month).toBe(120);
 
     // Move the approval into last month → last-month>0 delta branch.
     const lastMonth = new Date();

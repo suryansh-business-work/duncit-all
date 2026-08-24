@@ -13,6 +13,7 @@ export * from './payout-cycles.mock';
 export * from './backout.mock';
 export * from './expense.mock';
 export * from './payment-logs.mock';
+export * from './pod-expense.mock';
 export * from './payment-release.mock';
 export * from './pod-finance.mock';
 export * from './withdrawals.mock';

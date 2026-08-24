@@ -2,17 +2,31 @@ import type { ReactNode } from 'react';
 
 /** Lightweight stubs for @duncit/ui primitives (the real ones are tested in the package). */
 
-export function StatCard({ label, value, hint, icon, loading }: any) {
+export function StatCard({ label, value, hint, hintColor, icon, loading }: any) {
   return (
     <div data-testid="stat-card">
       <span data-testid="stat-label">{label}</span>
       <span data-testid="stat-value">{value}</span>
       {icon}
-      {hint ? <span data-testid="stat-hint">{hint}</span> : null}
+      {/* `hintColor` is the tile's whole verdict — green when a number is where
+          it should be, amber when it is not — so it has to be assertable. */}
+      {hint ? (
+        <span data-testid="stat-hint" data-hint-color={hintColor}>
+          {hint}
+        </span>
+      ) : null}
       {loading ? <span data-testid="stat-loading">loading</span> : null}
     </div>
   );
 }
+
+/**
+ * The page title block is the REAL one: it is a `<Typography>` pair over MUI
+ * with no data behind it, so a stub would only be a second copy of it — and
+ * omitting it made `PageHeader` reach a page as `undefined`, which takes the
+ * whole screen down at the first line of its render.
+ */
+export { PageHeader } from '../../../../../packages/ui/src/PageHeader';
 
 export function StatusChip({ status, label }: any) {
   return <span data-testid="status-chip">{label ?? status}</span>;

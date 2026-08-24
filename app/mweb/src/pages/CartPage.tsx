@@ -42,7 +42,7 @@ export default function CartPage() {
           {t('mweb.cart.emptyBody')}
         </Typography>
         <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
-          {t('mweb.cart.browseShop')}
+          {t('mweb.cart.exploreShop')}
         </Button>
       </Stack>
     );

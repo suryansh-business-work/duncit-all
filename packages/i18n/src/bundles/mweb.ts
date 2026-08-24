@@ -1221,11 +1221,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       title: 'Cart',
       empty: 'Your cart is empty',
       emptyBody: 'Add products from any Pod Shop and they will wait for you here.',
-      // The empty-cart CTA. The two surfaces send the buyer to DIFFERENT places
-      // — mWeb to the Pod Shop, native to Home — so each says where it goes
-      // rather than sharing a label that would be wrong on one of them.
-      browseShop: 'Browse the Pod Shop',
-      findPod: 'Find a pod',
+      // The empty-cart CTA. Both surfaces send the buyer to the Pod Shop, so
+      // they share the one label (rule 27).
+      exploreShop: 'Explore Pod Shop',
       total: 'Cart total',
       checkout: 'Proceed to checkout',
       clear: 'Clear cart',

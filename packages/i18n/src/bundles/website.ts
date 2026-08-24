@@ -18,6 +18,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
       policyHub: 'Policy Hub',
       allPolicies: 'All policies',
       rights: 'All Rights Reserved',
+      // The social column's heading. The link labels beneath it are brand
+      // names (Instagram, Facebook…) and stay untranslated by design.
+      followUs: 'Follow Duncit',
     },
     nav: {
       closeMenu: 'Close menu',

@@ -8531,6 +8531,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "website.brand.policyStrip.heading": "Policies",
   "website.footer.allPolicies": "All policies",
   "website.footer.emailPlaceholder": "Email address",
+  "website.footer.followUs": "Follow Duncit",
   "website.footer.newsletterTitle": "Get Duncit updates",
   "website.footer.notify": "Notify",
   "website.footer.policyHub": "Policy Hub",

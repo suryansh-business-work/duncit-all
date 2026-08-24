@@ -40,3 +40,9 @@ app/mweb/public/.well-known/
 # temp dir; only scripts/duplication-baseline.json is committed.
 duplication-report.md
 .jscpd/
+
+# Local scratch for the localization sweeps — one-off .mjs rewriters, bundle
+# dumps and draft commit messages. 144 of these rode into 31dc63a66 by
+# accident; Sonar scans every .mjs it finds, so a throwaway rewriter becomes
+# real issues and real duplication against the code it was written to edit.
+.tmp-loc/

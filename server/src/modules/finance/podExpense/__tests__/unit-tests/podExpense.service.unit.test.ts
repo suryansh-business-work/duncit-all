@@ -85,7 +85,7 @@ const podDoc = (over: Record<string, unknown> = {}) => ({
   pod_id: 'DUN-POD-4821',
   pod_title: 'Sunday Badminton',
   pod_date_time: new Date('2026-08-20T10:00:00.000Z'),
-  expense_total: 2500.555,
+  expense_total: 2500.567,
   expense_count: 3,
   bill_count: 2,
   last_expense_at: new Date('2026-08-21T09:00:00.000Z'),
@@ -131,7 +131,7 @@ describe('podsTable', () => {
           pod_title: 'Sunday Badminton',
           pod_date_time: '2026-08-20T10:00:00.000Z',
           pod_status: 'COMPLETED',
-          expense_total: 2500.56,
+          expense_total: 2500.57,
           expense_count: 3,
           bill_count: 2,
           last_expense_at: '2026-08-21T09:00:00.000Z',
@@ -209,7 +209,7 @@ describe('podSummary', () => {
 
     const row = await podExpenseService.podSummary(POD_DOC_ID);
 
-    expect(row).toMatchObject({ pod_doc_id: POD_DOC_ID, expense_total: 2500.56 });
+    expect(row).toMatchObject({ pod_doc_id: POD_DOC_ID, expense_total: 2500.57 });
     expect(lastPipeline()[0]).toEqual({ $match: { _id: new Types.ObjectId(POD_DOC_ID) } });
   });
 

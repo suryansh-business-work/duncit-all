@@ -9,8 +9,7 @@ import { graphqlRequest } from '@/services/graphql.client';
  * than one document's result because the request was split for caching (see
  * graphql/home.ts) — everything downstream still reads one object.
  */
-export type HomeFeed = ResultOf<typeof HomeStaticDocument> &
-  ResultOf<typeof HomePodsDocument>;
+export type HomeFeed = ResultOf<typeof HomeStaticDocument> & ResultOf<typeof HomePodsDocument>;
 
 interface HomeState {
   data?: HomeFeed;

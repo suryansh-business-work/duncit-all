@@ -76,7 +76,7 @@ const join = {
     font-family: var(--font-head, system-ui, sans-serif);
     font-size: 1.125rem;
     font-weight: 900;
-    color: #fff;
+    color: var(--color-on-primary);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   }
   .partner-brand :global(img) {
@@ -86,13 +86,13 @@ const join = {
   .partner-link {
     font-size: 0.875rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: color-mix(in srgb, var(--color-on-primary) 85%, transparent);
     text-decoration: none;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
     transition: color 150ms ease;
   }
   .partner-link:hover {
-    color: #fff;
+    color: var(--color-on-primary);
   }
 
   .partner-login {
@@ -100,17 +100,21 @@ const join = {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1.1rem;
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    border: 1px solid color-mix(in srgb, var(--color-on-primary) 55%, transparent);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
     font-size: 0.875rem;
     font-weight: 700;
-    color: #fff;
+    /* Two words in a pill between a wordmark and a burger — it broke across
+       two lines on a phone before the label was hidden, and would again at the
+       widths that show it. */
+    white-space: nowrap;
+    color: var(--color-on-primary);
     text-decoration: none;
     backdrop-filter: blur(6px);
     transition: background-color 150ms ease;
   }
   .partner-login:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: color-mix(in srgb, var(--color-on-primary) 22%, transparent);
   }
 </style>

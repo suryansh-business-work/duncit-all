@@ -37,7 +37,8 @@ import {
 
 const expenseId = () => `pex_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
-const clean = (value: unknown, max = 1000) => String(value ?? '').trim().slice(0, max);
+const clean = (value: string | number | null | undefined, max = 1000) =>
+  String(value ?? '').trim().slice(0, max);
 
 const CATEGORY_SET = new Set<string>(POD_EXPENSE_CATEGORIES);
 const METHOD_SET = new Set<string>(EXPENSE_PAYMENT_METHODS);
@@ -60,7 +61,6 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     pod_date_time: { type: 'date' },
-    pod_mode: { type: 'enum' },
   },
   defaultSort: { pod_date_time: -1 },
 };
@@ -98,9 +98,9 @@ const POD_EXPENSE_TABLE_CONFIG: TableEntityConfig = {
 
 function toPub(doc: IPodExpense) {
   return {
-    id: String(doc._id),
+    id: doc._id.toString(),
     expense_id: doc.expense_id,
-    pod_id: String(doc.pod_id),
+    pod_id: doc.pod_id.toString(),
     date: doc.date.toISOString(),
     category: doc.category,
     amount: doc.amount,
@@ -110,14 +110,33 @@ function toPub(doc: IPodExpense) {
     reference: doc.reference ?? '',
     bill_number: doc.bill_number ?? '',
     bill_url: doc.bill_url ?? '',
-    created_by: doc.created_by ? String(doc.created_by) : null,
+    created_by: doc.created_by?.toString() ?? null,
     created_at: doc.created_at?.toISOString?.() ?? '',
     updated_at: doc.updated_at?.toISOString?.() ?? '',
   };
 }
 
+/**
+ * Narrow the pod to the handful of fields a row needs, BEFORE the roll-up.
+ *
+ * A pod document carries its attendees, likes, comments and media; `$sort`
+ * spills past its 100MB budget on a few thousand of those and the whole list
+ * fails. Everything here is either rendered or read by `bucketForPod`.
+ */
+const POD_FIELDS_STAGE = {
+  $project: {
+    pod_id: 1,
+    pod_title: 1,
+    pod_date_time: 1,
+    pod_end_date_time: 1,
+    completed_at: 1,
+    deleted_at: 1,
+  },
+};
+
 /** Rolls one pod's expenses onto the pod document, as `$lookup` + `$group`. */
 const ROLLUP_STAGES = [
+  POD_FIELDS_STAGE,
   {
     $lookup: {
       from: PodExpenseModel.collection.name,
@@ -172,10 +191,7 @@ function toPodRow(doc: any) {
     pod_code: doc.pod_id ?? '',
     pod_title: doc.pod_title ?? '',
     pod_date_time: doc.pod_date_time?.toISOString?.() ?? '',
-    pod_mode: doc.pod_mode ?? 'PHYSICAL',
     pod_status: bucketForPod(doc, Date.now()).toUpperCase(),
-    ticket_price: round2(doc.pod_amount ?? 0),
-    no_of_spots: doc.no_of_spots ?? 0,
     expense_total: round2(doc.expense_total),
     expense_count: doc.expense_count ?? 0,
     bill_count: doc.bill_count ?? 0,
@@ -184,7 +200,15 @@ function toPodRow(doc: any) {
 }
 
 export const podExpenseService = {
-  /** One row per pod, with its Duncit spend rolled up. */
+  /**
+   * One row per pod, with its Duncit spend rolled up.
+   *
+   * The roll-up runs before the page is cut, because "sort by most spent" and
+   * "only pods still missing a bill" are both answers the whole matched set
+   * has to be known to give. That costs one indexed lookup per matched pod
+   * rather than per row shown — the lever if this ever gets slow is to page
+   * BEFORE the lookup whenever neither the sort nor the filter reads it.
+   */
   async podsTable(input?: TableQueryInput | null) {
     const podMatch = buildTableFilter(input, POD_TABLE_CONFIG);
     const rollupMatch = buildTableFilter(input, ROLLUP_TABLE_CONFIG);

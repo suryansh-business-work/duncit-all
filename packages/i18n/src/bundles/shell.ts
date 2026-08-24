@@ -410,6 +410,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       paymentRelease: 'Payment Release',
       payoutCycles: 'Payout Cycles',
       plans: 'Plans',
+      podExpenses: 'Pod Expenses',
       podFinance: 'Pod Finance',
       podIdeas: 'Pod Ideas',
       podMonitoringAi: 'Pod Monitoring (AI)',

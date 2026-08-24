@@ -15,12 +15,22 @@ type CardColor = 'primary' | 'success' | 'warning' | 'info' | 'error';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const cards = (t: Translate): ReadonlyArray<{ key: StatKey; label: string; icon: string; color: CardColor }> => [
+interface KpiCard {
+  key: StatKey;
+  label: string;
+  icon: string;
+  color: CardColor;
+  /** A rise is BAD for this metric (spend), so the trend colour flips. */
+  riseIsBad?: boolean;
+}
+
+const cards = (t: Translate): ReadonlyArray<KpiCard> => [
   { key: 'total_revenue', label: t('finance.dashboard.totalCollectedGmv'), icon: 'payments', color: 'primary' },
   { key: 'duncit_revenue', label: t('finance.dashboard.duncitRevenue'), icon: 'insights', color: 'success' },
   { key: 'gst_collected', label: t('finance.dashboard.gstCollected'), icon: 'quote', color: 'warning' },
   { key: 'pending_payouts', label: t('finance.dashboard.pendingPayouts'), icon: 'receipt', color: 'info' },
   { key: 'completed_payouts', label: t('finance.dashboard.completedPayouts'), icon: 'orders', color: 'primary' },
+  { key: 'pod_expenses', label: t('finance.dashboard.podExpenses'), icon: 'receipt', color: 'error', riseIsBad: true },
 ];
 
 const trendLabel = (stat?: FinanceStat): string | undefined => {
@@ -29,9 +39,11 @@ const trendLabel = (stat?: FinanceStat): string | undefined => {
   return `${sign}${stat.mom_change_pct.toFixed(1)}% vs last month`;
 };
 
-const trendColor = (stat?: FinanceStat): string => {
-  if (stat && stat.mom_change_pct < 0) return 'error.main';
-  return 'success.main';
+/** Green means "the right direction". For spend that is DOWN, not up. */
+const trendColor = (stat: FinanceStat | undefined, riseIsBad = false): string => {
+  const fell = !!stat && stat.mom_change_pct < 0;
+  const good = riseIsBad ? fell : !fell;
+  return good ? 'success.main' : 'error.main';
 };
 
 /** Live finance KPIs served by the finance engine (financeDashboardStats). */
@@ -59,7 +71,7 @@ export default function FinanceKpis() {
             icon={<AppIcon name={card.icon} fontSize="small" color={card.color} />}
             loading={loading && !stat}
             hint={trendLabel(stat)}
-            hintColor={trendColor(stat)}
+            hintColor={trendColor(stat, card.riseIsBad)}
             sx={{ borderRadius: 3, flex: '1 1 220px', minWidth: 220 }}
           />
         );

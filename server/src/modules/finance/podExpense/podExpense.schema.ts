@@ -18,10 +18,7 @@ export const podExpenseTypeDefs = /* GraphQL */ `
     pod_code: String!
     pod_title: String!
     pod_date_time: String!
-    pod_mode: String!
     pod_status: PodExpensePodStatus!
-    ticket_price: Float!
-    no_of_spots: Int!
     expense_total: Float!
     expense_count: Int!
     "How many of those entries have a bill or invoice attached."

@@ -21,6 +21,7 @@ import {
   InvoiceManagementPage,
   InvoiceTemplatePage,
   LedgerPage,
+  PodExpensePage,
   PayoutCyclesPage,
   ReferralsPage,
   StartupDashboardPage,
@@ -64,6 +65,7 @@ export default function App() {
       <Route path="/invoices/host" element={authed(<InvoiceTemplatePage kind="host" />)} />
       <Route path="/invoices/product" element={authed(<InvoiceTemplatePage kind="product" />)} />
       <Route path="/ledger" element={authed(<LedgerPage />)} />
+      <Route path="/pod-expenses" element={authed(<PodExpensePage />)} />
       <Route path="/referrals" element={authed(<ReferralsPage />)} />
       <Route path="/duncit-coin/dashboard" element={authed(<CoinDashboardPage />)} />
       <Route path="/duncit-coin/transactions" element={authed(<CoinTransactionsPage />)} />

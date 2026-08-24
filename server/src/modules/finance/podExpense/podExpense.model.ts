@@ -31,6 +31,8 @@ export type PodExpenseCategory = (typeof POD_EXPENSE_CATEGORIES)[number];
 export { EXPENSE_PAYMENT_METHODS as POD_EXPENSE_PAYMENT_METHODS };
 
 export interface IPodExpense extends Document {
+  /** Narrowed from Document's `unknown`: every read of this doc stringifies it. */
+  _id: Types.ObjectId;
   expense_id: string;
   pod_id: Types.ObjectId;
   date: Date;

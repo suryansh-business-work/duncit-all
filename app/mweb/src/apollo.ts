@@ -9,10 +9,15 @@ import {
   resolveNoRedisFlag,
 } from '@duncit/user-core';
 import { urlConfigs } from './config/url-configs';
-import { apolloErrorLink } from './utils/apolloErrorLink';
+import { ABORT_ERROR_NAME, apolloErrorLink } from './utils/apolloErrorLink';
+import { fetchWithTimeout } from './utils/fetchWithTimeout';
 
 const httpLink = new HttpLink({
   uri: urlConfigs.graphqlUrl,
+  // Every request carries a deadline. Without one a query the server never
+  // answers leaves the spinner turning with nothing to report — the native app
+  // has always had this, and the two surfaces must fail the same way.
+  fetch: fetchWithTimeout,
 });
 
 const authLink = setContext((_op, { headers }) => {
@@ -52,6 +57,11 @@ const retryLink = new RetryLink({
       if (definition.kind === 'OperationDefinition' && definition.operation === 'mutation') {
         return false;
       }
+      // A timeout is NOT a transient blip: the deadline already gave the server
+      // every chance it was going to get, and retrying six times would turn one
+      // 30s wait into three minutes of spinner. Surface it at once instead.
+      // (The native twin makes the same call in graphql.client's isTransient.)
+      if (error.name === ABORT_ERROR_NAME) return false;
       const status =
         (error as { statusCode?: number; response?: { status?: number } }).statusCode ??
         (error as { response?: { status?: number } }).response?.status;

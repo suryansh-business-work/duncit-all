@@ -86,6 +86,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       markAsResolved: 'Mark as resolved?',
       message: 'Message',
       monthlyHostEarnings: 'Monthly Host Earnings',
+      // What the transport says when it could not reach the API at all, and
+      // when it reached it but gave up waiting. Both are shown in place of the
+      // library's own wording, which describes the socket rather than the fix.
+      networkUnavailable:
+        'Unable to connect to server. Please check your internet connection and try again.',
       noContinueConversation: 'No, continue conversation',
       openAccountMenu: 'Open account menu',
       openPod: 'Open pod',
@@ -116,6 +121,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       removePhoto: 'Remove photo',
       removePhoto2: 'Remove photo?',
       reportAProblem: 'Report a Problem',
+      requestTimedOut: 'This is taking longer than usual. Check your connection and try again.',
       resetFilters: 'Reset filters',
       rotate: 'Rotate',
       screenshotsOptional: 'Screenshots (optional)',
@@ -2551,6 +2557,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       selectCountry: 'Select country',
       selectState: 'Select state',
       typeAYear: 'Type a year',
+      // The character rule is the same PERSON_NAME from @duncit/regex that
+      // signup runs, so a profile edit cannot save a name signup would have
+      // rejected. mWeb and native render these identically (rule 27).
+      validation: {
+        firstNamePattern: 'First name can use letters, spaces, apostrophes and periods only',
+        lastNamePattern: 'Last name can use letters, spaces, apostrophes and periods only',
+      },
     },
     addressBook: {
       addressBook: 'Address Book',

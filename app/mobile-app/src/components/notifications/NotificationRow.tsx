@@ -2,6 +2,7 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { followRequestRowState } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserNotification } from '@/hooks/useNotifications';
@@ -42,10 +43,19 @@ export function NotificationRow({
   // pays a nesting increment for it.
   const press = busy ? undefined : onPress;
   const rowOpacity = busy ? 0.6 : 1;
-  // Hoisted to nesting 0 (rule 26g): an actionable row ends in its buttons, so
-  // the "open me" chevron would be a second, competing affordance.
-  const showChevron =
-    !busy && !!notification.link_url && notification.action_type !== 'FOLLOW_REQUEST';
+  // Hoisted to nesting 0 (rule 26g), and the same decision the buttons below
+  // make so the two cannot disagree: an actionable row ends in its buttons, and
+  // the "open me" chevron would be a second, competing affordance. A
+  // new-follower row the viewer already follows back renders no buttons, so it
+  // keeps its chevron.
+  const rowState = followRequestRowState({
+    actionType: notification.action_type,
+    requestId: notification.action_ref_id,
+    status: notification.action_status,
+    followBackStatus: notification.follow_back_status,
+    actorId: notification.action_actor_id,
+  });
+  const showChevron = !busy && !!notification.link_url && rowState === 'HIDDEN';
 
   const body = (
     <XStack flex={1} gap={12} padding={12} alignItems="center">

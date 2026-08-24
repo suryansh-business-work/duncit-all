@@ -43,6 +43,11 @@ const CALLER_FIXABLE_CODES = new Set([
   // The thing asked for is gone, or someone else got there first.
   'NOT_FOUND',
   'CONFLICT',
+  // The caller hung up before we finished, so the rest of the work was
+  // abandoned on purpose (see clientPresence). Nothing is broken here — but it
+  // is worth a warn, because a run of these is a request that got slow enough
+  // for the app's own timeout to fire.
+  'CLIENT_CLOSED_REQUEST',
 ]);
 
 /**

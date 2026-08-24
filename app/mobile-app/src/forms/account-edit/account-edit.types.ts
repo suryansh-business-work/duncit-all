@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { PERSON_NAME, PHONE_NUMBER, PINCODE } from '@duncit/regex';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   FALLBACK_DATE_FORMAT,
@@ -7,6 +7,8 @@ import {
   isEligibleDob,
   patternPlaceholder,
 } from '@duncit/datetime';
+
+import { fallbackT, type Translate } from '@/i18n/fallback';
 
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 
@@ -55,10 +57,30 @@ export const makeAccountEditSchema = (
   initialDob = '',
   /** How the date box asks to be typed, from the admin's date pattern. */
   datePlaceholder: string = patternPlaceholder(FALLBACK_DATE_FORMAT),
+  /** Translator for the copy this schema fails with. */
+  t: Translate = fallbackT,
 ) =>
   z.object({
-    first_name: z.string().trim().min(1, 'First name is required').max(60, 'Too long'),
-    last_name: z.string().trim().max(60, 'Too long'),
+    // Both name boxes take the shared PERSON_NAME shape — letters, spaces,
+    // apostrophes and periods. Digits, underscores, emoji and any other
+    // punctuation are rejected here exactly as they are at signup and on mWeb.
+    first_name: z
+      .string()
+      .trim()
+      .min(1, 'First name is required')
+      .max(60, 'Too long')
+      .refine(
+        (value) => PERSON_NAME.test(value),
+        t('mweb.accountEdit.validation.firstNamePattern'),
+      ),
+    last_name: z
+      .string()
+      .trim()
+      .max(60, 'Too long')
+      .refine(
+        (value) => value === '' || PERSON_NAME.test(value),
+        t('mweb.accountEdit.validation.lastNamePattern'),
+      ),
     bio: z.string().trim().max(280, 'Keep it under 280 characters'),
     dob: makeDob(minAge, initialDob, datePlaceholder),
     country: z.string().trim().max(80, 'Too long'),

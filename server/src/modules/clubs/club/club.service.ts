@@ -24,6 +24,9 @@ const toClubActor = (u: any, fallbackName: string) => ({
   avatar_url: u.profile?.profile_photo ?? null,
 });
 
+/** Ceiling on the unpaginated `clubs` read — see POD_LIST_MAX in pod.service. */
+const CLUB_LIST_MAX = Number(process.env.CLUB_LIST_MAX_ROWS) || 1000;
+
 const slugify = (s: string) =>
   s
     .toLowerCase()
@@ -124,7 +127,18 @@ export const clubService = {
     if (filter?.locality) q.locality = filter.locality;
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     if (filter?.is_verified !== undefined) q.is_verified = filter.is_verified;
-    const docs = await ClubModel.find(q).sort({ club_name: 1 });
+    // Bounded and lean, for the same reason `pods` is: this read has no page
+    // argument, so it grew with the collection. The cap sits far above the live
+    // club count and announces itself when reached rather than quietly cutting
+    // the list short — an alphabetical sort means the tail would vanish without
+    // a trace otherwise.
+    const docs = await ClubModel.find(q).sort({ club_name: 1 }).limit(CLUB_LIST_MAX).lean();
+    if (docs.length === CLUB_LIST_MAX) {
+      logs.server.warn('club', 'list', {
+        message: `Club list hit its ${CLUB_LIST_MAX}-row cap; later clubs were not returned.`,
+        filter: JSON.stringify(filter ?? {}),
+      });
+    }
     return docs.map(toPub);
   },
 
@@ -146,6 +160,18 @@ export const clubService = {
     // and null is the honest answer.
     if (!isValidObjectId(id)) return null;
     return toPub(await ClubModel.findById(id));
+  },
+
+  /**
+   * Several clubs in one read, for the batched `Pod.club` loader. Malformed ids
+   * are dropped rather than thrown on, matching getById: a pod pointing at a
+   * club that no longer exists resolves to null, not to a failed feed.
+   */
+  async getByIds(ids: readonly string[]) {
+    const valid = ids.filter((id) => isValidObjectId(id));
+    if (valid.length === 0) return [];
+    const docs = await ClubModel.find({ _id: { $in: valid } }).lean();
+    return docs.map(toPub).filter(Boolean);
   },
 
   async getBySlug(slug: string) {

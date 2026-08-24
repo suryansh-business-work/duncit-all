@@ -68,6 +68,14 @@ exports:
   - 'appPopupLimits'
   - 'appPopupImageSize'
   - 'detectClientPlatform'
+  - 'followActionFor'
+  - 'nextFollowStatus'
+  - 'readFollowStatus'
+  - 'followStatusFrom'
+  - 'FOLLOW_LABEL_KEY'
+  - 'followRequestRowState'
+  - 'followBackLabelKey'
+  - 'canFollowBack'
 ---
 
 ## Why this exists
@@ -779,6 +787,41 @@ at once — an account with nowhere to receive a code cannot sign in.
 
 `findCommChannel(channels, channel)` is the one lookup both apps use, so a screen that wants
 one channel out of the sheet never writes its own `.find`.
+
+### The follow button, and the follow rows in the inbox
+
+Following a PRIVATE profile is a REQUEST, not a follow. The server is the only thing that
+writes a follow edge; `followActionFor` / `nextFollowStatus` exist so the button predicts the
+same outcome the server will produce, which is what makes an optimistic update safe.
+
+```ts
+followActionFor('REQUESTED');        // 'CANCEL_REQUEST' — there is no edge to unfollow yet
+nextFollowStatus('NONE', true);      // 'REQUESTED' — a private profile is asked
+nextFollowStatus('NONE', false);     // 'FOLLOWING'
+```
+
+`followRequestRowState` is the same idea for the notification inbox, which is the ONLY
+surface follow requests are answered on. It takes a row exactly as `myNotifications` returns
+it and says what that row offers:
+
+```ts
+followRequestRowState({ actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'PENDING' });
+// 'ANSWER'      — Accept / Deny
+followRequestRowState({ actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'ACCEPTED', followBackStatus: 'NONE' });
+// 'FOLLOW_BACK' — 'Accepted', and an offer to follow them back
+followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-aarav', followBackStatus: 'NONE' });
+// 'FOLLOW_BACK' — no request behind it, so the button stands alone
+followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-meera', followBackStatus: 'FOLLOWING' });
+// 'HIDDEN'      — already followed back, so there is nothing to offer
+```
+
+`NEW_FOLLOWER` matters more than it looks: a PUBLIC profile never receives a follow request,
+so "X started following you" is the only follow row it ever gets. Without it there is no way
+to follow anybody back from the inbox at all. Rows written before the actor column existed
+carry no `actorId` and stay inert rather than rendering a button with nobody to act on.
+
+`followBackLabelKey` and `canFollowBack` split the button's two live states: an open ask
+reads "Requested" and stops accepting taps, because a pending request has nothing to re-send.
 
 ## Adding a helper
 

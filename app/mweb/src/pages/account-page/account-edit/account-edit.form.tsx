@@ -51,8 +51,8 @@ export default function AccountEditForm({
   const minAge = useMinSignupAge();
   const { datePlaceholder } = useDateFormat();
   const schema = useMemo(
-    () => makeAccountEditSchema(minAge, defaultValues.dob, datePlaceholder),
-    [minAge, defaultValues.dob, datePlaceholder],
+    () => makeAccountEditSchema(minAge, defaultValues.dob, datePlaceholder, t),
+    [minAge, defaultValues.dob, datePlaceholder, t],
   );
   const {
     control,

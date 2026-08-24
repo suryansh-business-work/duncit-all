@@ -2204,8 +2204,14 @@ export const userService = {
 
   /** Write the follow edge and move both counters. The single place an edge is
    * born — direct follows of a public profile and accepted requests share it, so
-   * the two paths cannot drift on counters or the follower notification. */
-  async createFollowEdge(user_id: string, targetUserId: string) {
+   * the two paths cannot drift on counters or the follower notification.
+   *
+   * `notify` is off for an accepted request: the accepter already has the
+   * FOLLOW_REQUEST row, which turns into "Accepted · Follow Back" the moment
+   * they answer. A second row saying the same person now follows them would sit
+   * ABOVE it, newer and with nothing to act on — which is precisely how the
+   * inbox came to look like it could not follow anybody back. */
+  async createFollowEdge(user_id: string, targetUserId: string, notify = true) {
     const followerOid = new Types.ObjectId(user_id);
     const followingOid = new Types.ObjectId(targetUserId);
     let created = false;
@@ -2224,7 +2230,7 @@ export const userService = {
     }
     const updated = await UserModel.findById(user_id);
     const follower = await toPublic(updated);
-    if (created) await this.notifyNewFollower(targetUserId, follower);
+    if (created && notify) await this.notifyNewFollower(targetUserId, follower);
     return follower;
   },
 
@@ -2302,7 +2308,10 @@ export const userService = {
       { _id: request._id, status: 'PENDING' },
       { $set: { status: 'ACCEPTED', resolved_at: new Date() } }
     );
-    await this.createFollowEdge(String(request.requester_id), user_id);
+    // No "started following you" row: this notification's own row is the one
+    // that now reads "Accepted · Follow Back", and a second, newer row about
+    // the same person would bury it with nothing to act on.
+    await this.createFollowEdge(String(request.requester_id), user_id, false);
     return toPublic(await UserModel.findById(user_id));
   },
 
@@ -2402,6 +2411,13 @@ export const userService = {
 
   // Best-effort "started following you" notification to the followed user.
   // A failure here must never break the follow itself.
+  //
+  // The row is ACTIONABLE: it carries the follower as its actor, so the inbox
+  // can offer Follow Back straight from it. For a PUBLIC profile this is the
+  // only row it ever gets about a new follower — no follow request is ever
+  // raised — so without the actor there is no way to follow back from the
+  // inbox at all. Whether the button shows is decided per viewer by
+  // Notification.follow_back_status, which hides it once they already follow.
   async notifyNewFollower(targetUserId: string, follower: Awaited<ReturnType<typeof toPublic>>) {
     try {
       const { notificationService } = await import(
@@ -2413,6 +2429,10 @@ export const userService = {
         body: `${name} started following you`,
         image_url: follower?.profile_photo ?? null,
         link_url: follower?.user_id ? `/u/${follower.user_id}` : null,
+        action_type: 'NEW_FOLLOWER',
+        // Stored, not derived: a new-follower row references no document, so
+        // this column is the ONLY record of who it is about.
+        action_actor_id: follower?.user_id ?? null,
         scope: 'USER',
         target_user_ids: [targetUserId],
       });

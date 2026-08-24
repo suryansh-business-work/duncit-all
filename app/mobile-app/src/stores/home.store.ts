@@ -1,10 +1,15 @@
 import { create } from 'zustand';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { HomeFeedDocument } from '@/graphql/home';
+import { HomePodsDocument, HomeStaticDocument } from '@/graphql/home';
 import { graphqlRequest } from '@/services/graphql.client';
 
-export type HomeFeed = ResultOf<typeof HomeFeedDocument>;
+/**
+ * The merged shape of both halves of the feed. It is an intersection rather
+ * than one document's result because the request was split for caching (see
+ * graphql/home.ts) — everything downstream still reads one object.
+ */
+export type HomeFeed = ResultOf<typeof HomeStaticDocument> & ResultOf<typeof HomePodsDocument>;
 
 interface HomeState {
   data?: HomeFeed;
@@ -29,12 +34,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     if (get().data && !force) return;
     set({ isLoading: true, error: undefined });
     try {
-      const data = await graphqlRequest(
-        HomeFeedDocument,
-        { podFilter: { is_active: true } },
-        { auth: true },
-      );
-      set({ data, isLoading: false });
+      // In parallel: the catalogue half is usually a cache hit, so waiting for
+      // it in sequence would hand back its saving to the round trip it saved.
+      const [staticData, podData] = await Promise.all([
+        graphqlRequest(HomeStaticDocument, undefined, { auth: true }),
+        graphqlRequest(HomePodsDocument, { podFilter: { is_active: true } }, { auth: true }),
+      ]);
+      set({ data: { ...staticData, ...podData }, isLoading: false });
     } catch (error) {
       set({ error, isLoading: false });
     }

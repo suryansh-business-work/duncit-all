@@ -61,6 +61,36 @@ function overrideMongoDns(reason: string): void {
   logs.server.info('db', 'connectDB', { msg });
 }
 
+/**
+ * Ceiling on how long ANY single query may run, attached to every Mongoose
+ * query by `mongoose.set('maxTimeMS')` below.
+ *
+ * Without one, a query that has gone wrong — a missing index, a regex scan, a
+ * collection that outgrew its shape — keeps burning server CPU and holding a
+ * pooled connection long after the client that asked for it has given up and
+ * disconnected. That is what turns one slow request into a queue: the work is
+ * still running, the connections are still taken, and every retry adds more.
+ *
+ * The number sits above anything legitimate and below `socketTimeoutMS`, so
+ * Mongo ends the operation itself rather than the socket dying under it. Raw
+ * driver cursors (the database backup / restore streams) do not go through
+ * Mongoose queries and are deliberately unaffected.
+ */
+const MONGO_MAX_TIME_MS = Number(process.env.MONGO_MAX_TIME_MS) || 30_000;
+
+/**
+ * Warm connections to keep open.
+ *
+ * The pool opens lazily, and on this cluster a fresh connection costs a TLS
+ * handshake measured at 1–7s (see serverSelectionTimeoutMS below). A burst of
+ * traffic against an idle pool therefore pays that handshake on the critical
+ * path of the first requests in — which is exactly when the site is least able
+ * to afford it. Holding a floor of warm sockets moves that cost to startup.
+ */
+const MONGO_MIN_POOL_SIZE = Number(process.env.MONGO_MIN_POOL_SIZE) || 10;
+/** Explicit rather than inherited: the driver's default is 100 and silent. */
+const MONGO_MAX_POOL_SIZE = Number(process.env.MONGO_MAX_POOL_SIZE) || 100;
+
 function mongoConnectOptions(dbName: string | undefined): ConnectOptions {
   return {
     // Mumbai → Mumbai latency to this VPS spikes (TLS handshakes have
@@ -70,6 +100,8 @@ function mongoConnectOptions(dbName: string | undefined): ConnectOptions {
     serverSelectionTimeoutMS: 60_000,
     connectTimeoutMS: 60_000,
     socketTimeoutMS: 60_000,
+    minPoolSize: MONGO_MIN_POOL_SIZE,
+    maxPoolSize: MONGO_MAX_POOL_SIZE,
     family: 4, // prefer IPv4 — avoids some Atlas SRV resolution issues
     retryWrites: true,
     ...(dbName ? { dbName } : {}),
@@ -134,6 +166,10 @@ export async function connectDB(): Promise<void> {
   }
 
   mongoose.set('strictQuery', true);
+  // Attaches maxTimeMS to every Mongoose query. Set here rather than per model,
+  // because a global that has to be remembered at 289 call sites is a global
+  // that will be missed at one of them — and the one missed is the runaway.
+  mongoose.set('maxTimeMS', MONGO_MAX_TIME_MS);
 
   let attempt = 0;
   // Backoff: 3s, 6s, 9s, … capped at 30s.

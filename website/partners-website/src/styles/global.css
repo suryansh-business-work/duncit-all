@@ -10,6 +10,9 @@
   --color-ink-soft: #4b4651;
   --color-cream: #faf6f0;
   --color-lilac: #eef0fb;
+  /* Ink that sits ON a filled or dark surface — the primary button, the header
+     over the hero photograph. A token so no component writes `#fff` itself. */
+  --color-on-primary: #ffffff;
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { PERSON_NAME, PHONE_NUMBER, PINCODE } from '@duncit/regex';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   FALLBACK_DATE_FORMAT,
@@ -7,7 +7,7 @@ import {
   isEligibleDob,
   patternPlaceholder,
 } from '@duncit/datetime';
-import { PERSON_NAME_PATTERN } from '../../../forms/validation/rules';
+import { fallbackT, type Translate } from '../../../i18n/fallback';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const EXT_PATTERN = /^\+?\d{1,5}$/;
@@ -21,14 +21,15 @@ const addressPincode = z
   .trim()
   .refine((v) => v === '' || PINCODE.test(v), 'Enter a valid 6-digit pincode');
 
-const optionalPersonName = (label: string) =>
+/** An optional name box — empty, or the shared PERSON_NAME shape: letters,
+ * spaces, apostrophes and periods. Digits, underscores, emoji and any other
+ * punctuation are rejected, exactly as they are at signup. */
+const optionalPersonName = (label: string, patternMessage: string) =>
   z
     .string()
     .trim()
     .max(60, `${label} must be 60 characters or fewer`)
-    .refine((v) => v === '' || PERSON_NAME_PATTERN.test(v), {
-      message: `${label} can use letters, spaces, apostrophes, periods and hyphens only`,
-    });
+    .refine((v) => v === '' || PERSON_NAME.test(v), { message: patternMessage });
 
 const optionalLocation = (label: string) =>
   z.string().trim().max(80, `${label} must be 80 characters or fewer`);
@@ -70,6 +71,8 @@ export const makeAccountEditSchema = (
   initialDob = '',
   /** How the date box asks to be typed, from the admin's date pattern. */
   datePlaceholder: string = patternPlaceholder(FALLBACK_DATE_FORMAT),
+  /** Translator for the copy this schema fails with. */
+  t: Translate = fallbackT,
 ) =>
   z.object({
   first_name: z
@@ -77,10 +80,10 @@ export const makeAccountEditSchema = (
     .trim()
     .min(1, 'First name is required')
     .max(60, 'First name must be 60 characters or fewer')
-    .refine((v) => PERSON_NAME_PATTERN.test(v), {
-      message: 'First name can use letters, spaces, apostrophes, periods and hyphens only',
+    .refine((v) => PERSON_NAME.test(v), {
+      message: t('mweb.accountEdit.validation.firstNamePattern'),
     }),
-  last_name: optionalPersonName('Last name'),
+  last_name: optionalPersonName('Last name', t('mweb.accountEdit.validation.lastNamePattern')),
   bio: z.string().trim().max(500, 'Bio must be 500 characters or fewer'),
   dob: makeDob(minAge, initialDob, datePlaceholder),
   country: optionalLocation('Country'),

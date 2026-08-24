@@ -3,22 +3,28 @@ import { Schema, model, type Document, Types } from 'mongoose';
 export type NotificationScope = 'GLOBAL' | 'LOCATION' | 'ZONE' | 'USER' | 'AUDIENCE_LIST';
 
 /** Notifications the recipient can ACT on from the inbox, rather than only read.
- * The client renders the matching buttons; the server owns what they do. */
-export type NotificationAction = 'FOLLOW_REQUEST';
+ * The client renders the matching buttons; the server owns what they do.
+ *
+ * NEW_FOLLOWER carries no document to answer — its whole action is Follow
+ * Back. It exists because a PUBLIC profile never receives a follow request,
+ * so "X started following you" is the only row it ever gets about a new
+ * follower, and an inbox that cannot act on it cannot follow anybody back. */
+export type NotificationAction = 'FOLLOW_REQUEST' | 'NEW_FOLLOWER';
 
 export interface INotification extends Document {
   title: string;
   body: string;
   image_url?: string | null;
   link_url?: string | null;
-  /** Set when this row carries inline actions (e.g. Accept / Reject). */
+  /** Set when this row carries inline actions (e.g. Accept / Reject, Follow Back). */
   action_type?: NotificationAction | null;
   /** Document the action operates on — a FollowRequest id for FOLLOW_REQUEST. */
   action_ref_id?: Types.ObjectId | null;
-  /** The OTHER user this row is about — the requester behind a FOLLOW_REQUEST.
-   * It is what a Follow Back acts on, so it is stored rather than re-derived:
-   * the row must still know its actor after the document behind action_ref_id
-   * has been answered. */
+  /** The OTHER user this row is about — the requester behind a FOLLOW_REQUEST,
+   * the new follower behind a NEW_FOLLOWER. It is what a Follow Back acts on,
+   * so it is stored rather than re-derived: the row must still know its actor
+   * after the document behind action_ref_id has been answered, and a
+   * NEW_FOLLOWER row has no document to re-derive it from at all. */
   action_actor_id?: Types.ObjectId | null;
   scope: NotificationScope;
   silent: boolean;
@@ -39,7 +45,7 @@ const notificationSchema = new Schema<INotification>(
     body: { type: String, required: true, trim: true },
     image_url: { type: String, default: null },
     link_url: { type: String, default: null },
-    action_type: { type: String, enum: ['FOLLOW_REQUEST'], default: null },
+    action_type: { type: String, enum: ['FOLLOW_REQUEST', 'NEW_FOLLOWER'], default: null },
     action_ref_id: { type: Schema.Types.ObjectId, default: null },
     action_actor_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     scope: {

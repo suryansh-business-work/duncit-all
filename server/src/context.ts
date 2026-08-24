@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { watchClientPresence } from '@utils/clientPresence';
 
 export interface AuthUser {
   id: string;
@@ -20,6 +21,12 @@ export interface GraphQLContext {
    * redisResponseCache plugin; resolvers never need to look at it.
    */
   noRedis: boolean;
+  /**
+   * True once the caller has hung up mid-request — the app's own timeout fired,
+   * or the tab was closed. Expensive reads check it and abandon the request
+   * rather than finishing work for a socket that is already gone.
+   */
+  isClientGone: () => boolean;
 }
 
 /**
@@ -61,5 +68,5 @@ export async function buildContext({
       : duidFromArray;
   const rawNoRedis = req.headers['x-no-redis'];
   const noRedis = (Array.isArray(rawNoRedis) ? rawNoRedis[0] : rawNoRedis) === 'true';
-  return { req, res, user, device_id, noRedis };
+  return { req, res, user, device_id, noRedis, isClientGone: watchClientPresence(res) };
 }

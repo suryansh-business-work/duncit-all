@@ -11,14 +11,16 @@ import {
 } from '../../../pages/hosts-venues-page/queries';
 
 interface Props {
-  /** The notification's action kind — anything but FOLLOW_REQUEST renders nothing. */
+  /** The notification's action kind — FOLLOW_REQUEST or NEW_FOLLOWER; anything
+   * else renders nothing. */
   actionType?: string | null;
   requestId?: string | null;
-  /** Live status of the request — PENDING is the only state with Accept/Deny. */
+  /** Live status of the request — PENDING is the only state with Accept/Deny.
+   * Always null on a NEW_FOLLOWER row: there is no request behind it. */
   status?: string | null;
-  /** The requester, i.e. who a Follow Back would follow. */
+  /** The other user, i.e. who a Follow Back would follow. */
   actorId?: string | null;
-  /** The viewer's own follow state towards that requester. FOLLOWING is what
+  /** The viewer's own follow state towards that user. FOLLOWING is what
    * hides Follow Back — they are already followed, so there is nothing to do. */
   followBackStatus?: string | null;
   /** The row is unread, so it is painted with the primary gradient — the text
@@ -33,8 +35,9 @@ interface Props {
 const TEXT_BUTTON = { fontWeight: 800, textTransform: 'none' } as const;
 
 /**
- * The inline actions on a FOLLOW_REQUEST notification, across the whole life of
- * the request:
+ * The inline actions on an actionable follow notification.
+ *
+ * On a FOLLOW_REQUEST, across the whole life of the request:
  *
  *   PENDING   Accept / Deny — accepting is what creates the follow, so these
  *             buttons are the private profile's whole gate.
@@ -42,6 +45,11 @@ const TEXT_BUTTON = { fontWeight: 800, textTransform: 'none' } as const;
  *             follow the requester back. Following a private profile only opens
  *             a request, which is why the button can land on "Requested".
  *   DENIED    "Denied", and nothing to act on.
+ *
+ * On a NEW_FOLLOWER there is no request and so no outcome to state: the row
+ * carries Follow Back alone, and nothing once the viewer follows them back. It
+ * is the only follow row a PUBLIC profile ever gets, so it is the only way
+ * most people can follow back from the inbox at all.
  *
  * Which of those to render is decided by `followRequestRowState` in
  * @duncit/utils so the native twin cannot disagree with it (rules 27, 40).
@@ -65,7 +73,7 @@ export default function FollowRequestActions({
   // Self-gating: every notification row renders this, and an ordinary one gets
   // nothing back. That keeps the decision here instead of adding a branch to
   // the row's already-dense render.
-  const state = followRequestRowState({ actionType, requestId, status, followBackStatus });
+  const state = followRequestRowState({ actionType, requestId, status, followBackStatus, actorId });
   if (state === 'HIDDEN') return null;
 
   const run = async (mutate: () => Promise<unknown>) => {
@@ -81,7 +89,10 @@ export default function FollowRequestActions({
     }
   };
 
-  const settledLabel = status === 'ACCEPTED' ? t('mweb.follow.accepted') : t('mweb.follow.rejected');
+  const answeredLabel = status === 'ACCEPTED' ? t('mweb.follow.accepted') : t('mweb.follow.rejected');
+  // A new-follower row has no request behind it, so there is no outcome to
+  // state above the button — only a FOLLOW_REQUEST row carries this line.
+  const settledLabel = status ? answeredLabel : null;
 
   // Answered elsewhere (another device), denied, or already followed back —
   // state the outcome instead of offering buttons that would now fail.
@@ -105,9 +116,11 @@ export default function FollowRequestActions({
         sx={{ mt: 1 }}
         onClick={(event) => event.stopPropagation()}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
-          {settledLabel}
-        </Typography>
+        {settledLabel && (
+          <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
+            {settledLabel}
+          </Typography>
+        )}
         <Button
           size="small"
           variant="text"

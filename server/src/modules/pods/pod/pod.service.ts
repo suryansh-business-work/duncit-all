@@ -43,6 +43,18 @@ import { notifySocialActivity } from '@modules/engagement/notification/social-no
 import { logs } from '@observability/log';
 import { notifyEach, notifyEvent } from '@services/notify/notify.service';
 
+/**
+ * Ceiling on the unpaginated `pods` read.
+ *
+ * `pods` has no page argument — the discovery surfaces take the whole set and
+ * filter it client-side — so without a ceiling the query grew with the
+ * collection forever. The number is far above any city's live pod count and
+ * exists to bound the worst case, not to page: hitting it is logged as a
+ * warning precisely because it means the feed has outgrown this shape.
+ * Env-tunable so a spike can be absorbed without a deploy.
+ */
+const POD_LIST_MAX = Number(process.env.POD_LIST_MAX_ROWS) || 1000;
+
 const slugify = (s: string) =>
   s
     .toLowerCase()
@@ -1684,7 +1696,24 @@ export const podService = {
     // unfiltered public read) until the owner approves — a server guarantee, not
     // just a client `is_active` filter. Admin/onboarding reviewers opt in.
     if (!opts?.includePendingApproval) q.venue_approval_status = { $ne: 'PENDING' };
-    const docs = await PodModel.find(q).sort({ pod_date_time: -1 });
+    // Bounded and lean. Unbounded, this hydrated every matching pod into a full
+    // Mongoose document, so the discovery feed grew with the collection until it
+    // outran the client's request timeout. The sort is date-DESCENDING, so the
+    // cap sheds the OLDEST pods first — the ones every discovery surface already
+    // filters out as past — and never the upcoming ones the feed is built from.
+    const docs = await PodModel.find(q)
+      .sort({ pod_date_time: -1 })
+      .limit(POD_LIST_MAX)
+      .lean();
+    if (docs.length === POD_LIST_MAX) {
+      // Silent truncation would read as "that is all the pods there are". Say so
+      // instead: this is the signal that the cap needs raising or the feed needs
+      // paginating, and it lands in the Tech portal's logs where it is visible.
+      logs.server.warn('pod', 'list', {
+        message: `Pod list hit its ${POD_LIST_MAX}-row cap; older pods were not returned.`,
+        filter: JSON.stringify(filter ?? {}),
+      });
+    }
     const slugMap = await loadClubSlugMap(docs);
     return docs.map((d) => toPub(d, slugMap));
   },

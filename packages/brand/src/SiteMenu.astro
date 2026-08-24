@@ -106,9 +106,16 @@ const menuLabel = label ?? t('website.nav.menu');
     border-color: var(--color-primary, #ff5757);
     color: var(--color-primary, #ff5757);
   }
+  /* Over a banner photograph. A caller that toggles between transparent and
+     solid must NOT set this prop — it is fixed at build time and would leave a
+     white burger on a cream bar; such a header paints the button from its own
+     `.at-top` rule instead. */
   .site-menu-button.on-dark {
-    border-color: rgba(255, 255, 255, 0.45);
-    color: #fff;
+    border-color: color-mix(in srgb, var(--color-on-primary, #fff) 45%, transparent);
+    color: var(--color-on-primary, #fff);
+    /* The photograph behind it can be bright; the nav links beside it have
+       carried this shadow all along and the burger did not. */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   }
   @media (min-width: 1024px) {
     .site-menu-button {
@@ -223,7 +230,7 @@ const menuLabel = label ?? t('website.nav.menu');
   .site-menu-actions a.is-primary {
     border-color: transparent;
     background: var(--color-primary, #ff5757);
-    color: #fff;
+    color: var(--color-on-primary, #fff);
   }
 </style>
 

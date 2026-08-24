@@ -79,7 +79,18 @@ export const config = {
   // Google Maps key for the interactive location map (Maps Embed API). Mirrors
   // mWeb's VITE_GOOGLE_MAP_API; the map degrades to nothing when unset.
   googleMapApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API ?? '',
-  requestTimeoutMs: 15_000,
+  /**
+   * How long one attempt may take before the client gives up.
+   *
+   * 15s was below the real cost of a cold first load on a mobile radio — DNS,
+   * TLS and a full home feed — so the app reported "Request timed out" for
+   * requests the server went on to answer successfully. The server-side fan-out
+   * that made those requests slow is fixed; this is the headroom that stops a
+   * merely-slow network from reading as a failure. It stays finite on purpose:
+   * a request nobody can answer must still end, and the server now hears the
+   * disconnect and abandons the work rather than finishing it for nobody.
+   */
+  requestTimeoutMs: 30_000,
 } as const;
 
 export type AppConfig = typeof config;

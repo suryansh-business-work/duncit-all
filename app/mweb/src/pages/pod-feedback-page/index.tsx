@@ -94,6 +94,17 @@ export default function PodFeedbackPage() {
     );
   }
 
+  // The link travels further than the pod did. Only someone the host marked
+  // present may answer it — everyone else is told why, rather than filling in
+  // stars the submit would refuse.
+  if (!form.can_rate) {
+    return (
+      <Stack sx={{ py: 2 }}>
+        <Alert severity="warning">{t('mweb.podFeedback.noAccess')}</Alert>
+      </Stack>
+    );
+  }
+
   return (
     <Stack sx={{ py: 1 }}>
       <PodFeedbackCard

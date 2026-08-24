@@ -16,8 +16,12 @@ export type {
 export { UPLOAD_IMAGE, GET_IMAGEKIT_AUTH, UPLOAD_SETTINGS } from './queries';
 export { uploadImageToImagekit, useImagekitBase64Upload } from './upload';
 export type { ImagekitUploadResult, UploadImageOptions } from './upload';
-export { directUploadToImagekit, useImagekitDirectUpload } from './useImagekitDirectUpload';
-export type { UploadProgress } from './useImagekitDirectUpload';
+export {
+  directUploadToImagekit,
+  uploadFileWithTicket,
+  useImagekitDirectUpload,
+} from './useImagekitDirectUpload';
+export type { UploadPass, UploadProgress } from './useImagekitDirectUpload';
 export { compressUploadedVideo, type VideoTrim } from './videoCompression';
 export { useUploadSettings } from './useUploadSettings';
 export { croppablePresets, formatBytes, formatDuration, presetAspect, suggestPresetKey } from './cropUtils';

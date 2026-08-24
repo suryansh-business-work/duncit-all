@@ -39,6 +39,7 @@ export function useBackups() {
   const confirm = useConfirm();
   const refetchRef = useRef<(() => void) | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<BackupRow | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [liveBackup, setLiveBackup] = useState(false);
 
@@ -80,6 +81,11 @@ export function useBackups() {
     }, LIVE_POLL_MS);
     return () => globalThis.clearInterval(timer);
   }, [live, restoreQuery, settingsQuery]);
+
+  /** An uploaded archive is a new row, so the table has to be asked again. */
+  const onUploaded = useCallback(() => {
+    refetchRef.current?.();
+  }, []);
 
   const onRunNow = useCallback(async () => {
     try {
@@ -169,6 +175,9 @@ export function useBackups() {
     restoring: restoreState.loading,
     restoreTarget,
     setRestoreTarget,
+    uploadOpen,
+    setUploadOpen,
+    onUploaded,
     onRunNow,
     onSaveSettings,
     onDownload,

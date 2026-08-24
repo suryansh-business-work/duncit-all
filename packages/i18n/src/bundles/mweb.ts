@@ -480,6 +480,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       nameLabel: 'Name',
       namePlaceholder: 'Riya Sharma',
       emailPlaceholder: 'riya@duncit.com',
+      // The number box only; its dial code is picked from a list and labelled
+      // with mweb.common.code, which every other phone row on both apps uses.
+      phonePlaceholder: '9876543210',
+      phoneHint: 'We use this to reach you about your bookings.',
       passwordPlaceholder: 'Create a password',
       confirmPasswordLabel: 'Confirm Password',
       confirmPasswordPlaceholder: 'Re-enter password',
@@ -507,6 +511,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         dobInvalid: 'Enter a valid date of birth',
         dobFormat: 'Use the format {format}',
         dobMinAge: 'You must be at least {years} years old to join Duncit',
+        // Phone is required and unique. The client says what shape is expected;
+        // whether the number is already on another account is the server's
+        // answer, and it arrives as the form's error line.
+        phoneRequired: 'Phone number is required',
+        phoneInvalid: 'Enter a phone number — digits only, 6 to 15',
+        codeRequired: 'Country code is required',
+        codeInvalid: 'Use a code like +91',
       },
     },
     forgotPassword: {
@@ -1145,6 +1156,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The standalone page behind the link a host shares with their guests.
       pageTitle: 'Rate this pod',
       loadFailed: 'That pod could not be opened. Check the link and try again.',
+      // The link gets forwarded. Whoever opens it without having been marked
+      // present is told which of the two things is missing, so they know
+      // whether to book or to ask the host.
+      noAccess:
+        'You do not have access to this link because you have not joined this pod, or your attendance has not been marked by the host.',
       saved: 'Thanks — your rating has been saved.',
       alreadyRated: 'You already rated this pod. Change anything you like and send it again.',
       update: 'Update rating',

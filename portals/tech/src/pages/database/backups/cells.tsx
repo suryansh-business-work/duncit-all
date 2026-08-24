@@ -3,8 +3,13 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DownloadIcon from '@mui/icons-material/Download';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import RestoreIcon from '@mui/icons-material/Restore';
-import { formatBytes } from '../../server/format';
-import { compressionLabel, type BackupRow, type BackupStatus } from './queries';
+import { formatBytes, formatDateTime } from '../../server/format';
+import {
+  compressionLabel,
+  type BackupRow,
+  type BackupStatus,
+  type BackupTrigger,
+} from './queries';
 
 const STATUS_COLOR: Record<BackupStatus, 'success' | 'error' | 'info'> = {
   RUNNING: 'info',
@@ -12,8 +17,13 @@ const STATUS_COLOR: Record<BackupStatus, 'success' | 'error' | 'info'> = {
   FAILED: 'error',
 };
 
-export type StatusLabels = Record<BackupStatus, string>;
-export type TriggerLabels = Record<'SCHEDULED' | 'MANUAL', string>;
+/**
+ * RUNNING means two different things on this page, so it carries two labels: a
+ * backup is walking the database, an upload is being read off the disk. One
+ * word for both would be wrong for one of them.
+ */
+export type StatusLabels = Record<BackupStatus, string> & { CHECKING: string };
+export type TriggerLabels = Record<BackupTrigger, string>;
 
 export interface ActionLabels {
   download: string;
@@ -31,7 +41,14 @@ export const makeStatusOptions = (labels: StatusLabels) => [
 export const makeTriggerOptions = (labels: TriggerLabels) => [
   { value: 'SCHEDULED', label: labels.SCHEDULED },
   { value: 'MANUAL', label: labels.MANUAL },
+  { value: 'UPLOADED', label: labels.UPLOADED },
 ];
+
+const TRIGGER_COLOR: Record<BackupTrigger, 'default' | 'primary' | 'secondary'> = {
+  SCHEDULED: 'default',
+  MANUAL: 'primary',
+  UPLOADED: 'secondary',
+};
 
 /**
  * Status, with the failure reason on the chip rather than a row nobody opens.
@@ -40,15 +57,15 @@ export const makeTriggerOptions = (labels: TriggerLabels) => [
 export const makeRenderStatus = (labels: StatusLabels) =>
   function RenderStatus(row: BackupRow) {
     if (row.status === 'RUNNING') {
-      const label = row.currentCollection ?? labels.RUNNING;
+      const running = row.trigger === 'UPLOADED' ? labels.CHECKING : labels.RUNNING;
       return (
-        <Tooltip title={label}>
+        <Tooltip title={row.currentCollection ?? running}>
           <Chip
             size="small"
             color="info"
             variant="outlined"
             icon={<CircularProgress size={12} thickness={6} />}
-            label={labels.RUNNING}
+            label={running}
           />
         </Tooltip>
       );
@@ -75,7 +92,7 @@ export const makeRenderTrigger = (labels: TriggerLabels) =>
       <Chip
         size="small"
         variant="outlined"
-        color={row.trigger === 'SCHEDULED' ? 'default' : 'primary'}
+        color={TRIGGER_COLOR[row.trigger]}
         label={labels[row.trigger]}
       />
     );
@@ -94,6 +111,35 @@ export function renderSize(row: BackupRow) {
   );
 }
 
+/**
+ * The archive's name, and for an uploaded one the date it was TAKEN.
+ *
+ * The row is sorted and dated by when it started here, which for an upload is
+ * the day it arrived — so without this the one fact that decides which archive
+ * to restore, how old its data is, would only appear inside the restore dialog.
+ */
+export const makeRenderFile = (labels: { noFile: string; taken: (when: string) => string }) =>
+  function RenderFile(row: BackupRow) {
+    if (!row.fileName) {
+      return (
+        <Typography variant="caption" color="text.secondary">
+          {labels.noFile}
+        </Typography>
+      );
+    }
+    if (row.trigger !== 'UPLOADED' || !row.archiveTakenAt) {
+      return <Typography variant="body2">{row.fileName}</Typography>;
+    }
+    return (
+      <Box sx={{ lineHeight: 1.3, py: 0.5 }}>
+        <Typography variant="body2">{row.fileName}</Typography>
+        <Typography variant="caption" color="text.secondary">
+          {labels.taken(formatDateTime(row.archiveTakenAt))}
+        </Typography>
+      </Box>
+    );
+  };
+
 export interface RowActions {
   onDownload: (row: BackupRow) => void;
   onRestore: (row: BackupRow) => void;
@@ -106,9 +152,16 @@ export interface RowActions {
  * All three are disabled the moment the archive is gone — a pruned or deleted
  * row keeps its history and loses its file, and offering a restore from a file
  * that is not there would only fail at the worst possible moment.
+ *
+ * A RUNNING row has a file name too, but the file behind it is half written by
+ * a backup or half read by an upload check. Downloading a truncated archive, or
+ * restoring from one, is the worst thing this page could offer.
  */
 export const makeRenderActions = (labels: ActionLabels, actions: RowActions) =>
   function RenderActions(row: BackupRow) {
+    if (row.status === 'RUNNING') {
+      return <Typography variant="body2">—</Typography>;
+    }
     if (!row.hasFile) {
       return (
         <Typography variant="caption" color="text.secondary">

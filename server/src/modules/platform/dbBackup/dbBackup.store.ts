@@ -23,6 +23,12 @@ const BACKUPS_DIR = process.env.DB_BACKUPS_DIR || path.join(process.cwd(), 'db-b
 /** File extension for a framed-BSON archive; see dbBackup.archive.ts. */
 export const BACKUP_EXTENSION = '.dbk.gz';
 
+/** The instant and a random tail — what keeps two names apart. */
+function uniqueSuffix(at: Date): string {
+  const stamp = at.toISOString().replace(/[:.]/g, '-').replace(/Z$/, '');
+  return `${stamp}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
 /**
  * A name for one new archive: the database, the instant, and a random suffix.
  *
@@ -33,8 +39,27 @@ export const BACKUP_EXTENSION = '.dbk.gz';
  */
 export function newBackupName(database: string, at: Date): string {
   const safeDb = database.replace(/[^\w.-]/g, '_').slice(0, 40) || 'database';
-  const stamp = at.toISOString().replace(/[:.]/g, '-').replace(/Z$/, '');
-  return `${safeDb}-${stamp}-${crypto.randomUUID().slice(0, 8)}${BACKUP_EXTENSION}`;
+  return `${safeDb}-${uniqueSuffix(at)}${BACKUP_EXTENSION}`;
+}
+
+/**
+ * A name for an archive that arrived from an operator's machine.
+ *
+ * The name they picked is kept, sanitised, because it is how they recognise
+ * their own file in the table — but it is never TRUSTED as a path: everything
+ * outside a word character, a dot or a dash is replaced, so the result is a
+ * bare basename by construction, and the instant plus a random tail means two
+ * uploads of the same file cannot land on each other. `backupPath` still
+ * resolves it before anything is written, because that is the check that
+ * matters and it is one line either way.
+ */
+export function newUploadName(originalName: string, at: Date): string {
+  const stem =
+    originalName
+      .replace(/\.dbk\.gz$/i, '')
+      .replace(/[^\w.-]/g, '_')
+      .slice(0, 40) || 'archive';
+  return `uploaded-${stem}-${uniqueSuffix(at)}${BACKUP_EXTENSION}`;
 }
 
 /**

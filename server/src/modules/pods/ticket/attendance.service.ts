@@ -104,6 +104,36 @@ export async function markTicketPresent(
   await ticket.save();
 }
 
+/**
+ * Whether this person's own attendance at this pod has been marked.
+ *
+ * "Was I there" has exactly one answer, and a JOINED membership is not it: a
+ * membership says they booked a seat, a CHECKED_IN ticket says somebody at the
+ * door said they turned up. Anything that belongs to the people who actually
+ * came — the pod's rating link is the first — asks this rather than the roster.
+ */
+export async function hasMarkedAttendance(podId: string, userId: string): Promise<boolean> {
+  if (!Types.ObjectId.isValid(podId) || !Types.ObjectId.isValid(userId)) return false;
+  const marked = await TicketModel.exists({
+    pod_id: new Types.ObjectId(podId),
+    user_id: new Types.ObjectId(userId),
+    status: 'CHECKED_IN',
+  });
+  return marked !== null;
+}
+
+/** The same rule read the other way round: every pod this person is marked present at. */
+export async function markedPodIdsFor(userId: string): Promise<Types.ObjectId[]> {
+  if (!Types.ObjectId.isValid(userId)) return [];
+  const tickets = await TicketModel.find({
+    user_id: new Types.ObjectId(userId),
+    status: 'CHECKED_IN',
+  })
+    .select('pod_id')
+    .lean();
+  return tickets.map((t) => t.pod_id as Types.ObjectId);
+}
+
 /** The club's admins, as the "who can help me" card renders them. */
 async function clubAdminsFor(pod: any) {
   if (!pod?.club_id) return [];

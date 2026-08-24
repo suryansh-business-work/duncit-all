@@ -13,10 +13,16 @@ import {
 } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { formatBytes, formatDateTime } from '../../server/format';
-import type { BackupRow } from './queries';
+import { takenAt, type BackupRow } from './queries';
 
 interface Props {
   backup: BackupRow;
+  /**
+   * The database this restore REPLACES. Not the row's own: an uploaded archive
+   * usually comes from somewhere else, and naming the source as the thing about
+   * to be destroyed would be a warning about the wrong database.
+   */
+  liveDatabase: string;
   busy: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -33,10 +39,19 @@ interface Props {
  * turns on, the same guard every cloud console puts in front of the same
  * operation. The dialog leads with what is lost rather than what is gained.
  */
-export default function RestoreDialog({ backup, busy, onClose, onConfirm }: Readonly<Props>) {
+export default function RestoreDialog({
+  backup,
+  liveDatabase,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [typed, setTyped] = useState('');
-  const matches = typed.trim() === backup.database;
+  const matches = typed.trim() === liveDatabase;
+  // Worth saying out loud only when the two differ, which is exactly the case
+  // an uploaded archive creates.
+  const fromElsewhere = !!backup.database && backup.database !== liveDatabase;
 
   return (
     <Dialog open onClose={busy ? undefined : onClose} maxWidth="sm" fullWidth>
@@ -45,8 +60,16 @@ export default function RestoreDialog({ backup, busy, onClose, onConfirm }: Read
         <Stack spacing={2}>
           <Alert severity="error">
             <AlertTitle>{t('tech.dbBackup.restoreWarningTitle')}</AlertTitle>
-            {t('tech.dbBackup.restoreWarning', { vars: { database: backup.database } })}
+            {t('tech.dbBackup.restoreWarning', { vars: { database: liveDatabase } })}
           </Alert>
+
+          {fromElsewhere && (
+            <Alert severity="warning">
+              {t('tech.dbBackup.restoreSource', {
+                vars: { database: backup.database, live: liveDatabase },
+              })}
+            </Alert>
+          )}
 
           <Stack spacing={0.5}>
             <Typography variant="body2">
@@ -54,7 +77,7 @@ export default function RestoreDialog({ backup, busy, onClose, onConfirm }: Read
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {t('tech.dbBackup.restoreTaken', {
-                vars: { when: formatDateTime(backup.startedAt) },
+                vars: { when: formatDateTime(takenAt(backup)) },
               })}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -71,7 +94,7 @@ export default function RestoreDialog({ backup, busy, onClose, onConfirm }: Read
           <Alert severity="info">{t('tech.dbBackup.restoreSkipNote')}</Alert>
 
           <TextField
-            label={t('tech.dbBackup.restoreTypeLabel', { vars: { database: backup.database } })}
+            label={t('tech.dbBackup.restoreTypeLabel', { vars: { database: liveDatabase } })}
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
             disabled={busy}

@@ -3,6 +3,7 @@ import { useTranslation } from '@duncit/shell';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import {
   makeRenderActions,
+  makeRenderFile,
   makeRenderStatus,
   makeRenderTrigger,
   makeStatusOptions,
@@ -29,12 +30,14 @@ export default function BackupsTable({
   const columns = useMemo<DuncitColumn<BackupRow>[]>(() => {
     const statusLabels = {
       RUNNING: t('tech.dbBackup.statusRunning'),
+      CHECKING: t('tech.dbBackup.statusChecking'),
       SUCCEEDED: t('tech.dbBackup.statusSucceeded'),
       FAILED: t('tech.dbBackup.statusFailed'),
     };
     const triggerLabels = {
       SCHEDULED: t('tech.dbBackup.triggerScheduled'),
       MANUAL: t('tech.dbBackup.triggerManual'),
+      UPLOADED: t('tech.dbBackup.triggerUploaded'),
     };
     const actionLabels = {
       download: t('tech.dbBackup.download'),
@@ -54,6 +57,11 @@ export default function BackupsTable({
         // and the service's sortFields allowlist is snake_case. The row arriving
         // back is camelCase, so the value has to be read explicitly; the default
         // reader would look for row.started_at and render an em-dash forever.
+        //
+        // It stays the row's OWN start, not the archive's: sorting is sent to
+        // the server as started_at, and a cell showing a different date than the
+        // one it is ordered by reads as a broken table. An uploaded archive
+        // carries its real age beside its name instead.
         getDate: (row) => row.startedAt,
       }),
       {
@@ -97,6 +105,10 @@ export default function BackupsTable({
         headerName: t('tech.dbBackup.colFile'),
         flex: 1,
         minWidth: 240,
+        cellRenderer: makeRenderFile({
+          noFile: t('tech.dbBackup.noFile'),
+          taken: (when) => t('tech.dbBackup.restoreTaken', { vars: { when } }),
+        }),
         valueGetter: (row) => row.fileName ?? t('tech.dbBackup.noFile'),
       },
       {

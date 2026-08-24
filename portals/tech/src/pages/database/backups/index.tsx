@@ -1,18 +1,22 @@
 import { Alert, Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
 import BackupIcon from '@mui/icons-material/Backup';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useTranslation } from '@duncit/shell';
 import BackupScheduleCard from './BackupScheduleCard';
 import BackupsTable from './BackupsTable';
 import RestoreDialog from './RestoreDialog';
 import RestoreProgress from './RestoreProgress';
+import UploadBackupDialog from './UploadBackupDialog';
 import { useBackups } from './useBackups';
 
 /**
  * Database > Backups.
  *
- * One row per backup run, the schedule that produces them, and the three things
- * an operator does with an archive: download it, restore from it, delete it.
+ * One row per backup run, the schedule that produces them, and the four things
+ * an operator does with an archive: download it, restore from it, delete it —
+ * and send one IN, which is the only way an archive taken somewhere else ever
+ * gets onto this server.
  *
  * The page only starts a run — the archive is written on the server, so this is
  * a viewer. It polls while a backup or a restore is moving and stops the moment
@@ -24,7 +28,7 @@ export default function DbBackupsPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
         <BackupIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h5" fontWeight={800}>
@@ -34,6 +38,16 @@ export default function DbBackupsPage() {
             {t('tech.dbBackup.subtitle')}
           </Typography>
         </Box>
+        {/* Not disabled while a backup walks: an upload writes one file and
+            reads it back, so it competes with the walk for nothing. */}
+        <Button
+          variant="outlined"
+          startIcon={<UploadFileIcon />}
+          onClick={() => page.setUploadOpen(true)}
+          disabled={!page.settings}
+        >
+          {t('tech.dbBackup.upload')}
+        </Button>
         <Button
           variant="contained"
           startIcon={<PlayArrowIcon />}
@@ -70,12 +84,23 @@ export default function DbBackupsPage() {
         onDelete={page.onDelete}
       />
 
-      {page.restoreTarget && (
+      {page.restoreTarget && page.settings && (
         <RestoreDialog
           backup={page.restoreTarget}
+          liveDatabase={page.settings.liveDatabase}
           busy={page.restoring}
           onClose={() => page.setRestoreTarget(null)}
           onConfirm={page.onConfirmRestore}
+        />
+      )}
+
+      {/* Mounted only while it is open: a dialog left mounted keeps the file the
+          operator picked last time. */}
+      {page.uploadOpen && page.settings && (
+        <UploadBackupDialog
+          maxBytes={page.settings.uploadMaxBytes}
+          onClose={() => page.setUploadOpen(false)}
+          onUploaded={page.onUploaded}
         />
       )}
     </Stack>

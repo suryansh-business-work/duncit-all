@@ -24,6 +24,7 @@ export const DB_BACKUPS_TABLE = gql`
         error
         startedBy
         startedAt
+        archiveTakenAt
         finishedAt
       }
       total
@@ -36,6 +37,8 @@ export const DB_BACKUPS_TABLE = gql`
 export const DB_BACKUP_SETTINGS = gql`
   query DbBackupSettings {
     dbBackupSettings {
+      liveDatabase
+      uploadMaxBytes
       enabled
       frequency
       timeOfDay
@@ -70,6 +73,25 @@ export const DB_RESTORE_JOB = gql`
 export const RUN_DB_BACKUP = gql`
   mutation RunDbBackup {
     runDbBackup {
+      id
+      status
+    }
+  }
+`;
+
+export const DB_BACKUP_UPLOAD_AUTH = gql`
+  mutation DbBackupUploadAuth($fileName: String!) {
+    dbBackupUploadAuth(fileName: $fileName) {
+      uploadUrl
+      ticket
+      backupId
+    }
+  }
+`;
+
+export const COMPLETE_DB_BACKUP_UPLOAD = gql`
+  mutation CompleteDbBackupUpload($id: ID!) {
+    completeDbBackupUpload(id: $id) {
       id
       status
     }
@@ -119,7 +141,7 @@ export const RESTORE_DB_BACKUP = gql`
 `;
 
 export type BackupStatus = 'RUNNING' | 'SUCCEEDED' | 'FAILED';
-export type BackupTrigger = 'SCHEDULED' | 'MANUAL';
+export type BackupTrigger = 'SCHEDULED' | 'MANUAL' | 'UPLOADED';
 
 export interface BackupRow {
   id: string;
@@ -136,10 +158,21 @@ export interface BackupRow {
   error: string | null;
   startedBy: string | null;
   startedAt: string | null;
+  /** When the archive was taken — set only on one that was uploaded. */
+  archiveTakenAt: string | null;
   finishedAt: string | null;
 }
 
+export interface BackupUploadPass {
+  uploadUrl: string;
+  ticket: string;
+  backupId: string;
+}
+
 export interface BackupSettings {
+  /** The database a restore REPLACES, which an uploaded archive is rarely from. */
+  liveDatabase: string;
+  uploadMaxBytes: number;
   enabled: boolean;
   frequency: 'DAILY' | 'WEEKLY';
   timeOfDay: string;
@@ -169,6 +202,15 @@ export const getRowId = (row: BackupRow) => row.id;
 
 /** A backup or restore still moving, so the page keeps polling. */
 export const isRunning = (job?: { status: BackupStatus } | null) => job?.status === 'RUNNING';
+
+/**
+ * When the DATA in an archive is from — not when its row was created.
+ *
+ * For a backup this server took they are the same instant. For an uploaded one
+ * they are not, and the difference is the whole point: the row is from the day
+ * someone sent the file in, the data can be months older.
+ */
+export const takenAt = (row: BackupRow) => row.archiveTakenAt ?? row.startedAt;
 
 /**
  * How much smaller the archive is than the data it holds, e.g. "4.2×".

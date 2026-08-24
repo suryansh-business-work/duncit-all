@@ -1,7 +1,21 @@
 import { gql } from '@apollo/client';
 
-export const HOME_DATA = gql`
-  query HomeFeed($podFilter: PodFilterInput) {
+/**
+ * The home feed is fetched as TWO documents, not one.
+ *
+ * The server's Redis response cache only serves a request when EVERY top-level
+ * field it selects is on the public whitelist. `clubs`, `publicHosts` and
+ * `categories` are all on it — but bundling them with `pods` and `stories`,
+ * which are deliberately NOT (seats and stock go stale; a story carries
+ * seen_by_me), made the whole document uncacheable. So the catalogue half was
+ * re-fetched from Mongo on every single home load for nothing.
+ *
+ * Split, the slow-moving half is served from cache and only the live half
+ * reaches the database. The two are merged back into one object by
+ * `useHomeData`, so nothing downstream knows the difference.
+ */
+export const HOME_STATIC = gql`
+  query HomeFeedStatic {
     clubs(filter: { is_active: true }) {
       id
       club_id
@@ -21,6 +35,29 @@ export const HOME_DATA = gql`
       is_verified
       location_id
     }
+    publicHosts {
+      user_id
+      full_name
+    }
+    categories {
+      id
+      name
+      slug
+      icon
+      level
+      parent_id
+      icon_layout_mweb {
+        position
+        width
+        height
+      }
+    }
+  }
+`;
+
+/** The half that must be live: seats move, and a story knows who has seen it. */
+export const HOME_LIVE = gql`
+  query HomeFeedLive($podFilter: PodFilterInput) {
     pods(filter: $podFilter) {
       id
       pod_id
@@ -44,10 +81,6 @@ export const HOME_DATA = gql`
       place_label
       place_detail
     }
-    publicHosts {
-      user_id
-      full_name
-    }
     stories {
       id
       author_id
@@ -61,19 +94,6 @@ export const HOME_DATA = gql`
       liked_by_me
       likes_count
       views_count
-    }
-    categories {
-      id
-      name
-      slug
-      icon
-      level
-      parent_id
-      icon_layout_mweb {
-        position
-        width
-        height
-      }
     }
   }
 `;

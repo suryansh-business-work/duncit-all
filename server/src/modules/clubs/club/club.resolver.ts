@@ -1,4 +1,6 @@
 import { clubService } from './club.service';
+import { loadClubStats, primeClubStats } from './club.loaders';
+import { throwIfClientGone } from '@utils/clientPresence';
 import { venueService } from '@modules/venues/venue/venue.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
@@ -25,17 +27,33 @@ export const clubResolvers = {
       clubService.getHosts(parent.id, parent.host_ids ?? []),
     club_admins: (parent: { admin_user_ids?: string[] }) =>
       clubService.getClubAdmins(parent.admin_user_ids ?? []),
-    followers_count: (parent: { id: string }) => clubService.followersCount(parent.id),
-    rating: (parent: { id: string }) => clubService.getRating(parent.id),
-    ratings_count: (parent: { id: string }) => clubService.getRatingsCount(parent.id),
+    // All three come out of the SAME pair of batched aggregates, primed for the
+    // whole page by the `clubs` resolver. Asked one club at a time they were
+    // three round trips per row — on the home feed, three per club per request.
+    followers_count: async (parent: { id: string }, _a: unknown, ctx: GraphQLContext) =>
+      (await loadClubStats(ctx, parent.id)).followers_count,
+    rating: async (parent: { id: string }, _a: unknown, ctx: GraphQLContext) =>
+      (await loadClubStats(ctx, parent.id)).rating,
+    ratings_count: async (parent: { id: string }, _a: unknown, ctx: GraphQLContext) =>
+      (await loadClubStats(ctx, parent.id)).ratings_count,
     matched_venues: (parent: ClubMatchParent) =>
       venueService.findMatchingForClub(matchCriteria(parent)),
     matched_venues_count: (parent: ClubMatchParent) =>
       venueService.countMatchingForClub(matchCriteria(parent)),
   },
   Query: {
-    clubs: async (_p: unknown, args: { filter?: any }) => clubService.list(args.filter),
-    clubsTable: async (_p: unknown, args: { query?: any }) => clubService.table(args.query),
+    clubs: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+      const rows = await clubService.list(args.filter);
+      throwIfClientGone(ctx);
+      await primeClubStats(ctx, rows.map((c: any) => String(c?.id ?? '')));
+      return rows;
+    },
+    clubsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      const page = await clubService.table(args.query);
+      throwIfClientGone(ctx);
+      await primeClubStats(ctx, page.rows.map((c: any) => String(c?.id ?? '')));
+      return page;
+    },
     club: async (_p: unknown, args: { club_doc_id: string }) => clubService.getById(args.club_doc_id),
     clubBySlug: async (_p: unknown, args: { club_slug: string }) =>
       clubService.getBySlug(args.club_slug),

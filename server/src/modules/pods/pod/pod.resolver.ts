@@ -3,13 +3,15 @@ import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
 import type { PodLifecycle } from './pod.lifecycle';
 import { podDashboardService } from './pod.dashboard';
 import { coHostService } from './coHost.service';
-import { clubService } from '@modules/clubs/club/club.service';
+import { loadClub } from '@modules/clubs/club/club.loaders';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
-import { UserModel } from '@modules/access/user/user.model';
+import { loadUserActors } from '@modules/access/user/user.loaders';
 import { resolvePodPlace } from './pod.place';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { primePodRelations } from './pod.loaders';
+import { throwIfClientGone } from '@utils/clientPresence';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 // Roles allowed to see pods still awaiting a venue's slot approval (admin +
@@ -66,10 +68,12 @@ export const podResolvers = {
         recorded: roster.attended_seats > 0,
       };
     },
-    club: async (parent: any) => {
+    club: async (parent: any, _a: unknown, ctx: GraphQLContext) => {
       if (!parent.club_id) return null;
       try {
-        return await clubService.getById(String(parent.club_id));
+        // Batched per request: a feed's pods mostly share a handful of clubs,
+        // and the list resolver has already primed every one of them.
+        return await loadClub(ctx, String(parent.club_id));
       } catch {
         return null;
       }
@@ -88,39 +92,30 @@ export const podResolvers = {
       const place = await resolvePodPlace(parent, ctx);
       return place.detail || null;
     },
-    host_names: async (parent: any): Promise<string[]> => {
+    host_names: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string[]> => {
       const ids: string[] = (parent.pod_hosts_id ?? []).filter(Boolean).map(String);
       if (ids.length === 0) return [];
-      const users = await UserModel.find({ _id: { $in: ids } }).select(
-        'profile.first_name profile.last_name'
-      );
-      const byId = new Map<string, string>();
-      users.forEach((u: any) => {
-        const name = `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim();
-        if (name) byId.set(String(u._id), name);
-      });
-      return ids.map((id) => byId.get(id)).filter(Boolean) as string[];
+      // One `$in` for the WHOLE page, not one per pod: this used to be the
+      // single biggest source of round trips on the home feed.
+      const actors = await loadUserActors(ctx, ids);
+      return ids.map((id) => actors.get(id)?.name).filter(Boolean) as string[];
     },
     liked_by_me: (parent: any, _a: unknown, ctx: GraphQLContext) => {
       const uid = ctx.user?.id;
       if (!uid) return false;
       return (parent.liked_user_ids ?? []).some((x: string) => String(x) === uid);
     },
-    co_hosts: async (parent: any): Promise<any[]> => {
+    co_hosts: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<any[]> => {
       const entries = parent.co_hosts ?? [];
       if (entries.length === 0) return [];
       const ids = entries.map((c: any) => String(c.user_id));
-      const users = await UserModel.find({ _id: { $in: ids } }).select(
-        'profile.first_name profile.last_name profile.profile_photo'
-      );
-      const byId = new Map<string, any>(users.map((u: any) => [String(u._id), u]));
+      const actors = await loadUserActors(ctx, ids);
       return entries.map((c: any) => {
-        const u = byId.get(String(c.user_id));
-        const name = `${u?.profile?.first_name ?? ''} ${u?.profile?.last_name ?? ''}`.trim();
+        const actor = actors.get(String(c.user_id));
         return {
           user_id: String(c.user_id),
-          name,
-          profile_photo: u?.profile?.profile_photo ?? null,
+          name: actor?.name ?? '',
+          profile_photo: actor?.avatar_url ?? null,
           status: c.status ?? 'PENDING',
           invited_at: c.invited_at ?? '',
           responded_at: c.responded_at ?? null,
@@ -155,15 +150,27 @@ export const podResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return podDashboardService.load(args.days ?? 30);
     },
-    pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
-      podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
+    pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+      const rows = await podService.list(args.filter, {
+        includePendingApproval: canReviewPendingPods(ctx),
+      });
+      // The feed is the slowest read there is, so it is also the one most likely
+      // to outlive its caller. Stop here rather than resolving a field per row
+      // for a socket that has already closed.
+      throwIfClientGone(ctx);
+      // Every club and every host for the whole page, in one read each. Without
+      // this the Pod field resolvers below run once per row and the feed costs
+      // hundreds of round trips.
+      await primePodRelations(ctx, rows);
+      return rows;
+    },
     podsTable: async (
       _p: unknown,
       args: { query?: any; include_deleted?: boolean | null; lifecycle?: PodLifecycle | null },
       ctx: GraphQLContext
     ) => {
       const canReview = canReviewPendingPods(ctx);
-      return podService.table(args.query, {
+      const page = await podService.table(args.query, {
         includePendingApproval: canReview,
         // Cancelled pods stay editable, so reviewers must be able to find them.
         // Filtering TO the cancelled bucket is that same request spelled out, so
@@ -172,14 +179,23 @@ export const podResolvers = {
           canReview && (args.include_deleted === true || args.lifecycle === 'CANCELLED'),
         lifecycle: args.lifecycle ?? null,
       });
+      throwIfClientGone(ctx);
+      await primePodRelations(ctx, page.rows);
+      return page;
     },
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return podService.listMyHostPods(user.id, { from: args.from, to: args.to });
+      const rows = await podService.listMyHostPods(user.id, { from: args.from, to: args.to });
+      throwIfClientGone(ctx);
+      await primePodRelations(ctx, rows);
+      return rows;
     },
     myHostPodsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return podService.tableMine(user.id, args.query);
+      const page = await podService.tableMine(user.id, args.query);
+      throwIfClientGone(ctx);
+      await primePodRelations(ctx, page.rows);
+      return page;
     },
     pod: async (
       _p: unknown,

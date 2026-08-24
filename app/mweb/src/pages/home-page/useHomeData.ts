@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
-import { HOME_DATA, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
+import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
 
 interface UseHomeDataParams {
   superCategorySlug: string;
@@ -93,7 +93,21 @@ export function useHomeData({
   dateFilter,
   sortBy,
 }: UseHomeDataParams) {
-  const { data, loading, error, refetch } = useQuery(HOME_DATA, {
+  // The catalogue half: cacheable server-side, and unaffected by the location
+  // filters, so it is fetched once and reused as the user moves around.
+  const {
+    data: staticData,
+    loading: staticLoading,
+    error: staticError,
+    refetch: refetchStatic,
+  } = useQuery(HOME_STATIC, { fetchPolicy: 'cache-and-network' });
+
+  const {
+    data: liveData,
+    loading: liveLoading,
+    error: liveError,
+    refetch: refetchLive,
+  } = useQuery(HOME_LIVE, {
     variables: {
       podFilter: {
         location_id: locationId || undefined,
@@ -103,6 +117,24 @@ export function useHomeData({
     },
     fetchPolicy: 'cache-and-network',
   });
+
+  // Merged back into the single object every derivation below already reads, so
+  // splitting the request changed the transport and nothing else. Undefined
+  // until at least one half has landed — the skeleton keys off that.
+  const data = useMemo(() => {
+    if (!staticData && !liveData) return undefined;
+    return { ...staticData, ...liveData };
+  }, [staticData, liveData]);
+
+  const loading = staticLoading || liveLoading;
+  const error = liveError ?? staticError;
+
+  const refetch = useCallback(
+    async () => {
+      await Promise.all([refetchStatic(), refetchLive()]);
+    },
+    [refetchStatic, refetchLive],
+  );
 
   // A header-logo tap while already on Home re-fetches the feed (bug: logo did nothing).
   useEffect(() => {

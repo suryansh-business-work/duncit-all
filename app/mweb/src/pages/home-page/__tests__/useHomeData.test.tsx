@@ -4,7 +4,7 @@ import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
 import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../../components/app-header/queries';
-import { HOME_DATA, FOLLOWED_USERS } from '../queries';
+import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS } from '../queries';
 import { useHomeData } from '../useHomeData';
 
 // Re-declared identically to the (unexported) query inside useFollowedClubs so
@@ -129,9 +129,14 @@ const STORIES = [
   { id: 'st3', author_id: 'nobody' },
 ];
 
+const homeStaticMock = () => ({
+  request: { query: HOME_STATIC },
+  result: { data: { clubs: CLUBS, publicHosts: PUBLIC_HOSTS, categories: CATEGORIES } },
+});
+
 const homeDataMock = (locationId: string, zoneName: string) => ({
   request: {
-    query: HOME_DATA,
+    query: HOME_LIVE,
     variables: {
       podFilter: {
         location_id: locationId || undefined,
@@ -142,11 +147,8 @@ const homeDataMock = (locationId: string, zoneName: string) => ({
   },
   result: {
     data: {
-      clubs: CLUBS,
       pods: PODS,
-      publicHosts: PUBLIC_HOSTS,
       stories: STORIES,
-      categories: CATEGORIES,
     },
   },
 });
@@ -230,7 +232,7 @@ describe('useHomeData', () => {
   it('builds the full feed with no super-category selected', async () => {
     const { result } = renderHook(() => useHomeData(baseParams), {
       wrapper: wrapperWith([
-        homeDataMock('loc1', 'zoneA'),
+        homeDataMock('loc1', 'zoneA'), homeStaticMock(),
         headerMock,
         followedClubsMock,
         followedUsersMock,
@@ -290,7 +292,7 @@ describe('useHomeData', () => {
   it('shows every category (including pod-less ones) when the admin toggle is on', async () => {
     // Default (toggle off): the pod-less "Ball" category (c2) is hidden.
     const { result: off } = renderHook(() => useHomeData(baseParams), {
-      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), headerMock, followedClubsMock, followedUsersMock]),
+      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), headerMock, followedClubsMock, followedUsersMock]),
     });
     await waitFor(() => expect(off.current.loading).toBe(false));
     expect(off.current.vibeCategories.map((c: any) => c.id)).not.toContain('c2');
@@ -298,7 +300,7 @@ describe('useHomeData', () => {
     // Toggle on: c2 appears even though no pods reference it.
     const { result: on } = renderHook(() => useHomeData(baseParams), {
       wrapper: wrapperWith([
-        homeDataMock('loc1', 'zoneA'),
+        homeDataMock('loc1', 'zoneA'), homeStaticMock(),
         headerMockShowAll,
         followedClubsMock,
         followedUsersMock,
@@ -310,7 +312,7 @@ describe('useHomeData', () => {
 
   it('resolves host names via host_names, publicHosts, and no-match', async () => {
     const { result } = renderHook(() => useHomeData(baseParams), {
-      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), headerMock, followedClubsMock, followedUsersMock]),
+      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), headerMock, followedClubsMock, followedUsersMock]),
     });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -337,7 +339,7 @@ describe('useHomeData', () => {
         }),
       {
         wrapper: wrapperWith([
-          homeDataMock('loc1', 'zoneA'),
+          homeDataMock('loc1', 'zoneA'), homeStaticMock(),
           headerMock,
           followedClubsMock,
           followedUsersMock,
@@ -362,7 +364,7 @@ describe('useHomeData', () => {
     const { result: freeRes } = renderHook(
       () => useHomeData({ ...baseParams, priceFilter: 'FREE', dateFilter: 'WEEK', sortBy: 'DATE_DESC' }),
       {
-        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), headerMock, followedClubsMock, followedUsersMock]),
+        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), headerMock, followedClubsMock, followedUsersMock]),
       }
     );
     await waitFor(() => expect(freeRes.current.loading).toBe(false));
@@ -371,7 +373,7 @@ describe('useHomeData', () => {
     const { result: paidRes } = renderHook(
       () => useHomeData({ ...baseParams, priceFilter: 'PAID', dateFilter: 'TOMORROW', sortBy: 'PRICE_ASC' }),
       {
-        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), headerMock, followedClubsMock, followedUsersMock]),
+        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), headerMock, followedClubsMock, followedUsersMock]),
       }
     );
     await waitFor(() => expect(paidRes.current.loading).toBe(false));
@@ -382,12 +384,12 @@ describe('useHomeData', () => {
   it('re-fetches the feed when the home-refresh event fires', async () => {
     const { result } = renderHook(() => useHomeData(baseParams), {
       wrapper: wrapperWith([
-        homeDataMock('loc1', 'zoneA'),
+        homeDataMock('loc1', 'zoneA'), homeStaticMock(),
         headerMock,
         followedClubsMock,
         followedUsersMock,
         // second copy consumed by refetch
-        homeDataMock('loc1', 'zoneA'),
+        homeDataMock('loc1', 'zoneA'), homeStaticMock(),
       ]),
     });
     await waitFor(() => expect(result.current.loading).toBe(false));

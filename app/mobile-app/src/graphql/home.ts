@@ -1,13 +1,21 @@
 import { gql } from '@/generated/graphql';
 
 /**
- * Home-feed data for the authenticated landing — the mobile counterpart of
- * mWeb's `HOME_DATA`. We fetch the active clubs, their pods, and the category
- * tree (for the vibe chips). Heavy client-side price/date/sort filtering stays
- * a follow-up; the shell groups pods by club and surfaces the soonest ones.
+ * Home-feed data, fetched as TWO documents — the mobile counterpart of mWeb's
+ * HOME_STATIC / HOME_LIVE (rule 27: the two surfaces stay identical).
+ *
+ * The server's Redis response cache only serves a request when EVERY top-level
+ * field it selects is on the public whitelist. `clubs` and `categories` are;
+ * `pods` deliberately is not, because seats and stock must never be served
+ * stale. Asking for all three in one document therefore made the whole thing
+ * uncacheable, so the catalogue half went to Mongo on every launch for nothing.
+ *
+ * Split, the catalogue is a cache hit and only the pods reach the database. The
+ * store merges the two halves back into one object, so every derivation in
+ * `useHomeFeed` is unchanged.
  */
-export const HomeFeedDocument = gql(`
-  query MobileHomeFeed($podFilter: PodFilterInput) {
+export const HomeStaticDocument = gql(`
+  query MobileHomeStatic {
     categories {
       id
       name
@@ -37,6 +45,12 @@ export const HomeFeedDocument = gql(`
       followers_count
       is_verified
     }
+  }
+`);
+
+/** The half that must be live: seats move between one launch and the next. */
+export const HomePodsDocument = gql(`
+  query MobileHomePods($podFilter: PodFilterInput) {
     pods(filter: $podFilter) {
       id
       pod_id

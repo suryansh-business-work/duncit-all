@@ -79,16 +79,17 @@ export const FOLLOW_LABEL_KEY: Record<FollowStatus, string> = {
 };
 
 /**
- * What a FOLLOW_REQUEST notification row should render right now.
+ * What an actionable follow notification row should render right now.
  *
  * mWeb and native both own a Tamagui/MUI view of this row, so the DECISION
  * lives here and only the pixels differ (rule 40). The ordering matters:
  *
  *  - ANSWER      the request is still open — Accept / Deny.
- *  - FOLLOW_BACK it was accepted, and the viewer does NOT follow them back yet.
- *  - SETTLED     nothing left to do — it was denied, or it was accepted and the
- *                viewer already follows them, which is precisely when Follow
- *                Back must be hidden rather than offered.
+ *  - FOLLOW_BACK either an accepted request or a new follower, where the
+ *                viewer does NOT follow them back yet.
+ *  - SETTLED     nothing left to do — the request was denied, or it was
+ *                accepted and the viewer already follows them, which is
+ *                precisely when Follow Back must be hidden rather than offered.
  *  - HIDDEN      not an actionable follow row at all.
  */
 export type FollowRequestRowState = 'HIDDEN' | 'ANSWER' | 'FOLLOW_BACK' | 'SETTLED';
@@ -98,7 +99,19 @@ export function followRequestRowState(row: {
   requestId?: string | null;
   status?: string | null;
   followBackStatus?: string | null;
+  /** Who the row is about. A new-follower row has nothing else identifying
+   * them, so without it there is no one to follow back. */
+  actorId?: string | null;
 }): FollowRequestRowState {
+  // "X started following you" — no request to answer, so the whole row is the
+  // offer to follow them back. This is the ONLY follow row a public profile
+  // ever receives, and rows written before the actor column existed carry no
+  // actorId, so they stay inert rather than rendering a button that would have
+  // nobody to act on.
+  if (row.actionType === 'NEW_FOLLOWER') {
+    if (!row.actorId || row.followBackStatus === 'FOLLOWING') return 'HIDDEN';
+    return 'FOLLOW_BACK';
+  }
   if (row.actionType !== 'FOLLOW_REQUEST' || !row.requestId) return 'HIDDEN';
   // A row whose status has not loaded yet is treated as open: the request only
   // stops being answerable once the server says so.

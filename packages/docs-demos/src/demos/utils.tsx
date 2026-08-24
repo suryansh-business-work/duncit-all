@@ -2,8 +2,11 @@ import {
   HOST_FREE_SPOT_NOTE,
   authMessageCardState,
   buildCommPreferenceLabels,
+  canFollowBack,
   commChannelSummary,
   commRowState,
+  followBackLabelKey,
+  followRequestRowState,
   formatMoney,
   participationInputFrom,
   payableSpots,
@@ -24,6 +27,18 @@ interface BookingMock {
 interface SpotsMock {
   total_spots: number;
   price_per_spot: number;
+}
+
+/** Notification rows exactly as `myNotifications` hands them over. */
+interface FollowRowsMock {
+  rows: Array<{
+    label: string;
+    actionType: string | null;
+    requestId: string | null;
+    status: string | null;
+    actorId: string | null;
+    followBackStatus: string;
+  }>;
 }
 
 export default defineDemos('utils', [
@@ -160,6 +175,59 @@ export default defineDemos('utils', [
         ])
       );
     },
+  }),
+  defineDemo<FollowRowsMock>({
+    id: 'follow-notification-rows',
+    title: 'What each follow row in the inbox offers',
+    note:
+      "Set a row's followBackStatus to FOLLOWING and its Follow Back disappears — that is the whole point of the field. A NEW_FOLLOWER row has no request behind it, so it never shows Accept/Deny, and it is the only follow row a public profile ever receives.",
+    mock: {
+      rows: [
+        {
+          label: 'Riya asked to follow you',
+          actionType: 'FOLLOW_REQUEST',
+          requestId: 'fr-4821',
+          status: 'PENDING',
+          actorId: 'u-riya',
+          followBackStatus: 'NONE',
+        },
+        {
+          label: 'You accepted Riya',
+          actionType: 'FOLLOW_REQUEST',
+          requestId: 'fr-4821',
+          status: 'ACCEPTED',
+          actorId: 'u-riya',
+          followBackStatus: 'NONE',
+        },
+        {
+          label: 'Aarav started following you',
+          actionType: 'NEW_FOLLOWER',
+          requestId: null,
+          status: null,
+          actorId: 'u-aarav',
+          followBackStatus: 'NONE',
+        },
+        {
+          label: 'Meera started following you (you already follow her)',
+          actionType: 'NEW_FOLLOWER',
+          requestId: null,
+          status: null,
+          actorId: 'u-meera',
+          followBackStatus: 'FOLLOWING',
+        },
+      ],
+    },
+    compute: (mock) =>
+      Object.fromEntries(
+        mock.rows.map((row) => {
+          const state = followRequestRowState(row);
+          const button =
+            state === 'FOLLOW_BACK'
+              ? `${followBackLabelKey(row.followBackStatus)} (tappable: ${canFollowBack(row.followBackStatus)})`
+              : 'no follow-back button';
+          return [row.label, `${state}   ·   ${button}`];
+        })
+      ),
   }),
   defineDemo<{ amounts: number[] }>({
     id: 'money',

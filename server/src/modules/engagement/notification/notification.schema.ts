@@ -10,10 +10,14 @@ export const notificationTypeDefs = /* GraphQL */ `
 
   """
   Notifications the recipient can act on inline. FOLLOW_REQUEST renders
-  Accept / Reject against the FollowRequest in action_ref_id.
+  Accept / Deny against the FollowRequest in action_ref_id. NEW_FOLLOWER has
+  no document to answer — it renders Follow Back alone, which is the only way
+  a public profile (one that never receives a follow request) can follow a new
+  follower back from the inbox.
   """
   enum NotificationAction {
     FOLLOW_REQUEST
+    NEW_FOLLOWER
   }
 
   type Notification {
@@ -26,11 +30,15 @@ export const notificationTypeDefs = /* GraphQL */ `
     action_type: NotificationAction
     "The document the actions operate on — a FollowRequest id for FOLLOW_REQUEST."
     action_ref_id: ID
-    "Live status of action_ref_id, so an answered request stops offering buttons."
+    """
+    Live status of action_ref_id, so an answered request stops offering buttons.
+    Always null on a NEW_FOLLOWER row: there is no request behind it.
+    """
     action_status: String
     """
-    The other user this row is about — the requester behind a FOLLOW_REQUEST.
-    What the recipient's Follow Back acts on.
+    The other user this row is about — the requester behind a FOLLOW_REQUEST,
+    the new follower behind a NEW_FOLLOWER. What the recipient's Follow Back
+    acts on.
     """
     action_actor_id: ID
     """

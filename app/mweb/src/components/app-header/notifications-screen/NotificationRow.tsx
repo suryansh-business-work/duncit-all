@@ -1,4 +1,5 @@
 import { Avatar, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { followRequestRowState } from '@duncit/utils';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { formatRelative } from '../queries';
 import { notificationIcon } from '../notificationIcon';
@@ -31,10 +32,18 @@ export default function NotificationRow({
 }: Readonly<Props>) {
   const unread = !item.read_at;
   const notification = item.notification;
-  // An actionable row ends in its buttons, so the "open me" chevron would be a
-  // second, competing affordance.
-  const showChevron =
-    !busy && !!notification?.link_url && notification?.action_type !== 'FOLLOW_REQUEST';
+  // The same decision the buttons below make, so the two cannot disagree: an
+  // actionable row ends in its buttons, and the "open me" chevron would be a
+  // second, competing affordance. A new-follower row the viewer already follows
+  // back renders no buttons, so it keeps its chevron.
+  const rowState = followRequestRowState({
+    actionType: notification?.action_type,
+    requestId: notification?.action_ref_id,
+    status: notification?.action_status,
+    followBackStatus: notification?.follow_back_status,
+    actorId: notification?.action_actor_id,
+  });
+  const showChevron = !busy && !!notification?.link_url && rowState === 'HIDDEN';
   // Contextual icon by notification type (falls back to the bell) instead of
   // repeating a generic bell on every row.
   const RowIcon = notificationIcon(notification?.title);

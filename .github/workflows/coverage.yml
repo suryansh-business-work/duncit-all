@@ -237,6 +237,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # This job runs nothing but a plain node script, yet pnpm still has to be
+      # on PATH: setup-node reads the root package.json's `packageManager`
+      # (pnpm@9.15.0) and fails with "Unable to locate executable file: pnpm"
+      # without it. Every other job here installs pnpm for its own sake, which
+      # is why this was the only one that broke.
+      - uses: pnpm/action-setup@v4.4.0
+        with:
+          run_install: false
+
       - uses: actions/setup-node@v5
         with:
           node-version: 24

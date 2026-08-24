@@ -74,13 +74,21 @@ all when the list is empty — a build that could not reach the API shows no emp
 import SiteMenu from '@duncit/brand/SiteMenu.astro';
 ---
 
-<SiteMenu links={nav.links} actions={[nav.signup, nav.login]} onDark={overlay} />
+<SiteMenu links={nav.links} actions={[nav.signup, nav.login]} />
 ```
 
 The satellite sites hid their navigation below `lg` and put nothing in its place, so on a
 phone the header was a logo and one button and every other link was unreachable. This is
 the hamburger and the drawer it opens; it hides itself at `1024px`, which is the width the
-headers reveal their inline links at. `onDark` matches a header sitting over a banner.
+headers reveal their inline links at — so the actions passed here are the sign-in and
+sign-up the bar itself drops on a phone, not a second copy of buttons still rendered beside
+the burger.
+
+`onDark` paints the button white for a header that sits over a banner. Pass it ONLY when
+that header is _always_ over one, as the partner site's is: it is decided at build time, so
+a header that turns solid on scroll keeps a white burger on a cream bar — invisible. Such a
+header leaves the prop off and paints `.site-menu-button` from its own scrolled state
+instead.
 
 ## Everything here is plain CSS, not Tailwind
 
@@ -92,6 +100,7 @@ themselves and borrow only the palette tokens, which every site declares:
 ```css
 var(--color-line)   var(--color-ink)     var(--color-ink-soft)
 var(--color-primary) var(--color-surface) var(--font-head)
+var(--color-on-primary)
 ```
 
 Each has a literal fallback, so a site that has not declared one still renders.

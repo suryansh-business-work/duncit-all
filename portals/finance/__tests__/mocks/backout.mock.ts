@@ -168,6 +168,43 @@ interface DetailEventMock {
   at: string;
 }
 
+/**
+ * The booking behind the request, in the shape the shared timeline reads.
+ *
+ * The detail page stopped drawing this request's own flat event strip and now
+ * renders `PodParticipationTimeline` over the WHOLE booking, so a Finance
+ * reader and a member on Pod History see one story. A mock without this field
+ * leaves the page on its "no longer on file" branch, which is not what these
+ * suites are about.
+ */
+interface DetailBackoutMock {
+  __typename?: 'PodBackoutRequest';
+  backout_no: string;
+  status: string;
+  attempt_no: number;
+  seats: number;
+  seats_before: number;
+  refund_amount: number | null;
+  coins_refunded: number | null;
+  refund_status: string | null;
+  deduction_pct: number;
+  refund_processed_at: string | null;
+  created_at: string;
+  events: { __typename?: 'PodBackoutEvent'; status: string; at: string }[];
+}
+
+interface DetailParticipationMock {
+  __typename?: 'PodParticipation';
+  joined_at: string | null;
+  attended: boolean | null;
+  attended_at: string | null;
+  attendance_recorded: boolean | null;
+  pod_cancelled_by: string | null;
+  pod_cancelled_at: string | null;
+  cancel_refund_status: string | null;
+  backouts: DetailBackoutMock[];
+}
+
 interface DetailRequestMock {
   __typename?: 'BackoutRefundRequest';
   id: string;
@@ -195,8 +232,11 @@ interface DetailRequestMock {
   payment_status: string | null;
   deduction_pct: number;
   refund_amount: number | null;
+  coins_paid: number | null;
+  coins_refunded: number | null;
   refund_processed_at: string | null;
   events: DetailEventMock[];
+  participation: DetailParticipationMock | null;
   created_at: string;
   pod: DetailPodMock | null;
 }
@@ -248,13 +288,51 @@ export const makeBackoutDetail = (over: Partial<DetailRequestMock> = {}): Detail
   payment_status: 'PAID',
   deduction_pct: 10,
   refund_amount: 900,
+  coins_paid: 0,
+  coins_refunded: 0,
   refund_processed_at: null,
   events: [
     { __typename: 'BackoutEvent', status: 'IN_PROCESS', backout_count: 1, at: '2024-01-02T09:00:00Z' },
     { __typename: 'BackoutEvent', status: 'SPOT_FILLED', backout_count: 1, at: '2024-01-03T09:00:00Z' },
   ],
+  participation: makeDetailParticipation(),
   created_at: '2024-01-02T09:00:00Z',
   pod: makeDetailPod(),
+  ...over,
+});
+
+/** One seat joined, backed out once, and the spot filled — the canonical row. */
+export const makeDetailParticipation = (
+  over: Partial<DetailParticipationMock> = {},
+): DetailParticipationMock => ({
+  __typename: 'PodParticipation',
+  joined_at: '2024-01-01T09:00:00Z',
+  attended: false,
+  attended_at: null,
+  attendance_recorded: false,
+  pod_cancelled_by: null,
+  pod_cancelled_at: null,
+  cancel_refund_status: null,
+  backouts: [
+    {
+      __typename: 'PodBackoutRequest',
+      backout_no: 'DUN-BKO-000001',
+      status: 'SPOT_FILLED',
+      attempt_no: 1,
+      seats: 1,
+      seats_before: 1,
+      refund_amount: 900,
+      coins_refunded: 0,
+      refund_status: 'PENDING',
+      deduction_pct: 10,
+      refund_processed_at: null,
+      created_at: '2024-01-02T09:00:00Z',
+      events: [
+        { __typename: 'PodBackoutEvent', status: 'IN_PROCESS', at: '2024-01-02T09:00:00Z' },
+        { __typename: 'PodBackoutEvent', status: 'SPOT_FILLED', at: '2024-01-03T09:00:00Z' },
+      ],
+    },
+  ],
   ...over,
 });
 

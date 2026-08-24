@@ -9,7 +9,7 @@ import {
   makePayment,
   paymentFailed,
   paymentSuccess,
-  paymentsListMock,
+  paymentTotalsMock,
   paymentsTableMock,
   refundPaymentMock,
 } from '../mocks/payment-logs.mock';
@@ -51,7 +51,7 @@ describe('PaymentLogsPage', () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     tableControls.queries = [tableControls.queries[0], RICH_Q];
     renderWithProviders(<PaymentLogsPage />, {
-      mocks: [paymentsListMock(listItems), paymentsTableMock([paymentSuccess(), paymentFailed()]), invoicePdfMock()],
+      mocks: [paymentTotalsMock(listItems), paymentsTableMock([paymentSuccess(), paymentFailed()]), invoicePdfMock()],
     });
 
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
@@ -64,7 +64,7 @@ describe('PaymentLogsPage', () => {
 
   it('shows an error when the invoice pdf is missing', async () => {
     renderWithProviders(<PaymentLogsPage />, {
-      mocks: [paymentsListMock(listItems), paymentsTableMock([paymentSuccess()]), invoicePdfMock(null)],
+      mocks: [paymentTotalsMock(listItems), paymentsTableMock([paymentSuccess()]), invoicePdfMock(null)],
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     fireEvent.click(enabledButtonFor('DownloadIcon'));
@@ -76,7 +76,7 @@ describe('PaymentLogsPage', () => {
   it('refunds a successful payment', async () => {
     renderWithProviders(<PaymentLogsPage />, {
       mocks: [
-        paymentsListMock(listItems),
+        paymentTotalsMock(listItems),
         paymentsTableMock([paymentSuccess(), paymentFailed()]),
         refundPaymentMock(),
       ],
@@ -92,7 +92,7 @@ describe('PaymentLogsPage', () => {
 
   it('surfaces a refund error', async () => {
     renderWithProviders(<PaymentLogsPage />, {
-      mocks: [paymentsListMock(listItems), paymentsTableMock([paymentSuccess()]), refundPaymentMock({ fail: true })],
+      mocks: [paymentTotalsMock(listItems), paymentsTableMock([paymentSuccess()]), refundPaymentMock({ fail: true })],
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     fireEvent.click(enabledButtonFor('UndoIcon'));
@@ -104,7 +104,7 @@ describe('PaymentLogsPage', () => {
 
   it('renders with no payments data (empty totals)', async () => {
     renderWithProviders(<PaymentLogsPage />, {
-      mocks: [paymentsListMock(null), paymentsTableMock([])],
+      mocks: [paymentTotalsMock(null), paymentsTableMock([])],
     });
     await waitFor(() => expect(screen.getByText('No payments yet.')).toBeInTheDocument());
     expect(screen.getByText('Successful Payments')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('PaymentLogsPage', () => {
   it('shows the refund loading label', async () => {
     renderWithProviders(<PaymentLogsPage />, {
       mocks: [
-        paymentsListMock(listItems),
+        paymentTotalsMock(listItems),
         paymentsTableMock([paymentSuccess()]),
         refundPaymentMock({ delay: 60_000 }),
       ],

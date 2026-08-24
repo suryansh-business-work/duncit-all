@@ -95,6 +95,8 @@ const renderApproval = (m: OnboardingMeeting) => <ApprovalCell status={m.approva
 interface Props {
   fetchRows: TableFetch<OnboardingMeeting>;
   refetchRef: MutableRefObject<(() => void) | null>;
+  /** Filled by the table with a "replace this row" fn — see DuncitTable. */
+  updateRowRef: MutableRefObject<((row: OnboardingMeeting) => void) | null>;
   onSelect: (m: OnboardingMeeting) => void;
   onSchedule: (m: OnboardingMeeting) => void;
   onMarkDone: (m: OnboardingMeeting) => void;
@@ -106,6 +108,7 @@ interface Props {
 export default function MeetingsTable({
   fetchRows,
   refetchRef,
+  updateRowRef,
   onSelect,
   onSchedule,
   onMarkDone,
@@ -229,6 +232,7 @@ export default function MeetingsTable({
       emptyText={t('onboarding.meetings.noMeetingsForThisFilter')}
       searchPlaceholder="Search request no, name or phone"
       refetchRef={refetchRef}
+      updateRowRef={updateRowRef}
     />
   );
 }

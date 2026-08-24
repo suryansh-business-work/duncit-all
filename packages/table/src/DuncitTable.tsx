@@ -145,6 +145,18 @@ interface DuncitTableProps<T> {
   defaultPageSize?: 10 | 25 | 50 | 100; // default 25
   searchPlaceholder?: string;
   refetchRef?: MutableRefObject<(() => void) | null>; // parent-triggered reload after mutations
+  /**
+   * Filled with a "replace this one row" fn, like refetchRef.
+   *
+   * The row-level answer to the same problem refetchRef solves: an action whose
+   * mutation already returned the updated entity can put it straight into the
+   * grid instead of re-asking the server for the whole page. Only that row
+   * repaints, so an open menu, the scroll position and the current page all
+   * survive. Reach for refetchRef instead when the change could move the row
+   * OUT of the current view — that is a membership change, and only the query
+   * can answer it.
+   */
+  updateRowRef?: MutableRefObject<((row: T) => void) | null>;
   // Page-level filters from controls outside the table (tabs/selects/URL params).
   // Compared by value; a change resets to page 1 and refetches. Not shown as chips.
   externalFilters?: ReadonlyArray<TableFilterValue>;
@@ -168,15 +180,22 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     defaultPageSize,
     searchPlaceholder,
     refetchRef,
+    updateRowRef,
     externalFilters,
     selection,
   } = props;
   const { t } = useTranslation();
-  const table = useTableQuery({ fetchRows, defaultSort, defaultPageSize, externalFilters });
+  const table = useTableQuery({
+    fetchRows,
+    defaultSort,
+    defaultPageSize,
+    externalFilters,
+    getRowId,
+  });
   const prefs = useTablePrefs(tableId);
   const muiTheme = useTheme();
   const gridRef = useRef<AgGridReact<T>>(null);
-  const { refetch, setSort } = table;
+  const { refetch, setSort, updateRow } = table;
   const { sortBy, sortDir } = table.query;
 
   const agTheme = useMemo(() => buildAgTheme(muiTheme, prefs.density), [muiTheme, prefs.density]);
@@ -208,6 +227,14 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       refetchRef.current = null;
     };
   }, [refetchRef, refetch]);
+
+  useEffect(() => {
+    if (!updateRowRef) return undefined;
+    updateRowRef.current = updateRow;
+    return () => {
+      updateRowRef.current = null;
+    };
+  }, [updateRowRef, updateRow]);
 
   /*
    * Date cells read the admin's pattern inside their value getter, and the

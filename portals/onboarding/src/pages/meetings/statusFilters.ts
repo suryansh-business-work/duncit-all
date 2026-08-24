@@ -1,5 +1,5 @@
 import type { TableFilterValue } from '@duncit/table';
-import type { MeetingStatus } from './queries';
+import type { MeetingStatus, OnboardingMeeting } from './queries';
 
 /**
  * Status toggle keys for the meetings table: the raw DB statuses plus a synthetic
@@ -31,4 +31,23 @@ export function statusPinnedFilters(key: StatusFilterKey | ''): TableFilterValue
     ];
   }
   return [{ field: 'status', op: 'eq', value: key }];
+}
+
+/**
+ * Would this meeting still be in the list under the chosen toggle?
+ *
+ * The client-side twin of {@link statusPinnedFilters}, and the question that
+ * decides whether an action can be reflected by updating the row or has to
+ * re-ask the server. Marking a SCHEDULED meeting done while the Scheduled
+ * toggle is on does not change a cell — it removes the row from the list, and
+ * only the query knows what takes its place.
+ */
+export function matchesStatusFilter(
+  meeting: Pick<OnboardingMeeting, 'status' | 'cancelled_by_staff'>,
+  key: StatusFilterKey | '',
+): boolean {
+  if (!key) return true;
+  if (key === 'REJECTED') return meeting.status === 'CANCELLED' && !!meeting.cancelled_by_staff;
+  if (key === 'CANCELLED') return meeting.status === 'CANCELLED' && !meeting.cancelled_by_staff;
+  return meeting.status === key;
 }

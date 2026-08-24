@@ -30,7 +30,8 @@ const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 interface Props {
   meeting: OnboardingMeeting | null;
   onClose: () => void;
-  onSaved: () => void;
+  /** The saved meeting, so the caller can update its row without refetching. */
+  onSaved: (saved?: OnboardingMeeting | null) => void;
 }
 
 /** Slot-aware scheduling dialog — staff pick an open slot (booked ones disabled)
@@ -72,13 +73,13 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
     }
     setError(null);
     try {
-      await updateMeeting({
+      const res = await updateMeeting({
         variables: {
           id: meeting.id,
           input: { status, scheduled_at: slot || null, meeting_link: link.trim() || null, notes },
         },
       });
-      onSaved();
+      onSaved(res.data?.updateMeeting);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotUpdateMeeting'));
     }

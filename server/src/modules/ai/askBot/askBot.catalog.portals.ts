@@ -166,6 +166,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Edit the product invoice template\'s label, terms, footer and note, applied to every product/shop-order invoice generated after saving.' },
   { surface: 'finance', path: '/ledger', label: 'Duncit Expenses',
     description: 'Log and manage Duncit\'s own expenses — add a new expense in the drawer, filter and search the expense table, and watch the summary chips recompute against the same filters.' },
+  { surface: 'finance', path: '/pod-expenses', label: 'Pod Expenses',
+    description: 'What Duncit spends to run each pod. Every pod is a row with its spend rolled up (entries, bills attached, total); open one to record a bill against it, upload the supplier invoice, and edit or delete entries. Tabs narrow to pods with expenses or pods where a bill is still missing.' },
   { surface: 'finance', path: '/duncit-coin/dashboard', label: 'Dashboard', group: 'Duncit Coin',
     description: 'See Duncit Coin stat tiles (issued, redeemed, outstanding, wallet balances) with a drift warning when the ledger and wallet totals disagree, plus a monthly distribution chart over a selectable 6/12/24/36-month window.' },
   { surface: 'finance', path: '/duncit-coin/transactions', label: 'Transactions', group: 'Duncit Coin',

@@ -94,6 +94,16 @@ export type AccountDeletionTraceGroup = {
   id_kind: Scalars['String']['output'];
   /** The mongoose model, e.g. `Ticket`. */
   model_name: Scalars['String']['output'];
+  /**
+   * What clearing this does.
+   *
+   * DELETE_DOCUMENTS — the documents are the member's and go entirely.
+   * REMOVE_FROM_DOCUMENTS — the member is one entry inside somebody else's
+   * document (a pod attendee, a comment, a signature), so only their entry is
+   * pulled. The console shows this before it asks, because the two are not
+   * remotely the same act.
+   */
+  purge_kind: Scalars['String']['output'];
 };
 
 export type ActiveUserBucket = {
@@ -5535,6 +5545,8 @@ export type FinanceDashboardStats = {
   duncit_revenue: FinanceStat;
   gst_collected: FinanceStat;
   pending_payouts: FinanceStat;
+  /** What Duncit itself spent to run pods (Finance > Pod Expenses). */
+  pod_expenses: FinanceStat;
   total_revenue: FinanceStat;
 };
 
@@ -8107,6 +8119,7 @@ export type Mutation = {
   createPartnerPod: Pod;
   createPaymentReleaseRequest: PaymentReleaseRequest;
   createPod: Pod;
+  createPodExpense: PodExpense;
   createPodIdea: PodIdea;
   createPodPlan: PodPlan;
   createPolicy: Policy;
@@ -8255,6 +8268,7 @@ export type Mutation = {
   deletePod: Scalars['Boolean']['output'];
   deletePodComment: Scalars['Boolean']['output'];
   deletePodDraft: Scalars['Boolean']['output'];
+  deletePodExpense: Scalars['Boolean']['output'];
   deletePodIdea: Scalars['Boolean']['output'];
   deletePodIdeaComment: PodIdea;
   deletePodMessage?: Maybe<PodMessage>;
@@ -9028,6 +9042,7 @@ export type Mutation = {
   /** Replace the occasional-icon windows (admin Branding). */
   updateOccasionalIcons: Array<OccasionalIcon>;
   updatePod: Pod;
+  updatePodExpense: PodExpense;
   updatePodIdea: PodIdea;
   updatePodPlan: PodPlan;
   /** Replace the global Pod Shop slider media (managed from the products portal). */
@@ -9792,6 +9807,12 @@ export type MutationCreatePodArgs = {
 };
 
 
+export type MutationCreatePodExpenseArgs = {
+  input: PodExpenseInput;
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationCreatePodIdeaArgs = {
   input: CreatePodIdeaInput;
 };
@@ -10232,6 +10253,11 @@ export type MutationDeletePodCommentArgs = {
 
 export type MutationDeletePodDraftArgs = {
   draft_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeletePodExpenseArgs = {
+  expense_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -12229,6 +12255,12 @@ export type MutationUpdatePodArgs = {
 };
 
 
+export type MutationUpdatePodExpenseArgs = {
+  expense_doc_id: Scalars['ID']['input'];
+  input: PodExpenseInput;
+};
+
+
 export type MutationUpdatePodIdeaArgs = {
   input: UpdatePodIdeaInput;
   pod_idea_doc_id: Scalars['ID']['input'];
@@ -13892,6 +13924,103 @@ export type PodEarningsProjection = {
   /** Spots the host entered (physical capacity, including the host's own seat). */
   total_spots: Scalars['Int']['output'];
   waterfall: PodFinanceWaterfall;
+};
+
+/** One thing Duncit paid for to put a pod on. */
+export type PodExpense = {
+  __typename?: 'PodExpense';
+  amount: Scalars['Float']['output'];
+  /** The supplier's bill / invoice number, as printed on the document. */
+  bill_number: Scalars['String']['output'];
+  /** The uploaded bill or invoice (image or PDF). Empty when none is attached. */
+  bill_url: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  created_by?: Maybe<Scalars['ID']['output']>;
+  date: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  expense_id: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  payment_method: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  reference: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  vendor_name: Scalars['String']['output'];
+};
+
+export type PodExpenseCategoryTotal = {
+  __typename?: 'PodExpenseCategoryTotal';
+  category: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+};
+
+export type PodExpenseInput = {
+  amount: Scalars['Float']['input'];
+  bill_number?: InputMaybe<Scalars['String']['input']>;
+  bill_url?: InputMaybe<Scalars['String']['input']>;
+  category: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  payment_method?: InputMaybe<Scalars['String']['input']>;
+  reference?: InputMaybe<Scalars['String']['input']>;
+  vendor_name?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One pod, with everything Duncit has spent on it rolled up. */
+export type PodExpensePodRow = {
+  __typename?: 'PodExpensePodRow';
+  /** How many of those entries have a bill or invoice attached. */
+  bill_count: Scalars['Int']['output'];
+  expense_count: Scalars['Int']['output'];
+  expense_total: Scalars['Float']['output'];
+  last_expense_at?: Maybe<Scalars['String']['output']>;
+  /** The pod's human slug (pod_id), not the document id. */
+  pod_code: Scalars['String']['output'];
+  pod_date_time: Scalars['String']['output'];
+  pod_doc_id: Scalars['ID']['output'];
+  pod_status: PodExpensePodStatus;
+  pod_title: Scalars['String']['output'];
+};
+
+/**
+ * Where a pod sits in its own lifecycle, for the Pod Expenses list. CANCELLED
+ * pods appear here even though every other pod read hides them — money already
+ * spent on a called-off pod is still Duncit's cost.
+ */
+export type PodExpensePodStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'ONGOING'
+  | 'UPCOMING';
+
+/** Server-side table page for the shared table engine (podExpensePodsTable). */
+export type PodExpensePodTablePage = {
+  __typename?: 'PodExpensePodTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodExpensePodRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type PodExpenseSummary = {
+  __typename?: 'PodExpenseSummary';
+  bill_count: Scalars['Int']['output'];
+  by_category: Array<PodExpenseCategoryTotal>;
+  expense_count: Scalars['Int']['output'];
+  missing_bill_count: Scalars['Int']['output'];
+  /** Distinct pods that have at least one expense recorded. */
+  pods_covered: Scalars['Int']['output'];
+  this_month_spent: Scalars['Float']['output'];
+  total_spent: Scalars['Float']['output'];
+};
+
+/** Server-side table page for the shared table engine (podExpensesTable). */
+export type PodExpenseTablePage = {
+  __typename?: 'PodExpenseTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodExpense>;
+  total: Scalars['Int']['output'];
 };
 
 /**
@@ -16041,6 +16170,14 @@ export type Query = {
   podComments: Array<PodComment>;
   /** The Admin panel's Pods dashboard, in one read. */
   podDashboard: PodDashboard;
+  /** The same row for one pod — the expense drawer's header. */
+  podExpensePodSummary?: Maybe<PodExpensePodRow>;
+  /** Pod Expenses list: one row per pod, with its Duncit spend rolled up. */
+  podExpensePodsTable: PodExpensePodTablePage;
+  /** KPI tiles + per-category split for the Pod Expenses page. */
+  podExpenseSummary: PodExpenseSummary;
+  /** One pod's expense entries. */
+  podExpensesTable: PodExpenseTablePage;
   /**
    * Everything the feedback page for one pod needs — backs the shareable
    * /pod/:podId/feedback link a host sends to their guests.
@@ -17909,6 +18046,22 @@ export type QueryPodCommentsArgs = {
 
 export type QueryPodDashboardArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryPodExpensePodSummaryArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodExpensePodsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPodExpensesTableArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
 };
 
 

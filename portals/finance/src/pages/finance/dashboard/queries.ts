@@ -34,6 +34,12 @@ export const FINANCE_DASHBOARD_STATS = gql`
         last_month
         mom_change_pct
       }
+      pod_expenses {
+        total
+        this_month
+        last_month
+        mom_change_pct
+      }
     }
   }
 `;
@@ -52,4 +58,6 @@ export interface FinanceDashboardStats {
   gst_collected: FinanceStat;
   pending_payouts: FinanceStat;
   completed_payouts: FinanceStat;
+  /** What Duncit itself spent to run pods (Finance > Pod Expenses). */
+  pod_expenses: FinanceStat;
 }

@@ -1,16 +1,15 @@
 import { AppImage } from '@/components/AppImage';
 
-import { useController, type Control, type Path } from 'react-hook-form';
+import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
 
 import { countryFlagUrl } from '@/utils/location-tree';
 import { SelectSheet, type SelectOption } from './SelectSheet';
 import { COUNTRY_CODES, countryByDial } from './country-codes';
-import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '@/hooks/useTranslation';
 
-interface Props {
-  control: Control<AccountEditValues>;
-  name: Path<AccountEditValues>;
+interface Props<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
   label: string;
   testID: string;
   disabled?: boolean;
@@ -25,11 +24,20 @@ const OPTIONS: SelectOption[] = COUNTRY_CODES.map((c) => ({
 }));
 
 /**
- * Searchable country-dial-code dropdown (bug 4) bound to react-hook-form. The
- * field stores the dial string (e.g. '+91'); the sheet can be searched by country
+ * Searchable country-dial-code dropdown bound to react-hook-form. The field
+ * stores the dial string (e.g. '+91'); the sheet can be searched by country
  * name or code. RN twin of mWeb's MUI CountryCodeField.
+ *
+ * Generic over the form it is bound to: signup and the profile editor both
+ * render it, so it cannot name a single values type.
  */
-export function CountryCodeField({ control, name, label, testID, disabled }: Readonly<Props>) {
+export function CountryCodeField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  testID,
+  disabled,
+}: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const { field, fieldState } = useController({ control, name });
   const dial = String(field.value ?? '');

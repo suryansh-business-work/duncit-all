@@ -10,8 +10,17 @@ export const authTypeDefs = gql`
     first_name: String!
     last_name: String
     email: String!
-    phone_number: String
-    phone_extension: String
+    """
+    The account's phone number — digits only, without the dial code.
+
+    Required and unique: it is the second way an account is identified, so a
+    number already registered fails the signup instead of creating a second
+    person behind the same phone. Google signup collects it later; this door
+    asks for it up front.
+    """
+    phone_number: String!
+    "The dial code the number belongs to, such as +91. Chosen from a list."
+    phone_extension: String!
     password: String!
     dob: String!
     city: String

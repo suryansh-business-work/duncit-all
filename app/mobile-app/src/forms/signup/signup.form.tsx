@@ -12,6 +12,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useSignupPolicies } from '@/hooks/usePolicies';
 import { useTranslation } from '@/hooks/useTranslation';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
+import { PhoneField } from './PhoneField';
 import { makeSignupSchema, signupDefaults, type SignupFormValues } from './signup.types';
 
 export interface SignupFormProps {
@@ -20,7 +21,7 @@ export interface SignupFormProps {
   onSubmit: (values: SignupFormValues) => void | Promise<void>;
 }
 
-/** Email signup form: Name, Date of Birth, Email, Password, Confirm Password. */
+/** Email signup form: Name, Date of Birth, Email, Phone, Password, Confirm. */
 export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupFormProps>) {
   const { t } = useTranslation();
   const { minSignupAge } = useAppSettings();
@@ -65,6 +66,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         textContentType="emailAddress"
         required
       />
+      <PhoneField control={control} />
       <FormTextField
         control={control}
         name="password"

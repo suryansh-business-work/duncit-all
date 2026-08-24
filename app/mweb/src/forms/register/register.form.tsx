@@ -12,6 +12,7 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import { Link as RouterLink } from 'react-router-dom';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
+import PhoneField from './PhoneField';
 import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useMinSignupAge } from '../../utils/dateFormat';
@@ -101,6 +102,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           InputLabelProps={{ shrink: true }}
           InputProps={startIcon(<EmailOutlinedIcon fontSize="small" />)}
         />
+        <PhoneField control={control} />
         <DobYearField control={control} minAge={minAge} />
         <RhfTextField
           control={control}

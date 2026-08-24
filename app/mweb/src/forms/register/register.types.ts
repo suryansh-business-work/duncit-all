@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
-import { PERSON_NAME, REFERRAL_CODE } from '@duncit/regex';
+import { DIAL_CODE, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
 import { fallbackT, type Translate } from '../../i18n/fallback';
 
 /**
  * Register contract — RHF + Zod (migrated from Formik + Yup). Mirrors the native
- * signup: name, email, 8-char password with confirmation, and a date of birth
- * that makes the applicant at least 18 today.
+ * signup: name, email, phone, 8-char password with confirmation, and a date of
+ * birth that makes the applicant at least 18 today.
  *
  * The age rule lives in @duncit/datetime so signup, the profile editor and the
  * server all gate on the same calendar comparison. It replaced an
@@ -43,6 +43,23 @@ export function makeRegisterSchema(
         .min(1, t('mweb.auth.validation.emailRequired'))
         .email(t('mweb.auth.validation.emailInvalid'))
         .max(254),
+      /*
+        Phone is required and unique, and both halves are checked here only for
+        SHAPE — the digits without a dial code, matching the server's own
+        `phoneRegex`, so a number the form accepts is a number the mutation
+        accepts. Whether it is already on another account is the server's
+        answer: it holds the unique index, and a client-side check would race it.
+      */
+      phoneExtension: z
+        .string()
+        .trim()
+        .min(1, t('mweb.signup.validation.codeRequired'))
+        .regex(DIAL_CODE, t('mweb.signup.validation.codeInvalid')),
+      phoneNumber: z
+        .string()
+        .trim()
+        .min(1, t('mweb.signup.validation.phoneRequired'))
+        .regex(PHONE_INTL, t('mweb.signup.validation.phoneInvalid')),
       password: z.string().min(8, t('mweb.auth.validation.passwordMin')).max(128),
       confirmPassword: z.string().min(1, t('mweb.signup.validation.confirmRequired')),
       dob: dobString,
@@ -90,6 +107,10 @@ export type RegisterFormValues = z.infer<typeof registerSchema>;
 export const registerDefaults: RegisterFormValues = {
   name: '',
   email: '',
+  // Same default dial as every other phone row in both apps — India is the
+  // market, and the box is a searchable list for everyone else.
+  phoneExtension: '+91',
+  phoneNumber: '',
   password: '',
   confirmPassword: '',
   dob: '',

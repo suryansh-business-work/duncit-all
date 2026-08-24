@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useWatch, type Control, type UseFormSetValue } from 'react-hook-form';
 import { Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
 import RhfTextField from '../../../forms/components/RhfTextField';
-import CountryCodeField from './CountryCodeField';
+import CountryCodeField from '../../../forms/components/CountryCodeField';
 import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '../../../i18n/useTranslation';
 

@@ -19,6 +19,18 @@ const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 /** One or more digits, nothing else. */
 const DIGITS = /^\d+$/;
 
+/*
+  Everything that is NOT a digit — the complement of DIGITS, and the pattern
+  toDigits strips with.
+
+  Deliberately NOT exported. It needs the `g` flag to strip every run rather
+  than just the first, and every pattern this package exports is guaranteed
+  safe to reuse with .test() — a guarantee the lockstep test enforces and a
+  global regex breaks, since it keeps `lastIndex` between calls. Callers want
+  the transform anyway, so the transform is what leaves the module.
+*/
+const NON_DIGITS = /\D+/g;
+
 // ---------------------------------------------------------------------------
 // International / address patterns.
 //
@@ -116,6 +128,7 @@ module.exports = {
   PERSON_NAME,
   REFERRAL_CODE,
   USERNAME,
+  toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
   isEmail: (v) => EMAIL.test(v),

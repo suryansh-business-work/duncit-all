@@ -40,6 +40,8 @@ export function SignupScreen() {
         name: values.name,
         dob: values.dob,
         email: values.email,
+        phoneNumber: values.phoneNumber,
+        phoneExtension: values.phoneExtension,
         password: values.password,
         referralCode: values.referralCode,
         acceptedPolicyIds: values.acceptedPolicyIds,

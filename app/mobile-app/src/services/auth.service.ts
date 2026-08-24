@@ -19,6 +19,10 @@ export interface SignupValues {
   /** YYYY-MM-DD; the server stores a full date. */
   dob: string;
   email: string;
+  /** Digits only, without the dial code. Required and unique server-side. */
+  phoneNumber: string;
+  /** The dial code the number belongs to, e.g. '+91'. */
+  phoneExtension: string;
   password: string;
   /** A friend's code, checked by the server BEFORE the account is created. */
   referralCode?: string;
@@ -59,6 +63,8 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
       first_name,
       last_name,
       email: values.email.trim().toLowerCase(),
+      phone_number: values.phoneNumber.trim(),
+      phone_extension: values.phoneExtension.trim(),
       password: values.password,
       dob: dobToIso(values.dob),
       // Omitted rather than sent empty: the server treats a present-but-blank

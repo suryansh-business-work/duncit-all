@@ -56,6 +56,8 @@ describe('auth.service mutations', () => {
       name: 'Riya Sharma',
       dob: '1995-01-01',
       email: 'Riya@Duncit.com',
+      phoneNumber: '9845012345',
+      phoneExtension: '+91',
       password: 'StrongPass123',
       acceptedPolicyIds: ['pol-1'],
     });
@@ -67,6 +69,8 @@ describe('auth.service mutations', () => {
         first_name: 'Riya',
         last_name: 'Sharma',
         email: 'riya@duncit.com',
+        phone_number: '9845012345',
+        phone_extension: '+91',
         password: 'StrongPass123',
         dob: '1995-01-01T00:00:00.000Z',
         accepted_policy_ids: ['pol-1'],

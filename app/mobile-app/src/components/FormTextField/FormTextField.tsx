@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
+import { toDigits } from '@duncit/regex';
 import type { TextInputProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, XStack } from 'tamagui';
@@ -34,6 +35,15 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
   hint?: string;
   /** Trailing control rendered on the label line, right-aligned. */
   labelAction?: ReactNode;
+  /**
+   * Keep only digits in what the field stores.
+   *
+   * `keyboardType` is a request, not a rule — a hardware keyboard, a paste and
+   * an autofill all get past it — so a number-only box strips on change rather
+   * than objecting afterwards. The stripping itself is `toDigits` from
+   * @duncit/regex, the same rule the Zod schema then checks the length of.
+   */
+  digitsOnly?: boolean;
 }
 
 /**
@@ -50,6 +60,7 @@ export function FormTextField<T extends FieldValues>({
   required,
   hint,
   labelAction,
+  digitsOnly,
   secureTextEntry,
   editable,
   ...inputProps
@@ -83,7 +94,7 @@ export function FormTextField<T extends FieldValues>({
           focusStyle={{ borderColor: hasError ? '$danger' : '$primary', borderWidth: 1.5 }}
           paddingRight={isSecure ? 44 : undefined}
           value={(field.value as string) ?? ''}
-          onChangeText={field.onChange}
+          onChangeText={(text) => field.onChange(digitsOnly ? toDigits(text) : text)}
           onBlur={field.onBlur}
           secureTextEntry={isSecure && !visible}
           aria-label={label}

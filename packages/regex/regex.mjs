@@ -18,6 +18,18 @@ export const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 /** One or more digits, nothing else. */
 export const DIGITS = /^\d+$/;
 
+/*
+  Everything that is NOT a digit — the complement of DIGITS, and the pattern
+  toDigits strips with.
+
+  Deliberately NOT exported. It needs the `g` flag to strip every run rather
+  than just the first, and every pattern this package exports is guaranteed
+  safe to reuse with .test() — a guarantee the lockstep test enforces and a
+  global regex breaks, since it keeps `lastIndex` between calls. Callers want
+  the transform anyway, so the transform is what leaves the module.
+*/
+const NON_DIGITS = /\D+/g;
+
 // ---------------------------------------------------------------------------
 // International / address patterns.
 //
@@ -91,6 +103,16 @@ export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
  * a failed signup.
  */
 export const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
+
+/**
+ * Keep only the digits in a string.
+ *
+ * The rule behind every number-only box: a phone field is typed into, pasted
+ * into and autofilled, and the last two are how letters get in. Applied on
+ * change, it makes "digits only" a property of the input rather than a message
+ * shown after the fact.
+ */
+export const toDigits = (v) => String(v ?? '').replaceAll(NON_DIGITS, '');
 
 export const isPhoneNumber = (v) => PHONE_NUMBER.test(v);
 export const isPincode = (v) => PINCODE.test(v);

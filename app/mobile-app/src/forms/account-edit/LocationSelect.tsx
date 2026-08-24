@@ -2,7 +2,7 @@ import { useController, useWatch, type Control, type UseFormSetValue } from 'rea
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit/geo';
 
-import { SelectSheet, type SelectOption } from './SelectSheet';
+import { SelectSheet, type SelectOption } from '../components/SelectSheet';
 import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '@/hooks/useTranslation';
 

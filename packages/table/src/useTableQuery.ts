@@ -13,6 +13,8 @@ export interface UseTableQueryOptions<T> {
    * They are appended to the fetch query's filters but never shown as chips.
    */
   externalFilters?: ReadonlyArray<TableFilterValue>;
+  /** Row identity, so {@link UseTableQueryResult.updateRow} can find its row. */
+  getRowId?: (row: T) => string;
 }
 
 export interface UseTableQueryResult<T> {
@@ -28,6 +30,20 @@ export interface UseTableQueryResult<T> {
   setSort: (field: string | null, dir: TableSortDir) => void;
   setFilters: (filters: TableFilterValue[]) => void;
   refetch: () => void;
+  /**
+   * Replace ONE row in place, by id.
+   *
+   * For the common case where an action already knows the answer: a mutation
+   * that returns the updated entity has said everything a refetch would go and
+   * ask for. Putting it straight into the row skips the round-trip, and because
+   * only that row's object identity changes, AG Grid repaints that row alone —
+   * every other row, the scroll position and the open page are untouched.
+   *
+   * A row that is not on the current page is ignored: it is not on screen, and
+   * inventing it would put a row in front of the reader that the query it is
+   * looking at never returned.
+   */
+  updateRow: (row: T) => void;
 }
 
 /**
@@ -36,7 +52,7 @@ export interface UseTableQueryResult<T> {
  * orchestration with a monotonic sequence guard so stale responses are dropped.
  */
 export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQueryResult<T> {
-  const { fetchRows, defaultSort, defaultPageSize } = options;
+  const { fetchRows, defaultSort, defaultPageSize, getRowId } = options;
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [pageState, setPageState] = useState(1);
@@ -153,6 +169,25 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
     setReloadTick((tick) => tick + 1);
   }, []);
 
+  // Read through a ref so updateRow stays referentially stable — it is handed
+  // to parents through a ref of their own, and a changing identity there would
+  // re-run their effects on every render.
+  const rowIdRef = useRef(getRowId);
+  rowIdRef.current = getRowId;
+
+  const updateRow = useCallback((next: T) => {
+    const identify = rowIdRef.current;
+    if (!identify) return;
+    const id = identify(next);
+    setRows((prev) => {
+      const index = prev.findIndex((row) => identify(row) === id);
+      if (index === -1) return prev;
+      const out = [...prev];
+      out[index] = next;
+      return out;
+    });
+  }, []);
+
   return {
     rows,
     total,
@@ -166,5 +201,6 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
     setSort,
     setFilters,
     refetch,
+    updateRow,
   };
 }

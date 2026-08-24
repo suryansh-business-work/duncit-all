@@ -302,6 +302,7 @@ await fetchRows(payoutQuery);
 | `defaultPageSize` | `10 \| 25 \| 50 \| 100` | no | `25` | Initial page size. |
 | `searchPlaceholder` | `string` | no | — | Search box placeholder. |
 | `refetchRef` | `MutableRefObject<(() => void) \| null>` | no | — | Filled with the table's `refetch` so a parent can reload after a mutation. |
+| `updateRowRef` | `MutableRefObject<((row: T) => void) \| null>` | no | — | Filled with a "replace this one row" fn — see [Updating one row](#updating-one-row-instead-of-the-page). |
 | `externalFilters` | `ReadonlyArray<TableFilterValue>` | no | — | Page-driven filters (tab/URL/select). Compared by value, reset to page 1, **no chip**. |
 | `selection` | `{ onChange: (rows: T[]) => void; clearRef?: MutableRefObject<(() => void) \| null> }` | no | — | Opt in to a checkbox column. Absent means no selection config reaches AG Grid at all. `onChange` gets the rows ticked **right now** (and `[]` when a page change wipes them); `clearRef` is filled with a fn that unticks the grid. See [Selection is per page, and it is a mirror](#selection-is-per-page-and-it-is-a-mirror). |
 
@@ -321,7 +322,7 @@ await fetchRows(payoutQuery);
 
 | Export | Signature | Notes |
 | --- | --- | --- |
-| `useTableQuery` | `<T>({ fetchRows, defaultSort?, defaultPageSize?, externalFilters? }) => UseTableQueryResult<T>` | The state machine behind the table: `{ rows, total, loading, error, query, searchInput, setSearchInput, setPage, setPageSize, setSort, setFilters, refetch }`. A monotonic sequence guard drops stale responses. |
+| `useTableQuery` | `<T>({ fetchRows, defaultSort?, defaultPageSize?, externalFilters?, getRowId? }) => UseTableQueryResult<T>` | The state machine behind the table: `{ rows, total, loading, error, query, searchInput, setSearchInput, setPage, setPageSize, setSort, setFilters, refetch, updateRow }`. A monotonic sequence guard drops stale responses. `updateRow` needs `getRowId`, which `DuncitTable` always passes. |
 | `useTablePrefs` | `(tableId: string) => { hiddenOverrides: Record<string, boolean>; toggleColumn; resetColumns; density; toggleDensity }` | Reads/writes `localStorage`, every access wrapped in try/catch. Density defaults to `'standard'`. |
 | `makeApolloTableFetch` | `<Row>(client, query, resultKey, options?) => TableFetch<Row>` | Outside React only. `options`: `extraFilters`, `mapQuery`, `extraVariables`, `buildVariables`, `mapRow`, `fetchPolicy` (default `'network-only'`). |
 | `useApolloTableFetch` | `<Row>(client, query, resultKey, options?, deps?) => TableFetch<Row>` | The same thing memoized — **always** this one inside a component. |
@@ -510,3 +511,41 @@ which looks exactly like a broken fetch in a test.
 `DuncitTable` detects jsdom via the user agent and skips the measurement pass there. If you are
 writing a table test and rows are missing, this is why the real browser and the test can differ;
 it is a test-environment accommodation, not behaviour to depend on.
+
+## Updating one row instead of the page
+
+Most actions on a table row end in a mutation that returns the updated entity. That answer
+is already in hand, so sending the table back to the server for the whole page is a round
+trip asking a question it can answer itself:
+
+```tsx
+const updateRowRef = useRef<((row: MeetingRow) => void) | null>(null);
+
+<DuncitTable<MeetingRow> … updateRowRef={updateRowRef} />;
+
+const res = await updateMeeting({ variables: { id, input: { status: 'DONE' } } });
+updateRowRef.current?.(res.data.updateMeeting);
+```
+
+Only that row's object identity changes, so AG Grid repaints that row and leaves the rest
+alone — the scroll position, the current page, a menu the operator has open and any ticked
+checkboxes all survive. Renderer cells repaint because renderer columns are declared
+never-equal (see the repaint note above), which is what makes a Status chip and an Actions
+menu follow the new row rather than freeze on the old one.
+
+**Use `refetchRef` instead when the change could move the row OUT of the current view.** A
+status filter pinned to `SCHEDULED` and a row that just became `DONE` is not a cell change,
+it is a membership change: the row has to leave and something else moves up to take its
+place, and only the query knows what. The caller owns that decision, because only the caller
+knows what it has pinned:
+
+```tsx
+const apply = (updated) => {
+  if (!updated || !matchesActiveFilter(updated)) refresh();
+  else updateRowRef.current?.(updated);
+};
+```
+
+A row that is not on the current page is ignored rather than inserted — it is not on screen,
+and inventing it would show the reader a row the query they are looking at never returned.
+Like `refetchRef`, the ref is nulled on unmount.

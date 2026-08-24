@@ -18,8 +18,8 @@ import { useTranslation } from '@duncit/app-settings';
 interface Props {
   meeting: OnboardingMeeting | null;
   onClose: () => void;
-  /** Called after a decision is saved so the table can refetch. */
-  onDecided: () => Promise<unknown> | void;
+  /** The decided meeting, so the caller can update its row without refetching. */
+  onDecided: (decided?: OnboardingMeeting | null) => Promise<unknown> | void;
 }
 
 /** After a meeting is marked Done, onboarding staff review the applicant's survey
@@ -46,10 +46,12 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
     }
     setError(null);
     try {
-      await decideMeeting({ variables: { id: meeting.id, decision, feedback: feedback.trim() } });
+      const res = await decideMeeting({
+        variables: { id: meeting.id, decision, feedback: feedback.trim() },
+      });
       setFeedback('');
       onClose();
-      await onDecided();
+      await onDecided(res.data?.decideMeeting);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotSaveTheDecision'));
     }

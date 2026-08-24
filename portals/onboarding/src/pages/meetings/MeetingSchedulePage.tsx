@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
-import { statusPinnedFilters, type StatusFilterKey } from './statusFilters';
+import { matchesStatusFilter, statusPinnedFilters, type StatusFilterKey } from './statusFilters';
 import CancelMeetingDialog from './CancelMeetingDialog';
 import DecisionDialog from './DecisionDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
@@ -63,6 +63,7 @@ export default function MeetingSchedulePage() {
 
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
+  const updateRowRef = useRef<((row: OnboardingMeeting) => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
   const [updateMeeting] = useMutation(UPDATE_MEETING);
   // Double-submit guard for "Mark done". It is a ref rather than the mutation's
@@ -76,6 +77,34 @@ export default function MeetingSchedulePage() {
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
   const [requesterOf, setRequesterOf] = useState<OnboardingMeeting | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  /*
+    Every action here ends in a mutation that returns the whole updated meeting,
+    so the answer is already in hand — the table does not have to go and ask for
+    the page again to show a new Status or a new Actions menu. Putting the
+    returned row straight in repaints that ONE row and leaves the rest of the
+    page, the scroll position and the open page alone.
+
+    A refetch is still the right move in exactly two cases, and only those:
+      - nothing came back (an older mutation, or a failure that still wrote), so
+        the row on screen cannot be trusted; and
+      - the change moves the row OUT of the active status toggle, which is a
+        membership change rather than a cell change — only the query knows what
+        moves up to take its place.
+  */
+  const applyMeeting = useCallback(
+    (updated?: OnboardingMeeting | null) => {
+      if (!updated || !matchesStatusFilter(updated, statusFilter)) {
+        refresh();
+        return;
+      }
+      updateRowRef.current?.(updated);
+      // Keep the open drawer honest: it is showing a snapshot taken when the
+      // row was clicked, and this is the moment that snapshot went stale.
+      setSelected((current) => (current && current.id === updated.id ? updated : current));
+    },
+    [refresh, statusFilter],
+  );
 
   const pinnedFilters: TableFilterValue[] = [
     { field: 'kind', op: 'eq', value: kind },
@@ -96,18 +125,19 @@ export default function MeetingSchedulePage() {
       markingRef.current = true;
       setActionError(null);
       try {
-        await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
+        const res = await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
+        applyMeeting(res.data?.updateMeeting);
       } catch (e) {
         setActionError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotMarkTheMeetingAs'));
+        // Refetch on FAILURE too — a mutation that throws after its own write
+        // leaves the row already changed in Mongo, and doing nothing here would
+        // show the stale status until a manual page reload.
+        refresh();
       } finally {
         markingRef.current = false;
-        // Refetch on FAILURE too — a mutation that throws after its own write
-        // leaves the row already changed in Mongo, and refetching only on
-        // success would show the stale status until a manual page reload.
-        refresh();
       }
     },
-    [updateMeeting, refresh],
+    [updateMeeting, applyMeeting, refresh, t],
   );
 
   if (!valid) return <Alert severity="error">{t('onboarding.meetings.unknownMeetingKind')}</Alert>;
@@ -133,6 +163,7 @@ export default function MeetingSchedulePage() {
         key={`${kind}:${statusFilter}`}
         fetchRows={fetchRows}
         refetchRef={refetchRef}
+        updateRowRef={updateRowRef}
         onSelect={setSelected}
         onSchedule={setEditing}
         onMarkDone={markDone}
@@ -142,9 +173,13 @@ export default function MeetingSchedulePage() {
       />
 
       <RequesterDialog meeting={requesterOf} onClose={() => setRequesterOf(null)} />
-      <ScheduleMeetingDialog meeting={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />
-      <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={refresh} />
-      <DecisionDialog meeting={deciding} onClose={() => setDeciding(null)} onDecided={refresh} />
+      <ScheduleMeetingDialog
+        meeting={editing}
+        onClose={() => setEditing(null)}
+        onSaved={(saved) => { setEditing(null); applyMeeting(saved); }}
+      />
+      <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={applyMeeting} />
+      <DecisionDialog meeting={deciding} onClose={() => setDeciding(null)} onDecided={applyMeeting} />
       <MeetingDetailsDrawer
         meeting={selected}
         onClose={() => setSelected(null)}

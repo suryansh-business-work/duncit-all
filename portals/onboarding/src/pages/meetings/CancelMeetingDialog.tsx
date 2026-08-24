@@ -16,8 +16,8 @@ import { useTranslation } from '@duncit/app-settings';
 interface Props {
   meeting: OnboardingMeeting | null;
   onClose: () => void;
-  /** Called after a successful cancel so the table can refetch. */
-  onCancelled: () => Promise<unknown> | void;
+  /** The cancelled meeting, so the caller can update its row without refetching. */
+  onCancelled: (cancelled?: OnboardingMeeting | null) => Promise<unknown> | void;
 }
 
 /** Staff cancel-with-reason dialog — the applicant is emailed the reason and
@@ -42,10 +42,10 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
     }
     setError(null);
     try {
-      await cancelMeeting({ variables: { id: meeting.id, reason: reason.trim() } });
+      const res = await cancelMeeting({ variables: { id: meeting.id, reason: reason.trim() } });
       setReason('');
       onClose();
-      await onCancelled();
+      await onCancelled(res.data?.cancelMeeting);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotCancelTheMeeting'));
     }

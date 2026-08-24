@@ -16,6 +16,9 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**'],
+      // Harness, not shipped logic: it runs INSIDE other workspaces' setups, so
+      // it can never be exercised by this package's own suite.
+      exclude: ['src/test-setup.ts'],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },

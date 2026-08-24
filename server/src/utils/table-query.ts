@@ -165,13 +165,16 @@ export function buildTableFilter(
   return out;
 }
 
-function clampPage(q: TableQueryInput): { page: number; pageSize: number } {
+/** Page/page-size clamps. Exported alongside {@link resolveSort} for tables whose
+ * rows come from an aggregation pipeline rather than a Model.find — they still owe
+ * the caller the same paging and ordering contract. */
+export function clampPage(q: TableQueryInput): { page: number; pageSize: number } {
   const page = Math.max(1, Math.trunc(q.page ?? 1));
   const pageSize = Math.min(100, Math.max(1, Math.trunc(q.page_size ?? 25)));
   return { page, pageSize };
 }
 
-function resolveSort(q: TableQueryInput, config: TableEntityConfig): Record<string, 1 | -1> {
+export function resolveSort(q: TableQueryInput, config: TableEntityConfig): Record<string, 1 | -1> {
   let chosen = config.defaultSort;
   if (q.sort_by && Object.hasOwn(config.sortFields, q.sort_by)) {
     const dir: 1 | -1 = q.sort_dir === 'asc' ? 1 : -1;

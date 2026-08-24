@@ -486,6 +486,73 @@ export const TECH_BUNDLE: NestedCatalogue = {
       noTelemetryLogsPersistedYet: 'No telemetry logs persisted yet.',
       totalLogs: 'TOTAL LOGS',
     },
+    /*
+      The account-deletion queue. Members ask from mWeb or the app; nothing is
+      removed until somebody here does it, and what they do cannot be undone —
+      so most of this copy exists to say exactly what is about to happen.
+    */
+    accountDeletions: {
+      title: 'Account Deletions',
+      intro:
+        'Members who have asked to be removed. Nothing has been deleted yet — their account keeps working until you carry the request out here, and they can withdraw it until then.',
+      searchHint: 'Search reference, name, email or phone',
+      empty: 'Nobody has asked to be deleted.',
+      // Table columns.
+      reference: 'Reference',
+      member: 'Member',
+      contact: 'Contact',
+      reason: 'Reason',
+      askedFrom: 'Asked from',
+      requested: 'Requested',
+      status: 'Status',
+      reviewed: 'Reviewed',
+      noReason: 'No reason given',
+      // The detail dialog.
+      detailTitle: 'Deletion request {code}',
+      traceTitle: 'Where this member appears',
+      traceIntro:
+        'Read from the schemas themselves, so a collection added later is covered without anyone registering it. Counts are live.',
+      traceEmpty: 'Nothing left. Only the account document remains.',
+      traceClear: 'No trace found anywhere.',
+      collection: 'Collection',
+      field: 'Field',
+      records: 'Records',
+      effect: 'Effect',
+      // The two things a "Delete" here can mean. They are not close enough to
+      // share a word: one destroys documents, the other edits somebody else's.
+      effectDelete: 'Deletes the records',
+      effectRemove: 'Removes them from the records',
+      effectDeleteHint:
+        'These documents belong to this member and will be deleted outright.',
+      effectRemoveHint:
+        'The member is one entry inside documents that belong to others — a pod attendee, a comment, a signature. Only their entry is removed; the document stays.',
+      deleteGroup: 'Delete',
+      deletingGroup: 'Deleting…',
+      deleteAll: 'Delete everything',
+      deletingAll: 'Deleting…',
+      accountRemoved: 'The account document has been removed.',
+      accountPresent: 'The account document is still here.',
+      // Confirmations. Both are irreversible, so both spell out the damage.
+      confirmGroupTitle: 'Delete from {collection}?',
+      confirmGroupMessage:
+        'This affects {count} record(s) in {collection}. It cannot be undone.',
+      confirmAllTitle: 'Delete everything for {name}?',
+      confirmAllMessage:
+        'This permanently removes every record that points at this member, then the account itself. It cannot be undone. Type the reference {code} to confirm.',
+      confirmAllPrompt: 'Type {code} to confirm',
+      confirmAllCta: 'Delete everything',
+      // Turning one down.
+      reject: 'Reject request',
+      rejectTitle: 'Reject this request?',
+      rejectMessage: 'The account stays as it is. Say why, so support can tell them.',
+      rejectNoteLabel: 'Reason',
+      rejectNotePlaceholder: 'Why this request is being turned down.',
+      // What has already been done, kept on the request itself.
+      purgeLogTitle: 'Already deleted',
+      purgeLogEntry: '{removed} from {collection} ({field})',
+      done: 'Done',
+      close: 'Close',
+    },
     statusReports: {
       title: 'Status Reports',
       intro:

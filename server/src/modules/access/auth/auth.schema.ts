@@ -64,10 +64,6 @@ export const authTypeDefs = gql`
     new_password: String!
   }
 
-  input DeleteMyAccountInput {
-    otp: String!
-  }
-
   input GoogleAuthInput {
     id_token: String!
     portal_key: String
@@ -190,10 +186,14 @@ export const authTypeDefs = gql`
     requestPasswordChangeOtp(input: RequestPasswordChangeInput!): OtpRequestResult!
     "Auth-required: confirm the OTP and set the new password."
     changePasswordWithOtp(input: ChangePasswordInput!): Boolean!
-    "Auth-required: email a confirmation OTP before self-serve account deletion."
+    """
+    Auth-required: email a confirmation code before asking to be deleted.
+
+    The code is spent by submitAccountDeletionRequest, which FILES a request
+    for the Tech portal rather than deleting anything — see the accountDeletion
+    module. Nothing in this module deletes an account any more.
+    """
     requestAccountDeletionOtp: OtpRequestResult!
-    "Auth-required: confirm the OTP and soft-delete (and anonymize) the account."
-    deleteMyAccount(input: DeleteMyAccountInput!): Boolean!
     seedSuperAdmin: SeedAdminResult!
   }
 `;

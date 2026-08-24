@@ -23,8 +23,38 @@ export const REQUEST_ACCOUNT_DELETION_OTP = gql`
   }
 `;
 
-export const DELETE_MY_ACCOUNT = gql`
-  mutation DeleteMyAccount($input: DeleteMyAccountInput!) {
-    deleteMyAccount(input: $input)
+/*
+  Deletion is a REQUEST now, not an act. The code still proves who is asking;
+  what it buys is a row in the Tech portal's queue. Everything below reads or
+  writes that request — nothing here removes an account.
+*/
+export const MY_ACCOUNT_DELETION_REQUEST = gql`
+  query MyAccountDeletionRequest {
+    myAccountDeletionRequest {
+      id
+      request_id
+      status
+      requested_at
+    }
+  }
+`;
+
+export const SUBMIT_ACCOUNT_DELETION_REQUEST = gql`
+  mutation SubmitAccountDeletionRequest($input: SubmitAccountDeletionRequestInput!) {
+    submitAccountDeletionRequest(input: $input) {
+      id
+      request_id
+      status
+      requested_at
+    }
+  }
+`;
+
+export const CANCEL_MY_ACCOUNT_DELETION_REQUEST = gql`
+  mutation CancelMyAccountDeletionRequest {
+    cancelMyAccountDeletionRequest {
+      id
+      status
+    }
   }
 `;

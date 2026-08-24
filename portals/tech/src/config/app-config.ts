@@ -80,6 +80,11 @@ export const appConfig = {
     // Sits beside Telemetry rather than inside it: those rows are written by
     // machines, these by people, and the triage is a different job.
     { label: 'Status Reports', labelKey: 'shell.nav.statusReports', to: '/status-reports', icon: 'sos' },
+    // Beside Status Reports for the same reason it sits beside Telemetry: both
+    // are queues a PERSON filed and a person has to answer. Filed under Database
+    // it would read as a maintenance tool, which is exactly the wrong instinct
+    // for the one screen here that destroys somebody's account for good.
+    { label: 'Account Deletions', labelKey: 'shell.nav.accountDeletions', to: '/account-deletions', icon: 'personRemove' },
     {
       label: 'App Builds', labelKey: 'shell.nav.appBuilds',
       icon: 'installMobile',

@@ -385,6 +385,51 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       somethingWentWrong: 'Something went wrong.',
       thisPermanentlyDeletesYourAccountAnd: 'This permanently deletes your account and data. This action cannot be undone.',
       togglePrivateAccount: 'Toggle private account',
+      /*
+        Account deletion. mWeb and native render the same flow (rule 27) over
+        the same two mutations, so the copy is one set of keys.
+
+        The wording is deliberate: nothing here promises an immediate deletion,
+        because nothing is deleted immediately any more. The tap files a request
+        a person in the Tech portal carries out, and the account keeps working
+        until they do — so a member who taps this by mistake loses nothing, and
+        one who means it is told what actually happens next.
+      */
+      deletion: {
+        action: 'Request account deletion',
+        subtitle: 'Ask us to remove your account and everything on it.',
+        confirmTitle: 'Request account deletion?',
+        confirmMessage:
+          'We will email you a 6-digit code to confirm it is you. Your account keeps working until our team removes it, and you can withdraw the request any time before then.',
+        confirmCta: 'Send code',
+        otpSent: 'Code sent to your email.',
+        otpIntro: 'Enter the code to send your deletion request.',
+        otpLabel: '6-digit code',
+        otpHint: 'The code we emailed you',
+        otpPlaceholder: '123456',
+        reasonLabel: 'Why are you leaving?',
+        reasonHint: 'Optional — it goes to the person reviewing your request.',
+        reasonPlaceholder: 'Tell us what went wrong…',
+        submit: 'Send deletion request',
+        submitting: 'Sending…',
+        submitted: 'Deletion request sent.',
+        didntGetIt: 'Didn’t get it?',
+        resend: 'Resend code',
+        resending: 'Resending…',
+        // The banner that replaces the button once a request is open.
+        pendingTitle: 'Deletion requested',
+        pendingBody:
+          'Our team is reviewing your request. Your account works normally until they remove it.',
+        pendingRef: 'Reference {code}',
+        pendingOn: 'Requested on {date}',
+        withdraw: 'Withdraw request',
+        withdrawing: 'Withdrawing…',
+        withdrawn: 'Deletion request withdrawn.',
+        validation: {
+          otpPattern: 'Enter the 6 digit code',
+          reasonTooLong: 'Please keep this under 1000 characters',
+        },
+      },
       youHaveUnsavedChangesClosingNow: 'You have unsaved changes. Closing now will lose them.',
       yourPasswordHasBeenChangedSuccessfully: 'Your password has been changed successfully.',
       enterYourCity: 'Enter your city',

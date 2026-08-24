@@ -5,7 +5,6 @@ import {
   resetPasswordSchema,
   requestPasswordChangeSchema,
   changePasswordSchema,
-  deleteMyAccountSchema,
 } from '../../auth.validator';
 
 describe('auth validators — simplified signup contract', () => {
@@ -97,11 +96,4 @@ describe('auth validators — simplified signup contract', () => {
     ).rejects.toThrow();
   });
 
-  it('deleteMyAccountSchema requires a 6-digit OTP', async () => {
-    await expect(deleteMyAccountSchema.validate({ otp: '123456' })).resolves.toMatchObject({
-      otp: '123456',
-    });
-    await expect(deleteMyAccountSchema.validate({ otp: '12' })).rejects.toThrow(/6 digit/i);
-    await expect(deleteMyAccountSchema.validate({})).rejects.toThrow();
-  });
 });

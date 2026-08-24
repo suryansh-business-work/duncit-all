@@ -82,14 +82,6 @@ export const changePasswordSchema = yup.object({
   new_password: yup.string().min(8).max(100).required(),
 });
 
-// Self-serve account deletion: confirmed with a 6-digit email OTP.
-export const deleteMyAccountSchema = yup.object({
-  otp: yup
-    .string()
-    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
-    .required(),
-});
-
 export const googleSignupSchema = yup.object({
   id_token: yup.string().min(20).required(),
   // Token-only Google signup: the account is created from the verified Google
@@ -114,5 +106,4 @@ export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetS
 export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
 export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
 export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;
-export type DeleteMyAccountDTO = yup.InferType<typeof deleteMyAccountSchema>;
 export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;

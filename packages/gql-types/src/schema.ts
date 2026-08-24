@@ -14,6 +14,88 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AccountDeletionDetail = {
+  __typename?: 'AccountDeletionDetail';
+  /** False once the account document itself has been removed. */
+  account_exists: Scalars['Boolean']['output'];
+  request: AccountDeletionRequest;
+  /** Only the references that still match something; a cleared one drops out. */
+  trace: Array<AccountDeletionTraceGroup>;
+};
+
+/** One collection cleared while carrying a request out, and when. */
+export type AccountDeletionPurgeEntry = {
+  __typename?: 'AccountDeletionPurgeEntry';
+  collection_name: Scalars['String']['output'];
+  field_path: Scalars['String']['output'];
+  model_name: Scalars['String']['output'];
+  purged_at: Scalars['String']['output'];
+  removed: Scalars['Int']['output'];
+};
+
+/**
+ * A member asking to be removed.
+ *
+ * The identity fields are a SNAPSHOT taken when they asked, not a join onto
+ * the account — carrying the request out destroys the account, and a finished
+ * row that can no longer say who it was about is a useless record.
+ */
+export type AccountDeletionRequest = {
+  __typename?: 'AccountDeletionRequest';
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  purge_log: Array<AccountDeletionPurgeEntry>;
+  reason: Scalars['String']['output'];
+  request_id: Scalars['String']['output'];
+  requested_at: Scalars['String']['output'];
+  reviewed_at?: Maybe<Scalars['String']['output']>;
+  reviewed_by?: Maybe<Scalars['ID']['output']>;
+  status: AccountDeletionStatus;
+  surface: AccountDeletionSurface;
+  user_id: Scalars['ID']['output'];
+};
+
+export type AccountDeletionRequestPage = {
+  __typename?: 'AccountDeletionRequestPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AccountDeletionRequest>;
+  total: Scalars['Int']['output'];
+};
+
+export type AccountDeletionStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'PENDING'
+  | 'REJECTED';
+
+export type AccountDeletionSurface =
+  | 'APP'
+  | 'MWEB'
+  | 'UNKNOWN';
+
+/**
+ * One place this member still appears, found by reading the schemas rather
+ * than a hand-kept list — so a collection added next week is covered without
+ * anyone remembering to register it.
+ */
+export type AccountDeletionTraceGroup = {
+  __typename?: 'AccountDeletionTraceGroup';
+  /** The underlying collection, which is what a DB console shows. */
+  collection_name: Scalars['String']['output'];
+  /** How many documents match right now. */
+  count: Scalars['Int']['output'];
+  /** The field pointing at the member, e.g. `pod_attendees`. */
+  field_path: Scalars['String']['output'];
+  /** Whether the stored value is an ObjectId or a stringified id. */
+  id_kind: Scalars['String']['output'];
+  /** The mongoose model, e.g. `Ticket`. */
+  model_name: Scalars['String']['output'];
+};
+
 export type ActiveUserBucket = {
   __typename?: 'ActiveUserBucket';
   bucket: Scalars['String']['output'];
@@ -4522,10 +4604,6 @@ export type DbRestoreCollection = {
   name: Scalars['String']['output'];
 };
 
-export type DeleteMyAccountInput = {
-  otp: Scalars['String']['input'];
-};
-
 export type DummyCheckoutInput = {
   amount: Scalars['Float']['input'];
   /** Structured billing address (preferred). Legacy free-text still accepted. */
@@ -7927,6 +8005,8 @@ export type Mutation = {
   cancelFollowRequest: User;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
+  /** Withdraw an open request. The member's own, and only while it is open. */
+  cancelMyAccountDeletionRequest: AccountDeletionRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
   /** Call off a scheduled send before it runs. */
@@ -8167,8 +8247,6 @@ export type Mutation = {
   deleteMediaFiles: Scalars['Int']['output'];
   deleteMembershipBenefit: Scalars['Boolean']['output'];
   deleteMembershipPlan: Scalars['Boolean']['output'];
-  /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
-  deleteMyAccount: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
   /** Delete an own-brand warehouse. Blocked while any product still ships from it. */
   deleteMyBrandPickupLocation: Scalars['Boolean']['output'];
@@ -8383,6 +8461,15 @@ export type Mutation = {
   /** Finance-only: process the refund for a Spot Filled Backout request (one refund per request). */
   processBackoutRefund: BackoutRefundRequest;
   publishPodDraft: Pod;
+  /**
+   * Clear every remaining trace and then the account itself. Permanent.
+   *
+   * The account goes last: a run that dies halfway leaves a request that still
+   * names a user the next attempt can search by.
+   */
+  purgeAccountCompletely: AccountDeletionDetail;
+  /** Clear this member's rows behind ONE reference. Permanent. */
+  purgeAccountTrace: AccountDeletionDetail;
   /** Drop a URL from ImageKit's CDN cache, after replacing what sits behind it. */
   purgeMediaCache: Scalars['String']['output'];
   raiseBouncerSos: BouncerSosAlert;
@@ -8426,6 +8513,8 @@ export type Mutation = {
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
+  /** Turn a request down, with a reason. */
+  rejectAccountDeletionRequest: AccountDeletionDetail;
   /** Reject the Club Admin. A reason is required. */
   rejectClubAdminProfile: ClubAdminProfile;
   /** Onboarding/admin: reject a brand with notes. */
@@ -8473,7 +8562,13 @@ export type Mutation = {
    * story never showed.
    */
   reportStory: ContentReport;
-  /** Auth-required: email a confirmation OTP before self-serve account deletion. */
+  /**
+   * Auth-required: email a confirmation code before asking to be deleted.
+   *
+   * The code is spent by submitAccountDeletionRequest, which FILES a request
+   * for the Tech portal rather than deleting anything — see the accountDeletion
+   * module. Nothing in this module deletes an account any more.
+   */
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
   /**
@@ -8738,6 +8833,14 @@ export type Mutation = {
    * which is what actually takes it off the slots.
    */
   stopAdRequest: AdRequest;
+  /**
+   * Ask for the account to be removed.
+   *
+   * This does NOT delete anything. It files a request for the Tech portal and
+   * leaves the account fully usable, so a mis-tap costs nothing and the member
+   * can withdraw it. Asking twice returns the request already open.
+   */
+  submitAccountDeletionRequest: AccountDeletionRequest;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
@@ -10095,11 +10198,6 @@ export type MutationDeleteMembershipPlanArgs = {
 };
 
 
-export type MutationDeleteMyAccountArgs = {
-  input: DeleteMyAccountInput;
-};
-
-
 export type MutationDeleteMyAddressArgs = {
   id: Scalars['ID']['input'];
 };
@@ -10617,6 +10715,16 @@ export type MutationPublishPodDraftArgs = {
 };
 
 
+export type MutationPurgeAccountCompletelyArgs = {
+  request_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationPurgeAccountTraceArgs = {
+  input: PurgeAccountTraceInput;
+};
+
+
 export type MutationPurgeMediaCacheArgs = {
   url: Scalars['String']['input'];
 };
@@ -10715,6 +10823,12 @@ export type MutationRegisterArgs = {
 
 export type MutationRegisterBrandPickupWithShiprocketArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRejectAccountDeletionRequestArgs = {
+  note: Scalars['String']['input'];
+  request_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -11473,6 +11587,11 @@ export type MutationStartVideoCompressionArgs = {
 
 export type MutationStopAdRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSubmitAccountDeletionRequestArgs = {
+  input: SubmitAccountDeletionRequestInput;
 };
 
 
@@ -15159,6 +15278,12 @@ export type PublicRole = {
   name: Scalars['String']['output'];
 };
 
+export type PurgeAccountTraceInput = {
+  field_path: Scalars['String']['input'];
+  model_name: Scalars['String']['input'];
+  request_doc_id: Scalars['ID']['input'];
+};
+
 export type PushConfig = {
   __typename?: 'PushConfig';
   publicKey: Scalars['String']['output'];
@@ -15173,6 +15298,10 @@ export type PushSubscriptionInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** One request plus a live count of where that member still appears. */
+  accountDeletionRequest: AccountDeletionDetail;
+  /** Tech console queue. */
+  accountDeletionRequestsTable: AccountDeletionRequestPage;
   /** Live ads for a placement (includes AUTO ads). Public — powers the app ad slots. */
   activeAds: Array<PublicAd>;
   /**
@@ -15714,6 +15843,8 @@ export type Query = {
   membershipPlansTable: MembershipPlanTablePage;
   /** The membership pricing screen — mWeb and the native app render this. */
   membershipPricing: MembershipPricing;
+  /** The signed-in member's own open request, or null. */
+  myAccountDeletionRequest?: Maybe<AccountDeletionRequest>;
   /**  Account health for the signed-in user. Always returns a record (default base = 100).  */
   myAccountHealth: HealthScore;
   myActiveBouncerSos?: Maybe<BouncerSosAlert>;
@@ -16313,6 +16444,16 @@ export type Query = {
   withdrawalMinimums: WithdrawalMinimums;
   withdrawalRequests: Array<WalletWithdrawal>;
   withdrawalRequestsTable: WalletWithdrawalTablePage;
+};
+
+
+export type QueryAccountDeletionRequestArgs = {
+  request_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAccountDeletionRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -19938,6 +20079,14 @@ export type StoryView = {
   user?: Maybe<User>;
   user_id: Scalars['ID']['output'];
   viewed_at: Scalars['String']['output'];
+};
+
+export type SubmitAccountDeletionRequestInput = {
+  /** The 6-digit code from requestAccountDeletionOtp. */
+  otp: Scalars['String']['input'];
+  /** Optional: why they are leaving. Shown to whoever reviews it. */
+  reason?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<AccountDeletionSurface>;
 };
 
 export type SubmitAdRequestInput = {

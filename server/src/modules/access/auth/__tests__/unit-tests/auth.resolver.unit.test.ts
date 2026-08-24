@@ -28,9 +28,4 @@ describe('auth unit', () => {
     ).rejects.toThrow(/authenticat/i);
   });
 
-  it('deleteMyAccount requires authentication', async () => {
-    await expect(
-      (authResolvers.Mutation as any).deleteMyAccount({}, { input: { otp: '123456' } }, makeContext(null))
-    ).rejects.toThrow(/authenticat/i);
-  });
 });

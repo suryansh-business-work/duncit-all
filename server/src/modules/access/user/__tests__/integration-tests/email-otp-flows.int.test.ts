@@ -47,6 +47,7 @@ import {
 } from '@services/email/email.service';
 
 import { userService } from '../../user.service';
+import { accountDeletionService } from '@modules/access/accountDeletion/accountDeletion.service';
 import { UserModel } from '../../user.model';
 
 const PASSWORD = 'StrongPass123';
@@ -391,39 +392,46 @@ describe('deleting an account', () => {
     );
   });
 
-  it('deletes only once the code is confirmed, leaving no credentials behind', async () => {
+  it('files the request only once the code is confirmed, and erases nothing', async () => {
     const { id } = await makeUser();
     await userService.requestAccountDeletionOtp(id);
     const code = codeFrom(sendAccountDeletionOtpEmail as jest.Mock);
 
-    await userService.deleteMyAccount(id, { otp: code } as never);
+    const filed = await accountDeletionService.submitRequest(id, { otp: code });
+    expect(filed).toMatchObject({ status: 'PENDING' });
 
+    // The code is spent, and the account is not: erasure is the Tech portal's
+    // to carry out, so the credentials are still here until it does.
     const doc = await UserModel.findById(id).select('+auth.password').lean<any>();
-    // Invalidating the session is implicit: status stops login, the scrubbed
-    // credentials can never re-authenticate, and stripped roles deny the stale JWT.
-    expect(doc?.metadata?.status).not.toBe('ACTIVE');
-    expect(doc?.auth?.password).toBeFalsy();
+    expect(doc?.metadata?.status).toBe('ACTIVE');
+    expect(doc?.auth?.password).toBeTruthy();
+    await expect(accountDeletionService.submitRequest(id, { otp: code })).rejects.toThrow(
+      'expired'
+    );
   });
 
-  it('refuses a wrong or expired code, and deletes nothing', async () => {
+  it('refuses a wrong or expired code, and files nothing', async () => {
     const { id } = await makeUser();
     await userService.requestAccountDeletionOtp(id);
     const code = codeFrom(sendAccountDeletionOtpEmail as jest.Mock);
 
-    await expect(userService.deleteMyAccount(id, { otp: '000000' } as never)).rejects.toThrow(
+    await expect(accountDeletionService.submitRequest(id, { otp: '000000' })).rejects.toThrow(
       'Invalid OTP'
     );
 
     await expireOtp(id, 'account_deletion_otp');
-    await expect(userService.deleteMyAccount(id, { otp: code } as never)).rejects.toThrow('expired');
+    await expect(accountDeletionService.submitRequest(id, { otp: code })).rejects.toThrow(
+      'expired'
+    );
 
     const doc = await UserModel.findById(id).lean<any>();
     expect(doc?.metadata?.status).toBe('ACTIVE');
+    expect(await accountDeletionService.myRequest(id)).toBeNull();
   });
 
   it('refuses an account that does not exist', async () => {
     await expect(
-      userService.deleteMyAccount(new Types.ObjectId().toString(), { otp: '123456' } as never)
+      accountDeletionService.submitRequest(new Types.ObjectId().toString(), { otp: '123456' })
     ).rejects.toThrow('User not found');
   });
 });

@@ -39,10 +39,14 @@ const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 
 const renderCampaign = (row: MarketingCampaignRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 700
+    }}>
       {row.name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="div">
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>
       {row.subject}
     </Typography>
     {row.error && (

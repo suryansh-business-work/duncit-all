@@ -42,10 +42,18 @@ export default function PaymentSection({
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('finance.payment.paymentSectionTitle')}
         </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block",
+            mb: 2
+          }}>
           {t('finance.payment.paymentSectionCaption')} ·{' '}
           {t(attemptsKey, { vars: { n: detail.finalize_attempts } })}
         </Typography>

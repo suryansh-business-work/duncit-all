@@ -70,15 +70,17 @@ export default function ResponsiveDialog({
         onClose={onClose}
         onOpen={() => {}}
         disableSwipeToOpen
-        PaperProps={{
-          sx: mergeSx({
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
-            maxHeight: sheetMaxHeight,
-            display: 'flex',
-            flexDirection: 'column',
-            pb: 'env(safe-area-inset-bottom)',
-          }, paperSx),
+        slotProps={{
+          paper: {
+            sx: mergeSx({
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px',
+              maxHeight: sheetMaxHeight,
+              display: 'flex',
+              flexDirection: 'column',
+              pb: 'env(safe-area-inset-bottom)',
+            }, paperSx),
+          }
         }}
       >
         <Box
@@ -102,10 +104,14 @@ export default function ResponsiveDialog({
         {title && (
           <Stack
             direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: 2, pt: 0.5, pb: 0.5, flex: '0 0 auto' }}
-          >
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              px: 2,
+              pt: 0.5,
+              pb: 0.5,
+              flex: '0 0 auto'
+            }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>{title}</Box>
             <IconButton size="small" onClick={onClose} aria-label={t('mweb.common.close')}>
               <CloseIcon fontSize="small" />
@@ -134,7 +140,9 @@ export default function ResponsiveDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth={fullWidth} maxWidth={maxWidth} PaperProps={{ sx: paperSx }}>
+    <Dialog open={open} onClose={onClose} fullWidth={fullWidth} maxWidth={maxWidth} slotProps={{
+      paper: { sx: paperSx }
+    }}>
       {title && (
         <DialogTitle sx={{ pr: 6 }}>
           {title}

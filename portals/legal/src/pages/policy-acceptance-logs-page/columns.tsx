@@ -11,13 +11,17 @@ import {
 } from '../../graphql/policyAcceptance';
 
 const renderPerson = (row: PolicyAcceptance) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {row.user_name || EM_DASH}
   </Typography>
 );
 
 const renderPolicy = (row: PolicyAcceptance) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {row.policy_title}
   </Typography>
 );

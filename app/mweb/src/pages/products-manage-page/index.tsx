@@ -45,7 +45,9 @@ export default function ProductsManagePage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <Inventory2Icon fontSize="small" />
         </Box>
@@ -53,14 +55,23 @@ export default function ProductsManagePage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             ecomm Studio
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             Your Duncit product catalogue at a glance
           </Typography>
         </Box>
       </Stack>
 
       {loading && !data && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress size={22} />
         </Stack>
       )}
@@ -70,7 +81,13 @@ export default function ProductsManagePage() {
         {[{ label: t('mweb.productsManage.products'), value: products.length }, { label: t('mweb.productsManage.inStock'), value: totalStock }, { label: t('mweb.productsManage.avgPrice'), value: `₹${avgPrice}` }].map((item) => (
           <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>{item.label}</Typography>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "primary.main",
+                  fontWeight: 700
+                }}>{item.label}</Typography>
               <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }} noWrap>{item.value}</Typography>
             </CardContent>
           </Card>
@@ -82,7 +99,12 @@ export default function ProductsManagePage() {
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             Stock by product
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Top {stockChart.length || 0} products by available units
           </Typography>
           {stockChart.length === 0 ? (

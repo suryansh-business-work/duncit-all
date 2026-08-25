@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { pickBestVideoFile, validateFile } from '../src/utils';
 
 const file = (type: string, mb: number, name = '') =>
-  ({ type, size: mb * 1024 * 1024, name }) as File;
+  (({
+    type,
+    size: mb * 1024 * 1024,
+    name
+  }) as File);
 
 const IMAGES_ONLY = { allowImage: true, allowVideo: false, allowDocuments: false };
 const IMAGES_AND_VIDEO = { allowImage: true, allowVideo: true, allowDocuments: false };

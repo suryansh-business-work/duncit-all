@@ -106,7 +106,9 @@ export default function AcceptanceDetailDialog({ acceptanceId, onClose }: Readon
       <Dialog open={!!acceptanceId} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
         <DialogTitle>
           {t('legalAcceptanceLogs.detail.title')}
-          <Typography variant="caption" color="text.secondary" component="div">
+          <Typography variant="caption" component="div" sx={{
+            color: "text.secondary"
+          }}>
             {detail?.acceptance.policy_title ?? t('legalAcceptanceLogs.detail.subtitle')}
           </Typography>
         </DialogTitle>

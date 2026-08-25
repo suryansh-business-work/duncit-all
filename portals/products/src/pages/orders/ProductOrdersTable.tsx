@@ -27,7 +27,9 @@ const renderBuyer = (o: ProductOrderRow) => (
     <Typography variant="body2" component="span">
       {o.buyer_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {o.buyer_email}
     </Typography>
   </Stack>
@@ -51,10 +53,14 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
   const columns = useMemo<DuncitColumn<ProductOrderRow>[]>(() => {
     const renderOrder = (o: ProductOrderRow) => (
       <Stack sx={{ lineHeight: 1.2 }} component="span">
-        <Typography variant="body2" fontWeight={600} component="span">
+        <Typography variant="body2" component="span" sx={{
+          fontWeight: 600
+        }}>
           {o.order_no}
         </Typography>
-        <Typography variant="caption" color="text.secondary" component="span">
+        <Typography variant="caption" component="span" sx={{
+          color: "text.secondary"
+        }}>
           {formatDateTime(o.created_at)}
         </Typography>
       </Stack>

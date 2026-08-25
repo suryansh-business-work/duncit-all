@@ -1,5 +1,8 @@
 ---
 import { urlConfigs } from '../config/url-configs';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 
 interface Props {
   type: 'CAREERS' | 'NEWSROOM' | 'BLOG';
@@ -16,6 +19,7 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   data-type={type}
   data-variant={variant}
   data-graphql-url={graphqlUrl}
+  data-copy={JSON.stringify({ empty: t('website.main.contentList.empty'), error: t('website.main.contentList.error') })}
 >
   {
     variant === 'cards' ? (
@@ -43,25 +47,25 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   <form id="applyForm" method="dialog" class="bg-cream p-6 rounded-3xl">
     <div class="flex items-start justify-between gap-3 mb-4">
       <div>
-        <p class="text-xs uppercase tracking-wider font-extrabold text-primary">Apply for</p>
+        <p class="text-xs uppercase tracking-wider font-extrabold text-primary">{t('website.main.contentList.applyFor')}</p>
         <h3 class="font-head font-extrabold text-2xl text-ink" id="applyRoleTitle">Role</h3>
       </div>
       <button
         type="button"
         data-apply-close
         class="w-9 h-9 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:bg-primary transition"
-        aria-label="Close"
+        aria-label={t('website.main.contentList.close')}
       >
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
     <div class="space-y-3">
-      <input name="name" required minlength="2" maxlength="120" placeholder="Full name *" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="email" type="email" required maxlength="254" placeholder="Email *" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="phone" pattern="\+?\d{6,15}" placeholder="Phone (digits, optional +)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="resume_url" type="url" placeholder="Resume / CV link (Drive, LinkedIn…)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="portfolio_url" type="url" placeholder="Portfolio link (optional)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <textarea name="cover_note" rows="3" maxlength="4000" placeholder="Why you? (optional)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm"></textarea>
+      <input name="name" required minlength="2" maxlength="120" placeholder={t('website.main.contentList.fullName')} class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="email" type="email" required maxlength="254" placeholder={t('website.main.contentList.email')} class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="phone" pattern="\+?\d{6,15}" placeholder={t('website.main.contentList.phone')} class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="resume_url" type="url" placeholder={t('website.main.contentList.resume')} class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="portfolio_url" type="url" placeholder={t('website.main.contentList.portfolio')} class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <textarea name="cover_note" rows="3" maxlength="4000" placeholder={t('website.main.contentList.why')} class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm"></textarea>
       <p id="applyFeedback" class="text-sm font-semibold hidden"></p>
       <button type="submit" class="w-full px-4 py-3 rounded-xl bg-primary text-white font-bold inline-flex items-center justify-center gap-2 sticker hover:scale-[1.01] transition">
         <i class="fa-solid fa-paper-plane"></i> Submit application
@@ -192,6 +196,8 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   };
 
   document.querySelectorAll<HTMLElement>('[data-website-content-list]').forEach(async (root) => {
+    // Handed over by the markup — a module script cannot read Astro frontmatter.
+    const COPY = JSON.parse(root.dataset.copy ?? '{}');
     try {
       const response = await fetch(graphQlUrlFor(root), {
         method: 'POST',
@@ -202,13 +208,13 @@ const graphqlUrl = urlConfigs.graphqlUrl;
       if (payload.errors?.length) throw new Error(payload.errors[0].message);
       const items = payload.data?.publicWebsiteContent || [];
       if (!items.length) {
-        root.innerHTML = '<div class="p-5 rounded-2xl bg-surface sticker text-ink-soft">No published items yet.</div>';
+        root.innerHTML = `<div class="p-5 rounded-2xl bg-surface sticker text-ink-soft">${COPY.empty}</div>`;
         return;
       }
       const render = RENDERERS[root.dataset.variant ?? 'cards'] ?? renderCards;
       root.innerHTML = render(items);
     } catch (error) {
-      root.innerHTML = '<div class="p-5 rounded-2xl bg-surface sticker text-ink-soft">Content is temporarily unavailable.</div>';
+      root.innerHTML = `<div class="p-5 rounded-2xl bg-surface sticker text-ink-soft">${COPY.error}</div>`;
     }
   });
 

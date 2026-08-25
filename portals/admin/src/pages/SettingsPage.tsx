@@ -13,7 +13,9 @@ export default function SettingsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('admin.settings.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Personalize your admin experience and configure system behavior.
         </Typography>
       </Box>

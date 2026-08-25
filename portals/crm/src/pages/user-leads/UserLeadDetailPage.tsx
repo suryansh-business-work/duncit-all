@@ -41,13 +41,19 @@ export default function UserLeadDetailPage() {
       <Stack spacing={2}>
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={1.5} sx={{
+              alignItems: "center"
+            }}>
               <WhatsAppIcon sx={{ color: '#25D366' }} />
               <Box>
-                <Typography variant="h6" fontWeight={800}>
+                <Typography variant="h6" sx={{
+                  fontWeight: 800
+                }}>
                   {lead.name || `+${lead.phone}`}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   +{lead.phone}
                 </Typography>
               </Box>
@@ -66,26 +72,43 @@ export default function UserLeadDetailPage() {
 
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
-            <Typography fontWeight={800} sx={{ mb: 1 }}>
+            <Typography
+              sx={{
+                fontWeight: 800,
+                mb: 1
+              }}>
               Communities ({lead.source_communities?.length ?? 0})
             </Typography>
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={0.75} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               {(lead.source_communities ?? []).map((c: any) => (
                 <Chip key={c.jid} label={c.name || c.jid} color="primary" variant="outlined" />
               ))}
               {(lead.source_communities ?? []).length === 0 && (
-                <Typography variant="body2" color="text.secondary">None</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>None</Typography>
               )}
             </Stack>
-            <Typography fontWeight={800} sx={{ mt: 2, mb: 1 }}>
+            <Typography
+              sx={{
+                fontWeight: 800,
+                mt: 2,
+                mb: 1
+              }}>
               Groups ({lead.source_groups?.length ?? 0})
             </Typography>
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={0.75} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               {(lead.source_groups ?? []).map((g: any) => (
                 <Chip key={g.jid} label={g.name || g.jid} />
               ))}
               {(lead.source_groups ?? []).length === 0 && (
-                <Typography variant="body2" color="text.secondary">None</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>None</Typography>
               )}
             </Stack>
           </CardContent>

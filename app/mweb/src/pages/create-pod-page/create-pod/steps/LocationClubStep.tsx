@@ -62,15 +62,26 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
   return (
     <Stack spacing={2}>
       <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-        <Stack direction="row" spacing={1.25} alignItems="center">
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <PlaceIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={600}>{t('mweb.createPod.podLocation')}</Typography>
-            <Typography variant="subtitle2" fontWeight={700} noWrap data-testid="create-pod-location-label">
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600
+              }}>{t('mweb.createPod.podLocation')}</Typography>
+            <Typography variant="subtitle2" noWrap data-testid="create-pod-location-label" sx={{
+              fontWeight: 700
+            }}>
               {location ? [location.location_name || location.city, location.state].filter(Boolean).join(', ') : t('mweb.createPod.noLocationSelected')}
             </Typography>
             {locality && (
-              <Typography variant="caption" color="text.secondary" noWrap data-testid="create-pod-locality-label">
+              <Typography variant="caption" noWrap data-testid="create-pod-locality-label" sx={{
+                color: "text.secondary"
+              }}>
                 {t('mweb.createPod.localityLabel', { vars: { locality } })}
               </Typography>
             )}
@@ -90,7 +101,14 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
       )}
 
       <Box>
-        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.75 }}>{t('mweb.createPod.podMode')}</Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600,
+            display: 'block',
+            mb: 0.75
+          }}>{t('mweb.createPod.podMode')}</Typography>
         <Controller
           control={control}
           name="pod_mode"

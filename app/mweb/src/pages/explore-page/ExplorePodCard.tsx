@@ -174,8 +174,8 @@ export default function ExplorePodCard({
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
         sx={{
+          alignItems: "center",
           position: 'absolute',
           left: 10,
           right: 10,
@@ -184,9 +184,8 @@ export default function ExplorePodCard({
           borderRadius: '16px',
           bgcolor: 'rgba(0,0,0,0.42)',
           border: '1px solid rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(16px)',
-        }}
-      >
+          backdropFilter: 'blur(16px)'
+        }}>
         <Box sx={{ width: 36, height: 36, borderRadius: '8px', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
           {expired ? <InfoOutlinedIcon sx={{ fontSize: 19 }} /> : <FlashOnIcon sx={{ fontSize: 19 }} />}
         </Box>

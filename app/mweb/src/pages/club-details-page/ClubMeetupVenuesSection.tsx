@@ -49,8 +49,16 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
-        <Typography variant="h6" fontWeight={700}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.5
+        }}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           We usually meet
         </Typography>
         {!origin && (
@@ -63,34 +71,46 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
         {venues.map((venue) => {
           const distance = venueDistance(venue);
           return (
-          <Card
-            key={venue.id}
-            variant="outlined"
-            sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '16px' }}
-          >
-            <CardActionArea onClick={() => setSelectedId(venue.id)}>
-              <CardContent>
-                <Typography variant="body2" fontWeight={700} noWrap>
-                  {venue.venue_name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  {[venue.locality, venue.city].filter(Boolean).join(', ')}
-                </Typography>
-                {distance && (
-                  <Chip size="small" icon={<NearMeIcon sx={{ fontSize: 14 }} />} label={distance} sx={{ mt: 0.5, height: 22, fontWeight: 600 }} />
-                )}
-              </CardContent>
-            </CardActionArea>
-            <Box sx={{ px: 2, pb: 1.5 }}>
-              <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
-                Venue details
-              </Button>
-            </Box>
-          </Card>
+            <Card
+              key={venue.id}
+              variant="outlined"
+              sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '16px' }}
+            >
+              <CardActionArea onClick={() => setSelectedId(venue.id)}>
+                <CardContent>
+                  <Typography variant="body2" noWrap sx={{
+                    fontWeight: 700
+                  }}>
+                    {venue.venue_name}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      display: "block"
+                    }}>
+                    {[venue.locality, venue.city].filter(Boolean).join(', ')}
+                  </Typography>
+                  {distance && (
+                    <Chip size="small" icon={<NearMeIcon sx={{ fontSize: 14 }} />} label={distance} sx={{ mt: 0.5, height: 22, fontWeight: 600 }} />
+                  )}
+                </CardContent>
+              </CardActionArea>
+              <Box sx={{ px: 2, pb: 1.5 }}>
+                <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
+                  Venue details
+                </Button>
+              </Box>
+            </Card>
           );
         })}
       </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mt: 1
+        }}>
         {addressParts(selected).filter(Boolean).join(', ')}
       </Typography>
       <Button component={RouterLink} to={venueUrl(selected.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ mt: 1 }}>

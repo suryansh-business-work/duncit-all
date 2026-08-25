@@ -1,42 +1,49 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
 import { fetchBranding } from '../../lib/site-data';
+import { getTranslator } from '../../lib/i18n';
 
+const { t } = await getTranslator();
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
-  title="Safety Advice"
-  eyebrow="Safety Hub"
-  heading="Stay safe, stay you"
-  intro="Practical tips for making the most of Duncit without compromising your safety."
+  title={t('website.main.safetyAdvice.title')}
+  eyebrow={t('website.main.safetyAdvice.eyebrow')}
+  heading={t('website.main.safetyAdvice.heading')}
+  intro={t('website.main.safetyAdvice.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop"
 >
-  <h2>Before you connect</h2>
+  <h2>{t('website.main.safetyAdvice.beforeHeading')}</h2>
   <ul>
-    <li>Use a recent photo and a name you're comfortable with.</li>
-    <li>Don't share your home address, workplace, or financial info.</li>
-    <li>Trust your gut — if something feels off, it probably is.</li>
+    <li>{t('website.main.safetyAdvice.before1')}</li>
+    <li>{t('website.main.safetyAdvice.before2')}</li>
+    <li>{t('website.main.safetyAdvice.before3')}</li>
   </ul>
 
-  <h2>Meeting up IRL</h2>
+  <h2>{t('website.main.safetyAdvice.meetHeading')}</h2>
   <ul>
-    <li>Pick a public place for first meets — a café, a park, a busy spot.</li>
-    <li>Tell a friend where you're going and when you'll check in.</li>
-    <li>Arrange your own transport. Don't rely on the other person.</li>
-    <li>Stay sober enough to leave whenever you want.</li>
+    <li>{t('website.main.safetyAdvice.meet1')}</li>
+    <li>{t('website.main.safetyAdvice.meet2')}</li>
+    <li>{t('website.main.safetyAdvice.meet3')}</li>
+    <li>{t('website.main.safetyAdvice.meet4')}</li>
   </ul>
 
-  <h2>Red flags</h2>
+  <h2>{t('website.main.safetyAdvice.flagsHeading')}</h2>
   <ul>
-    <li>Someone asking for money, gifts, or financial help.</li>
-    <li>Pressure to move off Duncit to another platform too quickly.</li>
-    <li>Inconsistent stories or refusing to video chat.</li>
-    <li>Anyone making you uncomfortable — block, report, move on.</li>
+    <li>{t('website.main.safetyAdvice.flag1')}</li>
+    <li>{t('website.main.safetyAdvice.flag2')}</li>
+    <li>{t('website.main.safetyAdvice.flag3')}</li>
+    <li>{t('website.main.safetyAdvice.flag4')}</li>
   </ul>
 
-  <h2>Need help?</h2>
-  <p>Visit <a href="/safety/resources">our resources page</a> for crisis hotlines, or email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
+  <h2>{t('website.main.safetyAdvice.helpHeading')}</h2>
+  <p>
+    {t('website.main.safetyAdvice.helpText')}
+    <a href="/safety/resources">{t('website.main.safetyAdvice.helpLink')}</a>
+    {t('website.main.safetyAdvice.helpTextAfter')}
+    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+  </p>
 </PageLayout>

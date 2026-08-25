@@ -82,13 +82,19 @@ export default function AutoPodsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <AutoModeIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             {t('admin.autoPods.title')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('admin.autoPods.subtitle')}
           </Typography>
         </Box>

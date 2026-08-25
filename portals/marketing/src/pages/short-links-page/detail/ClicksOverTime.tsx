@@ -31,11 +31,21 @@ export default function ClicksOverTime({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" alignItems="baseline" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" fontWeight={700}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            mb: 2
+          }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             Clicks over time
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {`Last ${days} days · ${total.toLocaleString()} clicks`}
           </Typography>
         </Stack>
@@ -43,11 +53,20 @@ export default function ClicksOverTime({
         <Stack direction="row" spacing={1}>
           {/* Axis labels sit outside the plot so bars start at a clean baseline. */}
           <Stack
-            justifyContent="space-between"
-            sx={{ height: PLOT_HEIGHT, flexShrink: 0, textAlign: 'right' }}
-          >
+            sx={{
+              justifyContent: "space-between",
+              height: PLOT_HEIGHT,
+              flexShrink: 0,
+              textAlign: 'right'
+            }}>
             {ticks.map((tick) => (
-              <Typography key={tick} variant="caption" color="text.secondary" lineHeight={0}>
+              <Typography
+                key={tick}
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  lineHeight: 0
+                }}>
                 {tick.toLocaleString()}
               </Typography>
             ))}
@@ -73,10 +92,12 @@ export default function ClicksOverTime({
 
               <Stack
                 direction="row"
-                alignItems="flex-end"
                 spacing="2px"
-                sx={{ position: 'absolute', inset: 0 }}
-              >
+                sx={{
+                  alignItems: "flex-end",
+                  position: 'absolute',
+                  inset: 0
+                }}>
                 {series.map((point) => (
                   <Tooltip
                     key={point.date}
@@ -103,11 +124,20 @@ export default function ClicksOverTime({
               </Stack>
             </Box>
 
-            <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.75 }}>
-              <Typography variant="caption" color="text.secondary">
+            <Stack
+              direction="row"
+              sx={{
+                justifyContent: "space-between",
+                mt: 0.75
+              }}>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {formatDate(series[0].date)}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {/* fillDailySeries always returns one point per day, days >= 1. */}
                 {formatDate(series.at(-1)!.date)}
               </Typography>

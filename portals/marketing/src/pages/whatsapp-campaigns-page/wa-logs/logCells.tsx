@@ -46,17 +46,21 @@ export function SendCell({ row }: Readonly<{ row: WaLogRow }>) {
   const mono = row.kind === 'AUTOMATIC';
   return (
     <Box sx={{ minWidth: 0, lineHeight: 1.25, py: 0.5 }}>
-      <Typography variant="body2" fontWeight={700} component="div" noWrap title={row.name}>
+      <Typography variant="body2" component="div" noWrap title={row.name} sx={{
+        fontWeight: 700
+      }}>
         {row.name || EM_DASH}
       </Typography>
       <Typography
         variant="caption"
-        color="text.secondary"
         component="div"
         noWrap
         title={row.reference}
-        sx={{ fontFamily: mono ? 'monospace' : undefined, fontSize: 12 }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontFamily: mono ? 'monospace' : undefined,
+          fontSize: 12
+        }}>
         {row.reference}
       </Typography>
     </Box>
@@ -73,11 +77,18 @@ export function ReachCell({ row, t }: Readonly<{ row: WaLogRow; t: Translate }>)
   const missed = row.failed_count + row.skipped_count;
   return (
     <Box sx={{ lineHeight: 1.25, py: 0.5 }}>
-      <Typography variant="body2" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 700,
+          fontVariantNumeric: 'tabular-nums'
+        }}>
         {row.sent_count.toLocaleString()} / {row.recipient_count.toLocaleString()}
       </Typography>
       {missed > 0 && (
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {t('marketingWhatsapp.logs.reachHint', {
             vars: {
               failed: row.failed_count.toLocaleString(),
@@ -98,7 +109,9 @@ export function ReachCell({ row, t }: Readonly<{ row: WaLogRow; t: Translate }>)
 export function ReasonCell({ row }: Readonly<{ row: WaLogRow }>) {
   if (!row.reason) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {EM_DASH}
       </Typography>
     );
@@ -128,10 +141,14 @@ export function CostCell({ row, currency, t }: Readonly<CostProps>) {
       : t('marketingWhatsapp.logs.noRate');
   return (
     <Box sx={{ lineHeight: 1.25, py: 0.5 }}>
-      <Typography variant="body2" fontWeight={700} component="div">
+      <Typography variant="body2" component="div" sx={{
+        fontWeight: 700
+      }}>
         {waMoney(row.cost, currency)}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="div">
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         {rateText}
       </Typography>
     </Box>

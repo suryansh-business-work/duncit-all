@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { makeTpl } from '../mocks/email-template.mock';
 
 // MjmlEditorPane deps
@@ -65,9 +66,11 @@ describe('TemplateEditorPanel', () => {
     const onSendTest = vi.fn();
     const onDelete = vi.fn();
     render(
+      <MemoryRouter>
       <TemplateEditorPanel
         draft={tpl}
         setDraft={setDraft}
+        usage={null}
         dirty
         busy={false}
         tab="preview"
@@ -83,7 +86,8 @@ describe('TemplateEditorPanel', () => {
         onSave={onSave}
         onSendTest={onSendTest}
         onDelete={onDelete}
-      />,
+      />
+      </MemoryRouter>,
     );
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Renamed' } });

@@ -83,7 +83,14 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
               if (file) onFile(file).catch(() => undefined);
             }}
           />
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mt: 1,
+              flexWrap: 'wrap'
+            }}>
             <Button
               size="small"
               variant="outlined"

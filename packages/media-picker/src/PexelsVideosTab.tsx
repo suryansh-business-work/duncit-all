@@ -135,9 +135,10 @@ export default function PexelsVideosTab({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
-        sx={{ mb: 2 }}
-        alignItems={{ sm: 'center' }}
-      >
+        sx={{
+          alignItems: { sm: 'center' },
+          mb: 2
+        }}>
         <TextField
           fullWidth
           size="small"
@@ -147,12 +148,14 @@ export default function PexelsVideosTab({
           onKeyDown={(e) => {
             if (e.key === 'Enter') runPexelsVideos(vquery, 1, false).catch(console.error);
           }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <ToggleButtonGroup
@@ -194,9 +197,12 @@ export default function PexelsVideosTab({
       )}
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ display: 'block', mt: 2, textAlign: 'center' }}
-      >
+        sx={{
+          color: "text.secondary",
+          display: 'block',
+          mt: 2,
+          textAlign: 'center'
+        }}>
         Videos provided by{' '}
         <a
           href="https://www.pexels.com"

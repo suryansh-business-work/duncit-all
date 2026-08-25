@@ -37,10 +37,18 @@ export default function ConnectedAccountRow({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
-        alignItems={{ sm: 'center' }}
-        justifyContent="space-between"
-      >
-        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        sx={{
+          alignItems: { sm: 'center' },
+          justifyContent: "space-between"
+        }}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          sx={{
+            alignItems: "center",
+            flex: 1,
+            minWidth: 0
+          }}>
           {connected ? (
             <CheckCircleIcon fontSize="small" color="success" />
           ) : (
@@ -48,11 +56,15 @@ export default function ConnectedAccountRow({
           )}
           <Stack sx={{ minWidth: 0 }}>
             <Typography variant="subtitle2">{label}</Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <Typography variant="body2" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {value}
             </Typography>
             {status && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {status}
               </Typography>
             )}
@@ -74,7 +86,9 @@ export default function ConnectedAccountRow({
       </Stack>
 
       {hint && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {hint}
         </Typography>
       )}

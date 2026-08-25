@@ -55,21 +55,35 @@ export default function ProductPageHeader({
         <BackButton onClick={() => navigate(productListPath(brandId))}>
           {productListLabel(brandId)}
         </BackButton>
-        <Typography color="text.primary">
+        <Typography sx={{
+          color: "text.primary"
+        }}>
           {isNew ? 'Add product' : product?.product_name || 'Edit product'}
         </Typography>
       </Breadcrumbs>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+        alignItems: { md: 'center' }
+      }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h4" sx={{
+            fontWeight: 700
+          }}>
             {isNew ? 'Add inventory product' : product?.product_name}
           </Typography>
           {product && (
-            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mt: 0.5
+              }}>
               <Chip size="small" label={product.sku} variant="outlined" />
               <StatusChip status={product.status} colorMap={STATUS_CHIP_COLOR} />
               {product.last_updated_by_name && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Last edited by {product.last_updated_by_name} ·{' '}
                   {formatDateTime(product.updated_at)}
                 </Typography>

@@ -159,7 +159,9 @@ export default function ReportIssueForm({
         onRemove={screenshots.remove}
       />
       <CaptchaField control={control} name="captcha_answer" captcha={captcha} copy={copy} />
-      <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+      <Stack direction="row" spacing={1.5} sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button onClick={onCancel} disabled={submitting} color="inherit">
           {t('status.report.cancel')}
         </Button>

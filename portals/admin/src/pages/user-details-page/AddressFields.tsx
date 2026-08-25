@@ -62,7 +62,11 @@ export default function AddressFields({
 
   return (
     <>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <Autocomplete<GeoState>
           options={states}
           value={selectedState}
@@ -85,7 +89,11 @@ export default function AddressFields({
           fullWidth
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <Autocomplete<GeoCity | string, false, false, true>
           freeSolo
           disabled={!state}
@@ -110,7 +118,11 @@ export default function AddressFields({
           fullWidth
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <TextField
           label={t('admin.profile.pincode')}
           name="pincode"

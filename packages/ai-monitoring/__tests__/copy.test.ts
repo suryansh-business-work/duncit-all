@@ -7,7 +7,7 @@ import type { AiMonitoringConfig } from '../src/types';
 const t = (key: string) => key;
 
 const config = (over: Partial<AiMonitoringConfig> = {}): AiMonitoringConfig =>
-  ({
+  (({
     chip_enabled: true,
     chip_label: null,
     dialog_title: null,
@@ -15,8 +15,8 @@ const config = (over: Partial<AiMonitoringConfig> = {}): AiMonitoringConfig =>
     dialog_points: [],
     dialog_footnote: null,
     dismiss_label: null,
-    ...over,
-  }) as AiMonitoringConfig;
+    ...over
+  }) as AiMonitoringConfig);
 
 describe('aiMonitoringFallbackCopy', () => {
   it('reads every sentence from the translator — the package ships no English of its own', () => {

@@ -51,18 +51,39 @@ export default function PaymentDetailHeader({
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
+      <Stack
+        direction="row"
+        spacing={1.5}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <IconButton aria-label={t('finance.payment.backToLogs')} onClick={() => navigate('/payment-logs')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 240 }}>
-          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-            <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                fontFamily: 'monospace'
+              }}>
               {p.payment_id}
             </Typography>
             <StatusChip status={p.status} colorMap={STATUS_COLORS} />
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {p.invoice_no ?? t('finance.payment.noInvoiceNumber')} · {p.gateway} · {paidAt}
           </Typography>
         </Box>

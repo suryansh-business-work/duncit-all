@@ -27,14 +27,17 @@ export default function SecuritySection() {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
-            alignItems={{ sm: 'center' }}
-            justifyContent="space-between"
-          >
+            sx={{
+              alignItems: { sm: 'center' },
+              justifyContent: "space-between"
+            }}>
             <Stack sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 Password
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Change your password with an email verification code.
               </Typography>
             </Stack>

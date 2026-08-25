@@ -6,7 +6,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { Link as RouterLink } from 'react-router-dom';
@@ -87,8 +87,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           placeholder={t('mweb.signup.namePlaceholder')}
           autoComplete="name"
           size="small"
-          InputLabelProps={{ shrink: true }}
-          InputProps={startIcon(<PersonOutlineIcon fontSize="small" />)}
+          slotProps={{ inputLabel: { shrink: true }, input: startIcon(<PersonOutlineIcon fontSize="small" />) }}
         />
         <RhfTextField
           control={control}
@@ -99,8 +98,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           placeholder={t('mweb.signup.emailPlaceholder')}
           autoComplete="email"
           size="small"
-          InputLabelProps={{ shrink: true }}
-          InputProps={startIcon(<EmailOutlinedIcon fontSize="small" />)}
+          slotProps={{ inputLabel: { shrink: true }, input: startIcon(<EmailOutlinedIcon fontSize="small" />) }}
         />
         <PhoneField control={control} />
         <DobYearField control={control} minAge={minAge} />
@@ -114,12 +112,11 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           placeholder={t('mweb.signup.passwordPlaceholder')}
           autoComplete="new-password"
           size="small"
-          InputLabelProps={{ shrink: true }}
-          InputProps={passwordInputProps(
+          slotProps={{ inputLabel: { shrink: true }, input: passwordInputProps(
             showPwd,
             () => setShowPwd((v) => !v),
             showPwd ? hideLabel : showLabel,
-          )}
+          ) }}
         />
         <RhfTextField
           control={control}
@@ -130,12 +127,11 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           placeholder={t('mweb.signup.confirmPasswordPlaceholder')}
           autoComplete="new-password"
           size="small"
-          InputLabelProps={{ shrink: true }}
-          InputProps={passwordInputProps(
+          slotProps={{ inputLabel: { shrink: true }, input: passwordInputProps(
             showConfirmPwd,
             () => setShowConfirmPwd((v) => !v),
             showConfirmPwd ? hideLabel : showLabel,
-          )}
+          ) }}
         />
         <RhfTextField
           control={control}
@@ -144,9 +140,9 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           hint={t('mweb.referral.codeHint')}
           placeholder={t('mweb.referral.codePlaceholder')}
           size="small"
-          InputLabelProps={{ shrink: true }}
-          InputProps={startIcon(<CardGiftcardOutlinedIcon fontSize="small" />)}
-          inputProps={{ style: { textTransform: 'uppercase' } }}
+          slotProps={{ inputLabel: { shrink: true }, input: startIcon(<CardGiftcardOutlinedIcon fontSize="small" />), htmlInput: { style: { textTransform: 'uppercase' } } }}
+          
+          
         />
         <Controller
           control={control}
@@ -174,7 +170,12 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           {loading ? t('mweb.signup.submitting') : t('mweb.signup.submit')}
         </Button>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
-        <Typography variant="body2" color="text.secondary" textAlign="center">
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            textAlign: "center"
+          }}>
           {t('mweb.signup.haveAccount')}{' '}
           <Link component={RouterLink} to="/login" underline="hover">
             {t('mweb.signup.logIn')}

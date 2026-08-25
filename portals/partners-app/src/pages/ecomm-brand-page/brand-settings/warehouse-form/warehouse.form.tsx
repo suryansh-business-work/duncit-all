@@ -60,7 +60,7 @@ export default function WarehouseForm({ defaultValues, busy, apiError = null, on
           name="phone"
           label={t('shell.common.phone')}
           required
-          inputProps={{ inputMode: 'numeric' }}
+          slotProps={{ htmlInput: { inputMode: 'numeric' } }}
           hint="Digits only, for courier pickup coordination."
         />
       </Stack>
@@ -77,7 +77,7 @@ export default function WarehouseForm({ defaultValues, busy, apiError = null, on
           name="pincode"
           label={t('partners.ecommBrandPage.pincode')}
           required
-          inputProps={{ inputMode: 'numeric', maxLength: 6 }}
+          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
         />
         <RhfTextField control={control} name="country" label={t('partners.ecommBrandPage.country')} required />
       </Stack>
@@ -91,7 +91,9 @@ export default function WarehouseForm({ defaultValues, busy, apiError = null, on
           />
         )}
       />
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
+      <Stack direction="row" spacing={1} sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button onClick={onCancel} disabled={busy}>
           {t('shell.common.cancel')}
         </Button>

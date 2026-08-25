@@ -93,11 +93,20 @@ export default function CodeBlock({ code, language }: Readonly<Props>) {
     >
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ px: 1, py: 0.25, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 1,
+          py: 0.25,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           {language || 'code'}
         </Typography>
         <Tooltip title={copied ? 'Copied' : 'Copy'}>

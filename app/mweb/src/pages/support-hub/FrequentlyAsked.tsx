@@ -1,5 +1,5 @@
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import type { FaqItem } from './faqQueries';
 
 /** Rotating multi-hue gradients for the cards (matches the app's support palette). */
@@ -22,7 +22,12 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
   if (faqs.length === 0) return null;
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Frequently Asked
       </Typography>
       <Box

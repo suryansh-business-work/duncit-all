@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { DELETE_MEDIA_FILES, MEDIA_FILES, PAGE_SIZE, type MediaItem } from './queries';

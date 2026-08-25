@@ -90,8 +90,15 @@ export default function PickupLocationsPanel({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="subtitle1" fontWeight={700}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {heading}
         </Typography>
         <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>

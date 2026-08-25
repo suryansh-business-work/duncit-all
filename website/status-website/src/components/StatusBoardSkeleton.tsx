@@ -16,8 +16,20 @@ const ROWS = ['first', 'second', 'third', 'fourth'];
 function BannerSkeleton() {
   return (
     <Paper variant="outlined" sx={{ px: 2.5, py: 1.75, mb: 4 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1
+        }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            flex: 1
+          }}>
           <Skeleton variant="circular" width={12} height={12} />
           <Skeleton variant="text" width="45%" height={24} />
         </Stack>
@@ -30,7 +42,13 @@ function BannerSkeleton() {
 function ChartSkeleton() {
   return (
     <Paper variant="outlined" sx={{ p: 2.5, mb: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          gap: 1
+        }}>
         <Skeleton variant="text" width={200} />
         <Skeleton variant="text" width={70} height={30} />
       </Stack>
@@ -44,9 +62,10 @@ function FiltersSkeleton() {
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
       spacing={1.5}
-      alignItems={{ xs: 'stretch', sm: 'center' }}
-      mb={3}
-    >
+      sx={{
+        alignItems: { xs: 'stretch', sm: 'center' },
+        mb: 3
+      }}>
       <Skeleton variant="rounded" height={40} sx={{ flex: 1 }} />
       <Skeleton variant="rounded" height={40} width={140} />
       <Skeleton variant="rounded" height={40} width={210} />
@@ -57,8 +76,20 @@ function FiltersSkeleton() {
 function ServiceRowSkeleton({ divider }: Readonly<{ divider: boolean }>) {
   return (
     <Box sx={{ px: 2, py: 1.5, ...(divider ? { borderBottom: 1, borderColor: 'divider' } : {}) }}>
-      <Stack direction="row" gap={1.5} alignItems="center" flexWrap="wrap">
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: '1 1 220px' }}>
+      <Stack
+        direction="row"
+        sx={{
+          gap: 1.5,
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            flex: '1 1 220px'
+          }}>
           <Skeleton variant="circular" width={10} height={10} />
           <Box sx={{ flex: 1 }}>
             <Skeleton variant="text" width="40%" />
@@ -78,7 +109,9 @@ function ServiceRowSkeleton({ divider }: Readonly<{ divider: boolean }>) {
 
 function GroupSkeleton() {
   return (
-    <Box component="section" mb={4}>
+    <Box component="section" sx={{
+      mb: 4
+    }}>
       <Skeleton variant="text" width={120} height={18} />
       <Paper variant="outlined" sx={{ mt: 0.5, overflow: 'hidden' }}>
         {ROWS.map((row, index) => (

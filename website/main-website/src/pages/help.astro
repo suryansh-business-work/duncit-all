@@ -4,6 +4,9 @@
 // a redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
 import { fetchBranding } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
@@ -11,10 +14,10 @@ const supportPhone = branding.support_phone;
 ---
 
 <PageLayout
-  title="Help Center"
-  eyebrow="Support"
-  heading="How can we help?"
-  intro="Browse topics or search for answers. Can't find it? Reach our team directly."
+  title={t('website.main.help.title')}
+  eyebrow={t('website.main.help.eyebrow')}
+  heading={t('website.main.help.heading')}
+  intro={t('website.main.help.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=80&auto=format&fit=crop"
 >
@@ -24,21 +27,21 @@ const supportPhone = branding.support_phone;
       <input
         id="helpSearch"
         type="search"
-        placeholder="Search help topics…"
-        aria-label="Search help topics"
+        placeholder={t('website.main.help.searchPlaceholder')}
+        aria-label={t('website.main.help.searchLabel')}
         class="w-full pl-11 pr-4 py-3.5 rounded-xl glass border-2 border-ink/10 focus:border-primary outline-none"
       />
     </div>
   </div>
 
-  <div id="helpTopics" class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+  <div id="helpTopics" data-copy={JSON.stringify({ empty: t('website.main.help.empty'), error: t('website.main.help.error'), general: t('website.main.help.general'), one: t('website.main.help.questionOne'), many: t('website.main.help.questionMany') })} class="not-prose grid sm:grid-cols-2 gap-4 my-6">
     <div class="skeleton h-24" aria-hidden="true"></div>
     <div class="skeleton h-24" aria-hidden="true"></div>
     <div class="skeleton h-24" aria-hidden="true"></div>
     <div class="skeleton h-24" aria-hidden="true"></div>
   </div>
 
-  <h2>Still need help?</h2>
+  <h2>{t('website.main.help.stillHeading')}</h2>
   <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
     <a href={`mailto:${supportEmail}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
       <div class="flex items-start gap-4">
@@ -46,8 +49,8 @@ const supportPhone = branding.support_phone;
           <i class="fa-solid fa-envelope text-lg" aria-hidden="true"></i>
         </div>
         <div>
-          <div class="font-head font-bold text-ink mb-0.5">Email support</div>
-          <div class="text-sm text-ink-soft">{supportEmail} — we usually reply within 24 hours.</div>
+          <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.emailTitle')}</div>
+          <div class="text-sm text-ink-soft">{supportEmail} — {t('website.main.help.emailText')}</div>
         </div>
       </div>
     </a>
@@ -58,8 +61,8 @@ const supportPhone = branding.support_phone;
             <i class="fa-solid fa-phone text-lg" aria-hidden="true"></i>
           </div>
           <div>
-            <div class="font-head font-bold text-ink mb-0.5">Call us</div>
-            <div class="text-sm text-ink-soft">{supportPhone} — for urgent safety issues.</div>
+            <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.callTitle')}</div>
+            <div class="text-sm text-ink-soft">{supportPhone} — {t('website.main.help.callText')}</div>
           </div>
         </div>
       </a>
@@ -70,8 +73,8 @@ const supportPhone = branding.support_phone;
           <i class="fa-solid fa-paper-plane text-lg" aria-hidden="true"></i>
         </div>
         <div>
-          <div class="font-head font-bold text-ink mb-0.5">Contact form</div>
-          <div class="text-sm text-ink-soft">Send us a message — it lands straight with the team.</div>
+          <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.formTitle')}</div>
+          <div class="text-sm text-ink-soft">{t('website.main.help.formText')}</div>
         </div>
       </div>
     </a>
@@ -81,8 +84,8 @@ const supportPhone = branding.support_phone;
           <i class="fa-solid fa-circle-question text-lg" aria-hidden="true"></i>
         </div>
         <div>
-          <div class="font-head font-bold text-ink mb-0.5">Ask a question</div>
-          <div class="text-sm text-ink-soft">Can't find it? Submit your question and we'll answer.</div>
+          <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.askTitle')}</div>
+          <div class="text-sm text-ink-soft">{t('website.main.help.askText')}</div>
         </div>
       </div>
     </a>
@@ -93,6 +96,8 @@ const supportPhone = branding.support_phone;
   import { urlConfigs } from '../config/url-configs';
 
   const topicsEl = document.getElementById('helpTopics');
+  // Handed over by the markup — a module script cannot read Astro frontmatter.
+  const COPY = JSON.parse(topicsEl?.dataset.copy ?? '{}');
   const searchEl = document.getElementById('helpSearch') as HTMLInputElement | null;
 
   const TOPIC_ICONS = ['fa-heart', 'fa-comments', 'fa-shield-heart', 'fa-user', 'fa-mobile', 'fa-credit-card'];
@@ -117,12 +122,12 @@ const supportPhone = branding.support_phone;
       const groups: any[] = (json?.data?.publicFaqGroups ?? []).filter((g: any) => g.faqs?.length);
       if (!groups.length) {
         topicsEl.innerHTML =
-          '<p class="text-ink-soft sm:col-span-2">No help topics published yet — reach us directly below.</p>';
+          `<p class="text-ink-soft sm:col-span-2">${COPY.empty}</p>`;
         return;
       }
       topicsEl.innerHTML = groups
         .map((group, index) => {
-          const name = group.super_category?.name ?? 'General';
+          const name = group.super_category?.name ?? COPY.general;
           const slug = group.super_category?.slug ?? '';
           const icon = TOPIC_ICONS[index % TOPIC_ICONS.length];
           const count = group.faqs.length;
@@ -134,7 +139,7 @@ const supportPhone = branding.support_phone;
                 </div>
                 <div>
                   <div class="font-head font-bold text-ink mb-0.5">${esc(name)}</div>
-                  <div class="text-sm text-ink-soft">${count} answered ${count === 1 ? 'question' : 'questions'}</div>
+                  <div class="text-sm text-ink-soft">${count} ${count === 1 ? COPY.one : COPY.many}</div>
                 </div>
               </div>
             </a>`;
@@ -142,7 +147,7 @@ const supportPhone = branding.support_phone;
         .join('');
     } catch {
       topicsEl.innerHTML =
-        '<p class="text-ink-soft sm:col-span-2">Topics could not be loaded right now — reach us directly below.</p>';
+        `<p class="text-ink-soft sm:col-span-2">${COPY.error}</p>`;
     }
   }
 

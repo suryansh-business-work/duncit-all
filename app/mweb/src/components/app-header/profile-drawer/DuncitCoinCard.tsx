@@ -36,7 +36,9 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
         }}
         aria-label={t('mweb.coin.title')}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <Box
             sx={{
               width: 44,
@@ -52,14 +54,23 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
             <MonetizationOnIcon />
           </Box>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography fontWeight={600} noWrap>
+            <Typography noWrap sx={{
+              fontWeight: 600
+            }}>
               {t('mweb.coin.title')}
             </Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <Typography variant="body2" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.coin.sidebarCaption', { vars: { pct: earnPct } })}
             </Typography>
           </Box>
-          <Typography fontWeight={700} sx={{ color: gold }} noWrap>
+          <Typography
+            noWrap
+            sx={{
+              fontWeight: 700,
+              color: gold
+            }}>
             {balance}
           </Typography>
           <ChevronRightIcon color="disabled" />

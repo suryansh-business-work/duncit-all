@@ -58,7 +58,9 @@ export default function HostInsightsFilterSheet({
         </Stack>
       }
     >
-      <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={0.75} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {options.map(([value, label]) => {
           const selected = draft === value;
           return (

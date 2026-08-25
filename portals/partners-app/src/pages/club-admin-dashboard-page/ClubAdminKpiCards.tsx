@@ -66,12 +66,24 @@ export default function ClubAdminKpiCards({ kpis, loading }: Readonly<Props>) {
     <Stack spacing={2.5}>
       {groups(t).map((group) => (
         <Stack key={group.heading} spacing={1.25}>
-          <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ letterSpacing: 0.4 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 800,
+              letterSpacing: 0.4
+            }}>
             {group.heading}
           </Typography>
           <Grid container spacing={2}>
             {group.cards.map((card) => (
-              <Grid item xs={12} sm={6} md={3} key={card.key}>
+              <Grid
+                key={card.key}
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md: 3
+                }}>
                 <StatCard
                   label={card.label}
                   labelWeight={800}

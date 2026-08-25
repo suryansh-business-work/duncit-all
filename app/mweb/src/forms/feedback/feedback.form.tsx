@@ -64,13 +64,20 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           name="category"
           render={({ field, fieldState }) => (
             <Stack spacing={0.75}>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>
                 Category
               </Typography>
               {configLoading && config.categories.length === 0 ? (
                 <CircularProgress size={18} />
               ) : (
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" spacing={1} useFlexGap sx={{
+                  flexWrap: "wrap"
+                }}>
                   {config.categories.map((option) => (
                     <Chip
                       key={option.key || option.label}

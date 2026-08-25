@@ -54,9 +54,17 @@ export default function MediaListField({
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">{label}</Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <AiMonitoringChip />
           <Button size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
             {addLabel}
@@ -64,7 +72,13 @@ export default function MediaListField({
         </Stack>
       </Stack>
       {helperText && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mb: 1
+          }}>
           {helperText}
         </Typography>
       )}

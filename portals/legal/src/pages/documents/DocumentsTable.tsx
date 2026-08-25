@@ -25,7 +25,9 @@ interface Props {
 const getDocumentRowId = (d: LegalDocumentListItem) => d.id;
 
 const renderName = (d: LegalDocumentListItem) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {d.name}
   </Typography>
 );

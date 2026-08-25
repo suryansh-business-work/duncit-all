@@ -36,14 +36,13 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
         sx={{
+          alignItems: "center",
           p: 1.5,
           borderTop: 1,
           borderColor: 'divider',
-          pb: 'calc(env(safe-area-inset-bottom) + 12px)',
-        }}
-      >
+          pb: 'calc(env(safe-area-inset-bottom) + 12px)'
+        }}>
         <Controller
           control={control}
           name="text"

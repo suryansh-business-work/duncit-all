@@ -108,7 +108,13 @@ export default function FloatingWindow({
         />
 
         {minimised ? (
-          <Typography variant="caption" color="text.secondary" sx={{ px: 1.5, py: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              px: 1.5,
+              py: 1
+            }}>
             {t('shell.chat.window.minimised')}
           </Typography>
         ) : (

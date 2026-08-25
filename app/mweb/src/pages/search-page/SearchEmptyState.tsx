@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { Box, Button, Card, Stack, Typography } from '@mui/material';
 import LightbulbIcon from '@mui/icons-material/LightbulbOutlined';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -18,13 +19,19 @@ function CtaBlock({ icon, title, description, cta, onClick }: Readonly<CtaBlockP
   return (
     <Card variant="outlined" sx={{ p: 2.5, borderRadius: '16px' }}>
       <Stack spacing={1}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           {icon}
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {title}
           </Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {description}
         </Typography>
         <Button variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start', fontWeight: 700, borderRadius: 999 }}>
@@ -61,10 +68,22 @@ export default function SearchEmptyState({
     <Stack spacing={2.5} sx={{ pt: 1 }}>
       <Box sx={{ textAlign: 'center' }}>
         <SearchOffIcon color="disabled" sx={{ fontSize: 52 }} />
-        <Typography variant="h6" fontWeight={700} sx={{ mt: 1 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 700,
+            mt: 1
+          }}>
           {heading}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: 520, mx: 'auto' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5,
+            maxWidth: 520,
+            mx: 'auto'
+          }}>
           {description}
         </Typography>
       </Box>

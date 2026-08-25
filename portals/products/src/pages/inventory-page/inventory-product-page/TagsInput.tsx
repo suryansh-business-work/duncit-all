@@ -31,9 +31,9 @@ export default function TagsInput({
           .filter(Boolean);
         onChange(Array.from(new Set(cleaned)).slice(0, max));
       }}
-      renderTags={(items, getTagProps) =>
+      renderValue={(items, getItemProps) =>
         items.map((option, index) => (
-          <Chip variant="outlined" size="small" label={option} {...getTagProps({ index })} />
+          <Chip variant="outlined" size="small" label={option} {...getItemProps({ index })} />
         ))
       }
       renderInput={(params) => (

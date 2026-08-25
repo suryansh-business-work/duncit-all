@@ -78,7 +78,9 @@ export default function ContactSubmissionsPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" sx={{
+        fontWeight: 700
+      }}>
         Contact Submission
       </Typography>
       <DuncitTable<ContactSubmission>

@@ -44,7 +44,11 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
   };
 
   return (
-    <Stack alignItems="center" sx={{ position: 'relative' }}>
+    <Stack
+      sx={{
+        alignItems: "center",
+        position: 'relative'
+      }}>
       <HomeStatusTile
         label={uploading ? 'Uploading…' : 'My status'}
         imageUrl={latestIsVideo ? null : statusUrl ?? me?.profile_photo}

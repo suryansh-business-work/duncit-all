@@ -5,11 +5,7 @@
 import { podSeatsTaken } from '@duncit/utils';
 
 export type HostChartRange =
-  | 'ALL'
-  | 'LAST_YEAR'
-  | 'CURRENT_YEAR'
-  | 'PAST_6_MONTHS'
-  | 'PAST_3_MONTHS';
+  'ALL' | 'LAST_YEAR' | 'CURRENT_YEAR' | 'PAST_6_MONTHS' | 'PAST_3_MONTHS';
 
 /** Default "Pods by Month" range (feature 2). */
 export const DEFAULT_HOST_CHART_RANGE: HostChartRange = 'PAST_6_MONTHS';

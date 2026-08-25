@@ -15,12 +15,19 @@ export default function TopLinksCard({ links, onOpen }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           Busiest links
         </Typography>
 
         {links.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No link has been followed yet.
           </Typography>
         )}
@@ -38,17 +45,38 @@ export default function TopLinksCard({ links, onOpen }: Readonly<Props>) {
               }}
               sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
             >
-              <Stack direction="row" justifyContent="space-between" spacing={1}>
-                <Typography variant="body2" fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} sx={{
+                justifyContent: "space-between"
+              }}>
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{
+                    fontWeight: 600,
+                    minWidth: 0
+                  }}>
                   {link.label}
                 </Typography>
-                <Stack direction="row" spacing={1.5} alignItems="baseline" flexShrink={0}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  sx={{
+                    alignItems: "baseline",
+                    flexShrink: 0
+                  }}>
                   {link.revenue > 0 && (
-                    <Typography variant="caption" color="success.main" fontWeight={700}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "success.main",
+                        fontWeight: 700
+                      }}>
                       {formatINR(link.revenue)}
                     </Typography>
                   )}
-                  <Typography variant="body2" fontWeight={700}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 700
+                  }}>
                     {link.clicks.toLocaleString()}
                   </Typography>
                 </Stack>

@@ -16,18 +16,31 @@ interface Props {
 export default function PodFeedbackEntry({ row, label }: Readonly<Props>) {
   return (
     <Stack spacing={0.5}>
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Rating value={row.rating} size="small" readOnly />
-        <Typography variant="body2" fontWeight={600}>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
           {row.user.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {fmtDateTime(row.created_at)}
         </Typography>
       </Stack>
       {row.message && <Typography variant="body2">{row.message}</Typography>}
       {row.ratings.length > 0 && (
-        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={0.5} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           {row.ratings.map((entry) => (
             <Chip
               key={entry.aspect}

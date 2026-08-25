@@ -88,23 +88,35 @@ export function HeaderSearch({
           placeholder={label}
           autoFocus={autoFocus}
           inputRef={inputRef}
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            ...params.slotProps,
+
+            input: {
+              ...params.slotProps.input,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
       )}
       renderOption={(props, option) => (
         <Box component="li" {...props} key={option.to} sx={{ alignItems: 'flex-start' }}>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={700} noWrap>
+            <Typography variant="body2" noWrap sx={{
+              fontWeight: 700
+            }}>
               {option.label}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                display: 'block'
+              }}>
               {option.section ? `${option.section} · ${option.to}` : option.to}
             </Typography>
           </Box>

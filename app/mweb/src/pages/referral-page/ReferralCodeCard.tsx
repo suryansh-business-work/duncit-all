@@ -26,7 +26,12 @@ export default function ReferralCodeCard({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           {t('mweb.referral.yourCode')}
         </Typography>
         <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: 1, mt: 0.5 }}>
@@ -67,9 +72,20 @@ export default function ReferralCodeCard({
         </Stack>
 
         {referral.coins_per_referral > 0 && (
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.75 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mt: 1.75
+            }}>
             <MonetizationOnIcon fontSize="small" color="primary" />
-            <Typography variant="body2" sx={{ fontWeight: 700 }} color="primary.main">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "primary.main",
+                fontWeight: 700
+              }}>
               {t('mweb.referral.bothEarn', { vars: { coins: referral.coins_per_referral } })}
             </Typography>
           </Stack>
@@ -83,7 +99,12 @@ export default function ReferralCodeCard({
 
         {referral.referred_by_name && (
           <Box sx={{ mt: 1 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {t('mweb.referral.referredBy', { vars: { name: referral.referred_by_name } })}
             </Typography>
           </Box>

@@ -15,7 +15,9 @@ function SurveyKindCard({ meta, onOpen }: Readonly<CardProps>) {
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardActionArea onClick={() => onOpen(slug)} sx={{ p: 2.5, height: '100%' }}>
-        <Stack spacing={1.5} alignItems="flex-start">
+        <Stack spacing={1.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box
             sx={{
               display: 'grid',
@@ -30,8 +32,12 @@ function SurveyKindCard({ meta, onOpen }: Readonly<CardProps>) {
             <Icon />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight={800}>{title}</Typography>
-            <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
+            <Typography variant="h6" sx={{
+              fontWeight: 800
+            }}>{title}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{subtitle}</Typography>
           </Box>
         </Stack>
       </CardActionArea>
@@ -47,11 +53,17 @@ export default function SurveysHubPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <AssignmentIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{t('shell.nav.surveys')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('shell.nav.surveys')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Choose who a survey is for. Each type has its own category-specific surveys and a kind-level default.
           </Typography>
         </Box>

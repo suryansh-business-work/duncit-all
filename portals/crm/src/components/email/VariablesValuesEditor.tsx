@@ -21,7 +21,9 @@ interface Props {
 export default function VariablesValuesEditor({ variables, values, onChange, emptyHint }: Readonly<Props>) {
   if (variables.length === 0) {
     return (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {emptyHint ?? 'No variables declared yet.'}
       </Typography>
     );

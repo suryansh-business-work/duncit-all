@@ -36,7 +36,9 @@ class FakeXhr {
 }
 
 const makeClient = (data: unknown = { getImagekitAuth: AUTH }) =>
-  ({ mutate: vi.fn().mockResolvedValue({ data }) }) as any;
+  (({
+    mutate: vi.fn().mockResolvedValue({ data })
+  }) as any);
 
 const file = new File(['reel-bytes'], 'reel.mp4', { type: 'video/mp4' });
 

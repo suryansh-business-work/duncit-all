@@ -96,19 +96,31 @@ export default function EventTicketsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" fontWeight={900}>
+        <Typography variant="h5" sx={{
+          fontWeight: 900
+        }}>
           Event Tickets
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Issued tickets, QR check-in and downloads.
         </Typography>
       </Box>
 
       <Card>
         <CardContent>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 1
+            }}>
             <QrCodeScannerIcon color="primary" />
-            <Typography variant="subtitle1" fontWeight={900}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 900
+            }}>
               Check-in by QR
             </Typography>
           </Stack>

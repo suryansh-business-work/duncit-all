@@ -50,10 +50,14 @@ export default function VenueSlotRequestsPage() {
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
       <Stack spacing={0.25}>
-        <Typography variant="h6" fontWeight={800}>
+        <Typography variant="h6" sx={{
+          fontWeight: 800
+        }}>
           Slot Requests
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Hosts who want to run their pod at your venue. A pod only goes live after you approve its
           slot.
         </Typography>

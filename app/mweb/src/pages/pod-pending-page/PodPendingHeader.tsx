@@ -17,7 +17,9 @@ export default function PodPendingHeader({ refreshing, onRefresh }: Readonly<Pro
   const navigate = useNavigate();
 
   return (
-    <Stack direction="row" alignItems="center" spacing={0.5}>
+    <Stack direction="row" spacing={0.5} sx={{
+      alignItems: "center"
+    }}>
       <IconButton size="small" aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>

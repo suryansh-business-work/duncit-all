@@ -35,7 +35,9 @@ const renderKey = (k: ApiKeyRow) => (
 );
 
 const renderScopes = (k: ApiKeyRow) => (
-  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap component="span">
+  <Stack direction="row" spacing={0.5} useFlexGap component="span" sx={{
+    flexWrap: "wrap"
+  }}>
     {k.scopes.map((scope) => (
       <Chip key={scope} size="small" label={scope} />
     ))}

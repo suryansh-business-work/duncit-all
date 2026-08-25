@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { StatusChip } from '@duncit/ui';
 import ReviewDetails from '../ads-approvals-page/ReviewDetails';
 import { AD_STATUS_CHIP_COLORS, type AdRequestRow } from '../ads-approvals-page/helpers';
@@ -40,11 +40,27 @@ export default function LiveAdDetailsDialog({
   return (
     <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ display: 'block', lineHeight: 1 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 800,
+            display: 'block',
+            lineHeight: 1
+          }}>
           {ad.trace_id}
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" fontWeight={900} sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 900,
+              flex: 1,
+              minWidth: 0
+            }}>
             {ad.ad_title}
           </Typography>
           <StatusChip status={ad.status} colorMap={AD_STATUS_CHIP_COLORS} sx={{ fontWeight: 800 }} />

@@ -267,6 +267,74 @@ describe('emailLog deletes', () => {
   });
 });
 
+/* ---------------------------- template usage ---------------------------- */
+
+describe('emailLog usage by template', () => {
+  /** One `$group` row, as the pipeline hands it back. */
+  const row = (over: Record<string, unknown> = {}) => ({
+    _id: 'pod-backout-spot-filled',
+    sent: 128,
+    skipped: 2,
+    failed: 3,
+    total: 133,
+    last_sent_at: new Date('2026-08-24T12:30:00.000Z'),
+    last_attempt_at: new Date('2026-08-25T09:00:00.000Z'),
+    ...over,
+  });
+
+  it('reports each slug with its counts and both dates as ISO strings', async () => {
+    aggregate.mockResolvedValueOnce([row()]);
+    expect(await emailLogService.usageByTemplate()).toEqual([
+      {
+        slug: 'pod-backout-spot-filled',
+        sent: 128,
+        skipped: 2,
+        failed: 3,
+        total: 133,
+        last_sent_at: '2026-08-24T12:30:00.000Z',
+        last_attempt_at: '2026-08-25T09:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('leaves last_sent_at null for a template that has only ever failed', async () => {
+    aggregate.mockResolvedValueOnce([
+      row({ sent: 0, skipped: 0, failed: 40, total: 40, last_sent_at: null }),
+    ]);
+    const [usage] = await emailLogService.usageByTemplate();
+    expect(usage.last_sent_at).toBeNull();
+    // Still an attempt date — which is what separates "broken" from "unused".
+    expect(usage.last_attempt_at).toBe('2026-08-25T09:00:00.000Z');
+  });
+
+  it('leaves out the raw-HTML sends, which have no template page to sit on', async () => {
+    aggregate.mockResolvedValueOnce([]);
+    await emailLogService.usageByTemplate();
+    const [pipeline] = aggregate.mock.calls[0];
+    expect(pipeline[0]).toEqual({ $match: { template: { $gt: '' } } });
+  });
+
+  it('counts each status separately off one pass, not three queries', async () => {
+    aggregate.mockResolvedValueOnce([]);
+    await emailLogService.usageByTemplate();
+    expect(aggregate).toHaveBeenCalledTimes(1);
+    const group = aggregate.mock.calls[0][0][1].$group;
+    expect(group._id).toBe('$template');
+    expect(group.sent).toEqual({ $sum: { $cond: [{ $eq: ['$status', 'SENT'] }, 1, 0] } });
+    expect(group.total).toEqual({ $sum: 1 });
+  });
+
+  it('is unwindowed — "has this ever been used" cannot be answered by seven days', async () => {
+    aggregate.mockResolvedValueOnce([]);
+    await emailLogService.usageByTemplate();
+    // created_at is read as a MAX, never as a bound: nothing in the pipeline
+    // narrows the rows by date.
+    const [pipeline] = aggregate.mock.calls[0];
+    expect(Object.keys(pipeline[0].$match)).toEqual(['template']);
+    expect(pipeline.some((stage: Record<string, unknown>) => '$limit' in stage)).toBe(false);
+  });
+});
+
 /* --------------------------------- rbac --------------------------------- */
 
 describe('emailLog access', () => {
@@ -277,6 +345,16 @@ describe('emailLog access', () => {
     await expect(
       emailLogResolvers.Query.emailLogStats({}, { days: 7 }, ctx(['TECH_MANAGER']))
     ).resolves.toMatchObject({ days: 7 });
+  });
+
+  it('answers the Templates page its send counts under the same roles as the log', async () => {
+    aggregate.mockResolvedValueOnce([]);
+    await expect(
+      emailLogResolvers.Query.emailTemplateUsage({}, {}, ctx(['CITY_ADMIN']))
+    ).resolves.toEqual([]);
+    expect(() => emailLogResolvers.Query.emailTemplateUsage({}, {}, ctx(['USER']))).toThrow(
+      /access denied/i
+    );
   });
 
   it('keeps everyone else out', () => {

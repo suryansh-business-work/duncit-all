@@ -81,9 +81,22 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
         currencySymbol={currencySymbol}
         code={card.code}
       />
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.75 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mt: 0.75
+        }}>
         <Chip size="small" color={STATUS_COLOR[card.status]} label={t(STATUS_KEY[card.status])} />
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            flex: 1,
+            minWidth: 0
+          }}>
           {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
         </Typography>
         <IconButton size="small" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')}>
@@ -94,7 +107,13 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
         </IconButton>
       </Stack>
       {showRecipient && (
-        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            display: 'block'
+          }}>
           {card.recipient_name || card.recipient_email}
         </Typography>
       )}

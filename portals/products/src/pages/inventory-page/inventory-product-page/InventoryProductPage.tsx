@@ -106,7 +106,11 @@ export default function InventoryProductPage() {
 
   if (!isNew && productQuery.loading && !productQuery.data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );

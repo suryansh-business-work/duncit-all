@@ -75,14 +75,17 @@ export default function MinAgeSection({ onToast }: Readonly<Props>) {
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={1}
-          sx={{ mb: 2 }}
-        >
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: 2
+          }}>
           <Box>
             <Typography variant="subtitle1">{t('admin.settings.minAgeTitle')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               A date of birth younger than this is rejected on signup and when editing a profile,
               on the website and the app.
             </Typography>
@@ -102,10 +105,12 @@ export default function MinAgeSection({ onToast }: Readonly<Props>) {
           type="number"
           value={age}
           onChange={(e) => setAge(e.target.value)}
-          inputProps={{ min: MIN_ALLOWED, max: MAX_ALLOWED, step: 1 }}
           sx={{ maxWidth: 260 }}
           fullWidth
           helperText={`Whole years, ${MIN_ALLOWED}–${MAX_ALLOWED} (default ${FALLBACK})`}
+          slotProps={{
+            htmlInput: { min: MIN_ALLOWED, max: MAX_ALLOWED, step: 1 }
+          }}
         />
         {invalid && (
           <Alert severity="warning" sx={{ mt: 2 }}>

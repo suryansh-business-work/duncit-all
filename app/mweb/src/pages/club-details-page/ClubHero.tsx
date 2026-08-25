@@ -85,22 +85,23 @@ export default function ClubHero({
   const overlay = (
     <Stack
       direction="row"
-      alignItems="center"
-      justifyContent="space-between"
       sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
         position: 'absolute',
         top: 'calc(env(safe-area-inset-top) + 8px)',
         left: 8,
         right: 8,
         zIndex: 2,
         pointerEvents: 'none',
-        '& > *': { pointerEvents: 'auto' },
-      }}
-    >
+        '& > *': { pointerEvents: 'auto' }
+      }}>
       <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>
-      <Stack direction="row" spacing={0.75} alignItems="center">
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
         <Button
           size="small"
           variant={following ? 'contained' : 'outlined'}

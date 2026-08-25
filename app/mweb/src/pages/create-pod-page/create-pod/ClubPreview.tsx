@@ -41,9 +41,14 @@ export default function ClubPreview({ club }: Readonly<Props>) {
     <Stack
       direction="row"
       spacing={1.5}
-      alignItems="center"
-      sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
-    >
+      sx={{
+        alignItems: "center",
+        p: 1.25,
+        borderRadius: '16px',
+        border: 1,
+        borderColor: 'divider',
+        bgcolor: 'action.hover'
+      }}>
       <Avatar variant="rounded" src={cover} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
         <GroupsIcon />
       </Avatar>
@@ -51,7 +56,13 @@ export default function ClubPreview({ club }: Readonly<Props>) {
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
           {club.club_name}
         </Typography>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mt: 0.25
+          }}>
           <Chip
             size="small"
             variant="outlined"
@@ -88,7 +99,12 @@ export default function ClubPreview({ club }: Readonly<Props>) {
                 ))}
               </Stack>
             )}
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                whiteSpace: 'pre-wrap'
+              }}>
               {club.club_description?.trim() || t('mweb.createPod.noDescription')}
             </Typography>
           </Stack>

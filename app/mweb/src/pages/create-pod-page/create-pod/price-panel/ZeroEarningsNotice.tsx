@@ -15,23 +15,26 @@ export default function ZeroEarningsNotice() {
     <Stack
       direction="row"
       spacing={1}
-      alignItems="flex-start"
       role="alert"
       data-testid="create-pod-zero-earnings"
       sx={{
+        alignItems: "flex-start",
         p: 1.25,
         borderRadius: '16px',
         bgcolor: alpha(theme.palette.warning.main, 0.1),
         border: 1,
-        borderColor: alpha(theme.palette.warning.main, 0.4),
-      }}
-    >
+        borderColor: alpha(theme.palette.warning.main, 0.4)
+      }}>
       <InfoOutlinedIcon fontSize="small" color="warning" />
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle2" fontWeight={600}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 600
+        }}>
           {t('mweb.createPod.zeroEarningsTitle')}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.createPod.zeroEarningsBody')}
         </Typography>
       </Box>

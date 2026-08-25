@@ -56,8 +56,17 @@ export default function AisensyDetailDialog({
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pb: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" fontWeight={900} sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 900,
+              flex: 1,
+              minWidth: 0
+            }}>
             {title}
           </Typography>
           {status && (
@@ -89,7 +98,9 @@ export default function AisensyDetailDialog({
             ))}
           </Box>
           <Box>
-            <Typography variant="overline" color="text.secondary">
+            <Typography variant="overline" sx={{
+              color: "text.secondary"
+            }}>
               How it arrives
             </Typography>
             {template ? (

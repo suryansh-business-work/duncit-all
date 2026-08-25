@@ -143,8 +143,19 @@ export default function AttachmentUploadField({
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: value.length ? 1 : 0 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: value.length ? 1 : 0
+        }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            flex: 1
+          }}>
           {heading} ({value.length}/{max})
         </Typography>
         <AiMonitoringChip />

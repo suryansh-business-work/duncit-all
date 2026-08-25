@@ -17,11 +17,19 @@ export function SidebarUserCard({ user, fallbackName }: Readonly<SidebarUserCard
         {initials(user, fallbackName)}
       </Avatar>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={700} noWrap>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 700
+        }}>
           {accountName(user, fallbackName)}
         </Typography>
         {email && (
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              display: 'block'
+            }}>
             {email}
           </Typography>
         )}

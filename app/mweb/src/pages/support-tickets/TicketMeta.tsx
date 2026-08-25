@@ -13,7 +13,12 @@ const PRIORITY_COLOR: Record<TicketPriority, 'default' | 'warning' | 'error'> = 
 function Field({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Stack sx={{ minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         {label}
       </Typography>
       <Typography variant="body2" noWrap>
@@ -31,8 +36,20 @@ export default function TicketMeta({ ticket }: Readonly<{ ticket: TicketDetail }
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, flex: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600,
+            flex: 1
+          }}>
           {ticket.category}
         </Typography>
         <Chip

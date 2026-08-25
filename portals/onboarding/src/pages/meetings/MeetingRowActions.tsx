@@ -52,7 +52,11 @@ export default function MeetingRowActions({ meeting, onSchedule, onMarkDone, onD
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const actions = buildActions(meeting, { onSchedule, onMarkDone, onDecide, onReject }, t);
   if (actions.length === 0) {
-    return <Typography variant="caption" color="text.secondary">—</Typography>;
+    return (
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>—</Typography>
+    );
   }
   const run = (action: Action) => {
     setAnchor(null);
@@ -68,7 +72,9 @@ export default function MeetingRowActions({ meeting, onSchedule, onMarkDone, onD
           <MenuItem key={action.label} onClick={() => run(action)}>
             <ListItemText
               primary={action.label}
-              primaryTypographyProps={action.danger ? { color: 'error' } : undefined}
+              slotProps={{
+                primary: action.danger ? { color: 'error' } : undefined
+              }}
             />
           </MenuItem>
         ))}

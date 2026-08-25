@@ -12,7 +12,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
@@ -108,7 +108,14 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle component="div">
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <Chip size="small" color={STATUS_COLOR[row.status]} label={statusLabel(t, row.status)} />
           <Chip
             size="small"

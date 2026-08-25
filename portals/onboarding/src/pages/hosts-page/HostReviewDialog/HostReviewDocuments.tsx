@@ -18,17 +18,26 @@ export default function HostReviewDocuments({ passportUrl, policeVerificationUrl
   return (
     <>
       <Divider textAlign="left">
-        <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           Documents
         </Typography>
       </Divider>
-      <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={2} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {passportUrl && <ImagePreview src={passportUrl} label={t('onboarding.common.passportPhoto')} />}
         {policeVerificationUrl && (
           <ImagePreview src={policeVerificationUrl} label={t('onboarding.hosts.policeVerification')} />
         )}
         {!passportUrl && !policeVerificationUrl && (
-          <Typography variant="body2" color="warning.main" data-testid="review-no-documents">
+          <Typography variant="body2" data-testid="review-no-documents" sx={{
+            color: "warning.main"
+          }}>
             No documents uploaded yet.
           </Typography>
         )}

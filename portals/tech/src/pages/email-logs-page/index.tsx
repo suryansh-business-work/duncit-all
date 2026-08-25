@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
 import { useApolloTableFetch } from '@duncit/table';
 import { SUPER_ROLE } from '../../lib/session';
 import EmailLogBulkBar, { EmailLogDeleteAllButton } from './EmailLogBulkBar';
 import EmailLogQuickFilters, {
-  EMPTY_QUICK_FILTERS,
   quickFiltersToTable,
   type QuickFilterState,
 } from './EmailLogQuickFilters';
@@ -21,6 +21,54 @@ interface Stats {
   failed: number;
   total: number;
   all_time_total: number;
+}
+
+/** The query keys the quick filters live in. `?template=` is how a send count
+ * on the Templates page opens this table already narrowed to its own rows. */
+const FILTER_PARAMS = ['status', 'source', 'template'] as const;
+
+/**
+ * The quick filters, held in the URL rather than in component state.
+ *
+ * They have to be readable from a link: the send count beside each template
+ * links straight here. Keeping them in the query string makes that link the
+ * same thing as clicking the chips, and it fixes what local state cost —
+ * a reload, a pasted URL and a browser Back all landed on an unfiltered table.
+ *
+ * Writes REPLACE, like a tab: narrowing a table is a view of the page, not a
+ * destination, and Back should leave rather than walk three chips backwards.
+ */
+function useQuickFilterParams(): [QuickFilterState, (next: QuickFilterState) => void] {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const value = useMemo<QuickFilterState>(
+    () => ({
+      status: searchParams.get('status') ?? '',
+      source: searchParams.get('source') ?? '',
+      template: searchParams.get('template') ?? '',
+    }),
+    [searchParams]
+  );
+
+  // Both of react-router's returns change identity on every navigation, so the
+  // setter reads them through refs to stay stable for the memo below it.
+  const paramsRef = useRef(searchParams);
+  paramsRef.current = searchParams;
+  const applyRef = useRef(setSearchParams);
+  applyRef.current = setSearchParams;
+
+  const onChange = useCallback((next: QuickFilterState) => {
+    // Rebuilt from the current string rather than replaced, so the drawer's own
+    // tab param survives a chip click.
+    const params = new URLSearchParams(paramsRef.current);
+    for (const key of FILTER_PARAMS) {
+      const raw = next[key];
+      if (raw) params.set(key, raw);
+      else params.delete(key);
+    }
+    applyRef.current(params, { replace: true });
+  }, []);
+
+  return [value, onChange];
 }
 
 /**
@@ -38,7 +86,7 @@ export default function EmailLogsPage() {
   const fetchRows = useApolloTableFetch<EmailLogRow>(client, EMAIL_LOGS_TABLE, 'emailLogsTable');
   const [openId, setOpenId] = useState<string | null>(null);
   const [selected, setSelected] = useState<EmailLogRow[]>([]);
-  const [quick, setQuick] = useState<QuickFilterState>(EMPTY_QUICK_FILTERS);
+  const [quick, setQuick] = useQuickFilterParams();
   // Compared by value by the table, so it must not be a fresh array each render.
   const externalFilters = useMemo(() => quickFiltersToTable(quick), [quick]);
   // Stable, so the table does not re-register its row handler on every render.
@@ -77,19 +125,33 @@ export default function EmailLogsPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2
+        }}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Email Logs
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Every email the product tried to send — including the ones it decided not to, and the
             ones that failed before reaching a provider.
           </Typography>
         </Box>
         {stats && (
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="caption" color="text.secondary">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               last {stats.days} days
             </Typography>
             <Chip size="small" color="success" label={`${stats.sent} sent`} />

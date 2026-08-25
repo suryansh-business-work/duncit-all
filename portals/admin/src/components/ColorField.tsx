@@ -25,25 +25,27 @@ export default function ColorField({ label, value, onChange, helperText }: Reado
       fullWidth
       placeholder={DEFAULT_COLOR}
       helperText={helperText}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <input
-              type="color"
-              aria-label={`${label} picker`}
-              value={swatch}
-              onChange={(e) => onChange(e.target.value)}
-              style={{
-                width: 28,
-                height: 28,
-                border: 'none',
-                background: 'none',
-                padding: 0,
-                cursor: 'pointer',
-              }}
-            />
-          </InputAdornment>
-        ),
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <input
+                type="color"
+                aria-label={`${label} picker`}
+                value={swatch}
+                onChange={(e) => onChange(e.target.value)}
+                style={{
+                  width: 28,
+                  height: 28,
+                  border: 'none',
+                  background: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                }}
+              />
+            </InputAdornment>
+          ),
+        }
       }}
     />
   );

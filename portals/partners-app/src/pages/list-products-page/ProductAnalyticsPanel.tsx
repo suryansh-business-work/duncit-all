@@ -23,10 +23,14 @@ const money = (symbol: string, value: number) => `${symbol}${Number(value || 0).
 function Metric({ label, value }: Readonly<{ label: string; value: string | number }>) {
   return (
     <Box sx={{ p: 1.5, borderRadius: 2, border: 1, borderColor: 'divider', flex: '1 1 130px', minWidth: 120 }}>
-      <Typography variant="h6" fontWeight={950}>
+      <Typography variant="h6" sx={{
+        fontWeight: 950
+      }}>
         {value}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
     </Box>
@@ -45,7 +49,11 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
 
   if (loading && !analytics) {
     return (
-      <Stack alignItems="center" sx={{ py: 3 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 3
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
@@ -58,10 +66,14 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Typography variant="h6" fontWeight={950}>
+          <Typography variant="h6" sx={{
+            fontWeight: 950
+          }}>
             Analytics
           </Typography>
-          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1.5} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             <Metric label={t('partners.listProductsPage.productViews')} value={analytics.total_views} />
             <Metric label={t('partners.listProductsPage.totalClicks')} value={analytics.total_clicks} />
             <Metric label={t('shell.nav.orders')} value={analytics.orders} />
@@ -73,7 +85,9 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
           {analytics.variants.length > 0 && (
             <>
               <Divider />
-              <Typography variant="subtitle2" fontWeight={800}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 800
+              }}>
                 By variant
               </Typography>
               <Box sx={{ overflowX: 'auto' }}>
@@ -105,10 +119,14 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
           {analytics.locations.length > 0 && (
             <>
               <Divider />
-              <Typography variant="subtitle2" fontWeight={800}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 800
+              }}>
                 Purchase locations
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={1} useFlexGap sx={{
+                flexWrap: "wrap"
+              }}>
                 {analytics.locations.map((entry: any) => (
                   <Chip key={entry.location} label={`${entry.location}: ${entry.units_sold} sold`} size="small" />
                 ))}

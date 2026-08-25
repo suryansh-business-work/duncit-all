@@ -19,13 +19,23 @@ function Stat({ icon, label, value }: Readonly<{ icon: React.ReactNode; label: s
       spacing={0.25}
       sx={{ flex: 1, minWidth: 120, p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
     >
-      <Stack direction="row" spacing={0.75} alignItems="center" color="text.secondary">
+      <Stack
+        direction="row"
+        spacing={0.75}
+        sx={{
+          alignItems: "center",
+          color: "text.secondary"
+        }}>
         {icon}
-        <Typography variant="caption" fontWeight={700}>
+        <Typography variant="caption" sx={{
+          fontWeight: 700
+        }}>
           {label}
         </Typography>
       </Stack>
-      <Typography variant="h6" fontWeight={900}>
+      <Typography variant="h6" sx={{
+        fontWeight: 900
+      }}>
         {value}
       </Typography>
     </Stack>
@@ -40,9 +50,17 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <GroupsIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 900
+          }}>
             Overview
           </Typography>
         </Stack>
@@ -53,7 +71,12 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
             {club.club_description}
           </Typography>
         ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 2
+            }}>
             No description added yet.
           </Typography>
         )}
@@ -66,13 +89,22 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
         </Box>
 
         {club.locality && (
-          <Stack direction="row" spacing={0.75} alignItems="center" color="text.secondary" sx={{ mb: 1.5 }}>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            sx={{
+              alignItems: "center",
+              color: "text.secondary",
+              mb: 1.5
+            }}>
             <PlaceIcon fontSize="small" />
             <Typography variant="body2">{club.locality}</Typography>
           </Stack>
         )}
 
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           {club.club_whats_app_community_link && (
             <Button
               size="small"

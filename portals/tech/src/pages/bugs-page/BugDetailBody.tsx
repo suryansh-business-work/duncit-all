@@ -85,10 +85,19 @@ export default function BugDetailBody({ bug }: Readonly<{ bug: BugRow }>) {
       <Field label={t('tech.bugs.fingerprint')} value={bug.fingerprint} mono />
 
       <Box>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Occurrences by environment
         </Typography>
-        <Stack direction="row" spacing={1} sx={{ mt: 0.5 }} flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            flexWrap: "wrap",
+            mt: 0.5
+          }}>
           {envRows.map(([label, count]) => (
             <Chip key={label} size="small" variant="outlined" label={`${label}: ${count}`} />
           ))}
@@ -97,7 +106,9 @@ export default function BugDetailBody({ bug }: Readonly<{ bug: BugRow }>) {
 
       <Divider />
       <Box>
-        <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+        <Typography variant="subtitle2" gutterBottom sx={{
+          fontWeight: 700
+        }}>
           Who it hits
         </Typography>
         <AffectedSection bug={bug} />

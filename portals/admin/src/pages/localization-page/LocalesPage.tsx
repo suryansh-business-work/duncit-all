@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import TranslateIcon from '@mui/icons-material/Translate';
 import LocaleDialog, { type LocaleFormValues } from './LocaleDialog';
 import { DELETE_LOCALE, LOCALES, UPSERT_LOCALE, type LocaleRow } from './queries';
@@ -66,14 +66,25 @@ export default function LocalesPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <TranslateIcon color="primary" />
           <Box>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" sx={{
+              fontWeight: 700
+            }}>
               Locales
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Languages offered across the apps, portals and websites. The default is the
               source language every other falls back to.
             </Typography>

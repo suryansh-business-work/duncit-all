@@ -41,7 +41,9 @@ export default function GiftCardLogsPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <ReceiptLongIcon color="primary" />
         <Typography variant="h5" sx={{ fontWeight: 900 }}>
           {t('finance.giftCards.logsTitle')}

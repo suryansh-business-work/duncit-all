@@ -221,13 +221,15 @@ export default function NotificationFormDialog({
                     fullWidth
                     value={field.value}
                     onBlur={field.onBlur}
-                    SelectProps={{ multiple: true }}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message ?? ' '}
                     onChange={(event) => {
                       const next = event.target.value;
                       /* v8 ignore next -- a multiple Select always emits an array, so the string-split branch is only a defensive autofill guard */
                       field.onChange(typeof next === 'string' ? next.split(',') : next);
+                    }}
+                    slotProps={{
+                      select: { multiple: true }
                     }}
                   >
                     {users.map((user: any) => (

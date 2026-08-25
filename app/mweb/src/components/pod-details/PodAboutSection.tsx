@@ -20,7 +20,12 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
     <Stack spacing={1.5}>
       {text ? (
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              whiteSpace: 'pre-wrap'
+            }}>
             {shown}
           </Typography>
           {isLong && (
@@ -30,13 +35,20 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
           )}
         </Box>
       ) : (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.podDetails.aboutEmpty')}
         </Typography>
       )}
       {info && (
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block'
+            }}>
             {t('mweb.podDetails.whatToExpect')}
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

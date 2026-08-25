@@ -64,15 +64,35 @@ export default function EcommLeadDetailPage() {
         })}
       >
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={1.5}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             {lead.profile_photo_url && (
               <Avatar src={lead.profile_photo_url} sx={{ width: 56, height: 56, bgcolor: 'action.hover' }} />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h5" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 800,
+                  wordBreak: 'break-word'
+                }}>
                 {lead.seller_name}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  mt: 1
+                }}>
                 <StatusChip value={lead.lead_status} />
                 <PriorityChip value={lead.priority} />
                 {lead.city && <Chip size="small" icon={<LocationOnIcon fontSize="small" />} label={lead.city} variant="outlined" />}
@@ -83,7 +103,15 @@ export default function EcommLeadDetailPage() {
                 {lead.matched_user && <MatchedUserChip matched={lead.matched_user} />}
               </Stack>
               {lead.tags.length > 0 && (
-                <Stack direction="row" spacing={0.5} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap data-testid="ecomm-tags">
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  useFlexGap
+                  data-testid="ecomm-tags"
+                  sx={{
+                    flexWrap: "wrap",
+                    mt: 1
+                  }}>
                   {lead.tags.map((t) => (
                     <Chip key={t} size="small" label={`#${t}`} variant="outlined" />
                   ))}

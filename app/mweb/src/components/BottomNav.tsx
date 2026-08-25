@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import ExploreIcon from '@mui/icons-material/Explore';
 import GroupsIcon from '@mui/icons-material/Groups';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { APP_SHELL_MAX_WIDTH } from '../app/appLayout';

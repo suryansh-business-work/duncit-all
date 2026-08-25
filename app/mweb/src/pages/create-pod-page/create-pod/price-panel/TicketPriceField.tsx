@@ -38,14 +38,21 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
         <Typography
           component="label"
           htmlFor={FIELD_ID}
           variant="subtitle2"
-          fontWeight={600}
-          sx={{ minWidth: 0 }}
-        >
+          sx={{
+            fontWeight: 600,
+            minWidth: 0
+          }}>
           {t('mweb.createPod.ticketPriceLabel')}
         </Typography>
         <Link
@@ -67,11 +74,12 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
         fullWidth
         disabled={isFree}
         placeholder={t('mweb.createPod.ticketPricePlaceholder')}
-        InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
         error={!!errors.pod_amount}
         helperText={errors.pod_amount?.message ?? helper}
         {...register('pod_amount', { setValueAs: asTicketPrice })}
-      />
+        slotProps={{
+          input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
+        }} />
       {preview.zeroEarnings && <ZeroEarningsNotice />}
       <SuggestedPricesDialog
         open={open}

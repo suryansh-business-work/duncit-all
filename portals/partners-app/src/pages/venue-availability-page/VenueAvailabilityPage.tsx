@@ -147,7 +147,11 @@ export default function VenueAvailabilityPage() {
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
           {loading && !data ? (
-            <Stack alignItems="center" sx={{ py: 4 }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                py: 4
+              }}>
               <CircularProgress size={24} />
             </Stack>
           ) : (

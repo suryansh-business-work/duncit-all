@@ -35,7 +35,9 @@ interface Props {
 const getRowId = (c: Contract) => c.id;
 
 const renderTitle = (c: Contract) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {c.title}
   </Typography>
 );

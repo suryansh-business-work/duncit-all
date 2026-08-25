@@ -29,19 +29,38 @@ function StepRow({ step, busyKey, onRetry, formatDateTime }: Readonly<StepRowPro
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
-        justifyContent="space-between"
         useFlexGap
-        flexWrap="wrap"
-      >
-        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-          <Typography variant="body2" fontWeight={600}>
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap"
+        }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {step.label}
           </Typography>
           <StatusChip status={step.status} colorMap={STEP_STATUS_COLORS} />
         </Stack>
-        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-          <Typography variant="caption" color="text.secondary">
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {step.at ? formatDateTime(step.at) : t('finance.payment.stepNotRun')}
           </Typography>
           {step.can_retry && (
@@ -55,7 +74,12 @@ function StepRow({ step, busyKey, onRetry, formatDateTime }: Readonly<StepRowPro
         </Stack>
       </Stack>
       {step.detail && (
-        <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            wordBreak: 'break-word'
+          }}>
           {step.detail}
         </Typography>
       )}
@@ -81,7 +105,9 @@ export default function StepsTimeline({ steps, busyKey, onRetry, formatDateTime 
   return (
     <SectionBlock title={t('finance.payment.stepsTitle')}>
       {steps.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('finance.payment.stepsEmpty')}
         </Typography>
       )}

@@ -8,7 +8,12 @@ import { NotifyHost, notify, notifyError, notifySuccess } from '@duncit/dialogs'
  */
 export function NotifyDemo() {
   return (
-    <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }}>
+    <Stack
+      direction="row"
+      sx={{
+        flexWrap: "wrap",
+        gap: 1
+      }}>
       <Button variant="outlined" onClick={() => notify('Payout queued for the next settlement run.')}>
         notify
       </Button>

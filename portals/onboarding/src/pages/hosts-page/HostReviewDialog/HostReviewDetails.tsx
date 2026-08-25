@@ -23,7 +23,12 @@ function Section({ title, children }: Readonly<{ title: string; children: ReactN
   return (
     <>
       <Divider textAlign="left">
-        <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           {title}
         </Typography>
       </Divider>

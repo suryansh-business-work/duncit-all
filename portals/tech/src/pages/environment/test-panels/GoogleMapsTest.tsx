@@ -48,7 +48,9 @@ export default function GoogleMapsTest({ entry }: Readonly<{ entry: EnvEntry }>)
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Renders a live Google map using this entry's saved Maps API Key.
       </Typography>
       <Button startIcon={<MapIcon />} variant="contained" onClick={() => setLoad(true)} disabled={load}>

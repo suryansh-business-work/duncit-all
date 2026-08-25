@@ -43,7 +43,9 @@ export function DashboardToolbar({
 }: DashboardToolbarProps) {
   if (!editing) {
     return (
-      <Stack direction="row" justifyContent="flex-end">
+      <Stack direction="row" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button size="small" startIcon={<TuneIcon />} onClick={onStart}>
           {labels.customise}
         </Button>
@@ -55,14 +57,21 @@ export function DashboardToolbar({
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
       spacing={1}
-      alignItems={{ xs: 'stretch', sm: 'center' }}
-      justifyContent="space-between"
-      sx={{ p: 1, borderRadius: 2, bgcolor: 'action.hover' }}
-    >
-      <Typography variant="caption" color="text.secondary">
+      sx={{
+        alignItems: { xs: 'stretch', sm: 'center' },
+        justifyContent: "space-between",
+        p: 1,
+        borderRadius: 2,
+        bgcolor: 'action.hover'
+      }}>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         <strong>{labels.editing}</strong> — {labels.hint}
       </Typography>
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
+      <Stack direction="row" spacing={1} sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button size="small" color="inherit" startIcon={<RestartAltIcon />} onClick={onReset} disabled={saving}>
           {labels.reset}
         </Button>

@@ -55,9 +55,13 @@ export default function ChallengesPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <EmojiEventsIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>{t('challenge.list.title')}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>{t('challenge.list.title')}</Typography>
       </Stack>
 
       <ChallengesTable

@@ -17,13 +17,21 @@ export default function HostCategoriesCard() {
 
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px', p: { xs: 2, sm: 2.5 } }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1.25
+        }}>
         <CategoryRoundedIcon fontSize="small" color="primary" />
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           Your hosting categories
         </Typography>
       </Stack>
-      <Stack direction="row" useFlexGap flexWrap="wrap" spacing={1}>
+      <Stack direction="row" useFlexGap spacing={1} sx={{
+        flexWrap: "wrap"
+      }}>
         {categories.map((cat) => {
           const path = formatCategoryPath(cat);
           return <Chip key={path} label={path} sx={{ fontWeight: 600 }} />;

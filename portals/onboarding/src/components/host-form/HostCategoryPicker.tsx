@@ -41,7 +41,9 @@ export default function HostCategoryPicker({ existingSubIds, onAdd, disabled = f
 
   return (
     <Stack spacing={0.5}>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25} alignItems={{ md: 'flex-start' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25} sx={{
+        alignItems: { md: 'flex-start' }
+      }}>
         <AdminCategorySelect value={value} onChange={setValue} direction="row" disabled={disabled} />
         <Button
           variant="outlined" size="small" startIcon={<AddIcon />} disabled={!canAdd}

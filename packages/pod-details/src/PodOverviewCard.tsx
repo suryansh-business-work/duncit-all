@@ -41,7 +41,9 @@ export default function PodOverviewCard({ pod, showProducts }: Readonly<Props>) 
       {pod.pod_description && (
         <Box sx={{ mt: 2 }}>
           <Divider sx={{ mb: 1.5 }} />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Description
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>

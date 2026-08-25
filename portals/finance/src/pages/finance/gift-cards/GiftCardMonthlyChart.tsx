@@ -76,7 +76,11 @@ export default function GiftCardMonthlyChart({ buckets, loading }: Readonly<Prop
 
   // Computed above the JSX so the empty state never nests a ternary.
   let fallback = (
-    <Typography color="text.secondary" sx={{ pt: 4 }}>
+    <Typography
+      sx={{
+        color: "text.secondary",
+        pt: 4
+      }}>
       {t('finance.giftCards.logsEmpty')}
     </Typography>
   );

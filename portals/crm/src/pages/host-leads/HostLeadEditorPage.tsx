@@ -43,9 +43,13 @@ export default function HostLeadEditorPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" fontWeight={800}>{isEdit ? `Edit ${lead?.host_name}` : 'New Host Lead'}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>{isEdit ? `Edit ${lead?.host_name}` : 'New Host Lead'}</Typography>
         {!isEdit && aiPrefill && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             AI-prefilled draft — review every section before saving.
           </Typography>
         )}

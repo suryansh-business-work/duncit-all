@@ -26,7 +26,12 @@ function DefaultBody(props: Readonly<StatCardProps>) {
   const justify = iconPlacement === 'end' ? 'space-between' : 'flex-start';
   return (
     <>
-      <Stack direction="row" alignItems="center" justifyContent={justify} sx={mergeSx({ gap: 1, mb: 1 }, headerSx)}>
+      <Stack
+        direction="row"
+        sx={mergeSx({
+          alignItems: "center",
+          justifyContent: justify
+        }, mergeSx({ gap: 1, mb: 1 }, headerSx))}>
         {startIcon}
         <LabelText label={props.label} labelVariant={props.labelVariant ?? 'overline'} labelWeight={props.labelWeight} labelSx={props.labelSx} />
         {endIcon}
@@ -40,7 +45,12 @@ function DefaultBody(props: Readonly<StatCardProps>) {
 
 function ValueFirstBody(props: Readonly<StatCardProps>) {
   return (
-    <Stack direction="row" alignItems="center" sx={{ gap: 1.5 }}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        gap: 1.5
+      }}>
       <IconAdornment icon={props.icon} iconColor={props.iconColor} iconBox={props.iconBox} />
       <Box>
         <ValueBlock {...props} />
@@ -53,7 +63,13 @@ function ValueFirstBody(props: Readonly<StatCardProps>) {
 
 function SplitBody(props: Readonly<StatCardProps>) {
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ gap: 1 }}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 1
+      }}>
       <Box>
         <LabelText label={props.label} labelVariant={props.labelVariant ?? 'overline'} labelWeight={props.labelWeight} labelSx={props.labelSx} />
         <ValueBlock {...props} />

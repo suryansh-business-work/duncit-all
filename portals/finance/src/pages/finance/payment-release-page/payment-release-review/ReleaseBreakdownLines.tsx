@@ -89,14 +89,25 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
 
   return (
     <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Settlement breakdown
       </Typography>
       <Stack spacing={0.5} sx={{ mt: 1 }} divider={<Divider flexItem />}>
         {lines.map((line) => (
-          <Stack key={line.key} direction="row" justifyContent="space-between">
-            <Typography variant="body2" fontWeight={line.bold ? 700 : 400}>{line.label}</Typography>
-            <Typography variant="body2" fontWeight={line.bold ? 700 : 400}>{line.value}</Typography>
+          <Stack key={line.key} direction="row" sx={{
+            justifyContent: "space-between"
+          }}>
+            <Typography variant="body2" sx={{
+              fontWeight: line.bold ? 700 : 400
+            }}>{line.label}</Typography>
+            <Typography variant="body2" sx={{
+              fontWeight: line.bold ? 700 : 400
+            }}>{line.value}</Typography>
           </Stack>
         ))}
       </Stack>
@@ -115,7 +126,13 @@ function coinsNote(
   const earned = Math.max(0, Math.floor(Number(totals?.coins_earned_total) || 0));
   if (spent === 0 && earned === 0) return null;
   return (
-    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: 'block',
+        mt: 1
+      }}>
       {t('finance.paymentRelease.coinsNote', { vars: { spent, earned } })}
     </Typography>
   );

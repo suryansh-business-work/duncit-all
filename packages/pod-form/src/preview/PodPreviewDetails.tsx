@@ -20,7 +20,9 @@ function StatBox({ caption, value }: Readonly<{ caption: string; value: string }
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.06),
       }}
     >
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {caption}
       </Typography>
       <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>
@@ -52,16 +54,28 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
 
       <Stack spacing={2} sx={{ p: 2 }}>
         <Box>
-          <Typography variant="h5" fontWeight={800} sx={{ lineHeight: 1.1 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              lineHeight: 1.1
+            }}>
             {model.title}
           </Typography>
           {model.hostNames.length > 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mt: 0.5
+              }}>
               Hosted by {model.hostNames.join(', ')}
             </Typography>
           )}
           {model.clubName && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {model.clubName}
             </Typography>
           )}
@@ -80,7 +94,9 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
 
         {model.placeText && (
           <PreviewSection title={placeTitle}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {model.placeText}
             </Typography>
           </PreviewSection>
@@ -88,7 +104,12 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
 
         {model.description && (
           <PreviewSection title={t('podForm.preview.aboutThisPod')}>
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                whiteSpace: 'pre-line'
+              }}>
               {model.description}
             </Typography>
           </PreviewSection>
@@ -96,7 +117,12 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
 
         {model.info && (
           <PreviewSection title={t('podForm.preview.goodToKnow')}>
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                whiteSpace: 'pre-line'
+              }}>
               {model.info}
             </Typography>
           </PreviewSection>
@@ -122,7 +148,12 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
 
         {model.paymentTerms && (
           <PreviewSection title={t('podForm.common.paymentTerms')}>
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                whiteSpace: 'pre-line'
+              }}>
               {model.paymentTerms}
             </Typography>
           </PreviewSection>

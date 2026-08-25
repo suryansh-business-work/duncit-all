@@ -43,18 +43,24 @@ export default function PaymentFailureDialog({
           {/* The gateway's own words, never ours — a buyer ringing their bank
               needs the reason the bank will recognise. */}
           {failure.description && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.payment.gatewaySaid', { vars: { reason: failure.description } })}
             </Typography>
           )}
 
           {moneyAtRisk && (
             <Alert severity="info" icon={false}>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" sx={{
+                fontWeight: 600
+              }}>
                 {t('mweb.payment.moneySafe')}
               </Typography>
               {ticketPending && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('mweb.payment.ticketPending')}
                 </Typography>
               )}
@@ -64,7 +70,9 @@ export default function PaymentFailureDialog({
                 </Typography>
               )}
               {ticketFailed && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('mweb.payment.ticketFailed')}
                 </Typography>
               )}

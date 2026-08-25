@@ -1,5 +1,5 @@
 import { Avatar, Box, IconButton, Stack, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { formatDateTime } from '../../../utils/dateFormat';
 
 interface PostCommentListProps {
@@ -26,12 +26,16 @@ export default function PostCommentList({
           </Avatar>
           <Box>
             <Typography variant="body2">
-              <Typography component="span" fontWeight={700} variant="body2">
+              <Typography component="span" variant="body2" sx={{
+                fontWeight: 700
+              }}>
                 {post.author?.full_name ?? 'User'}
               </Typography>{' '}
               {post.caption}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {formatDateTime(post.created_at)}
             </Typography>
           </Box>
@@ -41,9 +45,11 @@ export default function PostCommentList({
       {sortedComments.length === 0 ? (
         <Typography
           variant="body2"
-          color="text.secondary"
-          sx={{ textAlign: 'center', py: 4 }}
-        >
+          sx={{
+            color: "text.secondary",
+            textAlign: 'center',
+            py: 4
+          }}>
           No comments yet. Be the first to comment.
         </Typography>
       ) : (
@@ -51,7 +57,9 @@ export default function PostCommentList({
           {sortedComments.map((c: any) => {
             const canRemove = c.author_id === meId || canDeletePost;
             return (
-              <Stack key={c.id} direction="row" spacing={1.5} alignItems="flex-start">
+              <Stack key={c.id} direction="row" spacing={1.5} sx={{
+                alignItems: "flex-start"
+              }}>
                 <Avatar
                   src={c.author?.profile_photo || undefined}
                   sx={{ width: 28, height: 28 }}
@@ -60,12 +68,16 @@ export default function PostCommentList({
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2">
-                    <Typography component="span" fontWeight={700} variant="body2">
+                    <Typography component="span" variant="body2" sx={{
+                      fontWeight: 700
+                    }}>
                       {c.author?.full_name ?? 'User'}
                     </Typography>{' '}
                     {c.text}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {formatDateTime(c.created_at)}
                   </Typography>
                 </Box>

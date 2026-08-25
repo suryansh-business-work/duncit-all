@@ -54,6 +54,8 @@ const baseEditor = (over: Partial<Editor> = {}): Editor =>
     loading: false,
     hasData: true,
     refetch: vi.fn().mockResolvedValue({}),
+    usageBySlug: new Map(),
+    refetchUsage: vi.fn().mockResolvedValue({}),
     selected: null,
     setSelected: vi.fn(),
     draft: null,
@@ -112,6 +114,26 @@ describe('EmailTemplatesPage', () => {
     // open create then send has no draft; drive send via a drafted panel is unavailable,
     // so assert the placeholder path renders and the dialog stays closed.
     expect(screen.getByText('Select a template from the left.')).toBeInTheDocument();
+  });
+
+  it('refreshes the counts after a test send, which writes a log row of its own', () => {
+    m.editor = baseEditor({ draft });
+    render(<EmailTemplatesPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'panel-sendtest' }));
+    fireEvent.click(screen.getByRole('button', { name: 'send-result' }));
+    expect(m.editor.refetchUsage).toHaveBeenCalled();
+  });
+
+  it('swallows a failed count refresh rather than breaking the send result', async () => {
+    m.editor = baseEditor({
+      draft,
+      refetchUsage: vi.fn().mockRejectedValue(new Error('offline')),
+    });
+    render(<EmailTemplatesPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'panel-sendtest' }));
+    fireEvent.click(screen.getByRole('button', { name: 'send-result' }));
+    await waitFor(() => expect(m.editor.refetchUsage).toHaveBeenCalled());
+    expect(m.editor.setSnack).toHaveBeenCalledWith({ kind: 'success', msg: 'sent' });
   });
 
   it('creates a template: refetch, select, success snack', async () => {

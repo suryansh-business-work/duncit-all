@@ -51,7 +51,9 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
     const renderStatus = (row: MailAutomationThread) => {
       if (row.replied_at) {
         return (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('support.mailAutomation.recentReplied', { vars: { when: when(row.replied_at) } })}
           </Typography>
         );
@@ -60,15 +62,25 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
         ? t('support.mailAutomation.recentFailed', { vars: { reason: row.reply_error } })
         : t('support.mailAutomation.recentPending');
       return (
-        <Typography variant="body2" color="error.main" title={row.reply_error || undefined}>
+        <Typography variant="body2" title={row.reply_error || undefined} sx={{
+          color: "error.main"
+        }}>
           {text}
         </Typography>
       );
     };
 
     const renderSubject = (row: MailAutomationThread) => (
-      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={600} noWrap title={row.subject}>
+      <Stack
+        direction="row"
+        spacing={0.75}
+        sx={{
+          alignItems: "center",
+          minWidth: 0
+        }}>
+        <Typography variant="body2" noWrap title={row.subject} sx={{
+          fontWeight: 600
+        }}>
           {row.subject}
         </Typography>
         {row.reply_by_ai && <SmartToyIcon fontSize="small" color="action" />}
@@ -119,7 +131,9 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle1" fontWeight={800}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 800
+      }}>
         {t('support.mailAutomation.recentTitle')}
       </Typography>
       <DuncitTable<MailAutomationThread>

@@ -27,10 +27,19 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
 
   return (
     <Box>
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         {t('mweb.giftCards.amountHeading')}
       </Typography>
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          flexWrap: "wrap",
+          mt: 1
+        }}>
         {settings.denominations.map((denomination) => {
           const active = amount === denomination;
           return (
@@ -52,8 +61,10 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
         onChange={(event) => onChange(event.target.value)}
         error={showError}
         helperText={rangeHint}
-        inputProps={{ min: settings.min_amount, max: settings.max_amount, inputMode: 'numeric' }}
         sx={{ mt: 1.5 }}
+        slotProps={{
+          htmlInput: { min: settings.min_amount, max: settings.max_amount, inputMode: 'numeric' }
+        }}
       />
     </Box>
   );

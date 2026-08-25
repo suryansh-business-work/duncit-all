@@ -60,10 +60,14 @@ export default function PodShopSliderPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography variant="h4" sx={{
+          fontWeight: 700
+        }}>
           Pod Shop Slider
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Manage the image/video slider shown at the top of the Pod Shop on the app and mWeb. The
           top item shows first — reorder with the arrows.
         </Typography>
@@ -72,7 +76,11 @@ export default function PodShopSliderPage() {
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
         <CardContent>
           {loading && !data ? (
-            <Stack alignItems="center" sx={{ p: 4 }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                p: 4
+              }}>
               <CircularProgress />
             </Stack>
           ) : (

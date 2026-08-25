@@ -32,7 +32,14 @@ export default function VoiceRecorderBar({
   const { t } = useTranslation();
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1, py: 0.5 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        px: 1,
+        py: 0.5
+      }}>
       <Tooltip title={t('shell.chat.voice.discard')}>
         <IconButton size="small" color="error" onClick={onCancel} aria-label={t('shell.chat.voice.discardLabel')}>
           <DeleteIcon fontSize="small" />
@@ -55,7 +62,14 @@ export default function VoiceRecorderBar({
         {clock(seconds)}
       </Typography>
 
-      <Stack direction="row" spacing="2px" alignItems="center" sx={{ flex: 1, height: 24 }}>
+      <Stack
+        direction="row"
+        spacing="2px"
+        sx={{
+          alignItems: "center",
+          flex: 1,
+          height: 24
+        }}>
         {Array.from({ length: BARS }, (_, index) => {
           // A standing wave whose HEIGHT is the live level: neighbouring bars
           // differ so it reads as sound rather than a progress bar.

@@ -34,13 +34,19 @@ export default function SavedItemsPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <BookmarkIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h5" sx={{
+            fontWeight: 600
+          }}>
             Saved Items
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Pods you saved from Explore.
           </Typography>
         </Box>

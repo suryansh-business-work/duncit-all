@@ -18,13 +18,19 @@ export default function LeaderboardSettingsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TuneIcon color="primary" />
         <Stack>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             {t('admin.leaderboard.settingsTitle')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('admin.leaderboard.settingsSubtitle')}
           </Typography>
         </Stack>

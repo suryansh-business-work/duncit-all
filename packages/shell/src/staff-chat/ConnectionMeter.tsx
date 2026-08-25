@@ -61,7 +61,9 @@ export default function ConnectionMeter({
         callbackFunctionOnNetworkTest={(speed: number) => setMbps(Number(speed) || 0)}
       />
 
-      <Stack direction="row" alignItems="center" spacing={0.75}>
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
         <Tooltip title={mbps === null ? 'Checking your connection' : `${mbps.toFixed(1)} MB/s`}>
           {slow ? (
             <SignalWifiStatusbarConnectedNoInternet4Icon sx={{ fontSize: 15, color: 'error.main' }} />
@@ -77,7 +79,12 @@ export default function ConnectionMeter({
           aria-label={t('shell.chat.call.quality')}
         />
         {slow && (
-          <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "error.main",
+              fontWeight: 700
+            }}>
             Slow connection
           </Typography>
         )}

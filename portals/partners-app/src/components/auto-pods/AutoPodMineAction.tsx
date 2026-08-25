@@ -31,7 +31,14 @@ export default function AutoPodMineAction({
   if (!status && !podHref) return null;
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
       {status ? <Chip size="small" color={statusColor} label={status} /> : null}
       {podHref ? (
         <Button size="small" component={RouterLink} to={podHref}>

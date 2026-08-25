@@ -29,7 +29,9 @@ type RowProps = Readonly<{
 
 function CategoryRow({ category, shownLabel, removeLabel, onChange, rows }: RowProps) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center">
+    <Stack direction="row" spacing={1.5} sx={{
+      alignItems: "center"
+    }}>
       <TextField
         size="small"
         value={category.label}
@@ -77,10 +79,14 @@ export default function CategoryList({ rows, onChange, onAdd }: Props) {
 
   return (
     <>
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         {t('support.problemSettings.categories')}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('support.problemSettings.categoriesHint')}
       </Typography>
 
@@ -97,7 +103,9 @@ export default function CategoryList({ rows, onChange, onAdd }: Props) {
         ))}
       </Stack>
 
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           size="small"
           label={t('support.problemSettings.newCategory')}

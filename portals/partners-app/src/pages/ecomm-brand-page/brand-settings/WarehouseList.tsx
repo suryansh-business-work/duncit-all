@@ -1,6 +1,6 @@
 import { Box, Button, Card, CardContent, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
@@ -46,17 +46,35 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="space-between">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+          justifyContent: "space-between"
+        }}>
           <Box sx={{ minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography fontWeight={900}>{warehouse.nickname}</Typography>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap"
+              }}>
+              <Typography sx={{
+                fontWeight: 900
+              }}>{warehouse.nickname}</Typography>
               {warehouse.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
               <Chip size="small" color={review.color} label={review.label} />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mt: 0.5
+              }}>
               {addressLine(warehouse)}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {warehouse.contact_name} · {warehouse.phone} · {warehouse.email}
             </Typography>
             {warehouse.review_status !== 'APPROVED' && (
@@ -65,7 +83,9 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
               </Typography>
             )}
           </Box>
-          <Stack direction="row" spacing={0.5} alignItems="flex-start">
+          <Stack direction="row" spacing={0.5} sx={{
+            alignItems: "flex-start"
+          }}>
             <Tooltip title={warehouse.is_default ? 'Default warehouse' : 'Make default'}>
               <span>
                 <IconButton
@@ -110,9 +130,16 @@ export default function WarehouseList({ warehouses, busy, onAdd, onEdit, onDelet
   return (
     <Stack spacing={1.5}>
       {warehouses.length === 0 && (
-        <Stack alignItems="center" spacing={1} sx={{ py: 3 }}>
+        <Stack
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            py: 3
+          }}>
           <WarehouseIcon color="disabled" sx={{ fontSize: 40 }} />
-          <Typography color="text.secondary">
+          <Typography sx={{
+            color: "text.secondary"
+          }}>
             No warehouses yet — add the location your products ship from.
           </Typography>
         </Stack>

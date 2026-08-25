@@ -21,7 +21,9 @@ export default function PodStatusChips({ pod }: Readonly<{ pod: any }>) {
   };
 
   return (
-    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={1} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       <Chip size="small" label={isFree ? 'Free' : `₹${pod.pod_amount}`} color="primary" />
       <Chip size="small" label={isVirtual ? 'Virtual' : 'Physical'} variant="outlined" />
       <Chip

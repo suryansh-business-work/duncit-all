@@ -29,9 +29,19 @@ interface Props {
 
 function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500}>{label}</Typography>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 600}>{value}</Typography>
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} sx={{
+        fontWeight: bold ? 700 : 500
+      }}>{label}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} sx={{
+        fontWeight: bold ? 700 : 600
+      }}>{value}</Typography>
     </Stack>
   );
 }
@@ -84,15 +94,31 @@ function LineRow({
   const variant = line.variant_label ? ` — ${line.variant_label}` : '';
   const label = `${line.product_name}${variant} × ${line.quantity}`;
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          minWidth: 0
+        }}>
         <LineThumb line={line} onInfo={onInfo} />
-        <Typography variant="body2" fontWeight={500} noWrap>{label}</Typography>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 500
+        }}>{label}</Typography>
         {lineQualifiesFreeDelivery(line) && (
           <Chip size="small" color="success" label={t('mweb.cart.freeDelivery')} sx={{ height: 18, fontSize: 11, fontWeight: 700 }} />
         )}
       </Stack>
-      <Typography variant="body2" fontWeight={700}>{fmt(line.unit_cost * line.quantity)}</Typography>
+      <Typography variant="body2" sx={{
+        fontWeight: 700
+      }}>{fmt(line.unit_cost * line.quantity)}</Typography>
     </Stack>
   );
 }
@@ -161,11 +187,23 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
   return (
     <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent sx={{ p: 1.75 }}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <ShoppingBagIcon sx={{ color: '#ff8b5f' }} />
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.orderSummary')}</Typography>
-            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.1 }}>{t('mweb.checkout.yourOrder')}</Typography>
+            <Typography
+              variant="subtitle1"
+              noWrap
+              sx={{
+                fontWeight: 700,
+                lineHeight: 1.1
+              }}>{t('mweb.checkout.yourOrder')}</Typography>
           </Box>
         </Stack>
         <Divider sx={{ my: 1 }} />
@@ -179,11 +217,18 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
           <Row label={t('mweb.checkout.subtotal')} value={fmt(subtotal)} />
           <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} />
           {estimated && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.checkout.deliveryEstimatedNote')}
             </Typography>
           )}
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>{t('mweb.checkout.inclusiveOf')}</Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5
+            }}>{t('mweb.checkout.inclusiveOf')}</Typography>
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />

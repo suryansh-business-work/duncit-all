@@ -148,25 +148,26 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
       sx={{
+        alignItems: "center",
         mb: message.text ? 0.5 : 0,
         p: 0.75,
         borderRadius: 1.5,
         border: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
-        maxWidth: 320,
-      }}
-    >
+        maxWidth: 320
+      }}>
       <Icon color="action" />
       <Stack sx={{ minWidth: 0, flex: 1 }}>
         <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
           {name}
         </Typography>
         {size && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {size}
           </Typography>
         )}

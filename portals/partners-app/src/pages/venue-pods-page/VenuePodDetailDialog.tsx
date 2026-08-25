@@ -68,22 +68,30 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
             {row.cancelled_at && <Row label={t('partners.common.cancelled')} value={fmtDate(row.cancelled_at)} />}
 
             <Divider sx={{ my: 1.5 }} />
-            <Typography variant="subtitle2" fontWeight={800} gutterBottom>
+            <Typography variant="subtitle2" gutterBottom sx={{
+              fontWeight: 800
+            }}>
               Who's coming
             </Typography>
             {loading && profiles.length === 0 && <CircularProgress size={20} />}
             {!loading && ids.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No attendees yet.
               </Typography>
             )}
             <Stack spacing={1}>
               {profiles.map((person) => (
-                <Stack key={person.user_id} direction="row" spacing={1.25} alignItems="center">
+                <Stack key={person.user_id} direction="row" spacing={1.25} sx={{
+                  alignItems: "center"
+                }}>
                   <Avatar src={person.profile_photo ?? undefined} sx={{ width: 30, height: 30 }}>
                     {(person.full_name?.[0] ?? '?').toUpperCase()}
                   </Avatar>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>
                     {person.full_name ?? 'Attendee'}
                   </Typography>
                 </Stack>

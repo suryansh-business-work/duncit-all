@@ -90,13 +90,19 @@ export default function ServerInfoPage() {
   const info = data?.techServerInfo;
 
   const header = (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <DnsIcon color="primary" />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="h5" fontWeight={800}>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>
           Server · Info
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Live metrics for the host running the API — CPU, memory, storage, uptime, SSH and SSL.
         </Typography>
       </Box>
@@ -118,7 +124,11 @@ export default function ServerInfoPage() {
         {header}
         {error && <Alert severity="error">Could not load server info: {error.message}</Alert>}
         {loading && (
-          <Stack alignItems="center" sx={{ py: 6 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 6
+            }}>
             <CircularProgress />
           </Stack>
         )}

@@ -15,10 +15,14 @@ const getRowId = (row: PodCancellationRow) => `${row.pod_id}-${row.kind}`;
 
 const renderPod = (row: PodCancellationRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 700
+    }}>
       {row.pod_title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.host_names.join(', ')}
     </Typography>
   </Stack>
@@ -34,7 +38,9 @@ const renderRefunds = (row: PodCancellationRow) => (
       {money(row.currency_symbol, row.refunded_total)} · {row.refunded_count} refunded
     </Typography>
     {row.unrefunded_count > 0 && (
-      <Typography variant="caption" color="warning.main" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "warning.main"
+      }}>
         {money(row.currency_symbol, row.unrefunded_total)} · {row.unrefunded_count} not refunded
       </Typography>
     )}

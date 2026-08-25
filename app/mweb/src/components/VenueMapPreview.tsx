@@ -23,8 +23,16 @@ export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Pro
 
   return (
     <Box sx={{ mt: 1.5 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.75 }}>
-        <Typography variant="caption" color="text.secondary">{t('mweb.venueMapPreview.mapPreview')}</Typography>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.75
+        }}>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>{t('mweb.venueMapPreview.mapPreview')}</Typography>
         <Button href={mapUrl} target="_blank" rel="noreferrer" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
           Open in Maps
         </Button>

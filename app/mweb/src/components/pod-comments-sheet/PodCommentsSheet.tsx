@@ -99,22 +99,28 @@ export default function PodCommentsSheet({
       anchor="bottom"
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          height: '70vh',
-          borderTopLeftRadius: '16px',
-          borderTopRightRadius: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-        },
+      slotProps={{
+        paper: {
+          sx: {
+            height: '70vh',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }
       }}
     >
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}
-      >
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 2,
+          py: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <Typography variant="h6">{t('mweb.podDetails.comments')}</Typography>
         <IconButton onClick={onClose}>
           <CloseIcon />
@@ -123,13 +129,22 @@ export default function PodCommentsSheet({
 
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
         {loading && !data && (
-          <Stack alignItems="center" sx={{ p: 4 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              p: 4
+            }}>
             <CircularProgress size={24} />
           </Stack>
         )}
         {error && <Alert severity="error" sx={{ m: 2 }}>{error.message}</Alert>}
         {!loading && comments.length === 0 && (
-          <Typography sx={{ p: 4, textAlign: 'center' }} color="text.secondary">
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 4,
+              textAlign: 'center'
+            }}>
             {t('mweb.podDetails.commentsEmpty')}
           </Typography>
         )}

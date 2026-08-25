@@ -19,11 +19,17 @@ export default function EnvironmentPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TuneIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800}>{t('shell.nav.environmentVariables')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('shell.nav.environmentVariables')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Manage credential entries per category, then map which entries each portal uses.
           </Typography>
         </Box>

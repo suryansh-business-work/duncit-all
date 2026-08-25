@@ -23,7 +23,9 @@ const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'mweb.explore.dateAny
 function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items: Array<[T, string]>; value: T; onChange: (value: T) => void }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={0.75} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       {items.map(([itemValue, labelKey]) => {
         const selected = value === itemValue;
         return (
@@ -62,7 +64,12 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }}>
             {t('mweb.explore.filtersTitle')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {t('mweb.explore.filtersSummary', { vars: { activeCount, resultCount } })}
           </Typography>
         </Box>
@@ -82,16 +89,33 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
     >
       <Stack spacing={2}>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.quickPresets')}</Typography>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>{t('mweb.explore.quickPresets')}</Typography>
           <ChipRow items={PRESETS} value={filters.preset} onChange={(preset) => setFilters({ ...filters, preset })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.sortBy')}</Typography>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>{t('mweb.explore.sortBy')}</Typography>
           <ChipRow items={SORTS} value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.vibe')}</Typography>
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>{t('mweb.explore.vibe')}</Typography>
+          <Stack direction="row" spacing={0.75} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             <Chip label={t('mweb.home.vibeAll')} clickable color={filters.categoryId ? 'default' : 'primary'} variant={filters.categoryId ? 'outlined' : 'filled'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 600 }} />
             {visibleCats.map((category: any) => {
               const selected = filters.categoryId === category.id;
@@ -109,11 +133,21 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           </Stack>
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.price')}</Typography>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>{t('mweb.explore.price')}</Typography>
           <ChipRow items={PRICES} value={filters.price} onChange={(price) => setFilters({ ...filters, price })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.when')}</Typography>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>{t('mweb.explore.when')}</Typography>
           <ChipRow items={DATES} value={filters.date} onChange={(date) => setFilters({ ...filters, date })} />
         </Stack>
       </Stack>

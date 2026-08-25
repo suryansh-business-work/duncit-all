@@ -17,7 +17,9 @@ interface Props {
 const getRoleRowId = (r: RoleRow) => r.id;
 
 const renderKey = (r: RoleRow) => (
-  <Typography variant="body2" fontWeight={600} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 600
+  }}>
     {r.key}
   </Typography>
 );
@@ -26,9 +28,10 @@ const renderPortal = (r: RoleRow) => {
   const portal = portalForRole(r.key);
   if (!portal) {
     return (
-      <Typography variant="body2" color="text.secondary" component="span">
-        —
-      </Typography>
+      <Typography variant="body2" component="span" sx={{
+        color: "text.secondary"
+      }}>—
+              </Typography>
     );
   }
   return (

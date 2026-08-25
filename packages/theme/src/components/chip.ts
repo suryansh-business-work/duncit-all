@@ -7,6 +7,9 @@ export const chip = (c: ThemeCtx): Components<Theme>['MuiChip'] => ({
   styleOverrides: {
     root: { borderRadius: c.t.radius.md, fontWeight: c.t.font.weight.medium, height: c.t.size.chipHeight, paddingInline: c.t.size.chipPadX },
     outlined: { borderColor: c.border, backgroundColor: c.surface },
-    filledPrimary: { backgroundColor: c.primary, color: c.white },
   },
+  // `filledPrimary` is no longer a Chip class in MUI 9 — match on props instead.
+  variants: [
+    { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: c.primary, color: c.white } },
+  ],
 });

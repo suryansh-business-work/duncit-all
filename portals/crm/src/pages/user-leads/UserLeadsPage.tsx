@@ -83,9 +83,17 @@ export default function UserLeadsPage() {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
-      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1.25}
+        sx={{
+          alignItems: "center",
+          mb: 2
+        }}>
         <PersonSearchIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>{t('shell.nav.whatsappLeads')}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>{t('shell.nav.whatsappLeads')}</Typography>
       </Stack>
 
       <LeadStatsBar reloadKey={reloadKey} />

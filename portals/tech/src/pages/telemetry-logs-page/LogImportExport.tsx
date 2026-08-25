@@ -98,7 +98,9 @@ export default function LogImportExport({ level, onImported }: Readonly<Props>) 
   };
 
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
+    <Stack direction="row" spacing={0.5} sx={{
+      alignItems: "center"
+    }}>
       <Button size="small" startIcon={<DownloadIcon />} disabled={exporting} onClick={runExport}>
         {exporting ? 'Exporting…' : 'Export'}
       </Button>

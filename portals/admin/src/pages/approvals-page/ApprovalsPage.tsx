@@ -81,13 +81,19 @@ export default function ApprovalsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <FactCheckIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Approve/Deny Requests
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Review approval requests coming in from across the portals.
           </Typography>
         </Box>

@@ -69,7 +69,13 @@ function IdeaDetailsBody({
 
   return (
     <>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
         <Avatar
           src={idea.author?.profile_photo || undefined}
           sx={{ width: 40, height: 40 }}
@@ -77,10 +83,14 @@ function IdeaDetailsBody({
           {(idea.author?.first_name?.[0] ?? 'U').toUpperCase()}
         </Avatar>
         <Box>
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {idea.author?.full_name ?? 'Member'}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {formatRelative(idea.created_at)}
           </Typography>
         </Box>
@@ -88,7 +98,13 @@ function IdeaDetailsBody({
       <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
         {idea.description}
       </Typography>
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: "center",
+          mb: 2
+        }}>
         <Button
           size="small"
           startIcon={
@@ -103,12 +119,16 @@ function IdeaDetailsBody({
         >
           {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}
         </Button>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {idea.shares_count} share{idea.shares_count === 1 ? '' : 's'}
         </Typography>
       </Stack>
       <Divider sx={{ mb: 1 }} />
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         Comments ({idea.comments_count})
       </Typography>
       <IdeaCommentsList

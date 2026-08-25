@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react';
 import { Avatar, Box, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { formatRelative } from './helpers';
@@ -49,7 +49,9 @@ export default function CommentsList({
               {(c.author_name || '?').slice(0, 1).toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Typography
                   variant="subtitle2"
                   onClick={() => onOpenProfile(c.author_id)}
@@ -60,7 +62,9 @@ export default function CommentsList({
                 >
                   {authorName}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatRelative(c.created_at)}
                 </Typography>
               </Stack>
@@ -68,7 +72,11 @@ export default function CommentsList({
                 {c.text}
               </Typography>
             </Box>
-            <Stack alignItems="center" sx={{ flex: '0 0 auto' }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                flex: '0 0 auto'
+              }}>
               <IconButton
                 size="small"
                 aria-label={t('mweb.podDetails.likeComment')}

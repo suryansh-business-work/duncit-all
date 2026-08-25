@@ -17,11 +17,20 @@ import { POD_EXPENSE_PODS_TABLE, type PodExpensePodRow } from './queries';
 const getPodRowId = (row: PodExpensePodRow) => row.pod_doc_id;
 
 const renderPod = (row: PodExpensePodRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} alignItems="flex-start">
-    <Typography variant="body2" fontWeight={700} component="span" noWrap>
+  <Stack
+    component="span"
+    sx={{
+      alignItems: "flex-start",
+      lineHeight: 1.2
+    }}>
+    <Typography variant="body2" component="span" noWrap sx={{
+      fontWeight: 700
+    }}>
       {row.pod_title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.pod_code}
     </Typography>
   </Stack>
@@ -73,7 +82,9 @@ export default function PodExpensePodsTable({
       );
     };
     const renderTotal = (row: PodExpensePodRow) => (
-      <Typography variant="body2" fontWeight={700} component="span">
+      <Typography variant="body2" component="span" sx={{
+        fontWeight: 700
+      }}>
         {money(row.expense_total)}
       </Typography>
     );

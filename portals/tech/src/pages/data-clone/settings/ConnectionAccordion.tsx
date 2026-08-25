@@ -53,7 +53,14 @@ export default function ConnectionAccordion({
   return (
     <Accordion defaultExpanded={!connection.connected} disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            flex: 1,
+            minWidth: 0
+          }}>
           <Typography sx={{ fontWeight: 700, flex: 1, minWidth: 0 }} noWrap>
             {label}
           </Typography>
@@ -68,14 +75,18 @@ export default function ConnectionAccordion({
       <AccordionDetails>
         <Stack spacing={2}>
           {connection.database && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {checkedLine}
             </Typography>
           )}
           {connection.lastTestError && <Alert severity="error">{connection.lastTestError}</Alert>}
           <DataCloneConnectionForm connection={connection} busy={busy} onSubmit={onSubmit} />
           {connection.hasUri && (
-            <Stack direction="row" justifyContent="flex-start">
+            <Stack direction="row" sx={{
+              justifyContent: "flex-start"
+            }}>
               <Button size="small" startIcon={<RefreshIcon />} onClick={onTest} disabled={busy}>
                 {t('tech.dataClone.retest')}
               </Button>

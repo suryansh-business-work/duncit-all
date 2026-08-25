@@ -108,7 +108,9 @@ export default function AdminsSection() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <AdminPanelSettingsIcon fontSize="small" color="action" />
         <Typography variant="subtitle2">{t('clubForm.common.clubAdmin')}</Typography>
       </Stack>
@@ -146,13 +148,17 @@ export default function AdminsSection() {
         }}
         renderOption={(optionProps, option) => (
           <li {...optionProps} key={option.user_id}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Stack direction="row" spacing={1.5} sx={{
+              alignItems: "center"
+            }}>
               <Avatar src={option.profile_photo ?? undefined} sx={{ width: 28, height: 28 }}>
                 {userLabel(option).charAt(0).toUpperCase()}
               </Avatar>
               <Stack>
                 <Typography variant="body2">{option.full_name || '—'}</Typography>
-                <Typography variant="caption" color="text.secondary">{option.email}</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{option.email}</Typography>
               </Stack>
             </Stack>
           </li>
@@ -165,14 +171,18 @@ export default function AdminsSection() {
             label={t('clubForm.adminsSection.assignClubAdmin')}
             placeholder={t('clubForm.adminsSection.searchClubAdminUsers')}
             helperText={error ?? 'One user administers this club. Picking another replaces the current one.'}
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <>
-                  {loading ? <CircularProgress size={16} /> : null}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
+            slotProps={{
+              ...params.slotProps,
+
+              input: {
+                ...params.slotProps.input,
+                endAdornment: (
+                  <>
+                    {loading ? <CircularProgress size={16} /> : null}
+                    {params.slotProps.input.endAdornment}
+                  </>
+                ),
+              }
             }}
           />
         )}

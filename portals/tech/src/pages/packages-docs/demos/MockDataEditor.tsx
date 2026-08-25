@@ -52,8 +52,15 @@ export default function MockDataEditor({ initial, onChange }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            flex: 1
+          }}>
           {t('tech.packagesDocs.mockHint')}
         </Typography>
         <Button

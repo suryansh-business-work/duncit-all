@@ -31,10 +31,21 @@ export interface InfoRowProps {
 function StackedRow({ label, value, labelVariant, labelWeight, valueWeight, sx, labelSx, valueSx }: Readonly<InfoRowProps>) {
   return (
     <Box sx={sx}>
-      <Typography variant={labelVariant ?? 'caption'} color="text.secondary" fontWeight={labelWeight ?? 700} display="block" sx={labelSx}>
+      <Typography
+        variant={labelVariant ?? 'caption'}
+        sx={[{
+          color: "text.secondary",
+          fontWeight: labelWeight ?? 700,
+          display: "block"
+        }, ...(Array.isArray(labelSx) ? labelSx : [labelSx])]}>
         {label}
       </Typography>
-      <Typography variant="body2" component="div" fontWeight={valueWeight} sx={valueSx}>
+      <Typography
+        variant="body2"
+        component="div"
+        sx={[{
+          fontWeight: valueWeight
+        }, ...(Array.isArray(valueSx) ? valueSx : [valueSx])]}>
         {value}
       </Typography>
     </Box>
@@ -43,16 +54,25 @@ function StackedRow({ label, value, labelVariant, labelWeight, valueWeight, sx, 
 
 function InlineRow({ label, value, labelWidth, labelVariant, labelWeight, valueWeight, sx, labelSx, valueSx }: Readonly<InfoRowProps>) {
   return (
-    <Stack direction="row" alignItems="baseline" sx={mergeSx({ gap: 1.5 }, sx)}>
+    <Stack
+      direction="row"
+      sx={mergeSx({
+        alignItems: "baseline"
+      }, mergeSx({ gap: 1.5 }, sx))}>
       <Typography
         variant={labelVariant ?? 'body2'}
-        color="text.secondary"
-        fontWeight={labelWeight}
-        sx={mergeSx({ minWidth: labelWidth ?? 96, flexShrink: 0 }, labelSx)}
-      >
+        sx={mergeSx({
+          color: "text.secondary",
+          fontWeight: labelWeight
+        }, mergeSx({ minWidth: labelWidth ?? 96, flexShrink: 0 }, labelSx))}>
         {label}
       </Typography>
-      <Typography variant="body2" component="div" fontWeight={valueWeight ?? 600} sx={mergeSx({ wordBreak: 'break-word' }, valueSx)}>
+      <Typography
+        variant="body2"
+        component="div"
+        sx={mergeSx({
+          fontWeight: valueWeight ?? 600
+        }, mergeSx({ wordBreak: 'break-word' }, valueSx))}>
         {value}
       </Typography>
     </Stack>
@@ -69,11 +89,25 @@ function SplitRow({ label, value, labelVariant, labelWeight, valueWeight, bold, 
   }
   const boldColorSx = bold && boldColor ? { color: boldColor } : {};
   return (
-    <Stack direction="row" justifyContent="space-between" sx={mergeSx({ gap: 2 }, sx)}>
-      <Typography variant={labelVariant ?? 'body2'} color={labelColor} fontWeight={resolvedLabelWeight} sx={labelSx}>
+    <Stack
+      direction="row"
+      sx={mergeSx({
+        justifyContent: "space-between"
+      }, mergeSx({ gap: 2 }, sx))}>
+      <Typography
+        variant={labelVariant ?? 'body2'}
+        color={labelColor}
+        sx={[{
+          fontWeight: resolvedLabelWeight
+        }, ...(Array.isArray(labelSx) ? labelSx : [labelSx])]}>
         {label}
       </Typography>
-      <Typography variant="body2" component="div" fontWeight={resolvedValueWeight} sx={mergeSx({ textAlign: 'right', ...boldColorSx }, valueSx)}>
+      <Typography
+        variant="body2"
+        component="div"
+        sx={mergeSx({
+          fontWeight: resolvedValueWeight
+        }, mergeSx({ textAlign: 'right', ...boldColorSx }, valueSx))}>
         {value}
       </Typography>
     </Stack>

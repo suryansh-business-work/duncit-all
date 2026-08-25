@@ -62,7 +62,11 @@ export default function WaSettings({
     pricingCard = <Alert severity="error">{parseApiError(error, 'Could not read the rates')}</Alert>;
   } else if (loading && !initialValues) {
     pricingCard = (
-      <Stack alignItems="center" sx={{ py: 5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -71,10 +75,14 @@ export default function WaSettings({
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack spacing={2}>
           <Stack spacing={0.25}>
-            <Typography variant="subtitle1" fontWeight={800}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 800
+            }}>
               Message pricing
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               What one message costs, by the category WhatsApp bills on. A send freezes the rate it
               was created under, so past costs never move when these change.
             </Typography>

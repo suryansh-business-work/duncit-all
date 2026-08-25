@@ -80,8 +80,10 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
             type="number"
             value={commission}
             onChange={(event) => setCommission(event.target.value)}
-            inputProps={{ min: 5, max: 50, step: 1, 'aria-label': 'Product commission percentage' }}
             helperText="5–50% Duncit cut. Blank keeps current."
+            slotProps={{
+              htmlInput: { min: 5, max: 50, step: 1, 'aria-label': 'Product commission percentage' }
+            }}
           />
         </Stack>
       </DialogContent>

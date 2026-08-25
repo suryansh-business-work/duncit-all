@@ -2,6 +2,12 @@
 // The old address. Policies live at /policy/<slug> now; this stays so that
 // every link already printed in an email, a receipt or another site's footer
 // still lands on the right page instead of 404ing.
+//
+// The line below is only ever seen if the inline redirect does not run, but it
+// is still a sentence somebody reads, so it comes from the catalogue too.
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 ---
 
 <!doctype html>
@@ -19,6 +25,6 @@
     </script>
   </head>
   <body>
-    <p>Policies moved to their own addresses. <a href="/policies">See all policies</a>.</p>
+    <p>{t('website.main.policyRedirect.moved')} <a href="/policies">{t('website.main.policyRedirect.seeAll')}</a>.</p>
   </body>
 </html>

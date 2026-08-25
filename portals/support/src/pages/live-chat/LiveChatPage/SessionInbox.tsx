@@ -57,7 +57,13 @@ export default function SessionInbox({
         flexDirection: 'column',
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 0.5 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          pr: 0.5
+        }}>
         <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
           Chat with Us
         </Typography>

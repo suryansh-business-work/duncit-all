@@ -17,11 +17,26 @@ interface RowProps {
 /** One label/value line in the read-only contact card. */
 function ContactRow({ label, value }: Readonly<RowProps>) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="caption" color="text.secondary" sx={{ width: 56, flex: '0 0 auto', fontWeight: 600 }}>
+    <Stack direction="row" spacing={1.5} sx={{
+      alignItems: "baseline"
+    }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          width: 56,
+          flex: '0 0 auto',
+          fontWeight: 600
+        }}>
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={700} sx={{ minWidth: 0, wordBreak: 'break-word' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 700,
+          minWidth: 0,
+          wordBreak: 'break-word'
+        }}>
         {value || '—'}
       </Typography>
     </Stack>
@@ -31,8 +46,17 @@ function ContactRow({ label, value }: Readonly<RowProps>) {
 /** Placeholder line shown while the `me` query is still loading. */
 function ContactRowSkeleton({ label }: Readonly<{ label: string }>) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="caption" color="text.secondary" sx={{ width: 56, flex: '0 0 auto', fontWeight: 600 }}>
+    <Stack direction="row" spacing={1.5} sx={{
+      alignItems: "baseline"
+    }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          width: 56,
+          flex: '0 0 auto',
+          fontWeight: 600
+        }}>
         {label}
       </Typography>
       <Skeleton variant="text" width="62%" sx={{ minWidth: 0 }} />
@@ -63,7 +87,12 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
 
   return (
     <Stack spacing={1.25}>
-      <Typography variant="overline" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         {t('mweb.checkout.contactDetails')}
       </Typography>
       <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
@@ -81,7 +110,9 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
           </>
         )}
       </Stack>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.checkout.contactEditNote')}
       </Typography>
     </Stack>

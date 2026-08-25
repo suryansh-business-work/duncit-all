@@ -18,7 +18,9 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
   const [lightbox, setLightbox] = useState<number | null>(null);
   if (!club) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.clubUnavailable')}
       </Typography>
     );
@@ -32,14 +34,25 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        sx={{
+          alignItems: { xs: 'flex-start', sm: 'center' }
+        }}
       >
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%', flex: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            width: '100%',
+            flex: 1
+          }}>
           <Avatar src={cover || undefined} sx={{ width: 48, height: 48 }}>
             {club.club_name?.[0]?.toUpperCase() ?? 'C'}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={600} noWrap>
+            <Typography variant="subtitle1" noWrap sx={{
+              fontWeight: 600
+            }}>
               {club.club_name}
             </Typography>
             {categoryCrumbs.length > 0 && (
@@ -50,14 +63,13 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
             {club.club_description && (
               <Typography
                 variant="caption"
-                color="text.secondary"
                 sx={{
+                  color: "text.secondary",
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
+                  overflow: 'hidden'
+                }}>
                 {club.club_description}
               </Typography>
             )}

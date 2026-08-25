@@ -39,7 +39,9 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
   const current = items[index];
 
   return (
-    <Dialog open onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ sx: { bgcolor: 'common.black' } }}>
+    <Dialog open onClose={onClose} maxWidth="lg" fullWidth slotProps={{
+      paper: { sx: { bgcolor: 'common.black' } }
+    }}>
       <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 320, md: 520 } }}>
         <IconButton
           onClick={onClose}

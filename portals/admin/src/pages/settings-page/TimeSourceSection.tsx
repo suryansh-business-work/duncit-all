@@ -100,14 +100,17 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={1}
-          sx={{ mb: 2 }}
-        >
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: 2
+          }}>
           <Box>
             <Typography variant="subtitle1">{t('admin.settings.timeTitle')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Where every app reads &quot;now&quot; from, and the zone dates are shown in. Also
               decides which occasion icons are active.
             </Typography>
@@ -160,7 +163,9 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
               </MenuItem>
             ))}
           </TextField>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {SOURCE_OPTIONS.find((o) => o.value === source)?.hint}
           </Typography>
 

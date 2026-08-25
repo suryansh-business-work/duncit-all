@@ -44,17 +44,24 @@ export default function OverallStatusBanner({ overall, lastUpdated }: Readonly<B
     <Paper variant="outlined" sx={{ px: 2.5, py: 1.75, mb: 4 }}>
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        flexWrap="wrap"
-        gap={1}
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1
+        }}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <StatusDot state={status.severity} size={12} />
-          <Typography fontWeight={700}>{status.message}</Typography>
+          <Typography sx={{
+            fontWeight: 700
+          }}>{status.message}</Typography>
         </Stack>
         {lastUpdated && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('status.board.lastChecked', { vars: { time: lastUpdated.toLocaleTimeString() } })}
           </Typography>
         )}

@@ -91,7 +91,11 @@ export default function PodAttendanceView({
 
   if (api.loading) {
     return (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
@@ -99,7 +103,9 @@ export default function PodAttendanceView({
 
   if (!board) {
     return (
-      <Stack spacing={1.5} alignItems="flex-start">
+      <Stack spacing={1.5} sx={{
+        alignItems: "flex-start"
+      }}>
         <Alert severity="error">{api.errorText}</Alert>
         <Button onClick={api.refetch} variant="outlined" sx={{ borderRadius: 999 }}>
           {labels.retry}
@@ -118,7 +124,9 @@ export default function PodAttendanceView({
       {board.can_mark ? <EarningsNotice labels={labels} /> : <LockedNotice lock={board.lock} labels={labels} />}
 
       {board.rows.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {labels.emptyRoster}
         </Typography>
       )}

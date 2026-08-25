@@ -126,6 +126,35 @@ export const emailLogTypeDefs = /* GraphQL */ `
     repeat_failures: [EmailLogFailingAddress!]!
   }
 
+  """
+  How much use one template has seen, counted from this log.
+
+  Derived rather than stored: the number is a link INTO the log, and a counter
+  on the template document would go on claiming 128 after the rows behind it
+  were deleted. Raw-HTML sends carry no slug and are not counted.
+  """
+  type EmailTemplateUsage {
+    "The template slug these rows carry. Matches EmailTemplate.slug."
+    slug: String!
+    "Attempts that actually went out."
+    sent: Int!
+    "Attempts deliberately not sent — a disabled template, a suppressed address."
+    skipped: Int!
+    "Attempts that tried and failed."
+    failed: Int!
+    "Every attempt, whatever became of it."
+    total: Int!
+    """
+    When it last actually went out, or null for a template that never has.
+
+    Null while total is non-zero is a real and important state: a template that
+    has only ever failed. It is not the same as never used.
+    """
+    last_sent_at: String
+    "The most recent attempt of any status."
+    last_attempt_at: String
+  }
+
   extend type Query {
     "Every email attempt, newest first. Filter by status, category, source, template."
     emailLogsTable(query: TableQueryInput): EmailLogTablePage!
@@ -134,6 +163,14 @@ export const emailLogTypeDefs = /* GraphQL */ `
     emailLogStats(days: Int): EmailLogStats!
     "Deliverability over the last N days. Defaults to 7, capped at 90."
     emailLogDashboard(range_days: Int): EmailLogDashboard!
+    """
+    Send counts and last-used dates, one entry per template slug.
+
+    Beside the log rather than beside the templates because every figure in it
+    is read off EmailLog — and deliberately NOT a field on EmailTemplate, which
+    would be one aggregation per row on a page listing thirty-five of them.
+    """
+    emailTemplateUsage: [EmailTemplateUsage!]!
   }
 
   extend type Mutation {

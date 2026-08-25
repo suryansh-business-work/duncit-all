@@ -39,7 +39,11 @@ export default function SlackSettingsPage() {
 
   if (configured.loading && !configured.data) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -48,7 +52,9 @@ export default function SlackSettingsPage() {
   if (!isConfigured) {
     return (
       <Stack spacing={2.5}>
-        <Typography variant="h4" fontWeight={950}>
+        <Typography variant="h4" sx={{
+          fontWeight: 950
+        }}>
           {t('tech.slack.title')}
         </Typography>
         <Alert severity="warning">{t('tech.slack.notConfigured')}</Alert>
@@ -58,12 +64,21 @@ export default function SlackSettingsPage() {
 
   return (
     <Stack spacing={2} sx={{ height: '100%' }}>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "flex-start",
+          justifyContent: "space-between"
+        }}>
         <Box>
-          <Typography variant="h4" fontWeight={950}>
+          <Typography variant="h4" sx={{
+            fontWeight: 950
+          }}>
             {t('tech.slack.title')}
           </Typography>
-          <Typography color="text.secondary">{t('tech.slack.subtitle')}</Typography>
+          <Typography sx={{
+            color: "text.secondary"
+          }}>{t('tech.slack.subtitle')}</Typography>
         </Box>
         {/* Every failure below is a permissions question; this is the answer. */}
         <SlackPermissionsButton />
@@ -72,7 +87,11 @@ export default function SlackSettingsPage() {
           the raw message is the actionable text — render it as-is. */}
       {error && <Alert severity="error">{error.message}</Alert>}
       {loading && !data && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress />
         </Stack>
       )}

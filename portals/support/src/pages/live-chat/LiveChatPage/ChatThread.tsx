@@ -53,7 +53,13 @@ export default function ChatThread({ session, messages, typingLabel }: Readonly<
           </Box>
         )}
         {typingLabel && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', pl: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontStyle: 'italic',
+              pl: 1
+            }}>
             {typingLabel}
           </Typography>
         )}

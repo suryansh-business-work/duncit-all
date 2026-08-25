@@ -23,7 +23,9 @@ export default function SpendBars({ rows, emptyText }: Readonly<{ rows: readonly
 
   if (rows.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {emptyText}
       </Typography>
     );
@@ -33,11 +35,19 @@ export default function SpendBars({ rows, emptyText }: Readonly<{ rows: readonly
     <Stack spacing={1.25}>
       {rows.map((row) => (
         <Box key={row.id}>
-          <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ mb: 0.25 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              justifyContent: "space-between",
+              mb: 0.25
+            }}>
             <Typography variant="caption" noWrap title={row.label} sx={{ maxWidth: '60%' }}>
               {row.label}
             </Typography>
-            <Typography variant="caption" fontWeight={700}>
+            <Typography variant="caption" sx={{
+              fontWeight: 700
+            }}>
               {usd(row.cost_usd)}
             </Typography>
           </Stack>
@@ -51,7 +61,9 @@ export default function SpendBars({ rows, emptyText }: Readonly<{ rows: readonly
               }}
             />
           </Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {formatDateTime(row.calls)} calls · {tokens(row.tokens)} tokens
           </Typography>
         </Box>

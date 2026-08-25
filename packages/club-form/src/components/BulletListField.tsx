@@ -1,6 +1,6 @@
 import { Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { requiredLabel } from './requiredLabel';
 import type { ClubFormValues } from '../types';
@@ -24,16 +24,22 @@ export default function BulletListField({ name, label, helperText, error, requir
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {requiredLabel(label, required)}
       </Typography>
       {helperText && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {helperText}
         </Typography>
       )}
       {fields.map((field, index) => (
-        <Stack key={field.id} direction="row" spacing={1} alignItems="center">
+        <Stack key={field.id} direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Controller
             control={control}
             name={`${name}.${index}` as const}

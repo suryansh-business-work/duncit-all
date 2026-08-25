@@ -1,8 +1,8 @@
 import { Box, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import {
   isLive,
   isStaleRunning,
@@ -84,7 +84,9 @@ export const renderBuild = (row: AppBuildRow) => (
     <Typography variant="body2" noWrap title={row.build_name || row.build_no}>
       {row.build_name || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary">
+    <Typography variant="caption" sx={{
+      color: "text.secondary"
+    }}>
       {row.build_no}
     </Typography>
   </Box>
@@ -98,7 +100,9 @@ export const renderCommit = (row: AppBuildRow) => {
         {row.commit_sha ? row.commit_sha.slice(0, 7) : '—'}
       </Typography>
       {subject && (
-        <Typography variant="caption" color="text.secondary" noWrap title={subject}>
+        <Typography variant="caption" noWrap title={subject} sx={{
+          color: "text.secondary"
+        }}>
           {subject}
         </Typography>
       )}
@@ -130,7 +134,9 @@ export const makeRenderTriggeredBy = (labels: Record<string, string>) => {
       <Typography variant="body2" noWrap title={row.triggered_by}>
         {row.triggered_by || '—'}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {labels[row.trigger_source] ?? row.trigger_source}
       </Typography>
     </Box>

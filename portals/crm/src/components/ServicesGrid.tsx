@@ -22,9 +22,11 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
-        sx={{ color: 'text.secondary', py: 1 }}
-      >
+        sx={{
+          alignItems: "center",
+          color: 'text.secondary',
+          py: 1
+        }}>
         <HandymanIcon fontSize="small" />
         <Typography variant="body2">{t('crm.components.noServicesTaggedYet')}</Typography>
       </Stack>
@@ -42,18 +44,32 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
         const name = displayName(s);
         return (
           <Card key={`${name}-${idx}`} variant="outlined" sx={{ p: 1.25 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }} useFlexGap flexWrap="wrap">
-              <Typography variant="subtitle2" fontWeight={700} noWrap>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap",
+                mb: 0.5
+              }}>
+              <Typography variant="subtitle2" noWrap sx={{
+                fontWeight: 700
+              }}>
                 {name}
               </Typography>
               {s.service === 'Other' && <Chip label={t('crm.common.custom')} size="small" variant="outlined" />}
             </Stack>
             {s.description ? (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {s.description}
               </Typography>
             ) : (
-              <Typography variant="caption" color="text.disabled">
+              <Typography variant="caption" sx={{
+                color: "text.disabled"
+              }}>
                 No description.
               </Typography>
             )}

@@ -44,12 +44,16 @@ export default function RestoreProgress({ job }: Readonly<{ job: RestoreJob }>) 
           })}
         </Typography>
         {running && job.currentCollection && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dbBackup.restoreCurrent', { vars: { name: job.currentCollection } })}
           </Typography>
         )}
         {!running && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dbBackup.restoreFinishedAt', {
               vars: { when: formatDateTime(job.finishedAt) },
             })}

@@ -34,7 +34,12 @@ export default function CallbackHistory() {
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Previous callbacks
       </Typography>
       <Stack spacing={1.25} sx={{ mt: 1 }}>
@@ -42,8 +47,16 @@ export default function CallbackHistory() {
           const dur = durationLabel(c.duration_seconds);
           return (
             <Paper key={c.id} variant="outlined" sx={{ p: 1.25, borderRadius: '16px' }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                <Typography variant="caption" color="text.secondary">
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatDateTime(c.created_at)}
                 </Typography>
                 <Chip size="small" color={STATUS_COLOR[c.status]} label={c.status} />
@@ -54,7 +67,13 @@ export default function CallbackHistory() {
                 </Typography>
               )}
               {(c.contacted_at || dur || c.conclusion) && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    display: 'block',
+                    mt: 0.5
+                  }}>
                   {c.contacted_at && `Called ${formatDateTime(c.contacted_at)}`}
                   {dur && ` · ${dur}`}
                   {c.conclusion && ` · ${c.conclusion}`}

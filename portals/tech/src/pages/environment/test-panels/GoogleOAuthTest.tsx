@@ -40,8 +40,12 @@ export default function GoogleOAuthTest() {
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
           <Avatar src={profile.picture} />
           <Box>
-            <Typography variant="body2" fontWeight={700}>{profile.name}</Typography>
-            <Typography variant="caption" color="text.secondary">{profile.email}</Typography>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>{profile.name}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{profile.email}</Typography>
           </Box>
         </Box>
       )}

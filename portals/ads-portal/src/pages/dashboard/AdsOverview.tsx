@@ -27,12 +27,25 @@ function EmptyState() {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Stack spacing={1.5} alignItems="center" sx={{ py: 4, textAlign: 'center' }}>
+        <Stack
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            py: 4,
+            textAlign: 'center'
+          }}>
           <CampaignOutlinedIcon color="primary" sx={{ fontSize: 48 }} />
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             No ads yet
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 420 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              maxWidth: 420
+            }}>
             Submit your first ad request — you get an instant cost estimate, and the Marketing
             team confirms the final price on approval.
           </Typography>
@@ -53,8 +66,16 @@ function EmptyState() {
 function RecentSection() {
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle1" fontWeight={700}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           Recent requests
         </Typography>
         <Button component={RouterLink} to="/ads" size="small">
@@ -71,13 +92,16 @@ function OverviewBody({ stats }: Readonly<{ stats: AdsDashboardStats }>) {
     <Stack spacing={2.5}>
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
         useFlexGap
-        flexWrap="wrap"
-        sx={{ gap: 1 }}
-      >
-        <Typography variant="subtitle1" fontWeight={700}>
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1
+        }}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           Ads overview
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} component={RouterLink} to={CREATE_AD_PATH}>

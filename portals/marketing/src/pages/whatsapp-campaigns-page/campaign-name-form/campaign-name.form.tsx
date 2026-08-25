@@ -49,7 +49,9 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
           size="small"
           hint=" "
         />
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button type="submit" startIcon={<AddIcon />} variant="outlined" disabled={busy || !isValid}>
             Add
           </Button>

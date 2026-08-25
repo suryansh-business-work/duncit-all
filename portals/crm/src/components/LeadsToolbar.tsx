@@ -33,10 +33,20 @@ export default function LeadsToolbar({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }} justifyContent="space-between">
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      spacing={1.5}
+      sx={{
+        alignItems: { md: 'center' },
+        justifyContent: "space-between"
+      }}>
       <Box>
-        <Typography variant="h5" fontWeight={800}>{title}</Typography>
-        {subtitle && <Typography variant="body2" color="text.secondary">{subtitle}</Typography>}
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>{title}</Typography>
+        {subtitle && <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{subtitle}</Typography>}
       </Box>
       <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', md: 'auto' }, flexWrap: 'wrap' }} useFlexGap>
         {onManageServices && (

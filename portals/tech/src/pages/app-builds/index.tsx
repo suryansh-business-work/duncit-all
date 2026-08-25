@@ -103,12 +103,22 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          mb: 2
+        }}>
         <Stack>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             {title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {subtitle}
           </Typography>
         </Stack>

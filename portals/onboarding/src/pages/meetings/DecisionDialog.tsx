@@ -62,7 +62,12 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
       <DialogTitle>{t('onboarding.meetings.approveOrDenyOnboarding')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           Review {meeting?.user_name || meeting?.contact_name || 'the applicant'}'s survey answers and add your
           feedback. Approving drafts them into the Onboarded list; denying asks them to re-apply.
         </Typography>

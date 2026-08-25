@@ -55,12 +55,18 @@ export default function WarehouseApprovalPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        justifyContent: "space-between"
+      }}>
         <Box>
-          <Typography variant="h4" fontWeight={950}>
+          <Typography variant="h4" sx={{
+            fontWeight: 950
+          }}>
             Warehouse Approval
           </Typography>
-          <Typography color="text.secondary">
+          <Typography sx={{
+            color: "text.secondary"
+          }}>
             Approve partner warehouses before they can be used for shipping.
           </Typography>
         </Box>
@@ -80,7 +86,11 @@ export default function WarehouseApprovalPage() {
 
       {error && <Alert severity="error">{error.message}</Alert>}
       {loading && !data ? (
-        <Stack alignItems="center" sx={{ py: 6 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 6
+          }}>
           <CircularProgress />
         </Stack>
       ) : null}
@@ -92,18 +102,28 @@ export default function WarehouseApprovalPage() {
         {rows.map((row) => (
           <Card key={row.id} variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Stack direction="row" spacing={1} alignItems="flex-start">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "flex-start"
+              }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="subtitle1" fontWeight={900} noWrap>
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
+                    <Typography variant="subtitle1" noWrap sx={{
+                      fontWeight: 900
+                    }}>
                       {row.title}
                     </Typography>
                     <Chip size="small" color={STATUS_COLOR[row.status] ?? 'default'} label={row.status} />
                   </Stack>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     {row.summary}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {row.requested_by_name ? `By ${row.requested_by_name} · ` : ''}
                     {fmtDate(row.created_at)}
                   </Typography>

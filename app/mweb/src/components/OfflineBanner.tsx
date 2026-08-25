@@ -14,9 +14,17 @@ export default function OfflineBanner() {
       aria-live="polite"
       sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 2, py: 0.75 }}
     >
-      <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
         <WifiOffIcon fontSize="small" />
-        <Typography variant="body2" fontWeight={600}>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
           No internet connection
         </Typography>
       </Stack>

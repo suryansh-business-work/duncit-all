@@ -91,12 +91,21 @@ export default function GiftCardFace({
       <Box
         sx={{ position: 'absolute', inset: 0, background: showArtwork ? ARTWORK_SCRIM : GRADIENT_SHEEN }}
       />
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1} sx={{ zIndex: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          zIndex: 1
+        }}>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" sx={{ opacity: 0.85, letterSpacing: 1.2, lineHeight: 1.6, display: 'block' }}>
             {t('mweb.giftCards.title')}
           </Typography>
-          <Typography variant={compact ? 'body2' : 'subtitle1'} fontWeight={700} noWrap>
+          <Typography variant={compact ? 'body2' : 'subtitle1'} noWrap sx={{
+            fontWeight: 700
+          }}>
             {title}
           </Typography>
         </Box>
@@ -120,7 +129,12 @@ export default function GiftCardFace({
       </Stack>
       <Box sx={{ zIndex: 1 }}>
         {isFront && (
-          <Typography variant={compact ? 'h6' : 'h4'} fontWeight={800} sx={{ lineHeight: 1.1 }}>
+          <Typography
+            variant={compact ? 'h6' : 'h4'}
+            sx={{
+              fontWeight: 800,
+              lineHeight: 1.1
+            }}>
             {formatMoney(amount, { symbol: currencySymbol })}
           </Typography>
         )}

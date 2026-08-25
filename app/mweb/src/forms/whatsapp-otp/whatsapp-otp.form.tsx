@@ -87,7 +87,7 @@ export function WhatsAppVerifyForm({
         required
         hint="4–8 digit code"
         size="small"
-        inputProps={{ inputMode: 'numeric', maxLength: 8 }}
+        slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 8 } }}
       />
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
         <Button type="submit" variant="contained" fullWidth disabled={loading}>

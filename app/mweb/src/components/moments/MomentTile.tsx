@@ -1,5 +1,5 @@
 import { Box, ButtonBase } from '@mui/material';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 
 interface Props {
   url: string;

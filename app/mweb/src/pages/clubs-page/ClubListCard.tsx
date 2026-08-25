@@ -46,7 +46,13 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
         )}
       </Box>
       <CardContent sx={{ pt: 0.75, '&:last-child': { pb: 1.5 } }}>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.75 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 0.75
+          }}>
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700, lineHeight: 1.15 }} noWrap>
             {club.club_name}
           </Typography>
@@ -55,9 +61,14 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
         {club.club_description && (
           <Typography
             variant="body2"
-            color="text.secondary"
-            sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 40 }}
-          >
+            sx={{
+              color: "text.secondary",
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              minHeight: 40
+            }}>
             {club.club_description}
           </Typography>
         )}

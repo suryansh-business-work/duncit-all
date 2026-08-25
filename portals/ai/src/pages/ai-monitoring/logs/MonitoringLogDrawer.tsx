@@ -29,7 +29,9 @@ export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
       <Box sx={{ width: { xs: '100vw', sm: 460 }, p: 2.5 }}>
         {row && (
           <Stack spacing={2}>
-            <Typography variant="h6" fontWeight={700}>
+            <Typography variant="h6" sx={{
+              fontWeight: 700
+            }}>
               {row.file_name || 'Uploaded image'}
             </Typography>
 
@@ -46,7 +48,9 @@ export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
               }}
             />
 
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               <Chip size="small" label={row.status} color={STATUS_COLOR[row.status]} />
               <Chip
                 size="small"
@@ -79,7 +83,9 @@ export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
             <Divider />
 
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Reason / comment
               </Typography>
               <Typography variant="body2">{row.summary || '—'}</Typography>

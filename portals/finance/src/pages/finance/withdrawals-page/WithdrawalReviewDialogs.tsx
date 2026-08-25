@@ -48,7 +48,9 @@ export default function WithdrawalReviewDialogs({
       <Typography variant="body2" sx={{ fontWeight: 700, wordBreak: 'break-word' }}>
         {`Pay to: ${payoutTarget(payTarget)}`}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         The amount was already held when the request was raised.
       </Typography>
     </Stack>

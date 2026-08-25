@@ -104,7 +104,7 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
         options={availableOptions}
         value={selectedNames}
         onChange={handleChange as never}
-        renderTags={() => null /* rows are rendered below with description editors */}
+        renderValue={() => null /* rows are rendered below with description editors */}
         renderInput={(params) => (
           <TextField
             {...params}
@@ -117,7 +117,9 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
       />
 
       {fields.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No services added yet.
         </Typography>
       ) : (
@@ -127,7 +129,15 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
             const label = displayName(current) || 'Untitled service';
             return (
               <Card key={row.id} variant="outlined" sx={{ p: 1.5 }}>
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} useFlexGap flexWrap="wrap">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    mb: 1
+                  }}>
                   <Chip label={label} color="primary" variant="outlined" size="small" sx={{ fontWeight: 600 }} />
                   {current.service === 'Other' && <Chip label={t('crm.common.custom')} size="small" variant="outlined" />}
                   <Box sx={{ flex: 1 }} />

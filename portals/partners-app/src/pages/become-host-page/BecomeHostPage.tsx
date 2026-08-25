@@ -81,7 +81,9 @@ export default function BecomeHostPage() {
   return (
     <Stack spacing={2.25}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
-        <Stack direction="row" alignItems="flex-start" spacing={1.25}>
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box sx={{ flex: 1 }}>
             <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
             <Typography variant="h4" sx={{ fontWeight: 950 }}>{isHost ? 'Your hosting' : 'Become a host'}</Typography>
@@ -104,7 +106,13 @@ export default function BecomeHostPage() {
             <CardContent>
               <HostStepContent step={step} s1={s1} s2={s2} s3={s3} set1={setS1} set2={setS2} set3={setS3} openPicker={setPicker} />
               {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
-              <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  mt: 3,
+                  justifyContent: "space-between"
+                }}>
                 <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
                 <Button variant="contained" onClick={next} disabled={busy || locked}>{step === 3 ? 'Submit' : 'Next'}</Button>
               </Stack>

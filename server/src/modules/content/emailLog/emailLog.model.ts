@@ -115,6 +115,10 @@ const emailLogSchema = new Schema<IEmailLog>(
 // category — this is the index that view reads.
 emailLogSchema.index({ created_at: -1 });
 emailLogSchema.index({ status: 1, created_at: -1 });
+// The template column is read two ways and both are this index: the table
+// narrowed to one slug newest-first — where a template's send count links to —
+// and the per-template roll-up that produces that count.
+emailLogSchema.index({ template: 1, created_at: -1 });
 
 export const EmailLogModel =
   (mongoose.models.EmailLog as mongoose.Model<IEmailLog>) ||

@@ -48,21 +48,24 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
           <Stack
             direction="row"
             spacing={1}
-            alignItems="center"
             role="button"
             tabIndex={0}
             aria-label={`Open ${club.club_name} club`}
-            sx={{ cursor: 'pointer' }}
             onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
             onDoubleClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if ((e.key === 'Enter' || e.key === ' ') && club.club_id) navigate(`/club/${club.club_id}`);
             }}
-          >
+            sx={{
+              alignItems: "center",
+              cursor: 'pointer'
+            }}>
             <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
               <GroupsIcon sx={{ fontSize: 15 }} />
             </Box>
-            <Typography variant="subtitle2" fontWeight={700} noWrap>
+            <Typography variant="subtitle2" noWrap sx={{
+              fontWeight: 700
+            }}>
               {club.club_name}
             </Typography>
             {club.is_verified && (
@@ -70,7 +73,13 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             )}
           </Stack>
         )}
-        <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.05, textShadow: '0 2px 12px rgba(0,0,0,0.36)' }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 700,
+            lineHeight: 1.05,
+            textShadow: '0 2px 12px rgba(0,0,0,0.36)'
+          }}>
           {pod.pod_title}
         </Typography>
         {description && (
@@ -96,7 +105,14 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             )}
           </Box>
         )}
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <Chip
             size="small"
             label={isFree ? 'Free' : format(pod.pod_amount)}

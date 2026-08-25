@@ -19,17 +19,25 @@ export default function UserHealthSection({ userId }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       <Stack>
-        <Typography variant="h6" fontWeight={900}>
+        <Typography variant="h6" sx={{
+          fontWeight: 900
+        }}>
           Account Health
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Default score is 100. Use the Adjust action to decrease or increase it with a remark
           — remarks are visible to the user when they tap their meter.
         </Typography>
       </Stack>
 
       {loading && !data && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress size={24} />
         </Stack>
       )}

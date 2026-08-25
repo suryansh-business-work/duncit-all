@@ -16,7 +16,7 @@ import {
   Box,
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import { isPodActive, podStatus, podStatusChip } from '../utils/podStatus';
 import { formatDateTime } from '../utils/dateFormat';
@@ -93,7 +93,11 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
 
   if (loading && !data)
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -110,13 +114,21 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       }}
     >
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <ChatBubbleOutlineIcon color="primary" />
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Chats
           </Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5,
+            fontWeight: 700
+          }}>
           {rooms.length} pod {rooms.length === 1 ? 'chat' : 'chats'} connected right now
         </Typography>
       </Box>
@@ -125,14 +137,16 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         placeholder={t('mweb.chatsPage.searchChatsByPodName')}
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }
+        }}
       />
       <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
         {POD_FILTERS.map(([value, label]) => (
@@ -141,7 +155,13 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       </Stack>
       {filter === 'ALL' && rooms.length > 0 && (
         <Box sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
-          <Typography variant="caption" color="success.main" sx={{ fontWeight: 700, letterSpacing: 0.6 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "success.main",
+              fontWeight: 700,
+              letterSpacing: 0.6
+            }}>
             ACTIVE PODS · {rooms.length}
           </Typography>
           <Stack direction="row" spacing={1.25} sx={{ mt: 1.25, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
@@ -163,39 +183,62 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
           {visibleRooms.map((p: any) => {
             const statusChip = podStatusChip(podStatus(p.pod_date_time, p.pod_end_date_time));
             return (
-            <Card key={p.id} variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'background.paper', overflow: 'hidden' }}>
-              <CardActionArea onClick={() => navigate(`/chats/${p.id}`)}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Avatar src={p.cover_url || undefined} variant="rounded" sx={{ width: 58, height: 58, borderRadius: '16px', bgcolor: 'primary.main' }}>
-                      <GroupsIcon />
-                    </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
-                        {p.pod_title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap display="block">
-                        {p.pod_date_time
-                          ? formatDateTime(p.pod_date_time)
-                          : 'Pod chat'}
-                      </Typography>
-                      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
-                        <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
-                        <Typography variant="caption" color="text.secondary">
-                          {/* Identity, deliberately: this counts who is IN the
-                              chat, and a multi-seat buyer is one person in it.
-                              Do not seat-adjust it the way occupancy was. */}
-                          {p.pod_attendees?.length || 0}{p.no_of_spots ? `/${p.no_of_spots}` : ''} members
+              <Card key={p.id} variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'background.paper', overflow: 'hidden' }}>
+                <CardActionArea onClick={() => navigate(`/chats/${p.id}`)}>
+                  <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                    <Stack direction="row" spacing={1.25} sx={{
+                      alignItems: "center"
+                    }}>
+                      <Avatar src={p.cover_url || undefined} variant="rounded" sx={{ width: 58, height: 58, borderRadius: '16px', bgcolor: 'primary.main' }}>
+                        <GroupsIcon />
+                      </Avatar>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
+                          {p.pod_title}
                         </Typography>
-                      </Stack>
-                    </Box>
-                    <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700, flex: '0 0 auto' }}>
-                      Open
-                    </Typography>
-                  </Stack>
-                </CardContent>
-              </CardActionArea>
-            </Card>
+                        <Typography
+                          variant="caption"
+                          noWrap
+                          sx={{
+                            color: "text.secondary",
+                            display: "block",
+                            fontWeight: 700
+                          }}>
+                          {p.pod_date_time
+                            ? formatDateTime(p.pod_date_time)
+                            : 'Pod chat'}
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={0.75}
+                          sx={{
+                            alignItems: "center",
+                            mt: 0.75
+                          }}>
+                          <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
+                          <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                          }}>
+                            {/* Identity, deliberately: this counts who is IN the
+                                chat, and a multi-seat buyer is one person in it.
+                                Do not seat-adjust it the way occupancy was. */}
+                            {p.pod_attendees?.length || 0}{p.no_of_spots ? `/${p.no_of_spots}` : ''} members
+                          </Typography>
+                        </Stack>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "primary.main",
+                          fontWeight: 700,
+                          flex: '0 0 auto'
+                        }}>
+                        Open
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
             );
           })}
         </Stack>

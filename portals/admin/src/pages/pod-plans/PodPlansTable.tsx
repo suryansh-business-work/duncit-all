@@ -26,7 +26,9 @@ const descriptionSnippet = (r: PlanRow) => {
 };
 
 const renderName = (r: PlanRow) => (
-  <Stack direction="row" spacing={1.5} alignItems="center" component="span">
+  <Stack direction="row" spacing={1.5} component="span" sx={{
+    alignItems: "center"
+  }}>
     {r.image_url && (
       <Box
         component="img"
@@ -36,10 +38,22 @@ const renderName = (r: PlanRow) => (
       />
     )}
     <Box sx={{ lineHeight: 1.2 }} component="span">
-      <Typography variant="body2" fontWeight={600} component="span" display="block">
+      <Typography
+        variant="body2"
+        component="span"
+        sx={{
+          fontWeight: 600,
+          display: "block"
+        }}>
         {r.name}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="span" display="block">
+      <Typography
+        variant="caption"
+        component="span"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {descriptionSnippet(r)}
       </Typography>
     </Box>

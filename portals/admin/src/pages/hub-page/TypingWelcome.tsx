@@ -20,7 +20,13 @@ export default function TypingWelcome() {
   }, [target]);
 
   return (
-    <Typography variant="h4" fontWeight={700} gutterBottom sx={{ minHeight: 44 }}>
+    <Typography
+      variant="h4"
+      gutterBottom
+      sx={{
+        fontWeight: 700,
+        minHeight: 44
+      }}>
       {text}
       <Typography component="span" color="primary" aria-hidden="true">|</Typography>
     </Typography>

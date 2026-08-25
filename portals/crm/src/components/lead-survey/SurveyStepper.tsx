@@ -70,14 +70,20 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
         </Stepper>
       )}
       <Stack spacing={1.75}>
-        <Typography variant="subtitle1" fontWeight={800}>{active.title}</Typography>
-        {active.help && <Typography variant="body2" color="text.secondary">{active.help}</Typography>}
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 800
+        }}>{active.title}</Typography>
+        {active.help && <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{active.help}</Typography>}
         {active.questions.map((q) => (
           <SurveyQuestionField key={q.qid} question={q} answer={get(q.qid)} onChange={(patch) => set(q.qid, patch)} />
         ))}
       </Stack>
       {error && <Alert severity="warning">{error}</Alert>}
-      <Stack direction="row" spacing={1.5} justifyContent="space-between">
+      <Stack direction="row" spacing={1.5} sx={{
+        justifyContent: "space-between"
+      }}>
         <Button disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</Button>
         {isLast ? (
           <Button variant="contained" onClick={submit} disabled={submitting}>{submitting ? 'Saving…' : submitLabelText}</Button>

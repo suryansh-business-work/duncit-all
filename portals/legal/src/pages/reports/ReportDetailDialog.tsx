@@ -79,7 +79,9 @@ export default function ReportDetailDialog({
     <Dialog open={!!report} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         {t('reportLogs.detailTitle', { vars: { report_no: report?.report_no ?? '' } })}
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {subtitle}
         </Typography>
         <IconButton
@@ -94,7 +96,12 @@ export default function ReportDetailDialog({
         <Stack spacing={2}>
           <ReportPreview report={report} />
           <Box>
-            <Typography variant="overline" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {t('reportLogs.colReason')}
             </Typography>
             <Typography variant="body2">
@@ -102,7 +109,12 @@ export default function ReportDetailDialog({
             </Typography>
           </Box>
           <Box>
-            <Typography variant="overline" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {t('reportLogs.detailDetails')}
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

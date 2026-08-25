@@ -10,7 +10,9 @@ export default function AuthenticationPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('shell.nav.authentication')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Configure how login sessions and access tokens behave across the platform.
         </Typography>
       </Box>

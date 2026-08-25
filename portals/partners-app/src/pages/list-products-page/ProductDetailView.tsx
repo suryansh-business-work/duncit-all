@@ -15,7 +15,9 @@ const categoryLabel = (category: any): string =>
 function CategoryChips({ categories }: Readonly<{ categories: any[] }>) {
   if (!categories?.length) return null;
   return (
-    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={1} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       {categories.map((category) => (
         <Chip
           key={`${category.super_category_id ?? ''}-${category.category_id ?? ''}-${category.sub_category_id ?? ''}`}
@@ -51,14 +53,20 @@ function VariantCard({ variant, index }: Readonly<{ variant: any; index: number 
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1}>
-          <Typography fontWeight={800}>{variant.option_label || `Variant ${index + 1}`}</Typography>
+          <Typography sx={{
+            fontWeight: 800
+          }}>{variant.option_label || `Variant ${index + 1}`}</Typography>
           <VariantImages images={Array.isArray(variant.images) ? variant.images : []} />
-          {variant.description && <Typography color="text.secondary" variant="body2">{variant.description}</Typography>}
+          {variant.description && <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{variant.description}</Typography>}
           <Typography variant="body2">
             {currency.format(Number(variant.unit_cost) || 0)} · {Number(variant.inventory_count) || 0} in stock
             {variant.size_label ? ` · Size ${variant.size_label}` : ''}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {dims[0]} × {dims[1]} × {dims[2]} cm · {Number(variant.weight_kg) || 0} kg
           </Typography>
         </Stack>
@@ -73,19 +81,33 @@ export default function ProductDetailView({ product }: Readonly<{ product: any }
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-            <Typography variant="h6" fontWeight={950}>{product.product_name}</Typography>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
+            <Typography variant="h6" sx={{
+              fontWeight: 950
+            }}>{product.product_name}</Typography>
             <StatusChip status={product.listing_review_status} colorMap={STATUS_COLORS} fallbackColor="warning" />
           </Stack>
           <CategoryChips categories={product.categories ?? []} />
-          {product.description && <Typography color="text.secondary">{product.description}</Typography>}
+          {product.description && <Typography sx={{
+            color: "text.secondary"
+          }}>{product.description}</Typography>}
           <Typography variant="body2">
             Delivery: {product.delivery_target === 'SHIPROCKET' ? 'ShipRocket' : product.delivery_target} · Commission:{' '}
             {product.commission_pct ?? 0}%
           </Typography>
-          {product.listing_review_notes && <Typography variant="body2" color="text.secondary">Review notes: {product.listing_review_notes}</Typography>}
+          {product.listing_review_notes && <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>Review notes: {product.listing_review_notes}</Typography>}
           <Divider />
-          <Typography variant="subtitle2" fontWeight={800}>Variants ({variants.length})</Typography>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>Variants ({variants.length})</Typography>
           <Stack spacing={1.5}>
             {variants.map((variant, index) => (
               <VariantCard key={variant.id ?? variant.sku ?? variant.option_label} variant={variant} index={index} />

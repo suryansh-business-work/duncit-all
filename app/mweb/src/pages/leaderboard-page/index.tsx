@@ -57,7 +57,11 @@ export default function LeaderboardPage() {
   const config = configData?.leaderboardConfig ?? null;
 
   const spinner = (
-    <Stack alignItems="center" sx={{ py: 4 }}>
+    <Stack
+      sx={{
+        alignItems: "center",
+        py: 4
+      }}>
       <CircularProgress size={24} />
     </Stack>
   );
@@ -77,7 +81,9 @@ export default function LeaderboardPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.leaderboard.title')}
         </Typography>
 

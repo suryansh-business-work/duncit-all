@@ -75,8 +75,16 @@ export default function BadgesPage() {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" fontWeight={700}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2
+        }}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           Badges
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={startCreate}>

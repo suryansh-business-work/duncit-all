@@ -26,9 +26,18 @@ const POLL_MS = 10_000;
 /** Shown until a channel is picked — the pane is half the page, so it says why. */
 function EmptyPane({ hint }: Readonly<{ hint: string }>) {
   return (
-    <Stack alignItems="center" justifyContent="center" spacing={1} sx={{ height: '100%', p: 4 }}>
+    <Stack
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        justifyContent: "center",
+        height: '100%',
+        p: 4
+      }}>
       <ForumOutlinedIcon sx={{ fontSize: 48 }} color="disabled" />
-      <Typography color="text.secondary">{hint}</Typography>
+      <Typography sx={{
+        color: "text.secondary"
+      }}>{hint}</Typography>
     </Stack>
   );
 }
@@ -74,7 +83,11 @@ export default function ConversationPane({ channel, onChannelsChanged }: Readonl
         </Alert>
       )}
       {isFirstLoad && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress />
         </Stack>
       )}

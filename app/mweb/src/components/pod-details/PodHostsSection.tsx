@@ -18,7 +18,9 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!hosts || hosts.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.hostsEmpty')}
       </Typography>
     );
@@ -30,15 +32,14 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
           key={h.user_id}
           direction="row"
           spacing={1.5}
-          alignItems="center"
           onClick={() => navigate(`/u/${h.user_id}`)}
           sx={{
+            alignItems: "center",
             cursor: 'pointer',
             p: 0.75,
             borderRadius: 1,
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-        >
+            '&:hover': { bgcolor: 'action.hover' }
+          }}>
           <Avatar
             src={h.profile_photo || h.passport_photo_url || undefined}
             sx={{ width: 40, height: 40 }}
@@ -46,10 +47,14 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
             {h.full_name?.[0]?.toUpperCase() ?? 'H'}
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" fontWeight={600}>
+            <Typography variant="body2" sx={{
+              fontWeight: 600
+            }}>
               {h.full_name || t('mweb.podDetails.host')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.podDetails.host')}
             </Typography>
           </Box>

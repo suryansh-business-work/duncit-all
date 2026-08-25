@@ -24,17 +24,20 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
     <Box sx={{ minWidth: 0 }}>
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ mb: 1.5 }}
-      >
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1.5
+        }}>
         <Stack
           direction="row"
-          alignItems="center"
           spacing={1.5}
-          sx={{ minWidth: 0, cursor: 'pointer' }}
           onClick={() => navigate(clubUrl(club.club_id))}
-        >
+          sx={{
+            alignItems: "center",
+            minWidth: 0,
+            cursor: 'pointer'
+          }}>
           <Avatar
             src={club.club_feature_images_and_videos?.[0]?.url}
             variant="rounded"
@@ -48,20 +51,25 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
             <GroupsIcon />
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.15 }} noWrap>
+            <Typography
+              variant="subtitle1"
+              noWrap
+              sx={{
+                fontWeight: 700,
+                lineHeight: 1.15
+              }}>
               {club.club_name}
             </Typography>
             {club.club_description && (
               <Typography
                 variant="caption"
-                color="text.secondary"
                 sx={{
+                  color: "text.secondary",
                   display: '-webkit-box',
                   WebkitLineClamp: 1,
                   WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
+                  overflow: 'hidden'
+                }}>
                 {club.club_description}
               </Typography>
             )}
@@ -72,7 +80,9 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
 
       {clubPods.length === 0 ? (
         <Card variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No upcoming pods in this club for the selected city.
           </Typography>
         </Card>

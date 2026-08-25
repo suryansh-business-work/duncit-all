@@ -135,7 +135,9 @@ export function RichTextToolbar({ compact, editor }: Readonly<Props>) {
           active={editor.isActive('link')}
           onPress={() => setLinkOpen(true)}
         >
-          <LinkIcon fontSize="small" />
+          <LinkIcon sx={{
+            fontSize: "small"
+          }} />
         </ToolbarButton>
         <ToolbarButton
           label={label('removeLink')}

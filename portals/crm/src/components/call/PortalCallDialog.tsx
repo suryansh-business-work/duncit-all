@@ -93,7 +93,9 @@ export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <PhoneInTalkIcon color="primary" />
           <span>Call · {lead?.displayName ?? ''}</span>
         </Stack>
@@ -101,7 +103,12 @@ export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
         {!placed && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 1
+            }}>
             A direct two-way call from your Twilio number to this contact.
           </Typography>
         )}

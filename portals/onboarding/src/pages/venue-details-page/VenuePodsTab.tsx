@@ -22,10 +22,14 @@ export default function VenuePodsTab({ venueId }: Readonly<{ venueId: string }>)
   return (
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
-        <Typography variant="h6" fontWeight={900}>
+        <Typography variant="h6" sx={{
+          fontWeight: 900
+        }}>
           Pods at this venue
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Every pod hosted here — live and upcoming. Deactivating or deleting the venue is blocked while pods are attached.
         </Typography>
       </Stack>

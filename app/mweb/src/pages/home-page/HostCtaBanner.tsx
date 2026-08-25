@@ -35,7 +35,9 @@ export default function HostCtaBanner({
       <AutoAwesomeIcon
         sx={{ position: 'absolute', top: 12, right: 14, fontSize: 20, opacity: 0.9 }}
       />
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 44,

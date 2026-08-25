@@ -49,11 +49,19 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
           <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
             {title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {caption}
           </Typography>
         </Box>
-        <Stack direction="row" alignItems="center" spacing={0.25} sx={{ color }}>
+        <Stack
+          direction="row"
+          spacing={0.25}
+          sx={{
+            alignItems: "center",
+            color
+          }}>
           <Typography variant="caption" sx={{ fontWeight: 700 }}>
             Open
           </Typography>

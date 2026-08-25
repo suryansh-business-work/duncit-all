@@ -1,29 +1,44 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
 ---
 
 <PageLayout
-  title="Our Safety Approach"
-  eyebrow="Safety Hub"
-  heading="Our approach to safety"
-  intro="Safety isn't a feature we bolted on — it's the foundation we built on."
+  title={t('website.main.safetyApproach.title')}
+  eyebrow={t('website.main.safetyApproach.eyebrow')}
+  heading={t('website.main.safetyApproach.heading')}
+  intro={t('website.main.safetyApproach.intro')}
   heroImage="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1600&q=80&auto=format&fit=crop"
 >
-  <h2>Our principles</h2>
+  <h2>{t('website.main.safetyApproach.principlesHeading')}</h2>
   <ul>
-    <li><strong>Prevention over reaction.</strong> Smart defaults, smart limits, smart matching.</li>
-    <li><strong>Humans in the loop.</strong> Every report goes to a real person, fast.</li>
-    <li><strong>Transparency.</strong> Clear rules, clear consequences, no shadow bans.</li>
-    <li><strong>User control.</strong> You decide who sees you, what you share, and when.</li>
+    <li>
+      <strong>{t('website.main.safetyApproach.principle1Label')}</strong>
+      {t('website.main.safetyApproach.principle1Text')}
+    </li>
+    <li>
+      <strong>{t('website.main.safetyApproach.principle2Label')}</strong>
+      {t('website.main.safetyApproach.principle2Text')}
+    </li>
+    <li>
+      <strong>{t('website.main.safetyApproach.principle3Label')}</strong>
+      {t('website.main.safetyApproach.principle3Text')}
+    </li>
+    <li>
+      <strong>{t('website.main.safetyApproach.principle4Label')}</strong>
+      {t('website.main.safetyApproach.principle4Text')}
+    </li>
   </ul>
 
-  <h2>How we do it</h2>
-  <p>We combine machine learning for pattern detection with a 24/7 human review team trained in trauma-informed care. We partner with leading non-profits and report transparently every quarter.</p>
+  <h2>{t('website.main.safetyApproach.howHeading')}</h2>
+  <p>{t('website.main.safetyApproach.howText')}</p>
 
-  <h2>Read more</h2>
+  <h2>{t('website.main.safetyApproach.readHeading')}</h2>
   <ul>
-    <li><a href="/safety/advice">Safety advice for users</a></li>
-    <li><a href="/safety/tools">In-app safety tools</a></li>
-    <li><a href="/safety/resources">Crisis resources</a></li>
+    <li><a href="/safety/advice">{t('website.main.safetyApproach.readAdvice')}</a></li>
+    <li><a href="/safety/tools">{t('website.main.safetyApproach.readTools')}</a></li>
+    <li><a href="/safety/resources">{t('website.main.safetyApproach.readResources')}</a></li>
   </ul>
 </PageLayout>

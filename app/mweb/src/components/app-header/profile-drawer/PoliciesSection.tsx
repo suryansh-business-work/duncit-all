@@ -40,7 +40,9 @@ export default function PoliciesSection({
           </ListItemIcon>
           <ListItemText
             primary={t('mweb.common.policies')}
-            primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
+            slotProps={{
+              primary: { sx: { fontSize: 14, fontWeight: 500 } }
+            }}
           />
           {policiesOpen ? (
             <ExpandLessIcon fontSize="small" />
@@ -62,7 +64,9 @@ export default function PoliciesSection({
                 </ListItemIcon>
                 <ListItemText
                   primary={p.title}
-                  primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}
+                  slotProps={{
+                    primary: { sx: { fontSize: 13, fontWeight: 500 } }
+                  }}
                 />
               </ListItemButton>
             </ListItem>

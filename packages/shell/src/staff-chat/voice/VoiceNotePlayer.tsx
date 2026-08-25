@@ -63,7 +63,13 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
   };
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 220 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        minWidth: 220
+      }}>
       <Box
         component="audio"
         ref={audioRef}
@@ -90,13 +96,16 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
       <Stack
         direction="row"
         spacing="2px"
-        alignItems="center"
-        sx={{ flex: 1, height: 28, cursor: 'pointer' }}
         onClick={(event) => {
           const box = event.currentTarget.getBoundingClientRect();
           seekTo(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)));
         }}
-      >
+        sx={{
+          alignItems: "center",
+          flex: 1,
+          height: 28,
+          cursor: 'pointer'
+        }}>
         {bars.map((peak, index) => (
           <Box
             // The bars come from one immutable array whose order is the audio's
@@ -113,7 +122,12 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
         ))}
       </Stack>
 
-      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 34 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          minWidth: 34
+        }}>
         {clock(playing || at > 0 ? total - at : total)}
       </Typography>
 

@@ -80,14 +80,32 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         overflow: 'hidden',
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            minWidth: 0
+          }}>
           <StorefrontIcon sx={{ color: '#ff8b5f' }} />
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="overline" sx={{ color: mutedColor, letterSpacing: 0, lineHeight: 1 }}>
               Pod Shop
             </Typography>
-            <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{
+                alignItems: "center",
+                minWidth: 0
+              }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
                 Products
               </Typography>
@@ -98,7 +116,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
       </Stack>
 
       {requests.length === 0 ? (
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mt: 2
+          }}>
           <Typography variant="body2" sx={{ color: mutedColor }}>
             No products available yet.
           </Typography>
@@ -117,16 +141,15 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               key={`${item.product_id}-${item.product_name}`}
               direction="row"
               spacing={1}
-              alignItems="center"
               sx={{
+                alignItems: "center",
                 p: 1,
                 borderRadius: '16px',
                 border: '1px solid',
                 borderColor: selected ? selectedBorder : borderColor,
                 bgcolor: selected ? selectedBg : itemBg,
-                transition: 'all 0.18s ease',
-              }}
-            >
+                transition: 'all 0.18s ease'
+              }}>
               <Box sx={{ width: 54, height: 54, borderRadius: '16px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
                 {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </Box>
@@ -146,9 +169,17 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                     </Button>
                   </Box>
                 )}
-                {selected && <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
+                {selected && <Stack
+                  direction="row"
+                  spacing={0.75}
+                  sx={{
+                    alignItems: "center",
+                    mt: 0.75
+                  }}>
                   <IconButton size="small" aria-label={`Decrease ${item.product_name}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
-                  <Typography variant="body2" fontWeight={700}>{quantity}</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 700
+                  }}>{quantity}</Typography>
                   <IconButton size="small" aria-label={`Increase ${item.product_name}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
                 </Stack>}
               </Box>
@@ -175,7 +206,12 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           The shop is currently closed.
         </Typography>
       ) : (
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Typography variant="caption" sx={{ color: mutedColor }}>
             {productCountLabel(selectedCount)}
           </Typography>

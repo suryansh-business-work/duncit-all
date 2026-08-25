@@ -20,7 +20,13 @@ export default function EmailTemplateEditorPage() {
   const back = () => navigate('/email-templates');
 
   if (editor.loading && !editor.draft) {
-    return <Stack alignItems="center" sx={{ py: 6 }}><CircularProgress /></Stack>;
+    return (
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}><CircularProgress /></Stack>
+    );
   }
   if (!editor.draft) {
     return (
@@ -33,10 +39,19 @@ export default function EmailTemplateEditorPage() {
 
   return (
     <Stack spacing={2} sx={{ minHeight: 0 }}>
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <BackButton onClick={back}>{t('crm.emailTemplates.backToTemplates')}</BackButton>
         <Box sx={{ flex: 1 }} />
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           <code>{editor.draft.slug}</code>
         </Typography>
       </Stack>

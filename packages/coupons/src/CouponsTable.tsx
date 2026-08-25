@@ -1,6 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import {
   DuncitTable,
   actionsColumn,
@@ -33,11 +33,23 @@ const getCouponRowId = (c: CouponRow) => c.id;
 
 const renderCode = (c: CouponRow) => (
   <Box sx={{ lineHeight: 1.2 }} component="span">
-    <Typography fontWeight={800} variant="body2" component="span" display="block">
+    <Typography
+      variant="body2"
+      component="span"
+      sx={{
+        fontWeight: 800,
+        display: "block"
+      }}>
       {c.code}
     </Typography>
     {c.description && (
-      <Typography variant="caption" color="text.secondary" component="span" display="block">
+      <Typography
+        variant="caption"
+        component="span"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {c.description}
       </Typography>
     )}

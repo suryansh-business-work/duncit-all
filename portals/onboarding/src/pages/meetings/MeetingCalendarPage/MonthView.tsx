@@ -35,7 +35,15 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
         {WEEKDAYS.map((d) => (
-          <Typography key={d} variant="caption" color="text.secondary" sx={{ p: 0.5, fontWeight: 700, textAlign: 'center' }}>{d}</Typography>
+          <Typography
+            key={d}
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              p: 0.5,
+              fontWeight: 700,
+              textAlign: 'center'
+            }}>{d}</Typography>
         ))}
       </Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: 1, borderLeft: 1, borderColor: 'divider' }}>
@@ -83,11 +91,12 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
                     component="button"
                     type="button"
                     variant="caption"
-                    color="text.secondary"
                     underline="hover"
                     onClick={(e) => { e.stopPropagation(); onMore(day); }}
-                    sx={{ textAlign: 'left' }}
-                  >
+                    sx={{
+                      color: "text.secondary",
+                      textAlign: 'left'
+                    }}>
                     +{dayMeetings.length - 3} more
                   </Link>
                 )}

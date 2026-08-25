@@ -20,18 +20,29 @@ export const button = (c: ThemeCtx): Components<Theme>['MuiButton'] => ({
       paddingBlock: c.t.size.buttonLgPadY,
       fontSize: c.t.font.size.buttonLg,
     },
-    containedPrimary: {
-      backgroundColor: c.primary,
-      color: c.white,
-      '&:hover': { backgroundColor: c.primaryHover },
-      '&:active': { backgroundColor: c.primaryActive },
-    },
-    outlinedPrimary: {
-      borderColor: c.primary,
-      color: c.primary,
-      '&:hover': { borderColor: c.primaryHover, backgroundColor: alpha(c.primary, 0.06) },
-    },
   },
+  // MUI 9 dropped the `<variant><Color>` style slots (containedPrimary and
+  // friends) from the class list, so the same rules are expressed as variants
+  // matched on props. Same output, and it no longer hard-codes a class name.
+  variants: [
+    {
+      props: { variant: 'contained', color: 'primary' },
+      style: {
+        backgroundColor: c.primary,
+        color: c.white,
+        '&:hover': { backgroundColor: c.primaryHover },
+        '&:active': { backgroundColor: c.primaryActive },
+      },
+    },
+    {
+      props: { variant: 'outlined', color: 'primary' },
+      style: {
+        borderColor: c.primary,
+        color: c.primary,
+        '&:hover': { borderColor: c.primaryHover, backgroundColor: alpha(c.primary, 0.06) },
+      },
+    },
+  ],
 });
 
 export const iconButton = (c: ThemeCtx): Components<Theme>['MuiIconButton'] => ({

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { JSX, Suspense, lazy, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { RedirectIfAuthed, RequireAuth } from './AuthGuards';

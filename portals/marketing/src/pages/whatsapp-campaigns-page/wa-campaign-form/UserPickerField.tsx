@@ -70,14 +70,18 @@ export default function UserPickerField({ control }: Readonly<Props>) {
               placeholder={t('marketing.whatsappCampaigns.searchByNameEmailOrNumber')}
               error={!!fieldState.error}
               helperText={fieldState.error?.message ?? ' '}
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {loading && <CircularProgress size={18} />}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
+              slotProps={{
+                ...params.slotProps,
+
+                input: {
+                  ...params.slotProps.input,
+                  endAdornment: (
+                    <>
+                      {loading && <CircularProgress size={18} />}
+                      {params.slotProps.input.endAdornment}
+                    </>
+                  ),
+                }
               }}
             />
           )}

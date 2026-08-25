@@ -20,7 +20,16 @@ interface Props {
 export default function MediaRow({ url, index, total, onReplace, onMove, onRemove }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1,
+        p: 1
+      }}>
       {VIDEO_RE.test(url) ? (
         <Box
           component="video"
@@ -43,12 +52,18 @@ export default function MediaRow({ url, index, total, onReplace, onMove, onRemov
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="caption"
-          color="text.secondary"
-          sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-        >
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
           {url}
         </Typography>
-        <Typography variant="caption" color="text.disabled">
+        <Typography variant="caption" sx={{
+          color: "text.disabled"
+        }}>
           #{index + 1}
         </Typography>
       </Box>

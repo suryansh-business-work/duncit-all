@@ -15,9 +15,17 @@ export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <StorefrontIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={800}>{t('finance.calculators.venueAndAmpHostSplit')}</Typography>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>{t('finance.calculators.venueAndAmpHostSplit')}</Typography>
         </Stack>
         <Stack spacing={2}>
           <TextField
@@ -26,11 +34,12 @@ export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
             size="small"
             value={inputs.venue_amount}
             onChange={(e) => onChange('venue_amount', Math.max(0, Number(e.target.value)))}
-            inputProps={{ min: 0, step: 50 }}
-            InputProps={{ startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon fontSize="small" /></InputAdornment> }}
             helperText="The venue's fixed booked slot price (set per venue in Partners). The host keeps whatever remains in the pool."
             fullWidth
-          />
+            slotProps={{
+              input: { startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon fontSize="small" /></InputAdornment> },
+              htmlInput: { min: 0, step: 50 }
+            }} />
           <PercentSlider
             label={t('finance.calculators.venueCommissionDuncitIncome')}
             value={inputs.venue_commission_percent}

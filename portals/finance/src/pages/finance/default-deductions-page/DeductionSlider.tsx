@@ -14,10 +14,20 @@ interface Props {
 export default function DeductionSlider({ label, value, onChange, hint, max = 100 }: Readonly<Props>) {
   return (
     <Box sx={{ flex: 1, minWidth: 220, px: 1 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.5
+        }}>
         <Tooltip title={hint ?? ''} placement="top" arrow disableHoverListener={!hint}>
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Typography variant="body2" fontWeight={600}>
+          <Stack direction="row" spacing={0.5} sx={{
+            alignItems: "center"
+          }}>
+            <Typography variant="body2" sx={{
+              fontWeight: 600
+            }}>
               {label}
             </Typography>
             {hint && <InfoOutlinedIcon fontSize="small" color="action" />}

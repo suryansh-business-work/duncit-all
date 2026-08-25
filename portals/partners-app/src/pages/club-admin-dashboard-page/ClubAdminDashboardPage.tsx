@@ -119,10 +119,14 @@ export default function ClubAdminDashboardPage() {
       header={
         <Stack spacing={2.5}>
           <Card sx={HERO_SX}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+              alignItems: { md: 'center' }
+            }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.clubAdminDashboardPage.partnerToolsClubAdmin')}</Typography>
-                <Typography variant="h5" fontWeight={950}>{t('partners.clubAdminDashboardPage.clubAdminDashboard')}</Typography>
+                <Typography variant="h5" sx={{
+                  fontWeight: 950
+                }}>{t('partners.clubAdminDashboardPage.clubAdminDashboard')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>
                   Pods, bookings, community and revenue across every club you administer.
                 </Typography>

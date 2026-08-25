@@ -110,7 +110,9 @@ export default function WelcomePage() {
       minW: 4,
       minH: 2,
       content: (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           <Chip
             color={stats.pendingFulfilment > 0 ? 'warning' : 'success'}
             label={`${stats.pendingFulfilment} orders to fulfil`}
@@ -132,10 +134,14 @@ export default function WelcomePage() {
       dashboardId="products.overview"
       header={
         <Box>
-          <Typography variant="h4" fontWeight={800}>
+          <Typography variant="h4" sx={{
+            fontWeight: 800
+          }}>
             Dashboard
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Hi {name} — here is how {appConfig.fullName} is doing today.
           </Typography>
           {loading && <LinearProgress sx={{ mt: 1 }} />}

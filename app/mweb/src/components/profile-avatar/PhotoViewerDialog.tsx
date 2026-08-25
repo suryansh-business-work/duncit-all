@@ -17,7 +17,9 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{ sx: { bgcolor: '#08070b' } }}
+      slotProps={{
+        paper: { sx: { bgcolor: '#08070b' } }
+      }}
     >
       <Box sx={{ position: 'relative' }}>
         <IconButton

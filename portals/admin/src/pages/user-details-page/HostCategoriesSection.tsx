@@ -48,10 +48,18 @@ export default function HostCategoriesSection({ hostProfile, rows, setRows }: Re
   return (
     <Card variant="outlined" sx={{ mt: 2 }} data-testid="host-categories">
       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Typography variant="subtitle2" fontWeight={700}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>
           Host categories
         </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block",
+            mb: 1
+          }}>
           Which Super → Category → Sub this host may create pods in. A host can hold several.
         </Typography>
         <Stack spacing={1.5}>
@@ -62,7 +70,9 @@ export default function HostCategoriesSection({ hostProfile, rows, setRows }: Re
               key={row.sub_id || `new-${index}`}
               direction="row"
               spacing={1}
-              alignItems="flex-start"
+              sx={{
+                alignItems: "flex-start"
+              }}
             >
               <AdminCategorySelect
                 value={row}
@@ -80,7 +90,9 @@ export default function HostCategoriesSection({ hostProfile, rows, setRows }: Re
             </Stack>
           ))}
           {rows.length === 0 && (
-            <Typography variant="body2" color="text.secondary" data-testid="host-categories-empty">
+            <Typography variant="body2" data-testid="host-categories-empty" sx={{
+              color: "text.secondary"
+            }}>
               No categories yet — this host cannot create pods until one is added.
             </Typography>
           )}

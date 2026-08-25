@@ -10,7 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import { useTranslation } from '../i18n/useTranslation';
 
 const PUBLIC_PLANS = gql`
@@ -48,17 +48,25 @@ export default function PodPlansPage() {
   return (
     <Container maxWidth="sm" sx={{ py: 3 }}>
       <Stack spacing={1.5} sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           Pod Plans
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Pick the plan that suits the kind of pods you want to host. More tiers
           are on the way — let us know what you need.
         </Typography>
       </Stack>
 
       {loading && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress />
         </Stack>
       )}
@@ -68,7 +76,9 @@ export default function PodPlansPage() {
         {(data?.publicPodPlans ?? []).map((p) => (
           <Card key={p.id} variant="outlined">
             <CardContent>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
+              <Stack direction="row" spacing={2} sx={{
+                alignItems: "flex-start"
+              }}>
                 {p.image_url && (
                   <Box
                     component="img"
@@ -87,10 +97,13 @@ export default function PodPlansPage() {
                   <Stack
                     direction="row"
                     spacing={1}
-                    alignItems="center"
-                    flexWrap="wrap"
-                  >
-                    <Typography variant="h6" fontWeight={700}>
+                    sx={{
+                      alignItems: "center",
+                      flexWrap: "wrap"
+                    }}>
+                    <Typography variant="h6" sx={{
+                      fontWeight: 700
+                    }}>
                       {p.name}
                     </Typography>
                     {p.is_coming_soon && (
@@ -105,9 +118,10 @@ export default function PodPlansPage() {
                   {p.description && (
                     <Typography
                       variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
+                      sx={{
+                        color: "text.secondary",
+                        mt: 0.5
+                      }}>
                       {p.description}
                     </Typography>
                   )}
@@ -121,7 +135,9 @@ export default function PodPlansPage() {
                       key={`${p.id}-${i}`}
                       direction="row"
                       spacing={1}
-                      alignItems="center"
+                      sx={{
+                        alignItems: "center"
+                      }}
                     >
                       <CheckCircleOutlineIcon
                         fontSize="small"

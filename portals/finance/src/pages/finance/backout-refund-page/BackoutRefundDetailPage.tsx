@@ -39,13 +39,23 @@ export default function BackoutRefundDetailPage() {
         if (!request) return null;
         return (
           <Box>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                alignItems: "center",
+                mb: 3
+              }}>
               <IconButton aria-label={t('finance.backoutRefund.backToBackoutRefunds')} onClick={() => navigate('/backout-refunds')}>
                 <ArrowBackIcon />
               </IconButton>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="h5" fontWeight={700}>{request.pod?.pod_title ?? 'Backout refund'}</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="h5" sx={{
+                  fontWeight: 700
+                }}>{request.pod?.pod_title ?? 'Backout refund'}</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {request.backout_no}
                   {request.user_name ? ` · ${request.user_name}` : ''}
                   {request.user_email ? ` · ${request.user_email}` : ''}

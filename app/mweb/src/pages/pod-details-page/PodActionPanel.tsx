@@ -156,7 +156,9 @@ export default function PodActionPanel({
 
   if (isFree) {
     return (
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <SeatPicker
           value={seats}
           onChange={onSeatsChange}
@@ -180,7 +182,9 @@ export default function PodActionPanel({
   }
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <SeatPicker
         value={seats}
         onChange={onSeatsChange}

@@ -41,11 +41,13 @@ export default function HostSelectField() {
         const next = toHostIds(event.target.value);
         setValue('pod_hosts_id', next, { shouldValidate: true });
       }}
-      SelectProps={selectProps}
       fullWidth
       required
       error={!!errors.pod_hosts_id}
       helperText={errors.pod_hosts_id?.message}
+      slotProps={{
+        select: selectProps
+      }}
     >
       {users.map((u) => (
         <MenuItem key={u.user_id} value={u.user_id}>

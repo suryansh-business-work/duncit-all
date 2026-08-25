@@ -29,10 +29,19 @@ const Shell = ({
       textAlign: 'center',
     }}
   >
-    <Stack spacing={2} alignItems="center" sx={{ maxWidth: 480 }}>
+    <Stack
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        maxWidth: 480
+      }}>
       {icon}
-      <Typography variant="h4" fontWeight={800}>{title}</Typography>
-      <Typography variant="body1" color="text.secondary">{subtitle}</Typography>
+      <Typography variant="h4" sx={{
+        fontWeight: 800
+      }}>{title}</Typography>
+      <Typography variant="body1" sx={{
+        color: "text.secondary"
+      }}>{subtitle}</Typography>
     </Stack>
   </Box>
 );

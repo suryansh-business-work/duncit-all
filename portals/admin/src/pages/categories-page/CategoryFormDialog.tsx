@@ -204,14 +204,15 @@ export default function CategoryFormDialog({
                       form: { ...dialog.form, min_pax: clampMinPax(e.target.value) },
                     })
                   }
-                  inputProps={{ min: MIN_PAX_FLOOR, max: MIN_PAX_CEILING, 'aria-label': 'Min number of pax allowed' }}
                   helperText={`The fewest people this activity needs (a doubles game needs 4). A host sizing a pod here cannot go below it. 0 = no minimum. Max ${MIN_PAX_CEILING}.`}
                   sx={{ maxWidth: 320 }}
+                  slotProps={{
+                    htmlInput: { min: MIN_PAX_FLOOR, max: MIN_PAX_CEILING, 'aria-label': 'Min number of pax allowed' }
+                  }}
                 />
                 <FormControlLabel
                   control={
                     <Switch
-                      inputProps={{ 'aria-label': 'Allow Co-Hosts' }}
                       checked={dialog.form.allow_co_hosts}
                       onChange={(e) =>
                         setDialog({
@@ -219,6 +220,9 @@ export default function CategoryFormDialog({
                           form: { ...dialog.form, allow_co_hosts: e.target.checked },
                         })
                       }
+                      slotProps={{
+                        input: { 'aria-label': 'Allow Co-Hosts' }
+                      }}
                     />
                   }
                   label={t('admin.categories.allowCoHosts')}

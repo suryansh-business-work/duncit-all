@@ -126,11 +126,15 @@ export default function AppPopupsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <PhoneIphoneIcon color="primary" />
           <Typography variant="h5">{t('shell.nav.appPopups')}</Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           A full-screen image shown when the app opens. Each person sees a popup once — closing it
           is remembered, so it never comes back.
         </Typography>

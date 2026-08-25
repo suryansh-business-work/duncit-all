@@ -110,7 +110,7 @@ const participationWith = (
 });
 
 const baseItem = (over: Partial<PodHistoryItem> = {}): PodHistoryItem =>
-  ({
+  (({
     id: 'mem-1',
     status: 'JOINED',
     joined_at: '2026-01-01T10:00:00.000Z',
@@ -121,8 +121,8 @@ const baseItem = (over: Partial<PodHistoryItem> = {}): PodHistoryItem =>
     referral_token: null,
     source: 'WEB',
     pod: basePod(),
-    ...over,
-  }) as PodHistoryItem;
+    ...over
+  }) as PodHistoryItem);
 
 const renderIt = (
   item: PodHistoryItem,

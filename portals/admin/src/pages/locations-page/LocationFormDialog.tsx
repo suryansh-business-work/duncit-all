@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import MediaPickerField from '../../components/MediaPickerField';
 import LocationHierarchyFields from './LocationHierarchyFields';
 import { AI_FILL_LOCATION_AREAS } from './queries';
@@ -126,7 +126,9 @@ export default function LocationFormDialog({
         <Stack spacing={2} sx={{ mt: 1 }}>
           <LocationHierarchyFields form={form} setForm={setForm} />
           {form.id && (
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <Switch
                 checked={form.is_active}
                 onChange={(_, v) => setForm({ ...form, is_active: v })}
@@ -145,10 +147,11 @@ export default function LocationFormDialog({
           <Box>
             <Stack
               direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ mb: 1 }}
-            >
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1
+              }}>
               <Typography variant="subtitle2">{t('admin.locations.localities')}</Typography>
               <Stack direction="row" spacing={1}>
                 <Button
@@ -176,7 +179,9 @@ export default function LocationFormDialog({
                   ref={isLast ? lastZoneRef : undefined}
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={1}
-                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  sx={{
+                    alignItems: { xs: 'stretch', sm: 'center' }
+                  }}
                 >
                   <TextField
                     size="small"

@@ -144,11 +144,17 @@ export default function MeetingSchedulePage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <EventIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{KIND_LABELS[kind]} Meeting Schedule</Typography>
-          <Typography variant="body2" color="text.secondary">Onboarding meeting requests from {KIND_LABELS[kind].toLowerCase()} applicants.</Typography>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{KIND_LABELS[kind]} Meeting Schedule</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>Onboarding meeting requests from {KIND_LABELS[kind].toLowerCase()} applicants.</Typography>
         </Box>
       </Stack>
 

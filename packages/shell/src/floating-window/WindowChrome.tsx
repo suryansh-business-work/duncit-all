@@ -34,16 +34,15 @@ export function TitleBar({
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
       sx={{
+        alignItems: "center",
         px: 1,
         py: 0.5,
         borderBottom: 1,
         borderColor: 'divider',
-        bgcolor: 'action.hover',
-      }}
-    >
+        bgcolor: 'action.hover'
+      }}>
       {/*
         The drag handle is the TITLE, not the whole bar.
 
@@ -72,7 +71,13 @@ export function TitleBar({
           {title}
         </Typography>
         {subtitle && (
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              display: 'block'
+            }}>
             {subtitle}
           </Typography>
         )}

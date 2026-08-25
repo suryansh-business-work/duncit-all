@@ -1,6 +1,6 @@
 import { Box, Button, Dialog, DialogContent, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import { useNavigate } from 'react-router-dom';
 import type { FaqItem } from './faqQueries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -15,10 +15,18 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '16px' } }}>
+    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" slotProps={{
+      paper: { sx: { borderRadius: '16px' } }
+    }}>
       {faq && (
         <DialogContent sx={{ p: 2.5 }}>
-          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "flex-start",
+              justifyContent: "space-between"
+            }}>
             <Typography variant="h6" sx={{ fontWeight: 700, pr: 1 }}>
               {faq.question}
             </Typography>
@@ -26,11 +34,22 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
               <CloseIcon fontSize="small" />
             </IconButton>
           </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              whiteSpace: 'pre-wrap',
+              mt: 1.5
+            }}>
             {faq.answer}
           </Typography>
           <Box sx={{ mt: 2.5, p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               Still need help?
             </Typography>
             <Button

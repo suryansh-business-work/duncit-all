@@ -23,12 +23,21 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-        <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" rowGap={1}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap",
+            rowGap: 1
+          }}>
           <Box>
             <Typography variant="h3" sx={{ fontWeight: 700, lineHeight: 1 }}>
               {score.total_score}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               / 100
             </Typography>
           </Box>
@@ -39,7 +48,12 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
               label={BAND_LABEL[score.band]}
               sx={{ fontWeight: 600, mb: 0.5 }}
             />
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: 'block'
+              }}>
               Base score: {score.base_score}
               {score.delta_sum !== 0 && (
                 <>
@@ -52,7 +66,12 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
       </Paper>
 
       <Box>
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           Admin remarks
         </Typography>
         {score.adjustments.length === 0 ? (
@@ -66,11 +85,15 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
               const color: 'success' | 'error' = a.delta > 0 ? 'success' : 'error';
               return (
                 <Paper key={a.id} variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-                  <Stack direction="row" alignItems="center" spacing={1.25}>
+                  <Stack direction="row" spacing={1.25} sx={{
+                    alignItems: "center"
+                  }}>
                     <Chip size="small" color={color} label={sign} sx={{ fontWeight: 700 }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography variant="body2">{a.remark}</Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {a.created_by_name} ·{' '}
                         {formatDateTime(a.created_at)} ·{' '}
                         {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}

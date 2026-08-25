@@ -11,7 +11,9 @@ import {
 
 describe('address-book-form barrel (index)', () => {
   it('re-exports blankAddressValues with the expected defaults', () => {
-    expect(blankAddressValues.label).toBe('Home');
+    // The blank shape carries no copy: the label is prefilled by the form from
+    // the catalogue, because it is text the user reads before editing it.
+    expect(blankAddressValues.label).toBe('');
     expect(blankAddressValues.country).toBe('India');
     expect(blankAddressValues.is_default).toBe(false);
   });
@@ -19,6 +21,9 @@ describe('address-book-form barrel (index)', () => {
   it('re-exports a working addressSchema', () => {
     const valid: AddressFormValues = {
       ...blankAddressValues,
+      // The blank shape no longer carries a label, so a complete address has to
+      // name one here.
+      label: 'Home',
       line1: '1 Main St',
       city: 'Delhi',
       state: 'Delhi',

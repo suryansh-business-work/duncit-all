@@ -55,9 +55,17 @@ export default function PodAccordion({
         aria-controls={`${id}-content`}
         id={`${id}-header`}
       >
-        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ flex: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          sx={{
+            alignItems: "center",
+            flex: 1
+          }}>
           {icon && <Box sx={{ display: 'flex', color: accent }}>{icon}</Box>}
-          <Typography variant="subtitle1" fontWeight={600} color={error ? 'error.main' : undefined}>
+          <Typography variant="subtitle1" color={error ? 'error.main' : undefined} sx={{
+            fontWeight: 600
+          }}>
             {title}
           </Typography>
         </Stack>

@@ -11,17 +11,25 @@ function CampaignLine({
   when,
 }: Readonly<{ campaign: WaDashboardCampaign; currency: string; when: string }>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={700} noWrap>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 700
+        }}>
           {campaign.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {`${categoryLabel(campaign.template_category)} · ${campaign.messages.toLocaleString()} sent · ${when}`}
         </Typography>
       </Stack>
       <StatusChip status={campaign.status} colorMap={WA_STATUS_COLORS} />
-      <Typography variant="body2" fontWeight={800}>
+      <Typography variant="body2" sx={{
+        fontWeight: 800
+      }}>
         {waMoney(campaign.cost, currency)}
       </Typography>
     </Stack>
@@ -42,11 +50,18 @@ export default function TopCampaignsCard({
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           Costliest sends
         </Typography>
         {rows.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Nothing sent in this window.
           </Typography>
         )}

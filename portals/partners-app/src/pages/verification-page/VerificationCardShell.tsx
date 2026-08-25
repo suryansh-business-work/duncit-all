@@ -18,13 +18,17 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <CheckCircleIcon
             sx={{ color: done ? 'success.main' : 'action.disabled', mt: 0.25 }}
             aria-hidden
           />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t(VERIFICATION_LABEL_KEYS[item.type])}
             </Typography>
             <Chip
@@ -34,7 +38,13 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
               sx={{ mt: 0.5, fontWeight: 600 }}
             />
             {item.status === 'REJECTED' && item.reject_reason && (
-              <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "error.main",
+                  display: "block",
+                  mt: 0.5
+                }}>
                 {item.reject_reason}
               </Typography>
             )}

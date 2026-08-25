@@ -68,7 +68,9 @@ export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
             onChange={(patch) => updateDraft(column.field, patch)}
           />
         ))}
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button size="small" onClick={handleClearAll}>
             {t('shell.table.clearAll')}
           </Button>

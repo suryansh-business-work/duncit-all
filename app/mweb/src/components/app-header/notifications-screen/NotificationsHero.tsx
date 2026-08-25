@@ -30,7 +30,9 @@ export default function NotificationsHero({
           border: '1px solid rgba(255,79,115,0.22)',
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
             {[0, 1, 2].map((index) => (
               <Avatar
@@ -51,7 +53,12 @@ export default function NotificationsHero({
             <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
               Never Miss an Update
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               Get real-time updates about your Pods, Clubs, Host activities, Chats, and Account—all
               in one place.
             </Typography>
@@ -59,7 +66,13 @@ export default function NotificationsHero({
           <Chip color="primary" label={`${total}`} sx={{ fontWeight: 700 }} />
         </Stack>
         {pushSupported && (
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.25 }}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              mt: 1.25
+            }}>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               Allow notifications
             </Typography>
@@ -67,7 +80,9 @@ export default function NotificationsHero({
               checked={pushOn}
               disabled={pushBusy}
               onChange={(_e, next) => onToggle(next)}
-              inputProps={{ 'aria-label': 'Allow notifications' }}
+              slotProps={{
+                input: { 'aria-label': 'Allow notifications' }
+              }}
             />
           </Stack>
         )}

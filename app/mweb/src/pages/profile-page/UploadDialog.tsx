@@ -59,8 +59,19 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <Stack direction="row" alignItems="center" sx={{ px: 2, py: 1 }}>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          px: 2,
+          py: 1
+        }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            flex: 1
+          }}>
           New post
         </Typography>
         <IconButton onClick={close} disabled={busy}>
@@ -90,10 +101,14 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
               multiline
               minRows={2}
               maxRows={6}
-              inputProps={{ maxLength: 2200 }}
               helperText={`${caption.length}/2200`}
+              slotProps={{
+                htmlInput: { maxLength: 2200 }
+              }}
             />
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
+            <Stack direction="row" spacing={1} sx={{
+              justifyContent: "flex-end"
+            }}>
               <Button onClick={() => setPickerOpen(true)} disabled={busy}>
                 Change photo
               </Button>
@@ -103,13 +118,20 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
             </Stack>
           </Stack>
         ) : (
-          <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
+          <Stack
+            spacing={2}
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}>
             <AddPhotoAlternateIcon sx={{ fontSize: 72, color: 'text.secondary' }} />
             <Typography variant="body1">{t('mweb.profile.pickAnImageToShare')}</Typography>
             <Button variant="contained" onClick={() => setPickerOpen(true)}>
               Choose image
             </Button>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Upload from device or pick from Pexels — both go through ImageKit.
             </Typography>
           </Stack>

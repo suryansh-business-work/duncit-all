@@ -104,7 +104,13 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
             </Alert>
           )}
           <VenueSections config={config} />
-          <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              justifyContent: "flex-end",
+              pt: 1
+            }}>
             {onCancel && (
               <Button onClick={onCancel} disabled={submitting}>
                 {t('shell.common.cancel')}
@@ -145,7 +151,9 @@ function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
   ];
   return (
     <>
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
+      <Stack direction="row" spacing={1} sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={() => toggleAll(true)}>
           Expand all
         </Button>

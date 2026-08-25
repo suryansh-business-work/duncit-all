@@ -66,14 +66,17 @@ export default function NumberSettingCard({
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={1}
-          sx={{ mb: 2 }}
-        >
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: 2
+          }}>
           <Box>
             <Typography variant="subtitle1">{title}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {description}
             </Typography>
           </Box>
@@ -92,8 +95,10 @@ export default function NumberSettingCard({
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           fullWidth
-          inputProps={{ min, max }}
           helperText={helperText}
+          slotProps={{
+            htmlInput: { min, max }
+          }}
         />
         {invalid && (
           <Alert severity="warning" sx={{ mt: 2 }}>

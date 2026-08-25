@@ -58,7 +58,9 @@ export default function VenueDashboardPage() {
       defaultLayout: { x: 0, y: 2, w: 12, h: 2 },
       minH: 2,
       content: (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+          alignItems: { sm: 'center' }
+        }}>
           <Button component={RouterLink} to="/register-venue" size="small" variant="outlined" startIcon={<StorefrontIcon />}>
             Venue Management
           </Button>
@@ -87,10 +89,14 @@ export default function VenueDashboardPage() {
       header={
         <Stack spacing={2.5}>
           <Card sx={HERO_SX}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+              alignItems: { md: 'center' }
+            }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.common.partnerToolsVenues')}</Typography>
-                <Typography variant="h5" fontWeight={950}>{t('partners.venueDashboardPage.venueDashboard')}</Typography>
+                <Typography variant="h5" sx={{
+                  fontWeight: 950
+                }}>{t('partners.venueDashboardPage.venueDashboard')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>
                   Slot-based earnings potential, capacity and booking requests across your venues.
                 </Typography>

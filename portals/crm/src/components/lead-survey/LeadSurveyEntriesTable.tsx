@@ -40,7 +40,11 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
   const copy = (token: string) => navigator.clipboard?.writeText(surveyLinkUrl(token));
 
   if (entries.length === 0) {
-    return <Typography variant="body2" color="text.secondary">{t('crm.components.noSurveysGeneratedYetClickFill')}</Typography>;
+    return (
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('crm.components.noSurveysGeneratedYetClickFill')}</Typography>
+    );
   }
 
   return (
@@ -69,11 +73,15 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                 <TableCell>{statusChip(e, t)}</TableCell>
                 <TableCell>
                   <Typography variant="body2">{fmt(e.created_at)}</Typography>
-                  {e.generated_by && <Typography variant="caption" color="text.secondary">by {e.generated_by}</Typography>}
+                  {e.generated_by && <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>by {e.generated_by}</Typography>}
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">{fmt(e.submitted_at)}</Typography>
-                  {e.submitted_by && <Typography variant="caption" color="text.secondary">{e.submitted_by}</Typography>}
+                  {e.submitted_by && <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{e.submitted_by}</Typography>}
                 </TableCell>
                 <TableCell align="right" onClick={(ev) => ev.stopPropagation()}>
                   {e.source === 'LINK' && !e.token_revoked && e.token && (
@@ -99,14 +107,26 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
           <Stack spacing={1.25}>
             {(view?.answers ?? []).map((a) => (
               <Stack key={a.qid} spacing={0.25}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{labelFor(a.qid)}</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 700
+                  }}>{labelFor(a.qid)}</Typography>
                 <Typography variant="body2">{(a.values?.length ? a.values.join(', ') : a.value) || '—'}</Typography>
               </Stack>
             ))}
-            {(view?.answers?.length ?? 0) === 0 && <Typography variant="body2" color="text.secondary">{t('crm.components.noAnswersRecorded')}</Typography>}
+            {(view?.answers?.length ?? 0) === 0 && <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('crm.components.noAnswersRecorded')}</Typography>}
           </Stack>
         </DialogContent>
-        <Stack direction="row" justifyContent="flex-end" sx={{ p: 1.5 }}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "flex-end",
+            p: 1.5
+          }}>
           <Button onClick={() => setView(null)}>{t('shell.common.close')}</Button>
         </Stack>
       </Dialog>

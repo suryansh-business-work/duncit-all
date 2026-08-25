@@ -11,9 +11,16 @@ export interface AutoPodsPageHeaderProps {
  */
 export default function AutoPodsPageHeader({ title }: Readonly<AutoPodsPageHeaderProps>) {
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <HandshakeIcon color="primary" />
-      <Typography variant="h5" fontWeight={700} lineHeight={1}>
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 700,
+          lineHeight: 1
+        }}>
         {title}
       </Typography>
     </Stack>

@@ -55,16 +55,24 @@ export default function AuthMessagesCard({ channel }: Readonly<Props>) {
 
       <Card variant="outlined" data-testid={`auth-messages-${channel}`}>
         <CardContent>
-          <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "flex-start"
+          }}>
             <ShieldOutlinedIcon color="action" fontSize="small" sx={{ mt: 0.25 }} />
             <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2" fontWeight={700}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 700
+              }}>
                 {card.title}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {card.body}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {card.note}
               </Typography>
             </Stack>
@@ -83,7 +91,9 @@ export default function AuthMessagesCard({ channel }: Readonly<Props>) {
                         /* reported through state.saveFailed */
                       });
                     }}
-                    inputProps={{ 'aria-label': card.title }}
+                    slotProps={{
+                      input: { 'aria-label': card.title }
+                    }}
                   />
                 </span>
               </Tooltip>

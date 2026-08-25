@@ -28,7 +28,13 @@ export default function ClubPreviewCard({ model }: Readonly<{ model: ClubPreview
         </Box>
       </Box>
       <CardContent sx={{ pt: 0.75, '&:last-child': { pb: 1.5 } }}>
-        <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.75 }}>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "center",
+            mb: 0.75
+          }}>
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700, lineHeight: 1.15 }} noWrap>
             {model.name}
           </Typography>
@@ -40,15 +46,14 @@ export default function ClubPreviewCard({ model }: Readonly<{ model: ClubPreview
         {model.description && (
           <Typography
             variant="body2"
-            color="text.secondary"
             sx={{
+              color: "text.secondary",
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              minHeight: 40,
-            }}
-          >
+              minHeight: 40
+            }}>
             {model.description}
           </Typography>
         )}

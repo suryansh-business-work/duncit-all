@@ -33,11 +33,12 @@ export default function CalendarToolbar({
   return (
     <Stack
       direction={{ xs: 'column', md: 'row' }}
-      alignItems={{ xs: 'stretch', md: 'center' }}
-      justifyContent="space-between"
       spacing={1.5}
-      sx={{ mb: 2 }}
-    >
+      sx={{
+        alignItems: { xs: 'stretch', md: 'center' },
+        justifyContent: "space-between",
+        mb: 2
+      }}>
       <ToggleButtonGroup
         size="small"
         exclusive
@@ -50,11 +51,23 @@ export default function CalendarToolbar({
         <ToggleButton value="month">{t('partners.venueAvailabilityPage.month')}</ToggleButton>
       </ToggleButtonGroup>
 
-      <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
         <IconButton onClick={() => onShift(-1)} aria-label={t('partners.venueAvailabilityPage.previous')}>
           <ChevronLeftIcon />
         </IconButton>
-        <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 160, textAlign: 'center' }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 900,
+            minWidth: 160,
+            textAlign: 'center'
+          }}>
           {periodLabel}
         </Typography>
         <IconButton

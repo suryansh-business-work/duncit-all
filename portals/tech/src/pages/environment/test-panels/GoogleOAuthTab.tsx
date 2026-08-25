@@ -10,7 +10,9 @@ export default function GoogleOAuthTab({ entry }: Readonly<{ entry: EnvEntry }>)
   const clientId = entry.config.find((p) => p.key === 'client_id')?.value ?? '';
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Sign in with Google using this entry's OAuth Client ID — the decoded user profile appears below.
       </Typography>
       {clientId ? (

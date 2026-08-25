@@ -17,15 +17,20 @@ export default function ClubsToolbar({
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
       spacing={2}
-      justifyContent="space-between"
-      alignItems={{ xs: 'flex-start', sm: 'center' }}
-    >
+      sx={{
+        justifyContent: "space-between",
+        alignItems: { xs: 'flex-start', sm: 'center' }
+      }}>
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <GroupsIcon color="primary" />
           <Typography variant="h5">{t('admin.clubs.title')}</Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Manage clubs. Pods are organised inside a club.
         </Typography>
       </Box>

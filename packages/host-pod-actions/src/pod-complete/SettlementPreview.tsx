@@ -27,12 +27,16 @@ function AttendanceNote({ settlement }: Readonly<{ settlement: PodSettlement }>)
       {/* The payout is computed from the SCANNED seats — a booking nobody
           checked in is not part of it, even though its money was collected and
           is not refunded. */}
-      <Typography variant="caption" color="text.secondary" data-testid="settlement-attendees">
+      <Typography variant="caption" data-testid="settlement-attendees" sx={{
+        color: "text.secondary"
+      }}>
         Based on {settlement.attended_seats} attended {seatWord} of {settlement.booked_seats} booked
         — your own spot is free.
       </Typography>
       {settlement.attended_seats < settlement.booked_seats && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {settlement.currency_symbol}
           {unscanned.toFixed(2)} was collected from seats nobody scanned in, so it is not part of
           this payout.

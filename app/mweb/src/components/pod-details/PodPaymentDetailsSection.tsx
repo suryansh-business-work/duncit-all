@@ -23,7 +23,9 @@ export default function PodPaymentDetailsSection({
   const { t } = useTranslation();
   if (isFree || !Number(amount)) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.freeToJoin')}
       </Typography>
     );
@@ -31,31 +33,55 @@ export default function PodPaymentDetailsSection({
   const p = priceCompute(amount);
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" sx={{ py: 0.5 }}>
-        <Typography variant="body2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          py: 0.5
+        }}>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.checkout.gst', { vars: { pct: p.gstPct } })}
         </Typography>
-        <Typography variant="body2" fontWeight={500}>
+        <Typography variant="body2" sx={{
+          fontWeight: 500
+        }}>
           {`${p.currency}${p.gst.toFixed(2)}`}
         </Typography>
       </Stack>
       <Divider sx={{ my: 1 }} />
-      <Stack direction="row" justifyContent="space-between" sx={{ py: 0.5 }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          py: 0.5
+        }}>
         {/*
           Per SEAT, and it has to say so. This prices one ticket, while the
           button on the same screen prices however many the seat picker holds —
           calling this "Total payable" put two different totals in front of the
           buyer and only one of them was what they would be charged.
         */}
-        <Typography variant="subtitle2" fontWeight={700}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.podDetails.pricePerSeat')}
         </Typography>
-        <Typography variant="subtitle2" fontWeight={700}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>
           {p.currency}
           {p.total.toFixed(2)}
         </Typography>
       </Stack>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: 'block',
+          mt: 1
+        }}>
         {t('mweb.podDetails.inclusiveOfGst')}
       </Typography>
     </Box>

@@ -67,7 +67,13 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
           Following
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4, fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.4,
+            fontWeight: 700
+          }}>
           Latest posts and stories from your clubs and people
         </Typography>
       </Box>

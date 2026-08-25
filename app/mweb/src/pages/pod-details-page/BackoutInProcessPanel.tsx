@@ -27,7 +27,9 @@ export default function BackoutInProcessPanel({ canCancel, busy, onKeepSpot }: R
       <Button variant="contained" onClick={onKeepSpot} disabled={busy} sx={{ fontWeight: 700 }}>
         {t('mweb.podDetails.keepMySpot')}
       </Button>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.changedYourMind')}
       </Typography>
     </Stack>

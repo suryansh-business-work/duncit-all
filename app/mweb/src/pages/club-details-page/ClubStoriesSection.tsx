@@ -88,7 +88,12 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
 
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         <AutoStoriesIcon sx={{ fontSize: 15, mb: '-2px', mr: 0.5 }} />
         Stories
       </Typography>

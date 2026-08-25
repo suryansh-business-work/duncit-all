@@ -32,7 +32,7 @@ const settle = async () => {
 const POD: CouponPodOption = { id: 'pod-1', title: 'Sunday Badminton' };
 
 const coupon = (over: Partial<CouponRow> = {}): CouponRow =>
-  ({
+  (({
     id: 'c-1',
     code: 'SUMMER25',
     description: 'Summer sale',
@@ -48,8 +48,8 @@ const coupon = (over: Partial<CouponRow> = {}): CouponRow =>
     used_count: 0,
     created_at: '2026-08-01T00:00:00.000Z',
     updated_at: '2026-08-02T00:00:00.000Z',
-    ...over,
-  }) as CouponRow;
+    ...over
+  }) as CouponRow);
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(

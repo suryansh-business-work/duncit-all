@@ -91,7 +91,9 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Requested for {fmt(meeting?.requested_at)}{meeting?.notes ? ` · ${meeting.notes}` : ''}
           </Typography>
           {loading && slots.length === 0 ? (

@@ -56,7 +56,9 @@ export default function GiftCardArtworkSection({ form, onFormChange }: Readonly<
   return (
     <Stack spacing={1.5}>
       <Typography variant="subtitle2">{t('admin.categories.giftCardArtwork')}</Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('admin.categories.giftCardArtworkHint')}
       </Typography>
       <MediaPickerField
@@ -77,11 +79,15 @@ export default function GiftCardArtworkSection({ form, onFormChange }: Readonly<
       />
       {canFlipGiftCard(artwork) && (
         <>
-          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1.5} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             <FacePreview url={artwork.front} label={frontLabel} />
             <FacePreview url={artwork.back} label={backLabel} />
           </Stack>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('admin.categories.giftCardFlipHint')}
           </Typography>
         </>

@@ -20,11 +20,16 @@ interface CatalogueData {
  *
  * `errorPolicy: 'all'` because a refused Project API is information the caller
  * shows, not a reason to render nothing.
+ *
+ * `skip` exists for the callers that only need the catalogue once something is
+ * opened — reading it costs a live round trip to AiSensy's Project API, so a
+ * screen that may never ask must not pay for it on mount.
  */
-export function useAisensyCatalogue() {
+export function useAisensyCatalogue(options: Readonly<{ skip?: boolean }> = {}) {
   const { data, loading, error, refetch } = useQuery<CatalogueData>(AISENSY_CATALOGUE, {
     fetchPolicy: 'cache-and-network',
     errorPolicy: 'all',
+    skip: options.skip,
   });
   return {
     // Undefined while the first request is in flight — treated as configured so

@@ -41,10 +41,14 @@ function ModuleCard({ icon, title, description, comingSoon }: Readonly<ModuleCar
           <Box sx={{ color: 'primary.main' }}>
             <AppIcon name={icon} />
           </Box>
-          <Typography variant="subtitle2" fontWeight={700}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             {title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {description}
           </Typography>
           <Chip label={comingSoon} size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
@@ -147,7 +151,9 @@ export function WelcomeDashboard({
       defaultLayout: { x: 0, y: row, w: 12, h: 1 },
       minH: 1,
       content: (
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('shell.welcome.modulesHeading', { vars: { name } })}
         </Typography>
       ),
@@ -178,10 +184,14 @@ export function WelcomeDashboard({
       dashboardId={dashboardId}
       header={
         <Box>
-          <Typography variant="h5" fontWeight={800}>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>
             {t('shell.welcome.greeting', { vars: { name: firstName } })}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {tagline}
           </Typography>
           <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }}>

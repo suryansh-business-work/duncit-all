@@ -47,7 +47,9 @@ export default function AttendeeRow({
           />
         </TableCell>
         <TableCell>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Avatar src={row.profile_photo ?? undefined} sx={{ width: 30, height: 30 }}>
               {(row.full_name?.[0] ?? '?').toUpperCase()}
             </Avatar>
@@ -65,9 +67,13 @@ export default function AttendeeRow({
                 {row.full_name ?? 'Unknown user'}
               </Link>
               {struck && row.replaced_by_user_id && (
-                <Stack direction="row" spacing={0.5} alignItems="center">
+                <Stack direction="row" spacing={0.5} sx={{
+                  alignItems: "center"
+                }}>
                   <SwapHorizIcon sx={{ fontSize: 14 }} color="warning" />
-                  <Typography variant="caption" color="warning.main">
+                  <Typography variant="caption" sx={{
+                    color: "warning.main"
+                  }}>
                     Spot filled by{' '}
                     <Link
                       component="button"
@@ -94,16 +100,19 @@ export default function AttendeeRow({
             <Typography
               key={`${companion.name}-${companion.phone_number}`}
               variant="caption"
-              color="text.secondary"
-              display="block"
-            >
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>
               {companion.name} · {companion.phone_extension ?? ''} {companion.phone_number}
             </Typography>
           ))}
         </TableCell>
         <TableCell>
           <Typography variant="body2">{row.email ?? '—'}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {row.phone ?? ''}
           </Typography>
         </TableCell>

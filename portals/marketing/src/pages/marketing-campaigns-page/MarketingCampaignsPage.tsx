@@ -84,12 +84,22 @@ export default function MarketingCampaignsPage() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="flex-start" spacing={2} mb={2}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: "flex-start",
+          mb: 2
+        }}>
         <Stack spacing={0.25} sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Marketing Campaigns
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Every email campaign you have sent or scheduled. Open one to see the email exactly as it
             went out.
           </Typography>

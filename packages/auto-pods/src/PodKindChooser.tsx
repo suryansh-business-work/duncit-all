@@ -45,13 +45,19 @@ function PodKindOption({ icon, title, description, onClick }: Readonly<PodKindOp
           '&:hover': { borderColor: 'primary.main', boxShadow: 2 },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           {icon}
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {title}
           </Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {description}
         </Typography>
       </Paper>
@@ -81,10 +87,17 @@ export function PodKindChooser({ open, labels, onClose, onPick }: Readonly<PodKi
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 0.5 }}>{labels.title}</DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {labels.subtitle}
         </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="stretch">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+          alignItems: "stretch"
+        }}>
           <PodKindOption
             icon={<EventAvailableIcon color="primary" />}
             title={labels.normalTitle}

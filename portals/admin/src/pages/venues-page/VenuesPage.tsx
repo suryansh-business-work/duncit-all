@@ -25,17 +25,24 @@ export default function VenuesPage() {
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={2}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        sx={{ mb: 3 }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        sx={{
+          justifyContent: "space-between",
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          mb: 3
+        }}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <StorefrontIcon color="primary" />
           <Box>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" sx={{
+              fontWeight: 700
+            }}>
               {t('admin.clubs.venues')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Every registered venue. Approvals and edits are managed in the Onboarding portal.
             </Typography>
           </Box>

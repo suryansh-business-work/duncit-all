@@ -23,7 +23,9 @@ export default function AccountPanel({ account, formatDateTime }: Readonly<Props
   if (!account) {
     return (
       <Stack spacing={1}>
-        <Typography variant="subtitle2" fontWeight={800}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 800
+        }}>
           {t('legalAcceptanceLogs.detail.sectionAccount')}
         </Typography>
         <Alert severity="warning">{t('legalAcceptanceLogs.detail.accountMissing')}</Alert>
@@ -33,7 +35,9 @@ export default function AccountPanel({ account, formatDateTime }: Readonly<Props
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         {t('legalAcceptanceLogs.detail.sectionAccount')}
       </Typography>
       {account.is_deleted && (

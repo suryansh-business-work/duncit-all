@@ -67,11 +67,10 @@ export default function DobYearField({
               size: 'small',
               fullWidth: true,
               onBlur: field.onBlur,
-              InputLabelProps: { shrink: true },
+              slotProps: { inputLabel: { shrink: true } },
               error: !!fieldState.error,
               helperText: fieldState.error?.message ?? hint,
-            },
-          }}
+            }}}
         />
       )}
     />

@@ -78,8 +78,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
                   fullWidth: true,
                   error: !!errors.pod_date_time,
                   helperText: errors.pod_date_time?.message,
-                },
-              }}
+                }}}
             />
           )}
         />
@@ -97,14 +96,18 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
                   fullWidth: true,
                   error: !!errors.pod_end_date_time,
                   helperText: errors.pod_end_date_time?.message,
-                },
-              }}
+                }}}
             />
           )}
         />
       </Stack>
       {duration && (
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600
+          }}>
           {t('mweb.createPod.totalDuration', { vars: { duration } })}
         </Typography>
       )}

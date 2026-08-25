@@ -21,8 +21,10 @@ interface CompletenessProps {
  */
 function Completeness({ translated, total }: Readonly<CompletenessProps>) {
   return (
-    <Typography variant="body2" fontWeight={600} color={completenessColor(translated, total)}>
-      {translated} / {total}
+    <Typography variant="body2" color={completenessColor(translated, total)} sx={{
+      fontWeight: 600
+    }}>
+      {translated}/ {total}
     </Typography>
   );
 }
@@ -59,10 +61,14 @@ export function getTranslationGroupColumns(
       sortable: true,
       cellRenderer: (row: TranslationGroupRow) => (
         <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {row.page || '—'}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {row.id}
           </Typography>
         </Stack>

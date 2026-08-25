@@ -25,8 +25,15 @@ export default function ClubPreviewDetails({ model }: Readonly<{ model: ClubPrev
 
       <Stack spacing={2} sx={{ p: 2 }}>
         <Box>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Typography variant="h5" fontWeight={800} sx={{ lineHeight: 1.1 }}>
+          <Stack direction="row" spacing={0.75} sx={{
+            alignItems: "center"
+          }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 800,
+                lineHeight: 1.1
+              }}>
               {model.name}
             </Typography>
             {model.isVerified && <VerifiedIcon color="primary" fontSize="small" />}
@@ -40,7 +47,12 @@ export default function ClubPreviewDetails({ model }: Readonly<{ model: ClubPrev
         </Box>
 
         {model.description && (
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              whiteSpace: 'pre-line'
+            }}>
             {model.description}
           </Typography>
         )}

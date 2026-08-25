@@ -38,10 +38,19 @@ export default function ThemePicker({
 
   return (
     <Box>
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         {t('mweb.giftCards.themeHeading')}
       </Typography>
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          flexWrap: "wrap",
+          mt: 1
+        }}>
         {THEME_GROUPS.map((group) => {
           const active = scopeType === group.value;
           return (
@@ -65,7 +74,13 @@ export default function ThemePicker({
             amount={amount}
             currencySymbol={currencySymbol}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5,
+              display: 'block'
+            }}>
             {t('mweb.giftCards.shopThemeCaption')}
           </Typography>
         </Box>

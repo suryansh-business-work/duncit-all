@@ -30,7 +30,12 @@ interface Props {
 function Detail({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {label}
       </Typography>
       <Typography variant="body2" component="div" sx={{ wordBreak: 'break-word' }}>
@@ -55,12 +60,18 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} alignItems="flex-start">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={800} noWrap>
+            <Typography variant="subtitle1" noWrap sx={{
+              fontWeight: 800
+            }}>
               {request.pod_title}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {podSummary(request)}
             </Typography>
           </Box>
@@ -95,7 +106,9 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           />
         </Stack>
 
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button
             size="small"
             color="error"

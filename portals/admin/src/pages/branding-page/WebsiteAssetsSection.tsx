@@ -21,7 +21,9 @@ export default function WebsiteAssetsSection({ form, setForm }: Readonly<Props>)
 
   return (
     <Stack spacing={2.5}>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Used by the public marketing websites. The static sites bake these in at build time — a
         redeploy picks up changes. Empty fields fall back to the sites' bundled assets.
       </Typography>

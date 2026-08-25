@@ -88,15 +88,24 @@ export default function SuperCategoryChart({ data, title }: Readonly<Props>) {
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             {titleText}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Venue and host leads grouped by the super category they were
             registered under (catalogue managed via Admin).
           </Typography>
         </Stack>
         <div style={{ height: 300, width: '100%' }}>
           {data.length === 0 ? (
-            <Stack alignItems="center" justifyContent="center" sx={{ height: '100%' }}>
-              <Typography variant="body2" color="text.secondary">
+            <Stack
+              sx={{
+                alignItems: "center",
+                justifyContent: "center",
+                height: '100%'
+              }}>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No super categories yet — add some from the Admin portal.
               </Typography>
             </Stack>

@@ -33,9 +33,15 @@ const getPortalModeRowId = (row: PortalModeRow) => row.key;
 
 const renderName = (row: PortalModeRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">{row.name}</Typography>
-    <Stack direction="row" spacing={0.5} alignItems="center" component="span">
-      <Typography variant="caption" color="text.secondary">{row.key}</Typography>
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 700
+    }}>{row.name}</Typography>
+    <Stack direction="row" spacing={0.5} component="span" sx={{
+      alignItems: "center"
+    }}>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>{row.key}</Typography>
       <Chip size="small" variant="outlined" label={KIND_LABEL[row.kind] ?? row.kind} />
     </Stack>
   </Box>
@@ -55,7 +61,9 @@ const renderLink = (row: PortalModeRow) =>
       <OpenInNewIcon sx={{ fontSize: 14 }} />
     </Link>
   ) : (
-    <Typography variant="caption" color="text.secondary">—</Typography>
+    <Typography variant="caption" sx={{
+      color: "text.secondary"
+    }}>—</Typography>
   );
 const linkValue = (row: PortalModeRow) => row.url ?? '';
 

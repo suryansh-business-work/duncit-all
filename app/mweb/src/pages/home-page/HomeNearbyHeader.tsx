@@ -19,11 +19,16 @@ export default function HomeNearbyHeader({
       : t('mweb.home.podsNearbyMany', { count: totalPods });
 
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+        px: 0.25
+      }}>
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
         onClick={onOpen}
         role="button"
         tabIndex={0}
@@ -31,8 +36,11 @@ export default function HomeNearbyHeader({
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') onOpen();
         }}
-        sx={{ minWidth: 0, cursor: 'pointer' }}
-      >
+        sx={{
+          alignItems: "center",
+          minWidth: 0,
+          cursor: 'pointer'
+        }}>
         <Box
           sx={{
             width: 30,
@@ -52,7 +60,12 @@ export default function HomeNearbyHeader({
           <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
             {t('mweb.home.happeningNearbyTitle')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {podsLabel}
           </Typography>
         </Box>

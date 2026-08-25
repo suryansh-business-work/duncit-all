@@ -126,10 +126,18 @@ export default function TerminalSuggestions({ onExec }: Readonly<TerminalSuggest
       }}
     >
       <Box sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="subtitle2" fontWeight={800}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 800
+        }}>
           {t('tech.terminal.suggestions')}
         </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 0.5
+          }}>
           {t('tech.terminal.suggestionsHint')}
         </Typography>
         <TextField
@@ -139,20 +147,27 @@ export default function TerminalSuggestions({ onExec }: Readonly<TerminalSuggest
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={t('tech.terminal.search')}
-          inputProps={{ 'aria-label': t('tech.terminal.search') }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-        />
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+
+            htmlInput: { 'aria-label': t('tech.terminal.search') }
+          }} />
       </Box>
 
       <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {groups.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              p: 2
+            }}>
             {t('tech.terminal.noMatches')}
           </Typography>
         ) : null}

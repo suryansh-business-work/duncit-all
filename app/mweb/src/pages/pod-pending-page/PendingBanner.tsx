@@ -28,15 +28,28 @@ export default function PendingBanner({ status }: Readonly<{ status: string }>) 
   return (
     <Stack
       spacing={1.25}
-      alignItems="center"
-      sx={{ py: 2, color: TONE_COLORS[banner.tone] }}
       data-testid="pod-pending-banner"
-    >
+      sx={{
+        alignItems: "center",
+        py: 2,
+        color: TONE_COLORS[banner.tone]
+      }}>
       {BANNER_ICONS[banner.icon]}
-      <Typography variant="h6" fontWeight={700} textAlign="center" color="text.primary">
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          textAlign: "center",
+          color: "text.primary"
+        }}>
         {banner.title}
       </Typography>
-      <Typography variant="body2" color="text.secondary" textAlign="center">
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          textAlign: "center"
+        }}>
         {banner.body}
       </Typography>
     </Stack>

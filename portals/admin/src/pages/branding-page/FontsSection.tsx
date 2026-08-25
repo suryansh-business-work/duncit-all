@@ -51,7 +51,9 @@ export default function FontsSection({ form, setForm }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       <DuncitTabs {...tabs} variant="fullWidth" />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {platform.hint} Leave empty for the default font (Quicksand).
       </Typography>
       <Autocomplete

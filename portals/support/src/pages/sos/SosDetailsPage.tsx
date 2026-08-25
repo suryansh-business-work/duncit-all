@@ -30,7 +30,9 @@ type SosAlertContactsProps = {
 
 function SosAlertContacts({ alert }: Readonly<SosAlertContactsProps>) {
   return (
-    <Stack direction="row" spacing={2} flexWrap="wrap">
+    <Stack direction="row" spacing={2} sx={{
+      flexWrap: "wrap"
+    }}>
       {alert.contact_phone && (
         <Link href={`tel:${alert.contact_phone}`} variant="body2">
           📞 {alert.contact_phone}
@@ -48,7 +50,9 @@ function SosAlertContacts({ alert }: Readonly<SosAlertContactsProps>) {
         </Link>
       )}
       {alert.host && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Host: {alert.host.name}
           {alert.host.phone ? ` (${alert.host.phone})` : ''}
         </Typography>
@@ -94,15 +98,28 @@ function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardPr
     <Card variant="outlined" sx={{ borderColor: alert.status === 'ACTIVE' ? 'error.main' : 'divider' }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap"
+              }}>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 {alert.user.name}
               </Typography>
               <Chip size="small" variant="outlined" label={alert.ticket_no} />
               <StatusChip status={alert.status} colorMap={SOS_STATUS_COLORS} />
             </Stack>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
             </Typography>
           </Stack>
@@ -174,7 +191,9 @@ export default function SosDetailsPage() {
     );
   } else {
     content = (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         This alert could not be found.
       </Typography>
     );

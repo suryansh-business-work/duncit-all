@@ -55,7 +55,13 @@ export function BotList({ onOpen }: Readonly<Props>) {
 
   return (
     <Box sx={{ overflowY: 'auto' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ px: 2, pb: 1 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          px: 2,
+          pb: 1
+        }}>
         {t('shell.askBot.listSubtitle')}
       </Typography>
       <List disablePadding>

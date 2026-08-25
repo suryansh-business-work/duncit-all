@@ -61,10 +61,18 @@ export default function MarketingCampaignForm({
   return (
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <RhfTextField control={control} name="name" label={t('marketing.common.campaignName')} required hint="3–120 characters" />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <RhfTextField control={control} name="audience" label={t('marketing.common.audience')} select>
             <MenuItem value="ALL_USERS">{t('marketing.marketingCampaigns.allActiveUsers')}</MenuItem>
             <MenuItem value="NEWSLETTER_SUBSCRIBERS">{t('marketing.marketingCampaigns.newsletterSubscribers')}</MenuItem>
@@ -72,7 +80,11 @@ export default function MarketingCampaignForm({
           </RhfTextField>
         </Grid>
         {audience === 'AUDIENCE_LIST' && (
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField
               control={control}
               name="audience_list_id"
@@ -95,7 +107,7 @@ export default function MarketingCampaignForm({
           </Grid>
         )}
         {reach !== null && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Alert severity={reach > 0 ? 'info' : 'warning'} data-testid="campaign-reach">
               {reach > 0
                 ? `This campaign reaches ${peopleCount(reach)}.`
@@ -103,10 +115,14 @@ export default function MarketingCampaignForm({
             </Alert>
           </Grid>
         )}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField control={control} name="subject" label={t('marketing.marketingCampaigns.emailSubject')} required hint="3–180 characters" />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Controller
             control={control}
             name="scheduled_at"
@@ -122,7 +138,7 @@ export default function MarketingCampaignForm({
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Controller
             control={control}
             name="mjml"
@@ -137,16 +153,18 @@ export default function MarketingCampaignForm({
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <CampaignVariables variables={variables} unknown={unknownVariables} />
         </Grid>
         {errorMessage && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
-        <Grid item xs={12}>
-          <Stack direction="row" justifyContent="flex-end">
+        <Grid size={12}>
+          <Stack direction="row" sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || previewLoading || !formState.isValid}>
               {scheduledAt ? 'Schedule Campaign' : 'Send Now'}
             </Button>

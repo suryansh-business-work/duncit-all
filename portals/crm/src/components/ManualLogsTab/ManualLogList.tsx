@@ -12,7 +12,9 @@ export function ManualLogList({ groups }: Readonly<Props>) {
   if (groups.length === 0)
     return (
       <Card variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No manual logs in this window. Capture conversations, follow-ups, or decisions here.
         </Typography>
       </Card>
@@ -37,9 +39,17 @@ export function ManualLogList({ groups }: Readonly<Props>) {
             <Stack spacing={1.25} sx={{ mt: 1 }}>
               {entries.map((activity) => (
                 <Card key={logKey(activity)} variant="outlined" sx={{ p: 1.5 }}>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.75 }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      alignItems: "center",
+                      mb: 0.75
+                    }}>
                     {activity.summary ? (
-                      <Typography variant="subtitle2" fontWeight={700}>
+                      <Typography variant="subtitle2" sx={{
+                        fontWeight: 700
+                      }}>
                         {activity.summary}
                       </Typography>
                     ) : null}

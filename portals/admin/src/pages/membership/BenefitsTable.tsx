@@ -22,7 +22,9 @@ const getBenefitRowId = (r: BenefitRow) => r.id;
 /** The row's cells as one readable line, so the table shows what it promises
  * without opening the dialog. */
 const renderValues = (r: BenefitRow) => (
-  <Typography variant="caption" color="text.secondary">
+  <Typography variant="caption" sx={{
+    color: "text.secondary"
+  }}>
     {(r.values ?? [])
       .map((v) => `${v.plan_key}: ${v.value || '—'}`)
       .join('  ·  ')}
@@ -41,7 +43,9 @@ const renderStatus = (r: BenefitRow, t: Translate) => (
 
 const renderLabel = (r: BenefitRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 600
+    }}>
       {r.label}
     </Typography>
     {renderValues(r)}

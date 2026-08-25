@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",
-    "date-fns": "^2.30.0",
-    "date-fns-tz": "2.0.1",
-    "typescript": "^5.4.5",
+    "date-fns": "^4.4.0",
+    "date-fns-tz": "^3.2.0",
+    "typescript": "^5.9.3",
     "vitest": "^2.1.9"
   }
 }

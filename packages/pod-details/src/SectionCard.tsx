@@ -55,10 +55,13 @@ export default function SectionCard({
     <Card variant="outlined" sx={mergeSx({ borderRadius: 3, overflow: 'hidden' }, sx)}>
       <Stack
         direction="row"
-        alignItems="center"
         spacing={1.25}
-        sx={{ px: 2.5, py: 1.75, minHeight: 64 }}
-      >
+        sx={{
+          alignItems: "center",
+          px: 2.5,
+          py: 1.75,
+          minHeight: 64
+        }}>
         <Box
           sx={{
             width: 34,
@@ -73,11 +76,22 @@ export default function SectionCard({
         >
           {icon}
         </Box>
-        <Typography variant="subtitle1" fontWeight={900} noWrap sx={{ minWidth: 0 }}>
+        <Typography
+          variant="subtitle1"
+          noWrap
+          sx={{
+            fontWeight: 900,
+            minWidth: 0
+          }}>
           {title}
         </Typography>
         {badge != null && (
-          <Typography variant="body2" color="text.secondary" fontWeight={700}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {badge}
           </Typography>
         )}
@@ -107,8 +121,19 @@ export default function SectionCard({
  */
 export function SectionEmpty({ text }: Readonly<{ text: string }>) {
   return (
-    <Stack alignItems="center" justifyContent="center" sx={{ py: 4, px: 2 }}>
-      <Typography variant="body2" color="text.secondary" textAlign="center">
+    <Stack
+      sx={{
+        alignItems: "center",
+        justifyContent: "center",
+        py: 4,
+        px: 2
+      }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          textAlign: "center"
+        }}>
         {text}
       </Typography>
     </Stack>

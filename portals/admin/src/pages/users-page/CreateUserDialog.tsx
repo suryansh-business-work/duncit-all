@@ -80,10 +80,22 @@ export default function CreateUserDialog({
         <DialogTitle>{t('admin.users.create')}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required /></Grid>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required /></Grid>
-            <Grid item xs={12}><RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} hint="Welcome email is sent if provided." /></Grid>
-            <Grid item xs={4} sm={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}><RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required /></Grid>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}><RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required /></Grid>
+            <Grid size={12}><RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} hint="Welcome email is sent if provided." /></Grid>
+            <Grid
+              size={{
+                xs: 4,
+                sm: 3
+              }}>
               <Controller
                 control={control}
                 name="phone_extension"
@@ -92,8 +104,12 @@ export default function CreateUserDialog({
                 )}
               />
             </Grid>
-            <Grid item xs={8} sm={9}><RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required /></Grid>
-            <Grid item xs={12}>
+            <Grid
+              size={{
+                xs: 8,
+                sm: 9
+              }}><RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required /></Grid>
+            <Grid size={12}>
               <Controller
                 control={control}
                 name="dob"
@@ -102,10 +118,10 @@ export default function CreateUserDialog({
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
-              <RhfTextField control={control} name="password" type={showPwd ? 'text' : 'password'} label={t('admin.users.temporaryPassword')} required hint="Minimum 8 characters." InputProps={{ endAdornment: pwdAdornment }} />
+            <Grid size={12}>
+              <RhfTextField control={control} name="password" type={showPwd ? 'text' : 'password'} label={t('admin.users.temporaryPassword')} required hint="Minimum 8 characters." slotProps={{ input: { endAdornment: pwdAdornment } }} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Controller
                 control={control}
                 name="roles"
@@ -115,21 +131,31 @@ export default function CreateUserDialog({
                     select
                     fullWidth
                     required
-                    SelectProps={{ multiple: true }}
                     value={field.value}
                     onChange={(event) => field.onChange(typeof event.target.value === 'string' ? [event.target.value] : event.target.value)}
                     onBlur={field.onBlur}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message ?? 'At least one role is required.'}
+                    slotProps={{
+                      select: { multiple: true }
+                    }}
                   >
                     {roles.map((role: any) => <MenuItem key={role.key} value={role.key}>{role.name} ({role.key})</MenuItem>)}
                   </TextField>
                 )}
               />
             </Grid>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="city" label={t('admin.profile.city')} /></Grid>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="zone" label={t('admin.profile.zone')} /></Grid>
-            {opError && <Grid item xs={12}><Alert severity="error">{opError}</Alert></Grid>}
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}><RhfTextField control={control} name="city" label={t('admin.profile.city')} /></Grid>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}><RhfTextField control={control} name="zone" label={t('admin.profile.zone')} /></Grid>
+            {opError && <Grid size={12}><Alert severity="error">{opError}</Alert></Grid>}
           </Grid>
         </DialogContent>
         <DialogActions>

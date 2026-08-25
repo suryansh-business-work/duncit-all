@@ -41,32 +41,58 @@ export default function PriceBreakdown({ amount, finance, productCost = 0, spots
       }}
     >
       <Box>
-        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.userPays')}</Typography>
-        <Typography variant="body2" fontWeight={700}>{cur}{r(gross)}</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>{t('podForm.priceBreakdown.userPays')}</Typography>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>{cur}{r(gross)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Platform Fee ({finance.platform_fee_pct}%)
         </Typography>
         <Typography variant="body2">{cur}{r(fee)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">GST ({finance.gst_pct}%)</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>GST ({finance.gst_pct}%)</Typography>
         <Typography variant="body2">{cur}{r(gst)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.payoutBeforeProducts')}</Typography>
-        <Typography variant="body2" fontWeight={700}>{cur}{r(net)}</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>{t('podForm.priceBreakdown.payoutBeforeProducts')}</Typography>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>{cur}{r(net)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.productCostPayableSpot')}</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>{t('podForm.priceBreakdown.productCostPayableSpot')}</Typography>
         <Typography variant="body2">{cur}{r(productShare)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.finalPayout')}</Typography>
-        <Typography variant="body2" fontWeight={700} color="primary.main">{cur}{r(finalPayout)}</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>{t('podForm.priceBreakdown.finalPayout')}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 700,
+            color: "primary.main"
+          }}>{cur}{r(finalPayout)}</Typography>
       </Box>
-      <Typography variant="caption" color="text.secondary" sx={{ gridColumn: '1 / -1' }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          gridColumn: '1 / -1'
+        }}>
         Duncit product cost is divided across the PAYABLE spots (total − 1, since the host&apos;s spot is
         free) when a spot count is available, then deducted from payout.
       </Typography>

@@ -4,8 +4,12 @@ import { changesLabel, durationLabel, sizeLabel, type AppBuildRow } from './quer
 import { formatDateTime } from '@duncit/app-settings';
 
 const Fact = ({ label, value }: Readonly<{ label: string; value: string }>) => (
-  <Stack direction="row" spacing={1} justifyContent="space-between">
-    <Typography variant="body2" color="text.secondary">
+  <Stack direction="row" spacing={1} sx={{
+    justifyContent: "space-between"
+  }}>
+    <Typography variant="body2" sx={{
+      color: "text.secondary"
+    }}>
       {label}
     </Typography>
     <Typography variant="body2" sx={{ textAlign: 'right', wordBreak: 'break-all' }}>

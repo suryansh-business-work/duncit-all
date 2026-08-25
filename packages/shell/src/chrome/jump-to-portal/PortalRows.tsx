@@ -39,7 +39,9 @@ export function PortalRequestRow({ portal, busy, onRequest }: Readonly<RequestRo
     );
   } else {
     action = (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('shell.jumpToPortal.notRequestable')}
       </Typography>
     );

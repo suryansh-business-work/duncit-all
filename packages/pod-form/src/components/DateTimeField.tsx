@@ -28,8 +28,7 @@ export default function DateTimeField({ control, name, label, minDateTime, requi
               required,
               error: !!fieldState.error,
               helperText: fieldState.error?.message,
-            },
-          }}
+            }}}
         />
       )}
     />

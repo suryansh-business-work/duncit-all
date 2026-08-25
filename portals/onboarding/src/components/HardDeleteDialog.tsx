@@ -59,7 +59,9 @@ export default function HardDeleteDialog({
         <DialogContentText>
           Confirm with your own account email and password to continue.
         </DialogContentText>
-        <Stack spacing={2} mt={2}>
+        <Stack spacing={2} sx={{
+          mt: 2
+        }}>
           <TextField
             label={t('onboarding.hardDeleteDialog.yourEmail')}
             type="email"

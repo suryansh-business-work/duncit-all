@@ -79,10 +79,17 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
       <DialogTitle sx={{ fontWeight: 700 }}>{t('contentReport.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('contentReport.subtitle')}
           </Typography>
-          <Typography variant="overline" color="text.secondary" fontWeight={700}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {t('contentReport.reasonLabel')}
           </Typography>
           <RadioGroup

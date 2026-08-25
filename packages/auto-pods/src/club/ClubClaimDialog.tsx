@@ -85,7 +85,9 @@ export function ClubClaimDialog({
       <DialogTitle>{labels.confirmClaim}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {labels.confirmClaimBody}
           </Typography>
           {row ? (

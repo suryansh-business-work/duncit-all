@@ -97,7 +97,11 @@ export default function SignupSurveyPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -146,10 +150,17 @@ export default function SignupSurveyPage() {
       </Box>
 
       <Box>
-        <Typography variant="h4" fontWeight={600}>
+        <Typography variant="h4" sx={{
+          fontWeight: 600
+        }}>
           What's your vibe? ✨
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           Pick at least {MIN_PICKS} interests across categories to find your tribe.
         </Typography>
       </Box>

@@ -12,16 +12,22 @@ export default function CloneExcludedCard({ excluded }: Readonly<{ excluded: str
   return (
     <Accordion variant="outlined" disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography variant="subtitle2" fontWeight={700}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>
           {t('tech.dataClone.excludedTitle', { vars: { total: excluded.length } })}
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dataClone.excludedHint')}
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             {excluded.map((name) => (
               <Chip key={name} size="small" variant="outlined" label={name} />
             ))}

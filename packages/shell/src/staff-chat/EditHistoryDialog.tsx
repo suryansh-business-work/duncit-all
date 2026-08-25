@@ -57,7 +57,9 @@ export default function EditHistoryDialog({
         <Stack spacing={1.5} divider={<Divider flexItem />}>
           {edits.map((edit) => (
             <Stack key={`${edit.at}-${edit.text}`} spacing={0.25}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {edit.at ? formats.full.format(new Date(edit.at)) : t('shell.chat.history.earlier')}
               </Typography>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -79,7 +81,13 @@ export default function EditHistoryDialog({
         </Stack>
 
         {!loading && !error && edits.length === 0 && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mt: 1,
+              display: 'block'
+            }}>
             {t('shell.chat.history.none')}
           </Typography>
         )}

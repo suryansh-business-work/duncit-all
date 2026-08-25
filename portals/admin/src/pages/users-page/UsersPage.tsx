@@ -66,7 +66,9 @@ export default function UsersPage() {
     <Stack spacing={2}>
       <Box>
         <Typography variant="h5">{t('admin.users.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Manage accounts, login methods, roles and access state. Click a row to open details.
         </Typography>
       </Box>

@@ -18,8 +18,16 @@ export default function AdMediaCard({ ad }: Readonly<{ ad: AdRequestDetail }>) {
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1.5
+          }}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {t('adRequest.media.label')}
           </Typography>
           <Chip size="small" variant="outlined" label={adTypeLabel(ad.ad_type, t)} />

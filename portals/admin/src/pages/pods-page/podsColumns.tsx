@@ -40,10 +40,14 @@ const renderCover = (p: PodRow) => {
 
 const renderTitle = (p: PodRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 600
+    }}>
       {p.pod_title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="div">
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>
       {p.pod_id}
     </Typography>
   </Box>
@@ -61,7 +65,9 @@ const renderType = (p: PodRow) => (
 );
 
 const renderHits = (p: PodRow) => (
-  <Stack direction="row" alignItems="center" spacing={0.5} component="span">
+  <Stack direction="row" spacing={0.5} component="span" sx={{
+    alignItems: "center"
+  }}>
     <VisibilityIcon fontSize="inherit" color="action" />
     <Typography variant="caption">{p.pod_hits}</Typography>
   </Stack>
@@ -85,7 +91,9 @@ const renderProducts = (p: PodRow) => {
   if (items.length === 0) return '—';
   return (
     <Tooltip title={productLines(p)}>
-      <Typography variant="caption" fontWeight={700} component="span">
+      <Typography variant="caption" component="span" sx={{
+        fontWeight: 700
+      }}>
         {items.length} product{items.length === 1 ? '' : 's'} · ₹{p.product_cost_total ?? 0}
       </Typography>
     </Tooltip>

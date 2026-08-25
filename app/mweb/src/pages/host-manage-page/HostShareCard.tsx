@@ -87,7 +87,13 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
     <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 0.5
+        }}>
         <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
           {payout.pod_title}
         </Typography>
@@ -95,18 +101,32 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
       </Stack>
       <Stack spacing={0.25}>
         {lines.map((line) => (
-          <Stack key={line.label} direction="row" justifyContent="space-between">
-            <Typography variant="caption" color="text.secondary">
+          <Stack key={line.label} direction="row" sx={{
+            justifyContent: "space-between"
+          }}>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {line.label}
             </Typography>
             <Typography variant="caption">{fmt(line.value)}</Typography>
           </Stack>
         ))}
-        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.25 }}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            mt: 0.25
+          }}>
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
             {payableLabel}
           </Typography>
-          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "primary.main",
+              fontWeight: 700
+            }}>
             {fmt(payable)}
           </Typography>
         </Stack>
@@ -125,7 +145,11 @@ export default function HostShareCard() {
   let body;
   if (loading && !data) {
     body = (
-      <Stack alignItems="center" sx={{ py: 3 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 3
+        }}>
         <CircularProgress size={20} />
       </Stack>
     );
@@ -146,7 +170,13 @@ export default function HostShareCard() {
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <PaidIcon color="primary" />
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             {t('mweb.hostManage.hostShare')}

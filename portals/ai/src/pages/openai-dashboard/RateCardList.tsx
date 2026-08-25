@@ -19,12 +19,22 @@ interface RateRowProps {
 
 function RateRow({ price, onEdit, rateLine, editAria }: Readonly<RateRowProps>) {
   return (
-    <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={600} noWrap title={price.model}>
+        <Typography variant="body2" noWrap title={price.model} sx={{
+          fontWeight: 600
+        }}>
           {price.model}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {rateLine}
         </Typography>
       </Box>

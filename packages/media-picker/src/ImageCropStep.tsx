@@ -60,7 +60,13 @@ export default function ImageCropStep({
   };
 
   return (
-    <Stack spacing={1.5} alignItems="center" sx={{ width: '100%', maxWidth: 480 }}>
+    <Stack
+      spacing={1.5}
+      sx={{
+        alignItems: "center",
+        width: '100%',
+        maxWidth: 480
+      }}>
       <TextField
         select
         fullWidth
@@ -71,7 +77,9 @@ export default function ImageCropStep({
       >
         {options.map((preset) => (
           <MenuItem key={preset.key} value={preset.key}>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <span>{preset.label}</span>
               {preset.key === suggestedKey && (
                 <Chip
@@ -100,8 +108,16 @@ export default function ImageCropStep({
               onCropComplete={handleComplete}
             />
           </Box>
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%' }}>
-            <Typography variant="caption" color="text.secondary">
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{
+              alignItems: "center",
+              width: '100%'
+            }}>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Zoom
             </Typography>
             <Slider
@@ -114,7 +130,9 @@ export default function ImageCropStep({
               aria-label={t('media.crop.zoom')}
             />
           </Stack>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Output {active.width}×{active.height}px — drag to position, pinch or slide to zoom.
           </Typography>
         </>

@@ -26,23 +26,31 @@ export default function ReportIssueSection({
     phase === 'sent' ? t('status.report.sendAnother') : t('status.report.open');
 
   return (
-    <Box component="section" mb={4}>
+    <Box component="section" sx={{
+      mb: 4
+    }}>
       <Typography
         variant="overline"
-        color="text.secondary"
-        sx={{ letterSpacing: '0.12em', fontWeight: 700 }}
-      >
+        sx={{
+          color: "text.secondary",
+          letterSpacing: '0.12em',
+          fontWeight: 700
+        }}>
         {t('status.report.heading')}
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, p: 2.5 }}>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('status.report.intro')}
           </Typography>
 
           {phase === 'sent' && (
             <Alert severity="success" onClose={() => setPhase('closed')}>
-              <Typography fontWeight={700}>{t('status.report.successTitle')}</Typography>
+              <Typography sx={{
+                fontWeight: 700
+              }}>{t('status.report.successTitle')}</Typography>
               <Typography variant="body2">{t('status.report.successBody')}</Typography>
             </Alert>
           )}

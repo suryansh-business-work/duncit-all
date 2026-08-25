@@ -53,9 +53,9 @@ export default function TagsField({ name, label, helperText, suggestions = [] }:
             value={value}
             onChange={(_, next) => field.onChange(cleanTags(next))}
             onBlur={field.onBlur}
-            renderTags={(tags, getTagProps) =>
+            renderValue={(tags, getItemProps) =>
               tags.map((tag, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
+                const { key, ...tagProps } = getItemProps({ index });
                 return <Chip key={key} {...tagProps} label={tag} size="small" variant="outlined" />;
               })
             }

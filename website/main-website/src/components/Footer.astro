@@ -12,44 +12,49 @@ import SmartLink from './SmartLink.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Chrome copy comes from Admin > Localization, baked in at build time with the
-// bundled fallback behind it (rule 38). Link labels are NOT translated here —
-// they are content from the Navigation manager, fetched below.
+// bundled fallback behind it (rule 38).
+//
+// The columns below are the FALLBACK for the Navigation manager's own groups,
+// which win whenever the portal answers (see `fetchNavGroups`). The fallback is
+// localized like every other fallback in the repo — it is what renders when the
+// API is unreachable, and a page that degrades into a second language is not a
+// degraded page, it is a broken one.
 const { t } = await getTranslator();
 const branding = await fetchBranding();
 
 const FALLBACK_COLUMNS = [
   {
-    label: 'About',
+    label: t("website.main.nav.about"),
     links: [
-      { id: 'f-about', label: 'About us', url: '/about' },
-      { id: 'f-newsroom', label: 'Newsroom', url: '/newsroom' },
-      { id: 'f-careers', label: 'Careers', url: '/careers' },
-      { id: 'f-contact', label: 'Contact us', url: '/contact' },
+      { id: "f-about", label: t("website.main.nav.aboutUs"), url: "/about" },
+      { id: "f-newsroom", label: t("website.main.nav.newsroom"), url: "/newsroom" },
+      { id: "f-careers", label: t("website.main.nav.careers"), url: "/careers" },
+      { id: "f-contact", label: t("website.main.nav.contactUs"), url: "/contact" },
     ],
   },
   {
-    label: 'Community',
+    label: t("website.main.nav.community"),
     links: [
-      { id: 'f-community', label: 'Community', url: '/community' },
-      { id: 'f-guidelines', label: 'Guidelines', url: '/guidelines' },
-      { id: 'f-blog', label: 'Blog', url: '/blog' },
+      { id: "f-community", label: t("website.main.nav.community"), url: "/community" },
+      { id: "f-guidelines", label: t("website.main.nav.guidelines"), url: "/guidelines" },
+      { id: "f-blog", label: t("website.main.nav.blog"), url: "/blog" },
     ],
   },
   {
-    label: 'Safety Hub',
+    label: t("website.main.nav.safetyHub"),
     links: [
-      { id: 'f-approach', label: 'Our approach', url: '/safety/approach' },
-      { id: 'f-advice', label: 'Advice', url: '/safety/advice' },
-      { id: 'f-tools', label: 'Safety Tools', url: '/safety/tools' },
-      { id: 'f-resources', label: 'Resources', url: '/safety/resources' },
+      { id: "f-approach", label: t("website.main.nav.ourApproach"), url: "/safety/approach" },
+      { id: "f-advice", label: t("website.main.nav.advice"), url: "/safety/advice" },
+      { id: "f-tools", label: t("website.main.nav.safetyTools"), url: "/safety/tools" },
+      { id: "f-resources", label: t("website.main.nav.resources"), url: "/safety/resources" },
     ],
   },
   {
-    label: 'Support',
+    label: t("website.main.nav.support"),
     links: [
-      { id: 'f-help', label: 'Help Center', url: '/help' },
-      { id: 'f-faq', label: 'FAQ', url: '/faq' },
-      { id: 'f-support-mail', label: 'Email support', url: `mailto:${branding.support_email}` },
+      { id: "f-help", label: t("website.main.nav.helpCenter"), url: "/help" },
+      { id: "f-faq", label: t("website.main.nav.faq"), url: "/faq" },
+      { id: "f-support-mail", label: t("website.main.nav.emailSupport"), url: `mailto:${branding.support_email}` },
     ],
   },
 ];

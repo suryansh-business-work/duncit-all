@@ -4,7 +4,7 @@ import { Box, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material
 import { StatCard, QueryGuard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import HubIcon from '@mui/icons-material/Hub';
 import {
@@ -21,12 +21,22 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 
 function TopBugRow({ bug }: Readonly<{ bug: TopBug }>) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+    <Stack
+      direction="row"
+      spacing={1.5}
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={600} noWrap title={bug.title}>
+        <Typography variant="body2" noWrap title={bug.title} sx={{
+          fontWeight: 600
+        }}>
           {bug.title}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {bug.source} · {bug.page}
         </Typography>
       </Box>
@@ -38,9 +48,10 @@ function TopBugRow({ bug }: Readonly<{ bug: TopBug }>) {
 function TopBugsList({ bugs }: Readonly<{ bugs: readonly TopBug[] }>) {
   if (bugs.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        No open bugs — nice.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>No open bugs — nice.
+              </Typography>
     );
   }
   return (
@@ -130,13 +141,16 @@ export default function TelemetryDashboardPage() {
   const header = (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
-      justifyContent="space-between"
-      alignItems={{ xs: 'flex-start', sm: 'center' }}
       spacing={1}
-    >
+      sx={{
+        justifyContent: "space-between",
+        alignItems: { xs: 'flex-start', sm: 'center' }
+      }}>
       <Box>
         <Typography variant="h5">{t('tech.telemetryDashboard.telemetryDashboard')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Log volume and errors across every surface — mWeb, portals, native iOS/Android and the
           server.
         </Typography>

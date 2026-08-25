@@ -22,7 +22,9 @@ export default function ClubAdminsSection({ admins }: Readonly<{ admins: ClubAdm
 
   return (
     <Box data-testid="club-admins">
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         Club Admins
       </Typography>
       <Stack spacing={1.5}>

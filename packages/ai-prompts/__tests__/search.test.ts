@@ -4,7 +4,7 @@ import { promptSearchText } from '../src/search';
 import type { AiPrompt } from '../src/types';
 
 const prompt = (over: Partial<AiPrompt> = {}): AiPrompt =>
-  ({
+  (({
     id: 'p1',
     key: 'ask-bot.navigation',
     kind: 'CODE',
@@ -19,8 +19,8 @@ const prompt = (over: Partial<AiPrompt> = {}): AiPrompt =>
     usage: [],
     token_count: 42,
     is_active: true,
-    ...over,
-  }) as AiPrompt;
+    ...over
+  }) as AiPrompt);
 
 describe('promptSearchText', () => {
   it('searches the BODY too — an operator remembers a sentence, not a row name', () => {

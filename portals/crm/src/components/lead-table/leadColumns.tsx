@@ -96,10 +96,14 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
   const { extra } = meta;
   const renderName = (row: T): ReactNode => (
     <Stack sx={{ lineHeight: 1.2 }} component="span">
-      <Typography variant="body2" fontWeight={700} noWrap component="span">
+      <Typography variant="body2" noWrap component="span" sx={{
+        fontWeight: 700
+      }}>
         {fieldText(row, meta.nameField)}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="span">
+      <Typography variant="caption" noWrap component="span" sx={{
+        color: "text.secondary"
+      }}>
         {row.contacts?.[0]?.mobile_number || '—'}
       </Typography>
     </Stack>

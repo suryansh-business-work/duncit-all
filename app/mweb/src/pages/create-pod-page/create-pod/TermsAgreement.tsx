@@ -20,11 +20,15 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
                 sx={{ pt: 0.25 }}
-                inputProps={{ 'aria-label': t('mweb.createPod.termsAria') }}
+                slotProps={{
+                  input: { 'aria-label': t('mweb.createPod.termsAria') }
+                }}
               />
             }
             label={
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {t('mweb.createPod.termsLeadIn')}{' '}
                 <Link href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
                   {t('mweb.createPod.termsLink')}

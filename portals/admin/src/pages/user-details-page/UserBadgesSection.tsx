@@ -26,20 +26,40 @@ export default function UserBadgesSection({ userId }: Readonly<{ userId: string 
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <EmojiEventsIcon color="primary" fontSize="small" />
           <Typography variant="subtitle1">Badges ({badges.length})</Typography>
         </Stack>
         {badges.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">{t('admin.badges.empty')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('admin.badges.empty')}</Typography>
         ) : (
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: 'repeat(auto-fill,minmax(96px,1fr))' }}>
             {badges.map((ub: any) => (
-              <Stack key={ub.id} alignItems="center" spacing={0.5} sx={{ textAlign: 'center' }}>
+              <Stack
+                key={ub.id}
+                spacing={0.5}
+                sx={{
+                  alignItems: "center",
+                  textAlign: 'center'
+                }}>
                 <Avatar src={ub.badge?.image_url || undefined} sx={{ width: 48, height: 48, bgcolor: 'primary.light' }}>
                   {!ub.badge?.image_url && <EmojiEventsIcon fontSize="small" />}
                 </Avatar>
-                <Typography variant="caption" fontWeight={600} noWrap sx={{ width: '100%' }}>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{
+                    fontWeight: 600,
+                    width: '100%'
+                  }}>
                   {ub.badge?.title}
                 </Typography>
               </Stack>

@@ -63,13 +63,19 @@ export default function AdsApprovalsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <CampaignIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Ads Approval
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Review ad requests submitted from the Ads portal. Approval freezes the cost at the
             current pricing.
           </Typography>

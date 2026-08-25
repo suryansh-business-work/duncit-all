@@ -97,11 +97,17 @@ export default function PodProductDialog({
     <Dialog fullScreen open={open} onClose={close}>
       <AppBar position="sticky" color="default" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Toolbar sx={{ gap: 1 }}>
-          <Stack flexGrow={1} minWidth={0}>
+          <Stack
+            sx={{
+              flexGrow: 1,
+              minWidth: 0
+            }}>
             <Typography variant="h6" noWrap>
               {t('podProduct.dialogTitle')}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {t('podProduct.dialogSubtitle')}
             </Typography>
           </Stack>
@@ -112,7 +118,12 @@ export default function PodProductDialog({
       </AppBar>
 
       <Grid container sx={{ flexGrow: 1, minHeight: 0 }}>
-        <Grid item xs={12} md={8} sx={{ p: 2, overflowY: 'auto' }}>
+        <Grid
+          sx={{ p: 2, overflowY: 'auto' }}
+          size={{
+            xs: 12,
+            md: 8
+          }}>
           <Stack spacing={2}>
             <ProductFilterBar
               criteria={criteria}
@@ -122,7 +133,9 @@ export default function PodProductDialog({
               t={t}
             />
             <Divider />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('podProduct.resultCount', { vars: { count: visible.length } })}
             </Typography>
             <ProductResults
@@ -136,11 +149,11 @@ export default function PodProductDialog({
           </Stack>
         </Grid>
         <Grid
-          item
-          xs={12}
-          md={4}
           sx={{ borderLeft: { md: 1 }, borderColor: { md: 'divider' }, overflowY: 'auto' }}
-        >
+          size={{
+            xs: 12,
+            md: 4
+          }}>
           <SelectionPanel
             product={selected}
             quantity={quantity}
@@ -178,7 +191,13 @@ function ProductResults({ products, total, added, selectedId, onSelect, t }: Rea
     <Box>
       <Grid container spacing={2}>
         {products.map((product) => (
-          <Grid item xs={12} sm={6} lg={4} key={product.id}>
+          <Grid
+            key={product.id}
+            size={{
+              xs: 12,
+              sm: 6,
+              lg: 4
+            }}>
             <ProductCard
               product={product}
               selected={product.id === selectedId}

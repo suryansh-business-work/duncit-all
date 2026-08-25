@@ -75,7 +75,9 @@ export default function BadgeFormDialog({ open, form, setForm, busy, onClose, on
             disabled={form.condition_type === 'MANUAL'}
             fullWidth
           />
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Switch
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}

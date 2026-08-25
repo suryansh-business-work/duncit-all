@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined';
 import RedeemIcon from '@mui/icons-material/RedeemOutlined';
 
 /** A titled block of the pod page, hidden entirely when it has nothing to say. */
@@ -10,7 +10,12 @@ export function PreviewSection({
 }: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.75 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 800,
+          mb: 0.75
+        }}>
         {title}
       </Typography>
       {children}
@@ -33,9 +38,13 @@ export function PreviewBullets({
   return (
     <Stack spacing={0.5}>
       {items.map((item) => (
-        <Stack key={item} direction="row" spacing={0.75} alignItems="flex-start">
+        <Stack key={item} direction="row" spacing={0.75} sx={{
+          alignItems: "flex-start"
+        }}>
           {icon}
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {item}
           </Typography>
         </Stack>
@@ -62,16 +71,25 @@ export function PreviewCharges({
   return (
     <Stack spacing={0.5} divider={<Divider flexItem />}>
       {charges.map((charge) => (
-        <Stack key={charge.label} direction="row" justifyContent="space-between" spacing={1}>
+        <Stack key={charge.label} direction="row" spacing={1} sx={{
+          justifyContent: "space-between"
+        }}>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="body2">{charge.label}</Typography>
             {charge.note && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {charge.note}
               </Typography>
             )}
           </Box>
-          <Typography variant="body2" fontWeight={700} sx={{ flex: '0 0 auto' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 700,
+              flex: '0 0 auto'
+            }}>
             {money(charge.amount)}
           </Typography>
         </Stack>

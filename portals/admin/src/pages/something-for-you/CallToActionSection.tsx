@@ -47,7 +47,9 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         Call to action
       </Typography>
 
@@ -82,7 +84,9 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
             <li {...props} key={option.path}>
               <Stack>
                 <Typography variant="body2">{option.label}</Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {option.path}
                 </Typography>
               </Stack>

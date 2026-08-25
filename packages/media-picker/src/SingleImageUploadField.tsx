@@ -82,7 +82,9 @@ export default function SingleImageUploadField({
   }
 
   return (
-    <Stack spacing={0.75} alignItems="flex-start">
+    <Stack spacing={0.75} sx={{
+      alignItems: "flex-start"
+    }}>
       {chrome}
       <AiMonitoringChip />
     </Stack>

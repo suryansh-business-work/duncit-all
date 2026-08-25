@@ -83,7 +83,7 @@ export function CurrentPasswordForm({
           placeholder={t('mweb.changePassword.enterYourCurrentPassword')}
           autoComplete="current-password"
           size="small"
-          InputProps={passwordAdornments(show, () => setShow((v) => !v))}
+          slotProps={{ input: passwordAdornments(show, () => setShow((v) => !v)) }}
         />
         <Button
           type="submit"
@@ -138,15 +138,15 @@ export function NewPasswordForm({
           required
           hint="6-digit code"
           placeholder="123456"
-          inputProps={{ inputMode: 'numeric', maxLength: 6 }}
-          size="small"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <PinOutlinedIcon fontSize="small" />
               </InputAdornment>
             ),
-          }}
+          }, htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+          size="small"
+          
         />
         <RhfTextField
           control={control}
@@ -158,7 +158,7 @@ export function NewPasswordForm({
           placeholder={t('mweb.changePassword.createANewPassword')}
           autoComplete="new-password"
           size="small"
-          InputProps={passwordAdornments(showPwd, () => setShowPwd((v) => !v))}
+          slotProps={{ input: passwordAdornments(showPwd, () => setShowPwd((v) => !v)) }}
         />
         <RhfTextField
           control={control}
@@ -169,7 +169,7 @@ export function NewPasswordForm({
           placeholder={t('mweb.changePassword.reEnterNewPassword')}
           autoComplete="new-password"
           size="small"
-          InputProps={passwordAdornments(showConfirm, () => setShowConfirm((v) => !v))}
+          slotProps={{ input: passwordAdornments(showConfirm, () => setShowConfirm((v) => !v)) }}
         />
         <Button
           type="submit"

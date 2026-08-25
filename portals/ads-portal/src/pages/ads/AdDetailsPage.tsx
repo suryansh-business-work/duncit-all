@@ -31,15 +31,27 @@ function AdDetailsContent({ ad }: Readonly<{ ad: AdRequestDetail }>) {
         title={ad.ad_title}
         actions={<StatusChip status={ad.status} colorMap={AD_STATUS_COLORS} />}
       />
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Submitted {formatDateCell(ad.created_at, 'd MMM yyyy, HH:mm')}
       </Typography>
       <MarketingRemarks ad={ad} />
-      <Grid container spacing={2} alignItems="flex-start">
-        <Grid item xs={12} md={5}>
+      <Grid container spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 5
+          }}>
           <AdMediaCard ad={ad} />
         </Grid>
-        <Grid item xs={12} md={7}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 7
+          }}>
           <AdSummaryCard ad={ad} />
         </Grid>
       </Grid>

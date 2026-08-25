@@ -46,7 +46,9 @@ const partnerTypesOf = (row: PartnerRow) =>
   (row.roles ?? []).filter((r) => PARTNER_TYPES[r]).map((r) => PARTNER_TYPES[r]);
 
 const renderTypes = (row: PartnerRow) => (
-  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+  <Stack direction="row" spacing={0.5} useFlexGap sx={{
+    flexWrap: "wrap"
+  }}>
     {partnerTypesOf(row).map((label) => (
       <Chip key={label} size="small" variant="outlined" color="primary" label={label} />
     ))}
@@ -55,10 +57,17 @@ const renderTypes = (row: PartnerRow) => (
 
 const renderPartner = (row: PartnerRow) => (
   <>
-    <Typography variant="body2" fontWeight={700}>
+    <Typography variant="body2" sx={{
+      fontWeight: 700
+    }}>
       {row.full_name || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" display="block">
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {row.email || row.phone_number || '—'}
     </Typography>
   </>
@@ -91,13 +100,23 @@ export default function PartnersPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <HandshakeIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Partners
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Everyone with partner access — hosts, venue partners, product sellers and club admins.
           </Typography>
         </Box>

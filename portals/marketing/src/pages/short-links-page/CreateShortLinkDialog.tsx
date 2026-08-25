@@ -46,10 +46,14 @@ export default function CreateShortLinkDialog({
     <Dialog open fullWidth maxWidth="sm" onClose={loading ? undefined : onClose}>
       <DialogTitle sx={{ pb: 0.5 }}>
         {/* DialogTitle is already an h2 — a nested h6 is invalid HTML. */}
-        <Typography variant="h6" component="div" fontWeight={700}>
+        <Typography variant="h6" component="div" sx={{
+          fontWeight: 700
+        }}>
           New short link
         </Typography>
-        <Typography variant="body2" component="div" color="text.secondary">
+        <Typography variant="body2" component="div" sx={{
+          color: "text.secondary"
+        }}>
           You get a duncit.com link that tags its destination for you.
         </Typography>
       </DialogTitle>

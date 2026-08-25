@@ -70,7 +70,9 @@ function ProgressSection({ job, running, pct }: Readonly<{ job: WaExtraction; ru
       ) : (
         <LinearProgress variant="determinate" value={running ? pct : 100} color={barColorFor(job.status)} sx={{ borderRadius: 1 }} />
       )}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {running ? `${job.processed} / ${job.total || '…'} contacts (${pct}%)` : `${job.processed} contacts processed`}
       </Typography>
     </Box>
@@ -85,7 +87,12 @@ function StatRow({ job }: Readonly<{ job: WaExtraction }>) {
     ['New leads', job.leads_created, 'primary.main'],
   ];
   return (
-    <Stack direction="row" flexWrap="wrap" gap={0.75}>
+    <Stack
+      direction="row"
+      sx={{
+        flexWrap: "wrap",
+        gap: 0.75
+      }}>
       {stats.map(([label, value, color]) => (
         <Chip key={label} size="small" variant="outlined" label={`${label}: ${value}`} sx={{ color, borderColor: color }} />
       ))}
@@ -111,9 +118,15 @@ function StatsDialog({ job, open, onClose }: Readonly<{ job: WaExtraction; open:
       <DialogContent dividers>
         <Stack spacing={1}>
           {rows.map(([label, value]) => (
-            <Stack key={label} direction="row" justifyContent="space-between">
-              <Typography variant="body2" color="text.secondary">{label}</Typography>
-              <Typography variant="body2" fontWeight={700}>{value}</Typography>
+            <Stack key={label} direction="row" sx={{
+              justifyContent: "space-between"
+            }}>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{label}</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 700
+              }}>{value}</Typography>
             </Stack>
           ))}
           {job.error && <Typography variant="body2" color="error">{job.error}</Typography>}
@@ -144,13 +157,25 @@ export default function ExtractionWidget() {
       elevation={8}
       sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1300, width: 320, borderRadius: 3, overflow: 'hidden' }}
     >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1.5, pb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          p: 1.5,
+          pb: 1
+        }}>
         {running ? (
           <SyncIcon color="warning" sx={{ animation: `${spin} 1.2s linear infinite` }} />
         ) : (
           <SyncIcon color={job.status === 'FAILED' ? 'error' : 'success'} />
         )}
-        <Typography fontWeight={800} sx={{ flex: 1 }} noWrap>
+        <Typography
+          noWrap
+          sx={{
+            fontWeight: 800,
+            flex: 1
+          }}>
           {title}
         </Typography>
         <Tooltip title={t('crm.tools.details')}>

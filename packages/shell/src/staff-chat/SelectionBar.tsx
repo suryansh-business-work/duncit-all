@@ -23,10 +23,14 @@ export default function SelectionBar({ selection }: Readonly<Props>) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
-      sx={{ p: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'action.selected' }}
-    >
+      sx={{
+        alignItems: "center",
+        p: 1,
+        borderBottom: 1,
+        borderColor: 'divider',
+        bgcolor: 'action.selected'
+      }}>
       <Tooltip title={t('shell.chat.selection.clear')}>
         <IconButton size="small" onClick={clear} aria-label={t('shell.chat.selection.clear')}>
           <CloseIcon fontSize="small" />

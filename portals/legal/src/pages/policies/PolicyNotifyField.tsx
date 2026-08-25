@@ -75,13 +75,19 @@ export default function PolicyNotifyField({
         }
         label={t('legal.policies.notify.label')}
       />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {renderReach()}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('legal.policies.notify.hint')}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {renderLastSent()}
       </Typography>
       {checked && (

@@ -125,26 +125,59 @@ export default function WaterfallAccordions({ breakdown }: Readonly<{ breakdown:
       {buildSteps(breakdown, t).map((step) => (
         <Accordion key={step.key} disableGutters variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flex: 1, pr: 1 }}>
-              <Typography variant="body2" fontWeight={700}>{step.title}</Typography>
-              <Typography variant="body2" fontWeight={700}>{step.amount}</Typography>
+            <Stack
+              direction="row"
+              sx={{
+                justifyContent: "space-between",
+                alignItems: "center",
+                flex: 1,
+                pr: 1
+              }}>
+              <Typography variant="body2" sx={{
+                fontWeight: 700
+              }}>{step.title}</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 700
+              }}>{step.amount}</Typography>
             </Stack>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="caption" color="text.secondary">{step.caption}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{step.caption}</Typography>
             {step.lines?.map((line) => (
-              <Stack key={line.key} direction="row" justifyContent="space-between" sx={{ mt: 1, pl: 2 }}>
-                <Typography variant="body2" fontWeight={line.bold ? 700 : 400}>{line.label}</Typography>
-                <Typography variant="body2" fontWeight={line.bold ? 700 : 400}>{line.value}</Typography>
+              <Stack
+                key={line.key}
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                  mt: 1,
+                  pl: 2
+                }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: line.bold ? 700 : 400
+                }}>{line.label}</Typography>
+                <Typography variant="body2" sx={{
+                  fontWeight: line.bold ? 700 : 400
+                }}>{line.value}</Typography>
               </Stack>
             ))}
           </AccordionDetails>
         </Accordion>
       ))}
       <Divider sx={{ my: 1.5 }} />
-      <Stack direction="row" justifyContent="space-between" sx={{ px: 2 }}>
-        <Typography variant="body2" fontWeight={800}>{t('finance.podFinance.totalMatchesCustomerPayment')}</Typography>
-        <Typography variant="body2" fontWeight={800}>{money(sym, total)}</Typography>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          px: 2
+        }}>
+        <Typography variant="body2" sx={{
+          fontWeight: 800
+        }}>{t('finance.podFinance.totalMatchesCustomerPayment')}</Typography>
+        <Typography variant="body2" sx={{
+          fontWeight: 800
+        }}>{money(sym, total)}</Typography>
       </Stack>
     </Box>
   );

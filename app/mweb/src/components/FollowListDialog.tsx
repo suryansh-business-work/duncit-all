@@ -64,7 +64,13 @@ interface RowProps {
 function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly<RowProps>) {
   const name = person.full_name || person.first_name || 'Duncit user';
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ py: 1 }}>
+    <Stack
+      direction="row"
+      spacing={1.5}
+      sx={{
+        alignItems: "center",
+        py: 1
+      }}>
       <Avatar
         src={person.profile_photo || undefined}
         onClick={() => onOpen(person.user_id)}
@@ -76,10 +82,14 @@ function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly<RowProps>) {
         onClick={() => onOpen(person.user_id)}
         sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
       >
-        <Typography fontWeight={600} noWrap>
+        <Typography noWrap sx={{
+          fontWeight: 600
+        }}>
           {name}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           @{person.username}
         </Typography>
       </Box>
@@ -145,7 +155,13 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
   };
 
   const emptyOrList = people.length === 0 ? (
-    <Typography color="text.secondary" textAlign="center" sx={{ py: 4, fontWeight: 700 }}>
+    <Typography
+      sx={{
+        color: "text.secondary",
+        textAlign: "center",
+        py: 4,
+        fontWeight: 700
+      }}>
       {tab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
     </Typography>
   ) : (
@@ -166,7 +182,11 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
     <ResponsiveDialog open={open} onClose={onClose} title={t('mweb.followList.connections')} sheetMaxHeight="80dvh">
       <DuncitTabs {...tabs} variant="fullWidth" sx={{ mb: 1 }} />
       {loading && people.length === 0 ? (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress size={28} />
         </Stack>
       ) : (

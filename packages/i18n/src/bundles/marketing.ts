@@ -312,7 +312,6 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       skipped: 'Skipped',
       spent: 'Spent',
       template: 'Template',
-      templateParams: 'Template params',
       tries: 'Tries',
       userName: 'User name',
       videoHeader: 'Video header',

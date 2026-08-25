@@ -33,21 +33,33 @@ export default function CaptchaField<T extends FieldValues>({
     <Box>
       <Typography
         variant="overline"
-        color="text.secondary"
-        sx={{ letterSpacing: '0.12em', fontWeight: 700 }}
-      >
+        sx={{
+          color: "text.secondary",
+          letterSpacing: '0.12em',
+          fontWeight: 700
+        }}>
         {copy.title}
       </Typography>
-      <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mt: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "flex-start",
+          mt: 0.5
+        }}>
         {captcha.image ? (
           <Box
             component="img"
             src={captcha.image}
             alt={copy.imageAlt}
-            width={180}
-            height={60}
-            sx={{ borderRadius: 1.5, border: 1, borderColor: 'divider', flexShrink: 0 }}
-          />
+            sx={{
+              width: 180,
+              height: 60,
+              borderRadius: 1.5,
+              border: 1,
+              borderColor: 'divider',
+              flexShrink: 0
+            }} />
         ) : (
           <Skeleton variant="rounded" width={180} height={60} sx={{ flexShrink: 0 }} />
         )}
@@ -70,7 +82,7 @@ export default function CaptchaField<T extends FieldValues>({
           hint={hint}
           autoComplete="off"
           spellCheck={false}
-          inputProps={{ maxLength: 8, style: { textTransform: 'uppercase', letterSpacing: 4 } }}
+          slotProps={{ htmlInput: { maxLength: 8, style: { textTransform: 'uppercase', letterSpacing: 4 } } }}
         />
       </Stack>
     </Box>

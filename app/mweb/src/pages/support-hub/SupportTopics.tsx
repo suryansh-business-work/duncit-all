@@ -1,6 +1,6 @@
 import { Box, List, ListItemButton, Paper, Stack, Typography } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import { useNavigate } from 'react-router-dom';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
 import type { FaqGroup } from './faqQueries';
@@ -15,7 +15,12 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
   if (groups.length === 0) return null;
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Topics
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '16px', overflow: 'hidden' }}>
@@ -51,7 +56,9 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
                   <Typography sx={{ fontWeight: 600 }} noWrap>
                     {name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {group.faqs.length} {group.faqs.length === 1 ? 'article' : 'articles'}
                   </Typography>
                 </Stack>

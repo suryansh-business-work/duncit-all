@@ -57,7 +57,9 @@ export default function CheckoutFields({
               fullWidth
               helperText={t('mweb.checkout.dummyGatewayOnly')}
               sx={fieldSx}
-              SelectProps={{ MenuProps: selectMenuProps }}
+              slotProps={{
+                select: { MenuProps: selectMenuProps }
+              }}
             >
               <MenuItem value="success">{t('mweb.checkout.successfulPayment')}</MenuItem>
               <MenuItem value="fail">{t('mweb.checkout.failedPayment')}</MenuItem>

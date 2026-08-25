@@ -8,7 +8,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import CategoryIcon from '@mui/icons-material/Category';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';

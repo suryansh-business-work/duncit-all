@@ -56,7 +56,9 @@ export default function BadgeDetailsSheet({
   return (
     <ResponsiveDialog open={open} onClose={onClose} bottomSheetOnly title={t('mweb.badges.badgeDetails')}>
       <Stack spacing={2} sx={{ pb: 1 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "center"
+        }}>
           <Avatar
             src={badge.image_url || undefined}
             sx={{ width: 72, height: 72, bgcolor: 'primary.light' }}
@@ -64,7 +66,9 @@ export default function BadgeDetailsSheet({
             {!badge.image_url && <EmojiEventsIcon fontSize="large" />}
           </Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h6" fontWeight={700} noWrap>
+            <Typography variant="h6" noWrap sx={{
+              fontWeight: 700
+            }}>
               {badge.title || 'Badge'}
             </Typography>
             {conditionLabel && (
@@ -83,7 +87,9 @@ export default function BadgeDetailsSheet({
 
         {badge.description && (
           <Box>
-            <Typography variant="overline" color="text.secondary">
+            <Typography variant="overline" sx={{
+              color: "text.secondary"
+            }}>
               About this badge
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -94,11 +100,17 @@ export default function BadgeDetailsSheet({
 
         {progress && (
           <Box>
-            <Stack direction="row" justifyContent="space-between">
-              <Typography variant="caption" color="text.secondary">
+            <Stack direction="row" sx={{
+              justifyContent: "space-between"
+            }}>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Progress
               </Typography>
-              <Typography variant="caption" fontWeight={600}>
+              <Typography variant="caption" sx={{
+                fontWeight: 600
+              }}>
                 {progress.current} / {progress.total}
               </Typography>
             </Stack>
@@ -111,7 +123,9 @@ export default function BadgeDetailsSheet({
         )}
 
         {awardedAt && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Earned on {formatDate(awardedAt)}
           </Typography>
         )}

@@ -60,7 +60,9 @@ export default function SlackComposer({ channelId, onSent }: Readonly<Props>) {
 
   return (
     <Box sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
-      <Stack direction="row" spacing={1} alignItems="flex-end">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "flex-end"
+      }}>
         <TextField
           fullWidth
           size="small"

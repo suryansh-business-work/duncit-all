@@ -16,18 +16,27 @@ export default function DistributionCard({ title, buckets }: Readonly<Props>) {
           {title}
         </Typography>
         {buckets.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No data in this range.
           </Typography>
         ) : (
           <Stack spacing={1.25} sx={{ mt: 1 }}>
             {buckets.map((b) => (
               <Box key={b.key}>
-                <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.25 }}>
+                <Stack
+                  direction="row"
+                  sx={{
+                    justifyContent: "space-between",
+                    mb: 0.25
+                  }}>
                   <Typography variant="caption" noWrap title={b.key} sx={{ maxWidth: '75%' }}>
                     {b.key}
                   </Typography>
-                  <Typography variant="caption" fontWeight={700}>
+                  <Typography variant="caption" sx={{
+                    fontWeight: 700
+                  }}>
                     {b.count}
                   </Typography>
                 </Stack>

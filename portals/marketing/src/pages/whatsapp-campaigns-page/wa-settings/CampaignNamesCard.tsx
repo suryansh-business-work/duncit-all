@@ -6,7 +6,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { CampaignNameForm, type CampaignNameValues } from '../campaign-name-form';
 import type { WaCampaignNameOption } from '../queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -19,13 +19,19 @@ function NameRow({
 }: Readonly<{ option: WaCampaignNameOption; busy: boolean; onDelete: () => void }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={700} noWrap>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 700
+        }}>
           {option.name}
         </Typography>
         {option.description && (
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" noWrap sx={{
+            color: "text.secondary"
+          }}>
             {option.description}
           </Typography>
         )}
@@ -63,16 +69,22 @@ export default function CampaignNamesCard({ busy, names, onAdd, onDelete }: Read
     <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
       <Stack spacing={1.5}>
         <Stack spacing={0.25}>
-          <Typography variant="subtitle1" fontWeight={800}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>
             Campaign names
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Add each campaign exactly as it is named in AiSensy. Everything that sends picks from
             this list.
           </Typography>
         </Stack>
         {names.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Nothing here yet.
           </Typography>
         )}

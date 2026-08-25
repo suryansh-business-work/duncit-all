@@ -29,11 +29,17 @@ export default function GiftCardClaimPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%' }}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.giftCards.title')}
         </Typography>
         {loading && !card && (
-          <Stack alignItems="center" sx={{ py: 4 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}>
             <CircularProgress size={24} />
           </Stack>
         )}

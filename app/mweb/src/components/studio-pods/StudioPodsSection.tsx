@@ -25,7 +25,11 @@ function StudioPodsBody({
   const { t } = useTranslation();
   if (loading) {
     return (
-      <Stack alignItems="center" sx={{ py: 3 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 3
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
@@ -46,7 +50,9 @@ function StudioPodsBody({
   }
   if (pods.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {emptyText}
       </Typography>
     );
@@ -103,7 +109,12 @@ export default function StudioPodsSection({
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {subtitle}
             </Typography>
           </Stack>
@@ -114,7 +125,9 @@ export default function StudioPodsSection({
           {!loading && <StudioPodsFigures summary={summary} scopeLabel={scopeLabel} />}
 
           {capped && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.studioPods.showingLatest', { vars: { pods: pods.length } })}
             </Typography>
           )}

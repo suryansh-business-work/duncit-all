@@ -23,7 +23,16 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
   const isResolved = session.status === 'CLOSED';
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1.25} sx={{ px: 2, py: 1, borderBottom: 1, borderColor: 'divider' }}>
+    <Stack
+      direction="row"
+      spacing={1.25}
+      sx={{
+        alignItems: "center",
+        px: 2,
+        py: 1,
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
       <Avatar src={session.user.avatar_url || undefined} sx={{ width: 32, height: 32, fontSize: 13 }}>
         {session.user.name?.[0]?.toUpperCase() || '?'}
       </Avatar>
@@ -31,7 +40,9 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
         <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
           {session.user.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {session.ticket_no}
           {session.user.phone ? ` · ${session.user.phone}` : ''}
         </Typography>

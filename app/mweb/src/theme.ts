@@ -174,6 +174,34 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiButton: {
       defaultProps: { disableElevation: true },
+      // Was containedPrimary / outlinedPrimary / textPrimary — MUI 9 dropped
+      // those class slots, so the same rules match on props instead.
+      variants: [
+        {
+          props: { variant: 'contained', color: 'primary' },
+          style: {
+            backgroundColor: PRIMARY,
+            color: WHITE,
+            '&:hover': { backgroundColor: PRIMARY_HOVER },
+            '&:active': { backgroundColor: PRIMARY_ACTIVE },
+          },
+        },
+        {
+          props: { variant: 'outlined', color: 'primary' },
+          style: {
+            borderColor: PRIMARY,
+            color: PRIMARY,
+            '&:hover': { borderColor: PRIMARY_HOVER, backgroundColor: alpha(PRIMARY, 0.06) },
+          },
+        },
+        {
+          props: { variant: 'text', color: 'primary' },
+          style: {
+            color: PRIMARY,
+            '&:hover': { backgroundColor: alpha(PRIMARY, 0.06) },
+          },
+        },
+      ],
       styleOverrides: {
         root: {
           borderRadius: RADIUS.pill,
@@ -189,24 +217,6 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         },
         sizeLarge: { paddingInline: 20, paddingBlock: 11, fontSize: '0.92rem' },
         sizeSmall: { paddingInline: 12, paddingBlock: 6, fontSize: '0.78rem' },
-        containedPrimary: {
-          backgroundColor: PRIMARY,
-          color: WHITE,
-          '&:hover': { backgroundColor: PRIMARY_HOVER },
-          '&:active': { backgroundColor: PRIMARY_ACTIVE },
-        },
-        outlinedPrimary: {
-          borderColor: PRIMARY,
-          color: PRIMARY,
-          '&:hover': {
-            borderColor: PRIMARY_HOVER,
-            backgroundColor: alpha(PRIMARY, 0.06),
-          },
-        },
-        textPrimary: {
-          color: PRIMARY,
-          '&:hover': { backgroundColor: alpha(PRIMARY, 0.06) },
-        },
         outlined: {
           borderColor: BORDER,
           color: INK,
@@ -224,6 +234,13 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiChip: {
       defaultProps: { size: 'small' },
+      variants: [
+        { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: PRIMARY, color: WHITE } },
+        {
+          props: { variant: 'filled', color: 'secondary' },
+          style: { backgroundColor: tokens.semantic.secondary, color: WHITE },
+        },
+      ],
       styleOverrides: {
         root: {
           borderRadius: RADIUS.pill,
@@ -233,8 +250,6 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           fontSize: '0.8125rem',
         },
         outlined: { borderColor: BORDER, backgroundColor: SURFACE },
-        filledPrimary: { backgroundColor: PRIMARY, color: WHITE },
-        filledSecondary: { backgroundColor: tokens.semantic.secondary, color: WHITE },
       },
     },
     MuiTextField: {
@@ -286,12 +301,26 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
     },
     MuiAlert: {
+      variants: [
+        {
+          props: { variant: 'standard', severity: 'info' },
+          style: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
+        },
+        {
+          props: { variant: 'standard', severity: 'success' },
+          style: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
+        },
+        {
+          props: { variant: 'standard', severity: 'warning' },
+          style: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
+        },
+        {
+          props: { variant: 'standard', severity: 'error' },
+          style: { backgroundColor: alpha(tokens.semantic.error, 0.12), color: INK },
+        },
+      ],
       styleOverrides: {
         root: { borderRadius: RADIUS.input, border: `1px solid ${BORDER}` },
-        standardInfo: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
-        standardSuccess: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
-        standardWarning: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
-        standardError: { backgroundColor: alpha(tokens.semantic.error, 0.12), color: INK },
       },
     },
     MuiAvatar: { styleOverrides: { root: { fontWeight: 700 } } },

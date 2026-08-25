@@ -73,7 +73,13 @@ export default function SomethingForYouRail() {
 
   return (
     <Stack spacing={1.25}>
-      <Typography variant="overline" fontWeight={800} color="text.secondary" sx={{ px: 0.25 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          fontWeight: 800,
+          color: "text.secondary",
+          px: 0.25
+        }}>
         {t('mweb.home.somethingForYou')}
       </Typography>
 

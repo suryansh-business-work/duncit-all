@@ -71,10 +71,14 @@ export default function AddSlotFields({
         }
         label={
           <Box>
-            <Typography variant="body2" fontWeight={800}>
+            <Typography variant="body2" sx={{
+              fontWeight: 800
+            }}>
               {t('shell.slots.wholeDay')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.availability.wholeDayHint')}
             </Typography>
           </Box>
@@ -139,15 +143,19 @@ export default function AddSlotFields({
         label={t('shell.availability.price')}
         value={price}
         onChange={(e) => patch({ price: e.target.value })}
-        inputProps={{ min: 0, step: 50 }}
         helperText={t('shell.availability.priceHint')}
+        slotProps={{
+          htmlInput: { min: 0, step: 50 }
+        }}
       />
       <TextField
         size="small"
         label={t('shell.availability.notes')}
         value={notes}
         onChange={(e) => patch({ notes: e.target.value })}
-        inputProps={{ maxLength: 280 }}
+        slotProps={{
+          htmlInput: { maxLength: 280 }
+        }}
       />
     </>
   );

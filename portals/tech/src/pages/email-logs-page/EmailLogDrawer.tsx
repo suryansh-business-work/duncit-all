@@ -71,9 +71,18 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
       anchor="right"
       open={Boolean(logId)}
       onClose={onClose}
-      PaperProps={{ sx: { width: { xs: '100%', md: 720 }, maxWidth: '100%' } }}
+      slotProps={{
+        paper: { sx: { width: { xs: '100%', md: 720 }, maxWidth: '100%' } }
+      }}
     >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 2, pb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          p: 2,
+          pb: 1
+        }}>
         <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
           {row?.subject || 'Email'}
         </Typography>
@@ -105,7 +114,12 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
       )}
 
       {!loading && !row && logId && (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 3 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            p: 3
+          }}>
           This log entry no longer exists.
         </Typography>
       )}
@@ -131,7 +145,12 @@ function HtmlPane({ html, onCopy }: Readonly<{ html: string; onCopy: () => void 
   if (!html) return <EmptyBody />;
   return (
     <Box sx={{ p: 2 }}>
-      <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "flex-end",
+          mb: 1
+        }}>
         <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>
           Copy
         </Button>
@@ -160,8 +179,12 @@ function HtmlPane({ html, onCopy }: Readonly<{ html: string; onCopy: () => void 
  */
 function EmptyBody() {
   return (
-    <Typography variant="body2" color="text.secondary" sx={{ p: 3 }}>
-      Nothing was rendered for this attempt — it stopped before a body existed.
-    </Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        p: 3
+      }}>Nothing was rendered for this attempt — it stopped before a body existed.
+          </Typography>
   );
 }

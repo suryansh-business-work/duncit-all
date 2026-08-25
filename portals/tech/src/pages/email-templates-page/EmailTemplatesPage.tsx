@@ -31,12 +31,22 @@ export default function EmailTemplatesPage() {
 
   return (
     <FillViewport>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2
+        }}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Email Templates
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Edit MJML on the left, see the rendered preview on the right. Templates are
             looked up by <code>slug</code> from server code.
           </Typography>
@@ -48,12 +58,22 @@ export default function EmailTemplatesPage() {
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <EmailSidebarList
-          items={editor.list.map((t) => ({
-            key: t.template_id,
-            primary: t.name,
-            secondary: t.slug,
-            off: !t.is_active,
-          }))}
+          items={editor.list.map((tpl) => {
+            const sent = editor.usageBySlug.get(tpl.slug)?.sent ?? 0;
+            return {
+              key: tpl.template_id,
+              primary: tpl.name,
+              secondary: tpl.slug,
+              off: !tpl.is_active,
+              // Every row carries its count, including the zeroes — a template
+              // nothing has ever sent is the thing this list could not show.
+              badge: {
+                label: String(sent),
+                title: t('tech.emailTemplates.sendsRecorded', { vars: { count: sent } }),
+                muted: sent === 0,
+              },
+            };
+          })}
           selected={editor.selected}
           onSelect={editor.setSelected}
           searchPlaceholder="Search name or slug"
@@ -64,6 +84,7 @@ export default function EmailTemplatesPage() {
           <TemplateEditorPanel
             draft={editor.draft}
             setDraft={editor.setDraft}
+            usage={editor.usageBySlug.get(editor.draft.slug) ?? null}
             dirty={editor.dirty}
             busy={editor.busy}
             tab={editor.tab}
@@ -84,7 +105,9 @@ export default function EmailTemplatesPage() {
           />
         ) : (
           <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-            <Typography color="text.secondary">{t('tech.emailTemplates.selectATemplateFromTheLeft')}</Typography>
+            <Typography sx={{
+              color: "text.secondary"
+            }}>{t('tech.emailTemplates.selectATemplateFromTheLeft')}</Typography>
           </Box>
         )}
       </Stack>
@@ -107,7 +130,12 @@ export default function EmailTemplatesPage() {
         detected={editor.detected}
         varsJson={editor.varsJson}
         onClose={() => setTestOpen(false)}
-        onResult={(kind, msg) => editor.setSnack({ kind, msg })}
+        onResult={(kind, msg) => {
+          editor.setSnack({ kind, msg });
+          // A test send writes a log row like any other, so the count above it
+          // is stale the moment the dialog closes.
+          editor.refetchUsage().catch(() => undefined);
+        }}
       />
 
       {editor.snack && (

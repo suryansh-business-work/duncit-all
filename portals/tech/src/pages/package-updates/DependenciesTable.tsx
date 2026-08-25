@@ -15,20 +15,26 @@ const ALL = 'ALL';
 const getRowId = (row: DependencyGroup) => row.name;
 
 const renderName = (row: DependencyGroup) => (
-  <Typography variant="body2" fontWeight={600} noWrap title={row.name}>
+  <Typography variant="body2" noWrap title={row.name} sx={{
+    fontWeight: 600
+  }}>
     {row.name}
   </Typography>
 );
 
 /** Every range declared for this package. More than one is repo-wide drift. */
 const renderRanges = (row: DependencyGroup) => (
-  <Typography variant="body2" color="text.secondary" noWrap title={row.ranges}>
+  <Typography variant="body2" noWrap title={row.ranges} sx={{
+    color: "text.secondary"
+  }}>
     {row.ranges}
   </Typography>
 );
 
 const renderLatest = (emptyText: string) => (row: DependencyGroup) => (
-  <Typography variant="body2" fontWeight={row.latest ? 600 : 400} color={row.latest ? 'text.primary' : 'text.disabled'}>
+  <Typography variant="body2" color={row.latest ? 'text.primary' : 'text.disabled'} sx={{
+    fontWeight: row.latest ? 600 : 400
+  }}>
     {row.latest ?? emptyText}
   </Typography>
 );

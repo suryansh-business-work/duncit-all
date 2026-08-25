@@ -70,7 +70,9 @@ export default function ProductAccordion({
           onChange={(_, v) => setExpanded(v ? sec.id : '')}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={600}>{sec.label}</Typography>
+            <Typography sx={{
+              fontWeight: 600
+            }}>{sec.label}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {sec.id === 'basic' && <BasicInfoSection categories={categories} />}

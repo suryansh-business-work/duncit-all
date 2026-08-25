@@ -15,7 +15,9 @@ interface Props {
 const getClubRowId = (club: ClubAdminClubRow) => club.club_id;
 
 const renderClub = (club: ClubAdminClubRow) => (
-  <Link component={RouterLink} to={`/club-admin/clubs/${club.club_id}`} underline="hover" fontWeight={800}>
+  <Link component={RouterLink} to={`/club-admin/clubs/${club.club_id}`} underline="hover" sx={{
+    fontWeight: 800
+  }}>
     {club.club_name}
   </Link>
 );
@@ -83,7 +85,9 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={900}>{t('partners.clubAdminDashboardPage.perClubBreakdown')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 900
+        }}>{t('partners.clubAdminDashboardPage.perClubBreakdown')}</Typography>
         <DuncitTable<ClubAdminClubRow>
           tableId="partners-app-club-admin-clubs"
           columns={columns}

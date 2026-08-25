@@ -178,7 +178,9 @@ export default function DynamicFieldsRenderer({ entity, name }: Readonly<Props>)
       {fields.map((f) => (
         <FieldCell key={f.id} field={f} value={values[f.name]} onChange={(v) => update(f.name, v)} />
       ))}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Edit the catalogue at Settings → Dynamic Fields. Changes here apply to both venue and host
         leads where the field is enabled.
       </Typography>

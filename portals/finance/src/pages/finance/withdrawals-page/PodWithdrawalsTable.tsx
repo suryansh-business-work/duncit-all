@@ -42,7 +42,9 @@ const renderStatus = (t: Translator['t']) => (row: PodWithdrawalGroup) => (
 
 /** Pod Title — the pod the withdrawals were earned on. */
 const renderPodTitle = (row: PodWithdrawalGroup) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {row.pod_title || EM_DASH}
   </Typography>
 );

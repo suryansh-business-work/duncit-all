@@ -32,7 +32,7 @@ const settle = async () => {
 };
 
 const row = (over: Partial<AutoPodRow> = {}): AutoPodRow =>
-  ({
+  (({
     id: 'ap-1',
     auto_pod_no: 'DUN-AP-001',
     stage: 'OPEN',
@@ -49,8 +49,8 @@ const row = (over: Partial<AutoPodRow> = {}): AutoPodRow =>
     viewer_claimed: false,
     pod_id: null,
     expected_host_earnings: 1400,
-    ...over,
-  }) as AutoPodRow;
+    ...over
+  }) as AutoPodRow);
 
 const formatWhen = (iso: string) => `when:${iso}`;
 const formatMoney = (amount: number) => `₹${amount}`;

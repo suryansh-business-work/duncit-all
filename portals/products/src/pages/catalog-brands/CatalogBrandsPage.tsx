@@ -23,10 +23,14 @@ export default function CatalogBrandsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography variant="h4" sx={{
+          fontWeight: 700
+        }}>
           Brands
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Every seller brand in the catalogue, whatever its review status. Open a brand&apos;s
           products or manage its details — approvals live in Brands &amp; Products Review.
         </Typography>

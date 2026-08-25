@@ -49,16 +49,19 @@ function ScopeChip({
 
 const renderTitle = (n: NotificationRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 600
+    }}>
       {n.title}
     </Typography>
     {n.link_url && (
       <Typography
         variant="caption"
-        color="text.secondary"
         component="div"
-        sx={{ wordBreak: 'break-all' }}
-      >
+        sx={{
+          color: "text.secondary",
+          wordBreak: 'break-all'
+        }}>
         → {n.link_url}
       </Typography>
     )}

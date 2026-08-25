@@ -36,12 +36,14 @@ export default function PexelsSearchBar({
         onKeyDown={(event) => {
           if (event.key === 'Enter') onSearch();
         }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }
         }}
       />
       <Button

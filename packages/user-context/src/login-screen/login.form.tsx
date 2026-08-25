@@ -74,12 +74,14 @@ export default function LoginForm({
           placeholder={t('session.login.email')}
           fullWidth
           sx={pillSx}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <AlternateEmailIcon fontSize="small" color="action" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <AlternateEmailIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <TextField
@@ -88,19 +90,21 @@ export default function LoginForm({
           placeholder={t('session.login.password')}
           fullWidth
           sx={pillSx}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlinedIcon fontSize="small" color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label={t('session.login.togglePassword')}>
-                  {showPwd ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label={t('session.login.togglePassword')}>
+                    {showPwd ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <Link
@@ -108,13 +112,27 @@ export default function LoginForm({
           type="button"
           onClick={onForgotPassword}
           underline="none"
-          color="text.secondary"
-          sx={{ alignSelf: 'flex-start', fontSize: 13, fontWeight: 600 }}
-        >
+          sx={{
+            color: "text.secondary",
+            alignSelf: 'flex-start',
+            fontSize: 13,
+            fontWeight: 600
+          }}>
           {t('session.login.forgotPassword')}
         </Link>
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mt: 0.5 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            alignItems: "center",
+            mt: 0.5
+          }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              flex: 1
+            }}>
             {t('session.login.authorizedOnly')}
           </Typography>
           <IconButton

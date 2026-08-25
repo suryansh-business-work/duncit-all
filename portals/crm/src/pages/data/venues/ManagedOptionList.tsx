@@ -108,14 +108,24 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap",
+            mb: 1.5
+          }}>
           <TextField
             size="small"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
             sx={{ minWidth: 220, flex: 1 }}
+            slotProps={{
+              input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }
+            }}
           />
           <Button variant="outlined" startIcon={<AddIcon />} onClick={startCreate} disabled={busy || !!draft}>
             {addLabel}
@@ -126,7 +136,11 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
         {formError && <Alert severity="error" sx={{ mb: 1 }} onClose={() => setFormError(null)}>{formError}</Alert>}
 
         {loading && rows.length === 0 ? (
-          <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}><CircularProgress /></Stack>
         ) : (
           <Table size="small">
             <TableHead>
@@ -144,14 +158,24 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
               {rows.length === 0 && !draft && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>Nothing here yet. Click "{addLabel}".</Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                        py: 2
+                      }}>Nothing here yet. Click "{addLabel}".</Typography>
                   </TableCell>
                 </TableRow>
               )}
               {rows.length > 0 && visible.length === 0 && !draft && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>{t('crm.data.noMatchesForYourSearch')}</Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                        py: 2
+                      }}>{t('crm.data.noMatchesForYourSearch')}</Typography>
                   </TableCell>
                 </TableRow>
               )}

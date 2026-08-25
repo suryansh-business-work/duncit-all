@@ -14,44 +14,56 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
-  title="FAQ"
-  eyebrow="Support"
-  heading="Frequently Asked"
-  intro="Quick answers to the questions we hear most."
+  title={t('website.main.faq.title')}
+  eyebrow={t('website.main.faq.eyebrow')}
+  heading={t('website.main.faq.heading')}
+  intro={t('website.main.faq.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop"
 >
-  <div id="faqGroups" class="not-prose my-6 space-y-3">
+  <div id="faqGroups" data-copy={JSON.stringify({ empty: t('website.main.faq.empty'), error: t('website.main.faq.error') })} class="not-prose my-6 space-y-3">
     <div class="skeleton h-8 w-48" aria-hidden="true"></div>
     <div class="skeleton h-20" aria-hidden="true"></div>
     <div class="skeleton h-20" aria-hidden="true"></div>
     <div class="skeleton h-20" aria-hidden="true"></div>
   </div>
 
-  <h2>Didn't find your answer?</h2>
-  <p>Ask us directly — if it's a common one, we'll add it to this page.</p>
-  <form class="not-prose grid gap-3 max-w-xl mt-4" id="askFaqForm">
+  <h2>{t('website.main.faq.askHeading')}</h2>
+  <p>{t('website.main.faq.askText')}</p>
+  <form
+    class="not-prose grid gap-3 max-w-xl mt-4"
+    id="askFaqForm"
+    data-copy={JSON.stringify({
+      ask: t('website.main.faq.ask'),
+      sending: t('website.main.faq.sending'),
+      gotIt: t('website.main.faq.gotIt'),
+      tooShort: t('website.main.faq.tooShort'),
+      needEmail: t('website.main.faq.needEmail'),
+      failed: t('website.main.faq.failed'),
+      failedRetry: t('website.main.faq.failedRetry'),
+    })}
+  >
     <textarea
       name="question"
       required
       rows="3"
-      placeholder="Type your question…"
+      placeholder={t('website.main.faq.questionPlaceholder')}
       class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"
     ></textarea>
     <input
       name="email"
       type="email"
       required
-      placeholder="Email for a reply"
+      placeholder={t('website.main.faq.emailPlaceholder')}
       class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none"
     />
     <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
     <p id="askFaqErr" class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
-      Ask <i class="fa-solid fa-paper-plane"></i>
+      {t('website.main.faq.ask')} <i class="fa-solid fa-paper-plane"></i>
     </button>
   </form>
-  <p class="mt-4">Or email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
+  <p class="mt-4">{t('website.main.faq.orEmail')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
 </PageLayout>
 
 <script>
@@ -60,6 +72,9 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 
   const GQL_URL = urlConfigs.graphqlUrl;
   const groupsEl = document.getElementById('faqGroups');
+  // Handed over by the markup: a module script cannot read Astro frontmatter,
+  // and define:vars would make this script inline (it imports @duncit/captcha).
+  const LIST_COPY = JSON.parse(groupsEl?.dataset.copy ?? '{}');
 
   const esc = (value: unknown) => {
     const div = document.createElement('div');
@@ -91,7 +106,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
       const groups: any[] = (json?.data?.publicFaqGroups ?? []).filter((g: any) => g.faqs?.length);
       if (!groups.length) {
         groupsEl.innerHTML =
-          '<p class="text-ink-soft">No FAQs published yet — ask your question below and we\'ll answer.</p>';
+          `<p class="text-ink-soft">${LIST_COPY.empty}</p>`;
         return;
       }
       groupsEl.innerHTML = groups
@@ -109,7 +124,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
       if (hash) document.getElementById(decodeURIComponent(hash))?.scrollIntoView({ behavior: 'smooth' });
     } catch {
       groupsEl.innerHTML =
-        '<p class="text-ink-soft">FAQs could not be loaded right now. Please try again later.</p>';
+        `<p class="text-ink-soft">${LIST_COPY.error}</p>`;
     }
   }
 
@@ -117,6 +132,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 
   const form = document.getElementById('askFaqForm') as HTMLFormElement | null;
   const errBox = document.getElementById('askFaqErr') as HTMLParagraphElement | null;
+  const COPY = JSON.parse(form?.dataset.copy ?? '{}');
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (errBox) {
@@ -132,14 +148,14 @@ const supportEmail = branding.support_email || 'support@duncit.com';
     if (payload.question.length < 5) {
       if (errBox) {
         errBox.classList.remove('hidden');
-        errBox.textContent = 'Please type a longer question.';
+        errBox.textContent = COPY.tooShort;
       }
       return;
     }
     if (!payload.email) {
       if (errBox) {
         errBox.classList.remove('hidden');
-        errBox.textContent = 'Please enter your email.';
+        errBox.textContent = COPY.needEmail;
       }
       return;
     }
@@ -147,7 +163,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
     const orig = btn?.innerHTML;
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${COPY.sending}`;
     }
     try {
       const res = await fetch(GQL_URL, {
@@ -165,27 +181,27 @@ const supportEmail = branding.support_email || 'support@duncit.com';
       // itself and this handler stays quiet.
       if (json?.errors?.length) {
         if (showCaptchaFailure(form, json.errors)) {
-          if (btn) btn.innerHTML = orig || 'Ask';
+          if (btn) btn.innerHTML = orig || COPY.ask;
           return;
         }
         throw new Error(json.errors[0].message);
       }
-      if (!json?.data?.submitFaqQuestion?.ok) throw new Error('Could not send. Try again.');
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
+      if (!json?.data?.submitFaqQuestion?.ok) throw new Error(COPY.failed);
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> ${COPY.gotIt}`;
       form.reset();
       reloadCaptcha(form);
     } catch (err: any) {
       if (errBox) {
         errBox.classList.remove('hidden');
-        errBox.textContent = err?.message || 'Could not send. Please try again.';
+        errBox.textContent = err?.message || COPY.failedRetry;
       }
       reloadCaptcha(form);
-      if (btn) btn.innerHTML = orig || 'Ask';
+      if (btn) btn.innerHTML = orig || COPY.ask;
     } finally {
       window.setTimeout(() => {
         if (btn) {
           btn.disabled = false;
-          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || 'Ask';
+          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || COPY.ask;
         }
       }, 3000);
     }

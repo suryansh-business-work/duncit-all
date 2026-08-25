@@ -121,7 +121,9 @@ export default function FeatureFlagsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('shell.nav.featureFlags')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Toggle features on or off across the platform without deploying code.
         </Typography>
       </Box>

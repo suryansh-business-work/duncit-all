@@ -58,10 +58,14 @@ export default function MembershipSubscribersPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           Membership subscribers
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Members who tapped &ldquo;Notify me&rdquo; on the Membership screen. Their email comes
           from their profile, so every address here is one they have already verified.
         </Typography>

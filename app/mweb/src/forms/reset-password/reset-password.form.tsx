@@ -73,15 +73,15 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           required
           hint={t('mweb.resetPassword.otpHint')}
           placeholder={t('mweb.resetPassword.otpPlaceholder')}
-          inputProps={{ inputMode: 'numeric', maxLength: 6 }}
-          size="small"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <PinOutlinedIcon fontSize="small" />
               </InputAdornment>
             ),
-          }}
+          }, htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+          size="small"
+          
         />
         <RhfTextField
           control={control}
@@ -93,11 +93,11 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           placeholder={t('mweb.resetPassword.newPasswordPlaceholder')}
           autoComplete="new-password"
           size="small"
-          InputProps={passwordInputProps(
+          slotProps={{ input: passwordInputProps(
             showPwd,
             () => setShowPwd((v) => !v),
             showPwd ? hideLabel : showLabel,
-          )}
+          ) }}
         />
         <RhfTextField
           control={control}
@@ -108,11 +108,11 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           placeholder={t('mweb.resetPassword.confirmPasswordPlaceholder')}
           autoComplete="new-password"
           size="small"
-          InputProps={passwordInputProps(
+          slotProps={{ input: passwordInputProps(
             showConfirmPwd,
             () => setShowConfirmPwd((v) => !v),
             showConfirmPwd ? hideLabel : showLabel,
-          )}
+          ) }}
         />
         <Button
           type="submit"

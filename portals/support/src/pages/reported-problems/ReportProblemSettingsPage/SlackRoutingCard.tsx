@@ -88,10 +88,14 @@ export default function SlackRoutingCard() {
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t('support.problemSettings.slackTitle')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('support.problemSettings.slackSubtitle')}
             </Typography>
 
@@ -128,7 +132,9 @@ export default function SlackRoutingCard() {
               <MenuItem value={FALLBACK}>{t('support.problemSettings.slackFallback')}</MenuItem>
               {options.map((channel) => (
                 <MenuItem key={channel.id} value={channel.id}>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
                     <span>{`#${channel.name}`}</span>
                     {channel.is_private && (
                       <Chip

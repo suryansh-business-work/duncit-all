@@ -1,7 +1,7 @@
 import { Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {

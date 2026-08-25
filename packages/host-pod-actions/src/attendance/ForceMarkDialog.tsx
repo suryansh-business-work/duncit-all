@@ -49,11 +49,15 @@ export default function ForceMarkDialog({
             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
               {row?.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {[phone, row?.email, row?.ticket_code].filter(Boolean).join(' · ')}
             </Typography>
             {!!row && row.seats > 1 && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {labels.seats(row.seats)}
               </Typography>
             )}

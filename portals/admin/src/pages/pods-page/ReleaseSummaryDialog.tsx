@@ -41,7 +41,12 @@ export default function ReleaseSummaryDialog({
     <Dialog open={!!summary} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>{t('admin.completePod.released')}</DialogTitle>
       <DialogContent dividers>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1
+          }}>
           Each payout below has been credited to its beneficiary&apos;s wallet.
         </Typography>
         <List dense disablePadding>
@@ -50,9 +55,10 @@ export default function ReleaseSummaryDialog({
               <ListItemText
                 primary={`${KIND_LABELS[release.kind] ?? release.kind} ${summary?.currency_symbol}${release.amount_requested.toFixed(2)} (${release.status})`}
                 secondary={release.release_id}
-                primaryTypographyProps={{ variant: 'body2', fontWeight: 700 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
+                slotProps={{
+                  primary: { variant: 'body2', sx: { fontWeight: 700 } },
+                  secondary: { variant: 'caption' }
+                }} />
             </ListItem>
           ))}
         </List>

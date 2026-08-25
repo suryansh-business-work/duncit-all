@@ -16,7 +16,13 @@ function FigureTile({ label, value }: Readonly<{ label: string; value: string }>
   return (
     <Card variant="outlined" sx={{ flex: '1 1 28%', minWidth: 96, borderRadius: '16px' }}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           {label}
         </Typography>
         <Typography variant="h6" sx={{ mt: 0.25, fontWeight: 700 }} noWrap>
@@ -101,7 +107,12 @@ export default function StudioPodsFigures({ summary, scopeLabel }: Readonly<Prop
           sx={{ height: 8, borderRadius: 999 }}
           aria-label={t('mweb.studioPods.spotsFilled')}
         />
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600
+          }}>
           {t('mweb.studioPods.fillRate', { vars: { pct } })}
         </Typography>
       </Box>

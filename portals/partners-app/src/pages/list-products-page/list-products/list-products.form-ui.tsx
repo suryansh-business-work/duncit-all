@@ -87,7 +87,9 @@ function CommissionField({ control }: Readonly<{ control: Control<ProductListing
       name="commission_pct"
       render={({ field }) => (
         <Box>
-          <Typography fontWeight={900}>Duncit commission: {field.value}%</Typography>
+          <Typography sx={{
+            fontWeight: 900
+          }}>Duncit commission: {field.value}%</Typography>
           <Slider min={5} max={50} value={field.value} onChange={(_, value) => field.onChange(value)} valueLabelDisplay="auto" />
           <Alert severity="info">
             Higher commission improves marketplace viability, but approval still depends on product quality, pricing, and
@@ -124,7 +126,9 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
       {!loading && warehouses.length === 0 && (
         <Alert severity="warning">
           This brand has no warehouses yet — add one in{' '}
-          <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} fontWeight={800}>
+          <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} sx={{
+            fontWeight: 800
+          }}>
             Brand Settings
           </Link>{' '}
           before listing the product.
@@ -137,7 +141,9 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
         <Alert severity="warning">
           None of this brand's warehouses is approved yet. A product can be listed once the Duncit
           team approves one — check the status in{' '}
-          <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} fontWeight={800}>
+          <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} sx={{
+            fontWeight: 800
+          }}>
             Brand Settings
           </Link>
           .
@@ -163,7 +169,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
         name="free_delivery_above"
         label={t('partners.listProductsPage.freeDeliveryAbove')}
         type="number"
-        inputProps={{ min: 0, step: 1, inputMode: 'numeric' }}
+        slotProps={{ htmlInput: { min: 0, step: 1, inputMode: 'numeric' } }}
         hint="Order value of this product at/above which its delivery is free. Leave blank for no offer."
         sx={{ maxWidth: 320 }}
       />

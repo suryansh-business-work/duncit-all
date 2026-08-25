@@ -51,7 +51,9 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
           color: 'text.secondary',
         }}
       >
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           Google sign-in not configured (VITE_GOOGLE_CLIENT_ID missing)
         </Typography>
       </Box>

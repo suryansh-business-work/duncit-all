@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { renderWithProviders } from '../testkit';
 
 vi.mock('@duncit/shell', async (importOriginal) => ({

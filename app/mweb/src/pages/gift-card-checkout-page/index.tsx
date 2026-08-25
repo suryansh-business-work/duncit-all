@@ -17,11 +17,22 @@ import { useGiftCardPayment } from './useGiftCardPayment';
 function SummaryRow({ label, value, bold = false }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   const variant = bold ? 'subtitle2' : 'body2';
   return (
-    <Stack direction="row" justifyContent="space-between" spacing={1}>
-      <Typography variant={variant} fontWeight={bold ? 700 : 500}>
+    <Stack direction="row" spacing={1} sx={{
+      justifyContent: "space-between"
+    }}>
+      <Typography variant={variant} sx={{
+        fontWeight: bold ? 700 : 500
+      }}>
         {label}
       </Typography>
-      <Typography variant={variant} fontWeight={bold ? 700 : 500} sx={{ textAlign: 'right', minWidth: 0 }} noWrap>
+      <Typography
+        variant={variant}
+        noWrap
+        sx={{
+          fontWeight: bold ? 700 : 500,
+          textAlign: 'right',
+          minWidth: 0
+        }}>
         {value}
       </Typography>
     </Stack>
@@ -70,11 +81,18 @@ export default function GiftCardCheckoutPage() {
   return (
     <Box sx={{ maxWidth: 560, mx: 'auto', p: 2 }}>
       <Stack spacing={2}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ bgcolor: 'action.hover' }}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" fontWeight={700} sx={{ flex: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              flex: 1
+            }}>
             {t('mweb.giftCards.checkoutTitle')}
           </Typography>
           <GatewayChip finance={payment.finance} />
@@ -102,7 +120,9 @@ export default function GiftCardCheckoutPage() {
           </Alert>
         </Paper>
         <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-          <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle2" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.checkout.contactDetails')}
           </Typography>
           {payment.meLoading && !me ? (
@@ -110,15 +130,21 @@ export default function GiftCardCheckoutPage() {
           ) : (
             <>
               {contactName && <Typography variant="body2">{contactName}</Typography>}
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {me?.email ?? ''}
               </Typography>
               {contactPhone && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {contactPhone}
                 </Typography>
               )}
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('mweb.checkout.contactEditNote')}
               </Typography>
             </>

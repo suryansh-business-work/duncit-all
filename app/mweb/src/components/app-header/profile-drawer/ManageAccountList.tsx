@@ -16,9 +16,12 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
     <Box sx={{ px: 2, pb: 1.25 }}>
       <Typography
         variant="overline"
-        color="text.secondary"
-        sx={{ fontWeight: 600, letterSpacing: 0.4, pl: 0.5 }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600,
+          letterSpacing: 0.4,
+          pl: 0.5
+        }}>
         {title}
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '16px', overflow: 'hidden' }}>
@@ -36,9 +39,10 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
               <ListItemText
                 primary={item.label}
                 secondary={item.caption || undefined}
-                primaryTypographyProps={{ fontWeight: 700 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
+                slotProps={{
+                  primary: { sx: { fontWeight: 700 } },
+                  secondary: { variant: 'caption' }
+                }} />
               {item.badge && <Chip size="small" color="warning" label={item.badge} sx={{ mr: 0.75 }} />}
               <ChevronRightIcon fontSize="small" color="disabled" />
             </ListItemButton>

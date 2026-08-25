@@ -1,13 +1,18 @@
 import type { ReactNode } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined';
 import type { ClubFaqValue } from '../types';
 
 /** A titled block of the club page, hidden entirely when it has nothing to say. */
 export function PreviewSection({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.75 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 800,
+          mb: 0.75
+        }}>
         {title}
       </Typography>
       {children}
@@ -20,9 +25,13 @@ export function PreviewBullets({ items }: Readonly<{ items: string[] }>) {
   return (
     <Stack spacing={0.5}>
       {items.map((item) => (
-        <Stack key={item} direction="row" spacing={0.75} alignItems="flex-start">
+        <Stack key={item} direction="row" spacing={0.75} sx={{
+          alignItems: "flex-start"
+        }}>
           <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main', mt: '2px' }} />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {item}
           </Typography>
         </Stack>
@@ -36,11 +45,15 @@ export function PreviewFaqs({ faqs }: Readonly<{ faqs: ClubFaqValue[] }>) {
     <Stack spacing={1}>
       {faqs.map((faq) => (
         <Box key={faq.question}>
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {faq.question}
           </Typography>
           {faq.answer && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {faq.answer}
             </Typography>
           )}

@@ -68,11 +68,19 @@ export default function SuperAdminsManager() {
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <AdminPanelSettingsIcon color="primary" />
           <Box>
             <Typography variant="h6">{t('admin.roles.superAdmins')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Admins have full access to every Duncit console. Grant carefully.
             </Typography>
           </Box>
@@ -99,14 +107,18 @@ export default function SuperAdminsManager() {
               {...params}
               label={t('admin.roles.searchUser')}
               placeholder={t('admin.roles.typeMore')}
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {searching ? <CircularProgress size={16} /> : null}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
+              slotProps={{
+                ...params.slotProps,
+
+                input: {
+                  ...params.slotProps.input,
+                  endAdornment: (
+                    <>
+                      {searching ? <CircularProgress size={16} /> : null}
+                      {params.slotProps.input.endAdornment}
+                    </>
+                  ),
+                }
               }}
             />
           )}
@@ -128,7 +140,9 @@ export default function SuperAdminsManager() {
             );
           })}
           {!loading && admins.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               No admins yet.
             </Typography>
           ) : null}

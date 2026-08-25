@@ -23,11 +23,15 @@ const getPromptRowId = (p: CrmCallPrompt) => p.id;
 
 const renderName = (p: CrmCallPrompt) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 700
+    }}>
       {p.name}
     </Typography>
     {p.description && (
-      <Typography variant="caption" color="text.secondary" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {p.description}
       </Typography>
     )}

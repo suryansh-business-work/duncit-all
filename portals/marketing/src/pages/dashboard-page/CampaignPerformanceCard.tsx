@@ -24,27 +24,39 @@ export default function CampaignPerformanceCard({
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle2" fontWeight={700}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            mb: 1.5
+          }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             Recent campaigns
           </Typography>
           <Typography
             variant="caption"
-            color="primary.main"
             role="button"
             tabIndex={0}
             onClick={onOpen}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') onOpen();
             }}
-            sx={{ cursor: 'pointer', fontWeight: 700 }}
-          >
+            sx={{
+              color: "primary.main",
+              cursor: 'pointer',
+              fontWeight: 700
+            }}>
             View all
           </Typography>
         </Stack>
 
         {campaigns.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Nothing has been sent yet.
           </Typography>
         )}
@@ -52,11 +64,24 @@ export default function CampaignPerformanceCard({
         <Stack spacing={1.5}>
           {campaigns.map((campaign) => (
             <Box key={campaign.campaign_id} data-testid="recent-campaign">
-              <Stack direction="row" justifyContent="space-between" spacing={1}>
-                <Typography variant="body2" fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} sx={{
+                justifyContent: "space-between"
+              }}>
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{
+                    fontWeight: 600,
+                    minWidth: 0
+                  }}>
                   {campaign.name}
                 </Typography>
-                <Typography variant="body2" fontWeight={700} flexShrink={0}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>
                   {`${campaign.open_rate}%`}
                 </Typography>
               </Stack>
@@ -67,7 +92,9 @@ export default function CampaignPerformanceCard({
                 value={Math.min(100, campaign.open_rate)}
                 sx={{ height: 6, borderRadius: 3, my: 0.5 }}
               />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {`${campaign.open_count.toLocaleString()} of ${campaign.recipient_count.toLocaleString()} opened · ${campaign.click_count.toLocaleString()} clicked · ${
                   campaign.sent_at ? formatDate(campaign.sent_at) : EM_DASH
                 }`}

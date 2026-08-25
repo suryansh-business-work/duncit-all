@@ -13,7 +13,9 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 // component type per column (S6478). The ones that read copy take `t` through a
 // factory, which keeps the column definition a plain reference.
 const renderReference = (row: AccountDeletionRow) => (
-  <Typography variant="body2" fontFamily="monospace" noWrap>
+  <Typography variant="body2" noWrap sx={{
+    fontFamily: "monospace"
+  }}>
     {row.request_id}
   </Typography>
 );
@@ -25,7 +27,9 @@ const renderMember = (row: AccountDeletionRow) => (
 );
 
 const renderContact = (row: AccountDeletionRow) => (
-  <Typography variant="body2" color="text.secondary" noWrap title={row.email}>
+  <Typography variant="body2" noWrap title={row.email} sx={{
+    color: "text.secondary"
+  }}>
     {row.phone || row.email}
   </Typography>
 );
@@ -39,7 +43,9 @@ const renderSurface = (row: AccountDeletionRow) => (
 );
 
 const renderRequested = (row: AccountDeletionRow) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {formatDateTime(row.requested_at)}
   </Typography>
 );

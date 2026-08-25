@@ -27,7 +27,9 @@ type DirectoryTab = 'HOSTS' | 'VENUES';
 
 /** Label with its live count, so the strip is built from data rather than markup. */
 const countedLabel = (text: string, count: number) => (
-  <Stack direction="row" spacing={1} alignItems="center">
+  <Stack direction="row" spacing={1} sx={{
+    alignItems: "center"
+  }}>
     <span>{text}</span>
     <Chip size="small" label={count} />
   </Stack>
@@ -79,7 +81,11 @@ export default function HostsVenuesPage() {
   if (tab === 'HOSTS') {
     if (hostsQ.loading && !hostsQ.data) {
       content = (
-        <Stack alignItems="center" sx={{ py: 6 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 6
+          }}>
           <CircularProgress />
         </Stack>
       );
@@ -98,7 +104,11 @@ export default function HostsVenuesPage() {
     }
   } else if (venuesQ.loading && !venuesQ.data) {
     content = (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -118,7 +128,9 @@ export default function HostsVenuesPage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 40, height: 40, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <StorefrontIcon fontSize="small" />
         </Box>
@@ -126,7 +138,12 @@ export default function HostsVenuesPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Hosts &amp; Venues
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             Meet trusted people and spaces powering pods
           </Typography>
         </Box>
@@ -140,7 +157,7 @@ export default function HostsVenuesPage() {
       <DuncitTabs
         {...tabs}
         textColor="primary"
-        TabIndicatorProps={{ sx: { display: 'none' } }}
+        slotProps={{ indicator: { sx: { display: 'none' } } }}
         sx={{ p: 0.5, borderRadius: 999, bgcolor: 'action.hover', border: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 42, borderRadius: 999, fontWeight: 700 }, '& .Mui-selected': { bgcolor: 'background.paper', boxShadow: '0 10px 24px rgba(15,23,42,0.12)' } }}
       />
 

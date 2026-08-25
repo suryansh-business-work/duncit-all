@@ -44,21 +44,23 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
         placeholder={t('mweb.common.searchForTopicsOrQuestions')}
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-          endAdornment: query ? (
-            <InputAdornment position="end">
-              <IconButton size="small" onClick={() => onQueryChange('')} aria-label={t('mweb.common.clearSearch')}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ) : null,
-        }}
         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper', minHeight: 48 } }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: query ? (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => onQueryChange('')} aria-label={t('mweb.common.clearSearch')}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          }
+        }}
       />
       {active && (
         <Paper variant="outlined" sx={{ mt: 1, borderRadius: '16px', overflow: 'hidden' }}>
@@ -70,7 +72,12 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
             </Stack>
           )}
           {!loading && results.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                p: 2
+              }}>
               No FAQs match “{debounced}”. Try starting a conversation below.
             </Typography>
           )}
@@ -82,7 +89,9 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
                   divider={index < results.length - 1}
                   onClick={() => onOpen(faq)}
                 >
-                  <ListItemText primary={faq.question} primaryTypographyProps={{ fontWeight: 700 }} />
+                  <ListItemText primary={faq.question} slotProps={{
+                    primary: { sx: { fontWeight: 700 } }
+                  }} />
                 </ListItemButton>
               ))}
             </List>

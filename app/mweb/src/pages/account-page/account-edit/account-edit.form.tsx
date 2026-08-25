@@ -96,14 +96,14 @@ export default function AccountEditForm({
             label={t('mweb.common.firstName')}
             required
             size="small"
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
           />
           <RhfTextField
             control={control}
             name="last_name"
             label={t('mweb.common.lastName')}
             size="small"
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
           />
         </Stack>
         <RhfTextField
@@ -114,12 +114,17 @@ export default function AccountEditForm({
           multiline
           minRows={2}
           size="small"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
         />
         <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
         <ContactFields control={control} setValue={setValue} />
-        <Typography variant="overline" color="text.secondary" fontWeight={700}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           Main address
         </Typography>
         <AddressFields

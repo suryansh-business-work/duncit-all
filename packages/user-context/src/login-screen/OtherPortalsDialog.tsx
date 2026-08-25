@@ -41,10 +41,14 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
       <DialogTitle sx={{ pb: 0.5 }}>
-        <Typography component="span" variant="h6" fontWeight={800}>
+        <Typography component="span" variant="h6" sx={{
+          fontWeight: 800
+        }}>
           {t('session.portals.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('session.portals.subtitle')}
         </Typography>
       </DialogTitle>
@@ -56,12 +60,14 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
           fullWidth
           size="small"
           sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 999 } }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" color="action" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
@@ -87,7 +93,9 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
           {results.map((p) => (
             <Card key={p.key} variant="outlined" sx={(theme) => ({ ...glass(theme), borderRadius: 3 })}>
               <CardActionArea onClick={() => window.open(resolvePortalUrl(p), '_self')} sx={{ p: 1.5 }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
+                <Stack direction="row" spacing={1.5} sx={{
+                  alignItems: "center"
+                }}>
                   <Box
                     component="img"
                     src={p.image}
@@ -96,10 +104,17 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
                     sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: 2, objectFit: 'cover', bgcolor: 'action.hover' }}
                   />
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="subtitle2" fontWeight={800} noWrap>
+                    <Typography variant="subtitle2" noWrap sx={{
+                      fontWeight: 800
+                    }}>
                       {p.name}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        display: 'block'
+                      }}>
                       {p.description}
                     </Typography>
                   </Box>
@@ -108,7 +123,12 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
             </Card>
           ))}
           {!results.length && (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                p: 2
+              }}>
               {t('session.portals.noMatch', { vars: { query } })}
             </Typography>
           )}

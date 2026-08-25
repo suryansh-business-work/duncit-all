@@ -21,7 +21,9 @@ const stateOptions = (t: Translate) => [
 const getContainerRowId = (c: DockerContainer) => c.id;
 
 const renderName = (c: DockerContainer) => (
-  <Typography variant="body2" fontWeight={600}>
+  <Typography variant="body2" sx={{
+    fontWeight: 600
+  }}>
     {c.name || c.id}
   </Typography>
 );

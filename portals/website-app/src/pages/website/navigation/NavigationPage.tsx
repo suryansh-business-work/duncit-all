@@ -62,10 +62,14 @@ export default function NavigationPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" sx={{
+        fontWeight: 700
+      }}>
         Website Navigation
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Header + footer links for every marketing website. Changes go live on the next site deploy.
       </Typography>
       <DuncitTabs {...tabs} variant="scrollable" />
@@ -102,7 +106,9 @@ export default function NavigationPage() {
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('websiteApp.navigation.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             "{confirmDelete?.label}" will disappear from {confirmDelete?.site} on the next deploy.
           </Typography>
         </DialogContent>

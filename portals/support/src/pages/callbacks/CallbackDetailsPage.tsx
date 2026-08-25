@@ -70,15 +70,28 @@ export default function CallbackDetailsPage() {
       <Card variant="outlined">
         <CardContent>
           <Stack spacing={1.5}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap"
+                }}>
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>
                   {req.user.name}
                 </Typography>
                 <Chip size="small" variant="outlined" label={req.ticket_no} />
                 <StatusChip status={req.status} colorMap={CALLBACK_STATUS_COLORS} />
               </Stack>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {formatDistanceToNow(new Date(req.created_at), { addSuffix: true })}
               </Typography>
             </Stack>
@@ -95,7 +108,9 @@ export default function CallbackDetailsPage() {
               <strong>Reason:</strong> {req.reason || '—'}
             </Typography>
             {(req.duration_seconds || req.conclusion) && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 <strong>Outcome:</strong>{' '}
                 {req.duration_seconds ? `${Math.round(req.duration_seconds / 60)} min · ` : ''}
                 {req.conclusion || '—'}
@@ -112,7 +127,9 @@ export default function CallbackDetailsPage() {
                     value={durationMin}
                     onChange={(e) => setDurationMin(e.target.value)}
                     sx={{ width: 160 }}
-                    inputProps={{ min: 0 }}
+                    slotProps={{
+                      htmlInput: { min: 0 }
+                    }}
                   />
                   <TextField
                     size="small"
@@ -150,7 +167,9 @@ export default function CallbackDetailsPage() {
     );
   } else {
     content = (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         This request could not be found.
       </Typography>
     );

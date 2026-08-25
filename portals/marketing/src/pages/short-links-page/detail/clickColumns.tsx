@@ -29,11 +29,15 @@ export const locationOf = (row: {
 
 const renderPlatform = (row: ShortLinkClickRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 600
+    }}>
       {row.platform}
     </Typography>
     {row.referrer_host && (
-      <Typography variant="caption" color="text.secondary" component="div">
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         {row.referrer_host}
       </Typography>
     )}
@@ -45,7 +49,9 @@ const renderDevice = (row: ShortLinkClickRow) => (
     <Typography variant="body2" component="div">
       {DEVICE_LABELS[row.device_type] ?? row.device_type}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="div">
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>
       {`${row.os} · ${row.browser}`}
     </Typography>
   </Box>

@@ -14,7 +14,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useApolloClient } from '@apollo/client';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { compressUploadedVideo, useImagekitDirectUpload } from '@duncit/media-picker';
@@ -106,15 +106,25 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
         aria-controls="pod-reel-content"
         id="pod-reel-header"
       >
-        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ flex: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          sx={{
+            alignItems: "center",
+            flex: 1
+          }}>
           <MovieOutlinedIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" fontWeight={700}>{t('mweb.createPod.podReel')}</Typography>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>{t('mweb.createPod.podReel')}</Typography>
           {hasReel && <Chip label={t('mweb.createPod.summaryAdded')} size="small" color="primary" />}
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1.25}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.createPod.reelHint')}
           </Typography>
           <Box>
@@ -141,7 +151,9 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           {pct !== null && (
             <Box>
               <LinearProgress variant="determinate" value={pct} />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {progressLabel}
               </Typography>
             </Box>

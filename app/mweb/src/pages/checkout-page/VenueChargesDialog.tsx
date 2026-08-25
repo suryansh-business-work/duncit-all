@@ -35,7 +35,9 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
       </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.checkout.venueChargesIntro')}
           </Typography>
           {charges.length > 0 && (
@@ -48,36 +50,54 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
                 <Stack
                   key={`${charge.label}|${charge.amount}|${charge.note ?? ''}`}
                   direction="row"
-                  alignItems="flex-start"
-                  justifyContent="space-between"
                   spacing={1.5}
-                >
+                  sx={{
+                    alignItems: "flex-start",
+                    justifyContent: "space-between"
+                  }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={600}>
+                    <Typography variant="body2" sx={{
+                      fontWeight: 600
+                    }}>
                       {charge.label}
                     </Typography>
                     {charge.note && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {charge.note}
                       </Typography>
                     )}
                   </Box>
-                  <Typography variant="body2" fontWeight={700}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 700
+                  }}>
                     {formatMoney(currency, charge.amount)}
                   </Typography>
                 </Stack>
               ))}
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" fontWeight={700}>
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {t('mweb.checkout.venueChargesTotal')}
                 </Typography>
-                <Typography variant="body2" fontWeight={700}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {formatMoney(currency, total)}
                 </Typography>
               </Stack>
             </Stack>
           )}
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.checkout.venueChargesNote')}
           </Typography>
         </Stack>

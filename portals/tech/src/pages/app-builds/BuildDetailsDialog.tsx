@@ -45,7 +45,13 @@ const ArtifactRow = ({
   artifact,
   missingLabel,
 }: Readonly<{ artifact: AppBuildArtifact; missingLabel: string }>) => (
-  <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+  <Stack
+    direction="row"
+    spacing={1}
+    sx={{
+      alignItems: "center",
+      justifyContent: "space-between"
+    }}>
     <Stack sx={{ minWidth: 0 }}>
       <Typography variant="body2" noWrap title={artifact.name}>
         {artifact.name}
@@ -76,11 +82,15 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <span>{build.build_no}</span>
           <Chip size="small" label={t(STATUS_KEY[build.status])} color={STATUS_COLOR[build.status]} />
         </Stack>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {build.build_name}
         </Typography>
       </DialogTitle>
@@ -115,14 +125,23 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
           {t('tech.appBuilds.commitsTitle', { vars: { total: String(build.commits.length) } })}
         </Typography>
         {build.commits.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.appBuilds.noCommits')}
           </Typography>
         )}
         <Stack spacing={0.75}>
           {build.commits.map((c) => (
-            <Stack key={c.hash} direction="row" spacing={1} alignItems="baseline">
-              <Typography variant="caption" sx={{ fontFamily: 'monospace' }} color="text.secondary">
+            <Stack key={c.hash} direction="row" spacing={1} sx={{
+              alignItems: "baseline"
+            }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontFamily: 'monospace'
+                }}>
                 {c.hash.slice(0, 7)}
               </Typography>
               <Typography variant="body2">{c.subject}</Typography>
@@ -135,7 +154,13 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
             run to link to yet. Saying so beats an absent button that looks like
             a bug. */}
         {!build.workflow_run_url && build.status === 'QUEUED' && (
-          <Typography variant="caption" color="text.secondary" sx={{ mr: 'auto', pl: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mr: 'auto',
+              pl: 2
+            }}>
             {t('tech.appBuilds.runLinkPending')}
           </Typography>
         )}

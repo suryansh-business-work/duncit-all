@@ -10,10 +10,14 @@ export default function DuncitWarehousesPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography variant="h4" sx={{
+          fontWeight: 700
+        }}>
           Duncit Warehouse Locations
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Add and manage the warehouses Duncit products ship from. Each Duncit
           product must select one of these as its pickup origin.
         </Typography>
@@ -27,7 +31,13 @@ export default function DuncitWarehousesPage() {
             emptyHint="No Duncit warehouses yet. Add one so products have a shipping origin."
           />
           <Divider sx={{ mt: 2 }} />
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mt: 1,
+              display: 'block'
+            }}>
             Registering a warehouse with ShipRocket lets SHIP orders pick up from it and enables live delivery rates.
           </Typography>
         </CardContent>

@@ -30,10 +30,13 @@ export default function MjmlEditorPane({ value, onChange, onValidate }: Readonly
     >
       <Stack
         direction="row"
-        alignItems="center"
         spacing={1}
-        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
-      >
+        sx={{
+          alignItems: "center",
+          p: 1,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <CodeIcon fontSize="small" />
         <Typography variant="subtitle2" sx={{ flex: 1 }}>
           MJML source

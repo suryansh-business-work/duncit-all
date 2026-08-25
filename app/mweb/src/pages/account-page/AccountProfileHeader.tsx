@@ -23,7 +23,9 @@ export default function AccountProfileHeader({
   const { labelFor } = useRoleLabels();
 
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center">
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{
+      alignItems: "center"
+    }}>
       <ProfileAvatar
         photo={me.profile_photo}
         name={me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim()}
@@ -31,11 +33,18 @@ export default function AccountProfileHeader({
         onChanged={onChanged}
       />
       <Box sx={{ flex: 1, textAlign: { xs: 'center', sm: 'left' } }}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           {me.full_name || `${me.first_name} ${me.last_name}`}
         </Typography>
         {me.bio && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5
+            }}>
             {me.bio}
           </Typography>
         )}

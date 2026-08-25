@@ -42,14 +42,18 @@ export default function DocumentActiveSwitch({
 
   return (
     <Tooltip title={t('legal.documents.activeHint')}>
-      <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        alignItems: "center"
+      }}>
         <Switch
           size="small"
           checked={isActive}
           disabled={loading}
-          inputProps={{ 'aria-label': t('legal.documents.colActive') }}
           onClick={(event) => event.stopPropagation()}
           onChange={(event) => toggle(event.target.checked)}
+          slotProps={{
+            input: { 'aria-label': t('legal.documents.colActive') }
+          }}
         />
         <Typography variant="body2" component="span">
           {label}

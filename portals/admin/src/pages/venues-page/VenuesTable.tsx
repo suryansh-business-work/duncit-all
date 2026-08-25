@@ -14,10 +14,17 @@ const getVenueRowId = (v: VenueRow) => v.id;
 
 const renderVenue = (v: VenueRow) => (
   <>
-    <Typography variant="body2" fontWeight={700}>
+    <Typography variant="body2" sx={{
+      fontWeight: 700
+    }}>
       {v.venue_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" display="block">
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {v.venue_type || '—'}
     </Typography>
   </>
@@ -37,7 +44,12 @@ const categoryValue = (v: VenueRow) =>
 const renderOwner = (v: VenueRow) => (
   <>
     <Typography variant="body2">{v.owner_name || '—'}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {v.owner_phone || v.owner_email || '—'}
     </Typography>
   </>

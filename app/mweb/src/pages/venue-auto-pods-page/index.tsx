@@ -20,7 +20,9 @@ export default function VenueAutoPodsPage() {
 
   return (
     <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
-      <Typography variant="h6" fontWeight={800}>
+      <Typography variant="h6" sx={{
+        fontWeight: 800
+      }}>
         {queue.labels.venueTitle}
       </Typography>
 

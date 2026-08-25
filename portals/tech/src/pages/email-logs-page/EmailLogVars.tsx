@@ -34,7 +34,9 @@ export default function EmailLogVars({ json }: Readonly<Props>) {
   if (!raw) {
     return (
       <Box sx={{ p: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No variables — this email was sent as ready-made HTML.
         </Typography>
       </Box>
@@ -65,7 +67,13 @@ export default function EmailLogVars({ json }: Readonly<Props>) {
           ))}
         </Box>
       )}
-      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block",
+          mb: 0.5
+        }}>
         As stored
       </Typography>
       <Box

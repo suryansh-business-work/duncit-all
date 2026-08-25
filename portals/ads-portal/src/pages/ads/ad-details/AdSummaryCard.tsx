@@ -31,7 +31,12 @@ export default function AdSummaryCard({ ad }: Readonly<{ ad: AdRequestDetail }>)
   return (
     <Card>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           {t('ads.detail.title')}
         </Typography>
         <Stack spacing={1.25}>

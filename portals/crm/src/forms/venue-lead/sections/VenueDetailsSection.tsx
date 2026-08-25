@@ -39,8 +39,8 @@ export default function VenueDetailsSection({ config }: Readonly<{ config: CrmOp
       )}
       <FormField name="venue_description" label={t('crm.forms.venueDescription')} size="small" multiline minRows={2} />
       <FieldGrid>
-        <FormField name="capacity_min" label={t('crm.forms.capacityMin')} size="small" inputProps={{ inputMode: 'numeric' }} />
-        <FormField name="capacity_max" label={t('crm.forms.capacityMax')} size="small" inputProps={{ inputMode: 'numeric' }} />
+        <FormField name="capacity_min" label={t('crm.forms.capacityMin')} size="small" slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
+        <FormField name="capacity_max" label={t('crm.forms.capacityMax')} size="small" slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
       </FieldGrid>
     </Stack>
   );

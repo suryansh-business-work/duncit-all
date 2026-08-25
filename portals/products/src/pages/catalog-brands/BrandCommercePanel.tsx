@@ -74,12 +74,16 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             Commercials & visibility
           </Typography>
 
           <form noValidate onSubmit={saveCommission}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+              alignItems: "flex-start"
+            }}>
               <RhfTextField
                 control={control}
                 name="product_commission_pct"
@@ -96,8 +100,15 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
 
           <Divider />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+            alignItems: { sm: 'center' }
+          }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                flex: 1
+              }}>
               {toggleMessage}
             </Typography>
             <Button color={toggleColor} variant="outlined" onClick={() => setConfirmOpen(true)}>

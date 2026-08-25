@@ -45,8 +45,7 @@ export default function DateTimeField({
           required,
           error,
           helperText,
-        },
-      }}
+        }}}
     />
   );
 }

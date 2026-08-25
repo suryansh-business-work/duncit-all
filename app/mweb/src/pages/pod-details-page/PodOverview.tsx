@@ -76,9 +76,20 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         borderColor: 'divider',
       }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "flex-start"
+        }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h4" fontWeight={700} sx={{ lineHeight: 1.05 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1.05
+            }}>
         {pod.pod_title}
       </Typography>
           {hostLine && <Typography variant="body2" sx={{ color: mutedColor, mt: 0.6 }} noWrap>{t('mweb.podDetails.hostedBy', { vars: { names: hostLine } })}</Typography>}

@@ -92,13 +92,23 @@ export default function AllVibeIconCard() {
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
         <AppsIcon color="primary" />
         <Stack>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             &quot;All&quot; tab icon
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Icon + layout for the leading &quot;All&quot; tab in the home &quot;What&apos;s your
             vibe&quot; tabber. Applies to mWeb and the mobile app.
           </Typography>
@@ -160,7 +170,9 @@ export default function AllVibeIconCard() {
           }
           label={t('admin.categories.showAll')}
         />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           On: the home &quot;What&apos;s your vibe&quot; tabber shows every category (with its icon),
           even ones with no pods yet. Off: only categories that currently have pods are shown.
         </Typography>
@@ -172,7 +184,12 @@ export default function AllVibeIconCard() {
         </Alert>
       )}
 
-      <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "flex-end",
+          mt: 1.5
+        }}>
         <Button variant="contained" onClick={save} disabled={busy || !dirty}>
           {busy ? 'Saving…' : 'Save'}
         </Button>

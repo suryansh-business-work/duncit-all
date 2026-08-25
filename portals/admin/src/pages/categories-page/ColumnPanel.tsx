@@ -60,7 +60,11 @@ export default function ColumnPanel({
   if (enabled) {
     if (loading && items.length === 0) {
       body = (
-        <Stack alignItems="center" sx={{ p: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            p: 4
+          }}>
           <CircularProgress size={24} />
         </Stack>
       );
@@ -73,7 +77,9 @@ export default function ColumnPanel({
     } else if (items.length === 0) {
       body = (
         <Box sx={{ p: 3 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No items yet. Click + to create one.
           </Typography>
         </Box>
@@ -112,8 +118,12 @@ export default function ColumnPanel({
                 </Avatar>
                 <ListItemText
                   primary={
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <Typography variant="body2" fontWeight={500}>
+                    <Stack direction="row" spacing={0.5} sx={{
+                      alignItems: "center"
+                    }}>
+                      <Typography variant="body2" sx={{
+                        fontWeight: 500
+                      }}>
                         {it.name}
                       </Typography>
                       {it.is_system && (
@@ -161,7 +171,9 @@ export default function ColumnPanel({
   } else {
     body = (
       <Box sx={{ p: 3 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Select a {level === 'CATEGORY' ? 'super category' : 'category'} on the left.
         </Typography>
       </Box>
@@ -171,13 +183,22 @@ export default function ColumnPanel({
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ pb: 1 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Box>
-            <Typography variant="subtitle1" fontWeight={600}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 600
+            }}>
               {title}
             </Typography>
             {parentName && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 in <strong>{parentName}</strong>
               </Typography>
             )}

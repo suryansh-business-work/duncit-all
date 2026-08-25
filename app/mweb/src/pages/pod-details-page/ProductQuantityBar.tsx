@@ -2,7 +2,7 @@ import { IconButton, Stack, Typography } from '@mui/material';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -31,8 +31,16 @@ export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: 
     );
   }
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-      <Stack direction="row" spacing={1} alignItems="center">
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: '100%'
+      }}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <IconButton aria-label={t('mweb.podDetails.decreaseQuantity')} onClick={() => onUpdate(quantity - 1)}>
           <RemoveIcon />
         </IconButton>

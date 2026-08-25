@@ -18,7 +18,15 @@ export default function CalendarList({ days, events, onEvent, emptyHint }: Reado
     .filter((r) => r.items.length > 0);
 
   if (rows.length === 0) {
-    return <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{emptyHint ?? 'Nothing scheduled.'}</Typography>;
+    return (
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          py: 3,
+          textAlign: 'center'
+        }}>{emptyHint ?? 'Nothing scheduled.'}</Typography>
+    );
   }
 
   return (
@@ -26,10 +34,14 @@ export default function CalendarList({ days, events, onEvent, emptyHint }: Reado
       {rows.map(({ day, items }) => (
         <Stack key={day.toISOString()} direction="row" spacing={1.5} sx={{ py: 1 }}>
           <Box sx={{ width: 120, flexShrink: 0 }}>
-            <Typography variant="body2" fontWeight={isToday(day) ? 800 : 700} color={isToday(day) ? 'primary.main' : 'text.primary'}>
+            <Typography variant="body2" color={isToday(day) ? 'primary.main' : 'text.primary'} sx={{
+              fontWeight: isToday(day) ? 800 : 700
+            }}>
               {format(day, 'EEE, dd MMM')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">{format(day, 'yyyy')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{format(day, 'yyyy')}</Typography>
           </Box>
           <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
             {items.map((e) => <EventPill key={e.id} event={e} onClick={onEvent} showTime />)}

@@ -22,35 +22,78 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
         {value.invoice_logo_url ? (
           <Box component="img" src={value.invoice_logo_url} alt="logo" sx={{ height: 34, maxWidth: 150, objectFit: 'contain' }} />
         ) : (
-          <Typography fontWeight={900} fontSize={20}>{value.business_name || 'Your business'}</Typography>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              fontSize: 20
+            }}>{value.business_name || 'Your business'}</Typography>
         )}
-        <Typography fontWeight={900} fontSize={16} letterSpacing={1}>{value.invoice_label || 'TAX INVOICE'}</Typography>
+        <Typography
+          sx={{
+            fontWeight: 900,
+            fontSize: 16,
+            letterSpacing: 1
+          }}>{value.invoice_label || 'TAX INVOICE'}</Typography>
       </Box>
 
       <Box sx={{ p: 2.5 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-start"
+          }}>
           <Box sx={{ maxWidth: 230 }}>
-            <Typography fontWeight={800}>{value.business_name || 'Your business'}</Typography>
-            {value.business_address && <Typography variant="caption" color="text.secondary" display="block">{value.business_address}</Typography>}
-            {value.business_gstin && <Typography variant="caption" color="text.secondary">GSTIN: {value.business_gstin}</Typography>}
+            <Typography sx={{
+              fontWeight: 800
+            }}>{value.business_name || 'Your business'}</Typography>
+            {value.business_address && <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>{value.business_address}</Typography>}
+            {value.business_gstin && <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>GSTIN: {value.business_gstin}</Typography>}
           </Box>
           <Box sx={{ textAlign: 'right' }}>
-            <Typography variant="caption" color="text.secondary">{t('finance.invoiceManagement.invoiceNo')}</Typography>
-            <Typography fontWeight={800}>{value.invoice_prefix || 'DUN'}/2526/000123</Typography>
-            <Typography variant="caption" color="text.secondary" display="block">Date: {formatDate(new Date())}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{t('finance.invoiceManagement.invoiceNo')}</Typography>
+            <Typography sx={{
+              fontWeight: 800
+            }}>{value.invoice_prefix || 'DUN'}/2526/000123</Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>Date: {formatDate(new Date())}</Typography>
           </Box>
         </Stack>
 
         <Box sx={{ mt: 2, bgcolor: '#fff1f4', borderRadius: 2, p: 1.5 }}>
           <Typography variant="caption" sx={{ color: ACCENT, fontWeight: 800 }}>{t('finance.invoiceManagement.billTo')}</Typography>
-          <Typography fontWeight={800}>{t('finance.invoiceManagement.riyaSharma')}</Typography>
-          <Typography variant="caption" color="text.secondary">riya@example.com · +91 90000 00000</Typography>
+          <Typography sx={{
+            fontWeight: 800
+          }}>{t('finance.invoiceManagement.riyaSharma')}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>riya@example.com · +91 90000 00000</Typography>
         </Box>
 
         <Box sx={{ mt: 2, bgcolor: ACCENT, color: '#fff', px: 1.5, py: 0.75, borderRadius: 1, display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 800 }}>
           <span>DESCRIPTION</span><span>AMOUNT</span>
         </Box>
-        <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1, borderBottom: '1px solid #eee' }}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            px: 1.5,
+            py: 1,
+            borderBottom: '1px solid #eee'
+          }}>
           <Typography variant="body2">{t('finance.invoiceManagement.podBookingSampleExperience')}</Typography>
           <Typography variant="body2">{money(SAMPLE.subtotal)}</Typography>
         </Stack>
@@ -64,12 +107,23 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
 
         <Box sx={{ mt: 2 }}>
           {(value.invoice_support_email || value.invoice_support_phone) && (
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>
               {[value.invoice_support_email && `Email: ${value.invoice_support_email}`, value.invoice_support_phone && `Phone: ${value.invoice_support_phone}`].filter(Boolean).join('   ·   ')}
             </Typography>
           )}
           {value.invoice_terms && (
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block",
+                mt: 0.5
+              }}>
               <b>Terms:</b> {value.invoice_terms}
             </Typography>
           )}

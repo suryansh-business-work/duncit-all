@@ -76,7 +76,11 @@ export default function PodClubAdminDialog({
   let body;
   if (loading && !data) {
     body = (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );

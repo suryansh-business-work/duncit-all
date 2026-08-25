@@ -46,7 +46,9 @@ export default function UploadSettingPage({ surface, title, subtitle }: Readonly
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{title}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {subtitle}
         </Typography>
       </Box>

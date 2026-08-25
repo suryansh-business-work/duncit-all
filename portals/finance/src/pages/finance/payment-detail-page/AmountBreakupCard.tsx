@@ -64,10 +64,21 @@ export default function AmountBreakupCard({ detail }: Readonly<{ detail: Payment
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 300, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 0.5
+          }}>
           {t('finance.payment.amountBreakup')}
         </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block",
+            mb: 1.5
+          }}>
           {p.description}
         </Typography>
         <Stack spacing={1}>
@@ -92,7 +103,12 @@ export default function AmountBreakupCard({ detail }: Readonly<{ detail: Payment
           at zero: Finance needs to see the absence, not an absent line.
         */}
         <Divider sx={{ my: 1.5 }} />
-        <Typography variant="overline" color="text.secondary" display="block">
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {t('finance.payment.duncitShare')}
         </Typography>
         <InfoRow
@@ -100,7 +116,13 @@ export default function AmountBreakupCard({ detail }: Readonly<{ detail: Payment
           label={t('finance.payment.platformFeeOfSubtotal', { vars: { pct: p.platform_fee_pct.toFixed(2) } })}
           value={money(p.currency_symbol, p.platform_fee_amount)}
         />
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block",
+            mt: 0.5
+          }}>
           {t('finance.payment.platformFeeNote')}
         </Typography>
       </CardContent>

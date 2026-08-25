@@ -26,7 +26,9 @@ export default function WordingDialog({ version, onClose }: Readonly<Props>) {
     <Dialog open={!!version} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
         {version?.title}
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {heading}
         </Typography>
       </DialogTitle>
@@ -35,7 +37,9 @@ export default function WordingDialog({ version, onClose }: Readonly<Props>) {
           {version?.content ? (
             <DuncitRichTextInput value={version.content} onChange={() => undefined} readOnly bare />
           ) : (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('legalAcceptanceLogs.detail.wordingEmpty')}
             </Typography>
           )}

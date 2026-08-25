@@ -36,14 +36,27 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
         aria-label={t('mweb.common.openYourProfile')}
       >
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={0.25}>
-            <Typography fontSize={15} fontWeight={600} noWrap>
+          <Stack direction="row" spacing={0.25} sx={{
+            alignItems: "center"
+          }}>
+            <Typography
+              noWrap
+              sx={{
+                fontSize: 15,
+                fontWeight: 600
+              }}>
               {me?.full_name ?? 'User'}
             </Typography>
             <ChevronRightIcon sx={{ fontSize: 16 }} color="disabled" />
           </Stack>
           {me?.email && (
-            <Typography fontSize={12} color="text.secondary" noWrap display="block">
+            <Typography
+              noWrap
+              sx={{
+                fontSize: 12,
+                color: "text.secondary",
+                display: "block"
+              }}>
               {me.email}
             </Typography>
           )}

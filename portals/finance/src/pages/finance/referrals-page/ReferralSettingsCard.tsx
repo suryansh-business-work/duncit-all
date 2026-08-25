@@ -32,23 +32,36 @@ export default function ReferralSettingsCard({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           Reward &amp; message
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Both sides of a referral earn this — the member who shared their code and the member who
           signed up with it.
         </Typography>
 
         <Stack spacing={2.5} sx={{ mt: 2 }}>
           <Stack spacing={0.25} sx={{ p: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               COINS PER REFERRAL
             </Typography>
-            <Typography variant="h6" fontWeight={700}>
+            <Typography variant="h6" sx={{
+              fontWeight: 700
+            }}>
               {coinsPerReferral}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Paid to each side the moment the code is redeemed. Change it in{' '}
               <Link component={RouterLink} to="/duncit-coin/settings">
                 Duncit Coin &rsaquo; Coin Settings
@@ -81,7 +94,12 @@ export default function ReferralSettingsCard({
             sx={{ p: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}
             aria-live="polite"
           >
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               PREVIEW
             </Typography>
             <Typography variant="body2">{preview}</Typography>

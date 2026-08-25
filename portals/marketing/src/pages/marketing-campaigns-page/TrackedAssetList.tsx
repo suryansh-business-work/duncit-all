@@ -25,11 +25,18 @@ export default function TrackedAssetList({
 }: Readonly<Props>) {
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          mb: 1
+        }}>
         {title}
       </Typography>
       {rows.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {emptyText}
         </Typography>
       )}
@@ -38,10 +45,11 @@ export default function TrackedAssetList({
           <Stack
             key={row.url}
             direction="row"
-            alignItems="center"
             spacing={1}
-            sx={{ minWidth: 0 }}
-          >
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             {row.badge}
             <Typography
               variant="body2"
@@ -49,7 +57,12 @@ export default function TrackedAssetList({
             >
               {row.url}
             </Typography>
-            <Typography variant="body2" fontWeight={700} sx={{ whiteSpace: 'nowrap' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                whiteSpace: 'nowrap'
+              }}>
               {`${row.count} ${countLabel}`}
             </Typography>
           </Stack>

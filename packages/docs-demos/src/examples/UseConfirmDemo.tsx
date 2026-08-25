@@ -22,7 +22,9 @@ function DeleteLocationButton() {
       <Button variant="outlined" color="error" onClick={onDelete}>
         Delete location
       </Button>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {result}
       </Typography>
     </Stack>

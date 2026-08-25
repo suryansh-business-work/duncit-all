@@ -16,7 +16,7 @@ import {
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import { useTranslation } from '@duncit/shell';
 import { SLACK_PERMISSIONS, type SlackPermissions, type SlackScope } from './queries';
 
@@ -42,18 +42,24 @@ function ScopeIcon({ granted, known }: Readonly<{ granted: boolean; known: boole
 
 function ScopeRow({ scope, known, optionalLabel }: Readonly<ScopeRowProps>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "flex-start"
+    }}>
       <Box sx={{ pt: 0.25 }}>
         <ScopeIcon granted={scope.granted} known={known} />
       </Box>
       <Stack sx={{ minWidth: 0 }}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.75} sx={{
+          alignItems: "center"
+        }}>
           <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 12 }}>
             {scope.scope}
           </Typography>
           {!scope.required && <Chip size="small" variant="outlined" label={optionalLabel} />}
         </Stack>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {scope.purpose}
         </Typography>
       </Stack>
@@ -71,7 +77,9 @@ function PermissionsBody({ data }: Readonly<{ data: SlackPermissions }>) {
   return (
     <Stack spacing={1.25}>
       {data.team && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('tech.slack.permissionsTeam', { vars: { team: data.team } })}
         </Typography>
       )}
@@ -93,7 +101,9 @@ function PermissionsBody({ data }: Readonly<{ data: SlackPermissions }>) {
         ))}
       </Stack>
       <Divider />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('tech.slack.permissionsHowTo')}
       </Typography>
       <Stack direction="row" spacing={2}>

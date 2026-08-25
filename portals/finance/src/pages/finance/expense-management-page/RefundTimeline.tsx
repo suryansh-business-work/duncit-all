@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { formatDate, useTranslation } from '@duncit/app-settings';
 
@@ -28,17 +28,25 @@ function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string;
   const { t } = useTranslation();
   const credit = amount > 0;
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: credit ? 'success.main' : 'error.main', flexShrink: 0 }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={700} noWrap>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 700
+        }}>
           {label}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {fmtDate(date)}
         </Typography>
       </Box>
-      <Typography variant="body2" fontWeight={800} color={credit ? 'success.main' : 'error.main'}>
+      <Typography variant="body2" color={credit ? 'success.main' : 'error.main'} sx={{
+        fontWeight: 800
+      }}>
         {credit ? '+' : '−'}₹{Math.abs(amount).toFixed(2)}
       </Typography>
       {onRemove && (
@@ -72,10 +80,14 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle1" fontWeight={800}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 800
+      }}>
         Refunds &amp; timeline
       </Typography>
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         <Chip size="small" label={`Gross ₹${expense.amount.toFixed(2)}`} />
         <Chip size="small" color="warning" label={`Refunded ₹${expense.refund_total.toFixed(2)}`} />
         <Chip size="small" color="success" label={`Net ₹${expense.net_amount.toFixed(2)}`} />
@@ -89,12 +101,16 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
       </Stack>
 
       <Divider />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Record a refund (max ₹{remaining.toFixed(2)})
       </Typography>
       <Stack direction="row" spacing={1}>
         <DatePicker label={t('finance.expenseManagement.refundDate')} value={date} onChange={setDate} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-        <TextField label={t('finance.common.amount')} required size="small" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} sx={{ width: 160 }} />
+        <TextField label={t('finance.common.amount')} required size="small" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} sx={{ width: 160 }} slotProps={{
+          input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
+        }} />
       </Stack>
       <TextField label={t('finance.expenseManagement.note')} size="small" value={note} onChange={(e) => setNote(e.target.value)} fullWidth />
       <Button variant="outlined" onClick={add} disabled={busy || remaining <= 0}>

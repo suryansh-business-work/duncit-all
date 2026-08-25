@@ -1,6 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip, IconButton, Stack } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
@@ -39,7 +39,9 @@ export default function NavigationTable({
 
   const columns = useMemo<DuncitColumn<WebsiteNavItem>[]>(() => {
     const renderActions = (item: WebsiteNavItem) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
+      <Stack direction="row" component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <IconButton size="small" aria-label={t('shell.common.edit')} onClick={() => onEdit(item)}>
           <EditIcon fontSize="small" />
         </IconButton>

@@ -93,10 +93,14 @@ export default function TelemetryLogsSettingsPage() {
               control={<Switch checked={field.value} onChange={(_, v) => field.onChange(v)} />}
               label={
                 <Box>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>
                     Ship logs to SigNoz (OTLP)
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     Turn off to stop external export — logs still persist to the database.
                   </Typography>
                 </Box>
@@ -106,7 +110,9 @@ export default function TelemetryLogsSettingsPage() {
         />
         <Divider />
         <Box>
-          <Typography variant="body2" fontWeight={600} gutterBottom>
+          <Typography variant="body2" gutterBottom sx={{
+            fontWeight: 600
+          }}>
             Levels persisted to the database
           </Typography>
           <Controller
@@ -149,8 +155,10 @@ export default function TelemetryLogsSettingsPage() {
               helperText={
                 fieldState.error?.message ?? 'Logs & bugs older than this are deleted daily (max 90).'
               }
-              inputProps={{ min: 1, max: 90 }}
               sx={{ maxWidth: 260 }}
+              slotProps={{
+                htmlInput: { min: 1, max: 90 }
+              }}
             />
           )}
         />
@@ -166,7 +174,9 @@ export default function TelemetryLogsSettingsPage() {
           </Button>
         </Box>
         {data?.telemetrySettings?.updated_at && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Last updated {formatDateTime(data.telemetrySettings.updated_at)}
           </Typography>
         )}
@@ -178,7 +188,9 @@ export default function TelemetryLogsSettingsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('tech.telemetryLogsSettings.telemetryLogsSettings')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Control which log levels are stored, how long they are kept, and whether logs ship to
           SigNoz.
         </Typography>

@@ -79,9 +79,11 @@ export default function InterviewDetailsForm({
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(onlyDigits(e.target.value))}
-              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 15 }}
               fullWidth
               required
+              slotProps={{
+                htmlInput: { inputMode: 'numeric', pattern: '[0-9]*', maxLength: 15 }
+              }}
             />
           </Stack>
           {!isHost && (

@@ -75,7 +75,9 @@ export default function NewsletterPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" sx={{
+        fontWeight: 700
+      }}>
         Newsletter Submission
       </Typography>
       <Stack direction="row" spacing={2}>

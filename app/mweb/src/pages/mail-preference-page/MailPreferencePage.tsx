@@ -50,7 +50,11 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
 
   if (state.loading) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -100,10 +104,14 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" fontWeight={800}>
+        <Typography variant="h6" sx={{
+          fontWeight: 800
+        }}>
           {fromLink ? t('mailPreference.linkTitle') : t('mailPreference.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mailPreference.subtitle', { vars: { email: state.preference.email } })}
         </Typography>
       </Stack>

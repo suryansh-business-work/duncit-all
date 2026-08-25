@@ -28,7 +28,14 @@ export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Rea
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" sx={{ mb: 0.25 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          mb: 0.25
+        }}>
         <Typography variant="body2" sx={{ fontWeight: 800 }}>
           Repeat on
         </Typography>
@@ -50,7 +57,9 @@ export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Rea
                 size="small"
                 checked={selected.has(day)}
                 onChange={() => toggle(day)}
-                inputProps={{ 'aria-label': WEEKDAY_FULL[day] }}
+                slotProps={{
+                  input: { 'aria-label': WEEKDAY_FULL[day] }
+                }}
               />
             }
             label={

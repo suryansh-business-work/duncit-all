@@ -44,7 +44,13 @@ function KpiTile({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Card variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
       <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "primary.main",
+            fontWeight: 700
+          }}>
           {label}
         </Typography>
         <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }}>
@@ -83,7 +89,13 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
     <Stack spacing={2.25}>
       <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 1.5 }}>
+          <Stack
+            direction="row"
+            spacing={1.25}
+            sx={{
+              alignItems: "center",
+              mb: 1.5
+            }}>
             <Box sx={{ width: 34, height: 34, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73, #ff7a59)' }}>
               <InsightsIcon fontSize="small" />
             </Box>

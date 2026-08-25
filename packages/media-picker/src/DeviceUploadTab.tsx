@@ -89,16 +89,32 @@ export default function DeviceUploadTab({
   const stageLabel = t(STAGE_KEYS[stage]);
 
   return (
-    <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>
+    <Stack
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        py: 2
+      }}>
       <input ref={fileInputRef} type="file" accept={accept} onChange={onPickFile} hidden />
       {previewUrl && isPdf && (
         <Stack
-          alignItems="center"
           spacing={1}
-          sx={{ width: '100%', maxWidth: 480, p: 4, borderRadius: 2, bgcolor: 'action.hover' }}
-        >
+          sx={{
+            alignItems: "center",
+            width: '100%',
+            maxWidth: 480,
+            p: 4,
+            borderRadius: 2,
+            bgcolor: 'action.hover'
+          }}>
           <PictureAsPdfIcon color="error" sx={{ fontSize: 56 }} />
-          <Typography variant="body2" fontWeight={700} noWrap sx={{ maxWidth: '100%' }}>
+          <Typography
+            variant="body2"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              maxWidth: '100%'
+            }}>
             {picked?.name}
           </Typography>
         </Stack>
@@ -147,16 +163,28 @@ export default function DeviceUploadTab({
           }}
         >
           <CloudUploadIcon color="primary" sx={{ fontSize: 48 }} />
-          <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 1 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              mt: 1
+            }}>
             {label}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {hint}
           </Typography>
         </Box>
       )}
       {picked && (
-        <Stack spacing={1} alignItems="center" sx={{ width: '100%' }}>
+        <Stack
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            width: '100%'
+          }}>
           <FileDetails file={picked} dims={dims} />
           <Button size="small" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             {t('media.device.change')}
@@ -170,7 +198,9 @@ export default function DeviceUploadTab({
           ) : (
             <LinearProgress variant="determinate" value={uploadPct} />
           )}
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {stageLabel}…{uploadPct === null ? '' : ` ${uploadPct}%`}
           </Typography>
         </Box>

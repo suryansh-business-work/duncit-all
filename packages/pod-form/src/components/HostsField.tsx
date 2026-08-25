@@ -79,13 +79,15 @@ export default function HostsField() {
         <li {...optionProps} key={option.user_id}>
           <Stack>
             <Typography variant="body2">{option.full_name || '—'}</Typography>
-            <Typography variant="caption" color="text.secondary">{option.email}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{option.email}</Typography>
           </Stack>
         </li>
       )}
-      renderTags={(selected, getTagProps) =>
+      renderValue={(selected, getItemProps) =>
         selected.map((option, index) => {
-          const { key, ...tagProps } = getTagProps({ index });
+          const { key, ...tagProps } = getItemProps({ index });
           return <Chip key={option.user_id} {...tagProps} size="small" label={hostLabel(option)} />;
         })
       }
@@ -97,14 +99,18 @@ export default function HostsField() {
           required={required}
           error={!!errors.pod_hosts_id}
           helperText={errors.pod_hosts_id?.message || requiredHint}
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading ? <CircularProgress size={16} /> : null}
-                {params.InputProps.endAdornment}
-              </>
-            ),
+          slotProps={{
+            ...params.slotProps,
+
+            input: {
+              ...params.slotProps.input,
+              endAdornment: (
+                <>
+                  {loading ? <CircularProgress size={16} /> : null}
+                  {params.slotProps.input.endAdornment}
+                </>
+              ),
+            }
           }}
         />
       )}

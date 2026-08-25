@@ -102,7 +102,13 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
             </Alert>
           )}
           <HostSections config={config} />
-          <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              justifyContent: "flex-end",
+              pt: 1
+            }}>
             {onCancel && (
               <Button onClick={onCancel} disabled={submitting}>
                 {t('shell.common.cancel')}

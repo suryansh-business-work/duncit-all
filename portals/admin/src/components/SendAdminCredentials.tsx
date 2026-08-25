@@ -89,7 +89,12 @@ export default function SendAdminCredentials() {
           {data!.seedSuperAdmin.emailed ? ' — credentials emailed.' : ' — email not sent (check SMTP).'}
         </Alert>
       )}
-      <Typography variant="caption" color="text.secondary" textAlign="center">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          textAlign: "center"
+        }}>
         First-time setup helper. Disable in production once configured.
       </Typography>
 
@@ -97,10 +102,14 @@ export default function SendAdminCredentials() {
         <DialogTitle>{t('admin.captcha.confirm')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Enter the characters below to email the super-admin credentials.
             </Typography>
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <Box
                 sx={{
                   flex: 1,
@@ -133,7 +142,9 @@ export default function SendAdminCredentials() {
               helperText={captchaError ?? ' '}
               autoFocus
               fullWidth
-              inputProps={{ maxLength: 5, style: { textTransform: 'uppercase', letterSpacing: 4 } }}
+              slotProps={{
+                htmlInput: { maxLength: 5, style: { textTransform: 'uppercase', letterSpacing: 4 } }
+              }}
             />
           </Stack>
         </DialogContent>

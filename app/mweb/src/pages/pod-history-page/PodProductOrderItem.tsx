@@ -23,7 +23,14 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
 
   return (
     <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
-      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={0.75}
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap",
+          mb: 1
+        }}>
         <Chip
           size="small"
           icon={isShip ? <LocalShippingIcon /> : <StorefrontIcon />}
@@ -31,7 +38,9 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
         />
         <Chip size="small" color="primary" variant="outlined" label={statusLabel(order.fulfilment_status, t)} />
         <Box sx={{ flex: 1 }} />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           #{order.order_no}
         </Typography>
       </Stack>
@@ -42,14 +51,18 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
             key={`${li.product_id}-${li.variant_id || 'base'}`}
             direction="row"
             spacing={1}
-            alignItems="center"
+            sx={{
+              alignItems: "center"
+            }}
           >
             <Avatar src={li.image_url || undefined} variant="rounded" sx={{ width: 34, height: 34, bgcolor: 'action.hover' }} />
             <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }} noWrap>
               {li.name}
               {li.variant_label ? ` — ${li.variant_label}` : ''} × {li.qty}
             </Typography>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {formatMoney(order.currency_symbol, li.gross)}
             </Typography>
           </Stack>
@@ -61,7 +74,9 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
       {isShip ? (
         <Stack spacing={0.5} sx={{ mb: 1 }}>
           {order.shiprocket.awb && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.podHistory.awb', { vars: { awb: order.shiprocket.awb } })}
               {order.shiprocket.courier_name ? ` · ${order.shiprocket.courier_name}` : ''}
             </Typography>
@@ -81,7 +96,13 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
           </Button>
         </Stack>
       ) : (
-        <Typography variant="caption" sx={{ mb: 1, display: 'block' }} color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            mb: 1,
+            display: 'block'
+          }}>
           {t('mweb.podHistory.pickupCode')} <b>{order.pickup_ref || '—'}</b>
           {order.pickup_location_id ? ` · ${order.pickup_location_id}` : ''}
         </Typography>

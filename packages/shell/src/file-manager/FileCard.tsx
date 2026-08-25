@@ -40,7 +40,6 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
         size="small"
         checked={selected}
         onChange={() => onToggle(file.fileId)}
-        inputProps={{ 'aria-label': `Select ${file.name}` }}
         sx={{
           position: 'absolute',
           top: 2,
@@ -49,6 +48,9 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
           bgcolor: 'background.paper',
           borderRadius: 1,
           p: 0.25,
+        }}
+        slotProps={{
+          input: { 'aria-label': `Select ${file.name}` }
         }}
       />
       <Tooltip title={t('shell.fileManager.copyLink')}>
@@ -82,7 +84,12 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
               sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
             />
           ) : (
-            <Stack alignItems="center" spacing={0.5} sx={{ color: 'text.secondary' }}>
+            <Stack
+              spacing={0.5}
+              sx={{
+                alignItems: "center",
+                color: 'text.secondary'
+              }}>
               <InsertDriveFileIcon />
               <Typography variant="caption">{file.mime || 'file'}</Typography>
             </Stack>
@@ -92,7 +99,9 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
           <Typography variant="body2" noWrap title={file.name}>
             {file.name}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {formatBytes(file.size)}
             {file.width ? ` · ${file.width}×${file.height}` : ''}
           </Typography>

@@ -50,7 +50,9 @@ export default function ItemFormDialog({
             fullWidth
             error={tooLong}
             helperText={`${form.title.length}/${TITLE_MAX} — shown over the image, up to three lines`}
-            inputProps={{ maxLength: TITLE_MAX }}
+            slotProps={{
+              htmlInput: { maxLength: TITLE_MAX }
+            }}
           />
           <MediaPickerField
             label={t('admin.somethingForYou.cardImage')}

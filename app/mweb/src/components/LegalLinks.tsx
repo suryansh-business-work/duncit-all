@@ -13,10 +13,13 @@ export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
   return (
     <Typography
       variant="caption"
-      color="text.secondary"
       align="center"
-      sx={{ display: 'block', mt: 1.5, lineHeight: 1.5 }}
-    >
+      sx={{
+        color: "text.secondary",
+        display: 'block',
+        mt: 1.5,
+        lineHeight: 1.5
+      }}>
       {lead} {t('mweb.auth.legalAgree')}{' '}
       <Link href={TERMS_URL} target="_blank" rel="noopener" underline="hover">
         {t('mweb.auth.terms')}
@@ -24,9 +27,8 @@ export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
       {t('mweb.auth.legalAnd')}{' '}
       <Link href={PRIVACY_URL} target="_blank" rel="noopener" underline="hover">
         {t('mweb.auth.privacy')}
-      </Link>
-      .
-    </Typography>
+      </Link>.
+          </Typography>
   );
 }
 
@@ -37,9 +39,11 @@ export function LegalLinkRow() {
     <Stack
       direction="row"
       spacing={2}
-      justifyContent="center"
-      sx={{ mt: 1, flexWrap: 'wrap' }}
-    >
+      sx={{
+        justifyContent: "center",
+        mt: 1,
+        flexWrap: 'wrap'
+      }}>
       <Link
         href={TERMS_URL}
         target="_blank"

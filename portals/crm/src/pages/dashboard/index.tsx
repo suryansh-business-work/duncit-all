@@ -77,13 +77,17 @@ export default function DashboardPage() {
       dashboardId="crm.overview"
       header={
         <Stack spacing={2}>
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <DashboardIcon color="primary" />
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 CRM Dashboard
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Venue & host leads overview — counts, pipeline stages and priority mix.
               </Typography>
             </Box>

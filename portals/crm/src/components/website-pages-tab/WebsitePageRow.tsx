@@ -55,7 +55,12 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
           {page.url}
         </Typography>
         {page.title && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block'
+            }}>
             {page.title}
           </Typography>
         )}
@@ -70,7 +75,12 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
       </TableCell>
       <TableCell align="right">{page.content_chars ? page.content_chars.toLocaleString() : '—'}</TableCell>
       <TableCell align="right">
-        <Stack direction="row" justifyContent="flex-end" alignItems="center">
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "flex-end",
+            alignItems: "center"
+          }}>
           <Tooltip title={fetched ? 'Re-fetch content' : 'Fetch content'}>
             <span>
               <IconButton size="small" color="primary" onClick={run} disabled={loading} aria-label={t('crm.components.fetchContent')}>

@@ -117,7 +117,12 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
     <Stack spacing={2.5} component="form" onSubmit={handleSubmit(onSave)} noValidate>
       {sections(t).map((section) => (
         <Box key={section.title}>
-          <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{section.title}</Typography>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              mb: 1
+            }}>{section.title}</Typography>
           <Stack spacing={2}>
             {section.fields.map((field) => (
               <TextField
@@ -138,7 +143,12 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
       ))}
 
       <Box>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t('partners.ecommBrandPage.productCategories')}</Typography>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            mb: 1
+          }}>{t('partners.ecommBrandPage.productCategories')}</Typography>
         <Stack direction="row" spacing={1}>
           <TextField
             size="small"
@@ -151,7 +161,14 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
           />
           <Button onClick={addCategory} disabled={locked} variant="outlined">Add</Button>
         </Stack>
-        <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mt: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            flexWrap: "wrap",
+            rowGap: 1,
+            mt: 1
+          }}>
           {categories.map((category) => (
             <Chip
               key={category}
@@ -163,7 +180,12 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
       </Box>
 
       <Box>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t('partners.ecommBrandPage.brandMedia')}</Typography>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            mb: 1
+          }}>{t('partners.ecommBrandPage.brandMedia')}</Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <MediaSlot label={t('partners.ecommBrandPage.logo')} url={logo} disabled={locked} onPick={() => pickInto('logo_url')} onClear={() => setValue('logo_url', '')} />
           <MediaSlot label={t('partners.ecommBrandPage.coverImage')} url={cover} disabled={locked} onPick={() => pickInto('cover_image_url')} onClear={() => setValue('cover_image_url', '')} />
@@ -171,18 +193,37 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
       </Box>
 
       <Box>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-          <Typography variant="subtitle2" fontWeight={800}>{t('shell.nav.documents')}</Typography>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1
+          }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>{t('shell.nav.documents')}</Typography>
           <Button size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addDocument} disabled={locked}>{t('partners.ecommBrandPage.addDocument')}</Button>
         </Stack>
         {documents.length === 0 ? (
-          <Typography variant="caption" color="text.secondary">{t('partners.ecommBrandPage.brandRegistrationTrademarkGstCertificateEtc')}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{t('partners.ecommBrandPage.brandRegistrationTrademarkGstCertificateEtc')}</Typography>
         ) : (
           <Stack spacing={1}>
             {documents.map((doc, index) => (
-              <Stack key={doc.url} direction="row" alignItems="center" spacing={1}>
+              <Stack key={doc.url} direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <TextField size="small" label={t('shell.common.type')} value={doc.type} disabled={locked} onChange={(e) => setValue('documents', documents.map((d, i) => (i === index ? { ...d, type: e.target.value } : d)))} sx={{ width: 160 }} />
-                <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1, minWidth: 0 }}>{doc.url}</Typography>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{
+                    color: "text.secondary",
+                    flex: 1,
+                    minWidth: 0
+                  }}>{doc.url}</Typography>
                 {!locked && (
                   <IconButton size="small" onClick={() => setValue('documents', documents.filter((_, i) => i !== index))}><DeleteIcon fontSize="small" /></IconButton>
                 )}
@@ -195,7 +236,9 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
       {!locked && (
         <>
           <Divider />
-          <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+          <Stack direction="row" spacing={1.5} sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button type="submit" variant="outlined" disabled={busy}>{t('partners.ecommBrandPage.saveDraft')}</Button>
             <Button type="button" variant="contained" endIcon={<SendIcon />} disabled={busy} onClick={handleSubmit(onSubmitForReview)}>
               Submit for review
@@ -211,7 +254,9 @@ function MediaSlot({ label, url, disabled, onPick, onClear }: Readonly<{ label: 
   const { t } = useTranslation();
   return (
     <Box sx={{ flex: 1 }}>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>{label}</Typography>
       {url && <Box component="img" src={url} alt={label} sx={{ display: 'block', width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 1, my: 0.5 }} />}
       <Stack direction="row" spacing={1}>
         <Button size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={onPick} disabled={disabled}>{url ? 'Change' : t('partners.becomeHostPage.upload')}</Button>

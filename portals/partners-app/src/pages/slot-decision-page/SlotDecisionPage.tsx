@@ -108,9 +108,10 @@ export default function SlotDecisionPage() {
           <Stack
             direction={{ xs: 'column-reverse', sm: 'row' }}
             spacing={1}
-            justifyContent="flex-end"
-            sx={{ mt: 2.5 }}
-          >
+            sx={{
+              justifyContent: "flex-end",
+              mt: 2.5
+            }}>
             <Button
               variant="outlined"
               color="error"
@@ -143,7 +144,9 @@ export default function SlotDecisionPage() {
         )}
       </Card>
 
-      <Stack direction="row" justifyContent="center">
+      <Stack direction="row" sx={{
+        justifyContent: "center"
+      }}>
         <Button onClick={() => navigate('/venues/requests')}>{t('partners.slotDecisionPage.seeAllSlotRequests')}</Button>
       </Stack>
     </Stack>

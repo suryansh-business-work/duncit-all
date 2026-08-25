@@ -111,14 +111,17 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={1}
-          sx={{ mb: 2 }}
-        >
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: 2
+          }}>
           <Box>
             <Typography variant="subtitle1">{t('admin.settings.displayFormats')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               The one date &amp; time format every surface reads and writes — this panel, the
               portals, mWeb and the app, in what is displayed and in every date box that is
               typed into.

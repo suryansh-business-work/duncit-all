@@ -18,10 +18,14 @@ const getRowId = (row: VenuePodRow) => row.id;
 
 const renderPod = (row: VenuePodRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 700
+    }}>
       {row.pod_title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.host_names.join(', ') || '—'}
     </Typography>
   </Stack>

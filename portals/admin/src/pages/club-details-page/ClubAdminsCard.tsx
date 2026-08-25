@@ -7,9 +7,17 @@ export default function ClubAdminsCard({ admins }: Readonly<{ admins: ClubActor[
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <AdminPanelSettingsIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 900
+          }}>
             Club Admins
           </Typography>
           <Chip size="small" label={admins.length} sx={{ ml: 0.5 }} />
@@ -17,7 +25,12 @@ export default function ClubAdminsCard({ admins }: Readonly<{ admins: ClubActor[
         <Divider />
 
         {admins.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ pt: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              pt: 2
+            }}>
             No club admins assigned yet.
           </Typography>
         ) : (
@@ -29,7 +42,9 @@ export default function ClubAdminsCard({ admins }: Readonly<{ admins: ClubActor[
                     {(admin.name || '?').charAt(0).toUpperCase()}
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={admin.name} primaryTypographyProps={{ fontWeight: 700 }} />
+                <ListItemText primary={admin.name} slotProps={{
+                  primary: { sx: { fontWeight: 700 } }
+                }} />
               </ListItem>
             ))}
           </List>

@@ -42,7 +42,9 @@ export default function ChatHeader({
   };
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
       </IconButton>
@@ -52,7 +54,9 @@ export default function ChatHeader({
           Chat with Us
         </Typography>
         {ticketNo && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {ticketNo}
           </Typography>
         )}

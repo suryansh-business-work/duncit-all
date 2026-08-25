@@ -57,7 +57,9 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
   return (
     <Stack spacing={2.5}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.ecommBrands.brand')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('onboarding.ecommBrands.brand')}</Typography>
         <Box sx={grid2}>
           {field('brand_name', 'Brand name')}
           {field('tagline', 'Tagline')}
@@ -75,7 +77,9 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.common.contact')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('onboarding.common.contact')}</Typography>
         <Box sx={grid2}>
           {field('contact_person', 'Contact person')}
           {field('contact_email', 'Contact email')}
@@ -84,7 +88,9 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.ecommBrands.businessAndLegal')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('onboarding.ecommBrands.businessAndLegal')}</Typography>
         <Box sx={grid2}>
           {field('registered_business_name', 'Registered business name')}
           {field('established_year', 'Established year')}
@@ -94,7 +100,9 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.common.address')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('onboarding.common.address')}</Typography>
         <TextField size="small" label={t('onboarding.common.addressLine1')} value={values.address_line1} onChange={(e) => set('address_line1')(e.target.value)} />
         <Box sx={grid2}>
           {field('city', 'City')}
@@ -105,7 +113,9 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>{t('onboarding.common.payout')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('onboarding.common.payout')}</Typography>
         <Box sx={grid2}>
           {field('account_holder_name', 'Account holder name')}
           {field('account_number', 'Account number')}
@@ -115,7 +125,9 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={700}>{t('shell.nav.documents')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('shell.nav.documents')}</Typography>
         {docs.map((doc) => (
           <Box
             key={doc.id}

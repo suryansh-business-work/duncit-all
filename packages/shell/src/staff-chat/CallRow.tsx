@@ -2,7 +2,7 @@ import { Box, Chip, IconButton, Link, Stack, Tooltip, Typography } from '@mui/ma
 import CallIcon from '@mui/icons-material/Call';
 import CallMissedIcon from '@mui/icons-material/CallMissed';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useTranslation } from '../i18n/useTranslation';
 import { callDuration } from './timeline';
@@ -62,19 +62,22 @@ export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>
   const label = t(KIND_KEY[outgoing ? 'out' : 'in'][video ? 'video' : 'audio']);
 
   return (
-    <Stack alignItems="center" sx={{ my: 0.5 }}>
+    <Stack
+      sx={{
+        alignItems: "center",
+        my: 0.5
+      }}>
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
         sx={{
+          alignItems: "center",
           px: 1.5,
           py: 0.75,
           borderRadius: 4,
           bgcolor: 'action.hover',
-          maxWidth: '90%',
-        }}
-      >
+          maxWidth: '90%'
+        }}>
         {answered ? (
           <Box sx={{ display: 'inline-flex', color: 'text.secondary' }}>
             {call.kind === 'VIDEO' ? (
@@ -92,7 +95,9 @@ export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>
             {label}
             {note ? ` · ${note}` : ''}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {when}
             {answered ? ` · ${callDuration(call.duration_seconds)}` : ''}
           </Typography>

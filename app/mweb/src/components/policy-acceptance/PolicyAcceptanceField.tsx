@@ -80,7 +80,12 @@ export default function PolicyAcceptanceField({
           />
         }
         label={
-          <Typography variant="body2" color="text.secondary" sx={{ pt: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              pt: 1
+            }}>
             {requiredLabel(t('policyAcceptance.checkboxLabel'), true)}
           </Typography>
         }

@@ -8,7 +8,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -48,19 +48,29 @@ export default function FileManagerToolbar({
   const input = useRef<HTMLInputElement>(null);
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap",
+        mb: 2
+      }}>
       <TextField
         size="small"
         value={search}
         onChange={(event) => onSearch(event.target.value)}
         placeholder={t('shell.fileManager.search')}
         sx={{ flex: 1, minWidth: 220 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }
         }}
       />
       <TextField

@@ -105,7 +105,9 @@ export default function BenefitFormDialog({
             />
 
             <Stack spacing={0.5}>
-              <Typography variant="subtitle2" fontWeight={700}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 700
+              }}>
                 What each tier gets
               </Typography>
               <Alert severity="info" sx={{ py: 0.25 }}>
@@ -136,7 +138,9 @@ export default function BenefitFormDialog({
               />
             ))}
 
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={2} sx={{
+              alignItems: "center"
+            }}>
               <RhfTextField
                 control={control}
                 name="sort_order"

@@ -44,23 +44,37 @@ export default function BrandSummaryCard({ brand, productsTo }: Readonly<Props>)
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+            alignItems: { sm: 'center' }
+          }}>
             <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 64, height: 64 }}>
               {brand.brand_name?.[0]?.toUpperCase() ?? '?'}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                <Typography variant="h6" fontWeight={800}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap"
+                }}>
+                <Typography variant="h6" sx={{
+                  fontWeight: 800
+                }}>
                   {brand.brand_name}
                 </Typography>
                 <StatusChip status={brand.status} colorMap={BRAND_STATUS_COLOR} />
                 <Chip size="small" label={activeLabel} color={activeColor} variant="outlined" />
                 {brand.brand_no && <Chip size="small" variant="outlined" label={brand.brand_no} />}
               </Stack>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {contactLine(brand)}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {locationLine(brand)}
               </Typography>
             </Box>
@@ -74,7 +88,9 @@ export default function BrandSummaryCard({ brand, productsTo }: Readonly<Props>)
             </Button>
           </Stack>
 
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {productsLine(brand)}
           </Typography>
 

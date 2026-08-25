@@ -25,7 +25,9 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+          alignItems: "center"
+        }}>
           <HealthMeter
             score={health.total_score}
             band={health.band}
@@ -38,12 +40,16 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {bandHeadline(health.band)}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Base activity: {health.base_score}
               {health.delta_sum !== 0 && <> · Admin adjustment: {deltaLabel}</>}
             </Typography>
             {health.adjustments.length > 0 && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {health.adjustments.length} admin remark{remarkSuffix} — tap the meter to read.
               </Typography>
             )}

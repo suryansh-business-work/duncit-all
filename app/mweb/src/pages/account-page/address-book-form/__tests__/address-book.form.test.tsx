@@ -48,7 +48,9 @@ describe('AddressForm', () => {
   it('renders the title and all fields with blank defaults', () => {
     renderForm();
     expect(screen.getByText('Add address')).toBeInTheDocument();
-    expect(textbox(/label/i)).toHaveValue(blankAddressValues.label);
+    // Prefilled from the catalogue rather than from the blank shape, which no
+    // longer carries copy.
+    expect(textbox(/label/i)).toHaveValue('Home');
     expect(textbox(/country/i)).toHaveValue(blankAddressValues.country);
     expect(screen.getByRole('checkbox')).not.toBeChecked();
   });

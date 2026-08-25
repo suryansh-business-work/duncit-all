@@ -77,7 +77,9 @@ export default function GrievanceDetailDialog({
     <Dialog open={!!ticket} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         Grievance
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {ticket?.grievance_no}
         </Typography>
         <IconButton
@@ -115,16 +117,22 @@ export default function GrievanceDetailDialog({
           <Divider />
 
           <Stack spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Subject
             </Typography>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {ticket?.subject}
             </Typography>
           </Stack>
 
           <Stack spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               What they told us
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

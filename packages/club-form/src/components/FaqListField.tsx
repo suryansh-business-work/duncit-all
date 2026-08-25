@@ -1,6 +1,6 @@
 import { Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import type { ClubFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
@@ -14,7 +14,9 @@ export default function FaqListField() {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         FAQs
       </Typography>
       {fields.map((field, index) => (
@@ -23,7 +25,9 @@ export default function FaqListField() {
           spacing={1}
           sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Controller
               control={control}
               name={`faqs.${index}.question` as const}

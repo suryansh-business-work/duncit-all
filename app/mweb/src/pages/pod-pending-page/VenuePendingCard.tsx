@@ -77,8 +77,19 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="venue-pending-card">
       <Stack spacing={1.25}>
-        <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              minWidth: 0
+            }}>
             {venue.venue_name}
           </Typography>
           <Chip

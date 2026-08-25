@@ -103,7 +103,9 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
             />
           )}
         />
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           {onCancel && (
             <Button onClick={onCancel} disabled={submitting}>
               {t('shell.common.cancel')}

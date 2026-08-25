@@ -324,3 +324,57 @@ table whose rows are *supposed* to be identical, already excluded from Sonar's
 CPD for the same reason. Detector settings are in
 [.jscpd.json](../.jscpd.json): 10 lines / 90 tokens minimum, so a shared import
 block is not a finding but a copied component or helper is.
+
+---
+
+## 7. Baseline raised on 2026-08-25 (v1.70.22) — 1,214 lines of new debt
+
+Six sessions had been working the tree at once and none of it was committed.
+Landing all of it in one go (`796d4e96f`) took 14 workspaces past their ratchet
+at the same moment, so the baseline was re-cut rather than blocking the push.
+
+This is a **deliberate raise, and the only one so far.** Every other entry in
+this file records duplication that was *found*; this one records duplication
+that was *accepted*. The repo-wide figure held at 1.52%, so the ceiling in
+`scripts/duplication-baseline.json` actually tightened from 1.9% to 1.8% — but
+the per-workspace numbers below are all higher than they were, and every one of
+them is work owed.
+
+| Workspace | Was | Now | Δ |
+|---|---:|---:|---:|
+| `portals/crm` | 1231 | 1731 | +500 |
+| `app/mweb` | 2892 | 3075 | +183 |
+| `portals/onboarding` | 891 | 1063 | +172 |
+| `portals/admin` | 1045 | 1191 | +146 |
+| `portals/finance` | 334 | 380 | +46 |
+| `portals/products` | 152 | 198 | +46 |
+| `packages/club-form` | 276 | 305 | +29 |
+| `portals/partners-app` | 848 | 873 | +25 |
+| `packages/media-picker` | 202 | 225 | +23 |
+| `packages/pod-form` | 390 | 406 | +16 |
+| `portals/marketing` | 332 | 342 | +10 |
+| `portals/website-app` | 184 | 191 | +7 |
+| `portals/support` | 188 | 194 | +6 |
+| `server` | 3720 | 3725 | +5 |
+
+### The clusters to pay down first
+
+Each of these is a whole component or module copied between two workspaces, and
+each has an obvious home under `packages/` (rule 40):
+
+| Lines | Clone | Home |
+|---:|---|---|
+| 96 | `packages/club-form/src/components/MediaRow.tsx` ↔ `packages/pod-form/src/components/MediaRow.tsx` | `@duncit/media-picker` — it already ships `media-list-field/MediaListRow.tsx`, a 78-line clone of the same thing |
+| 96 | `portals/admin/…/pod-monitoring/PodAuditDetailDialog.tsx` ↔ `portals/partners-app/…/club-admin-monitoring-page/PodAuditDetailDialog.tsx` | a pod-monitoring package, or `@duncit/pod-details` |
+| 92 | `portals/admin/…/pod-monitoring/queries.ts` ↔ `portals/partners-app/…/club-admin-monitoring-page/queries.ts` | same |
+| 90 | `portals/admin/…/pod-monitoring/PodActivityDialog.tsx` ↔ `portals/partners-app/…/club-admin-club-pods-page/PodActivityDialog.tsx` | same |
+| 79 | `portals/marketing/src/components/MediaPickerField.tsx` ↔ `portals/onboarding/src/components/MediaPickerField.tsx` | `@duncit/media-picker` |
+| 76 | `app/mweb/src/forms/components/country-codes.ts` ↔ `app/mobile-app/src/forms/components/country-codes.ts` | `@duncit/forms` — framework-free data, the exact shape rule 40 says to share |
+| 75 | `portals/admin/src/components/BankAccountVerificationSection.tsx` ↔ `portals/onboarding/src/components/BankAccountVerificationSection.tsx` | `@duncit/forms` or a finance package |
+
+The 600-line `packages/communication/src/wa-events.ts` ↔
+`server/src/modules/platform/whatsapp/whatsapp.events.ts` pair is **not** on that
+list: `server/src` imports zero `@duncit/*` packages by design (rule 40, "Server
+is the boundary"), so that copy is the architecture rather than an oversight.
+If it is ever paid down it has to be by moving the logic into
+`server/src/utils/*` and having the package read from there, not the reverse.

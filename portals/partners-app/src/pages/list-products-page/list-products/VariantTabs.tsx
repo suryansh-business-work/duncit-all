@@ -46,10 +46,14 @@ export default function VariantTabs({ control, watch, setValue, onPickImage }: R
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         Variants
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Each variant carries its own images, description, size, dimensions, price and stock.
       </Typography>
       <DuncitTabs {...tabs} variant="scrollable" scrollButtons="auto" />

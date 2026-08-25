@@ -48,16 +48,16 @@ export default function AddressFields<T extends FieldValues>({
   const labelProps = shrinkLabels ? { shrink: true } : undefined;
   return (
     <Stack spacing={1.5}>
-      <RhfTextField control={control} name={names.line1} label={t('mweb.address.line1')} required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
-      <RhfTextField control={control} name={names.line2} label={t('mweb.address.line2')} size={size} sx={fieldSx} InputLabelProps={labelProps} />
-      <RhfTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+      <RhfTextField control={control} name={names.line1} label={t('mweb.address.line1')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+      <RhfTextField control={control} name={names.line2} label={t('mweb.address.line2')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+      <RhfTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.city} label={t('mweb.address.city')} required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
-        <RhfTextField control={control} name={names.state} label={t('mweb.address.state')} required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+        <RhfTextField control={control} name={names.city} label={t('mweb.address.city')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+        <RhfTextField control={control} name={names.state} label={t('mweb.address.state')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.pincode} label={t('mweb.address.pincode')} required={required} hint={pincodeHint} size={size} sx={fieldSx} InputLabelProps={labelProps} inputProps={PINCODE_INPUT} />
-        <RhfTextField control={control} name={names.country} label={t('mweb.address.country')} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+        <RhfTextField control={control} name={names.pincode} label={t('mweb.address.pincode')} required={required} hint={pincodeHint} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps, htmlInput: PINCODE_INPUT }}  />
+        <RhfTextField control={control} name={names.country} label={t('mweb.address.country')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       </Stack>
     </Stack>
   );

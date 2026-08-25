@@ -22,13 +22,21 @@ export default function VenueEarningsLinkCard() {
       data-testid="venue-earnings-link-card"
     >
       <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <PaidIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
               Earnings
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {summary
                 ? `Lifetime ${money(summary.lifetime_earnings)} · Pending ${money(summary.pending_amount)}`
                 : 'Payouts and slot-price breakdowns'}

@@ -14,10 +14,21 @@ const placeholder = (name: string) => `{{${name}}}`;
 export default function CampaignVariables({ variables, unknown }: Readonly<Props>) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 0.75 }}>
+      <Typography
+        variant="caption"
+        component="div"
+        sx={{
+          color: "text.secondary",
+          mb: 0.75
+        }}>
         Available variables — use them in the subject or the MJML
       </Typography>
-      <Stack direction="row" flexWrap="wrap" gap={0.75}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: "wrap",
+          gap: 0.75
+        }}>
         {variables.map((variable) => (
           <Tooltip
             key={variable.name}

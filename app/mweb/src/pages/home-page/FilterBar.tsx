@@ -79,7 +79,15 @@ export default function FilterBar({
 
       {/* ── Price row ── */}
       <Stack spacing={0.35}>
-        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 700, lineHeight: 1.1, textTransform: 'uppercase' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            px: 0.25,
+            fontWeight: 700,
+            lineHeight: 1.1,
+            textTransform: 'uppercase'
+          }}>
           Price
         </Typography>
         <Box sx={scrollRow}>
@@ -105,7 +113,15 @@ export default function FilterBar({
 
       {/* ── Date row ── */}
       <Stack spacing={0.35}>
-        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 700, lineHeight: 1.1, textTransform: 'uppercase' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            px: 0.25,
+            fontWeight: 700,
+            lineHeight: 1.1,
+            textTransform: 'uppercase'
+          }}>
           When
         </Typography>
         <Box sx={scrollRow}>
@@ -141,10 +157,12 @@ export default function FilterBar({
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-            InputProps={{
-              startAdornment: (
-                <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                ),
+              }
             }}
           >
             <MenuItem value="DATE_ASC">{t('mweb.home.dateEarliestFirst')}</MenuItem>

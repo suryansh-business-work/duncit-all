@@ -33,7 +33,9 @@ export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry 
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Uploads a file to this ImageKit account and returns the CDN path.
       </Typography>
       <Button variant="outlined" component="label">

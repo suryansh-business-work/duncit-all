@@ -98,10 +98,14 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
     <Card>
       <CardContent>
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+            justifyContent: "space-between"
+          }}>
             <Box>
               <Typography variant="subtitle1">{t('admin.activity.appVisit')}</Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {activity?.total_visits ?? 0} visits recorded in {year}.
               </Typography>
             </Box>

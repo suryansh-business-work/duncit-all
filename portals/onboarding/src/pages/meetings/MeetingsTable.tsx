@@ -39,9 +39,10 @@ function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | nu
   const value = status ?? 'NONE';
   if (value === 'NONE')
     return (
-      <Typography variant="body2" color="text.secondary">
-        —
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>—
+              </Typography>
     );
   return <StatusChip status={value} label={APPROVAL_LABELS[value]} colorMap={APPROVAL_COLORS} />;
 }
@@ -57,9 +58,10 @@ function JoinCell({ meeting }: Readonly<{ meeting: OnboardingMeeting }>) {
     );
   }
   return (
-    <Typography variant="body2" color="text.secondary">
-      —
-    </Typography>
+    <Typography variant="body2" sx={{
+      color: "text.secondary"
+    }}>—
+          </Typography>
   );
 }
 
@@ -68,9 +70,11 @@ const getMeetingRowId = (m: OnboardingMeeting) => m.id;
 const renderRequestNo = (m: OnboardingMeeting) => (
   <Typography
     variant="body2"
-    fontWeight={800}
-    sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}
-  >
+    sx={{
+      fontWeight: 800,
+      fontFamily: 'monospace',
+      whiteSpace: 'nowrap'
+    }}>
     {m.request_no || '—'}
   </Typography>
 );
@@ -83,7 +87,12 @@ const renderMeetingStatus = (m: OnboardingMeeting) => (
   <>
     <StatusChip status={m.status} colorMap={STATUS_COLORS} label={meetingStatusLabel(m)} />
     {m.status === 'CANCELLED' && m.cancel_reason && (
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {m.cancel_reason}
       </Typography>
     )}
@@ -124,16 +133,22 @@ export default function MeetingsTable({
           component="button"
           type="button"
           variant="body2"
-          fontWeight={700}
           onClick={(e) => {
             e.stopPropagation();
             onRequester(m);
           }}
-          sx={{ textAlign: 'left' }}
-        >
+          sx={{
+            fontWeight: 700,
+            textAlign: 'left'
+          }}>
           {requesterValue(m)}
         </Link>
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {m.user_email || m.contact_phone || ''}
         </Typography>
       </>

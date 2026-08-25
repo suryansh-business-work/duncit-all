@@ -312,6 +312,23 @@ async function repeatFailures(since: Date) {
   }));
 }
 
+/** The one status that means the email actually left. */
+const IS_SENT = { $eq: ['$status', 'SENT'] };
+
+/** How many rows in the group matched, as a `$group` accumulator. */
+const countWhere = (match: unknown) => ({ $sum: { $cond: [match, 1, 0] } });
+
+/** One row of the per-template roll-up, straight out of the pipeline. */
+interface TemplateUsageRow {
+  _id: string;
+  sent: number;
+  skipped: number;
+  failed: number;
+  total: number;
+  last_sent_at: Date | null;
+  last_attempt_at: Date | null;
+}
+
 export const emailLogService = {
   /** Record one attempt. Never throws; a lost log line is not worth a lost email. */
   async record(entry: EmailLogEntry): Promise<void> {
@@ -453,6 +470,52 @@ export const emailLogService = {
       not_delivered_templates,
       repeat_failures,
     };
+  },
+
+  /**
+   * How much use each template has seen — counted from this log, never stored.
+   *
+   * A counter on the template document would be cheaper and would be wrong.
+   * The number exists to be CLICKED: it opens the log filtered to that slug, so
+   * a count reading 128 above a table showing 40 is worse than no count at all.
+   * Deriving it is what stops the two ever disagreeing — including after
+   * someone empties the log, which this product allows on purpose.
+   *
+   * A raw-HTML send carries no slug and has no template page to sit on, so it
+   * is matched out. `$gt: ''` drops the null and missing rows with it, and
+   * reads off `{ template: 1, created_at: -1 }` as a range rather than a scan.
+   *
+   * Unwindowed, unlike the dashboard: the question is "has this template ever
+   * been used", and a 7-day window answers "no" for everything seasonal.
+   */
+  async usageByTemplate() {
+    const rows = await EmailLogModel.aggregate<TemplateUsageRow>([
+      { $match: { template: { $gt: '' } } },
+      {
+        $group: {
+          _id: '$template',
+          sent: countWhere(IS_SENT),
+          skipped: countWhere({ $eq: ['$status', 'SKIPPED'] }),
+          failed: countWhere({ $eq: ['$status', 'FAILED'] }),
+          total: { $sum: 1 },
+          // `$max` ignores nulls, so this is the newest SENT row's date, and
+          // null for a template that has only ever failed — a state the page
+          // has to be able to show rather than round off to "never used".
+          last_sent_at: { $max: { $cond: [IS_SENT, '$created_at', null] } },
+          last_attempt_at: { $max: '$created_at' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    return rows.map((r) => ({
+      slug: r._id,
+      sent: r.sent,
+      skipped: r.skipped,
+      failed: r.failed,
+      total: r.total,
+      last_sent_at: r.last_sent_at?.toISOString() ?? null,
+      last_attempt_at: r.last_attempt_at?.toISOString() ?? null,
+    }));
   },
 
   /**

@@ -76,7 +76,14 @@ function Eyebrow({ eyebrow, eyebrowWeight }: Readonly<Pick<BackHeaderProps, 'eye
   if (eyebrow == null) return null;
   if (typeof eyebrow === 'string' || typeof eyebrow === 'number') {
     return (
-      <Typography variant="overline" color="text.secondary" display="block" sx={{ fontWeight: eyebrowWeight ?? 900, lineHeight: 1.6 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          display: "block",
+          fontWeight: eyebrowWeight ?? 900,
+          lineHeight: 1.6
+        }}>
         {eyebrow}
       </Typography>
     );
@@ -106,7 +113,11 @@ export function BackHeader({
 }: Readonly<BackHeaderProps>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" alignItems="center" sx={mergeSx({ gap: 1 }, sx)}>
+    <Stack
+      direction="row"
+      sx={mergeSx({
+        alignItems: "center"
+      }, mergeSx({ gap: 1 }, sx))}>
       <BackIcon
         onBack={onBack}
         backTo={backTo}
@@ -116,12 +127,22 @@ export function BackHeader({
       />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Eyebrow eyebrow={eyebrow} eyebrowWeight={eyebrowWeight} />
-        <Typography variant={titleVariant} fontWeight={titleWeight} noWrap={titleNoWrap} sx={titleSx}>
+        <Typography
+          variant={titleVariant}
+          noWrap={titleNoWrap}
+          sx={[{
+            fontWeight: titleWeight
+          }, ...(Array.isArray(titleSx) ? titleSx : [titleSx])]}>
           {title}
         </Typography>
       </Box>
       {actions != null && (
-        <Stack direction="row" alignItems="center" sx={{ gap: 1 }}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            gap: 1
+          }}>
           {actions}
         </Stack>
       )}

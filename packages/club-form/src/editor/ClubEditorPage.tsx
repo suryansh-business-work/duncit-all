@@ -62,19 +62,29 @@ export default function ClubEditorPage({
         <Stack spacing={2}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
-            justifyContent="space-between"
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
             spacing={1.5}
-          >
+            sx={{
+              justifyContent: "space-between",
+              alignItems: { xs: 'flex-start', sm: 'center' }
+            }}>
             <Stack spacing={0.25}>
-              <Typography variant="overline" color="text.secondary" fontWeight={800}>
+              <Typography
+                variant="overline"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 800
+                }}>
                 {eyebrow}
               </Typography>
-              <Typography variant="h6" fontWeight={950}>
+              <Typography variant="h6" sx={{
+                fontWeight: 950
+              }}>
                 {heading ?? defaultHeading}
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               {titleExtras}
               <Button startIcon={<ArrowBackIcon />} onClick={onBack}>
                 {backLabel}

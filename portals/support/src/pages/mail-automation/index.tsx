@@ -86,7 +86,11 @@ export default function MailAutomationPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
 
       {loading && !data ? (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress />
         </Stack>
       ) : null}
@@ -105,11 +109,10 @@ export default function MailAutomationPage() {
       <Dialog
         open={Boolean(editing)}
         onClose={(_event, reason) => {
-          if (reason !== 'backdropClick') closeDialog();
+          if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') closeDialog();
         }}
         fullWidth
         maxWidth="md"
-        disableEscapeKeyDown
       >
         {editing && (
           <>

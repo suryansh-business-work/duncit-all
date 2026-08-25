@@ -11,7 +11,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '@duncit/app-settings';
 import type { TraceGroup } from './queries';
 
@@ -42,7 +42,9 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
 
   if (trace.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('tech.accountDeletions.traceEmpty')}
       </Typography>
     );
@@ -68,15 +70,24 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
             return (
               <TableRow key={key} hover>
                 <TableCell>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="body2" fontWeight={600}>
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
+                    <Typography variant="body2" sx={{
+                      fontWeight: 600
+                    }}>
                       {group.collection_name}
                     </Typography>
                     <Chip size="small" variant="outlined" label={group.model_name} />
                   </Stack>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" fontFamily="monospace" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: "monospace",
+                      color: "text.secondary"
+                    }}>
                     {group.field_path}
                   </Typography>
                 </TableCell>

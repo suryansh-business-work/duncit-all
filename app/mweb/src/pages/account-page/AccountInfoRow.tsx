@@ -9,7 +9,9 @@ export interface AccountInfoRowProps {
 
 export default function AccountInfoRow({ icon, label, value }: Readonly<AccountInfoRowProps>) {
   return (
-    <Stack direction="row" spacing={2} alignItems="center">
+    <Stack direction="row" spacing={2} sx={{
+      alignItems: "center"
+    }}>
       <Box
         sx={{
           width: 36,
@@ -24,7 +26,9 @@ export default function AccountInfoRow({ icon, label, value }: Readonly<AccountI
         {icon}
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {label}
         </Typography>
         <Typography variant="body1">{value}</Typography>

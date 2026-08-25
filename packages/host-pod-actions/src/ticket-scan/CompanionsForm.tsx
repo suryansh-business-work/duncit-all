@@ -67,13 +67,20 @@ export default function CompanionsForm({ seats, required, busy, onSubmit }: Read
       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
         {labels.companionsTitle}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {labels.companionsBody(seats, required)}
       </Typography>
 
       {fields.map((field, index) => (
         <Stack key={field.id} spacing={1}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {labels.companionsHeading(index + 1)}
           </Typography>
           {/* `required` on both: the ticket cannot check in without them, and

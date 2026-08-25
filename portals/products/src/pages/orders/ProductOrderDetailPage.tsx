@@ -71,7 +71,11 @@ export default function ProductOrderDetailPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -94,8 +98,12 @@ export default function ProductOrderDetailPage() {
         Back to orders
       </Button>
 
-      <Stack direction="row" spacing={1.5} alignItems="center">
-        <Typography variant="h5" fontWeight={800}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>
           {order.order_no}
         </Typography>
         <StatusChip
@@ -113,10 +121,18 @@ export default function ProductOrderDetailPage() {
       )}
 
       <Grid container spacing={2.5}>
-        <Grid item xs={12} md={7}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 7
+          }}>
           <OrderSummaryCard order={order} podDateTime={formatDateTime(order.pod?.pod_date_time)} />
         </Grid>
-        <Grid item xs={12} md={5}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 5
+          }}>
           <Stack spacing={2.5}>
             <OrderFulfilmentPanel
               order={order}
@@ -136,7 +152,12 @@ export default function ProductOrderDetailPage() {
             />
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 700,
+                    mb: 1.5
+                  }}>
                   Tracking
                 </Typography>
                 <OrderTrackingTimeline events={order.tracking_events} />

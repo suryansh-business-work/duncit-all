@@ -119,7 +119,9 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
             <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <AutoAwesomeIcon fontSize="small" color="secondary" /> Fill with AI
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Optional — describe a topic, vibe, or context. Leave blank for a
               random {entity.toLowerCase()}.
             </Typography>
@@ -144,7 +146,9 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
               {error}
             </Alert>
           )}
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button
               size="small"
               onClick={() => {

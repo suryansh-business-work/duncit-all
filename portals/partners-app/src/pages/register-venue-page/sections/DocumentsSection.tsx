@@ -69,13 +69,23 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
         )}
       />
       <Box>
-        <Typography variant="subtitle2" fontWeight={800}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 800
+        }}>
           Documents{' '}
-          <Typography component="span" variant="caption" color="error.main" fontWeight={800}>
+          <Typography
+            component="span"
+            variant="caption"
+            sx={{
+              color: "error.main",
+              fontWeight: 800
+            }}>
             (required)
           </Typography>
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {approvedEdit
             ? 'Verified documents are locked — you can add new documents, not replace them. PDF only, max 50 MB.'
             : 'Upload at least one document with its type. PDF only, max 50 MB.'}
@@ -84,7 +94,9 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
       {typeof listError === 'string' && listError && <FormHelperText error>{listError}</FormHelperText>}
       {fields.map((row, index) => (
         <Stack key={row.id} spacing={0.5}>
-          <Stack direction="row" spacing={1} alignItems="flex-start">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "flex-start"
+          }}>
             <Controller
               name={`documents.${index}.type`}
               control={control}

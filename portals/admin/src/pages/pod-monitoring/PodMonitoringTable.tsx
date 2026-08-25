@@ -25,7 +25,9 @@ const renderRisk = (row: PodAuditLog) => (
 );
 
 const renderSummary = (row: PodAuditLog) => (
-  <Typography variant="body2" color="text.secondary" component="span">
+  <Typography variant="body2" component="span" sx={{
+    color: "text.secondary"
+  }}>
     {row.ai_summary || '—'}
   </Typography>
 );

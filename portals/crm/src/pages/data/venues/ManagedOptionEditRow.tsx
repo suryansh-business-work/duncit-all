@@ -28,9 +28,11 @@ export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel
         <TextField
           size="small"
           value={draft.sort_order}
-          inputProps={{ inputMode: 'numeric' }}
           onChange={(e) => setDraft({ ...draft, sort_order: e.target.value })}
           sx={{ width: 70 }}
+          slotProps={{
+            htmlInput: { inputMode: 'numeric' }
+          }}
         />
       </TableCell>
       <TableCell>

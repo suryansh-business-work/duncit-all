@@ -43,7 +43,11 @@ export default function AdsSettingsPage() {
     body = <Alert severity="error">{error.message}</Alert>;
   } else if (loading || !initialValues) {
     body = (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -62,13 +66,19 @@ export default function AdsSettingsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <SellIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Ads Settings
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Per-day placement pricing used to quote every ad request. Approved ads keep the cost
             frozen at approval time.
           </Typography>

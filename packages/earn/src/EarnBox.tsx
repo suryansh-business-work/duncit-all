@@ -47,7 +47,9 @@ export default function EarnBox({
     >
       <CardActionArea disabled={disabled} onClick={onOpen} sx={{ p: 1 }}>
         <CardContent>
-          <Stack spacing={1.25} alignItems="flex-start">
+          <Stack spacing={1.25} sx={{
+            alignItems: "flex-start"
+          }}>
             <Box
               sx={{
                 width: 44,
@@ -64,7 +66,9 @@ export default function EarnBox({
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {description}
             </Typography>
             {disabled && !cta && (
@@ -75,7 +79,13 @@ export default function EarnBox({
       </CardActionArea>
       {cta && (
         <Box sx={{ px: 3, pb: 2 }}>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
             <Button
               size="small"

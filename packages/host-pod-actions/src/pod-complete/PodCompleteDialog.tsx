@@ -112,7 +112,9 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           spacing={2}
           sx={{ pt: 0.5 }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {labels.completeHint}
           </Typography>
           {hasVenue && (
@@ -124,7 +126,9 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               {...register('venue_bill_amount')}
               error={!!errors.venue_bill_amount}
               helperText={errors.venue_bill_amount?.message}
-              InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+              slotProps={{
+                input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
+              }}
             />
           )}
           <Controller

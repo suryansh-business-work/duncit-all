@@ -90,7 +90,15 @@ export default function WhatsAppBrowser() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }} flexWrap="wrap" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1,
+          mb: 1
+        }}>
         <DuncitTabs {...tabs} />
         <Button size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => void startExtraction()}>
           {running ? 'Extracting…' : 'Extract'}
@@ -104,7 +112,9 @@ export default function WhatsAppBrowser() {
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         sx={{ mb: 1 }}
-        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+        slotProps={{
+          input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }
+        }}
       />
 
       {tab === 'groups' && community && (
@@ -112,7 +122,11 @@ export default function WhatsAppBrowser() {
       )}
 
       {loading && items.length === 0 ? (
-        <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}><CircularProgress size={24} /></Stack>
       ) : (
         <>
           <List>
@@ -133,7 +147,12 @@ export default function WhatsAppBrowser() {
                 <ListItemText key={u.id} primary={u.name || `+${u.phone}`} secondary={`+${u.phone}${u.is_business ? ' · Business' : ''}`} sx={{ px: 2, py: 0.5 }} />
               ))}
             {total === 0 && (
-              <Typography color="text.secondary" sx={{ px: 2, py: 1 }}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  px: 2,
+                  py: 1
+                }}>
                 {running ? 'Extracting from WhatsApp…' : 'No data yet. Tap Extract to pull from WhatsApp.'}
               </Typography>
             )}

@@ -38,17 +38,31 @@ const eventCaption = (t: EventTicketRow) =>
   t.pod_mode === 'VIRTUAL' ? 'Virtual' : t.venue_name || t.zone_name || 'Physical';
 
 const renderCode = (t: EventTicketRow) => (
-  <Typography fontWeight={800} variant="body2" component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 800
+  }}>
     {t.ticket_code}
   </Typography>
 );
 
 const renderEvent = (t: EventTicketRow) => (
   <Box sx={{ lineHeight: 1.2 }} component="span">
-    <Typography variant="body2" fontWeight={600} component="span" display="block">
+    <Typography
+      variant="body2"
+      component="span"
+      sx={{
+        fontWeight: 600,
+        display: "block"
+      }}>
       {t.pod_title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span" display="block">
+    <Typography
+      variant="caption"
+      component="span"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {eventCaption(t)}
     </Typography>
   </Box>
@@ -56,10 +70,18 @@ const renderEvent = (t: EventTicketRow) => (
 
 const renderAttendee = (t: EventTicketRow) => (
   <Box sx={{ lineHeight: 1.2 }} component="span">
-    <Typography variant="body2" component="span" display="block">
+    <Typography variant="body2" component="span" sx={{
+      display: "block"
+    }}>
       {t.user_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span" display="block">
+    <Typography
+      variant="caption"
+      component="span"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {t.user_email}
     </Typography>
   </Box>
@@ -69,7 +91,13 @@ const renderStatus = (t: EventTicketRow) => (
   <Box sx={{ lineHeight: 1.2 }} component="span">
     <StatusChip status={t.status} label={t.status.replace('_', ' ')} colorMap={STATUS_COLOR} />
     {t.checked_in_at && (
-      <Typography variant="caption" color="text.secondary" component="span" display="block">
+      <Typography
+        variant="caption"
+        component="span"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {fmt(t.checked_in_at)}
       </Typography>
     )}
@@ -85,7 +113,9 @@ export default function EventTicketsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EventTicketRow>[]>(() => {
     const renderActions = (ticket: EventTicketRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
+      <Stack direction="row" component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Tooltip title={t('admin.eventTickets.downloadTicket')}>
           <IconButton size="small" onClick={() => onDownload(ticket)} aria-label={t('admin.eventTickets.downloadTicket')}>
             <DownloadIcon fontSize="small" />

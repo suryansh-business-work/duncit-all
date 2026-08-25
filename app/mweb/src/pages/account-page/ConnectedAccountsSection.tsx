@@ -76,7 +76,9 @@ export default function ConnectedAccountsSection() {
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               {t('mweb.account.connected.title')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.account.connected.subtitle')}
             </Typography>
           </Stack>

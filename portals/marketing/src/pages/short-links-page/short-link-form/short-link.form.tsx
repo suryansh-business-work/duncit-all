@@ -42,7 +42,7 @@ export default function ShortLinkForm({
   return (
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="label"
@@ -51,7 +51,7 @@ export default function ShortLinkForm({
             hint="What this link is for, so you can find it later"
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="destination_url"
@@ -61,7 +61,11 @@ export default function ShortLinkForm({
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <RhfTextField control={control} name="source" label={t('marketing.shortLinks.linkCreatingFor')} select required>
             {options.sources.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -71,7 +75,11 @@ export default function ShortLinkForm({
           </RhfTextField>
         </Grid>
         {source === 'OTHER' && (
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField
               control={control}
               name="source_other"
@@ -82,7 +90,11 @@ export default function ShortLinkForm({
           </Grid>
         )}
 
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <RhfTextField control={control} name="medium" label={t('marketing.shortLinks.medium')} select required>
             {options.mediums.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -92,7 +104,11 @@ export default function ShortLinkForm({
           </RhfTextField>
         </Grid>
         {medium === 'OTHER' && (
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField
               control={control}
               name="medium_other"
@@ -103,7 +119,7 @@ export default function ShortLinkForm({
           </Grid>
         )}
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="campaign_id"
@@ -121,13 +137,15 @@ export default function ShortLinkForm({
         </Grid>
 
         {errorMessage && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
 
-        <Grid item xs={12}>
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Grid size={12}>
+          <Stack direction="row" spacing={1} sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button onClick={onCancel} disabled={busy}>
               Cancel
             </Button>

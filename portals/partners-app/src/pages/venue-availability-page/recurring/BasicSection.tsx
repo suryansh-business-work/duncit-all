@@ -49,10 +49,14 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
         control={<Switch checked={form.wholeDay} onChange={(e) => patch({ wholeDay: e.target.checked })} />}
         label={
           <Box>
-            <Typography variant="body2" fontWeight={800}>
+            <Typography variant="body2" sx={{
+              fontWeight: 800
+            }}>
               Whole day
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Each selected day becomes one whole-day booking — no time windows needed.
             </Typography>
           </Box>

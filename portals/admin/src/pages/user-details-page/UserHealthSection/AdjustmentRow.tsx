@@ -20,11 +20,15 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
 
   return (
     <Paper variant="outlined" sx={{ p: 1 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Chip size="small" color={color} label={sign} sx={{ fontWeight: 900 }} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="body2">{remark || '—'}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {adjustment.created_by_name} ·{' '}
             {formatDateTime(adjustment.created_at)}
           </Typography>

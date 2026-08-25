@@ -33,8 +33,16 @@ export default function ScreenshotField({
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-        <Typography variant="body2" fontWeight={700}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {t('status.report.screenshots')}
         </Typography>
         <Button
@@ -64,7 +72,14 @@ export default function ScreenshotField({
         {error || t('status.report.screenshotsHelp')}
       </FormHelperText>
       {shots.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            flexWrap: "wrap",
+            mt: 1
+          }}>
           {shots.map((shot) => (
             <Box key={shot.id} sx={{ position: 'relative' }}>
               <Box

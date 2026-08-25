@@ -39,15 +39,24 @@ function ChannelRow({
       sx={{ borderRadius: 2, mb: 0.5, alignItems: 'flex-start' }}
     >
       <Stack sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.75} sx={{
+          alignItems: "center"
+        }}>
           {channel.is_private ? (
             <LockIcon sx={{ fontSize: 14 }} color="action" />
           ) : (
-            <Typography component="span" color="text.secondary" fontWeight={800}>
+            <Typography
+              component="span"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 800
+              }}>
               #
             </Typography>
           )}
-          <Typography fontWeight={selected ? 800 : 600} noWrap>
+          <Typography noWrap sx={{
+            fontWeight: selected ? 800 : 600
+          }}>
             {channel.name}
           </Typography>
           {/* The bot only receives history for channels it belongs to, so this
@@ -55,7 +64,9 @@ function ChannelRow({
           {!channel.is_member && <Chip size="small" variant="outlined" label={membersLabel} />}
         </Stack>
         {channel.topic && (
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" noWrap sx={{
+            color: "text.secondary"
+          }}>
             {channel.topic}
           </Typography>
         )}
@@ -87,12 +98,14 @@ export default function ChannelList({ channels, selectedId, onSelect }: Readonly
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('tech.slack.searchChannels')}
           aria-label={t('tech.slack.searchChannels')}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
       </Box>
@@ -107,7 +120,13 @@ export default function ChannelList({ channels, selectedId, onSelect }: Readonly
           />
         ))}
         {filtered.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ px: 1.5, py: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              px: 1.5,
+              py: 2
+            }}>
             {t('tech.slack.noChannelMatch')}
           </Typography>
         )}

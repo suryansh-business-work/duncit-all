@@ -91,11 +91,17 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
     return (
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "center"
+          }}>
             <WhatsAppIcon sx={{ color: '#25D366' }} />
             <Box sx={{ flex: 1 }}>
-              <Typography fontWeight={800}>{t('crm.tools.connected')}</Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography sx={{
+                fontWeight: 800
+              }}>{t('crm.tools.connected')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {connection.phone ? `+${connection.phone}` : 'WhatsApp account linked'}
               </Typography>
             </Box>
@@ -118,8 +124,12 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography fontWeight={800}>{t('crm.tools.gatewayConnection')}</Typography>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
+            <Typography sx={{
+              fontWeight: 800
+            }}>{t('crm.tools.gatewayConnection')}</Typography>
             <Chip size="small" label={connection.status} color={STATUS_COLOR[connection.status]} />
           </Stack>
           {actionError && <Alert severity="error">{actionError}</Alert>}
@@ -149,27 +159,47 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
             >
               Generate API key
             </Button>
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>
               Paste your master/admin key above, then generate a dedicated key (saved automatically).
             </Typography>
             {generateState.error && (
-              <Typography variant="caption" color="error" display="block">
+              <Typography variant="caption" color="error" sx={{
+                display: "block"
+              }}>
                 {generateState.error.message}
               </Typography>
             )}
           </Box>
           {connecting && qr ? (
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  mb: 1
+                }}>
                 Open WhatsApp → Linked devices → Link a device, then scan:
               </Typography>
               <Box component="img" src={qr} alt={t('crm.tools.whatsappQr')} sx={{ width: 240, height: 240 }} />
             </Box>
           ) : null}
           {connecting && !qr ? (
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
               <CircularProgress size={20} />
-              <Typography variant="body2" color="text.secondary">{t('crm.tools.waitingForQr')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('crm.tools.waitingForQr')}</Typography>
             </Stack>
           ) : null}
           <Button

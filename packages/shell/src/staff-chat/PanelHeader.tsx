@@ -35,7 +35,15 @@ export default function PanelHeader({
   const { t } = useTranslation();
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        px: 1.5,
+        pt: 1.5,
+        pb: 1
+      }}>
       <Typography variant="subtitle1" sx={{ flex: 1 }}>
         {t('shell.chat.panel.title')}
       </Typography>

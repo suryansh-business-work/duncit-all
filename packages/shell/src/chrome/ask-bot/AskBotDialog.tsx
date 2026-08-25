@@ -40,9 +40,13 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm" PaperProps={{ sx: PAPER_SX }}>
+    <Dialog open={open} onClose={close} fullWidth maxWidth="sm" slotProps={{
+      paper: { sx: PAPER_SX }
+    }}>
       <DialogTitle component="div" sx={{ pb: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           {inChat && (
             <Tooltip title={t('shell.askBot.back')}>
               <IconButton size="small" edge="start" onClick={() => setBotKey(null)} aria-label={t('shell.askBot.back')}>

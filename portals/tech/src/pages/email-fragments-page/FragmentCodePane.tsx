@@ -32,12 +32,20 @@ export default function FragmentCodePane({ title, hint, value, onChange }: Reado
     >
       <Stack
         direction="row"
-        alignItems="center"
         spacing={1}
-        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
-      >
+        sx={{
+          alignItems: "center",
+          p: 1,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <Typography variant="subtitle2">{title}</Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            flex: 1
+          }}>
           {hint}
         </Typography>
         <Tooltip title={t('tech.common.formatMjml')}>

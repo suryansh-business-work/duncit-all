@@ -4,6 +4,9 @@ import { blankAddressValues, type AddressFormValues } from './address-book.types
 
 const valid: AddressFormValues = {
   ...blankAddressValues,
+  // The blank shape no longer carries a label — the form prefills it from the
+  // catalogue — so a complete address has to name one here.
+  label: 'Home',
   line1: '12 MG Road',
   city: 'Pune',
   state: 'Maharashtra',

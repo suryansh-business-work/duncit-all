@@ -15,10 +15,14 @@ import {
 /** The field, with the document path it maps to underneath. */
 export const renderField = (row: UserChangeLogRow) => (
   <Stack spacing={0.25} component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="caption" fontWeight={700} component="span">
+    <Typography variant="caption" component="span" sx={{
+      fontWeight: 700
+    }}>
       {row.field_label || row.field}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.field}
     </Typography>
   </Stack>
@@ -28,9 +32,10 @@ export const renderField = (row: UserChangeLogRow) => (
 function renderValue(value: string) {
   if (!value) {
     return (
-      <Typography variant="caption" color="text.disabled" component="span">
-        —
-      </Typography>
+      <Typography variant="caption" component="span" sx={{
+        color: "text.disabled"
+      }}>—
+              </Typography>
     );
   }
   return (
@@ -68,7 +73,9 @@ export const renderActorName = (row: UserChangeLogRow) => (
     <Typography variant="caption" component="span">
       {row.actor_name || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.actor_user_id ?? '—'}
     </Typography>
   </Stack>

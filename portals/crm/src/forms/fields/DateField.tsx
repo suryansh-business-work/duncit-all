@@ -26,8 +26,7 @@ export default function DateField({ name, label, hint }: Readonly<Props>) {
               onBlur: field.onBlur,
               error: !!fieldState.error,
               helperText: fieldState.error?.message ?? hint ?? ' ',
-            },
-          }}
+            }}}
         />
       )}
     />

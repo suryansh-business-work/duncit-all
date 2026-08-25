@@ -89,7 +89,9 @@ export default function ChatSearchPanel({
 
   return (
     <Box sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'action.hover' }}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           size="small"
           fullWidth
@@ -111,7 +113,14 @@ export default function ChatSearchPanel({
         </Tooltip>
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          flexWrap: "wrap",
+          mt: 1
+        }}>
         <Chip
           size="small"
           label={t('shell.chat.search.anyone')}
@@ -163,7 +172,9 @@ export default function ChatSearchPanel({
         {loading && <CircularProgress size={18} sx={{ display: 'block', mx: 'auto', my: 2 }} />}
 
         {!loading && called && results.length === 0 && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('shell.chat.search.nothing')}
           </Typography>
         )}

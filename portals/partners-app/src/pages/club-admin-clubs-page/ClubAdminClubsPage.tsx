@@ -25,8 +25,12 @@ export default function ClubAdminClubsPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Stack spacing={0.25}>
-        <Typography variant="h5" fontWeight={950}>{t('partners.clubAdminClubsPage.yourClubs')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="h5" sx={{
+          fontWeight: 950
+        }}>{t('partners.clubAdminClubsPage.yourClubs')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Clubs you administer. Click a club to open its details, or jump straight to its pods.
         </Typography>
       </Stack>

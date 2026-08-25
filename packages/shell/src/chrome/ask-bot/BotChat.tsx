@@ -57,13 +57,17 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
   return (
     <Stack sx={{ flex: 1, minHeight: 0 }}>
       <Stack spacing={1.25} sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 1.5 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {copy.greeting}
         </Typography>
 
         {messages.length === 0 && (
           <Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.askBot.tryAsking')}
             </Typography>
             <Stack spacing={0.75} sx={{ mt: 0.75, alignItems: 'flex-start' }}>
@@ -79,7 +83,13 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
         ))}
 
         {loading && (
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary' }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              color: 'text.secondary'
+            }}>
             <CircularProgress size={14} />
             <Typography variant="caption">{t('shell.askBot.thinking')}</Typography>
           </Stack>
@@ -87,7 +97,9 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
 
         {!loading && followups.length > 0 && (
           <Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.askBot.thenAsk')}
             </Typography>
             <Stack spacing={0.75} sx={{ mt: 0.75, alignItems: 'flex-start' }}>
@@ -114,20 +126,22 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t('shell.askBot.placeholder')}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  type="submit"
-                  size="small"
-                  edge="end"
-                  disabled={loading || !draft.trim()}
-                  aria-label={t('shell.askBot.send')}
-                >
-                  <SendIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    type="submit"
+                    size="small"
+                    edge="end"
+                    disabled={loading || !draft.trim()}
+                    aria-label={t('shell.askBot.send')}
+                  >
+                    <SendIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }
           }}
         />
       </Box>

@@ -26,7 +26,7 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Chip
           color="primary"
           variant="outlined"
@@ -34,7 +34,11 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           label={ownerLabel}
         />
       </Grid>
-      <Grid item xs={12} sm={8}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 8
+        }}>
         <RhfTextField
           control={control}
           required
@@ -43,7 +47,11 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           hint='Customer-facing name, e.g. "Cold Brew Coffee 250ml"'
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfTextField
           control={control}
           name="brand_name"
@@ -51,7 +59,11 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           hint="Manufacturer or brand"
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfTextField select control={control} required name="product_type" label={t('products.basic.productType')} hint=" ">
           {PRODUCT_TYPE_OPTIONS.map((opt) => (
             <MenuItem key={opt.value} value={opt.value}>
@@ -61,7 +73,11 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
         </RhfTextField>
         <FormHelperText>{t('products.basic.consumableHint')}</FormHelperText>
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfTextField select control={control} required name="unit_type" label={t('products.basic.unitType')} hint=" ">
           {UNIT_TYPE_OPTIONS.map((opt) => (
             <MenuItem key={opt.value} value={opt.value}>
@@ -71,7 +87,11 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
         </RhfTextField>
         <FormHelperText>{t('products.basic.unitHint')}</FormHelperText>
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfTextField
           select
           control={control}
@@ -87,7 +107,7 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           ))}
         </RhfTextField>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <RhfTextField
           control={control}
           name="short_description"
@@ -95,7 +115,7 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           hint={`One-line marketing pitch · ${(shortDescription ?? '').length}/280`}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <RhfTextField
           control={control}
           multiline
@@ -105,7 +125,7 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           hint={`Detailed copy for listings · ${(description ?? '').length}/4000`}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Controller
           control={control}
           name="tags"

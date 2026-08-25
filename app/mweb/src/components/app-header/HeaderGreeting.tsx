@@ -52,7 +52,13 @@ export default function HeaderGreeting({
       >
         {title}
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }} noWrap>
+      <Typography
+        variant="caption"
+        noWrap
+        sx={{
+          color: "text.secondary",
+          fontWeight: 500
+        }}>
         {t('mweb.home.greetingSubtitle')}
       </Typography>
     </Stack>

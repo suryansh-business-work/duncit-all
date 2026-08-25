@@ -30,14 +30,29 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
         borderColor: alpha(theme.palette.success.main, 0.3),
       }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="flex-start">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "flex-start"
+      }}>
         <AccountBalanceWalletOutlinedIcon color="success" sx={{ mt: 0.25 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {receiveLabel}
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {t('mweb.createPod.payingPax', { vars: { count: payingPax } })}
             </Typography>
             <Chip
@@ -49,32 +64,59 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
             />
           </Stack>
         </Box>
-        <Typography variant="h5" fontWeight={700} color="success.main" sx={{ whiteSpace: 'nowrap' }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 700,
+            color: "success.main",
+            whiteSpace: 'nowrap'
+          }}>
           {amount}
         </Typography>
       </Stack>
       <Stack spacing={0.25} sx={{ mt: 1.25, px: 0.5 }} data-testid="price-panel-net-payout">
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="caption" color="text.secondary">
+        <Stack direction="row" sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.createPod.totalCollectionLabel')}
           </Typography>
-          <Typography variant="caption" fontWeight={700}>
+          <Typography variant="caption" sx={{
+            fontWeight: 700
+          }}>
             {collection}
           </Typography>
         </Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="caption" color="text.secondary">
+        <Stack direction="row" sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.createPod.minusTotalDeductions')}
           </Typography>
-          <Typography variant="caption" fontWeight={700}>
+          <Typography variant="caption" sx={{
+            fontWeight: 700
+          }}>
             {totalDeductions}
           </Typography>
         </Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="caption" fontWeight={600}>
+        <Stack direction="row" sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="caption" sx={{
+            fontWeight: 600
+          }}>
             {t('mweb.createPod.equalsYouWillReceive')}
           </Typography>
-          <Typography variant="caption" fontWeight={700} color="success.main">
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              color: "success.main"
+            }}>
             {amount}
           </Typography>
         </Stack>
@@ -89,7 +131,9 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
           borderColor: alpha(theme.palette.success.main, 0.4),
         }}
       >
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.createPod.estimatesNote')}
         </Typography>
       </Box>

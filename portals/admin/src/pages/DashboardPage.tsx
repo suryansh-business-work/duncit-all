@@ -10,8 +10,9 @@ import { useTranslation } from '@duncit/shell';
 /** "Total 128" — the count that used to sit in each chart card's own header. */
 function TotalChip({ total }: Readonly<{ total: number }>) {
   return (
-    <Typography variant="overline" color="text.secondary">
-      Total {total}
+    <Typography variant="overline" sx={{
+      color: "text.secondary"
+    }}>Total {total}
     </Typography>
   );
 }
@@ -71,14 +72,17 @@ export default function DashboardPage() {
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
-          alignItems="center"
-          justifyContent="space-between"
-        >
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 800 }}>
               {t('admin.hub.dashboard')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Monitor users, pods, clubs and live activity from one workspace.
             </Typography>
           </Box>

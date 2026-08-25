@@ -30,7 +30,11 @@ export default function ProductDetailPage() {
 
   if ((accessLoading && !accessData) || (loading && !product)) {
     return (
-      <Stack alignItems="center" sx={{ py: 5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -49,8 +53,16 @@ export default function ProductDetailPage() {
           background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.25}>
-          <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+          <Stack direction="row" spacing={1.25} sx={{
+            alignItems: "center"
+          }}>
             <Button
               onClick={() => navigate(productsHome)}
               startIcon={<ArrowBackIcon />}
@@ -63,7 +75,9 @@ export default function ProductDetailPage() {
               <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>
                 Product details
               </Typography>
-              <Typography variant="h4" fontWeight={950}>
+              <Typography variant="h4" sx={{
+                fontWeight: 950
+              }}>
                 {product?.product_name || 'Product listing'}
               </Typography>
             </Box>

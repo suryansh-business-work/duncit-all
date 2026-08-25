@@ -19,7 +19,9 @@ interface FieldProps {
 export function DetailField({ label, value, mono }: Readonly<FieldProps>) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
       <Typography
@@ -36,7 +38,9 @@ export function DetailField({ label, value, mono }: Readonly<FieldProps>) {
 export function DetailBlock({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
       <Paper

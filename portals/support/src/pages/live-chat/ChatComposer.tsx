@@ -39,7 +39,9 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
         maxBytes={100 * 1024 * 1024}
         allowDocuments
       />
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           size="small"
           fullWidth

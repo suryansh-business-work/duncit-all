@@ -63,7 +63,9 @@ export default function CancellationPolicyForm({
           />
         )}
       />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('partners.venueSettingsPage.rescheduleOnlyHint')}
       </Typography>
 
@@ -74,7 +76,9 @@ export default function CancellationPolicyForm({
       ) : null}
 
       <Typography variant="subtitle2">{t('partners.venueSettingsPage.bandsTitle')}</Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('partners.venueSettingsPage.bandsHint')}
       </Typography>
 

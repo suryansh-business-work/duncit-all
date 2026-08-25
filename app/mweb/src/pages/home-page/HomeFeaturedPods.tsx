@@ -165,10 +165,29 @@ export default function HomeFeaturedPods({
                     theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.65)',
                 }}
               >
-                <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  useFlexGap
+                  sx={{
+                    alignItems: "center",
+                    flexWrap: "wrap"
+                  }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    sx={{
+                      alignItems: "center",
+                      minWidth: 0
+                    }}>
                     <EventIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: 600
+                      }}>
                       {formatPodDate(pod.pod_date_time)}
                     </Typography>
                   </Stack>
@@ -183,10 +202,28 @@ export default function HomeFeaturedPods({
                 <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1, fontSize: '1.3rem' }} noWrap>
                   {pod.pod_title}
                 </Typography>
-                <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
-                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  sx={{
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    sx={{
+                      alignItems: "center",
+                      minWidth: 0
+                    }}>
                     <GroupIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: 600
+                      }}>
                       {spotsText}
                     </Typography>
                   </Stack>

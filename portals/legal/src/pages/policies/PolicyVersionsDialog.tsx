@@ -45,8 +45,17 @@ function VersionRow({
 }: Readonly<RowProps>) {
   return (
     <Paper variant="outlined" sx={{ p: 1.5 }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-        <Typography variant="body2" fontWeight={800}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
+        <Typography variant="body2" sx={{
+          fontWeight: 800
+        }}>
           {label}
         </Typography>
         {version.is_current && <Chip size="small" color="success" label={currentLabel} />}
@@ -55,14 +64,21 @@ function VersionRow({
           {readLabel}
         </Button>
       </Stack>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {version.title} · {when} · {editedBy}
       </Typography>
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontFamily: 'monospace',
+          wordBreak: 'break-all'
+        }}>
         {version.content_hash}
       </Typography>
       {expanded && (
@@ -70,7 +86,9 @@ function VersionRow({
           {version.content ? (
             <DuncitRichTextInput value={version.content} onChange={() => undefined} readOnly bare />
           ) : (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {emptyLabel}
             </Typography>
           )}
@@ -118,7 +136,9 @@ export default function PolicyVersionsDialog({ policy, onClose }: Readonly<Props
     }
     if (versions.length === 0) {
       return (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('legal.policies.versions.empty')}
         </Typography>
       );
@@ -153,7 +173,9 @@ export default function PolicyVersionsDialog({ policy, onClose }: Readonly<Props
     <Dialog open={!!policy} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
       <DialogTitle>
         {t('legal.policies.versions.title', { vars: { title: policy?.title ?? '' } })}
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {t('legal.policies.versions.subtitle')}
         </Typography>
       </DialogTitle>

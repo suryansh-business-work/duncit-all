@@ -70,7 +70,12 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ pb: 0.5 }}>
         {t('tech.appBuilds.triggerTitle')}
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {t('tech.appBuilds.triggerSubtitle')}
         </Typography>
       </DialogTitle>
@@ -85,7 +90,9 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
             {/* Which repo this dispatches against and where the row will land.
                 Both are surprising often enough to be worth stating: a staging
                 build still records itself in the portal it was started from. */}
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('tech.appBuilds.triggerTargets', {
                 vars: { repository: config.repository, server: config.reports_to },
               })}

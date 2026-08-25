@@ -33,7 +33,9 @@ export default function GrievanceEscalationNotice() {
                 </Typography>
               </StepLabel>
               <StepContent>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {step.body}
                 </Typography>
               </StepContent>

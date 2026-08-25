@@ -111,14 +111,18 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth={step === 'map' ? 'md' : 'sm'}>
       <DialogTitle>
-        <Stack direction="row" spacing={1} alignItems="center"><FileUploadIcon color="primary" /><span>{title}</span></Stack>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}><FileUploadIcon color="primary" /><span>{title}</span></Stack>
       </DialogTitle>
       <DialogContent dividers>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
 
         {step === 'file' && (
           <Stack spacing={1.5}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Upload an Excel (.xlsx) or CSV file. Next you'll map your columns to lead fields.
               Multi-value columns accept comma-separated values.
             </Typography>
@@ -127,11 +131,15 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
             )}
             <Divider />
             <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
-            <Stack direction="row" spacing={1.25} alignItems="center">
+            <Stack direction="row" spacing={1.25} sx={{
+              alignItems: "center"
+            }}>
               <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => inputRef.current?.click()} disabled={inspecting}>
                 {inspecting ? 'Reading…' : 'Choose file'}
               </Button>
-              <Typography variant="body2" color="text.secondary" noWrap>{fileName || 'No file selected'}</Typography>
+              <Typography variant="body2" noWrap sx={{
+                color: "text.secondary"
+              }}>{fileName || 'No file selected'}</Typography>
             </Stack>
           </Stack>
         )}

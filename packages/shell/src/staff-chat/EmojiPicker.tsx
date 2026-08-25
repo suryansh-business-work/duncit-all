@@ -117,9 +117,12 @@ export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
             <Box key={group.name}>
               <Typography
                 variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}
-              >
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700,
+                  display: 'block',
+                  mb: 0.5
+                }}>
                 {t(group.titleKey)}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.25 }}>

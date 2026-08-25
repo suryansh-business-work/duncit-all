@@ -47,7 +47,9 @@ export default function PhoneExtensionField({
           <Typography variant="body2" sx={{ flex: 1 }}>
             {c.name}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {c.dial}
           </Typography>
         </Box>

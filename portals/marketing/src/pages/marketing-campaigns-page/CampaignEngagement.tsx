@@ -31,7 +31,12 @@ export default function CampaignEngagement({ campaign, formatDateTime }: Readonl
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 700,
+            mb: 1
+          }}>
           Engagement
         </Typography>
         <Box sx={GRID}>

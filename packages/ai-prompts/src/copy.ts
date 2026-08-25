@@ -13,9 +13,10 @@ export type PromptTranslate = (key: string) => string;
  * gate can see it.
  */
 export const promptCopy = (t: PromptTranslate) =>
-  ({
+  (({
     pageTitle: t('ai.library.pageTitle'),
     pageSubtitle: t('ai.library.pageSubtitle'),
+
     kinds: {
       CODE: {
         label: t('ai.library.kinds.CODE.label'),
@@ -28,14 +29,17 @@ export const promptCopy = (t: PromptTranslate) =>
         blurb: t('ai.library.kinds.AI.blurb'),
       },
     },
+
     roles: {
       SYSTEM: t('ai.library.roles.SYSTEM'),
       USER: t('ai.library.roles.USER'),
     },
+
     roleHints: {
       SYSTEM: t('ai.library.roleHints.SYSTEM'),
       USER: t('ai.library.roleHints.USER'),
     },
+
     addPrompt: t('ai.library.addPrompt'),
     editPrompt: t('ai.library.editPrompt'),
     createTitle: t('ai.library.createTitle'),
@@ -49,6 +53,7 @@ export const promptCopy = (t: PromptTranslate) =>
     busy: t('ai.library.busy'),
     codeDeleteHint: t('ai.library.codeDeleteHint'),
     resetHint: t('ai.library.resetHint'),
+
     fields: {
       name: t('ai.library.fields.name'),
       description: t('ai.library.fields.description'),
@@ -58,6 +63,7 @@ export const promptCopy = (t: PromptTranslate) =>
       content: t('ai.library.fields.content'),
       active: t('ai.library.fields.active'),
     },
+
     hints: {
       nameCode: t('ai.library.hints.nameCode'),
       nameAi: t('ai.library.hints.nameAi'),
@@ -68,6 +74,7 @@ export const promptCopy = (t: PromptTranslate) =>
       model: t('ai.library.hints.model'),
       content: t('ai.library.hints.content'),
     },
+
     usageTitle: t('ai.library.usageTitle'),
     usageEmpty: t('ai.library.usageEmpty'),
     variablesTitle: t('ai.library.variablesTitle'),
@@ -87,8 +94,8 @@ export const promptCopy = (t: PromptTranslate) =>
     saving: t('ai.library.saving'),
     saveChanges: t('ai.library.saveChanges'),
     add: t('ai.library.add'),
-    cancel: t('shell.common.cancel'),
-  }) as const;
+    cancel: t('shell.common.cancel')
+  }) as const);
 
 /** The shape every component in this package renders from. */
 export type PromptCopy = ReturnType<typeof promptCopy>;

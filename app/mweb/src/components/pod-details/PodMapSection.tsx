@@ -43,17 +43,23 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={0.75} alignItems="center">
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
         <EventIcon color="primary" sx={{ fontSize: 20 }} />
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           {t('mweb.podDetails.timeAndVenue')}
         </Typography>
       </Stack>
       <Stack spacing={0.25}>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.podDetails.when')}
         </Typography>
-        <Typography variant="body2" fontWeight={500}>
+        <Typography variant="body2" sx={{
+          fontWeight: 500
+        }}>
           {formatStart(pod.pod_date_time)}
           {pod.pod_end_date_time
             ? `  \u2192  ${formatEnd(pod.pod_end_date_time)}`
@@ -63,10 +69,14 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
       {isVirtual ? (
         <Stack spacing={1}>
           <Stack spacing={0.25}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.podDetails.meeting')}
             </Typography>
-            <Typography variant="body2" fontWeight={500}>
+            <Typography variant="body2" sx={{
+              fontWeight: 500
+            }}>
               {formatMeetingPlatform(pod.meeting_platform, t)}
             </Typography>
           </Stack>
@@ -82,12 +92,19 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
               {t('mweb.podDetails.joinMeeting')}
             </Button>
           ) : (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.podDetails.meetingLinkAfterJoin')}
             </Typography>
           )}
           {pod.meeting_notes && (
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                whiteSpace: 'pre-wrap'
+              }}>
               {pod.meeting_notes}
             </Typography>
           )}
@@ -95,10 +112,14 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
       ) : (
         <>
           <Stack spacing={0.25}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.podDetails.where')}
             </Typography>
-            <Typography variant="body2" fontWeight={500}>
+            <Typography variant="body2" sx={{
+              fontWeight: 500
+            }}>
               {placeText ?? '\u2014'}
             </Typography>
           </Stack>

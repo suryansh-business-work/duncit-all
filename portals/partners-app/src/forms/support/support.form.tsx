@@ -60,7 +60,7 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
   return (
     <Stack component="form" noValidate onSubmit={submit} spacing={2}>
       <RhfTextField control={control} name="name" label={t('partners.forms.yourName')} required autoComplete="name" />
-      <RhfTextField control={control} name="email" label={t('shell.common.email')} type="email" autoComplete="email" disabled InputProps={{ readOnly: true }} hint={t('partners.becomeHostPage.lockedToYourDuncitAccount')} />
+      <RhfTextField control={control} name="email" label={t('shell.common.email')} type="email" autoComplete="email" disabled slotProps={{ input: { readOnly: true } }} hint={t('partners.becomeHostPage.lockedToYourDuncitAccount')} />
       <TextField select label={t('partners.common.category')} defaultValue={defaults.category} error={categoryError} helperText={categoryError ? errors.category?.message : ' '} fullWidth {...register('category')}>
         {supportCategories(t).map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
       </TextField>

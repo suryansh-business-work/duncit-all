@@ -40,7 +40,12 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Contact number
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -51,8 +56,8 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
           label={t('mweb.common.phoneNumber')}
           hint="10-digit number"
           size="small"
-          InputLabelProps={{ shrink: true }}
-          inputProps={numericInput}
+          slotProps={{ inputLabel: { shrink: true }, htmlInput: numericInput }}
+          
         />
       </Stack>
 
@@ -61,13 +66,20 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
           <Checkbox
             checked={sameAsContact}
             onChange={(event) => setSameAsContact(event.target.checked)}
-            inputProps={{ 'aria-label': t('mweb.account.whatsappSameAsContact') }}
+            slotProps={{
+              input: { 'aria-label': t('mweb.account.whatsappSameAsContact') }
+            }}
           />
         }
         label={t('mweb.account.whatsappSameAsContact')}
       />
 
-      <Typography variant="overline" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         WhatsApp number
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -84,8 +96,8 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
           hint="10-digit number"
           size="small"
           disabled={sameAsContact}
-          InputLabelProps={{ shrink: true }}
-          inputProps={numericInput}
+          slotProps={{ inputLabel: { shrink: true }, htmlInput: numericInput }}
+          
         />
       </Stack>
     </Stack>

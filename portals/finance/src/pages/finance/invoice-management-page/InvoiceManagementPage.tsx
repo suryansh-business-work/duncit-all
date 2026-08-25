@@ -83,11 +83,21 @@ export default function InvoiceManagementPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <DescriptionIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>{t('finance.invoiceManagement.invoiceManagement')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>{t('finance.invoiceManagement.invoiceManagement')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Control the branding and text rendered on every tax invoice and event ticket.
           </Typography>
         </Box>
@@ -98,13 +108,17 @@ export default function InvoiceManagementPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="flex-start">
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
         <Box sx={{ flex: 1, width: '100%' }}>
           <Stack spacing={2}>
             <InvoiceBrandingForm value={form} onChange={onChange} emailError={emailError} />
             <Card variant="outlined">
               <CardContent>
-                <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                <Typography variant="subtitle1" gutterBottom sx={{
+                  fontWeight: 700
+                }}>
                   Payment processing
                 </Typography>
                 <FormControlLabel
@@ -116,7 +130,9 @@ export default function InvoiceManagementPage() {
           </Stack>
         </Box>
         <Box sx={{ flex: 1, width: '100%', position: { md: 'sticky' }, top: { md: 16 } }}>
-          <Typography variant="overline" color="text.secondary">{t('finance.invoiceManagement.livePreview')}</Typography>
+          <Typography variant="overline" sx={{
+            color: "text.secondary"
+          }}>{t('finance.invoiceManagement.livePreview')}</Typography>
           <InvoicePreview value={form} />
         </Box>
       </Stack>

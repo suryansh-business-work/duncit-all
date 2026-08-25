@@ -153,7 +153,13 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <VerifiedUserIcon color="primary" fontSize="small" />
           <Typography variant="subtitle1">{t('admin.tabs.verification')}</Typography>
         </Stack>

@@ -98,7 +98,9 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
           </Box>
         </Stack>
         {error && <Alert severity="error">{error.message}</Alert>}
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button onClick={onCancel} disabled={loading}>
             Cancel
           </Button>

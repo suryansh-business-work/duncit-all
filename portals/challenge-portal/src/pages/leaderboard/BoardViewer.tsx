@@ -52,9 +52,13 @@ function BoardTable({ rows, t }: Readonly<BoardTableProps>) {
           <TableRow key={row.user_id} hover selected={row.is_me}>
             <TableCell>{row.rank}</TableCell>
             <TableCell>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Avatar src={row.avatar_url || undefined} sx={{ width: 28, height: 28 }} />
-                <Typography variant="body2" fontWeight={row.is_me ? 700 : 400} noWrap>
+                <Typography variant="body2" noWrap sx={{
+                  fontWeight: row.is_me ? 700 : 400
+                }}>
                   {row.name}
                 </Typography>
               </Stack>
@@ -96,9 +100,10 @@ export default function BoardViewer() {
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          justifyContent="space-between"
-        >
+          sx={{
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: "space-between"
+          }}>
           <TextField
             select
             size="small"

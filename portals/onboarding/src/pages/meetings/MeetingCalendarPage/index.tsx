@@ -77,7 +77,11 @@ export default function MeetingCalendarPage() {
 
   let body: React.ReactNode;
   if (loading && meetings.length === 0) {
-    body = <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress /></Stack>;
+    body = <Stack
+      sx={{
+        alignItems: "center",
+        py: 5
+      }}><CircularProgress /></Stack>;
   } else if (view === 'month') {
     body = <MonthView days={days} cursor={cursor} meetings={meetings} holidays={holidays} slotMinutes={slotMinutes} now={now} onSelect={setSelected} onContext={openContext} onMore={(day) => { setCursor(day); setView('day'); }} />;
   } else {

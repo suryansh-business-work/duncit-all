@@ -1,7 +1,7 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 import {
@@ -217,14 +217,32 @@ export default function CreatePodPage() {
 
   return (
     <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
-      <Stack direction="row" spacing={1.25} alignItems="center" justifyContent="space-between">
-        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        spacing={1.25}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          sx={{
+            alignItems: "center",
+            minWidth: 0
+          }}>
           <AddCircleOutlineIcon color="primary" />
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               {t('mweb.createPod.title')}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {t('mweb.createPod.autosaveNote')}
             </Typography>
           </Box>

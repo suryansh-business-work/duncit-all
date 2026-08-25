@@ -13,14 +13,27 @@ interface Props {
 export default function CategoryActions({ categories, onSelect }: Readonly<Props>) {
   return (
     <Box component="section">
-      <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2, mt: 2 }}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          lineHeight: 1.2,
+          mt: 2
+        }}>
         ✨ Discover Experiences by Interest
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 2
+        }}>
         Not sure what to search for? Explore communities by category and discover experiences happening around you.
       </Typography>
       {categories.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Categories are on their way — check back soon.
         </Typography>
       ) : (
@@ -48,7 +61,14 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
               }}
             >
               {renderSuperCategoryMark(category.icon) ?? <CategoryIcon color="primary" />}
-              <Typography variant="caption" fontWeight={600} textAlign="center" noWrap sx={{ width: '100%' }}>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  fontWeight: 600,
+                  textAlign: "center",
+                  width: '100%'
+                }}>
                 {category.name}
               </Typography>
             </ButtonBase>

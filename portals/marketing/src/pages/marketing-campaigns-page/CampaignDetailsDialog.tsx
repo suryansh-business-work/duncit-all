@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { StatusChip } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import CampaignHtmlFrame from './CampaignHtmlFrame';
@@ -57,8 +57,15 @@ export default function CampaignDetailsDialog({
   return (
     <Dialog open fullWidth maxWidth="md" onClose={busy ? undefined : onClose}>
       <DialogTitle sx={{ pb: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Typography variant="h6" fontWeight={700} sx={{ flex: 1 }}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              flex: 1
+            }}>
             {campaign?.name ?? 'Campaign'}
           </Typography>
           {campaign && (
@@ -66,7 +73,9 @@ export default function CampaignDetailsDialog({
           )}
         </Stack>
         {campaign && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {campaign.subject}
           </Typography>
         )}
@@ -74,7 +83,11 @@ export default function CampaignDetailsDialog({
 
       <DialogContent dividers>
         {loading && !campaign && (
-          <Stack alignItems="center" sx={{ py: 4 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}>
             <CircularProgress size={28} />
           </Stack>
         )}
@@ -89,7 +102,12 @@ export default function CampaignDetailsDialog({
             />
             <CampaignEngagement campaign={campaign} formatDateTime={formatDateTime} />
             <Box>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 700,
+                  mb: 1
+                }}>
                 Email
               </Typography>
               <CampaignHtmlFrame

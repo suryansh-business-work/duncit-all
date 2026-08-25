@@ -47,13 +47,20 @@ export default function DecisionHeader({
         background: GRADIENTS[decision],
       }}
     >
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "center"
+      }}>
         {icon}
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" sx={{ opacity: 0.85 }}>
             {eyebrow}
           </Typography>
-          <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1.2
+            }}>
             {title}
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.92, mt: 0.5 }}>

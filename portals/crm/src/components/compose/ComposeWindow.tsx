@@ -64,22 +64,27 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
     >
       <Stack
         direction="row"
-        alignItems="center"
         spacing={1}
         onPointerDown={onPointerDown}
         onDoubleClick={() => setMinimized((m) => !m)}
         sx={{
+          alignItems: "center",
           px: 1.5,
           py: 1,
           bgcolor: 'primary.main',
           color: 'primary.contrastText',
           cursor: maximized ? 'default' : 'move',
           userSelect: 'none',
-          touchAction: 'none',
-        }}
-      >
+          touchAction: 'none'
+        }}>
         {icon}
-        <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ flex: 1 }}>
+        <Typography
+          variant="subtitle2"
+          noWrap
+          sx={{
+            fontWeight: 700,
+            flex: 1
+          }}>
           {title}
         </Typography>
         <Tooltip title={minimized ? 'Expand' : 'Minimize'}>
@@ -103,7 +108,16 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
         <>
           <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>{children}</Box>
           {actions && (
-            <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                justifyContent: "flex-end",
+                px: 2,
+                py: 1.5,
+                borderTop: 1,
+                borderColor: 'divider'
+              }}>
               {actions}
             </Stack>
           )}

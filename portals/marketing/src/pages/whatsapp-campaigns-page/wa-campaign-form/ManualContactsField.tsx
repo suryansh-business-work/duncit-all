@@ -1,7 +1,7 @@
 import { useFieldArray, type Control } from 'react-hook-form';
 import { Alert, Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { RhfTextField } from '@duncit/forms';
 import { MANUAL_VARIABLE_NOTE } from '../helpers';
 import type { WaCampaignValues } from './wa-campaign.types';
@@ -26,7 +26,9 @@ function ContactRow({
 }: Readonly<{ control: Control<WaCampaignValues>; index: number; onRemove: () => void }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "flex-start"
+    }}>
       <RhfTextField
         control={control}
         name={`contacts.${index}.name`}
@@ -67,7 +69,9 @@ export default function ManualContactsField({ control }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         Contacts
       </Typography>
       <Alert severity="info" icon={false} sx={{ py: 0.5 }}>

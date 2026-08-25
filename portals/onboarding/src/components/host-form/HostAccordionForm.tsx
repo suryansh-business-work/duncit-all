@@ -94,7 +94,9 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" justifyContent="flex-end">
+      <Stack direction="row" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button
           size="small"
           startIcon={allExpanded ? <UnfoldLessIcon /> : <UnfoldMoreIcon />}

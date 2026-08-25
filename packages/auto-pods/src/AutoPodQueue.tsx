@@ -46,12 +46,20 @@ function AutoPodSection({
   if (rows.length === 0) return null;
   return (
     <Box>
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+      <Typography variant="subtitle2" gutterBottom sx={{
+        color: "text.secondary"
+      }}>
         {heading}
       </Typography>
       <Grid container spacing={2}>
         {rows.map((row) => (
-          <Grid item xs={12} sm={6} md={4} key={row.id}>
+          <Grid
+            key={row.id}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <AutoPodCard
               row={row}
               labels={labels}

@@ -78,7 +78,9 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
       <DialogContent dividers>
         {step === 1 ? (
           <Stack spacing={1.5}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Enter your current password and we’ll email you a one-time code.
             </Typography>
             <CurrentPasswordForm loading={requesting} onSubmit={handleRequest} />
@@ -87,7 +89,12 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
           <Stack spacing={1.5}>
             {info && <Alert severity="success">{info}</Alert>}
             <NewPasswordForm loading={changing} onSubmit={handleChange} />
-            <Typography variant="body2" color="text.secondary" textAlign="center">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                textAlign: "center"
+              }}>
               Didn’t get it?{' '}
               <Link
                 component="button"

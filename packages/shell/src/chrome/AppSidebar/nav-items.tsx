@@ -82,9 +82,10 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafIt
       <ListItemText
         primary={item.label}
         secondary={item.featured ? item.caption : undefined}
-        primaryTypographyProps={{ fontWeight: item.featured ? 800 : 600, variant: 'body2' }}
-        secondaryTypographyProps={{ variant: 'caption' }}
-      />
+        slotProps={{
+          primary: { variant: 'body2', sx: { fontWeight: item.featured ? 800 : 600 } },
+          secondary: { variant: 'caption' }
+        }} />
     </ListItemButton>
   );
 }
@@ -106,10 +107,8 @@ function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonl
         </ListItemIcon>
         <ListItemText
           primary={item.label}
-          primaryTypographyProps={{
-            fontWeight: active ? 800 : 600,
-            variant: 'body2',
-            color: active ? 'primary.main' : 'inherit',
+          slotProps={{
+            primary: { variant: 'body2', color: active ? 'primary.main' : 'inherit', sx: { fontWeight: active ? 800 : 600 } }
           }}
         />
         {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}

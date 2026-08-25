@@ -58,7 +58,12 @@ export default function ChatParticipants({ hosts, participants, count, onOpenPro
       data-testid="chat-participants"
       sx={{ px: { xs: 1.25, sm: 2 }, py: 1, borderBottom: 1, borderColor: 'divider' }}
     >
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         {count} {count === 1 ? 'participant' : 'participants'}
       </Typography>
       <Stack

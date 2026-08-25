@@ -19,12 +19,19 @@ export default function VenueHealthPage() {
 
   return (
     <Stack spacing={2.25} sx={{ mx: { xs: -0.25, sm: 0 } }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <IconButton size="small" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {data?.myVenueHealth?.subject_label || 'Venue'}
           </Typography>
           <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
@@ -34,7 +41,11 @@ export default function VenueHealthPage() {
       </Stack>
 
       {loading && !data && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress size={24} />
         </Stack>
       )}
@@ -42,7 +53,9 @@ export default function VenueHealthPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
 
       {data?.myVenueHealth && (
-        <Stack spacing={2.5} alignItems="center">
+        <Stack spacing={2.5} sx={{
+          alignItems: "center"
+        }}>
           <HealthMeter
             score={data.myVenueHealth.total_score}
             band={data.myVenueHealth.band}

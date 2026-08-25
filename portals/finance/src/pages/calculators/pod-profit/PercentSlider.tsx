@@ -24,9 +24,22 @@ export default function PercentSlider({ label, value, onChange, hint, max = 100,
     : undefined;
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 0.5
+        }}>
         <Tooltip title={hint} placement="top" arrow>
-          <Typography variant="body2" fontWeight={700} sx={{ flex: 1, minWidth: 0 }} noWrap>
+          <Typography
+            variant="body2"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              flex: 1,
+              minWidth: 0
+            }}>
             {label}
           </Typography>
         </Tooltip>
@@ -35,10 +48,11 @@ export default function PercentSlider({ label, value, onChange, hint, max = 100,
           type="number"
           value={value}
           onChange={(e) => onChange(clampPct(Number(e.target.value), max))}
-          inputProps={{ 'aria-label': label, min: 0, max, step }}
-          InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
           sx={{ width: 110 }}
-        />
+          slotProps={{
+            input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+            htmlInput: { 'aria-label': label, min: 0, max, step }
+          }} />
       </Stack>
       <Slider
         size="small"
@@ -53,7 +67,9 @@ export default function PercentSlider({ label, value, onChange, hint, max = 100,
         valueLabelFormat={(v) => `${v}%`}
         sx={{ mt: 0.5 }}
       />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {hint}
       </Typography>
     </Box>

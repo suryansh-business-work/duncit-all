@@ -46,7 +46,13 @@ function DetailRow({
   children,
 }: Readonly<{ icon: React.ReactNode; children: React.ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary' }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        color: 'text.secondary'
+      }}>
       {icon}
       <Typography variant="caption" noWrap component="div">
         {children}
@@ -91,7 +97,9 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Stack spacing={1} sx={{ p: 1.5, width: 280 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Avatar src={person.photo || undefined} sx={{ width: 44, height: 44 }}>
               {initials(person.name)}
             </Avatar>
@@ -104,8 +112,10 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
                   href={`mailto:${person.email}`}
                   variant="caption"
                   underline="hover"
-                  color="text.secondary"
                   noWrap
+                  sx={{
+                    color: "text.secondary"
+                  }}
                 >
                   {person.email}
                 </Link>
@@ -114,7 +124,9 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
           </Stack>
 
           {person.bio && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {person.bio}
             </Typography>
           )}
@@ -141,15 +153,24 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
 
           <Divider />
 
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {t(person.roles.length === 1 ? 'shell.chat.list.console' : 'shell.chat.list.consoles')}
           </Typography>
           {person.roles.length === 0 ? (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.chat.list.noConsole')}
             </Typography>
           ) : (
-            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={0.5} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               {person.roles.map((role) => (
                 <Chip key={role} size="small" label={ROLE_LABEL[role] ?? role} />
               ))}

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
@@ -44,7 +44,13 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">{t('products.media.productImages')}</Typography>
         <Button
           size="small"
@@ -64,7 +70,9 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
             textAlign: 'center',
           }}
         >
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             No images yet — add product photos to make the listing richer.
           </Typography>
         </Box>

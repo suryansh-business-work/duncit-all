@@ -32,13 +32,16 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
     <>
       {canPost && (
         <Stack
-          alignItems="center"
           spacing={0.5}
           role="button"
           aria-label={t('mweb.clubDetails.addAStoryToThisClub')}
           onClick={() => openClubPicker(clubId)}
-          sx={{ cursor: 'pointer', width: 66, flex: '0 0 auto' }}
-        >
+          sx={{
+            alignItems: "center",
+            cursor: 'pointer',
+            width: 66,
+            flex: '0 0 auto'
+          }}>
           <Avatar
             sx={{
               width: 58,
@@ -59,13 +62,16 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
       {stories.map((story, index) => (
         <Stack
           key={story.id}
-          alignItems="center"
           spacing={0.5}
           role="button"
           aria-label={`Story by ${story.author?.full_name ?? 'member'}`}
           onClick={() => onOpen(index)}
-          sx={{ cursor: 'pointer', width: 66, flex: '0 0 auto' }}
-        >
+          sx={{
+            alignItems: "center",
+            cursor: 'pointer',
+            width: 66,
+            flex: '0 0 auto'
+          }}>
           <Box
             sx={{
               p: 0.35,

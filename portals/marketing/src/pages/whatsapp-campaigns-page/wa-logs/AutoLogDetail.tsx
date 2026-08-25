@@ -9,12 +9,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Stack,
   Typography,
 } from '@mui/material';
+import { WA_EVENT_BY_KEY } from '@duncit/communication';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { EM_DASH } from '@duncit/table';
 import { useDateFormat, useTranslation, whatsappCategoryCopy } from '@duncit/app-settings';
+import SentMessage from '../wa-message';
 import { categoryLabel, waRate } from '../helpers';
 import { WHATSAPP_MESSAGE_LOG, type WaMessageLogRow } from '../queries';
 
@@ -29,8 +32,21 @@ const STATUS_COLORS: StatusColorMap = {
 /** One label/value line. Hoisted so it isn't redefined each render (S6478). */
 function MetaRow({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
-      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 170, fontWeight: 700 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "baseline",
+        flexWrap: "wrap"
+      }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          minWidth: 170,
+          fontWeight: 700
+        }}>
         {label}
       </Typography>
       {children}
@@ -65,18 +81,33 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
   );
   const log = data?.whatsappMessageLog ?? null;
   const category = log ? whatsappCategoryCopy(t, log.category) : null;
+  // The scenario registry names every placeholder it declares, so an automatic
+  // message can label its values rather than number them. It is the same
+  // catalogue the server sends from (rule 40), mirrored in @duncit/communication.
+  const paramLabels = log ? WA_EVENT_BY_KEY.get(log.event_key)?.params : undefined;
 
   return (
     <Dialog open={Boolean(logId)} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <span>{t('marketingWhatsapp.logs.detailTitle')}</span>
           {log && <StatusChip status={log.status} colorMap={STATUS_COLORS} />}
         </Stack>
       </DialogTitle>
       <DialogContent dividers>
         {loading && !log && (
-          <Stack alignItems="center" sx={{ py: 6 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 6
+            }}>
             <CircularProgress />
           </Stack>
         )}
@@ -88,9 +119,15 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
             {/* The whole point of opening the row: why it did not arrive. */}
             {log.reason && <Alert severity="info">{log.reason}</Alert>}
 
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('marketingWhatsapp.logs.detailHint')}
             </Typography>
+
+            <SentMessage campaignName={log.campaign} params={log.params} labels={paramLabels} />
+
+            <Divider />
 
             <Stack spacing={0.75}>
               <MetaRow label={t('adminWhatsapp.logColScenario')}>
@@ -114,23 +151,6 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
               </MetaRow>
               <MetaRow label={t('adminWhatsapp.logColDestination')}>
                 <Typography variant="body2">{log.destination || EM_DASH}</Typography>
-              </MetaRow>
-              <MetaRow label={t('adminWhatsapp.paramsLabel')}>
-                {log.params.length > 0 ? (
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                    {log.params.map((param, index) => (
-                      // Values are ordered and may repeat, so the position is
-                      // the only stable identity a chip has (S6479).
-                      <Chip
-                        key={`${index}-${param}`}
-                        size="small"
-                        label={`{{${index + 1}}} ${param}`}
-                      />
-                    ))}
-                  </Stack>
-                ) : (
-                  <Typography variant="body2">{EM_DASH}</Typography>
-                )}
               </MetaRow>
               <MetaRow label={t('marketingWhatsapp.logs.messageId')}>
                 <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 13 }}>

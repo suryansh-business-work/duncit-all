@@ -73,9 +73,18 @@ export function AppsDrawer({
         anchor="right"
         open={open}
         onClose={close}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}
+        slotProps={{
+          paper: { sx: { width: { xs: '100%', sm: 380 } } }
+        }}
       >
-        <Stack direction="row" alignItems="center" sx={{ px: 2, pt: 2, pb: 1 }}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            px: 2,
+            pt: 2,
+            pb: 1
+          }}>
           <Typography variant="h6" sx={{ flex: 1 }}>
             {t('shell.appsDrawer.title')}
           </Typography>
@@ -92,12 +101,14 @@ export function AppsDrawer({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('shell.appsDrawer.search')}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }
             }}
           />
         </Box>
@@ -119,7 +130,13 @@ export function AppsDrawer({
             </ListItemButton>
           ))}
           {shown.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 3 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                px: 2,
+                py: 3
+              }}>
               {t('shell.appsDrawer.noMatch', { vars: { term: search } })}
             </Typography>
           )}

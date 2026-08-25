@@ -33,21 +33,32 @@ export default function GiftCardRedeemPage() {
     <Box sx={{ p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%' }}>
         <Box>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.giftCards.redeemTitle')}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5
+            }}>
             {t('mweb.giftCards.redeemSubtitle')}
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1} alignItems="flex-start">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "flex-start"
+        }}>
           <TextField
             fullWidth
             label={t('mweb.giftCards.codeLabel')}
             value={codeInput}
             onChange={(event) => setCodeInput(event.target.value)}
             helperText={t('mweb.giftCards.codeHint')}
-            inputProps={{ style: { textTransform: 'uppercase' }, maxLength: 19 }}
+            slotProps={{
+              htmlInput: { style: { textTransform: 'uppercase' }, maxLength: 19 }
+            }}
           />
           <Button
             variant="contained"

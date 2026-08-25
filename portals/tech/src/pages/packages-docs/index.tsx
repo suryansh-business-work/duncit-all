@@ -40,10 +40,14 @@ export default function PackagesDocsPage() {
   return (
     <FillViewport>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           Package Documentation
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Read from each package&apos;s own <code>docs/index.mdx</code>, so it says what the
           code says — and every package runs, on mock data you can edit.{' '}
           {PACKAGE_DOCS.length} packages documented.

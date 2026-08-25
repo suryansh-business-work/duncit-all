@@ -49,16 +49,33 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
 
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1
+        }}>
         {t('adRequest.media.label')}
         {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}
       </Typography>
-      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={2}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
           {value ? replaceLabel : uploadLabel}
         </Button>
         {value && (
-          <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              wordBreak: 'break-all'
+            }}>
             {value}
           </Typography>
         )}

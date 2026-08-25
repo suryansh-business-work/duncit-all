@@ -39,12 +39,11 @@ export default function DobDateField({
               size: 'small',
               fullWidth: true,
               onBlur: field.onBlur,
-              InputLabelProps: { shrink: true },
+              slotProps: { inputLabel: { shrink: true } },
               error: !!fieldState.error,
               helperText:
                 fieldState.error?.message ?? `Must be at least ${minAge} years old`,
-            },
-          }}
+            }}}
         />
       )}
     />

@@ -45,9 +45,18 @@ export default function AiMonitorBackdrop({ open }: Readonly<{ open: boolean }>)
     >
       <Stack
         spacing={1.25}
-        alignItems="center"
-        sx={{ width: 'min(340px, calc(100vw - 32px))', px: 3, py: 3.5, borderRadius: '16px', textAlign: 'center', color: '#fff', bgcolor: 'rgba(17,24,39,0.94)', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 24px 70px rgba(0,0,0,0.42)' }}
-      >
+        sx={{
+          alignItems: "center",
+          width: 'min(340px, calc(100vw - 32px))',
+          px: 3,
+          py: 3.5,
+          borderRadius: '16px',
+          textAlign: 'center',
+          color: '#fff',
+          bgcolor: 'rgba(17,24,39,0.94)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          boxShadow: '0 24px 70px rgba(0,0,0,0.42)'
+        }}>
         <Box sx={{ position: 'relative', width: 76, height: 76, display: 'grid', placeItems: 'center' }}>
           {RINGS.map((ring) => (
             <Box
@@ -60,7 +69,9 @@ export default function AiMonitorBackdrop({ open }: Readonly<{ open: boolean }>)
             <AutoAwesomeIcon sx={{ fontSize: 26 }} />
           </Box>
         </Box>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.createPod.aiMonitoringTitle')}
         </Typography>
         <Box aria-hidden sx={{ width: '100%', height: 4, borderRadius: 999, overflow: 'hidden', bgcolor: 'rgba(255,255,255,0.14)' }}>

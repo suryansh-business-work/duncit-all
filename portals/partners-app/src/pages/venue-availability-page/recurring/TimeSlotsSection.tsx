@@ -1,7 +1,7 @@
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { newTimeSlot, type TimeSlotRow } from './useRecurringDialog';
 import { useTranslation } from '@duncit/shell';
@@ -31,7 +31,9 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
       </Typography>
       <Stack spacing={1}>
         {timeSlots.map((row, index) => (
-          <Stack key={row.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+          <Stack key={row.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{
+            alignItems: { sm: 'center' }
+          }}>
             <TimePicker
               label={timeSlots.length > 1 ? `Start #${index + 1}` : t('partners.page.start')}
               value={row.start}
@@ -58,9 +60,17 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
       <Button size="small" startIcon={<AddIcon />} onClick={addRow} sx={{ mt: 1 }}>
         Add time slot
       </Button>
-      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          mt: 0.5
+        }}>
         <InfoOutlinedIcon fontSize="inherit" color="action" />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Venue hours {openHours.open}–{openHours.close}. {gapHint}
         </Typography>
       </Stack>

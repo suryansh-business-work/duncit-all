@@ -52,11 +52,15 @@ export default function SearchResultRow({
           '&:hover': { bgcolor: loaded ? 'action.selected' : 'transparent' },
         }}
       >
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <Typography variant="caption" sx={{ fontWeight: 700 }}>
             {who}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {when}
           </Typography>
           {message.attachment_url && <AttachFileIcon sx={{ fontSize: 12 }} />}

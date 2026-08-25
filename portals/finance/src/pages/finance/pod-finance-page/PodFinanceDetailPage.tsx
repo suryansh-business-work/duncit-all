@@ -16,17 +16,34 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
 
   return (
     <Box>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <IconButton aria-label={t('finance.podFinance.backToPodFinance')} onClick={() => navigate('/pod-finance')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1 }}>
-          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-            <Typography variant="h5" fontWeight={700}>{breakdown.pod_title}</Typography>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
+            <Typography variant="h5" sx={{
+              fontWeight: 700
+            }}>{breakdown.pod_title}</Typography>
             <SettlementStatusChip status={breakdown.settlement_status} />
             {breakdown.frozen && <FrozenBadge />}
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {breakdown.bookings_count} bookings · Customer paid {money(sym, breakdown.collected_total)}
             {breakdown.completed_at ? ` · Completed ${formatDateTime(breakdown.completed_at)}` : ''}
           </Typography>
@@ -34,7 +51,9 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
               than the tickets' face value by exactly the redeemed figure.
               Saying so is what stops the gap reading as missing money. */}
           {(breakdown.coins_redeemed_total > 0 || breakdown.coins_earned_total > 0) && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Duncit Coins · {breakdown.coins_redeemed_total} spent on these bookings (already off
               the collected total) · {breakdown.coins_earned_total} earned back by buyers
             </Typography>
@@ -42,10 +61,17 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
         </Box>
       </Stack>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="flex-start">
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
         <Card variant="outlined" sx={{ borderRadius: 3, flex: 2, width: '100%' }}>
           <CardContent>
-            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                mb: 1.5
+              }}>
               Money Waterfall
             </Typography>
             <WaterfallAccordions breakdown={breakdown} />

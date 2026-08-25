@@ -45,7 +45,9 @@ export default function TelemetryLogsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('tech.telemetryLogs.telemetryLogs')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Every persisted log, split by level, with the account, device and build behind each one.
           Only the levels selected in Logs Settings are stored, and rows leave when the retention
           window ends.
@@ -54,7 +56,9 @@ export default function TelemetryLogsPage() {
 
       <DuncitTabs {...tabs} items={TAB_ITEMS} variant="scrollable" allowScrollButtonsMobile />
 
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {active.blurb}
       </Typography>
 

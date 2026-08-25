@@ -32,12 +32,22 @@ export default function OwnerField({ control, options, loading }: Readonly<Props
           noOptionsText="Nobody has access to this portal yet"
           renderOption={(props, option) => (
             <li {...props} key={option.id}>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  width: '100%'
+                }}>
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={700} noWrap>
+                  <Typography variant="body2" noWrap sx={{
+                    fontWeight: 700
+                  }}>
                     {ownerLabel(option)}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap>
+                  <Typography variant="caption" noWrap sx={{
+                    color: "text.secondary"
+                  }}>
                     {option.email}
                   </Typography>
                 </Stack>

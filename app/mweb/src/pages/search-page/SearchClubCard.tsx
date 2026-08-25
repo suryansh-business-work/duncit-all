@@ -45,7 +45,13 @@ export default function SearchClubCard({
   const { club, upcoming_pods: pods } = result;
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.25 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 1.25
+        }}>
         <Avatar
           src={club.club_feature_images_and_videos?.[0]?.url}
           variant="rounded"
@@ -55,18 +61,44 @@ export default function SearchClubCard({
           <GroupsIcon />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }} onClick={() => onOpenClub(club.club_id)}>
-          <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.15 }}>
+          <Typography
+            variant="subtitle1"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1.15
+            }}>
             {club.club_name}
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              flexWrap: 'wrap'
+            }}>
             {categoryName && (
-              <Typography variant="caption" color="primary.main" fontWeight={600} noWrap>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "primary.main",
+                  fontWeight: 600
+                }}>
                 {categoryName}
               </Typography>
             )}
-            <Stack direction="row" spacing={0.4} alignItems="center">
+            <Stack direction="row" spacing={0.4} sx={{
+              alignItems: "center"
+            }}>
               <PeopleAltIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary" fontWeight={700} noWrap>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>
                 {followersLabel(club.followers_count)}
               </Typography>
             </Stack>
@@ -111,7 +143,12 @@ export default function SearchClubCard({
         </Box>
       ) : (
         club.club_description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>
             {club.club_description}
           </Typography>
         )

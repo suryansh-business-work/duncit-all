@@ -52,7 +52,11 @@ export default function PackageDemos({ slug }: Readonly<{ slug: string }>) {
   }
   if (!loaded) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -73,10 +77,17 @@ export default function PackageDemos({ slug }: Readonly<{ slug: string }>) {
       ))}
 
       <Box>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('tech.packagesDocs.demoSource')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           <code>packages/docs-demos/src/demos/{slug}.tsx</code> — the file that just ran.
         </Typography>
         <MonacoBlock code={loaded.source} language="typescript" badge="tsx" />

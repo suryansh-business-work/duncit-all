@@ -24,9 +24,13 @@ function VariantRow({ variant }: Readonly<{ variant: ProductVariantValues }>) {
   return (
     <TableRow>
       <TableCell>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Avatar src={variant.image_urls[0]} variant="rounded" sx={{ width: 36, height: 36 }} />
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {variant.option_label || 'Default'}
           </Typography>
         </Stack>
@@ -64,10 +68,19 @@ export default function ListProductsPreview({ values, brandId }: Readonly<Props>
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h6" fontWeight={950}>
+        <Typography variant="h6" sx={{
+          fontWeight: 950
+        }}>
           {values.product_name || 'Product preview'}
         </Typography>
-        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 0.75 }}>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          useFlexGap
+          sx={{
+            flexWrap: "wrap",
+            mt: 0.75
+          }}>
           {values.categories.map((category) => (
             <Chip
               key={`${category.super_id}-${category.category_id}-${category.sub_id}`}

@@ -72,13 +72,23 @@ export default function ExpenseManagementPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <MenuBookIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Duncit Expense Management
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Track internal business expenses and refunds. Click a row to view, edit or refund.
           </Typography>
         </Box>
@@ -88,17 +98,33 @@ export default function ExpenseManagementPage() {
         {summary && (
           <Card variant="outlined">
             <CardContent>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  flexWrap: "wrap",
+                  alignItems: "center"
+                }}>
                 <Chip label={`Gross ${CURRENCY}${summary.gross_total.toFixed(2)}`} />
                 <Chip color="warning" label={`Refunds ${CURRENCY}${summary.refund_total.toFixed(2)}`} />
                 <Chip color="success" label={`Net ${CURRENCY}${summary.total.toFixed(2)}`} />
                 <Box sx={{ flex: 1 }} />
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {summary.count} expense{summary.count === 1 ? '' : 's'}
                 </Typography>
               </Stack>
               {summary.by_category.length > 0 && (
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{
+                    flexWrap: "wrap",
+                    mt: 1.5
+                  }}>
                   {summary.by_category.map((c: any) => (
                     <Chip key={c.category} size="small" variant="outlined" label={`${labelize(c.category)}: ${CURRENCY}${c.total.toFixed(2)}`} />
                   ))}

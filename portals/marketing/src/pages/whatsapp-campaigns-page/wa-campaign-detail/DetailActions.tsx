@@ -1,6 +1,6 @@
 import { Button, Stack, Tooltip } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -57,7 +57,9 @@ export default function DetailActions({
   if (retrying) retryLabel = t('marketingWhatsapp.logs.retrying');
 
   return (
-    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={1} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       {/* Only the people it did not reach — the audience is not re-resolved,
           so a retry can never widen who the campaign touched. */}
       <Button

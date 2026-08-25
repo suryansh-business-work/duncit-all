@@ -49,13 +49,19 @@ export default function TerminalPage() {
 
   return (
     <Stack spacing={2} sx={{ height: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TerminalIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>
             {t('tech.terminal.title')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.terminal.subtitle')}
           </Typography>
         </Box>

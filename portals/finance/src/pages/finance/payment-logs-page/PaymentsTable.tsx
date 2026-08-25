@@ -23,10 +23,14 @@ const whenValue = (p: PaymentRow) => new Date(p.created_at).toLocaleString('en-I
 
 const renderCustomer = (p: PaymentRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 600
+    }}>
       {p.user_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {p.user_email}
     </Typography>
   </Stack>
@@ -42,7 +46,13 @@ const renderIds = (p: PaymentRow) => (
       {p.payment_id}
     </Typography>
     {p.invoice_no && (
-      <Typography variant="caption" color="text.secondary" component="span" sx={{ fontFamily: 'monospace' }}>
+      <Typography
+        variant="caption"
+        component="span"
+        sx={{
+          color: "text.secondary",
+          fontFamily: 'monospace'
+        }}>
         {p.invoice_no}
       </Typography>
     )}

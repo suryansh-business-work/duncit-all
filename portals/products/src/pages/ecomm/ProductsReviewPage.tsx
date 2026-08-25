@@ -50,12 +50,18 @@ export default function ProductsReviewPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        justifyContent: "space-between"
+      }}>
         <Box>
-          <Typography variant="h4" fontWeight={950}>
+          <Typography variant="h4" sx={{
+            fontWeight: 950
+          }}>
             Products Reviews
           </Typography>
-          <Typography color="text.secondary">
+          <Typography sx={{
+            color: "text.secondary"
+          }}>
             Approve or deny the product listings partners submit, before they become selectable in
             pods.
           </Typography>

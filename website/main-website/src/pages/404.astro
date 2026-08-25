@@ -2,9 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 ---
 
-<Layout title="404 — Lost in the Vibe | Duncit">
+<Layout title={t('website.main.notFound.title')}>
   <SiteNav />
   <div class="bg-frame p-3 sm:p-4">
     <!-- ============== HERO 404 ============== -->
@@ -16,14 +19,14 @@ import Footer from '../components/Footer.astro';
 
       <!-- Nav -->
       <nav class="relative z-20 flex items-center justify-between">
-        <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+        <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label={t('website.main.nav.menu')}>
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
         <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface sticker hover:-translate-y-0.5 transition">
           <span class="w-7 h-7 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head text-sm">D</span>
-          <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
+          <span class="font-head font-black text-ink text-lg leading-none">{t('website.partners.nav.brandAria')}</span>
         </a>
-        <a href="/" class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label="Home">
+        <a href="/" class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label={t('website.main.nav.home')}>
           <i class="fa-solid fa-house text-base"></i>
         </a>
       </nav>
@@ -31,16 +34,16 @@ import Footer from '../components/Footer.astro';
       <!-- Floating stickers around the 404 -->
       <div class="relative z-10 flex flex-col items-center justify-center pt-8 pb-4">
         <span data-float-sticker class="absolute top-[2%] left-[6%] sm:left-[14%] px-4 py-1.5 rounded-full bg-primary text-white font-bold sticker -rotate-12 text-sm">
-          <i class="fa-solid fa-compass mr-1"></i> Lost?
+          <i class="fa-solid fa-compass mr-1"></i> {t('website.main.notFound.lost')}
         </span>
         <span data-float-sticker class="absolute top-[4%] right-[6%] sm:right-[14%] px-4 py-1.5 rounded-full bg-tertiary text-on-accent font-bold sticker rotate-12 text-sm">
-          <i class="fa-solid fa-map-location-dot mr-1"></i> Off the map
+          <i class="fa-solid fa-map-location-dot mr-1"></i> {t('website.main.notFound.offMap')}
         </span>
         <span data-float-sticker class="hidden sm:inline-flex absolute top-[18%] left-[4%] px-3 py-1 rounded-full bg-surface text-ink font-bold sticker rotate-6 text-xs items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> page missing
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> {t('website.main.notFound.pageMissing')}
         </span>
         <span data-float-sticker class="hidden sm:inline-flex absolute top-[20%] right-[3%] px-3 py-1 rounded-full bg-ink text-cream font-bold sticker -rotate-6 text-xs items-center gap-1.5">
-          <i class="fa-solid fa-ghost text-tertiary"></i> spooky empty
+          <i class="fa-solid fa-ghost text-tertiary"></i> {t('website.main.notFound.spookyEmpty')}
         </span>
 
         <!-- Lottie animation: lost / 404 vibe -->
@@ -59,24 +62,24 @@ import Footer from '../components/Footer.astro';
         </h1>
 
         <p class="mt-6 text-center max-w-md text-ink-soft text-base sm:text-lg px-4">
-          This page took a wrong turn at the vibe check. Don't worry — the party is still on. Let's get you back home.
+          {t('website.main.notFound.text')}
         </p>
 
         <!-- CTA buttons -->
         <div class="mt-8 flex flex-col sm:flex-row gap-3 items-center">
           <a href="/" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition">
-            <i class="fa-solid fa-house"></i> Take me home
+            <i class="fa-solid fa-house"></i> {t('website.main.notFound.takeMeHome')}
           </a>
           <a href="/help" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-bold sticker hover:-translate-y-0.5 transition">
-            <i class="fa-solid fa-life-ring"></i> Get help
+            <i class="fa-solid fa-life-ring"></i> {t('website.main.notFound.getHelp')}
           </a>
         </div>
 
         <span data-float-sticker class="absolute bottom-[8%] left-[8%] sm:left-[20%] px-4 py-1.5 rounded-full bg-secondary text-white font-bold sticker -rotate-6 text-sm">
-          <i class="fa-solid fa-bolt mr-1 text-tertiary"></i> Try again
+          <i class="fa-solid fa-bolt mr-1 text-tertiary"></i> {t('website.main.notFound.tryAgain')}
         </span>
         <span data-float-sticker class="absolute bottom-[10%] right-[8%] sm:right-[20%] px-4 py-1.5 rounded-full bg-purple-300 text-on-accent font-bold sticker rotate-6 text-sm">
-          <i class="fa-solid fa-heart mr-1 text-primary"></i> We got you
+          <i class="fa-solid fa-heart mr-1 text-primary"></i> {t('website.main.notFound.weGotYou')}
         </span>
       </div>
     </section>
@@ -85,52 +88,52 @@ import Footer from '../components/Footer.astro';
     <section class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14">
       <div class="max-w-3xl mx-auto text-center">
         <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-4">
-          <i class="fa-solid fa-arrow-pointer"></i> Try one of these
+          <i class="fa-solid fa-arrow-pointer"></i> {t('website.main.notFound.tryOneOfThese')}
         </span>
-        <h2 class="text-3xl sm:text-4xl mb-8">Where do you want to <span class="text-primary">go?</span></h2>
+        <h2 class="text-3xl sm:text-4xl mb-8">{t('website.main.notFound.whereHeadingLead')} <span class="text-primary">{t('website.main.notFound.whereHeadingAccent')}</span></h2>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <a href="/" class="group p-5 rounded-2xl bg-surface sticker text-left hover:-translate-y-1 transition">
             <div class="w-10 h-10 rounded-full bg-primary text-white inline-flex items-center justify-center mb-3">
               <i class="fa-solid fa-house"></i>
             </div>
-            <div class="font-head font-black text-lg text-ink">Home</div>
-            <div class="text-sm text-ink-soft">The Duncit launch page</div>
+            <div class="font-head font-black text-lg text-ink">{t('website.main.nav.home')}</div>
+            <div class="text-sm text-ink-soft">{t('website.main.notFound.homeText')}</div>
           </a>
           <a href="/about" class="group p-5 rounded-2xl bg-surface sticker text-left hover:-translate-y-1 transition">
             <div class="w-10 h-10 rounded-full bg-secondary text-white inline-flex items-center justify-center mb-3">
               <i class="fa-solid fa-circle-info"></i>
             </div>
-            <div class="font-head font-black text-lg text-ink">About us</div>
-            <div class="text-sm text-ink-soft">What we're building</div>
+            <div class="font-head font-black text-lg text-ink">{t('website.main.nav.aboutUs')}</div>
+            <div class="text-sm text-ink-soft">{t('website.main.notFound.aboutText')}</div>
           </a>
           <a href="/community" class="group p-5 rounded-2xl bg-surface sticker text-left hover:-translate-y-1 transition">
             <div class="w-10 h-10 rounded-full bg-tertiary text-on-accent inline-flex items-center justify-center mb-3">
               <i class="fa-solid fa-people-group"></i>
             </div>
-            <div class="font-head font-black text-lg text-ink">Community</div>
-            <div class="text-sm text-ink-soft">Join the tribe</div>
+            <div class="font-head font-black text-lg text-ink">{t('website.main.nav.community')}</div>
+            <div class="text-sm text-ink-soft">{t('website.main.notFound.communityText')}</div>
           </a>
           <a href="/help" class="group p-5 rounded-2xl bg-surface sticker text-left hover:-translate-y-1 transition">
             <div class="w-10 h-10 rounded-full bg-secondary text-white inline-flex items-center justify-center mb-3">
               <i class="fa-solid fa-life-ring"></i>
             </div>
-            <div class="font-head font-black text-lg text-ink">Help Center</div>
-            <div class="text-sm text-ink-soft">Find answers fast</div>
+            <div class="font-head font-black text-lg text-ink">{t('website.main.nav.helpCenter')}</div>
+            <div class="text-sm text-ink-soft">{t('website.main.notFound.helpText')}</div>
           </a>
           <a href="/contact" class="group p-5 rounded-2xl bg-surface sticker text-left hover:-translate-y-1 transition">
             <div class="w-10 h-10 rounded-full bg-primary text-white inline-flex items-center justify-center mb-3">
               <i class="fa-solid fa-envelope"></i>
             </div>
-            <div class="font-head font-black text-lg text-ink">Contact</div>
-            <div class="text-sm text-ink-soft">Talk to a human</div>
+            <div class="font-head font-black text-lg text-ink">{t('website.main.nav.contact')}</div>
+            <div class="text-sm text-ink-soft">{t('website.main.notFound.contactText')}</div>
           </a>
           <a href="/#download" class="group p-5 rounded-2xl bg-surface sticker text-left hover:-translate-y-1 transition">
             <div class="w-10 h-10 rounded-full bg-tertiary text-on-accent inline-flex items-center justify-center mb-3">
               <i class="fa-solid fa-rocket"></i>
             </div>
-            <div class="font-head font-black text-lg text-ink">Get the app</div>
-            <div class="text-sm text-ink-soft">Android &amp; iOS</div>
+            <div class="font-head font-black text-lg text-ink">{t('website.main.notFound.getAppTitle')}</div>
+            <div class="text-sm text-ink-soft">{t('website.main.notFound.getAppText')}</div>
           </a>
         </div>
       </div>

@@ -62,9 +62,10 @@ export default function DynamicValuesView({ entity, json }: Readonly<Props>) {
   if (loading && fields.length === 0) return null;
   if (fields.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        No custom fields defined yet. Open Settings → Dynamic Fields to add some.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>No custom fields defined yet. Open Settings → Dynamic Fields to add some.
+              </Typography>
     );
   }
 

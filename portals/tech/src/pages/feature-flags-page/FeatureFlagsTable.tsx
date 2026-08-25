@@ -9,11 +9,15 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 const getFlagRowId = (f: FeatureFlagRow) => f.id;
 
 const renderKey = (f: FeatureFlagRow) => (
-  <Typography variant="body2" fontWeight={600}>{f.key}</Typography>
+  <Typography variant="body2" sx={{
+    fontWeight: 600
+  }}>{f.key}</Typography>
 );
 
 const renderDescription = (f: FeatureFlagRow) => (
-  <Typography variant="body2" color="text.secondary">{f.description || '—'}</Typography>
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>{f.description || '—'}</Typography>
 );
 
 const renderType = (f: FeatureFlagRow, t: Translate) =>

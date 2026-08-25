@@ -89,14 +89,16 @@ export default function AppPopupDialog() {
       onClose={close}
       maxWidth={false}
       aria-label={t('mweb.appPopup.appPopup')}
-      PaperProps={{
-        sx: {
-          width: cardWidth(aspect),
-          maxWidth: '100%',
-          m: `${APP_POPUP_VIEWPORT_GUTTER}px`,
-          overflow: 'hidden',
-          backgroundImage: 'none',
-        },
+      slotProps={{
+        paper: {
+          sx: {
+            width: cardWidth(aspect),
+            maxWidth: '100%',
+            m: `${APP_POPUP_VIEWPORT_GUTTER}px`,
+            overflow: 'hidden',
+            backgroundImage: 'none',
+          },
+        }
       }}
     >
       <AppPopupCard

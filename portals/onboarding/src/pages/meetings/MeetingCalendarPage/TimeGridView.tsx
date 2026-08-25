@@ -56,8 +56,15 @@ export default function TimeGridView({ days, meetings, holidays, availability, s
             const holidayNamePart = holiday?.name ? ` · ${holiday.name}` : '';
             return (
               <Box key={day.toISOString()} sx={{ flex: 1, textAlign: 'center', py: 0.5, bgcolor: headerBg(day, !!holiday, bg) }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={700}>{format(day, 'EEE')}</Typography>
-                <Typography variant="subtitle2" fontWeight={isToday(day) ? 800 : 600}>{format(day, 'd')}</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 700
+                  }}>{format(day, 'EEE')}</Typography>
+                <Typography variant="subtitle2" sx={{
+                  fontWeight: isToday(day) ? 800 : 600
+                }}>{format(day, 'd')}</Typography>
                 {holiday && (
                   <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holidayNamePart}`}>
                     <Typography variant="caption" sx={{ display: 'block', color: 'warning.main', fontWeight: 700, lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -76,7 +83,14 @@ export default function TimeGridView({ days, meetings, holidays, availability, s
           <Box sx={{ width: GUTTER, flexShrink: 0 }}>
             {hours.map((h) => (
               <Box key={h} sx={{ height: HOUR_PX, position: 'relative' }}>
-                <Typography variant="caption" color="text.secondary" sx={{ position: 'absolute', top: -8, right: 6 }}>{hourLabel(h)}</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    position: 'absolute',
+                    top: -8,
+                    right: 6
+                  }}>{hourLabel(h)}</Typography>
               </Box>
             ))}
           </Box>

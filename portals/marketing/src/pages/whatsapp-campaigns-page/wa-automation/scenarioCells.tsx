@@ -14,16 +14,23 @@ interface ScenarioCellProps {
 export function ScenarioCell({ row, firesLabel }: Readonly<ScenarioCellProps>) {
   return (
     <Box sx={{ minWidth: 0, lineHeight: 1.3 }}>
-      <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace', fontSize: 12 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 700,
+          fontFamily: 'monospace',
+          fontSize: 12
+        }}>
         {row.event_key}
       </Typography>
       <Tooltip title={firesLabel}>
         <Typography
           variant="caption"
-          color="text.secondary"
           component="div"
-          sx={{ whiteSpace: 'normal' }}
-        >
+          sx={{
+            color: "text.secondary",
+            whiteSpace: 'normal'
+          }}>
           {row.fires}
         </Typography>
       </Tooltip>
@@ -84,7 +91,9 @@ export function ValuesCell({ row, paramsLabel }: Readonly<ValuesCellProps>) {
   const mismatch = row.params.length !== row.template_params;
   const title = (
     <Box>
-      <Typography variant="caption" fontWeight={700} component="div">
+      <Typography variant="caption" component="div" sx={{
+        fontWeight: 700
+      }}>
         {paramsLabel}
       </Typography>
       <Typography variant="caption" component="div" sx={{ whiteSpace: 'pre-line' }}>
@@ -96,10 +105,11 @@ export function ValuesCell({ row, paramsLabel }: Readonly<ValuesCellProps>) {
     <Tooltip title={title}>
       <Typography
         variant="body2"
-        fontWeight={mismatch ? 700 : 400}
         color={mismatch ? 'error.main' : 'text.primary'}
-        sx={{ fontVariantNumeric: 'tabular-nums' }}
-      >
+        sx={{
+          fontWeight: mismatch ? 700 : 400,
+          fontVariantNumeric: 'tabular-nums'
+        }}>
         {row.params.length} / {row.template_params}
       </Typography>
     </Tooltip>
@@ -115,7 +125,9 @@ interface BlockerCellProps {
 export function BlockerCell({ row, readyLabel }: Readonly<BlockerCellProps>) {
   if (!row.blocker) {
     return (
-      <Typography variant="caption" color="success.main">
+      <Typography variant="caption" sx={{
+        color: "success.main"
+      }}>
         {readyLabel}
       </Typography>
     );
@@ -153,7 +165,9 @@ export function EnabledCell({
   const locked = !row.can_disable;
   const title = locked ? (
     <Box>
-      <Typography variant="caption" fontWeight={700} component="div">
+      <Typography variant="caption" component="div" sx={{
+        fontWeight: 700
+      }}>
         {lockedTitle}
       </Typography>
       <Typography variant="caption" component="div">
@@ -169,8 +183,10 @@ export function EnabledCell({
         <Switch
           checked={row.enabled}
           disabled={locked || busy}
-          inputProps={{ 'aria-label': row.event_key }}
           onChange={(event) => onToggle(row.event_key, event.target.checked)}
+          slotProps={{
+            input: { 'aria-label': row.event_key }
+          }}
         />
       </span>
     </Tooltip>

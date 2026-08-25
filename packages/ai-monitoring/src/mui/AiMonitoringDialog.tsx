@@ -11,7 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import type { AiMonitoringCopy } from '../index';
 
@@ -32,15 +32,21 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<AiMonitorin
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <SmartToyIcon color="primary" fontSize="small" />
-          <Typography component="span" variant="h6" fontWeight={700}>
+          <Typography component="span" variant="h6" sx={{
+            fontWeight: 700
+          }}>
             {copy.title}
           </Typography>
         </Stack>
       </DialogTitle>
       <DialogContent dividers>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {copy.intro}
         </Typography>
         <List dense disablePadding sx={{ mt: 1 }}>
@@ -49,12 +55,20 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<AiMonitorin
               <ListItemIcon sx={{ minWidth: 32, mt: 0.5 }}>
                 <CheckCircleOutlineIcon fontSize="small" color="success" />
               </ListItemIcon>
-              <ListItemText primaryTypographyProps={{ variant: 'body2' }} primary={point} />
+              <ListItemText primary={point} slotProps={{
+                primary: { variant: 'body2' }
+              }} />
             </ListItem>
           ))}
         </List>
         {copy.footnote && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block',
+              mt: 1
+            }}>
             {copy.footnote}
           </Typography>
         )}

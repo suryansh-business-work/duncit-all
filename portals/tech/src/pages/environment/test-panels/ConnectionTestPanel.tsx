@@ -56,7 +56,9 @@ export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {description}
       </Typography>
 
@@ -73,7 +75,9 @@ export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
             helperText={t('tech.environment.leaveBlankToUseThePhone')}
             fullWidth
             autoComplete="off"
-            inputProps={{ inputMode: 'numeric', autoComplete: 'off', 'data-1p-ignore': true }}
+            slotProps={{
+              htmlInput: { inputMode: 'numeric', autoComplete: 'off', 'data-1p-ignore': true }
+            }}
           />
         </>
       )}

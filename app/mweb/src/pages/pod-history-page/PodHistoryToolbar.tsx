@@ -80,7 +80,9 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Box sx={{ p: 2, width: 290 }}>
-          <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle2" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.podHistory.filterByCategory')}
           </Typography>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>
@@ -110,7 +112,13 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
             </Select>
           </FormControl>
           {!filters.superId && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: 0.75,
+                display: 'block'
+              }}>
               {t('mweb.podHistory.selectSuperFirst')}
             </Typography>
           )}

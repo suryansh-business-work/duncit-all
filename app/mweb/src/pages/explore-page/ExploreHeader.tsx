@@ -24,9 +24,13 @@ export default function ExploreHeader({
   const { t } = useTranslation();
   return (
     <Stack spacing={1.1} sx={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 3 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={0.75} alignItems="center">
+          <Stack direction="row" spacing={0.75} sx={{
+            alignItems: "center"
+          }}>
             <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, lineHeight: 1 }}>
               Explore
             </Typography>

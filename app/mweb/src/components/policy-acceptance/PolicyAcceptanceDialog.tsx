@@ -68,7 +68,12 @@ export default function PolicyAcceptanceDialog({
     <Dialog open={open} onClose={finish} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle sx={{ fontWeight: 700 }}>{t('policyAcceptance.dialogTitle')}</DialogTitle>
       <DialogContent dividers>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           {intro}
         </Typography>
         <PolicyAcceptanceList
@@ -80,13 +85,17 @@ export default function PolicyAcceptanceDialog({
         />
         {ready && (
           <Stack spacing={0.5} sx={{ mt: 1.5 }}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('policyAcceptance.acceptedCount', {
                 vars: { done, total: policies.length },
               })}
             </Typography>
             {!complete && (
-              <Typography variant="caption" color="error.main">
+              <Typography variant="caption" sx={{
+                color: "error.main"
+              }}>
                 {t('policyAcceptance.mustAcceptHint')}
               </Typography>
             )}

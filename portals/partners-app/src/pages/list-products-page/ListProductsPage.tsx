@@ -20,10 +20,18 @@ export default function ListProductsPage() {
         <BackButton onClick={() => navigate('/ecomm-brand')} sx={{ color: 'inherit', mb: 1 }}>
           Back to brands
         </BackButton>
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' }
+          }}>
           <Box>
             <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.productManagement')}</Typography>
-            <Typography variant="h4" fontWeight={900}>{t('partners.listProductsPage.brandProducts')}</Typography>
+            <Typography variant="h4" sx={{
+              fontWeight: 900
+            }}>{t('partners.listProductsPage.brandProducts')}</Typography>
             <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
               Add products under a Super → Category → Sub category. Once the products portal approves them they appear in matching pods.
             </Typography>

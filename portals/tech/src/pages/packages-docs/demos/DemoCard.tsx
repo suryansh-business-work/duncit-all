@@ -18,7 +18,12 @@ function runCompute(demo: PackageDemo, mock: unknown): Record<string, unknown> {
 
 function SectionLabel({ children }: Readonly<{ children: string }>) {
   return (
-    <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1 }}>
+    <Typography
+      variant="overline"
+      sx={{
+        color: "text.secondary",
+        letterSpacing: 1
+      }}>
       {children}
     </Typography>
   );
@@ -43,11 +48,19 @@ export default function DemoCard({ demo }: Readonly<{ demo: PackageDemo }>) {
     <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
       <Stack spacing={2}>
         <Box>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {demo.title}
           </Typography>
           {demo.note && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.6 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mt: 0.5,
+                lineHeight: 1.6
+              }}>
               {demo.note}
             </Typography>
           )}

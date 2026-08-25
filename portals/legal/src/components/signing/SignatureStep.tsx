@@ -42,7 +42,9 @@ export default function SignatureStep({ draft, methods, onChange }: Readonly<Pro
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('legal.sign.allRequired')}
       </Typography>
       {methods.length === 0 && <Alert severity="warning">{t('legal.sign.noMethods')}</Alert>}

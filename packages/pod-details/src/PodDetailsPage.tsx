@@ -83,14 +83,23 @@ function PodDetailsView({
               belong to the heading, not to a separate band under it. */}
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
-            alignItems={{ xs: 'stretch', sm: 'flex-start' }}
-            justifyContent="space-between"
             spacing={2}
-          >
+            sx={{
+              alignItems: { xs: 'stretch', sm: 'flex-start' },
+              justifyContent: "space-between"
+            }}>
             <Stack spacing={1.25} sx={{ minWidth: 0 }}>
-              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                  minWidth: 0
+                }}>
                 <BackButton onClick={() => navigate(backTo)}>{backLabel}</BackButton>
-                <Typography variant="h5" fontWeight={900} noWrap>
+                <Typography variant="h5" noWrap sx={{
+                  fontWeight: 900
+                }}>
                   {pod.pod_title}
                 </Typography>
               </Stack>
@@ -114,14 +123,24 @@ function PodDetailsView({
               half-page void beside the club card: the narrative on the left
               (what it is, what happened to it) against the people-and-money
               sidebar on the right (who ran it, what it took, how it scored). */}
-          <Grid container spacing={GAP} alignItems="flex-start">
-            <Grid item xs={12} lg={7}>
+          <Grid container spacing={GAP} sx={{
+            alignItems: "flex-start"
+          }}>
+            <Grid
+              size={{
+                xs: 12,
+                lg: 7
+              }}>
               <Stack spacing={GAP}>
                 <PodOverviewCard pod={pod} showProducts={showProducts} />
                 <PodTimelineSection pod={pod} />
               </Stack>
             </Grid>
-            <Grid item xs={12} lg={5}>
+            <Grid
+              size={{
+                xs: 12,
+                lg: 5
+              }}>
               <Stack spacing={GAP}>
                 <PodHostsCard pod={pod} attendees={attendeeRows} />
                 <PodClubCard clubId={pod.club_id ?? null} />

@@ -15,7 +15,13 @@ function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
       variant="outlined"
       icon={<InsertDriveFileIcon />}
       label={
-        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ maxWidth: 200 }}>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "center",
+            maxWidth: 200
+          }}>
           <Typography variant="caption" noWrap sx={{ fontWeight: 700, flex: 1, minWidth: 0 }}>
             {info.name}
           </Typography>

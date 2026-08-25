@@ -22,6 +22,38 @@ export const TEMPLATES = gql`
   }
 `;
 
+/**
+ * How often each template has actually been used, from the email log.
+ *
+ * A separate query from TEMPLATES on purpose: that one carries every MJML body
+ * on the page, and these numbers move after a send while the bodies do not.
+ */
+export const TEMPLATE_USAGE = gql`
+  query EmailTemplateUsage {
+    emailTemplateUsage {
+      slug
+      sent
+      skipped
+      failed
+      total
+      last_sent_at
+      last_attempt_at
+    }
+  }
+`;
+
+/** One template's tally. Absent from the list entirely when it has never sent. */
+export interface TemplateUsage {
+  slug: string;
+  sent: number;
+  skipped: number;
+  failed: number;
+  total: number;
+  /** Null when it has only ever failed — which is not the same as never used. */
+  last_sent_at?: string | null;
+  last_attempt_at?: string | null;
+}
+
 export const RENDER = gql`
   query RenderTpl($mjml: String!, $vars: String, $fragment: String) {
     renderEmailTemplate(mjml: $mjml, vars: $vars, fragment_key: $fragment) {

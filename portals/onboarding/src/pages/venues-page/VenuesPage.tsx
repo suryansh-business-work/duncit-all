@@ -73,9 +73,15 @@ export default function VenuesPage() {
 
   return (
     <Box>
-      <Stack spacing={0.25} mb={2}>
-        <Typography variant="h5" fontWeight={700}>{t('onboarding.venues.registeredVenues')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+      <Stack spacing={0.25} sx={{
+        mb: 2
+      }}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>{t('onboarding.venues.registeredVenues')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Review submitted venue requests and manage approved spaces for clubs, pods and meetups.
         </Typography>
       </Stack>

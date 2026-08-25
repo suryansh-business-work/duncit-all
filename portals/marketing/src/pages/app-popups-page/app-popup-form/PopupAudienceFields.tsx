@@ -26,7 +26,11 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           control={control}
           name="audience_type"
@@ -44,7 +48,11 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
       </Grid>
 
       {audienceType === 'AUDIENCE_LIST' && (
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <RhfTextField
             control={control}
             name="audience_list_id"
@@ -62,7 +70,11 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
         </Grid>
       )}
 
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           control={control}
           name="cta_label"
@@ -71,7 +83,11 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           control={control}
           name="cta_url"

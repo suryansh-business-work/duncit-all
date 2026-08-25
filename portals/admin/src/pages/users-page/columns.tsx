@@ -16,7 +16,14 @@ const providerOptions = (t: ColumnDeps['t']) => [
 ];
 
 const renderUser = (u: UserRow) => (
-  <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }} component="span">
+  <Stack
+    direction="row"
+    spacing={1.25}
+    component="span"
+    sx={{
+      alignItems: "center",
+      minWidth: 0
+    }}>
     <Avatar
       src={u.profile_photo || undefined}
       sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13, fontWeight: 700 }}
@@ -24,12 +31,23 @@ const renderUser = (u: UserRow) => (
       {initials(u)}
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={700} noWrap component="div">
+      <Typography variant="body2" noWrap component="div" sx={{
+        fontWeight: 700
+      }}>
         {u.full_name || 'Unnamed user'}
       </Typography>
-      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }} component="span">
+      <Stack
+        direction="row"
+        spacing={0.5}
+        component="span"
+        sx={{
+          alignItems: "center",
+          minWidth: 0
+        }}>
         <EmailOutlinedIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-        <Typography variant="caption" color="text.secondary" noWrap component="span">
+        <Typography variant="caption" noWrap component="span" sx={{
+          color: "text.secondary"
+        }}>
           {u.email || 'No email'}
         </Typography>
       </Stack>
@@ -37,9 +55,18 @@ const renderUser = (u: UserRow) => (
           Google address, and they need not be the same address — support has to
           see which Gmail actually signs this account in. */}
       {u.google_email && (
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }} component="span">
+        <Stack
+          direction="row"
+          spacing={0.5}
+          component="span"
+          sx={{
+            alignItems: "center",
+            minWidth: 0
+          }}>
           <GoogleIcon sx={{ fontSize: 13, color: '#4285f4' }} />
-          <Typography variant="caption" color="text.secondary" noWrap component="span">
+          <Typography variant="caption" noWrap component="span" sx={{
+            color: "text.secondary"
+          }}>
             {u.google_email}
           </Typography>
         </Stack>
@@ -52,15 +79,21 @@ const contactValue = (u: UserRow) => [u.city, u.zone].filter(Boolean).join(' · 
 
 const renderContact = (u: UserRow) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-    <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+    <Stack direction="row" spacing={0.5} component="span" sx={{
+      alignItems: "center"
+    }}>
       <PhoneOutlinedIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
       <Typography variant="body2" noWrap component="span">
         {u.phone_number || '—'}
       </Typography>
     </Stack>
-    <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+    <Stack direction="row" spacing={0.5} component="span" sx={{
+      alignItems: "center"
+    }}>
       <PlaceOutlinedIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-      <Typography variant="caption" color="text.secondary" noWrap component="span">
+      <Typography variant="caption" noWrap component="span" sx={{
+        color: "text.secondary"
+      }}>
         {contactValue(u)}
       </Typography>
     </Stack>
@@ -107,7 +140,9 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
           }}
           variant="outlined"
         />
-        <Typography variant="caption" color="text.secondary" component="span">
+        <Typography variant="caption" component="span" sx={{
+          color: "text.secondary"
+        }}>
           {u.last_login_at ? formatDate(u.last_login_at) : 'Not tracked yet'}
         </Typography>
       </Stack>

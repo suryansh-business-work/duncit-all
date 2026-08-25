@@ -20,7 +20,9 @@ interface Props {
 export default function PhoneField({ control }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "flex-start"
+    }}>
       <CountryCodeField
         control={control}
         name="phoneExtension"
@@ -35,9 +37,9 @@ export default function PhoneField({ control }: Readonly<Props>) {
         placeholder={t('mweb.signup.phonePlaceholder')}
         autoComplete="tel-national"
         size="small"
-        InputLabelProps={{ shrink: true }}
+        slotProps={{ inputLabel: { shrink: true }, htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
         digitsOnly
-        inputProps={{ inputMode: 'numeric', maxLength: 15 }}
+        
       />
     </Stack>
   );

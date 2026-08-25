@@ -99,15 +99,18 @@ export default function StartupDashboardPage() {
   const header = (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
-      justifyContent="space-between"
-      alignItems={{ xs: 'flex-start', sm: 'center' }}
       spacing={2}
-    >
+      sx={{
+        justifyContent: "space-between",
+        alignItems: { xs: 'flex-start', sm: 'center' }
+      }}>
       <Box>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Startup Dashboard
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Founder KPIs across revenue, growth, customers and operations.
         </Typography>
       </Box>
@@ -130,7 +133,11 @@ export default function StartupDashboardPage() {
       {loading && !dashboard ? (
         <Stack spacing={3}>
           {header}
-          <Stack alignItems="center" sx={{ py: 8 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 8
+            }}>
             <CircularProgress />
           </Stack>
         </Stack>

@@ -211,9 +211,12 @@ export default function PexelsPhotosTab({
       )}
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ display: 'block', mt: 2, textAlign: 'center' }}
-      >
+        sx={{
+          color: "text.secondary",
+          display: 'block',
+          mt: 2,
+          textAlign: 'center'
+        }}>
         Photos provided by{' '}
         <a
           href="https://www.pexels.com"

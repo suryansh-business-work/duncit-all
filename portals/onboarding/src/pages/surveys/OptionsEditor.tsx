@@ -41,23 +41,32 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
 
   return (
     <Stack spacing={0.75}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>{t('onboarding.surveys.options')}</Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>{t('onboarding.surveys.options')}</Typography>
       {list.map((opt, i) => {
         const rowKey = rowKeys.current.keys[i];
         return (
-        <Stack key={rowKey} direction="row" spacing={0.5} alignItems="center">
-          <TextField
-            size="small"
-            fullWidth
-            placeholder={`Option ${i + 1}`}
-            value={opt}
-            onChange={(e) => set(i, e.target.value)}
-            inputProps={{ 'aria-label': `Option ${i + 1}` }}
-          />
-          <Tooltip title={t('onboarding.common.moveUp')}><span><IconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
-          <Tooltip title={t('onboarding.common.moveDown')}><span><IconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
-          <Tooltip title={t('onboarding.surveys.removeOption')}><IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
-        </Stack>
+          <Stack key={rowKey} direction="row" spacing={0.5} sx={{
+            alignItems: "center"
+          }}>
+            <TextField
+              size="small"
+              fullWidth
+              placeholder={`Option ${i + 1}`}
+              value={opt}
+              onChange={(e) => set(i, e.target.value)}
+              slotProps={{
+                htmlInput: { 'aria-label': `Option ${i + 1}` }
+              }}
+            />
+            <Tooltip title={t('onboarding.common.moveUp')}><span><IconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
+            <Tooltip title={t('onboarding.common.moveDown')}><span><IconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
+            <Tooltip title={t('onboarding.surveys.removeOption')}><IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+          </Stack>
         );
       })}
       <Button size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.surveys.addOption')}</Button>

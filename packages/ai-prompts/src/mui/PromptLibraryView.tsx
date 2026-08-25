@@ -112,20 +112,28 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <AutoStoriesIcon color="primary" />
-          <Typography variant="h5" fontWeight={800}>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>
             {copy.pageTitle}
           </Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {copy.pageSubtitle}
         </Typography>
       </Box>
 
       <DuncitTabs {...tabs} />
 
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {blurb}
       </Typography>
 

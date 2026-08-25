@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { JSX, useState } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -76,7 +76,13 @@ export default function PodSections() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "flex-end",
+          mb: 1
+        }}>
         <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
           Expand all
         </Button>
@@ -137,7 +143,9 @@ export default function PodSections() {
                 product IS enabling them now, so the switch is gone and the flag
                 is derived in buildPodInput — this section opens like any other. */}
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 600
+              }}>{section.title}</Typography>
             </AccordionSummary>
             <AccordionDetails>{section.render()}</AccordionDetails>
           </Accordion>

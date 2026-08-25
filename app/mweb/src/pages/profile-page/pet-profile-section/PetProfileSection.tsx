@@ -20,9 +20,20 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            mb: 2
+          }}>
           <PetsIcon color="primary" />
-          <Typography variant="h6" sx={{ flex: 1 }} fontWeight={700}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              flex: 1
+            }}>
             Pet Profile
           </Typography>
           {!editing && (

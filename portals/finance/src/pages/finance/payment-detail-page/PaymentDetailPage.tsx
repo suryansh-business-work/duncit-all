@@ -41,7 +41,9 @@ function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
       />
 
       <Stack spacing={2}>
-        <Stack direction={twoUp} spacing={2} alignItems="flex-start">
+        <Stack direction={twoUp} spacing={2} sx={{
+          alignItems: "flex-start"
+        }}>
           <AmountBreakupCard detail={detail} />
           <CoinsCard
             coins={detail.coins}
@@ -65,7 +67,9 @@ function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
           formatDateTime={formatDateTime}
         />
 
-        <Stack direction={twoUp} spacing={2} alignItems="flex-start">
+        <Stack direction={twoUp} spacing={2} sx={{
+          alignItems: "flex-start"
+        }}>
           {detail.coupon && <CouponCard coupon={detail.coupon} currencySymbol={p.currency_symbol} />}
           <CustomerCard payment={p} />
         </Stack>

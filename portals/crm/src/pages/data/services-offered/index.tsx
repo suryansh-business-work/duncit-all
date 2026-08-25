@@ -88,11 +88,17 @@ export default function ServicesOfferedPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <HandymanIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{t('crm.data.servicesOfferedForHostAndAmp')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('crm.data.servicesOfferedForHostAndAmp')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Curated service titles per Super → Category → Sub. Venue & host forms load these dynamically.
           </Typography>
         </Box>

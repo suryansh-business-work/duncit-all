@@ -31,7 +31,9 @@ export default function AiMonitoringAccordion({ settings, saving, onSave }: Read
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>{t('admin.uploads.aiTitle')}</Typography>
+        <Typography sx={{
+          fontWeight: 700
+        }}>{t('admin.uploads.aiTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2}>

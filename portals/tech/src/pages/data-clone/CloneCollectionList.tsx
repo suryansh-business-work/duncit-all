@@ -32,21 +32,40 @@ function CollectionRow({ item }: Readonly<{ item: CloneCollection }>) {
   const counts = `${item.copiedCount.toLocaleString()} / ${item.sourceCount.toLocaleString()}`;
   return (
     <ListItem disableGutters sx={{ display: 'block', py: 1 }}>
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-        <Typography variant="body2" fontWeight={600} sx={{ flex: 1, minWidth: 0 }} noWrap>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
+        <Typography
+          variant="body2"
+          noWrap
+          sx={{
+            fontWeight: 600,
+            flex: 1,
+            minWidth: 0
+          }}>
           {item.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {counts}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {formatBytes(item.bytes)}
         </Typography>
         <Chip size="small" color={STATUS_COLOR[item.status]} label={t(STATUS_KEY[item.status])} />
       </Stack>
       <CollectionBar item={item} />
       {item.error && (
-        <Typography variant="caption" color="error.main">
+        <Typography variant="caption" sx={{
+          color: "error.main"
+        }}>
           {item.error}
         </Typography>
       )}

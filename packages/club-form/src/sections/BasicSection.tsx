@@ -129,13 +129,17 @@ export default function BasicSection() {
       />
 
       {config.showVerified && (
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Switch checked={!!isVerified} onChange={(_, value) => setValue('is_verified', value)} />
           <Typography variant="body2">{isVerified ? 'Verified club' : 'Not verified'}</Typography>
         </Stack>
       )}
       {config.showIsActive && clubDocId && (
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Switch checked={!!isActive} onChange={(_, value) => setValue('is_active', value)} />
           <Typography variant="body2">{isActive ? 'Active' : 'Inactive'}</Typography>
         </Stack>

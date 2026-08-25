@@ -149,7 +149,13 @@ export default function MessageThread({
         )}
 
         {messages.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              textAlign: 'center',
+              py: 4
+            }}>
             {t('shell.chat.thread.sayHello')}
           </Typography>
         )}

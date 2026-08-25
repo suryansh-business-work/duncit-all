@@ -32,10 +32,22 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} alignItems="flex-start">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={800} noWrap>{request.pod_title}</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            <Typography variant="subtitle1" noWrap sx={{
+              fontWeight: 800
+            }}>{request.pod_title}</Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}>
               {request.pod_description || 'No description provided.'}
             </Typography>
           </Box>
@@ -59,7 +71,9 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             value={request.host_phone ? <Link href={`tel:${request.host_phone}`}>{request.host_phone}</Link> : '—'}
           />
         </Stack>
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           {/* Same page the request email's buttons open — it shows what this
            * booking actually earns after Duncit's commission. */}
           <Button size="small" component={RouterLink} to={`/venues/requests/${request.slot_id}`}>
@@ -91,7 +105,9 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
       <Dialog open={confirmApprove} onClose={() => setConfirmApprove(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('partners.slotRequestsPage.approveThisSlotBooking')}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             "{request.pod_title}" will be confirmed for {slotWindow(request)} and the pod goes live immediately.
           </Typography>
         </DialogContent>
@@ -115,7 +131,9 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
         <DialogTitle>{t('partners.slotRequestsPage.declineThisSlotBooking')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               The slot opens up again and the host is notified that the request was declined.
             </Typography>
             <TextField
@@ -124,8 +142,10 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
               onChange={(e) => setReason(e.target.value)}
               multiline
               minRows={2}
-              inputProps={{ maxLength: 280 }}
               helperText={t('partners.slotRequestsPage.sharedWithTheHostSoThey')}
+              slotProps={{
+                htmlInput: { maxLength: 280 }
+              }}
             />
           </Stack>
         </DialogContent>

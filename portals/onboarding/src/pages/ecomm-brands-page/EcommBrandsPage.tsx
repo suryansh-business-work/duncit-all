@@ -71,9 +71,15 @@ export default function EcommBrandsPage() {
 
   return (
     <Box>
-      <Stack spacing={0.25} mb={2}>
-        <Typography variant="h5" fontWeight={700}>E-Commerce Brands</Typography>
-        <Typography variant="body2" color="text.secondary">
+      <Stack spacing={0.25} sx={{
+        mb: 2
+      }}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>E-Commerce Brands</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Review and verify partner product brands before they go live.
         </Typography>
       </Stack>

@@ -51,9 +51,8 @@ export default function ConfigField({ field, value, error, helperText, required,
       required={required}
       fullWidth
       autoComplete={field.secret ? 'new-password' : 'off'}
-      inputProps={{ autoComplete: field.secret ? 'new-password' : 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
-      InputProps={
-        field.secret
+      slotProps={{
+        input: field.secret
           ? {
               endAdornment: (
                 <InputAdornment position="end">
@@ -70,8 +69,9 @@ export default function ConfigField({ field, value, error, helperText, required,
                 </InputAdornment>
               ),
             }
-          : undefined
-      }
-    />
+          : undefined,
+
+        htmlInput: { autoComplete: field.secret ? 'new-password' : 'off', 'data-1p-ignore': true, 'data-lpignore': true }
+      }} />
   );
 }

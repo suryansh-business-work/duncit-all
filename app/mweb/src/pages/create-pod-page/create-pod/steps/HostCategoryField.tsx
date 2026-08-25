@@ -35,15 +35,21 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         {requiredLabel(t('mweb.createPod.categoryLabel'), true)}
       </Typography>
       <Typography
         variant="caption"
-        color="text.secondary"
-        display="block"
         data-testid="create-pod-category-hint"
-      >
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {t('mweb.createPod.categoryHint')}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>

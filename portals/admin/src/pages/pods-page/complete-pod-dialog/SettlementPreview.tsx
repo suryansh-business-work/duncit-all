@@ -34,7 +34,9 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
     return (
       <Stack spacing={1}>
         <FinanceWaterfallList symbol={s.currency_symbol} lines={lines} />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Payouts are credited to the beneficiary wallets when the pod is completed.
         </Typography>
       </Stack>

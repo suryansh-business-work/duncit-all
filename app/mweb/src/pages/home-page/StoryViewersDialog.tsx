@@ -40,7 +40,9 @@ export default function StoryViewersDialog({
   const viewersBody =
     viewers.length === 0 ? (
       <Box sx={{ py: 3, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No one has viewed this story yet.
         </Typography>
       </Box>
@@ -60,7 +62,9 @@ export default function StoryViewersDialog({
   return (
     <Dialog open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <VisibilityIcon fontSize="small" />
           <Typography component="span" sx={{ fontWeight: 700 }}>
             {viewers.length === 0 ? 'No views yet' : `Seen by ${viewers.length}`}
@@ -73,7 +77,9 @@ export default function StoryViewersDialog({
       <DialogContent dividers>
         {loading && viewers.length === 0 ? (
           <Box sx={{ py: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Loading…
             </Typography>
           </Box>

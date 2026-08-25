@@ -23,8 +23,16 @@ interface Props {
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" slotProps={{
+      paper: { sx: { borderRadius: '16px' } }
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          pr: 1
+        }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.sortResults')}</DialogTitle>
         <IconButton aria-label={t('mweb.search.closeSort')} onClick={onClose}>
           <CloseIcon />
@@ -51,7 +59,9 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
               <ListItemText
                 primary={option.label}
                 secondary={option.description}
-                primaryTypographyProps={{ fontWeight: 600 }}
+                slotProps={{
+                  primary: { sx: { fontWeight: 600 } }
+                }}
               />
             </ListItemButton>
           ))}

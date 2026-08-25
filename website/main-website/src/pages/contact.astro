@@ -15,48 +15,61 @@ const supportPhone = branding.support_phone;
 ---
 
 <PageLayout
-  title="Contact us"
-  eyebrow="Say hi"
-  heading="Get in touch"
-  intro="Questions, partnerships, press, or just a friendly hello — we'd love to hear from you."
+  title={t('website.main.contact.title')}
+  eyebrow={t('website.main.contact.eyebrow')}
+  heading={t('website.main.contact.heading')}
+  intro={t('website.main.contact.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=1600&q=80&auto=format&fit=crop"
 >
   <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
     <a href={`mailto:${supportEmail}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
       <i class="fa-solid fa-envelope text-2xl text-primary mb-2" aria-hidden="true"></i>
-      <div class="font-head font-bold text-ink">Email us</div>
+      <div class="font-head font-bold text-ink">{t('website.main.contact.emailUs')}</div>
       <div class="text-sm text-ink-soft mt-1">{supportEmail}</div>
     </a>
     {supportPhone ? (
       <a href={`tel:${supportPhone}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
         <i class="fa-solid fa-phone text-2xl text-secondary mb-2" aria-hidden="true"></i>
-        <div class="font-head font-bold text-ink">Call us</div>
+        <div class="font-head font-bold text-ink">{t('website.main.contact.callUs')}</div>
         <div class="text-sm text-ink-soft mt-1">{supportPhone}</div>
       </a>
     ) : (
       <a href="/help" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
         <i class="fa-solid fa-life-ring text-2xl text-tertiary-dark mb-2" aria-hidden="true"></i>
-        <div class="font-head font-bold text-ink">Help Center</div>
-        <div class="text-sm text-ink-soft mt-1">Browse answered topics</div>
+        <div class="font-head font-bold text-ink">{t('website.main.contact.helpCenter')}</div>
+        <div class="text-sm text-ink-soft mt-1">{t('website.main.contact.helpCenterText')}</div>
       </a>
     )}
   </div>
 
-  <h2>Send us a message</h2>
-  <form class="not-prose grid gap-4 max-w-xl mt-4" id="contactForm">
-    <input name="name" required placeholder="Your name" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
-    <input name="email" required type="email" placeholder="Your email" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
-    <input name="subject" placeholder="Subject (optional)" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
-    <textarea name="message" required rows="5" placeholder="What's on your mind?" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
+  <h2>{t('website.main.contact.formHeading')}</h2>
+  <form
+    class="not-prose grid gap-4 max-w-xl mt-4"
+    id="contactForm"
+    data-copy={JSON.stringify({
+      sending: t('website.main.contact.sending'),
+      sent: t('website.main.contact.sent'),
+      send: t('website.main.contact.send'),
+      failed: t('website.main.contact.failed'),
+      failedRetry: t('website.main.contact.failedRetry'),
+    })}
+  >
+    <input name="name" required placeholder={t('website.main.contact.namePlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
+    <input name="email" required type="email" placeholder={t('website.main.contact.emailPlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
+    <input name="subject" placeholder={t('website.main.contact.subjectPlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
+    <textarea name="message" required rows="5" placeholder={t('website.main.contact.messagePlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
     <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
     <p id="contactErr" class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
-      Send <i class="fa-solid fa-paper-plane"></i>
+      {t('website.main.contact.send')} <i class="fa-solid fa-paper-plane"></i>
     </button>
   </form>
 </PageLayout>
 
+<!-- The copy reaches the script through the form's own data attribute, NOT
+     `define:vars`: that directive makes a script `is:inline`, and an inline
+     script cannot import — this one needs @duncit/captcha. -->
 <script>
   import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
   import { urlConfigs } from '../config/url-configs';
@@ -64,6 +77,9 @@ const supportPhone = branding.support_phone;
   const GQL_URL = urlConfigs.graphqlUrl;
   const form = document.getElementById('contactForm') as HTMLFormElement | null;
   const errBox = document.getElementById('contactErr') as HTMLParagraphElement | null;
+  // Localized strings for the states this script drives, handed over by the
+  // markup above (a module script cannot read Astro frontmatter).
+  const COPY = JSON.parse(form?.dataset.copy ?? '{}');
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (errBox) {
@@ -82,7 +98,7 @@ const supportPhone = branding.support_phone;
     const orig = btn?.innerHTML;
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${COPY.sending}`;
     }
     try {
       const res = await fetch(GQL_URL, {
@@ -100,27 +116,27 @@ const supportPhone = branding.support_phone;
       // itself and this handler stays quiet.
       if (json?.errors?.length) {
         if (showCaptchaFailure(form, json.errors)) {
-          if (btn) btn.innerHTML = orig || 'Send';
+          if (btn) btn.innerHTML = orig || COPY.send;
           return;
         }
         throw new Error(json.errors[0].message);
       }
-      if (!json?.data?.submitContactForm?.ok) throw new Error('Could not send. Try again.');
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Message sent!';
+      if (!json?.data?.submitContactForm?.ok) throw new Error(COPY.failed);
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> ${COPY.sent}`;
       form.reset();
       reloadCaptcha(form);
     } catch (err: any) {
       if (errBox) {
         errBox.classList.remove('hidden');
-        errBox.textContent = err?.message || 'Could not send. Please try again.';
+        errBox.textContent = err?.message || COPY.failedRetry;
       }
       reloadCaptcha(form);
-      if (btn) btn.innerHTML = orig || 'Send';
+      if (btn) btn.innerHTML = orig || COPY.send;
     } finally {
       window.setTimeout(() => {
         if (btn) {
           btn.disabled = false;
-          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || 'Send';
+          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || COPY.send;
         }
       }, 3000);
     }

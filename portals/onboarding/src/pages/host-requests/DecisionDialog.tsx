@@ -64,7 +64,12 @@ export default function DecisionDialog({ mode, request, busy, onClose, onConfirm
     <Dialog open={!!request} onClose={close} fullWidth maxWidth="xs">
       <DialogTitle>{dialogCopy.title}</DialogTitle>
       <DialogContent dividers>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           {request?.request_no} · {request?.host_name}
         </Typography>
         <TextField

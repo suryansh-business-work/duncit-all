@@ -59,15 +59,28 @@ export default function HostReviewCommission({ value, defaultPct, saving, onSave
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }} data-testid="review-host-commission">
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         Host commission
       </Typography>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         The commission Duncit takes from this host&apos;s payouts. Defaults to the{' '}
         {defaultPct}% set in Finance → Default Deductions; override it here and it saves when you
         leave the field.
       </Typography>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mt: 1.5
+        }}>
         <TextField
           label={t('onboarding.hosts.commissionFromHost')}
           type="number"
@@ -79,12 +92,15 @@ export default function HostReviewCommission({ value, defaultPct, saving, onSave
           disabled={saving}
           error={!valid}
           helperText={helperText}
-          inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Host commission percentage' }}
-          InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
           sx={{ maxWidth: 260 }}
-        />
+          slotProps={{
+            input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+            htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Host commission percentage' }
+          }} />
         {saving && (
-          <Typography variant="caption" color="text.secondary" data-testid="commission-saving">
+          <Typography variant="caption" data-testid="commission-saving" sx={{
+            color: "text.secondary"
+          }}>
             Saving…
           </Typography>
         )}

@@ -1,7 +1,7 @@
 import { Box, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { cartLineKey, lineQualifiesFreeDelivery, type CartLine } from '../../components/cart/CartContext';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -36,7 +36,9 @@ export default function CartPodGroup({
         {podTitle}
       </Typography>
       {lines.map((line) => (
-        <Stack key={cartLineKey(line)} direction="row" spacing={1} alignItems="center">
+        <Stack key={cartLineKey(line)} direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Box
             sx={{ width: 48, height: 48, borderRadius: '16px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover' }}
           >
@@ -54,8 +56,12 @@ export default function CartPodGroup({
               {line.product_name}
               {line.variant_label ? ` — ${line.variant_label}` : ''}
             </Typography>
-            <Stack direction="row" spacing={0.75} alignItems="center">
-              <Typography variant="caption" color="text.secondary">
+            <Stack direction="row" spacing={0.75} sx={{
+              alignItems: "center"
+            }}>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('mweb.cart.unitEach', { vars: { price: priceFormat(line.unit_cost) } })}
               </Typography>
               {lineQualifiesFreeDelivery(line) && (
@@ -68,7 +74,9 @@ export default function CartPodGroup({
               )}
             </Stack>
           </Box>
-          <Stack direction="row" spacing={0.5} alignItems="center">
+          <Stack direction="row" spacing={0.5} sx={{
+            alignItems: "center"
+          }}>
             <IconButton
               size="small"
               aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
@@ -76,7 +84,9 @@ export default function CartPodGroup({
             >
               <RemoveIcon fontSize="small" />
             </IconButton>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {line.quantity}
             </Typography>
             <IconButton
@@ -98,8 +108,15 @@ export default function CartPodGroup({
         </Stack>
       ))}
       <Divider />
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="body2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.cart.productsTotal')}
         </Typography>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>

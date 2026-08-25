@@ -81,10 +81,14 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
     <Card variant="outlined">
       <CardContent>
         <Stack spacing={0.5} sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             Give one member coins
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Applies immediately and writes a ledger row naming you. A deduction can never take a
             balance below zero.
           </Typography>
@@ -97,10 +101,18 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
         )}
 
         <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 5
+            }}>
             <CoinUserPicker value={user} onChange={setUser} disabled={loading} />
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid
+            size={{
+              xs: 6,
+              md: 3
+            }}>
             <Controller
               name="direction"
               control={control}
@@ -115,7 +127,11 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
               )}
             />
           </Grid>
-          <Grid item xs={6} md={4}>
+          <Grid
+            size={{
+              xs: 6,
+              md: 4
+            }}>
             <Controller
               name="coins"
               control={control}
@@ -129,14 +145,16 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
                   inputMode="numeric"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">coins</InputAdornment>,
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">coins</InputAdornment>,
+                    }
                   }}
                 />
               )}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="reason"
               control={control}

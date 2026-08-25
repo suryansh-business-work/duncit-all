@@ -44,12 +44,14 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             type="email"
             required
             disabled
-            InputProps={{ readOnly: true }}
             error={Boolean(fieldState.error)}
             helperText={
               fieldState.error?.message ??
               (accountEmail ? 'Locked to your Duncit account' : 'Loaded from your Duncit account')
             }
+            slotProps={{
+              input: { readOnly: true }
+            }}
           />
         )}
       />

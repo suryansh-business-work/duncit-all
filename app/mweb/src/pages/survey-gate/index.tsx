@@ -171,8 +171,12 @@ export default function SurveyGatePage() {
         <CardContent>
           <AuthLogo />
           <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-            <Typography variant="h6" fontWeight={700}>{heading}</Typography>
-            <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
+            <Typography variant="h6" sx={{
+              fontWeight: 700
+            }}>{heading}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{subtitle}</Typography>
           </Stack>
           {step === 'category' && (
             <CategoryStep

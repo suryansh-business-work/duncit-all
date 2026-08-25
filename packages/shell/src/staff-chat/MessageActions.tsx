@@ -9,7 +9,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import HistoryIcon from '@mui/icons-material/History';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useTranslation } from '../i18n/useTranslation';
 import type { StaffMessage } from './queries';
@@ -143,7 +143,9 @@ export default function MessageActions({
             <ListItemIcon>
               <DeleteForeverIcon fontSize="small" color="error" />
             </ListItemIcon>
-            <ListItemText primaryTypographyProps={{ color: 'error' }}>
+            <ListItemText slotProps={{
+              primary: { color: 'error' }
+            }}>
               {t('shell.chat.actions.deleteForEveryone')}
             </ListItemText>
           </MenuItem>

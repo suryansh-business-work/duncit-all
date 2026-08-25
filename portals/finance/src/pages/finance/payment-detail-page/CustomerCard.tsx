@@ -21,7 +21,12 @@ export default function CustomerCard({ payment }: Readonly<{ payment: DetailPaym
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 300, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           {t('finance.payment.customerTitle')}
         </Typography>
         <Stack spacing={1} divider={<Divider flexItem />}>

@@ -64,19 +64,38 @@ export default function PodHistoryDetailsPage() {
     }
   };
 
-  if (loading && items.length === 0) return <Stack alignItems="center" sx={{ p: 6 }}><CircularProgress /></Stack>;
+  if (loading && items.length === 0) return (
+    <Stack
+      sx={{
+        alignItems: "center",
+        p: 6
+      }}><CircularProgress /></Stack>
+  );
   if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
   if (!selected) return <Alert severity="warning">{t('mweb.podHistory.notFound')}</Alert>;
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto' }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <IconButton size="small" onClick={() => navigate('/pod-history')} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.podHistory.backToPodHistory')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0 }}>{t('mweb.podHistory.title')}</Typography>
-          <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }} noWrap>{selected.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}</Typography>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              letterSpacing: 0
+            }}>{t('mweb.podHistory.title')}</Typography>
+          <Typography
+            variant="h5"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1.1
+            }}>{selected.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}</Typography>
         </Box>
       </Stack>
       <PodHistoryDetails

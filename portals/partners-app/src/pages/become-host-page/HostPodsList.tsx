@@ -83,8 +83,12 @@ export default function HostPodsList() {
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.25}>
-          <Typography variant="h6" fontWeight={950}>{t('partners.becomeHostPage.yourHostedPods')}</Typography>
-          <Typography variant="body2" color="text.secondary">{t('partners.becomeHostPage.podsAssignedToYourHostProfile')}</Typography>
+          <Typography variant="h6" sx={{
+            fontWeight: 950
+          }}>{t('partners.becomeHostPage.yourHostedPods')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('partners.becomeHostPage.podsAssignedToYourHostProfile')}</Typography>
           <DuncitTable<PartnerPodRow>
             tableId="partners-app-host-pods"
             columns={columns(t)}

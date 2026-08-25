@@ -13,7 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
@@ -71,11 +71,21 @@ export default function MeetingHolidaysCard() {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <BeachAccessIcon color="primary" fontSize="small" />
           <Box>
-            <Typography variant="subtitle1" fontWeight={800}>{t('onboarding.meetings.holidaysAndAmpLeave')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 800
+            }}>{t('onboarding.meetings.holidaysAndAmpLeave')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Public holidays, office holidays and official leave — slots on these days are blocked and they show on the calendar.
             </Typography>
           </Box>
@@ -83,7 +93,9 @@ export default function MeetingHolidaysCard() {
 
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
 
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <DatePicker
             label={t('onboarding.meetings.date')}
             value={date}
@@ -110,13 +122,34 @@ export default function MeetingHolidaysCard() {
 
         <Stack spacing={1} sx={{ mt: 2 }}>
           {holidays.length === 0 && (
-            <Typography variant="body2" color="text.secondary">{t('onboarding.meetings.noHolidaysAddedYet')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('onboarding.meetings.noHolidaysAddedYet')}</Typography>
           )}
           {holidays.map((h) => (
-            <Stack key={h.id} direction="row" alignItems="center" spacing={1} sx={{ borderBottom: 1, borderColor: 'divider', pb: 0.75 }}>
-              <Typography variant="body2" fontWeight={700} sx={{ minWidth: 170 }}>{prettyDate(h.date)}</Typography>
+            <Stack
+              key={h.id}
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                borderBottom: 1,
+                borderColor: 'divider',
+                pb: 0.75
+              }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  minWidth: 170
+                }}>{prettyDate(h.date)}</Typography>
               <Chip size="small" label={HOLIDAY_TYPE_LABELS[h.type]} />
-              <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>{h.name || ''}</Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  flex: 1
+                }}>{h.name || ''}</Typography>
               <IconButton size="small" color="error" onClick={() => remove(h.id)} aria-label={t('onboarding.meetings.removeHoliday')}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>

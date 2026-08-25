@@ -19,7 +19,9 @@ export default function PodActionButtons({ pod, onEdit, onQuickEdit, onDelete, o
   const { t } = useTranslation();
   const cancelled = !!pod.is_deleted;
   return (
-    <Stack direction="row" spacing={0.25} justifyContent="flex-end">
+    <Stack direction="row" spacing={0.25} sx={{
+      justifyContent: "flex-end"
+    }}>
       {!cancelled && (
         <Tooltip title={t('admin.completePod.title')}>
           <IconButton size="small" color="success" onClick={() => onComplete(pod)}>

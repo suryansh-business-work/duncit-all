@@ -6,9 +6,9 @@ import { useSuperCategories } from '@/api/useSuperCategories';
 import { CRM_LEAD_CONFIG, SUPER_CATEGORIES } from '@/api/crm.gql';
 
 const wrapper = (mocks: any[]) =>
-  function Wrapper({ children }: { children: React.ReactNode }) {
+  (function Wrapper({ children }: { children: React.ReactNode }) {
     return <MockedProvider mocks={mocks} addTypename={false}>{children}</MockedProvider>;
-  };
+  });
 
 describe('useCrmConfig', () => {
   it('returns the empty config while the query is loading', () => {

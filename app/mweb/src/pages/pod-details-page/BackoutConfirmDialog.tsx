@@ -128,7 +128,9 @@ export default function BackoutConfirmDialog({
         </Box>
 
         <Divider sx={{ my: 2 }} />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.podDetails.readTheFull')}{' '}
           <Link
             component={RouterLink}

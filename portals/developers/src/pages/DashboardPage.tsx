@@ -44,10 +44,14 @@ export default function DashboardPage() {
           <CardContent>
             <Stack spacing={1}>
               {tile.icon}
-              <Typography variant="subtitle1" fontWeight={900}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 900
+              }}>
                 {t(tile.titleKey)}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {t(tile.textKey)}
               </Typography>
             </Stack>
@@ -62,10 +66,14 @@ export default function DashboardPage() {
       dashboardId="developers.overview"
       header={
         <Box>
-          <Typography variant="h5" fontWeight={900}>
+          <Typography variant="h5" sx={{
+            fontWeight: 900
+          }}>
             {t('developers.dashboard.title')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('developers.dashboard.subtitle')}
           </Typography>
         </Box>

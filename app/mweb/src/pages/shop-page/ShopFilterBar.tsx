@@ -71,20 +71,24 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
   const [open, setOpen] = useState(false);
   return (
     <Box>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           size="small"
           placeholder={t('mweb.shop.searchPlaceholder')}
           value={filters.query}
           onChange={(e) => filters.setQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
           sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
+          }}
         />
         <IconButton
           aria-label={t('mweb.common.filters')}

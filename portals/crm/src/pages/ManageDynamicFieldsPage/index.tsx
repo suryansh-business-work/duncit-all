@@ -94,13 +94,17 @@ export default function ManageDynamicFieldsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TuneIcon color="primary" />
         <Box sx={{ flex: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
             Dynamic Fields
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Define custom fields shown on venue & host forms. Drag rows to reorder — order is saved
             automatically.
           </Typography>
@@ -141,7 +145,11 @@ export default function ManageDynamicFieldsPage() {
       <Card>
         <CardContent sx={{ p: 0 }}>
           {loading && rows.length === 0 ? (
-            <Stack alignItems="center" sx={{ py: 6 }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                py: 6
+              }}>
               <CircularProgress />
             </Stack>
           ) : (

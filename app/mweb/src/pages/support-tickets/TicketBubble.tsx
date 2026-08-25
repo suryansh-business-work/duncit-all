@@ -19,7 +19,11 @@ interface Props {
 export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonly<Props>) {
   if (msg.author_role === 'SYSTEM') {
     return (
-      <Stack alignItems="center" sx={{ my: 0.5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          my: 0.5
+        }}>
         <Chip
           size="small"
           label={msg.body_text}
@@ -56,7 +60,14 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
         )}
         <Typography variant="body2">{msg.body_text}</Typography>
         <AttachmentList urls={msg.attachments} size={54} />
-        <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.5} sx={{ mt: 0.25 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            justifyContent: "flex-end",
+            mt: 0.25
+          }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             {timeText}
           </Typography>

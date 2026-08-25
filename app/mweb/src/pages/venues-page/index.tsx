@@ -101,8 +101,10 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
         placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        inputProps={{ 'aria-label': 'Search venues' }}
         fullWidth
+        slotProps={{
+          htmlInput: { 'aria-label': 'Search venues' }
+        }}
       />
       {categories.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>
@@ -130,7 +132,9 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
         </Typography>
       )}
       {!loading && !error && venues.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No venues found here yet — try another search or category.
         </Typography>
       )}

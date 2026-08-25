@@ -7,7 +7,12 @@ export default function DashboardPage() {
   return (
     <WelcomeDashboard dashboardId="finance.overview" name={appConfig.name} tagline={appConfig.tagline}>
       <Box>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           {appConfig.name} overview
         </Typography>
         <FinanceKpis />

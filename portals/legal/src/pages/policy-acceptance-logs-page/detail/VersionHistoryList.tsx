@@ -32,8 +32,17 @@ function VersionRow({
       variant="outlined"
       sx={{ p: 1.5, borderColor: isAccepted ? 'primary.main' : 'divider' }}
     >
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-        <Typography variant="body2" fontWeight={800}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
+        <Typography variant="body2" sx={{
+          fontWeight: 800
+        }}>
           {versionLabel}
         </Typography>
         {version.is_current && <Chip size="small" color="success" label={currentLabel} />}
@@ -43,17 +52,29 @@ function VersionRow({
           {readLabel}
         </Button>
       </Stack>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {version.title}
       </Typography>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {when} · {editedBy}
       </Typography>
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontFamily: 'monospace',
+          wordBreak: 'break-all'
+        }}>
         {version.content_hash}
       </Typography>
     </Paper>
@@ -89,14 +110,18 @@ export default function VersionHistoryList({
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         {t('legalAcceptanceLogs.detail.sectionVersions')}
       </Typography>
       {wordingMissing && (
         <Alert severity="info">{t('legalAcceptanceLogs.detail.versionMissing')}</Alert>
       )}
       {newestFirst.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('legalAcceptanceLogs.detail.noVersions')}
         </Typography>
       )}

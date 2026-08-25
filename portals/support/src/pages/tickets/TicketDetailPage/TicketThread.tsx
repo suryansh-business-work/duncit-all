@@ -44,7 +44,9 @@ export default function TicketThread({ ticket }: Readonly<{ ticket: Ticket }>) {
           {groups.map((group) => (
             <Stack key={group.key} spacing={1.5}>
               <Divider>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {group.label}
                 </Typography>
               </Divider>

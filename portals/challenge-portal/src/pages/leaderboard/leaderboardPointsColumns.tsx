@@ -9,7 +9,9 @@ const renderUser = (row: LeaderboardPointRow) => (
     <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
       {row.user_name || row.user_id}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap>
+    <Typography variant="caption" noWrap sx={{
+      color: "text.secondary"
+    }}>
       {row.user_email || EM_DASH}
     </Typography>
   </Stack>

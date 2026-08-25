@@ -188,7 +188,12 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
         />
       )}
       {duration && (
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600
+          }}>
           {t('mweb.createPod.podWindow', { vars: { duration } })}
         </Typography>
       )}

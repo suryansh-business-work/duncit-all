@@ -15,7 +15,12 @@ function InfoCard({ title, children }: Readonly<{ title: string; children: React
   return (
     <Card variant="outlined" sx={{ flex: 1, minWidth: 260, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>{title}</Typography>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>{title}</Typography>
         <Stack spacing={1} divider={<Divider flexItem />}>{children}</Stack>
       </CardContent>
     </Card>
@@ -38,7 +43,14 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
   const replacementConfirmed = request.replacement_confirmed ? 'Yes' : 'No';
 
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} useFlexGap flexWrap="wrap" alignItems="flex-start">
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      spacing={2}
+      useFlexGap
+      sx={{
+        flexWrap: "wrap",
+        alignItems: "flex-start"
+      }}>
       <InfoCard title={t('finance.common.pod')}>
         {image && (
           <Box
@@ -62,10 +74,14 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
       </InfoCard>
 
       <InfoCard title={t('finance.backoutRefund.backoutAttempts')}>
-        <Typography variant="h4" fontWeight={800} data-testid="backout-attempts-metric">
+        <Typography variant="h4" data-testid="backout-attempts-metric" sx={{
+          fontWeight: 800
+        }}>
           {request.backout_attempts_used} / {request.max_backout_attempts}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Backout attempts this member has used for this pod (max set in Admin › Pod Settings).
         </Typography>
       </InfoCard>
@@ -73,13 +89,17 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
       <InfoCard title={t('finance.backoutRefund.replacementConfirmed')}>
         <Typography
           variant="h4"
-          fontWeight={800}
           color={request.replacement_confirmed ? 'success.main' : 'text.secondary'}
           data-testid="replacement-confirmed-metric"
+          sx={{
+            fontWeight: 800
+          }}
         >
           {replacementConfirmed}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Derived from the latest timeline status — Yes only once the released seat was rebooked.
         </Typography>
       </InfoCard>
@@ -97,7 +117,9 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
         <InfoRow variant="split" label={t('shell.common.name')} value={request.replacement_user_name ?? '—'} />
         <InfoRow variant="split" label={t('shell.common.email')} value={request.replacement_user_email ?? '—'} />
         <InfoRow variant="split" label={t('finance.backoutRefund.userId')} value={request.replacement_user_id ?? '—'} />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           The member whose join closed this Backout. Blank on requests filled
           before Duncit started recording it.
         </Typography>
@@ -112,16 +134,30 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
 
       <InfoCard title={t('finance.common.refund')}>
         <InfoRow variant="split" label={t('finance.backoutRefund.backoutId')} value={request.backout_no} />
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="body2" color="text.secondary">{t('finance.backoutRefund.backoutStatus')}</Typography>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('finance.backoutRefund.backoutStatus')}</Typography>
           <StatusChip
             status={request.backout_status}
             label={BACKOUT_STATUS_LABELS[request.backout_status]}
             colorMap={BACKOUT_STATUS_COLORS}
           />
         </Stack>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="body2" color="text.secondary">{t('finance.backoutRefund.refundStatus')}</Typography>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('finance.backoutRefund.refundStatus')}</Typography>
           <StatusChip status={request.refund_status} colorMap={REFUND_STATUS_COLORS} />
         </Stack>
         <InfoRow variant="split" label={t('finance.backoutRefund.deduction')} value={`${request.deduction_pct}%`} />

@@ -28,7 +28,9 @@ function PodAttendanceBody({ podId }: Readonly<{ podId: string }>) {
 
   return (
     <Stack spacing={2} sx={{ p: 1.5, pb: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
         <IconButton aria-label={labels.back} onClick={() => navigate(-1)} size="small">
           <ArrowBackIcon fontSize="small" />
         </IconButton>

@@ -66,8 +66,13 @@ describe('App', () => {
     vi.mocked(useFilteredGroups).mockReturnValue([]);
 
     const { container } = render(<App />);
-    expect(screen.getByText('Checking services…')).toBeTruthy();
     expect(container.querySelector('.MuiSkeleton-root')).toBeTruthy();
+    // ONE loading state, not three: the skeleton stands in for the whole board
+    // while it loads, so the banner that would otherwise say "Checking
+    // services…" is not rendered underneath it. That copy still belongs to the
+    // banner — for a board that has loaded and has nothing to report yet — and
+    // OverallStatusBanner's own suite is where it is held.
+    expect(screen.queryByText('Checking services…')).toBeNull();
     expect(screen.queryByText('No services match your filters.')).toBeNull();
   });
 

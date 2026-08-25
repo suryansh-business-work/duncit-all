@@ -53,7 +53,9 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
       }}
     >
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <PaymentsIcon fontSize="small" />
           <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: 1 }}>
             AVAILABLE BALANCE

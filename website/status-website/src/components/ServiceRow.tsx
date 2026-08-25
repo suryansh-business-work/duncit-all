@@ -31,8 +31,12 @@ function UptimeChip({
 function ServiceHeading({ service }: Readonly<{ service: StatusService }>) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Stack direction="row" spacing={0.75} alignItems="center">
-        <Typography fontWeight={700} noWrap>
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
+        <Typography noWrap sx={{
+          fontWeight: 700
+        }}>
           {service.name}
         </Typography>
         <Link
@@ -46,7 +50,9 @@ function ServiceHeading({ service }: Readonly<{ service: StatusService }>) {
           <OpenInNewIcon sx={{ fontSize: 14 }} />
         </Link>
       </Stack>
-      <Typography variant="body2" color="text.secondary" noWrap>
+      <Typography variant="body2" noWrap sx={{
+        color: "text.secondary"
+      }}>
         {service.description}
       </Typography>
     </Box>
@@ -74,12 +80,32 @@ export default function ServiceRow({
         sx={{ display: 'block', py: 1.5 }}
         aria-label={`Show status and details for ${service.name}`}
       >
-        <Stack direction="row" gap={1.5} alignItems="center" flexWrap="wrap">
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: '1 1 220px', minWidth: 0 }}>
+        <Stack
+          direction="row"
+          sx={{
+            gap: 1.5,
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{
+              alignItems: "center",
+              flex: '1 1 220px',
+              minWidth: 0
+            }}>
             <StatusDot state={dotStateFor(state)} />
             <ServiceHeading service={service} />
           </Stack>
-          <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             <UptimeChip windowLabel="24h" value={summary?.uptime_24h} />
             <UptimeChip windowLabel="90d" value={summary?.uptime_90d} />
             {summary && summary.active_incidents > 0 && (
@@ -89,7 +115,9 @@ export default function ServiceRow({
           </Stack>
         </Stack>
         {summary && summary.daily.length > 0 && (
-          <Box mt={1.25}>
+          <Box sx={{
+            mt: 1.25
+          }}>
             <UptimeBarStrip daily={summary.daily} height={26} />
           </Box>
         )}

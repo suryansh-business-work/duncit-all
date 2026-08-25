@@ -25,9 +25,10 @@ function UserSection({ row }: Readonly<{ row: TelemetryLogRow }>) {
   const { t } = useTranslation();
   if (!row.user?.id) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Nobody was signed in — this happened before or without a session.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>Nobody was signed in — this happened before or without a session.
+              </Typography>
     );
   }
   return (
@@ -67,7 +68,9 @@ function MachineSection({ row }: Readonly<{ row: TelemetryLogRow }>) {
 function Group({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+      <Typography variant="subtitle2" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         {title}
       </Typography>
       {children}
@@ -81,14 +84,18 @@ export default function LogDetailDialog({ row, onClose }: Readonly<Props>) {
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Chip size="small" label={row.level} />
           <Chip
             size="small"
             label={row.environment}
             color={ENV_COLOR[row.environment] ?? 'default'}
           />
-          <Typography variant="subtitle1" fontWeight={700} noWrap>
+          <Typography variant="subtitle1" noWrap sx={{
+            fontWeight: 700
+          }}>
             {row.page} / {row.component}
           </Typography>
         </Stack>

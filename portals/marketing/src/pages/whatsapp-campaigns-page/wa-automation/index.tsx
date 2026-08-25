@@ -68,7 +68,9 @@ export default function WaAutomation() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('adminWhatsapp.subtitle')}
       </Typography>
 

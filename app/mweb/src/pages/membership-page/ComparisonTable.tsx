@@ -31,7 +31,12 @@ function BenefitCell({
     return <RemoveIcon fontSize="small" sx={{ color: 'text.disabled' }} aria-label={noLabel} />;
   }
   return (
-    <Typography variant="body2" fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
+    <Typography
+      variant="body2"
+      sx={{
+        fontWeight: 600,
+        whiteSpace: 'nowrap'
+      }}>
       {value}
     </Typography>
   );
@@ -62,10 +67,14 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         {t('mweb.membership.compareTitle')}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.membership.compareHint')}
       </Typography>
 
@@ -98,9 +107,11 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
                   >
                     <Typography
                       variant="overline"
-                      sx={{ fontWeight: 800, letterSpacing: 0.8 }}
-                      color="text.secondary"
-                    >
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: 800,
+                        letterSpacing: 0.8
+                      }}>
                       {group.group}
                     </Typography>
                   </TableCell>
@@ -108,7 +119,9 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
                 {group.rows.map((row) => (
                   <TableRow key={row.id} hover>
                     <TableCell sx={stickyCellSx}>
-                      <Typography variant="body2" fontWeight={600}>
+                      <Typography variant="body2" sx={{
+                        fontWeight: 600
+                      }}>
                         {row.label}
                       </Typography>
                     </TableCell>
@@ -129,7 +142,9 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
         </Table>
       </Paper>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.membership.footnote')}
       </Typography>
     </Stack>

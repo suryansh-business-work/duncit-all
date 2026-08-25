@@ -1,6 +1,6 @@
 import { Box, Button, ImageList, ImageListItem, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -15,17 +15,33 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
   const { t } = useTranslation();
   return (
     <>
-      <Stack direction="row" justifyContent="center" spacing={4}>
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ py: 1 }}>
+      <Stack direction="row" spacing={4} sx={{
+        justifyContent: "center"
+      }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            py: 1
+          }}>
           <GridOnIcon fontSize="small" />
-          <Typography variant="caption" letterSpacing={1.5}>
+          <Typography variant="caption" sx={{
+            letterSpacing: 1.5
+          }}>
             POSTS
           </Typography>
         </Stack>
       </Stack>
 
       {posts.length === 0 ? (
-        <Stack alignItems="center" spacing={2} sx={{ py: 6, color: 'text.secondary' }}>
+        <Stack
+          spacing={2}
+          sx={{
+            alignItems: "center",
+            py: 6,
+            color: 'text.secondary'
+          }}>
           <Box
             sx={{
               width: 64,
@@ -50,13 +66,21 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
             <ImageListItem key={post.id} onClick={() => onOpenPost(post.id)} sx={{ cursor: 'pointer', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden', '&:hover .post-overlay': { opacity: 1 } }}>
               <Box component="img" src={post.image_url} alt={post.caption || 'post'} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <Box className="post-overlay" sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.45)', color: 'common.white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, opacity: 0, transition: 'opacity 150ms' }}>
-                <Stack direction="row" spacing={0.5} alignItems="center">
+                <Stack direction="row" spacing={0.5} sx={{
+                  alignItems: "center"
+                }}>
                   <FavoriteIcon fontSize="small" />
-                  <Typography variant="body2" fontWeight={700}>{post.likes_count}</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 700
+                  }}>{post.likes_count}</Typography>
                 </Stack>
-                <Stack direction="row" spacing={0.5} alignItems="center">
+                <Stack direction="row" spacing={0.5} sx={{
+                  alignItems: "center"
+                }}>
                   <ChatBubbleOutlineIcon fontSize="small" />
-                  <Typography variant="body2" fontWeight={700}>{post.comments_count}</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 700
+                  }}>{post.comments_count}</Typography>
                 </Stack>
               </Box>
             </ImageListItem>

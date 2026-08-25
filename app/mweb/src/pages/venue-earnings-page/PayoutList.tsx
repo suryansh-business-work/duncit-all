@@ -39,17 +39,36 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
 
   return (
     <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
           {payout.pod_title}
         </Typography>
         <Chip size="small" color={STATUS_COLOR[payout.status] ?? 'default'} label={payout.status} />
       </Stack>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.25 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }} noWrap>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mt: 0.25
+        }}>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            flex: 1
+          }}>
           {formatDate(payout.created_at)}
         </Typography>
-        <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "primary.main",
+            fontWeight: 700
+          }}>
           {fmt(payable)}
         </Typography>
         {expandable && (
@@ -65,7 +84,13 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
       </Stack>
       {expandable && b && (
         <Collapse in={open} unmountOnExit>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block',
+              mt: 0.5
+            }}>
             Slot price {fmt(b.share_amount)} − commission ({b.commission_pct}%) {fmt(b.commission_amount)} = {fmt(payable)}
           </Typography>
         </Collapse>

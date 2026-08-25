@@ -1,6 +1,6 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { StatusChip } from '@duncit/ui';
 import { actionsColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { adPositionLabel, formatAdMoney } from '../../lib/ad-positions';
@@ -11,10 +11,14 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 
 const renderAd = (row: AdRequestRow) => (
   <Stack spacing={0} sx={{ lineHeight: 1.3 }}>
-    <Typography variant="body2" fontWeight={700} noWrap>
+    <Typography variant="body2" noWrap sx={{
+      fontWeight: 700
+    }}>
       {row.ad_title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap>
+    <Typography variant="caption" noWrap sx={{
+      color: "text.secondary"
+    }}>
       {row.trace_id}
     </Typography>
   </Stack>

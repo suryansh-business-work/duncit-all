@@ -72,11 +72,17 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
   return (
     <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <RuleIcon fontSize="small" color="action" />
           <div>
-            <Typography fontWeight={800}>{t('partners.venueAvailabilityPage.venueRules')}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography sx={{
+              fontWeight: 800
+            }}>{t('partners.venueAvailabilityPage.venueRules')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Buffer, booking window and advance-booking limits
             </Typography>
           </div>
@@ -93,7 +99,9 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
                 size="small"
                 value={draft[f.key]}
                 onChange={(e) => setNum(f.key, e.target.value, f.max)}
-                inputProps={{ min: 0, max: f.max }}
+                slotProps={{
+                  htmlInput: { min: 0, max: f.max }
+                }}
               />
             ))}
           </Box>

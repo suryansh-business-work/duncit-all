@@ -18,18 +18,33 @@ function CoinRow({ gold, caption, children }: Readonly<RowProps>) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
-      justifyContent="space-between"
       spacing={1}
-      sx={{ p: 1.25, borderRadius: '16px', bgcolor: COIN_GOLD_TINT, border: '1px solid', borderColor: gold }}
-    >
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+        p: 1.25,
+        borderRadius: '16px',
+        bgcolor: COIN_GOLD_TINT,
+        border: '1px solid',
+        borderColor: gold
+      }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          minWidth: 0
+        }}>
         <MonetizationOnIcon fontSize="small" sx={{ color: gold, flexShrink: 0 }} />
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="body2" fontWeight={600} noWrap>
+          <Typography variant="body2" noWrap sx={{
+            fontWeight: 600
+          }}>
             {t('mweb.coin.checkoutTitle')}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {caption}
           </Typography>
         </Box>

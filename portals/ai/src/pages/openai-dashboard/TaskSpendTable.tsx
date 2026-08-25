@@ -11,10 +11,17 @@ const searchOf = (row: TaskSpend) => `${row.label} ${row.module} ${row.task}`;
 
 const renderTask = (row: TaskSpend) => (
   <Box>
-    <Typography variant="body2" fontWeight={600} noWrap title={row.label}>
+    <Typography variant="body2" noWrap title={row.label} sx={{
+      fontWeight: 600
+    }}>
       {row.label}
     </Typography>
-    <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        fontFamily: 'monospace'
+      }}>
       {row.task}
     </Typography>
   </Box>
@@ -28,16 +35,19 @@ const renderTask = (row: TaskSpend) => (
 const renderFailures = (row: TaskSpend) => {
   if (row.failures === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        —
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>—
+              </Typography>
     );
   }
   return <Chip size="small" color="warning" variant="outlined" label={row.failures} />;
 };
 
 const renderCost = (row: TaskSpend) => (
-  <Typography variant="body2" fontWeight={700}>
+  <Typography variant="body2" sx={{
+    fontWeight: 700
+  }}>
     {usd(row.cost_usd)}
   </Typography>
 );
@@ -97,7 +107,9 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
   if (rows.length === 0) {
     return (
       <Stack sx={{ p: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('ai.taskSpend.empty')}
         </Typography>
       </Stack>

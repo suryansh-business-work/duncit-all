@@ -35,8 +35,7 @@ export default function CouponDateField({
               onBlur: field.onBlur,
               error: !!fieldState.error,
               helperText: fieldState.error?.message,
-            },
-          }}
+            }}}
         />
       )}
     />

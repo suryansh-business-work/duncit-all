@@ -78,7 +78,9 @@ export default function AudiencePicker({
   const externalFilters = useMemo(() => buildFilters(filters), [filters]);
 
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="flex-start">
+    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+      alignItems: "flex-start"
+    }}>
       {/* The filters live beside the results, never inside the table — the
           table's own column filters are gone entirely. */}
       <Box

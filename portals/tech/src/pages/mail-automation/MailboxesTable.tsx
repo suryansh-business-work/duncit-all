@@ -51,13 +51,17 @@ export default function MailboxesTable({
     };
 
     const renderMailbox = (row: MailAutomationAccount) => (
-      <Typography variant="body2" fontWeight={700} noWrap title={row.email}>
+      <Typography variant="body2" noWrap title={row.email} sx={{
+        fontWeight: 700
+      }}>
         {row.email}
       </Typography>
     );
 
     const renderWriter = (row: MailAutomationAccount) => (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t(row.ai_enabled ? 'tech.mailAutomation.aiOn' : 'tech.mailAutomation.aiOff')}
       </Typography>
     );

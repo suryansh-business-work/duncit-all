@@ -55,7 +55,11 @@ export default function HostPodsCard({
   let body;
   if (loading) {
     body = (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
@@ -91,7 +95,13 @@ export default function HostPodsCard({
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <EventIcon color="primary" />
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             Your pods

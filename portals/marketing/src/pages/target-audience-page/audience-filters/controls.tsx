@@ -41,15 +41,17 @@ export function MultiSelect({
       value={value}
       // MUI types a multiple Select's value as the array it always is here.
       onChange={(e) => onChange(e.target.value as unknown as string[])}
-      SelectProps={{
-        multiple: true,
-        renderValue: (selected) => (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {(selected as string[]).map((v) => (
-              <Chip key={v} label={v} size="small" />
-            ))}
-          </Box>
-        ),
+      slotProps={{
+        select: {
+          multiple: true,
+          renderValue: (selected) => (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {(selected as string[]).map((v) => (
+                <Chip key={v} label={v} size="small" />
+              ))}
+            </Box>
+          ),
+        }
       }}
     >
       {options.length === 0 && <MenuItem disabled>{t('marketing.targetAudience.noOptionsYet')}</MenuItem>}
@@ -121,7 +123,12 @@ export function TextFilter({
 function RangeShell({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
     <Stack spacing={0.75}>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         {label}
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -144,7 +151,9 @@ export function NumberRange({
         label={`${label} from`}
         value={from.value}
         onChange={(e) => from.onChange(e.target.value)}
-        InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: { shrink: true }
+        }}
       />
       <TextField
         {...SMALL}
@@ -152,7 +161,9 @@ export function NumberRange({
         label={`${label} to`}
         value={to.value}
         onChange={(e) => to.onChange(e.target.value)}
-        InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: { shrink: true }
+        }}
       />
     </RangeShell>
   );
@@ -183,8 +194,7 @@ export function DateRange({
         slotProps={{
           textField: { ...SMALL },
           // A date bound has to be removable again, so Clear joins the actions.
-          actionBar: { actions: ['clear', 'cancel', 'accept'] },
-        }}
+          actionBar: { actions: ['clear', 'cancel', 'accept'] }}}
       />
       <DatePicker
         label={`${label} to`}
@@ -193,8 +203,7 @@ export function DateRange({
         slotProps={{
           textField: { ...SMALL },
           // A date bound has to be removable again, so Clear joins the actions.
-          actionBar: { actions: ['clear', 'cancel', 'accept'] },
-        }}
+          actionBar: { actions: ['clear', 'cancel', 'accept'] }}}
       />
     </RangeShell>
   );

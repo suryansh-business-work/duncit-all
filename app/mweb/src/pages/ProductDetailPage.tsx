@@ -104,7 +104,11 @@ export default function ProductDetailPage() {
 
   if (loading && !product)
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -113,7 +117,9 @@ export default function ProductDetailPage() {
 
   return (
     <Stack spacing={1.5} sx={{ py: 0.5 }}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <IconButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} size="small">
           <ArrowBackIcon />
         </IconButton>
@@ -146,7 +152,9 @@ export default function ProductDetailPage() {
         {formatRupees(price)}
       </Typography>
       {variants.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           {variants.map((v: any) => (
             <Chip
               key={v.id}
@@ -168,7 +176,12 @@ export default function ProductDetailPage() {
           sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
         />
       )}
-      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          whiteSpace: 'pre-wrap'
+        }}>
         {product.description || product.short_description || 'No description provided.'}
       </Typography>
       {specs.length > 0 && (
@@ -184,14 +197,18 @@ export default function ProductDetailPage() {
             <Stack
               key={spec.label}
               direction="row"
-              justifyContent="space-between"
               sx={{
+                justifyContent: "space-between",
                 px: 1.5,
                 py: 1,
-                '& + &': { borderTop: 1, borderColor: 'divider' },
-              }}
-            >
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+                '& + &': { borderTop: 1, borderColor: 'divider' }
+              }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>
                 {spec.label}
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>

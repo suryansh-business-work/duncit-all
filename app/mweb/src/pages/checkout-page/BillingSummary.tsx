@@ -16,7 +16,9 @@ export default function BillingSummary({ address }: Readonly<{ address: PostalAd
   return (
     <Stack spacing={0.25} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider' }}>
       {rows.map((row) => (
-        <Typography key={row.key} variant="body2" color="text.secondary">
+        <Typography key={row.key} variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {row.text}
         </Typography>
       ))}

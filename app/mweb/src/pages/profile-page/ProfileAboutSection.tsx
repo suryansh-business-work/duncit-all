@@ -25,8 +25,15 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="subtitle2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Typography variant="subtitle2" sx={{
+          color: "text.secondary"
+        }}>
           Description and links
         </Typography>
         <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>
@@ -38,12 +45,16 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
           {me.bio}
         </Typography>
       ) : (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Add a short description so members know more about you.
         </Typography>
       )}
       {links.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           {links.map((link: any) => (
             <Link key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noopener noreferrer">
               {link.label}

@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import { StatusChip } from '@duncit/ui';
 import {
@@ -61,7 +61,13 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
 
   const detailsContent = idea ? (
     <>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 2
+        }}>
         <Avatar
           src={idea.author?.profile_photo || undefined}
           sx={{ width: 40, height: 40 }}
@@ -69,10 +75,14 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
           {(idea.author?.full_name?.[0] ?? 'U').toUpperCase()}
         </Avatar>
         <Box>
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {idea.author?.full_name ?? 'Member'}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {idea.author?.email ?? ''} · {formatDateTime(idea.created_at)}
           </Typography>
         </Box>
@@ -81,15 +91,21 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
         {idea.description}
       </Typography>
       <Stack direction="row" spacing={3} sx={{ mb: 2, color: 'text.secondary' }}>
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <FavoriteIcon fontSize="small" />
           <Typography variant="body2">{idea.likes_count} likes</Typography>
         </Stack>
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <ChatBubbleOutlineIcon fontSize="small" />
           <Typography variant="body2">{idea.comments_count} comments</Typography>
         </Stack>
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <ShareIcon fontSize="small" />
           <Typography variant="body2">{idea.shares_count} shares</Typography>
         </Stack>

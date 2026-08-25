@@ -1,5 +1,5 @@
 import GroupsIcon from '@mui/icons-material/Groups';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import CheckIcon from '@mui/icons-material/Check';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
@@ -44,7 +44,9 @@ export default function ClubSummaryHeader({
           worst possible first impression of a page whose job is to recruit.
           Who is actually in the club is answered further down by Club Members
           — real people, from real pods. */}
-      <Stack direction="row" spacing={1.5} alignItems="center" data-tour="club-header">
+      <Stack direction="row" spacing={1.5} data-tour="club-header" sx={{
+        alignItems: "center"
+      }}>
         <Avatar
           src={featureUrl}
           variant="rounded"
@@ -64,9 +66,14 @@ export default function ClubSummaryHeader({
           {club.club_description && (
             <Typography
               variant="body2"
-              color="text.secondary"
-              sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mt: 0.5 }}
-            >
+              sx={{
+                color: "text.secondary",
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                mt: 0.5
+              }}>
               {club.club_description}
             </Typography>
           )}

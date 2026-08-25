@@ -84,14 +84,18 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth={step === 'review' ? 'lg' : 'sm'}>
       <DialogTitle>
-        <Stack direction="row" spacing={1} alignItems="center"><AutoFixHighIcon color="secondary" /><span>{title}</span></Stack>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}><AutoFixHighIcon color="secondary" /><span>{title}</span></Stack>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           {error && <Alert severity={step === 'review' ? 'warning' : 'error'}>{error}</Alert>}
           {step === 'input' ? (
             <>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Paste text describing one or more {entity === 'VENUE_LEAD' ? 'venues' : 'hosts'} — a list, a brief,
                 multiple messages. We'll extract each as a row you can edit before saving.
               </Typography>
@@ -99,7 +103,9 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
             </>
           ) : (
             <>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {rows.length} record{rows.length === 1 ? '' : 's'} found. Edit any cell, then Confirm & save.
               </Typography>
               <AiRecordsTable entity={entity} rows={rows} onChange={setRows} />

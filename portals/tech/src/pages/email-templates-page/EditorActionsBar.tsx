@@ -19,7 +19,9 @@ export default function EditorActionsBar({
   onDelete,
 }: Readonly<Props>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <Button
         variant="contained"
         startIcon={<SaveIcon />}
@@ -36,7 +38,9 @@ export default function EditorActionsBar({
       </Button>
       <Box sx={{ flex: 1 }} />
       {dirty && (
-        <Typography variant="caption" color="warning.main">
+        <Typography variant="caption" sx={{
+          color: "warning.main"
+        }}>
           Unsaved changes
         </Typography>
       )}

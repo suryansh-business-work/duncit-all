@@ -43,7 +43,9 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
   if (isOnList) {
     return (
       <Alert severity="success" icon={<MarkEmailReadIcon fontSize="small" />}>
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.membership.notifyDone')}
         </Typography>
         <Typography variant="body2">{t('mweb.membership.notifyDoneBody')}</Typography>
@@ -55,13 +57,19 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <NotificationsActiveIcon fontSize="small" color="primary" />
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t('mweb.membership.notifyTitle')}
             </Typography>
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.membership.notifyBody')}
           </Typography>
 
@@ -72,7 +80,9 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
             value={email}
             helperText={email ? t('mweb.membership.notifyEmailHint') : t('mweb.membership.notifyNoEmail')}
             error={!email}
-            InputProps={{ readOnly: true }}
+            slotProps={{
+              input: { readOnly: true }
+            }}
           />
 
           {failed && <Alert severity="error">{t('mweb.membership.notifyError')}</Alert>}

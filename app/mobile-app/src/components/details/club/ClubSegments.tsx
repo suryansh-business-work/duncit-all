@@ -14,15 +14,7 @@ import { ClubMomentsRail } from './ClubMomentsRail';
 import { ClubPodsSchedule } from './ClubPodsSchedule';
 
 type SegmentKey =
-  | 'PODS'
-  | 'MOMENTS'
-  | 'WHO'
-  | 'WHAT'
-  | 'PERKS'
-  | 'VALUES'
-  | 'FAQS'
-  | 'HOSTS'
-  | 'ADMINS';
+  'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS' | 'ADMINS';
 
 interface Props {
   club: ClubDetail;

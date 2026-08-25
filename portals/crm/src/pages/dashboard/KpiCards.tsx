@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { Stack } from '@mui/material';
 import { StatCard } from '@duncit/ui';
 import LocationOnIcon from '@mui/icons-material/LocationOn';

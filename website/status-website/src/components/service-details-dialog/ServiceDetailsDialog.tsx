@@ -34,8 +34,15 @@ export default function ServiceDetailsDialog({ service, onClose }: Readonly<Dial
       {service && (
         <>
           <DialogTitle component="div">
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Stack direction="row" spacing={1.25} alignItems="center">
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+              <Stack direction="row" spacing={1.25} sx={{
+                alignItems: "center"
+              }}>
                 <StatusDot state={dotState} size={12} />
                 <Typography variant="h6" component="h2">
                   {service.name}

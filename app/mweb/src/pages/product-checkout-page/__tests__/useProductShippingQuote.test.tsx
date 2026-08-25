@@ -15,13 +15,13 @@ const shippingMock = (): MockedResponse => ({
 });
 
 const wrapper = (mocks: MockedResponse[]) =>
-  function Wrapper({ children }: Readonly<{ children: React.ReactNode }>) {
+  (function Wrapper({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
       <MockedProvider mocks={mocks} addTypename={false}>
         {children}
       </MockedProvider>
     );
-  };
+  });
 
 describe('useProductShippingQuote', () => {
   it('does not quote for an invalid pincode (no query fired)', () => {

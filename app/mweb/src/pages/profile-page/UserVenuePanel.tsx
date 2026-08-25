@@ -27,7 +27,9 @@ export default function UserVenuePanel() {
   if (!venue) {
     return (
       <Stack spacing={1.5}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           You have not registered a venue yet.
         </Typography>
         <Button component={RouterLink} to="/register-venue" variant="outlined" size="small">
@@ -43,7 +45,9 @@ export default function UserVenuePanel() {
 
   return (
     <Stack spacing={1.4}>
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: 'rgba(255,193,7,0.16)', color: 'warning.main', display: 'grid', placeItems: 'center' }}>
           <WorkspacePremiumIcon fontSize="small" />
         </Box>
@@ -51,13 +55,17 @@ export default function UserVenuePanel() {
           <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
             {venue.venue_name || 'Venue application'}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {isApproved ? 'Approved venue profile' : `Step ${completed} of 4 completed`}
           </Typography>
         </Box>
         <Chip size="small" label={venue.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
       </Stack>
-      <Stack direction="row" spacing={0.75} alignItems="center">
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
         {labels.map((label, index) => {
           const done = index < completed || isApproved;
           return (
@@ -71,7 +79,9 @@ export default function UserVenuePanel() {
         })}
       </Stack>
       {(venue.approved_at || venue.submitted_at) && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {venue.approved_at ? `Approved ${formatDate(venue.approved_at)}` : `Submitted ${formatDate(venue.submitted_at)}`}
         </Typography>
       )}

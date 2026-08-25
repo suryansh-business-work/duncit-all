@@ -23,7 +23,9 @@ const STATUS_COLORS: Record<string, 'warning' | 'success' | 'error'> = {
 
 function StatusCountChips({ counts }: Readonly<{ counts: Record<string, number> }>) {
   return (
-    <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" component="span">
+    <Stack direction="row" spacing={0.5} useFlexGap component="span" sx={{
+      flexWrap: "wrap"
+    }}>
       {Object.entries(counts).map(([status, count]) => (
         <StatusChip key={status} status={status} label={`${count} ${status}`} colorMap={STATUS_COLORS} />
       ))}
@@ -39,7 +41,9 @@ interface QueryData {
 const getGroupRowId = (g: PodFinanceGroup) => g.pod_id;
 
 const renderPod = (g: PodFinanceGroup) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {g.pod_title}
   </Typography>
 );
@@ -110,11 +114,21 @@ export default function PodFinancePage() {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <AnalyticsIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>{t('shell.nav.podFinance')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>{t('shell.nav.podFinance')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Pods with money movement — open a pod to see its full financial waterfall.
           </Typography>
         </Box>

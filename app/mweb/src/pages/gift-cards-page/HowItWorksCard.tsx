@@ -15,16 +15,25 @@ export default function HowItWorksCard() {
   const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         {t('mweb.giftCards.howTitle')}
       </Typography>
       <Stack spacing={1.25} sx={{ mt: 1.5 }}>
         {STEP_KEYS.map((stepKey, index) => (
-          <Stack key={stepKey} direction="row" spacing={1.5} alignItems="flex-start">
+          <Stack key={stepKey} direction="row" spacing={1.5} sx={{
+            alignItems: "flex-start"
+          }}>
             <Avatar sx={{ width: 24, height: 24, fontSize: 13, fontWeight: 700, bgcolor: 'primary.main' }}>
               {index + 1}
             </Avatar>
-            <Typography variant="body2" color="text.secondary" sx={{ pt: 0.25 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                pt: 0.25
+              }}>
               {t(stepKey)}
             </Typography>
           </Stack>

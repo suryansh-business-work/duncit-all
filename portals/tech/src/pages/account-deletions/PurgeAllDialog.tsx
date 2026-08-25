@@ -64,7 +64,9 @@ export default function PurgeAllDialog({
             disabled={busy}
             onChange={(event) => setTyped(event.target.value)}
             label={t('tech.accountDeletions.confirmAllPrompt', { vars: { code } })}
-            inputProps={{ 'data-testid': 'purge-all-confirm-input' }}
+            slotProps={{
+              htmlInput: { 'data-testid': 'purge-all-confirm-input' }
+            }}
           />
         </Stack>
       </DialogContent>

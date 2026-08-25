@@ -28,10 +28,20 @@ function Stat({
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <Typography display="block" fontWeight={700} lineHeight={1}>
+      <Typography
+        sx={{
+          display: "block",
+          fontWeight: 700,
+          lineHeight: 1
+        }}>
         {new Intl.NumberFormat(undefined, { notation: value > 999 ? 'compact' : 'standard' }).format(value)}
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         {label}
       </Typography>
     </Box>
@@ -76,7 +86,14 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           </IconButton>
         </Tooltip>
       </Box>
-      <Stack spacing={2} alignItems="center" sx={{ px: 2, pb: 2, mt: { xs: -6, sm: -7 } }}>
+      <Stack
+        spacing={2}
+        sx={{
+          alignItems: "center",
+          px: 2,
+          pb: 2,
+          mt: { xs: -6, sm: -7 }
+        }}>
         <ProfileAvatar
           photo={me.profile_photo}
           name={displayName}
@@ -87,7 +104,13 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           {/* The tick beside the NAME is now the only thing that says the email
               is verified — the "Your email is verified." band below is gone.
               Native shows the same mark in the same place (rule 27). */}
-          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
             <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               {displayName}
             </Typography>
@@ -103,7 +126,13 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
             fallback={me.email ?? `@${me.user_id}`}
           />
           {me.bio && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.25, whiteSpace: 'pre-wrap' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mt: 1.25,
+                whiteSpace: 'pre-wrap'
+              }}>
               {me.bio}
             </Typography>
           )}

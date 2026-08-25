@@ -74,10 +74,14 @@ export default function WaLogs({
   return (
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('marketingWhatsapp.logs.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('marketingWhatsapp.logs.hint')}
         </Typography>
       </Stack>

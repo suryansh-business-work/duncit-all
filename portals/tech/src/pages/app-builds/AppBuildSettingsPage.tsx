@@ -45,10 +45,14 @@ export default function AppBuildSettingsPage() {
   return (
     <Box>
       <Stack sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           {t('tech.appBuilds.settingsTitle')}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('tech.appBuilds.settingsSubtitle')}
         </Typography>
       </Stack>

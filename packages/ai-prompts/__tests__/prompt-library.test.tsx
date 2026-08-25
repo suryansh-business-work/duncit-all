@@ -26,7 +26,7 @@ const settle = async () => {
 };
 
 const prompt = (over: Partial<AiPrompt> = {}): AiPrompt =>
-  ({
+  (({
     id: 'p-1',
     key: 'ask-bot.navigation',
     kind: 'CODE',
@@ -36,18 +36,20 @@ const prompt = (over: Partial<AiPrompt> = {}): AiPrompt =>
     content: 'Use {{navigation_map}} to answer {{user_question}}.',
     category: 'Navigation',
     target_model: 'claude-opus-5',
+
     variables: [
       { name: 'navigation_map', required: true, example: '', description: 'The page catalogue' },
       { name: 'user_question', required: true, example: 'where do I add a venue?', description: '' },
     ],
+
     tasks: ['ask-bot'],
     usage: [],
     token_count: 42,
     is_active: true,
     created_at: '2026-08-01T00:00:00.000Z',
     updated_at: '2026-08-02T00:00:00.000Z',
-    ...over,
-  }) as AiPrompt;
+    ...over
+  }) as AiPrompt);
 
 const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
 

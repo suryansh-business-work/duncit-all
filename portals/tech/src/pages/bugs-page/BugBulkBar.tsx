@@ -1,6 +1,6 @@
 import { useMutation } from '@apollo/client';
 import { Button, Paper, Stack, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -72,7 +72,9 @@ export default function BugBulkBar({ selected, onClear, onDeleted }: Readonly<Ba
 
   return (
     <Paper variant="outlined" sx={{ px: 2, py: 1 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         {/* The grid drops its ticks on every page turn, so the count only ever
             describes this page. Saying "selected" alone would read as a total. */}
         <Typography variant="body2" sx={{ flex: 1 }}>

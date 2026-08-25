@@ -34,7 +34,13 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
       <BackHeader
         onBack={onBack}
         eyebrow={
-          <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontFamily: 'monospace',
+              fontWeight: 700
+            }}>
             {ticket.ticket_no}
           </Typography>
         }

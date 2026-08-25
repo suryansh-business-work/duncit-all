@@ -59,7 +59,9 @@ export default function HostRequestRowActions({ request, busy, onAcknowledge, on
           <MenuItem key={action.label} onClick={() => run(action)}>
             <ListItemText
               primary={action.label}
-              primaryTypographyProps={action.danger ? { color: 'error' } : undefined}
+              slotProps={{
+                primary: action.danger ? { color: 'error' } : undefined
+              }}
             />
           </MenuItem>
         ))}

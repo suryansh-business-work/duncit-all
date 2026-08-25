@@ -71,9 +71,17 @@ export default function AllTicketsPage() {
               onClick={() => target && navigate(target)}
               sx={{ p: 1.5, borderRadius: '16px', cursor: target ? 'pointer' : 'default' }}
             >
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  minWidth: 0
+                }}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
                     <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
                       {row.ticket_no}
                     </Typography>
@@ -82,7 +90,9 @@ export default function AllTicketsPage() {
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
                     {row.title}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {formatDistanceToNowStrict(new Date(row.created_at))} ago
                   </Typography>
                 </Box>

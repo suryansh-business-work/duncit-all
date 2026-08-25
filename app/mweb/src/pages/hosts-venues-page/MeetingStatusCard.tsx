@@ -33,20 +33,40 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px', bgcolor: scheduled ? 'rgba(20,184,166,0.06)' : undefined }}>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <EventAvailableIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              flex: 1
+            }}>
             Your {label} onboarding meeting
           </Typography>
           <Chip size="small" label={meeting.status} color={scheduled ? 'success' : 'default'} />
         </Stack>
         {meeting.request_no && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600,
+              display: 'block',
+              mb: 1
+            }}>
             Request ID: {meeting.request_no}
           </Typography>
         )}
         {scheduled ? (
-          <Stack spacing={1.25} alignItems="flex-start">
+          <Stack spacing={1.25} sx={{
+            alignItems: "flex-start"
+          }}>
             {meeting.scheduled_at && (
               <Typography variant="body2">
                 Scheduled for <strong>{formatDateTime(meeting.scheduled_at)}</strong>
@@ -59,7 +79,9 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
             )}
           </Stack>
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Requested — our onboarding team will confirm a time soon.
           </Typography>
         )}

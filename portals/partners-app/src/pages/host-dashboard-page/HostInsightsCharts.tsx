@@ -67,14 +67,22 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={5}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 5
+        }}>
         <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle2" fontWeight={900}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 900
+            }}>
               Pods by status
             </Typography>
             {totalPods === 0 ? (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No pods yet. Once you host one it appears here.
               </Typography>
             ) : (
@@ -82,11 +90,17 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
                 const value = counts?.[status.key] ?? 0;
                 return (
                   <Stack key={status.key} spacing={0.5}>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="caption" fontWeight={800}>
+                    <Stack direction="row" sx={{
+                      justifyContent: "space-between"
+                    }}>
+                      <Typography variant="caption" sx={{
+                        fontWeight: 800
+                      }}>
                         {status.label}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {value}
                       </Typography>
                     </Stack>
@@ -104,10 +118,16 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={7}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 7
+        }}>
         <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle2" fontWeight={900}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 900
+            }}>
               Monthly earnings
             </Typography>
             {hasTrend ? (
@@ -131,20 +151,31 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
                     />
                   </svg>
                 </Box>
-                <Stack direction="row" justifyContent="space-between" sx={{ px: 0.5 }}>
+                <Stack
+                  direction="row"
+                  sx={{
+                    justifyContent: "space-between",
+                    px: 0.5
+                  }}>
                   {months.map((month) => (
-                    <Typography key={month.month} variant="caption" color="text.secondary">
+                    <Typography key={month.month} variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {monthLabel(month.month)}
                     </Typography>
                   ))}
                 </Stack>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Peak month:{' '}
                   {formatMoney(Math.max(...totals, 0), { symbol: currencySymbol })}
                 </Typography>
               </>
             ) : (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Not enough completed pods to draw a trend yet.
               </Typography>
             )}

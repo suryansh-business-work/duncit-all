@@ -77,13 +77,27 @@ export default function LoginScreen({
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={2.5}
-          alignItems="stretch"
-          sx={{ position: 'relative', zIndex: 2, p: 2, width: '100%', maxWidth: 760, justifyContent: 'center' }}
-        >
+          sx={{
+            alignItems: "stretch",
+            position: 'relative',
+            zIndex: 2,
+            p: 2,
+            width: '100%',
+            maxWidth: 760,
+            justifyContent: 'center'
+          }}>
           <Stack spacing={2} sx={{ width: '100%', maxWidth: 380, mx: { xs: 'auto', md: 0 } }}>
             <Box sx={(theme) => ({ ...glass(theme), borderRadius: 4, p: { xs: 3, sm: 3.5 } })}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 2
+                }}>
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Box component="img" src={config.logoUrl} alt={config.portalName} onError={config.onLogoError} sx={{ height: 26, width: 'auto', maxWidth: 110, objectFit: 'contain' }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, letterSpacing: 0.2 }}>
                     duncit.com
@@ -111,12 +125,33 @@ export default function LoginScreen({
               {altSlot && <Box sx={{ mt: 2 }}>{altSlot}</Box>}
               {footerSlot && <Box sx={{ mt: 2 }}>{footerSlot}</Box>}
 
-              <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ mt: 2.5 }}>
-                <Link href={config.privacyUrl ?? DEFAULT_PRIVACY} target="_blank" rel="noopener" underline="none" color="text.secondary" sx={legalLink}>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  mt: 2.5
+                }}>
+                <Link
+                  href={config.privacyUrl ?? DEFAULT_PRIVACY}
+                  target="_blank"
+                  rel="noopener"
+                  underline="none"
+                  sx={[{
+                    color: "text.secondary"
+                  }, ...(Array.isArray(legalLink) ? legalLink : [legalLink])]}>
                   {t('session.login.privacyPolicy')}
                 </Link>
                 <Box sx={{ color: 'text.disabled' }}>·</Box>
-                <Link href={config.termsUrl ?? DEFAULT_TERMS} target="_blank" rel="noopener" underline="none" color="text.secondary" sx={legalLink}>
+                <Link
+                  href={config.termsUrl ?? DEFAULT_TERMS}
+                  target="_blank"
+                  rel="noopener"
+                  underline="none"
+                  sx={[{
+                    color: "text.secondary"
+                  }, ...(Array.isArray(legalLink) ? legalLink : [legalLink])]}>
                   {t('session.login.termsOfUse')}
                 </Link>
                 <Box sx={{ color: 'text.disabled' }}>·</Box>
@@ -124,9 +159,17 @@ export default function LoginScreen({
                   {t('session.login.otherPortals')}
                 </Link>
               </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  display: 'block',
+                  mt: 1
+                }}>
                 {t('session.login.supportPrefix')}{' '}
-                <Link href={`mailto:${contact}`} underline="none" color="primary" fontWeight={700}>
+                <Link href={`mailto:${contact}`} underline="none" color="primary" sx={{
+                  fontWeight: 700
+                }}>
                   {contact}
                 </Link>{' '}
                 {t('session.login.supportSuffix')}

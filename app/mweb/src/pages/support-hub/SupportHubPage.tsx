@@ -55,7 +55,12 @@ export default function SupportHubPage() {
         <StartConversation />
 
         <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             More ways to reach us
           </Typography>
           <Box

@@ -66,7 +66,9 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
         ) : (
           <Stack spacing={1.5}>
             {bookedAt && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {labels.currentlyBooked(formatSlot(bookedAt))}
               </Typography>
             )}

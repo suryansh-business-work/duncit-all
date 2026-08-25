@@ -29,7 +29,9 @@ export default function RepeatFailuresCard({
           Addresses failing repeatedly
         </Typography>
         {rows.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No address failed more than once in this range.
           </Typography>
         ) : (
@@ -54,12 +56,16 @@ export default function RepeatFailuresCard({
                     <Chip size="small" color="error" variant="outlined" label={r.failures} />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption" color="text.secondary" title={r.last_reason}>
+                    <Typography variant="caption" title={r.last_reason} sx={{
+                      color: "text.secondary"
+                    }}>
                       {r.last_reason}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {formatDateTime(r.last_failed_at)}
                     </Typography>
                   </TableCell>

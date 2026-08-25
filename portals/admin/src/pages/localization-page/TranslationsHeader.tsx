@@ -25,14 +25,25 @@ export default function TranslationsHeader({
   onAdd,
 }: Readonly<Props>) {
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between">
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <SpellcheckIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Translations
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Every user-facing string, grouped portal-wise and page-wise. Open a page to edit
             its entries; untranslated ones fall back to the default language, then to each
             app&apos;s bundled copy.

@@ -47,7 +47,9 @@ export default function ComposerRow({
   const hasText = Boolean(draft.trim());
 
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
+    <Stack direction="row" spacing={0.5} sx={{
+      alignItems: "center"
+    }}>
       <Tooltip title={t('shell.chat.composer.attach')}>
         <span>
           <IconButton
@@ -94,7 +96,9 @@ export default function ComposerRow({
         }
         onBlur={onBlur}
         onKeyDown={onKeyDown}
-        inputProps={{ 'aria-label': t('shell.chat.composer.placeholder') }}
+        slotProps={{
+          htmlInput: { 'aria-label': t('shell.chat.composer.placeholder') }
+        }}
       />
 
       {/* Mic when there is nothing to send, send when there is — the same swap

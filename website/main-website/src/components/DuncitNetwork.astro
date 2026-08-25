@@ -7,34 +7,37 @@
 // deploy links to the real host; SmartLink marks them as leaving the site.
 import { urlConfigs } from '../config/url-configs';
 import SmartLink from './SmartLink.astro';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 
 const destinations = [
   {
     icon: 'fa-coins',
-    eyebrow: 'For hosts, venues and clubs',
-    title: 'Earn with Duncit',
-    text: 'Host pods, list your space or run a club — and get paid for the gatherings you make happen.',
-    cta: 'See how much you could earn',
+    eyebrow: t('website.main.network.earnEyebrow'),
+    title: t('website.main.network.earnTitle'),
+    text: t('website.main.network.earnText'),
+    cta: t('website.main.network.earnCta'),
     href: urlConfigs.earnwithUrl,
     tone: 'text-primary',
     tint: 'bg-primary/10',
   },
   {
     icon: 'fa-bullhorn',
-    eyebrow: 'For brands',
-    title: 'Duncit Ads',
-    text: 'Put your brand in front of people who came out to do something. Nine placements, priced by the day.',
-    cta: 'Price a campaign',
+    eyebrow: t('website.main.network.adsEyebrow'),
+    title: t('website.main.network.adsTitle'),
+    text: t('website.main.network.adsText'),
+    cta: t('website.main.network.adsCta'),
     href: urlConfigs.adsSiteUrl,
     tone: 'text-secondary',
     tint: 'bg-secondary/10',
   },
   {
     icon: 'fa-handshake',
-    eyebrow: 'For partners',
-    title: 'Duncit Partners',
-    text: 'Venues, e-commerce brands and clubs run their side of Duncit from the partner console.',
-    cta: 'Become a partner',
+    eyebrow: t('website.main.network.partnersEyebrow'),
+    title: t('website.main.network.partnersTitle'),
+    text: t('website.main.network.partnersText'),
+    cta: t('website.main.network.partnersCta'),
     href: urlConfigs.partnersSiteUrl,
     tone: 'text-tertiary-dark',
     tint: 'bg-tertiary/25',
@@ -48,11 +51,11 @@ const destinations = [
       <span
         class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
       >
-        <i class="fa-solid fa-circle-nodes" aria-hidden="true"></i> The Duncit network
+        <i class="fa-solid fa-circle-nodes" aria-hidden="true"></i> {t('website.main.network.eyebrow')}
       </span>
-      <h2 class="mt-5 text-4xl text-ink sm:text-5xl">There is more than the app</h2>
+      <h2 class="mt-5 text-4xl text-ink sm:text-5xl">{t('website.main.network.heading')}</h2>
       <p class="mt-3 text-lg text-ink-soft">
-        Duncit is where people meet. These are the three ways to be on the other side of that.
+        {t('website.main.network.text')}
       </p>
     </div>
 

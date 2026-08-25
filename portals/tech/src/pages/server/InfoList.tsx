@@ -14,16 +14,21 @@ export default function InfoList({ rows }: Readonly<{ rows: InfoRowItem[] }>) {
         <Stack
           key={row.label}
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
           spacing={2}
           sx={{
+            justifyContent: "space-between",
+            alignItems: "center",
             py: 1,
             borderTop: i === 0 ? 0 : 1,
-            borderColor: 'divider',
-          }}
-        >
-          <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ flexShrink: 0 }}>
+            borderColor: 'divider'
+          }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600,
+              flexShrink: 0
+            }}>
             {row.label}
           </Typography>
           <Box sx={{ textAlign: 'right', wordBreak: 'break-word', minWidth: 0 }}>

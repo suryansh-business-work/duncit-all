@@ -6,10 +6,14 @@ import { humanizeType, type ApprovalRequest } from './helpers';
 
 const renderSubject = (row: ApprovalRequest) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} noWrap component="div">
+    <Typography variant="body2" noWrap component="div" sx={{
+      fontWeight: 700
+    }}>
       {row.subject_name || 'Unnamed'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap component="div">
+    <Typography variant="caption" noWrap component="div" sx={{
+      color: "text.secondary"
+    }}>
       {row.subject_email || '—'}
     </Typography>
   </Box>
@@ -18,9 +22,10 @@ const renderSubject = (row: ApprovalRequest) => (
 const renderKind = (row: ApprovalRequest) => {
   if (!row.kind) {
     return (
-      <Typography variant="caption" color="text.disabled" component="span">
-        —
-      </Typography>
+      <Typography variant="caption" component="span" sx={{
+        color: "text.disabled"
+      }}>—
+              </Typography>
     );
   }
   return <Chip label={row.kind} size="small" variant="outlined" color="secondary" />;

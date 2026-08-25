@@ -49,8 +49,12 @@ export default function TicketTypeStep({ control, errors, slaLabel }: Readonly<P
                   control={<Radio />}
                   label={
                     <Stack sx={{ py: 0.5 }}>
-                      <Typography fontWeight={700}>{t(option.labelKey)}</Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography sx={{
+                        fontWeight: 700
+                      }}>{t(option.labelKey)}</Typography>
+                      <Typography variant="body2" sx={{
+                        color: "text.secondary"
+                      }}>
                         {t(option.hintKey)}
                       </Typography>
                     </Stack>
@@ -73,9 +77,11 @@ export default function TicketTypeStep({ control, errors, slaLabel }: Readonly<P
                 {...field}
                 type="number"
                 label={t('support.mailAutomation.slaMin')}
-                inputProps={{ min: 1, max: 720 }}
                 error={Boolean(errors.sla_min_hours)}
                 helperText={errors.sla_min_hours?.message ?? ' '}
+                slotProps={{
+                  htmlInput: { min: 1, max: 720 }
+                }}
               />
             )}
           />
@@ -87,14 +93,18 @@ export default function TicketTypeStep({ control, errors, slaLabel }: Readonly<P
                 {...field}
                 type="number"
                 label={t('support.mailAutomation.slaMax')}
-                inputProps={{ min: 1, max: 720 }}
                 error={Boolean(errors.sla_max_hours)}
                 helperText={errors.sla_max_hours?.message ?? ' '}
+                slotProps={{
+                  htmlInput: { min: 1, max: 720 }
+                }}
               />
             )}
           />
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('support.mailAutomation.slaHint', { vars: { label: slaLabel } })}
         </Typography>
       </Stack>

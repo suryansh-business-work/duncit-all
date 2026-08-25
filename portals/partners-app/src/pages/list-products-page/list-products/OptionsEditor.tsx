@@ -1,6 +1,6 @@
 import { Autocomplete, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { Controller, useFieldArray, type Control, type Path } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
@@ -17,14 +17,20 @@ export default function OptionsEditor({ control }: Readonly<Props>) {
   const { fields, append, remove } = useFieldArray({ control, name: 'options' });
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         Options (e.g. Size, Colour)
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Add the options your product varies by — a variant tab appears automatically for every combination.
       </Typography>
       {fields.map((field, index) => (
-        <Stack key={field.id} direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
+        <Stack key={field.id} direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <RhfTextField
             control={control}
             name={`options.${index}.name` as Path<ProductListingValues>}

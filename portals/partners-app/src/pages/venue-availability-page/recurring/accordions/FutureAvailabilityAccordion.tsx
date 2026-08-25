@@ -82,11 +82,17 @@ export default function FutureAvailabilityAccordion({
   return (
     <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <EventRepeatIcon fontSize="small" color="action" />
           <div>
-            <Typography fontWeight={800}>{t('partners.venueAvailabilityPage.futureAvailability')}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography sx={{
+              fontWeight: 800
+            }}>{t('partners.venueAvailabilityPage.futureAvailability')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Keep slots published automatically
             </Typography>
           </div>
@@ -98,7 +104,9 @@ export default function FutureAvailabilityAccordion({
             control={<Switch checked={draft.enabled} onChange={(e) => patch({ enabled: e.target.checked })} />}
             label={t('partners.venueAvailabilityPage.autoExtendAvailability')}
           />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             A daily job keeps slots published ahead using your default slot template — no need to re-open this
             dialog. Slots are added up to the window below (max {maxAdvanceDays} days, set under Venue rules).
           </Typography>
@@ -119,10 +127,14 @@ export default function FutureAvailabilityAccordion({
                 setHorizonText(e.target.value);
               }}
               onBlur={commitHorizon}
-              inputProps={{ min: 1, max: maxAdvanceDays }}
               disabled={!draft.enabled}
+              slotProps={{
+                htmlInput: { min: 1, max: maxAdvanceDays }
+              }}
             />
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <DatePicker
                 label={t('partners.venueAvailabilityPage.stopOnOptional')}
                 value={untilToDate(draft.until)}

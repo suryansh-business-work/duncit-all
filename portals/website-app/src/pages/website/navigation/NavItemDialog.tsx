@@ -151,7 +151,9 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
               />
             )}
           />
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={2} sx={{
+            alignItems: "center"
+          }}>
             <Controller
               control={form.control}
               name="sort_order"

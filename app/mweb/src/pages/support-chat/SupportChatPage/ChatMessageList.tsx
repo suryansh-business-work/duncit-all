@@ -11,7 +11,7 @@ interface Props {
   typingText: string | null;
   formatTime: (iso: string) => string;
   onRetry: (msg: SupportChatMessage) => void;
-  scrollRef: React.RefObject<HTMLDivElement>;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
   onScroll: () => void;
 }
 
@@ -36,7 +36,13 @@ export default function ChatMessageList({
     );
   } else if (messages.length === 0) {
     body = (
-      <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          p: 2,
+          textAlign: 'center'
+        }}>
         Start a conversation — our assistant replies instantly and connects you to a human when needed.
       </Typography>
     );
@@ -46,7 +52,11 @@ export default function ChatMessageList({
         {messages.map((m, i) => (
           <Box key={m.id}>
             {showDaySeparator(m.created_at, messages[i - 1]?.created_at, timeZone) && (
-              <Stack alignItems="center" sx={{ my: 0.5 }}>
+              <Stack
+                sx={{
+                  alignItems: "center",
+                  my: 0.5
+                }}>
                 <Typography variant="caption" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 99, fontWeight: 700 }}>
                   {dayLabel(m.created_at, timeZone)}
                 </Typography>
@@ -61,7 +71,13 @@ export default function ChatMessageList({
           </Box>
         ))}
         {typingText && (
-          <Typography variant="caption" color="text.secondary" sx={{ pl: 1, fontStyle: 'italic' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              pl: 1,
+              fontStyle: 'italic'
+            }}>
             {typingText}
           </Typography>
         )}

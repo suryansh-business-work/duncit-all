@@ -55,7 +55,12 @@ export function ModerationBlockedDialog({
         <GppMaybeIcon color="error" /> {title ?? t('ui.moderation.title')}
       </DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           {description ?? t('ui.moderation.description')}
         </Typography>
         <Stack spacing={1.25}>

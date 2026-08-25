@@ -45,7 +45,12 @@ function RateExample({ values }: Readonly<{ values: WaPricingValues }>) {
   const symbol = values.currency_symbol.trim() || '₹';
   return (
     <Alert severity="info" icon={false}>
-      <Typography variant="caption" fontWeight={800} display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          fontWeight: 800,
+          display: "block"
+        }}>
         1,000 messages would cost
       </Typography>
       <Typography variant="body2">

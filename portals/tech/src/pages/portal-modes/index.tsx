@@ -51,11 +51,17 @@ export default function PortalModesPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <ConstructionIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800}>{t('tech.portalModes.maintenanceAndDevelopment')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('tech.portalModes.maintenanceAndDevelopment')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Toggle any portal, website or app into Maintenance or Development. Only one can be on at a time; both block
             the app with a distinct page.
           </Typography>

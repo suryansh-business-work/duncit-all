@@ -28,7 +28,14 @@ export default function StepHero({ step, total, title, subtitle }: Readonly<Prop
         aria-label={counter}
         sx={{ height: 6, borderRadius: 999 }}
       />
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mt: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mt: 0.5
+        }}>
         <Typography
           variant="caption"
           color="primary"
@@ -41,7 +48,9 @@ export default function StepHero({ step, total, title, subtitle }: Readonly<Prop
       <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.12 }}>
         {title}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {subtitle}
       </Typography>
       <PodGuidelinesDialog open={guideOpen} onClose={() => setGuideOpen(false)} />

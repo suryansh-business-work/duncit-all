@@ -43,13 +43,21 @@ export default function CouponField({
     return (
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ p: 1.25, borderRadius: '16px', bgcolor: 'success.light', color: 'success.contrastText' }}
-      >
-        <Stack direction="row" spacing={1} alignItems="center">
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 1.25,
+          borderRadius: '16px',
+          bgcolor: 'success.light',
+          color: 'success.contrastText'
+        }}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <LocalOfferIcon fontSize="small" />
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {t('mweb.checkout.couponApplied', { vars: { code: applied.code ?? '' } })}
           </Typography>
           <Chip
@@ -73,7 +81,9 @@ export default function CouponField({
           label={couponCodeLabel}
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          inputProps={{ style: { textTransform: 'uppercase' }, 'aria-label': couponCodeLabel }}
+          slotProps={{
+            htmlInput: { style: { textTransform: 'uppercase' }, 'aria-label': couponCodeLabel }
+          }}
         />
         <Button variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
           {applying ? t('mweb.checkout.couponApplying') : t('mweb.checkout.couponApply')}

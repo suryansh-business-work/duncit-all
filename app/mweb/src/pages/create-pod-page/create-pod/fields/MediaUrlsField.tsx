@@ -79,9 +79,11 @@ export default function MediaUrlsField({
     <Box>
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ fontWeight: 700, letterSpacing: '0.06em' }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          letterSpacing: '0.06em'
+        }}>
         {requiredLabel(fieldLabel, required)}
       </Typography>
       {urls.length === 0 ? (
@@ -111,8 +113,12 @@ export default function MediaUrlsField({
           <Box sx={{ width: 56, height: 56, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
             <AddPhotoAlternateOutlinedIcon color="primary" />
           </Box>
-          <Typography variant="subtitle2" fontWeight={600}>{t('mweb.createPod.uploadImage')}</Typography>
-          <Typography variant="caption" color="text.secondary">{t('mweb.createPod.uploadImageHint')}</Typography>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 600
+          }}>{t('mweb.createPod.uploadImage')}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{t('mweb.createPod.uploadImageHint')}</Typography>
         </Box>
       ) : (
         <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>

@@ -120,7 +120,11 @@ export default function ChatRoomPage() {
 
   if (loading && !data)
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );

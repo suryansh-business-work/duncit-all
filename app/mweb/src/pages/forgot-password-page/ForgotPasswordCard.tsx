@@ -21,15 +21,29 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
-        <Stack alignItems="center" spacing={1.2}>
+        <Stack spacing={1.2} sx={{
+          alignItems: "center"
+        }}>
           <AuthLogo />
-          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              textAlign: "center",
+              color: "text.primary"
+            }}>
             {t('mweb.forgotPassword.title')}{' '}
             <Box component="span" sx={{ color: auth.accent }}>
               {t('mweb.forgotPassword.titleAccent')}
             </Box>
           </Typography>
-          <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              color: "text.secondary",
+              maxWidth: 320
+            }}>
             {t('mweb.forgotPassword.subtitle')}
           </Typography>
         </Stack>
@@ -42,8 +56,12 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
         />
 
         {unregistered ? (
-          <Stack alignItems="center" spacing={1}>
-            <Typography variant="body2" color="text.secondary">
+          <Stack spacing={1} sx={{
+            alignItems: "center"
+          }}>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.forgotPassword.newToDuncit')}
             </Typography>
             <Button
@@ -56,7 +74,12 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
             </Button>
           </Stack>
         ) : (
-          <Typography variant="body2" textAlign="center" color="text.secondary">
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              color: "text.secondary"
+            }}>
             {t('mweb.forgotPassword.remembered')}{' '}
             <Link component={RouterLink} to="/login" underline="hover">
               {t('mweb.auth.backToLogin')}

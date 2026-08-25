@@ -25,18 +25,24 @@ const METHOD_OPTIONS = POD_EXPENSE_PAYMENT_METHODS.map((m) => ({ value: m, label
 const getEntryRowId = (row: PodExpenseRow) => row.id;
 
 const renderCategory = (row: PodExpenseRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} alignItems="flex-start">
+  <Stack
+    component="span"
+    sx={{
+      alignItems: "flex-start",
+      lineHeight: 1.2
+    }}>
     <Typography variant="body2" component="span">
       {labelize(row.category)}
     </Typography>
     {row.description ? (
       <Typography
         variant="caption"
-        color="text.secondary"
         component="span"
         noWrap
-        sx={{ maxWidth: 200 }}
-      >
+        sx={{
+          color: "text.secondary",
+          maxWidth: 200
+        }}>
         {row.description}
       </Typography>
     ) : null}
@@ -77,7 +83,9 @@ export default function PodExpenseEntriesTable({
     const renderBill = (row: PodExpenseRow) => {
       if (!row.bill_url) {
         return (
-          <Typography variant="caption" color="warning.main" component="span">
+          <Typography variant="caption" component="span" sx={{
+            color: "warning.main"
+          }}>
             {t('finance.podExpense.noBill')}
           </Typography>
         );

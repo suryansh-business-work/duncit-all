@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { useQuery } from '@apollo/client';
 import { Skeleton, Stack } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';

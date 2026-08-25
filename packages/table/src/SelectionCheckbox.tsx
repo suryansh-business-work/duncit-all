@@ -27,8 +27,10 @@ export function SelectionCheckbox({ node }: Readonly<CustomCellRendererProps>) {
       size="small"
       checked={checked}
       onChange={(event) => node.setSelected(event.target.checked)}
-      inputProps={{ 'aria-label': t('shell.table.selectRow') }}
       sx={{ p: 0.5 }}
+      slotProps={{
+        input: { 'aria-label': t('shell.table.selectRow') }
+      }}
     />
   );
 }
@@ -72,8 +74,10 @@ export function SelectionHeaderCheckbox({ api }: Readonly<CustomHeaderProps>) {
         if (event.target.checked) api.selectAll();
         else api.deselectAll();
       }}
-      inputProps={{ 'aria-label': t('shell.table.selectAllRows') }}
       sx={{ p: 0.5 }}
+      slotProps={{
+        input: { 'aria-label': t('shell.table.selectAllRows') }
+      }}
     />
   );
 }

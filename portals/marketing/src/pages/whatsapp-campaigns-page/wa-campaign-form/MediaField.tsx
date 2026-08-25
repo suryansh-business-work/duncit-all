@@ -28,11 +28,15 @@ export default function MediaField<T extends FieldValues>({
 
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         {t('marketingWhatsapp.mediaTitle')}
       </Typography>
       {fromCampaign && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('marketingWhatsapp.mediaFromCampaign')}
         </Typography>
       )}

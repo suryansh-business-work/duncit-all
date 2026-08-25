@@ -72,14 +72,20 @@ export default function PodTrendChart({ trend, loading }: Readonly<Props>) {
         <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
           {t('admin.podsDashboard.podsCreated')}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           One bar per day, including the days nobody created anything.
         </Typography>
         <Box sx={{ height: 260, mt: 2 }}>
           {hasData ? (
             <Bar data={data} options={options} />
           ) : (
-            <Typography color="text.secondary" sx={{ pt: 4 }}>
+            <Typography
+              sx={{
+                color: "text.secondary",
+                pt: 4
+              }}>
               {loading ? 'Loading pod activity…' : 'No pods were created in this period.'}
             </Typography>
           )}

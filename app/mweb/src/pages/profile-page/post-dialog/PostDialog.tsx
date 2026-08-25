@@ -158,7 +158,11 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
       <DialogContent sx={{ p: 0 }}>
         {loading && !post ? (
-          <Stack alignItems="center" sx={{ p: 6 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              p: 6
+            }}>
             <CircularProgress />
           </Stack>
         ) : (

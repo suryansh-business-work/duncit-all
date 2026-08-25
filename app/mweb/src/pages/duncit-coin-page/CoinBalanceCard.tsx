@@ -17,7 +17,9 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px', borderColor: gold }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 52,
@@ -33,23 +35,46 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
           <MonetizationOnIcon fontSize="large" />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.coin.balanceLabel')}
           </Typography>
-          <Typography variant="h4" fontWeight={700} sx={{ color: gold, lineHeight: 1.2 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: gold,
+              lineHeight: 1.2
+            }}>
             {balance?.balance ?? 0}
           </Typography>
         </Box>
       </Stack>
-      <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          mt: 2
+        }}>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.coin.lifetimeLabel')}
         </Typography>
-        <Typography variant="body2" fontWeight={600}>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
           {balance?.lifetime_earned ?? 0}
         </Typography>
       </Stack>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: 'block',
+          mt: 1.5
+        }}>
         {t('mweb.coin.rateNote', {
           vars: {
             pct: balance?.earn_pct ?? 0,

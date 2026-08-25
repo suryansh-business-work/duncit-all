@@ -33,13 +33,23 @@ export function FeedUrlBar({ url, label }: Readonly<Props>) {
 
   return (
     <Alert severity="warning" icon={false} sx={{ py: 1 }}>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {copy.apiTitle}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0.75 }}>
+      <Typography
+        variant="caption"
+        component="p"
+        sx={{
+          color: "text.secondary",
+          mb: 0.75
+        }}>
         {copy.apiHint}
       </Typography>
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
         <Box
           component="code"
           sx={{

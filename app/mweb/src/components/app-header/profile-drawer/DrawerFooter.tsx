@@ -18,7 +18,14 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
       >
         Logout
       </Button>
-      <Typography variant="caption" color="text.disabled" display="block" textAlign="center" mt={1}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.disabled",
+          display: "block",
+          textAlign: "center",
+          mt: 1
+        }}>
         App version {__APP_VERSION__}
       </Typography>
     </Box>

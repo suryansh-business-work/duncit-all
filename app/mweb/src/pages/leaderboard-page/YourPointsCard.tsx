@@ -31,7 +31,13 @@ export default function YourPointsCard({ board, loading }: Readonly<Props>) {
       }}
     >
       <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Stack spacing={0.25} sx={{ minWidth: 0 }}>
             <Typography variant="overline" sx={{ opacity: 0.85, letterSpacing: 1 }}>
               {t('mweb.leaderboard.yourPoints')}

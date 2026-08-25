@@ -13,7 +13,9 @@ export default function ClubMomentsSection({ moments }: Readonly<Props>) {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         Moments
       </Typography>
       <Box

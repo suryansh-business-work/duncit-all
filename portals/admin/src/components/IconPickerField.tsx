@@ -104,15 +104,19 @@ export default function IconPickerField({
           helperText={
             isKnown ? `Material icon: ${value}` : hint
           }
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: isKnown ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
-                {renderIconByName(value, 'small')}
-              </Box>
-            ) : (
-              rawAdornment
-            ),
+          slotProps={{
+            ...params.slotProps,
+
+            input: {
+              ...params.slotProps.input,
+              startAdornment: isKnown ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
+                  {renderIconByName(value, 'small')}
+                </Box>
+              ) : (
+                rawAdornment
+              ),
+            }
           }}
         />
       )}

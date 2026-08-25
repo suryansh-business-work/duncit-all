@@ -53,7 +53,9 @@ function PortalCard({
   return (
     <Card variant="outlined">
       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Typography variant="subtitle2" fontWeight={700}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>
           {portal.name}
         </Typography>
         <Stack spacing={0.25} sx={{ mb: 0.75, mt: 0.25 }}>
@@ -61,10 +63,17 @@ function PortalCard({
             <Stack
               key={link.url}
               direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <Typography variant="caption" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "text.secondary",
+                  minWidth: 0
+                }}>
                 {link.label ? `${link.label} · ${cleanHost(link.url)}` : cleanHost(link.url)}
               </Typography>
               <Tooltip title={`Open ${link.url}`}>
@@ -96,13 +105,17 @@ function PortalCard({
               }
               label={
                 <Box>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>
                     {r.name}
                     {r.required && (
                       <Chip size="small" label={t('admin.roles.default')} color="info" sx={{ ml: 0.75, height: 18 }} />
                     )}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {r.key}
                   </Typography>
                 </Box>
@@ -133,7 +146,12 @@ export default function RolesDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{t('admin.roles.portalAccess')}</DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           Choose which portals this user can access. Granting a portal gives full access to it.
         </Typography>
         <Stack spacing={1.5}>

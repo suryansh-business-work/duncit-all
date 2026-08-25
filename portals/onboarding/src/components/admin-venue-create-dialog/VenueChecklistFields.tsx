@@ -38,9 +38,20 @@ export default function VenueChecklistFields({ s1, set }: Readonly<Props>) {
     <Stack spacing={2}>
       {groups(t).map((group) => (
         <Stack key={group.name} spacing={0.75}>
-          <Typography variant="subtitle2" fontWeight={800}>{group.label}</Typography>
-          <Typography variant="caption" color="text.secondary">{group.hint}</Typography>
-          <Stack direction="row" flexWrap="wrap" sx={{ gap: 0.75 }} role="group" aria-label={group.label}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>{group.label}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{group.hint}</Typography>
+          <Stack
+            direction="row"
+            role="group"
+            aria-label={group.label}
+            sx={{
+              flexWrap: "wrap",
+              gap: 0.75
+            }}>
             {(config?.[group.name] ?? []).map((option: string) => {
               const selected = s1[group.name].includes(option);
               return (

@@ -15,9 +15,17 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <ReceiptLongIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={800}>{t('finance.calculators.podPricing')}</Typography>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>{t('finance.calculators.podPricing')}</Typography>
         </Stack>
         <Stack spacing={2}>
           <TextField
@@ -26,20 +34,23 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             size="small"
             value={inputs.pod_amount}
             onChange={(e) => onChange('pod_amount', Math.max(0, Number(e.target.value)))}
-            inputProps={{ min: 0, step: 50 }}
-            InputProps={{ startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon fontSize="small" /></InputAdornment> }}
             helperText={t('finance.calculators.priceTheCustomerPaysForOne')}
             fullWidth
-          />
+            slotProps={{
+              input: { startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon fontSize="small" /></InputAdornment> },
+              htmlInput: { min: 0, step: 50 }
+            }} />
           <TextField
             label={t('finance.calculators.noOfSpots')}
             type="number"
             size="small"
             value={inputs.no_of_spots}
             onChange={(e) => onChange('no_of_spots', Math.max(0, Math.round(Number(e.target.value))))}
-            inputProps={{ min: 0, step: 1 }}
             helperText="Pod capacity including the host's own seat — for physical pods this is the venue space's available spots. The host's spot is free, so the waterfall runs on ticket × (spots − 1)."
             fullWidth
+            slotProps={{
+              htmlInput: { min: 0, step: 1 }
+            }}
           />
           <PercentSlider
             label="GST"

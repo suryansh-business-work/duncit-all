@@ -74,11 +74,15 @@ export default function PodsTable<T extends PodRowBase>({
     );
     const renderPod = (pod: T) => (
       <Box sx={{ lineHeight: 1.2 }}>
-        <Typography variant="body2" fontWeight={900} component="div">
+        <Typography variant="body2" component="div" sx={{
+          fontWeight: 900
+        }}>
           {pod.pod_title}
         </Typography>
         {clubName && pod.club_id && (
-          <Typography variant="caption" color="text.secondary" component="div">
+          <Typography variant="caption" component="div" sx={{
+            color: "text.secondary"
+          }}>
             {clubName(pod.club_id)}
           </Typography>
         )}

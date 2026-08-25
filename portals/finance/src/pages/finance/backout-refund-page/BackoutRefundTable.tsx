@@ -21,17 +21,28 @@ const BACKOUT_STATUS_OPTIONS = (['IN_PROCESS', 'CANCELLED', 'SPOT_FILLED'] as co
 const getBackoutRowId = (row: BackoutRefundRequest) => row.id;
 
 const renderBackoutNo = (row: BackoutRefundRequest) => (
-  <Typography variant="body2" fontWeight={800} component="span" sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+  <Typography
+    variant="body2"
+    component="span"
+    sx={{
+      fontWeight: 800,
+      fontFamily: 'monospace',
+      whiteSpace: 'nowrap'
+    }}>
     {row.backout_no}
   </Typography>
 );
 
 const renderMember = (row: BackoutRefundRequest) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 700
+    }}>
       {row.user_name ?? '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.user_email ?? ''}
     </Typography>
   </Stack>
@@ -73,9 +84,10 @@ export default function BackoutRefundTable({
     const renderActions = (row: BackoutRefundRequest) => {
       if (!canProcessRefund(row)) {
         return (
-          <Typography variant="caption" color="text.secondary" component="span">
-            —
-          </Typography>
+          <Typography variant="caption" component="span" sx={{
+            color: "text.secondary"
+          }}>—
+                      </Typography>
         );
       }
       return (

@@ -67,6 +67,37 @@ describe('EmailSidebarList', () => {
     expect(screen.queryByText('No templates yet.')).not.toBeInTheDocument();
   });
 
+  it('carries a badge with its own tooltip, and marks a zero as muted', () => {
+    render(
+      <EmailSidebarList
+        items={[
+          {
+            key: 't1',
+            primary: 'Welcome',
+            secondary: 'welcome',
+            badge: { label: '128', title: '128 sends recorded' },
+          },
+          {
+            key: 't2',
+            primary: 'Receipt',
+            secondary: 'payment-receipt',
+            badge: { label: '0', title: '0 sends recorded', muted: true },
+          },
+        ]}
+        selected="t1"
+        onSelect={vi.fn()}
+        searchPlaceholder="Search name or slug"
+        emptyText="No templates yet."
+      />
+    );
+
+    expect(screen.getByText('128')).toBeInTheDocument();
+    // A never-used template shows its zero rather than nothing — an absent
+    // badge would read as "not loaded" for exactly the rows worth noticing.
+    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.getByLabelText('128 sends recorded')).toBeInTheDocument();
+  });
+
   it('shows the empty text when there is genuinely nothing', () => {
     render(
       <EmailSidebarList

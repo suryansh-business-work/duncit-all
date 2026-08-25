@@ -26,14 +26,17 @@ export default function Header({
   return (
     <Stack
       direction="row"
-      alignItems="center"
-      justifyContent="space-between"
-      flexWrap="wrap"
-      gap={2}
-      mb={4}
       component="header"
-    >
-      <Stack direction="row" spacing={1.75} alignItems="center">
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 2,
+        mb: 4
+      }}>
+      <Stack direction="row" spacing={1.75} sx={{
+        alignItems: "center"
+      }}>
         <Box
           component="img"
           src={logoUrl}
@@ -41,7 +44,9 @@ export default function Header({
           sx={{ height: 40, width: 'auto', maxWidth: 140, borderRadius: 2, objectFit: 'contain' }}
         />
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Typography variant="h4" component="h1">
               {t('status.board.title', { vars: { app: appName } })}
             </Typography>
@@ -49,7 +54,9 @@ export default function Header({
               <Chip label={t('status.board.staging')} color="warning" size="small" />
             )}
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('status.board.subtitle', { vars: { app: appName } })}
           </Typography>
         </Box>

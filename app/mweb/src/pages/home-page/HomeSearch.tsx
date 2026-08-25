@@ -26,18 +26,6 @@ export default function HomeSearch({ disabled }: Readonly<Props>) {
         placeholder={disabled ? 'No pods to search yet' : 'Search clubs, pods, categories or activities…'}
         onClick={open}
         onFocus={open}
-        inputProps={{
-          'aria-label': 'Search Duncit',
-          enterKeyHint: 'search',
-          readOnly: true,
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" color="action" />
-            </InputAdornment>
-          ),
-        }}
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: '16px',
@@ -46,7 +34,21 @@ export default function HomeSearch({ disabled }: Readonly<Props>) {
             cursor: disabled ? 'default' : 'pointer',
           },
         }}
-      />
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          },
+
+          htmlInput: {
+            'aria-label': 'Search Duncit',
+            enterKeyHint: 'search',
+            readOnly: true,
+          }
+        }} />
     </Box>
   );
 }

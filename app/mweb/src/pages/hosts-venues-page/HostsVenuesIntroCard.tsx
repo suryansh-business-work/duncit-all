@@ -11,9 +11,17 @@ export default function HostsVenuesIntroCard() {
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
+          sx={{
+            alignItems: { xs: 'stretch', sm: 'center' }
+          }}
         >
-          <Stack direction="row" spacing={1.5} sx={{ flex: 1 }} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{
+              alignItems: "center",
+              flex: 1
+            }}>
             <Box sx={{ width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'success.main', color: 'success.contrastText' }}>
               <VerifiedUserIcon />
             </Box>
@@ -21,7 +29,9 @@ export default function HostsVenuesIntroCard() {
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                 Want to host or list a space?
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Become a Duncit Host or register your venue — onboarding is just a few steps.
               </Typography>
             </Box>

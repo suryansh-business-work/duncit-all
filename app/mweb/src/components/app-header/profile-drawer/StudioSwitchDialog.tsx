@@ -52,7 +52,13 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
         <Typography id="studio-switch-title" variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
           Switch role
         </Typography>
-        <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            justifyContent: "center",
+            mb: 2
+          }}>
           {options.map((option) => {
             const selected = option.mode === pending;
             return (
@@ -119,7 +125,14 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
         >
           {switchButtonLabel(changed, pending)}
         </Button>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.25, textAlign: 'center' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 1.25,
+            textAlign: 'center'
+          }}>
           Switching changes your sidebar, header and dashboard.
         </Typography>
       </DialogContent>

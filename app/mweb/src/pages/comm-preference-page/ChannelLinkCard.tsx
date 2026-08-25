@@ -34,16 +34,24 @@ export default function ChannelLinkCard({
     <Card variant="outlined" data-testid={`comm-channel-${channel}`}>
       <CardActionArea component={RouterLink} to={to}>
         <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "center"
+          }}>
             {icon}
             <Stack sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 600
+              }}>
                 {name}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {hint}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="caption" noWrap sx={{
+                color: "text.secondary"
+              }}>
                 {summary}
               </Typography>
             </Stack>

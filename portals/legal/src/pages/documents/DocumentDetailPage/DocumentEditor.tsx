@@ -39,7 +39,9 @@ export function DocumentEditor(props: Readonly<Props>) {
           minRows={2}
         />
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Content
           </Typography>
           <DuncitRichTextInput
@@ -49,7 +51,9 @@ export function DocumentEditor(props: Readonly<Props>) {
             aiContext="legal document"
           />
         </Box>
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button onClick={props.onCancel}>{t('shell.common.cancel')}</Button>
           <Button
             variant="contained"

@@ -23,14 +23,19 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
   return (
     <Stack
       direction="row"
-      alignItems="flex-start"
       spacing={1.5}
-      sx={{ py: 1.25 }}
       data-testid={`mail-preference-${item.category}`}
-    >
+      sx={{
+        alignItems: "flex-start",
+        py: 1.25
+      }}>
       <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={0.75}>
-          <Typography variant="subtitle2" fontWeight={700}>
+        <Stack direction="row" spacing={0.75} sx={{
+          alignItems: "center"
+        }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             {copy.label}
           </Typography>
           {item.required && (
@@ -42,7 +47,9 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
             />
           )}
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {copy.description}
         </Typography>
       </Stack>
@@ -54,7 +61,9 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
           checked={item.enabled}
           disabled={item.required}
           onChange={(event) => onChange(item.category, event.target.checked)}
-          inputProps={{ 'aria-label': copy.label }}
+          slotProps={{
+            input: { 'aria-label': copy.label }
+          }}
         />
       )}
     </Stack>

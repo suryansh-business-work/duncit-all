@@ -63,8 +63,16 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="h6" fontWeight={700}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           Ratings & Reviews
         </Typography>
         <Button
@@ -78,15 +86,30 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
       </Stack>
 
       {ratingsCount > 0 ? (
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="h4" fontWeight={700}>{rating.toFixed(1)}</Typography>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
+          <Typography variant="h4" sx={{
+            fontWeight: 700
+          }}>{rating.toFixed(1)}</Typography>
           <Box>
             <Rating value={rating} precision={0.1} readOnly size="small" emptyIcon={<StarIcon fontSize="inherit" />} />
-            <Typography variant="caption" color="text.secondary">{ratingsCount} ratings</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{ratingsCount} ratings</Typography>
           </Box>
         </Stack>
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           No ratings yet. Be the first to review!
         </Typography>
       )}
@@ -103,10 +126,16 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
                 </ListItemAvatar>
                 <ListItemText
                   primary={
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="body2" fontWeight={700}>{r.user_name}</Typography>
+                    <Stack direction="row" spacing={1} sx={{
+                      alignItems: "center"
+                    }}>
+                      <Typography variant="body2" sx={{
+                        fontWeight: 700
+                      }}>{r.user_name}</Typography>
                       <Rating value={r.stars} readOnly size="small" max={5} />
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {formatDate(r.created_at)}
                       </Typography>
                     </Stack>
@@ -121,11 +150,13 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle fontWeight={600}>{t('mweb.clubDetails.rateThisClub')}</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.clubDetails.rateThisClub')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Box>
-              <Typography variant="body2" fontWeight={700} gutterBottom>
+              <Typography variant="body2" gutterBottom sx={{
+                fontWeight: 700
+              }}>
                 Your rating
               </Typography>
               <Rating
@@ -141,8 +172,10 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              inputProps={{ maxLength: 500 }}
               helperText={`${comment.length}/500`}
+              slotProps={{
+                htmlInput: { maxLength: 500 }
+              }}
             />
           </Stack>
         </DialogContent>

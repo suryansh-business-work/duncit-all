@@ -31,17 +31,29 @@ export default function MyBadges() {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 2
+          }}>
           <EmojiEventsIcon color="primary" />
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             Your badges
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             ({badges.length})
           </Typography>
         </Stack>
         {badges.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No badges yet. Join pods, host events and refer friends to earn them!
           </Typography>
         ) : (
@@ -76,19 +88,24 @@ export default function MyBadges() {
                 >
                   {!ub.badge?.image_url && <EmojiEventsIcon />}
                 </Avatar>
-                <Typography variant="body2" fontWeight={600} noWrap sx={{ width: '100%' }}>
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{
+                    fontWeight: 600,
+                    width: '100%'
+                  }}>
                   {ub.badge?.title}
                 </Typography>
                 <Typography
                   variant="caption"
-                  color="text.secondary"
                   sx={{
+                    color: "text.secondary",
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
+                    overflow: 'hidden'
+                  }}>
                   {ub.badge?.description}
                 </Typography>
               </ButtonBase>

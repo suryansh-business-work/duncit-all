@@ -21,11 +21,22 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
   const { t } = useTranslation();
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <EventIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 180 }}>
-          <Typography variant="h5" fontWeight={800}>{t('onboarding.meetings.meetingCalendar')}</Typography>
-          <Typography variant="body2" color="text.secondary">{t('onboarding.meetings.scheduledAndAmpRequestedOnboardingMeetings')}</Typography>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('onboarding.meetings.meetingCalendar')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('onboarding.meetings.scheduledAndAmpRequestedOnboardingMeetings')}</Typography>
         </Box>
         <ToggleButtonGroup
           size="small"
@@ -37,14 +48,25 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
             <ToggleButton key={v} value={v} sx={{ textTransform: 'capitalize', px: 1.5, fontWeight: 700 }}>{v}</ToggleButton>
           ))}
         </ToggleButtonGroup>
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={{
+          alignItems: "center"
+        }}>
           <IconButton size="small" aria-label={t('onboarding.meetings.previous')} onClick={() => onStep(-1)}><ChevronLeftIcon /></IconButton>
           <Button size="small" onClick={onToday} sx={{ fontWeight: 700 }}>{t('onboarding.meetings.today')}</Button>
           <IconButton size="small" aria-label={t('onboarding.meetings.next')} onClick={() => onStep(1)}><ChevronRightIcon /></IconButton>
         </Stack>
       </Stack>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
-        <Typography variant="subtitle1" fontWeight={800}>{label}</Typography>
+      <Stack
+        direction="row"
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap"
+        }}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 800
+        }}>{label}</Typography>
         <CalendarLegend />
       </Stack>
     </Stack>

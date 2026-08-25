@@ -25,20 +25,25 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         {titleText}
       </Typography>
       <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (
           <Stack
             key={host.id}
-            alignItems="center"
             spacing={0.5}
             role="button"
             aria-label={host.name}
             onClick={() => navigate(`/u/${host.id}`)}
-            sx={{ cursor: 'pointer', width: 72, flex: '0 0 auto' }}
-          >
+            sx={{
+              alignItems: "center",
+              cursor: 'pointer',
+              width: 72,
+              flex: '0 0 auto'
+            }}>
             <Avatar src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
               {host.name?.[0]?.toUpperCase() || 'H'}
             </Avatar>

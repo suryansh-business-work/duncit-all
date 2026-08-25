@@ -17,22 +17,40 @@ function TrailRow({ row, isCurrent, when, via }: Readonly<RowProps>) {
       variant="outlined"
       sx={{ p: 1.25, borderColor: isCurrent ? 'primary.main' : 'divider' }}
     >
-      <Stack direction="row" spacing={1} justifyContent="space-between" flexWrap="wrap" useFlexGap>
-        <Typography variant="body2" fontWeight={700}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          justifyContent: "space-between",
+          flexWrap: "wrap"
+        }}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {row.policy_title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {when}
         </Typography>
       </Stack>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {via} · {row.surface}
       </Typography>
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontFamily: 'monospace',
+          wordBreak: 'break-all'
+        }}>
         {row.content_hash}
       </Typography>
     </Paper>
@@ -69,11 +87,15 @@ export default function AcceptanceTrailList({
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         {heading}
       </Typography>
       {rows.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {emptyText}
         </Typography>
       )}
@@ -87,7 +109,9 @@ export default function AcceptanceTrailList({
         />
       ))}
       {!!footnote && rows.length > 0 && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {footnote}
         </Typography>
       )}

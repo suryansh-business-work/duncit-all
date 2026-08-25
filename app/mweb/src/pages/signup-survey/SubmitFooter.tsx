@@ -28,14 +28,19 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
       <Stack
         direction="row"
         spacing={2}
-        alignItems="center"
-        sx={{ width: '100%' }}
-      >
+        sx={{
+          alignItems: "center",
+          width: '100%'
+        }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Selected
           </Typography>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {count}
             <Box component="span" sx={{ color: 'text.secondary', fontWeight: 600 }}>
               {' '}/ {total}

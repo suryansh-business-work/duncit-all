@@ -7,7 +7,9 @@ import type { ProductListingRow } from './queries';
 const LISTING_STATUS_COLORS: StatusColorMap = { APPROVED: 'success', DENIED: 'error' };
 
 export const renderProduct = (product: ProductListingRow) => (
-  <Stack direction="row" spacing={1.25} alignItems="center">
+  <Stack direction="row" spacing={1.25} sx={{
+    alignItems: "center"
+  }}>
     <Box
       component="img"
       src={product.image_url || product.images?.[0]}
@@ -15,10 +17,14 @@ export const renderProduct = (product: ProductListingRow) => (
       sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'cover', bgcolor: 'action.hover' }}
     />
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={900} noWrap component="div">
+      <Typography variant="body2" noWrap component="div" sx={{
+        fontWeight: 900
+      }}>
         {product.product_name}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="div">
+      <Typography variant="caption" noWrap component="div" sx={{
+        color: "text.secondary"
+      }}>
         {product.images?.length || 0} images · {product.size_label || 'No size'}
       </Typography>
     </Box>
@@ -50,15 +56,19 @@ interface QuantityCellProps {
 export function QuantityCell({ product, disabled, onSave }: Readonly<QuantityCellProps>) {
   const [value, setValue] = useState(String(product.inventory_count ?? 0));
   return (
-    <Stack direction="row" spacing={1} alignItems="center" component="span">
+    <Stack direction="row" spacing={1} component="span" sx={{
+      alignItems: "center"
+    }}>
       <TextField
         size="small"
         type="number"
         value={value}
         disabled={disabled}
         onChange={(event) => setValue(event.target.value)}
-        inputProps={{ min: 0 }}
         sx={{ width: 92 }}
+        slotProps={{
+          htmlInput: { min: 0 }
+        }}
       />
       <Button size="small" disabled={disabled} onClick={() => onSave(product, Number(value || 0))}>
         Update

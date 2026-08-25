@@ -47,7 +47,13 @@ export default function GiftCardStatTiles({ stats, loading }: Readonly<Props>) {
             : undefined;
         return (
           // Six tiles at two columns each = one clean desktop row.
-          <Grid item xs={6} sm={4} md={2} key={tile.key}>
+          <Grid
+            key={tile.key}
+            size={{
+              xs: 6,
+              sm: 4,
+              md: 2
+            }}>
             <StatCard
               layout="split"
               label={labels[tile.key]}

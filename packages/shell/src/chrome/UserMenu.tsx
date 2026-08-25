@@ -42,11 +42,25 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
           sx={{ gap: 1, px: 0.5, py: 0.25, borderRadius: 1 }}
         >
           <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'right', minWidth: 0, maxWidth: 200 }}>
-            <Typography variant="caption" fontWeight={700} noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                fontWeight: 700,
+                display: 'block',
+                lineHeight: 1.2
+              }}>
               {accountName(user, fallbackName)}
             </Typography>
             {email && (
-              <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "text.secondary",
+                  display: 'block',
+                  lineHeight: 1.2
+                }}>
                 {email}
               </Typography>
             )}

@@ -46,7 +46,9 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
   }
 
   return (
-    <Stack spacing={0.5} alignItems="flex-start">
+    <Stack spacing={0.5} sx={{
+      alignItems: "flex-start"
+    }}>
       <ButtonBase
         onClick={() => setOpen(true)}
         aria-label={`Enlarge ${label}`}
@@ -85,7 +87,9 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
           <ZoomOutMapIcon fontSize="small" />
         </Box>
       </ButtonBase>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
 
@@ -94,7 +98,9 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
         onClose={() => setOpen(false)}
         maxWidth="lg"
         fullWidth
-        PaperProps={{ sx: { bgcolor: 'common.black' } }}
+        slotProps={{
+          paper: { sx: { bgcolor: 'common.black' } }
+        }}
       >
         <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', p: 1 }}>
           <IconButton

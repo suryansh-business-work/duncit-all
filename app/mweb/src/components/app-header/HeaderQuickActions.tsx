@@ -9,7 +9,12 @@ import { useTranslation } from '../../i18n/useTranslation';
 /** A labelled circular header action (mock): the button with a tiny caption. */
 function QuickAction({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
-    <Stack alignItems="center" spacing={0.1} sx={{ flex: '0 0 auto' }}>
+    <Stack
+      spacing={0.1}
+      sx={{
+        alignItems: "center",
+        flex: '0 0 auto'
+      }}>
       {children}
       <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', lineHeight: 1 }}>
         {label}

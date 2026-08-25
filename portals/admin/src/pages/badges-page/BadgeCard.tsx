@@ -22,7 +22,9 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" spacing={2} alignItems="flex-start">
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box
             sx={{
               width: 56,
@@ -42,27 +44,35 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
             ) : null}
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="subtitle1" fontWeight={700} noWrap>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
+              <Typography variant="subtitle1" noWrap sx={{
+                fontWeight: 700
+              }}>
                 {badge.title}
               </Typography>
               {!badge.is_active && <Chip size="small" label={t('admin.profile.inactive')} />}
             </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: 'block'
+              }}>
               {badge.condition_type} ≥ {badge.threshold}
             </Typography>
             <Typography
               variant="body2"
-              color="text.secondary"
               sx={{
+                color: "text.secondary",
                 mt: 0.5,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-              }}
-            >
+                WebkitBoxOrient: 'vertical'
+              }}>
               {badge.description}
             </Typography>
           </Box>

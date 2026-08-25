@@ -7,6 +7,9 @@ import DownloadApps from '../components/DownloadApps.astro';
 import DuncitNetwork from '../components/DuncitNetwork.astro';
 import SmartLink from '../components/SmartLink.astro';
 import { urlConfigs } from '../config/url-configs';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 
 // Real group photos from Unsplash (free to use)
 const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
@@ -20,23 +23,23 @@ const mwebRegisterUrl = `${urlConfigs.mwebUrl}/register`;
 const earningPaths = [
   {
     icon: 'fa-champagne-glasses',
-    title: 'Host pods',
-    text: 'Create pods, bring the right people together and earn from every gathering you run.',
+    title: t('website.main.home.hostTitle'),
+    text: t('website.main.home.hostText'),
   },
   {
     icon: 'fa-store',
-    title: 'List your venue',
-    text: 'Publish your space’s slots and get verified bookings from hosts near you.',
+    title: t('website.main.home.venueTitle'),
+    text: t('website.main.home.venueText'),
   },
   {
     icon: 'fa-bag-shopping',
-    title: 'Sell at gatherings',
-    text: 'Bring your products to real meetups and reach buyers face to face.',
+    title: t('website.main.home.sellTitle'),
+    text: t('website.main.home.sellText'),
   },
 ];
 ---
 
-<Layout title="Duncit — Friends who match your energy">
+<Layout title={t('website.main.home.title')}>
   <SiteNav />
   <div class="bg-frame p-3 sm:p-4">
     <!-- ============== HERO ============== -->
@@ -85,14 +88,14 @@ const earningPaths = [
       <!-- Nav -->
       <nav class="relative z-20 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label={t('website.main.nav.menu')}>
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
           <BrandLogo height={56} />
         </div>
         <div class="flex items-center gap-2">
           <a href="#download" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full glass-chip text-ink text-xs font-bold whitespace-nowrap hover:scale-105 transition">
-            <i class="fa-solid fa-download"></i> Get the app
+            <i class="fa-solid fa-download"></i> {t('website.main.home.getApp')}
           </a>
         </div>
       </nav>
@@ -105,16 +108,15 @@ const earningPaths = [
           class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-white backdrop-blur"
         >
           <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
-          Friendship, not algorithms
+          {t('website.main.home.badge')}
         </span>
 
         <h1 class="max-w-4xl text-4xl leading-[1.02] text-white sm:text-6xl md:text-7xl">
-          Find your people.<br />Match your <span class="text-primary">energy</span>.
+          {t('website.main.home.headingLine1')}<br />{t('website.main.home.headingLine2Lead')} <span class="text-primary">{t('website.main.home.headingLine2Accent')}</span>.
         </h1>
 
         <p class="max-w-xl text-base text-white/80 sm:text-lg">
-          Duncit is the friendship platform for real-life connections — built around what you
-          actually love doing.
+          {t('website.main.home.intro')}
         </p>
 
         <div class="flex flex-col items-center gap-3 sm:flex-row">
@@ -122,13 +124,13 @@ const earningPaths = [
             href={mwebRegisterUrl}
             class="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-primary/40 transition hover:scale-[1.03]"
           >
-            <i class="fa-solid fa-bolt"></i> Join Duncit
+            <i class="fa-solid fa-bolt"></i> {t('website.main.home.join')}
           </a>
           <a
             href={mwebLoginUrl}
             class="inline-flex items-center gap-2 rounded-full border border-white/45 px-8 py-3.5 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
           >
-            <i class="fa-solid fa-right-to-bracket"></i> Sign in
+            <i class="fa-solid fa-right-to-bracket"></i> {t('website.main.home.signIn')}
           </a>
         </div>
 
@@ -138,7 +140,7 @@ const earningPaths = [
           href="#download"
           class="mt-2 inline-flex flex-col items-center gap-2 text-xs font-semibold text-white/70 transition hover:text-white"
         >
-          Scroll to explore
+          {t('website.main.home.scroll')}
           <span
             class="scroll-cue flex h-9 w-9 items-center justify-center rounded-full border border-white/40"
             aria-hidden="true"
@@ -160,20 +162,19 @@ const earningPaths = [
       <div class="max-w-6xl mx-auto grid lg:grid-cols-[0.8fr_1.2fr] gap-8 items-start">
         <div>
           <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-5">
-            <i class="fa-solid fa-coins"></i> Earn with Duncit
+            <i class="fa-solid fa-coins"></i> {t('website.main.home.earnEyebrow')}
           </span>
-          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">Turn gatherings into income</h2>
+          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">{t('website.main.home.earnHeading')}</h2>
           <p class="text-ink-soft text-lg max-w-md">
-            Hosts, venues and sellers all earn from real local demand. Every path lives on
-            Earn with Duncit — pick yours and start.
+            {t('website.main.home.earnText')}
           </p>
           <SmartLink
             href={urlConfigs.earnwithUrl}
-            label="Explore Earn with Duncit"
+            label={t('website.main.home.earnCta')}
             glyph={false}
             class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-white font-bold sticker hover:scale-[1.03] transition"
           >
-            Explore Earn with Duncit <i class="fa-solid fa-arrow-right"></i>
+            {t('website.main.home.earnCta')} <i class="fa-solid fa-arrow-right"></i>
           </SmartLink>
         </div>
         <div class="grid sm:grid-cols-3 gap-4">
@@ -190,7 +191,7 @@ const earningPaths = [
               <h3 class="text-xl text-ink mb-2">{path.title}</h3>
               <p class="text-ink-soft text-sm leading-relaxed">{path.text}</p>
               <span class="inline-flex items-center gap-2 mt-5 font-bold text-primary text-sm">
-                Start now <i class="fa-solid fa-arrow-right"></i>
+                {t('website.main.home.earnStart')} <i class="fa-solid fa-arrow-right"></i>
               </span>
             </SmartLink>
           ))}
@@ -203,27 +204,26 @@ const earningPaths = [
       <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         <div>
           <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/15 text-secondary font-bold text-xs uppercase tracking-wider mb-4">
-            <i class="fa-solid fa-fire"></i> Real Energy
+            <i class="fa-solid fa-fire"></i> {t('website.main.home.vibesEyebrow')}
           </span>
           <h2 class="text-4xl sm:text-5xl md:text-6xl mb-5">
-            <span class="text-primary">No bots.</span><br />
-            <span class="text-secondary">No fakes.</span><br />
-            Just <span class="relative inline-block">vibes.<span class="absolute -bottom-1 left-0 w-full h-3 bg-tertiary/70 -z-10 -rotate-1 rounded"></span></span>
+            <span class="text-primary">{t('website.main.home.vibesNoBots')}</span><br />
+            <span class="text-secondary">{t('website.main.home.vibesNoFakes')}</span><br />
+            {t('website.main.home.vibesJust')} <span class="relative inline-block">{t('website.main.home.vibesVibes')}<span class="absolute -bottom-1 left-0 w-full h-3 bg-tertiary/70 -z-10 -rotate-1 rounded"></span></span>
           </h2>
           <p class="text-ink-soft text-lg max-w-md">
-            Chatting effortless on Duncit. Discover what you share with new
-            friends and dive right into laughs or real talk.
+            {t('website.main.home.vibesText')}
           </p>
           <div class="mt-6 flex flex-wrap gap-3">
-            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-user-check text-primary"></i> Verified people</span>
-            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-bolt text-secondary"></i> Matched by energy</span>
-            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-champagne-glasses text-tertiary-dark"></i> Real gatherings</span>
+            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-user-check text-primary"></i> {t('website.main.home.chipVerified')}</span>
+            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-bolt text-secondary"></i> {t('website.main.home.chipMatched')}</span>
+            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-champagne-glasses text-tertiary-dark"></i> {t('website.main.home.chipGatherings')}</span>
           </div>
         </div>
         <div class="relative">
-          <img src={vibesImg} alt="Friends chatting" class="w-full aspect-[4/5] object-cover rounded-3xl sticker" />
+          <img src={vibesImg} alt={t('website.main.home.vibesImageAlt')} class="w-full aspect-[4/5] object-cover rounded-3xl sticker" />
           <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-on-accent font-bold sticker -rotate-6">
-            <i class="fa-solid fa-heart text-primary"></i> Authentic
+            <i class="fa-solid fa-heart text-primary"></i> {t('website.main.home.authentic')}
           </span>
         </div>
       </div>
@@ -234,11 +234,10 @@ const earningPaths = [
       <div class="max-w-6xl mx-auto">
         <div class="grid md:grid-cols-2 gap-10 items-start">
           <h2 class="text-4xl sm:text-5xl md:text-6xl">
-            Flow with the<br />moment
+            {t('website.main.home.flowHeadingLine1')}<br />{t('website.main.home.flowHeadingLine2')}
           </h2>
           <p class="text-on-accent font-medium text-lg max-w-md">
-            Discover new friends without the pressure—see what you have in
-            common, start fun or meaningful conversations, and connect naturally.
+            {t('website.main.home.flowText')}
           </p>
         </div>
 
@@ -347,7 +346,7 @@ const earningPaths = [
   broken by the bundled animejs script). ResizeObserver rebuilds the rounded-rect
   textPath once the SVG actually has a size, which is what makes it reliably show.
 -->
-<script is:inline>
+<script is:inline define:vars={{ MARQUEE: t('website.main.home.marquee') }}>
   (function () {
     try {
       var svg = document.getElementById('bannerMarquee');
@@ -357,7 +356,7 @@ const earningPaths = [
       if (!svg || !path || !textEl || !tp) return;
 
       var MSG =
-        'Real people. Real energy.  Sports, live music, nightlife, the outdoors — see what happens when the right people match your energy.  •  ';
+        MARQUEE + '  •  ';
       var unitLen = 0;
       var offset = 0;
       var ready = false;

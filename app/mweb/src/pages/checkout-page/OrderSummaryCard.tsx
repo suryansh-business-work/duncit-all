@@ -79,7 +79,9 @@ export default function OrderSummaryCard({
           <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 12%, rgba(0,0,0,0.75) 100%)' }} />
           <Box sx={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.ticket')}</Typography>
-            <Typography variant="subtitle1" fontWeight={700} noWrap>{title}</Typography>
+            <Typography variant="subtitle1" noWrap sx={{
+              fontWeight: 700
+            }}>{title}</Typography>
             {when && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.74)' }}>{when}</Typography>}
           </Box>
         </Box>
@@ -90,7 +92,13 @@ export default function OrderSummaryCard({
           label={seatsText}
           sx={{ mt: 1, fontWeight: 700 }}
         />
-        {pod?.zone_name && <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>{pod.zone_name}</Typography>}
+        {pod?.zone_name && <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            mt: 1,
+            display: 'block'
+          }}>{pod.zone_name}</Typography>}
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
           {seats > 1 && unitAmount > 0 && (
@@ -109,23 +117,39 @@ export default function OrderSummaryCard({
             />
           ))}
           <Divider sx={{ my: 1 }} />
-          <Typography variant="caption" color="text.secondary">{t('mweb.checkout.inclusiveOf')}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{t('mweb.checkout.inclusiveOf')}</Typography>
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
           <CoinSummaryRows coins={coins} />
           {venueCharges.length > 0 && (
             <Box sx={{ mt: 1, p: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Typography variant="body2" fontWeight={600}>{t('mweb.checkout.venueCharges')}</Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                <Stack direction="row" spacing={0.5} sx={{
+                  alignItems: "center"
+                }}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>{t('mweb.checkout.venueCharges')}</Typography>
                   <IconButton size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
                     <InfoOutlinedIcon fontSize="inherit" color="action" />
                   </IconButton>
                 </Stack>
-                <Typography variant="body2" fontWeight={700}>{fmt(venueTotal)}</Typography>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>{fmt(venueTotal)}</Typography>
               </Stack>
-              <Typography variant="caption" color="text.secondary">{t('mweb.checkout.venuePayAtVenue')}</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{t('mweb.checkout.venuePayAtVenue')}</Typography>
             </Box>
           )}
         </Stack>
@@ -142,9 +166,25 @@ function Row({
   tone,
 }: Readonly<{ label: string; value: string; bold?: boolean; tone?: string }>) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500} sx={{ color: tone }}>{label}</Typography>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 600} sx={{ color: tone }}>{value}</Typography>
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+      <Typography
+        variant={bold ? 'subtitle1' : 'body2'}
+        sx={{
+          fontWeight: bold ? 700 : 500,
+          color: tone
+        }}>{label}</Typography>
+      <Typography
+        variant={bold ? 'subtitle1' : 'body2'}
+        sx={{
+          fontWeight: bold ? 700 : 600,
+          color: tone
+        }}>{value}</Typography>
     </Stack>
   );
 }

@@ -73,32 +73,34 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
               fullWidth
               required={!connection.hasUri}
               autoComplete="new-password"
-              inputProps={{
-                autoComplete: 'new-password',
-                'data-1p-ignore': true,
-                'data-lpignore': true,
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Tooltip title={revealLabel}>
-                      <IconButton
-                        aria-label={revealLabel}
-                        edge="end"
-                        size="small"
-                        onClick={() => setReveal((v) => !v)}
-                      >
-                        {reveal ? (
-                          <VisibilityOffIcon fontSize="small" />
-                        ) : (
-                          <VisibilityIcon fontSize="small" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </InputAdornment>
-                ),
-              }}
-            />
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Tooltip title={revealLabel}>
+                        <IconButton
+                          aria-label={revealLabel}
+                          edge="end"
+                          size="small"
+                          onClick={() => setReveal((v) => !v)}
+                        >
+                          {reveal ? (
+                            <VisibilityOffIcon fontSize="small" />
+                          ) : (
+                            <VisibilityIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
+                },
+
+                htmlInput: {
+                  autoComplete: 'new-password',
+                  'data-1p-ignore': true,
+                  'data-lpignore': true,
+                }
+              }} />
           )}
         />
         <Controller
@@ -113,11 +115,15 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
               fullWidth
               required
               autoComplete="off"
-              inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
+              slotProps={{
+                htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
+              }}
             />
           )}
         />
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button type="submit" variant="contained" disabled={busy}>
             {busy ? t('tech.dataClone.connecting') : t('tech.dataClone.connect')}
           </Button>

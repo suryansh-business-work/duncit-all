@@ -46,19 +46,37 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
   const fromLabel = event?.leadName ? event.leadName : generalLabel;
 
   return (
-    <Drawer anchor="right" open={!!event} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
+    <Drawer anchor="right" open={!!event} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 380 } } }
+    }}>
       {event && (
         <Stack sx={{ height: '100%' }}>
-          <Stack direction="row" alignItems="center" sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-            <Typography variant="subtitle1" fontWeight={800} sx={{ flex: 1 }}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              p: 2,
+              borderBottom: 1,
+              borderColor: 'divider'
+            }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 800,
+                flex: 1
+              }}>
               {isReminder ? 'Reminder' : 'Follow-up'}
             </Typography>
             <IconButton onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
           </Stack>
 
           <Stack spacing={1.5} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
-            <Typography variant="h6" fontWeight={700}>{event.title}</Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Typography variant="h6" sx={{
+              fontWeight: 700
+            }}>{event.title}</Typography>
+            <Stack direction="row" spacing={1} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               <Chip size="small" label={formatDateTime(event.date)} />
               <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity] ?? event.entity} />
               {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : t('crm.components.pending')} />}
@@ -66,7 +84,13 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
             <Divider />
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>FROM</Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700,
+                  letterSpacing: 0.4
+                }}>FROM</Typography>
               <Typography variant="body2">
                 {fromLabel}
               </Typography>
@@ -74,7 +98,13 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
             {event.notes && (
               <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>NOTES</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 700,
+                    letterSpacing: 0.4
+                  }}>NOTES</Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{event.notes}</Typography>
               </Box>
             )}

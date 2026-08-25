@@ -50,14 +50,16 @@ export default function AddressForm({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  // A new address opens with a suggested label the user can overwrite.
+  const blank = { ...blankAddressValues, label: t('mweb.account.addressLabelDefault') };
   const { control, handleSubmit, reset } = useForm<AddressFormValues>({
-    defaultValues: initial ?? blankAddressValues,
+    defaultValues: initial ?? blank,
     resolver: zodResolver(addressSchema),
     mode: 'onTouched',
   });
 
   useEffect(() => {
-    if (open) reset(initial ?? blankAddressValues);
+    if (open) reset(initial ?? blank);
   }, [open, initial, reset]);
 
   const field = (

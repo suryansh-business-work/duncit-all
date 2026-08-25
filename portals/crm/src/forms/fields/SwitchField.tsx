@@ -24,7 +24,7 @@ export default function SwitchField({ name, label }: Readonly<Props>) {
             />
           }
           label={label}
-          componentsProps={{ typography: { variant: 'body2' } }}
+          slotProps={{ typography: { variant: 'body2' } }}
         />
       )}
     />

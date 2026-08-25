@@ -41,13 +41,17 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <LockOutlinedIcon color="action" />
           <Stack sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               Private account
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               When private, only followers can see your posts and status.
             </Typography>
           </Stack>
@@ -59,7 +63,9 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
               onChange={(event) => {
                 onToggle(event.target.checked).catch(() => undefined);
               }}
-              inputProps={{ 'aria-label': 'Toggle private account' }}
+              slotProps={{
+                input: { 'aria-label': 'Toggle private account' }
+              }}
             />
           )}
         </Stack>

@@ -145,7 +145,9 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
   return (
     <Dialog open={open} onClose={() => !signing && onClose()} fullWidth maxWidth="md">
       <DialogTitle>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>{record?.title ?? t('legal.sign.untitled')}</Box>
           <Chip
             size="small"

@@ -56,7 +56,12 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
       <DialogTitle>{t('onboarding.meetings.cancelMeeting')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           The applicant ({meeting?.user_name || meeting?.contact_name || 'applicant'}) will be
           emailed this reason and asked to fill the survey again and book a new slot.
         </Typography>

@@ -13,7 +13,6 @@ const onlyDigits = (value: string) => value.replace(/\D/g, '').slice(0, 15);
 export default function PhoneNumberField({
   name = 'phone_number',
   hint,
-  inputProps,
   ...rest
 }: Readonly<PhoneNumberFieldProps>) {
   const { control } = useFormContext();
@@ -35,11 +34,12 @@ export default function PhoneNumberField({
             helperText={showError ? fieldState.error?.message : (hint ?? ' ')}
             onBlur={field.onBlur}
             onChange={(event) => field.onChange(onlyDigits(event.target.value))}
-            inputProps={{
-              inputMode: 'numeric',
-              pattern: '[0-9]*',
-              maxLength: 15,
-              ...inputProps,
+            slotProps={{
+              htmlInput: {
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+                maxLength: 15,
+              }
             }}
           />
         );

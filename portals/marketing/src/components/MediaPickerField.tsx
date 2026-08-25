@@ -78,25 +78,27 @@ export default function MediaPickerField({
         fullWidth
         placeholder={t('marketing.mediaPickerField.clickTheImageIconToUpload')}
         helperText={helperText}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Tooltip title={t('marketing.mediaPickerField.pickFromDeviceOrPexels')}>
-                <IconButton size="small" onClick={() => setOpen(true)}>
-                  <ImageIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </InputAdornment>
-          ),
-          endAdornment: value ? (
-            <InputAdornment position="end">
-              <Tooltip title={t('marketing.mediaPickerField.open')}>
-                <IconButton size="small" onClick={() => window.open(value, '_blank')}>
-                  <OpenInNewIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </InputAdornment>
-          ) : null,
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <Tooltip title={t('marketing.mediaPickerField.pickFromDeviceOrPexels')}>
+                  <IconButton size="small" onClick={() => setOpen(true)}>
+                    <ImageIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            ),
+            endAdornment: value ? (
+              <InputAdornment position="end">
+                <Tooltip title={t('marketing.mediaPickerField.open')}>
+                  <IconButton size="small" onClick={() => window.open(value, '_blank')}>
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            ) : null,
+          }
         }}
       />
       {showPreview && value && (
@@ -123,7 +125,12 @@ export default function MediaPickerField({
               bgcolor: 'action.hover',
             }}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              wordBreak: 'break-all'
+            }}>
             {value}
           </Typography>
         </Box>

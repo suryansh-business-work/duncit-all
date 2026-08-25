@@ -22,7 +22,9 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" spacing={2} alignItems="flex-start">
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "flex-start"
+        }}>
           {/* Portrait, like the card itself — a square thumbnail here would
               hide exactly the cropping problem this list exists to catch. */}
           <Box
@@ -45,16 +47,27 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
           </Box>
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="subtitle1" fontWeight={700} noWrap>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
+              <Typography variant="subtitle1" noWrap sx={{
+                fontWeight: 700
+              }}>
                 {item.title}
               </Typography>
               {!item.is_active && <Chip size="small" label={t('admin.somethingForYou.hidden')} />}
             </Stack>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <Typography variant="body2" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {item.bottom_text || '—'}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: 'block'
+              }}>
               {describeAction(item)} · order {item.sort_order}
             </Typography>
           </Box>

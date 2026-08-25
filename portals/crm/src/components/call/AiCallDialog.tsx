@@ -120,7 +120,9 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <SmartToyIcon color="primary" />
           <span>AI Call · {lead?.displayName ?? ''}</span>
         </Stack>
@@ -139,7 +141,9 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
             />
           ) : (
             <>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 The AI agent will call the customer and converse using the selected Static Content.
               </Typography>
               <TextField

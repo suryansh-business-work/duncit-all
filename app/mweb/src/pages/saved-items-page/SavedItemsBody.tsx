@@ -15,7 +15,11 @@ interface Props {
 export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }: Readonly<Props>) {
   if (loading && !hasData) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );

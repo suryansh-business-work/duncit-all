@@ -10,7 +10,9 @@ interface SurveyHeaderActionsProps {
 export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderActionsProps>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center">
+    <Stack direction="row" spacing={0.75} sx={{
+      alignItems: "center"
+    }}>
       <Tooltip title={t('mweb.common.logout')}>
         <IconButton
           size="small"

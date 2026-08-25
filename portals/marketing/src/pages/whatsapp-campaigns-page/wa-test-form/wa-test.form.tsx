@@ -94,7 +94,9 @@ export default function WaTestForm({
         <DialogTitle>{t('marketing.whatsappCampaigns.sendATestMessage')}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               One real WhatsApp message to one number — billed like any other.
             </Typography>
             <RhfTextField

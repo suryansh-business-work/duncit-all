@@ -15,13 +15,21 @@ export default function SubmittedSummary({ survey, answers }: Readonly<Props>) {
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', mb: 2 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          letterSpacing: 0.4
+        }}>
         YOUR SURVEY ANSWERS
       </Typography>
       <Stack spacing={0.75} sx={{ mt: 0.75 }}>
         {items.map((a) => (
           <Stack key={a.qid} spacing={0.1}>
-            <Typography variant="caption" color="text.secondary">{labelFor(a.qid)}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{labelFor(a.qid)}</Typography>
             <Typography variant="body2">{a.values?.length ? a.values.join(', ') : a.value}</Typography>
           </Stack>
         ))}

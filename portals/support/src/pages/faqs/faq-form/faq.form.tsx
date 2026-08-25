@@ -115,7 +115,9 @@ export default function FaqForm({
             minRows={4}
             required
           />
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={2} sx={{
+            alignItems: "center"
+          }}>
             <RhfTextField
               control={control}
               name="sort_order"

@@ -81,7 +81,12 @@ export default function ContractFormDialog({
           {error && <Alert severity="error">{error}</Alert>}
 
           {!isNew && contractNo && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontFamily: 'monospace'
+              }}>
               {contractNo}
             </Typography>
           )}
@@ -146,7 +151,9 @@ export default function ContractFormDialog({
           />
 
           <Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Contract
             </Typography>
             <DuncitRichTextInput

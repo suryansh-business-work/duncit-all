@@ -100,7 +100,13 @@ export default function PodWithdrawalDetailPage() {
         if (!summary) return null;
         return (
           <Box>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                alignItems: "center",
+                mb: 3
+              }}>
               <IconButton
                 aria-label={t('finance.withdrawals.back')}
                 onClick={() => navigate('/withdrawals')}
@@ -108,8 +114,17 @@ export default function PodWithdrawalDetailPage() {
                 <ArrowBackIcon />
               </IconButton>
               <Box sx={{ flex: 1 }}>
-                <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-                  <Typography variant="h5" fontWeight={700}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{
+                    alignItems: "center",
+                    flexWrap: "wrap"
+                  }}>
+                  <Typography variant="h5" sx={{
+                    fontWeight: 700
+                  }}>
                     {summary.pod_title}
                   </Typography>
                   <Chip
@@ -122,7 +137,9 @@ export default function PodWithdrawalDetailPage() {
                     }
                   />
                 </Stack>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('finance.withdrawals.detailSubtitle')}
                   {summary.requested_from.length > 0
                     ? ` · ${summary.requested_from.map((role) => translatedRoleLabel(t, role)).join(', ')}`

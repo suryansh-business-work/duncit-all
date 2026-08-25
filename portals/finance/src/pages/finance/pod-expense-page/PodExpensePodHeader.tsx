@@ -23,12 +23,18 @@ export default function PodExpensePodHeader({ pod, currency, onClose }: Readonly
 
   return (
     <Stack spacing={1.25} sx={{ mb: 2 }}>
-      <Stack direction="row" alignItems="flex-start" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "flex-start"
+      }}>
         <Stack sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h6" fontWeight={800} noWrap>
+          <Typography variant="h6" noWrap sx={{
+            fontWeight: 800
+          }}>
             {pod.pod_title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {pod.pod_code} · {formatDate(pod.pod_date_time)}
           </Typography>
         </Stack>
@@ -37,7 +43,14 @@ export default function PodExpensePodHeader({ pod, currency, onClose }: Readonly
         </IconButton>
       </Stack>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          flexWrap: "wrap",
+          alignItems: "center"
+        }}>
         <StatusChip
           status={pod.pod_status}
           colorMap={POD_STATUS_COLORS}

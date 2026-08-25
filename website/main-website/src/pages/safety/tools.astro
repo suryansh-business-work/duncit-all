@@ -1,40 +1,39 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
 
 const tools = [
-  { icon: 'fa-ban', title: 'Block', desc: 'Instantly remove someone from your world. They won\'t know.' },
-  { icon: 'fa-volume-xmark', title: 'Mute', desc: 'Silence notifications without blocking them.' },
-  { icon: 'fa-flag', title: 'Report', desc: 'Send a flag to our T&S team. Reviewed within hours.' },
-  { icon: 'fa-eye-slash', title: 'Hide profile', desc: 'Pause discoverability without deleting your account.' },
-  { icon: 'fa-image', title: 'Photo verify', desc: 'Optional selfie verification to prove you\'re you.' },
-  { icon: 'fa-key', title: 'Two-factor', desc: 'Lock your account with SMS or authenticator codes.' },
+  { icon: 'fa-ban', title: t('website.main.safetyTools.blockTitle'), desc: t('website.main.safetyTools.blockText') },
+  { icon: 'fa-volume-xmark', title: t('website.main.safetyTools.muteTitle'), desc: t('website.main.safetyTools.muteText') },
+  { icon: 'fa-flag', title: t('website.main.safetyTools.reportTitle'), desc: t('website.main.safetyTools.reportText') },
+  { icon: 'fa-eye-slash', title: t('website.main.safetyTools.hideTitle'), desc: t('website.main.safetyTools.hideText') },
+  { icon: 'fa-image', title: t('website.main.safetyTools.verifyTitle'), desc: t('website.main.safetyTools.verifyText') },
+  { icon: 'fa-key', title: t('website.main.safetyTools.twoFactorTitle'), desc: t('website.main.safetyTools.twoFactorText') },
 ];
 ---
 
 <PageLayout
-  title="Safety Tools"
-  eyebrow="Safety Hub"
-  heading="Tools to stay safe"
-  intro="Every Duncit user gets these tools, free, from day one."
+  title={t('website.main.safetyTools.title')}
+  eyebrow={t('website.main.safetyTools.eyebrow')}
+  heading={t('website.main.safetyTools.heading')}
+  intro={t('website.main.safetyTools.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1600&q=80&auto=format&fit=crop"
 >
   <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
-    {tools.map((t) => (
+    {tools.map((tool) => (
       <div class="p-5 rounded-2xl bg-surface sticker">
         <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center mb-3">
-          <i class={`fa-solid ${t.icon} text-lg`}></i>
+          <i class={`fa-solid ${tool.icon} text-lg`}></i>
         </div>
-        <div class="font-head font-bold text-ink mb-1">{t.title}</div>
-        <div class="text-sm text-ink-soft">{t.desc}</div>
+        <div class="font-head font-bold text-ink mb-1">{tool.title}</div>
+        <div class="text-sm text-ink-soft">{tool.desc}</div>
       </div>
     ))}
   </div>
 
-  <h2>How reports work</h2>
-  <p>
-    When you report, our team gets a notification immediately. Most reports are reviewed within
-    a few hours. Serious reports (harassment, threats, illegal content) get priority and are
-    actioned in under an hour, 24/7.
-  </p>
+  <h2>{t('website.main.safetyTools.reportsHeading')}</h2>
+  <p>{t('website.main.safetyTools.reportsText')}</p>
 </PageLayout>

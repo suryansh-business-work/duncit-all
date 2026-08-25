@@ -141,7 +141,13 @@ export default function SendTestDialog({
             disabled={loading}
           />
 
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block',
+              mt: 2
+            }}>
             Sent through the same path as a real email — same header and footer, same provider —
             and recorded in Emails › Logs.
           </Typography>

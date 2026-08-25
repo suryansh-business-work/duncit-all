@@ -12,18 +12,32 @@ interface Props {
 export default function AvailabilityHeader({ venueName, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <IconButton size="small" onClick={onBack} aria-label={t('partners.venueAvailabilityPage.back')}>
         <ArrowBackIcon />
       </IconButton>
       <Box>
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 900
+          }}>
           {t('partners.venueAvailabilityPage.venueNamed', { vars: { name: venueName ?? '…' } })}
         </Typography>
-        <Typography variant="h4" fontWeight={950} sx={{ lineHeight: 1.1 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 950,
+            lineHeight: 1.1
+          }}>
           {t('partners.venueAvailabilityPage.slotAvailability')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('partners.venueAvailabilityPage.slotAvailabilityHint')}
         </Typography>
       </Box>

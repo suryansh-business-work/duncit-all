@@ -48,12 +48,14 @@ export default function ProductFilterBar({
           onChange={(event) => patch({ search: event.target.value })}
           fullWidth
           size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         {brands.length > 0 && (
@@ -88,7 +90,13 @@ export default function ProductFilterBar({
           ))}
         </TextField>
       </Stack>
-      <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 1
+        }}>
         <FormControlLabel
           control={
             <Checkbox

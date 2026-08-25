@@ -26,7 +26,9 @@ const renderTask = (row: OpenAiLogRow) => (
     <Typography variant="body2" noWrap title={row.task_label}>
       {row.task_label || row.task}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap title={row.detail}>
+    <Typography variant="caption" noWrap title={row.detail} sx={{
+      color: "text.secondary"
+    }}>
       {row.detail || row.module}
     </Typography>
   </Box>
@@ -43,7 +45,9 @@ const makeRenderCost = (t: Translate) => (row: OpenAiLogRow) => {
   if (!row.priced && row.total_tokens > 0) {
     return (
       <Tooltip title={t('ai.openAiLogs.unpricedTooltip')}>
-        <Typography variant="body2" color="warning.main">
+        <Typography variant="body2" sx={{
+          color: "warning.main"
+        }}>
           {t('ai.openAiLogs.unpriced')}
         </Typography>
       </Tooltip>
@@ -55,7 +59,9 @@ const makeRenderCost = (t: Translate) => (row: OpenAiLogRow) => {
 const renderTokens = (row: OpenAiLogRow) => (
   <Box>
     <Typography variant="body2">{tokens(row.total_tokens)}</Typography>
-    <Typography variant="caption" color="text.secondary">
+    <Typography variant="caption" sx={{
+      color: "text.secondary"
+    }}>
       {row.prompt_tokens} in · {row.completion_tokens} out
     </Typography>
   </Box>
@@ -65,9 +71,10 @@ const renderTokens = (row: OpenAiLogRow) => (
 const renderError = (row: OpenAiLogRow) => {
   if (!row.error_message) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        —
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>—
+              </Typography>
     );
   }
   return (

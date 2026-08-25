@@ -4,7 +4,7 @@ import EventIcon from '@mui/icons-material/Event';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
-import PersonIcon from '@mui/icons-material/PersonOutline';
+import PersonIcon from '@mui/icons-material/PersonOutlined';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -153,9 +153,17 @@ export default function PodCard({
             theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.65)',
         }}
       >
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <EventIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {dateText}
           </Typography>
         </Stack>
@@ -173,10 +181,28 @@ export default function PodCard({
         >
           {pod.pod_title}
         </Typography>
-        <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
-          <Stack direction="row" spacing={0.4} alignItems="center" sx={{ minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+          <Stack
+            direction="row"
+            spacing={0.4}
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             <GroupIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600
+              }}>
               {spotsText}
             </Typography>
           </Stack>
@@ -188,17 +214,33 @@ export default function PodCard({
           />
         </Stack>
         {placeText && (
-          <Stack direction="row" spacing={0.4} alignItems="center" sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={0.4}
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             <PlaceIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {placeText}
             </Typography>
           </Stack>
         )}
         {hostName && (
-          <Stack direction="row" spacing={0.4} alignItems="center" sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={0.4}
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             <PersonIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {hostName}
             </Typography>
           </Stack>

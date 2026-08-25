@@ -106,7 +106,9 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
 
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('marketing.targetAudience.pickedPeopleStayInTheList')}
           </Typography>
 
@@ -116,7 +118,9 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             label={t('marketing.targetAudience.searchByNameEmailOrPhone')}
-            InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1 }} /> }}
+            slotProps={{
+              input: { startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1 }} /> }
+            }}
           />
 
           {error && <Alert severity="error">{error}</Alert>}
@@ -132,7 +136,9 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
           </Box>
 
           {pageCount > 1 && (
-            <Stack alignItems="center">
+            <Stack sx={{
+              alignItems: "center"
+            }}>
               <Pagination
                 count={pageCount}
                 page={page}
@@ -145,7 +151,9 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: 'space-between', px: 3, py: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('marketing.targetAudience.nSelected', { vars: { count: selected.length } })}
         </Typography>
         <Stack direction="row" spacing={1}>

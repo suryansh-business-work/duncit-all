@@ -44,10 +44,14 @@ export default function ApiKeysPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" fontWeight={900}>
+        <Typography variant="h5" sx={{
+          fontWeight: 900
+        }}>
           {t('developers.apiKeys.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('developers.apiKeys.subtitle')}
         </Typography>
       </Box>

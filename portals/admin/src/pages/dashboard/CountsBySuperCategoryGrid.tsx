@@ -33,72 +33,78 @@ export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }:
   const values = counts.map((c) => c.count);
 
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="stretch">
-          <Box sx={{ height: 220, flex: '0 0 280px', minWidth: 0 }}>
-            <Doughnut
-              data={{
-                labels,
-                datasets: [
-                  {
-                    data: values,
-                    backgroundColor: labels.map((_label, index) => palette[index % palette.length]),
-                    borderColor: theme.palette.background.paper,
-                    borderWidth: 2,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '68%',
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    backgroundColor: theme.palette.background.paper,
-                    titleColor: theme.palette.text.primary,
-                    bodyColor: theme.palette.text.secondary,
-                    borderColor: theme.palette.divider,
-                    borderWidth: 1,
-                  },
-                },
-              }}
-            />
-          </Box>
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{
-              overflowX: 'auto',
-              pb: 1,
-              flex: 1,
-              alignItems: 'center',
-              '&::-webkit-scrollbar': { height: 6 },
-            }}
-          >
-          {counts.length === 0 && (
-            <Typography color="text.secondary">{t('admin.dashboard.noSuperCategories')}</Typography>
-          )}
-          {counts.map((c, index) => (
-            <Card
-              key={c.super_category_slug || 'unknown'}
-              variant="outlined"
-              sx={{
-                minWidth: 160,
-                borderLeft: `4px solid ${palette[index % palette.length] || color}`,
-                flexShrink: 0,
-              }}
-            >
-              <CardContent>
-                <Typography variant="overline" color="text.secondary">
-                  {c.super_category_name || c.super_category_slug || 'Uncategorised'}
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, color: palette[index % palette.length] || color }}>
-                  {c.count}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-          </Stack>
+    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+      alignItems: "stretch"
+    }}>
+      <Box sx={{ height: 220, flex: '0 0 280px', minWidth: 0 }}>
+        <Doughnut
+          data={{
+            labels,
+            datasets: [
+              {
+                data: values,
+                backgroundColor: labels.map((_label, index) => palette[index % palette.length]),
+                borderColor: theme.palette.background.paper,
+                borderWidth: 2,
+              },
+            ],
+          }}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: theme.palette.background.paper,
+                titleColor: theme.palette.text.primary,
+                bodyColor: theme.palette.text.secondary,
+                borderColor: theme.palette.divider,
+                borderWidth: 1,
+              },
+            },
+          }}
+        />
+      </Box>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          overflowX: 'auto',
+          pb: 1,
+          flex: 1,
+          alignItems: 'center',
+          '&::-webkit-scrollbar': { height: 6 },
+        }}
+      >
+      {counts.length === 0 && (
+        <Typography sx={{
+          color: "text.secondary"
+        }}>{t('admin.dashboard.noSuperCategories')}</Typography>
+      )}
+      {counts.map((c, index) => (
+        <Card
+          key={c.super_category_slug || 'unknown'}
+          variant="outlined"
+          sx={{
+            minWidth: 160,
+            borderLeft: `4px solid ${palette[index % palette.length] || color}`,
+            flexShrink: 0,
+          }}
+        >
+          <CardContent>
+            <Typography variant="overline" sx={{
+              color: "text.secondary"
+            }}>
+              {c.super_category_name || c.super_category_slug || 'Uncategorised'}
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: palette[index % palette.length] || color }}>
+              {c.count}
+            </Typography>
+          </CardContent>
+        </Card>
+      ))}
+      </Stack>
     </Stack>
   );
 }

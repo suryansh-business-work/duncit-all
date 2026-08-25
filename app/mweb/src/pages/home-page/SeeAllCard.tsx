@@ -37,7 +37,9 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
         scrollSnapAlign: 'start',
       }}
     >
-      <Stack alignItems="center" spacing={1}>
+      <Stack spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 44,
@@ -55,7 +57,12 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
           {t('mweb.home.seeAll')}
         </Typography>
         {count !== undefined && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {t('mweb.home.morePods', { count })}
           </Typography>
         )}

@@ -57,25 +57,31 @@ function WidgetHeader({ widget, editing, dragLabel }: HeaderProps) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
       className={editing ? DRAG_HANDLE_CLASS : undefined}
       sx={{
+        alignItems: "center",
         px: 2,
         pt: 1.5,
         pb: widget.subtitle ? 0.5 : 1,
-        ...(editing && { cursor: 'move', touchAction: 'none', userSelect: 'none' }),
-      }}
-    >
+        ...(editing && { cursor: 'move', touchAction: 'none', userSelect: 'none' })
+      }}>
       {editing ? <DragGrip label={dragLabel} /> : null}
       <Box sx={{ minWidth: 0, flex: 1 }}>
         {widget.title ? (
-          <Typography variant="subtitle1" fontWeight={800} noWrap>
+          <Typography variant="subtitle1" noWrap sx={{
+            fontWeight: 800
+          }}>
             {widget.title}
           </Typography>
         ) : null}
         {widget.subtitle ? (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block'
+            }}>
             {widget.subtitle}
           </Typography>
         ) : null}

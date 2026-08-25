@@ -46,7 +46,9 @@ export default function CallHeader({
   const ringing = phase === 'ringing' || phase === 'incoming';
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <Box
         sx={{
           position: 'relative',
@@ -80,7 +82,9 @@ export default function CallHeader({
         <Typography variant="subtitle2" noWrap>
           {peerName}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t(kind === 'VIDEO' ? 'shell.chat.call.video' : 'shell.chat.call.audio')} ·{' '}
           {LABEL[phase] ? t(LABEL[phase]) : ''}
           {sharing ? t('shell.chat.call.sharingScreen') : ''}

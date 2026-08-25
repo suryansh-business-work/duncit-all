@@ -37,7 +37,9 @@ export default function UserHeader({
       backAriaLabel="back"
       backSize="medium"
       eyebrow={
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           <Link component={RouterLink} to="/users" underline="hover" color="inherit">
             {t('admin.users.title')}
           </Link>{' '}

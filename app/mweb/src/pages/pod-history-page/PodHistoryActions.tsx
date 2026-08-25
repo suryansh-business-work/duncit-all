@@ -109,7 +109,9 @@ export default function PodHistoryActions({
           {t('mweb.podHistory.podRemovedNotice')}
         </Alert>
       )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {!isDeleted && (
           <>
             <Button

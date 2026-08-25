@@ -7,10 +7,14 @@ import { portalNameOf, type PortalAccessRequest } from './helpers';
 
 const renderRequester = (row: PortalAccessRequest) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} noWrap component="div">
+    <Typography variant="body2" noWrap component="div" sx={{
+      fontWeight: 700
+    }}>
       {row.subject_name || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap component="div">
+    <Typography variant="caption" noWrap component="div" sx={{
+      color: "text.secondary"
+    }}>
       {row.subject_email || '—'}
     </Typography>
   </Box>
@@ -34,7 +38,9 @@ export function getPortalAccessColumns({
   const renderActions = (row: PortalAccessRequest) => {
     if (row.status !== 'PENDING') {
       return (
-        <Typography variant="caption" color="text.secondary" component="span">
+        <Typography variant="caption" component="span" sx={{
+          color: "text.secondary"
+        }}>
           {row.reviewed_by_name || '—'}
         </Typography>
       );

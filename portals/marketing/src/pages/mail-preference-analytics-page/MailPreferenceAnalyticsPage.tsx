@@ -149,12 +149,18 @@ export default function MailPreferenceAnalyticsPage() {
       <DuncitDashboard
         dashboardId="marketing.mailPreferenceAnalytics"
         header={
-          <Stack direction="row" alignItems="flex-start" spacing={2}>
+          <Stack direction="row" spacing={2} sx={{
+            alignItems: "flex-start"
+          }}>
             <Stack spacing={0.25} sx={{ flex: 1 }}>
-              <Typography variant="h5" fontWeight={700}>
+              <Typography variant="h5" sx={{
+                fontWeight: 700
+              }}>
                 {t('mailPreference.analytics.title')}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {t('mailPreference.analytics.subtitle')}
               </Typography>
             </Stack>

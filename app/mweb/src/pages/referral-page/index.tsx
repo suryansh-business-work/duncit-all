@@ -42,7 +42,11 @@ export default function ReferralPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -84,7 +88,9 @@ export default function ReferralPage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 38,
@@ -102,7 +108,12 @@ export default function ReferralPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             {t('mweb.referral.title')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {t('mweb.referral.subtitle')}
           </Typography>
         </Box>
@@ -117,7 +128,13 @@ export default function ReferralPage() {
 
       <Card variant="outlined">
         <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 1
+            }}>
             <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
               {t('mweb.referral.friendsTitle')}
             </Typography>
@@ -131,14 +148,23 @@ export default function ReferralPage() {
                 <Stack
                   key={entry.user_id}
                   direction="row"
-                  alignItems="center"
                   spacing={1}
-                  sx={{ p: 1.25, borderRadius: 2, border: 1, borderColor: 'divider' }}
-                >
+                  sx={{
+                    alignItems: "center",
+                    p: 1.25,
+                    borderRadius: 2,
+                    border: 1,
+                    borderColor: 'divider'
+                  }}>
                   <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
                     {entry.full_name || t('mweb.referral.newMember')}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: 700
+                    }}>
                     {formatRelative(entry.referred_at)} ago
                   </Typography>
                 </Stack>

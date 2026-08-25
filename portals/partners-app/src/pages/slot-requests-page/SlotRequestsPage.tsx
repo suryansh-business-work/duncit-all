@@ -48,11 +48,22 @@ export default function SlotRequestsPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: 3 }} variant="outlined">
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+          alignItems: { md: 'center' }
+        }}>
           <Stack sx={{ flex: 1, minWidth: 0 }} spacing={0.25}>
-            <Typography variant="overline" color="text.secondary" fontWeight={800}>{t('partners.common.partnerToolsVenues')}</Typography>
-            <Typography variant="h5" fontWeight={950}>{t('partners.slotRequestsPage.slotRequests')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 800
+              }}>{t('partners.common.partnerToolsVenues')}</Typography>
+            <Typography variant="h5" sx={{
+              fontWeight: 950
+            }}>{t('partners.slotRequestsPage.slotRequests')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Hosts who want to run their pod at your venue. A pod only goes live after you approve its slot.
             </Typography>
           </Stack>

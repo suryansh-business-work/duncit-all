@@ -15,7 +15,11 @@ interface VenueListBodyProps {
 export default function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProps>) {
   if (showSpinner) {
     return (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
@@ -48,16 +52,26 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
       <Stack direction="row" spacing={1.25}>
         <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '16px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
         <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }} noWrap>
             {venue.venue_name}
           </Typography>
         </Stack>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {[venue.venue_type, venue.locality, venue.city, venue.state].filter(Boolean).join(' - ') || '-'}
         </Typography>
         {venue.postal_code && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             PIN: {venue.postal_code}
           </Typography>
         )}
@@ -67,12 +81,23 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
           </Stack>
         )}
         {typeof venue.capacity === 'number' && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Capacity: {venue.capacity}
           </Typography>
         )}
         {venue.description && (
-          <Typography variant="body2" sx={{ mt: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} color="text.primary">
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.primary",
+              mt: 0.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
             {venue.description}
           </Typography>
         )}

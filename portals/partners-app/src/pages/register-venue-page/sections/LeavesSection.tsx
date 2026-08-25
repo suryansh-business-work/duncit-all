@@ -54,8 +54,12 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
   return (
     <Stack spacing={2.5}>
       <Stack spacing={0.5}>
-        <Typography variant="subtitle2" fontWeight={800}>{t('partners.registerVenuePage.leavesAndHolidays')}</Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 800
+        }}>{t('partners.registerVenuePage.leavesAndHolidays')}</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Mark the dates your venue stays closed. No slots can be created on these dates, hosts cannot book
           them, and they show in red on your availability calendar.
         </Typography>
@@ -65,7 +69,9 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
         <Alert severity="info">{t('partners.registerVenuePage.saveTheVenueDetailsSectionFirst')}</Alert>
       )}
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+        alignItems: { sm: 'center' }
+      }}>
         <DatePicker
           label={t('partners.registerVenuePage.addALeaveDate')}
           value={picked}
@@ -87,9 +93,16 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
       </Stack>
 
       {dates.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">{t('partners.registerVenuePage.noLeaveDatesYet')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('partners.registerVenuePage.noLeaveDatesYet')}</Typography>
       ) : (
-        <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }}>
+        <Stack
+          direction="row"
+          sx={{
+            flexWrap: "wrap",
+            gap: 1
+          }}>
           {dates.map((date) => (
             <Chip
               key={date}

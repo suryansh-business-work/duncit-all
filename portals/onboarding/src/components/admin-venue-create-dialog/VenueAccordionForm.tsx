@@ -95,7 +95,9 @@ export default function VenueAccordionForm({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" justifyContent="flex-end" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button
           size="small"
           startIcon={allExpanded ? <UnfoldLessIcon /> : <UnfoldMoreIcon />}

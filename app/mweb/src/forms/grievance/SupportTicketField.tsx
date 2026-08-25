@@ -67,8 +67,7 @@ export default function SupportTicketField({ control, options, loading }: Readon
       select
       // MUI reads an empty value as "nothing chosen" and would otherwise leave
       // the label sitting on top of the placeholder.
-      InputLabelProps={{ shrink: true }}
-      SelectProps={{ displayEmpty: true, renderValue: renderValue(options, copy.placeholder) }}
+      slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true, renderValue: renderValue(options, copy.placeholder) } }}
     >
       {options.map((option) => (
         <MenuItem key={option.value} value={option.value}>

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DocumentNode, FieldNode, OperationDefinitionNode, SelectionNode } from 'graphql';
 import {
   FRAGMENT_OPTIONS,
+  TEMPLATE_USAGE,
   TEMPLATES,
 } from '../../src/pages/email-templates-page/queries';
 import { FRAGMENTS } from '../../src/pages/email-fragments-page/queries';
@@ -57,6 +58,24 @@ describe('email query selection sets match what the code reads', () => {
       'fragment_key',
       'footer_note',
       'is_active',
+    ]) {
+      expect(fields).toContain(required);
+    }
+  });
+
+  it('the usage roll-up asks for the slug it joins on and every count it draws', () => {
+    const fields = fieldsUnder(TEMPLATE_USAGE, 'emailTemplateUsage');
+    // `slug` is the join key — the templates list is keyed by template_id, and
+    // a roll-up that forgot to ask for the slug would silently show zero
+    // everywhere rather than fail.
+    for (const required of [
+      'slug',
+      'sent',
+      'skipped',
+      'failed',
+      'total',
+      'last_sent_at',
+      'last_attempt_at',
     ]) {
       expect(fields).toContain(required);
     }

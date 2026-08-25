@@ -75,12 +75,16 @@ export default function RestoreDialog({
             <Typography variant="body2">
               <strong>{t('tech.dbBackup.restoreFrom')}:</strong> {backup.fileName}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('tech.dbBackup.restoreTaken', {
                 vars: { when: formatDateTime(takenAt(backup)) },
               })}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('tech.dbBackup.restoreContents', {
                 vars: {
                   collections: String(backup.collectionsTotal),

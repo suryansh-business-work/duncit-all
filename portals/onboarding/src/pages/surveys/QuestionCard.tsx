@@ -45,14 +45,27 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>Q{index + 1}</Typography>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              flex: 1
+            }}>Q{index + 1}</Typography>
           <Tooltip title={t('onboarding.common.moveUp')}><span><IconButton size="small" onClick={() => onMove(-1)} disabled={index === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
           <Tooltip title={t('onboarding.common.moveDown')}><span><IconButton size="small" onClick={() => onMove(1)} disabled={index === total - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
           <Tooltip title={t('shell.common.delete')}><IconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
         </Stack>
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1.5} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             <TextField select size="small" label={t('shell.common.type')} value={question.type} onChange={(e) => set({ type: e.target.value as QuestionType })} sx={{ minWidth: 200 }}>
               {types(t).map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
             </TextField>

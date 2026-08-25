@@ -17,13 +17,19 @@ export default function NoWhatsAppNumberCard() {
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <PhonelinkEraseOutlinedIcon color="action" />
           <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t('whatsappPreference.noNumberTitle')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('whatsappPreference.noNumberBody')}
             </Typography>
             <Button

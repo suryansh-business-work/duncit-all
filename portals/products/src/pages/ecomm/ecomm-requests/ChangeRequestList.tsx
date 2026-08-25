@@ -28,16 +28,24 @@ export default function ChangeRequestList({ kind }: Readonly<{ kind: 'BRAND' | '
 
   if (loading && requests.length === 0) {
     return (
-      <Stack alignItems="center" sx={{ py: 3 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 3
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
   }
   if (requests.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-        No change requests yet. Submit one above and it will appear here for review.
-      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          py: 2
+        }}>No change requests yet. Submit one above and it will appear here for review.
+              </Typography>
     );
   }
 
@@ -45,19 +53,37 @@ export default function ChangeRequestList({ kind }: Readonly<{ kind: 'BRAND' | '
     <Stack spacing={1.5}>
       {requests.map((request) => (
         <Box key={request.id} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
               {request.title}
             </Typography>
             <Chip size="small" label={request.status} color={STATUS_COLOR[request.status] ?? 'default'} />
           </Stack>
           {request.details.map((detail) => (
-            <Typography key={detail.label} variant="caption" color="text.secondary" display="block">
+            <Typography
+              key={detail.label}
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>
               <strong>{detail.label}:</strong> {detail.value}
             </Typography>
           ))}
           {request.review_notes && (
-            <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "error.main",
+                display: "block",
+                mt: 0.5
+              }}>
               Reviewer: {request.review_notes}
             </Typography>
           )}

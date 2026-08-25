@@ -30,12 +30,21 @@ function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProp
   const profile = data?.hostByUser;
 
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center">
+    <Stack direction="row" spacing={1.5} sx={{
+      alignItems: "center"
+    }}>
       <Avatar src={contact?.profile_photo ?? undefined} sx={{ width: 36, height: 36 }}>
         {(name[0] ?? '?').toUpperCase()}
       </Avatar>
       <Stack sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <Link
             component="button"
             underline="hover"
@@ -47,7 +56,9 @@ function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProp
           {primary && <Chip icon={<StarIcon />} label={t('podDetailsPanel.podHostsCard.primary')} size="small" color="primary" variant="outlined" />}
           {profile && <StatusChip status={profile.status} />}
         </Stack>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {[profile?.email ?? contact?.email, profile?.phone ?? contact?.phone, profile?.host_no]
             .filter(Boolean)
             .join(' · ') || 'No contact on file'}

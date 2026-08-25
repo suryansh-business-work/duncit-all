@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from './site-data';
+import { type SiteNavGroup } from './site-data';
+let siteData: typeof import('./site-data');
 
 interface FakeResponse {
   ok: boolean;
@@ -13,9 +14,21 @@ const ok = (data: unknown, errors?: unknown[]): FakeResponse => ({
 
 const fetchMock = vi.fn();
 
-beforeEach(() => {
+/**
+ * A FRESH module per test.
+ *
+ * site-data keeps a module-level `inFlight` map so a static build makes one
+ * request per distinct query however many pages ask for it. Left in place
+ * between tests it does the same thing to the suite: only the first call per
+ * query reaches `fetch`, and every later test reads the first one's answer
+ * instead of its own. Resetting the registry is what makes each case actually
+ * exercise the code it names.
+ */
+beforeEach(async () => {
+  vi.resetModules();
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
+  siteData = await import('./site-data');
 });
 
 afterEach(() => {
@@ -25,7 +38,7 @@ afterEach(() => {
 describe('fetchBranding', () => {
   it('merges the remote branding over the bundled fallback', async () => {
     fetchMock.mockResolvedValue(ok({ branding: { app_name: 'Partners', support_phone: '123' } }));
-    const branding = await fetchBranding();
+    const branding = await siteData.fetchBranding();
     expect(branding.app_name).toBe('Partners');
     expect(branding.support_phone).toBe('123');
     expect(branding.support_email).toBe('support@duncit.com');
@@ -33,34 +46,34 @@ describe('fetchBranding', () => {
 
   it('returns the fallback when the request is not ok', async () => {
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({}) });
-    expect((await fetchBranding()).app_name).toBe('Duncit');
+    expect((await siteData.fetchBranding()).app_name).toBe('Duncit');
   });
 
   it('returns the fallback when the network throws', async () => {
     fetchMock.mockRejectedValue(new Error('offline'));
-    expect((await fetchBranding()).app_name).toBe('Duncit');
+    expect((await siteData.fetchBranding()).app_name).toBe('Duncit');
   });
 
   it('returns the fallback when the response carries GraphQL errors', async () => {
     fetchMock.mockResolvedValue(ok(null, [{ message: 'boom' }]));
-    expect((await fetchBranding()).app_name).toBe('Duncit');
+    expect((await siteData.fetchBranding()).app_name).toBe('Duncit');
   });
 });
 
 describe('fetchPolicies', () => {
   it('returns the policies from the API', async () => {
     fetchMock.mockResolvedValue(ok({ publicPolicies: [{ id: 'p1', slug: 'terms', title: 'Terms' }] }));
-    await expect(fetchPolicies()).resolves.toEqual([{ id: 'p1', slug: 'terms', title: 'Terms' }]);
+    await expect(siteData.fetchPolicies()).resolves.toEqual([{ id: 'p1', slug: 'terms', title: 'Terms' }]);
   });
 
   it('returns an empty list when there is no data', async () => {
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({}) });
-    await expect(fetchPolicies()).resolves.toEqual([]);
+    await expect(siteData.fetchPolicies()).resolves.toEqual([]);
   });
 
   it('tolerates an empty errors array', async () => {
     fetchMock.mockResolvedValue(ok({ publicPolicies: [] }, []));
-    await expect(fetchPolicies()).resolves.toEqual([]);
+    await expect(siteData.fetchPolicies()).resolves.toEqual([]);
   });
 });
 
@@ -79,7 +92,7 @@ describe('fetchNavGroups', () => {
       }),
     );
 
-    const groups = await fetchNavGroups('HEADER', fallback);
+    const groups = await siteData.fetchNavGroups('HEADER', fallback);
     expect(groups.map((group) => group.label)).toEqual(['Product', 'More']);
     expect(groups[0].links.map((link) => link.id)).toEqual(['1', '2']);
     expect(groups[1].links.map((link) => link.id)).toEqual(['3']);
@@ -96,11 +109,11 @@ describe('fetchNavGroups', () => {
         ],
       }),
     );
-    await expect(fetchNavGroups('FOOTER', fallback)).resolves.toBe(fallback);
+    await expect(siteData.fetchNavGroups('FOOTER', fallback)).resolves.toBe(fallback);
   });
 
   it('falls back when the request fails', async () => {
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({}) });
-    await expect(fetchNavGroups('HEADER', fallback)).resolves.toBe(fallback);
+    await expect(siteData.fetchNavGroups('HEADER', fallback)).resolves.toBe(fallback);
   });
 });

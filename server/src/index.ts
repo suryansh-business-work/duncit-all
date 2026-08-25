@@ -239,6 +239,15 @@ async function bootstrap() {
     const { coinSettingsService } = await import('@modules/finance/coin/coin.settings.service');
     await coinSettingsService.seed();
   });
+  // Stamps a deletion date on requests filed before the retention window
+  // existed. Skipping it leaves those rows with no date to count down from, so
+  // the Tech queue shows a blank where the member's promise should be.
+  await safeSeed('accountDeletionDates', async () => {
+    const { accountDeletionService } = await import(
+      '@modules/access/accountDeletion/accountDeletion.service'
+    );
+    await accountDeletionService.backfillScheduledDates();
+  });
   // Builds the gift card unique indexes (code, payment_id, the once-only
   // redeem guard) — new unique indexes only land through syncIndexes at boot.
   await safeSeed('giftCardIndexes', async () => {
@@ -289,6 +298,12 @@ async function bootstrap() {
     await membershipService.seedDefaults();
   });
 
+  // The shipped badge catalogue (Legend, Pack Champion, the partner badges …).
+  // $setOnInsert only, so an admin's edits to a badge survive every redeploy.
+  await safeSeed('badges', async () => {
+    const { badgeService } = await import('@modules/engagement/badge/badge.service');
+    await badgeService.seedDefaults();
+  });
   // Status-page incidents: seed minimum historical data so the 90-day chart
   // and Incidents feed render (gated to staging / STATUS_SEED_INCIDENTS=1).
   await safeSeed('statusIncidents', async () => {

@@ -10,12 +10,15 @@ import {
 import { AccountDeletionSurface } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { SecuritySheet } from './SecuritySheet';
+import type { PendingRequest } from './DeletionRequestPanel';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface DeleteAccountDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmitted: () => void;
+  /** Hands the filed request up: the parent tells the member the date on it,
+   * then signs them out. */
+  onSubmitted: (request: PendingRequest) => void;
 }
 
 const errMsg = (e: unknown, t: Translate) =>
@@ -52,7 +55,7 @@ export function DeleteAccountDialog({
     setSubmitting(true);
     setError(null);
     try {
-      await graphqlRequest(
+      const data = await graphqlRequest(
         MobileSubmitAccountDeletionRequestDocument,
         {
           input: {
@@ -63,7 +66,7 @@ export function DeleteAccountDialog({
         },
         { auth: true },
       );
-      onSubmitted();
+      onSubmitted(data.submitAccountDeletionRequest);
     } catch (e) {
       setError(errMsg(e, t));
     } finally {

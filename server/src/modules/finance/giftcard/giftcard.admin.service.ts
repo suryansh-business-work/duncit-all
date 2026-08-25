@@ -9,6 +9,7 @@ import { giftCardPub } from './giftcard.service';
 import { giftCardSettingsService } from './giftcard.settings.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { userNameOrDeleted } from '@modules/access/accountDeletion/accountDeletion.retention';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 /**
@@ -106,9 +107,9 @@ const toCardRow = (card: IGiftCard, users: Map<string, UserInfo>) => {
   const redeemer = card.redeemed_by_user_id ? users.get(String(card.redeemed_by_user_id)) : undefined;
   return {
     ...giftCardPub(card),
-    purchaser_name: purchaser?.name ?? '',
+    purchaser_name: userNameOrDeleted(purchaser, card.purchaser_user_id),
     purchaser_email: purchaser?.email ?? '',
-    redeemer_name: redeemer?.name ?? '',
+    redeemer_name: userNameOrDeleted(redeemer, card.redeemed_by_user_id),
     redeemer_email: redeemer?.email ?? '',
     payment_id: card.payment_id,
   };
@@ -121,7 +122,7 @@ const toTxnRow = (t: IGiftCardTransaction, users: Map<string, UserInfo>) => {
     gift_card_id: String(t.gift_card_id),
     code: t.code,
     user_id: String(t.user_id),
-    user_name: user?.name ?? '',
+    user_name: userNameOrDeleted(user, t.user_id),
     user_email: user?.email ?? '',
     type: t.type,
     amount: t.amount,

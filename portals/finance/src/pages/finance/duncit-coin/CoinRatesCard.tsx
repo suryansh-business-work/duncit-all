@@ -18,8 +18,8 @@ interface RateField {
   helper: string;
 }
 
-/** The three payout rules, in the order money reaches a member: they join a pod,
- * they buy something, or they bring somebody in. */
+/** The payout rules, in the order value reaches a member: they join a pod, they
+ * buy something, they bring somebody in, or they tell us how a pod went. */
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const fields = (t: Translate): readonly RateField[] => [
@@ -40,6 +40,12 @@ const fields = (t: Translate): readonly RateField[] => [
     label: t('finance.duncitCoin.coinsPerReferral'),
     unit: 'coins',
     helper: 'Paid to EACH side — the member who shared and the one who signed up.',
+  },
+  {
+    name: 'pod_feedback_coins',
+    label: t('finance.duncitCoin.podFeedbackRate'),
+    unit: 'coins',
+    helper: t('finance.duncitCoin.podFeedbackRateHelper'),
   },
 ];
 
@@ -74,7 +80,8 @@ export default function CoinRatesCard({ control, currencySymbol }: Readonly<Prop
               key={f.name}
               size={{
                 xs: 12,
-                sm: 4
+                sm: 6,
+                md: 3
               }}>
               <Controller
                 name={f.name}

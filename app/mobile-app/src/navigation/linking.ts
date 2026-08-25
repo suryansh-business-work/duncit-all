@@ -104,6 +104,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       DuncitCoin: 'duncit-coin',
       HappeningNearby: { path: 'happening-nearby', parse: { initialIndex: Number } },
       Faqs: 'faqs',
+      Badges: 'badges',
       TourGuide: 'tour-guide',
       PodPlans: 'pod-plans',
       Policies: 'policies',

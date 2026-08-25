@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { splitPodsByPhase } from '@duncit/utils';
+
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeStore, type HomeFeed } from '@/stores/home.store';
@@ -106,10 +108,6 @@ function deriveVibeCategories(
 const byDateAsc = (a: HomePod, b: HomePod) =>
   new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime();
 
-// A pod is "previous" once its start date/time has passed (bug 8).
-const isPastPod = (p: HomePod) =>
-  !!p.pod_date_time && new Date(p.pod_date_time).getTime() < Date.now();
-
 /** Derives the home shell sections from the raw feed. A selected vibe chip keeps
  * only pods whose club sits on the same category branch — equal/ancestor/
  * descendant — so the "All {category}" chip also keeps SUB-tagged clubs. */
@@ -161,9 +159,14 @@ function deriveHome(
   // — drives disabling the Filter + Search controls when there's nothing to act on.
   const hasContent = allPods.some(inScope);
 
-  // Past-date pods leave the main feed and move to the Previous Pods section/page.
-  const activePods = pods.filter((p) => !isPastPod(p));
-  const previousPods = pods.filter(isPastPod).sort((a, b) => byDateAsc(b, a));
+  // Three time buckets, one pass, one clock read: a pod that is RUNNING right
+  // now is neither upcoming nor previous — it belongs to the Ongoing rail, and
+  // only drops into Previous Pods once its end time has passed. The rule lives
+  // in @duncit/utils so mWeb's twin (useHomeData) reads exactly the same one.
+  const phases = splitPodsByPhase(pods);
+  const activePods = phases.upcoming;
+  const ongoingPods = phases.ongoing.slice().sort(byDateAsc);
+  const previousPods = phases.previous.slice().sort((a, b) => byDateAsc(b, a));
 
   const podsByClub = new Map<string, HomePod[]>();
   activePods.forEach((p) => {
@@ -201,6 +204,7 @@ function deriveHome(
     clubsWithPods,
     featuredPods,
     activePods: activePods.slice().sort(byDateAsc),
+    ongoingPods,
     previousPods,
     totalPods: activePods.length,
     categoryLabelOf,

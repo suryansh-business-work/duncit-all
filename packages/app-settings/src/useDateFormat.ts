@@ -46,6 +46,14 @@ export interface UseDateFormatOptions {
    * default time pattern 'hh:mm a'.
    */
   timeZoneAware?: boolean;
+  /**
+   * Render in THIS zone instead of the admin-configured one.
+   *
+   * Only for a surface that lets the reader pick their own — the taskbar clock,
+   * which offers "follow the workspace" and "this device". Empty or absent
+   * means the admin's setting, which is what every other caller wants.
+   */
+  timeZone?: string;
 }
 
 /**
@@ -65,7 +73,7 @@ export function useDateFormat(options?: Readonly<UseDateFormatOptions>): DateFor
   return createDateFormatter({
     dateFormat: settings?.date_format,
     timeFormat: settings?.time_format,
-    timeZone: settings?.time_zone,
+    timeZone: options?.timeZone || settings?.time_zone,
     timeZoneAware,
     clock: {
       source: toTimeSource(settings?.time_source),

@@ -5,23 +5,27 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
+  MobileAccountDeletionSettingsDocument,
   MobileCancelAccountDeletionRequestDocument,
   MobileMyAccountDeletionRequestDocument,
   MobileRequestAccountDeletionOtpDocument,
 } from '@/graphql/account';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { useLogout } from '@/hooks/useLogout';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
+import { DeletionSubmittedDialog } from './DeletionSubmittedDialog';
 
 interface Props {
   onDone: (message: string) => void;
 }
 
-interface PendingRequest {
+export interface PendingRequest {
   request_id: string;
   requested_at: string;
+  scheduled_delete_at: string;
 }
 
 const errMsg = (e: unknown, t: Translate) =>
@@ -39,7 +43,10 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
   const { t } = useTranslation();
   const { danger, muted } = useThemeColors();
   const { formatDate } = useDateFormat();
+  const logout = useLogout();
   const [pending, setPending] = useState<PendingRequest | null>(null);
+  const [submitted, setSubmitted] = useState<PendingRequest | null>(null);
+  const [retentionDays, setRetentionDays] = useState<number | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [otpOpen, setOtpOpen] = useState(false);
   const [requesting, setRequesting] = useState(false);
@@ -60,6 +67,21 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
       active = false;
     };
   }, [load, t]);
+
+  // The window, so the warning below quotes the number the server will actually
+  // stamp the request with. A failure here leaves the generic wording rather
+  // than a made-up figure.
+  useEffect(() => {
+    let active = true;
+    graphqlRequest(MobileAccountDeletionSettingsDocument, undefined, { auth: true })
+      .then((data) => {
+        if (active) setRetentionDays(data.accountDeletionSettings.retention_days);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const startFlow = () => {
     setRequesting(true);
@@ -83,12 +105,20 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
       .finally(() => setCancelling(false));
   };
 
-  const onSubmitted = () => {
+  const onSubmitted = (request: PendingRequest) => {
     setOtpOpen(false);
-    load()
-      .then(() => onDone(t('mweb.account.deletion.submitted')))
-      .catch((e) => setError(errMsg(e, t)));
+    setSubmitted(request);
   };
+
+  const signOut = () => {
+    setSubmitted(null);
+    logout().catch((e) => setError(errMsg(e, t)));
+  };
+
+  const confirmMessage =
+    retentionDays === null
+      ? t('mweb.account.deletion.confirmMessage')
+      : t('mweb.account.deletion.confirmMessageDays', { vars: { days: retentionDays } });
 
   const errorLine = error ? (
     <Text fontSize={12.5} color="$danger" testID="deletion-panel-error">
@@ -107,6 +137,11 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
             </Text>
             <Text fontSize={12.5} color="$muted">
               {t('mweb.account.deletion.pendingBody')}
+            </Text>
+            <Text fontSize={12.5} fontWeight="700" color="$danger">
+              {t('mweb.account.deletion.deletesOn', {
+                vars: { date: formatDate(pending.scheduled_delete_at) },
+              })}
             </Text>
             <Text fontSize={12} color="$muted">
               {t('mweb.account.deletion.pendingRef', { vars: { code: pending.request_id } })}
@@ -156,7 +191,7 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
       <ConfirmDialog
         open={confirmOpen}
         title={t('mweb.account.deletion.confirmTitle')}
-        message={t('mweb.account.deletion.confirmMessage')}
+        message={confirmMessage}
         confirmLabel={
           requesting ? t('mweb.account.deletion.submitting') : t('mweb.account.deletion.confirmCta')
         }
@@ -169,6 +204,12 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
         open={otpOpen}
         onClose={() => setOtpOpen(false)}
         onSubmitted={onSubmitted}
+      />
+      <DeletionSubmittedDialog
+        open={!!submitted}
+        code={submitted?.request_id ?? ''}
+        deletesOn={submitted?.scheduled_delete_at ?? ''}
+        onSignOut={signOut}
       />
     </YStack>
   );

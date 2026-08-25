@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
+import { splitPodsByPhase } from '@duncit/utils';
 import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
@@ -233,32 +234,45 @@ export function useHomeData({
     isDescendantOf,
   ]);
 
-  // A pod is "previous" once its start date/time has passed — it leaves the main
-  // feed and moves to the Previous Pods section/page (bug 8).
-  const isPastPod = (p: any) =>
-    !!p.pod_date_time && new Date(p.pod_date_time).getTime() < Date.now();
-  // Date-ASC like the native twin (useHomeFeed deriveHome), so the Happening
-  // nearby page shows the same order as the home rail and a "See all"
-  // continuation (?from=N) lands right after the rail's last card.
+  // Three time buckets, one pass, one clock read: a pod that is RUNNING right
+  // now is neither upcoming nor previous — it belongs to the Ongoing rail, and
+  // only drops into Previous Pods once its end time has passed. The rule lives
+  // in @duncit/utils so the native twin (useHomeFeed deriveHome) reads it too.
+  const phases = useMemo(() => splitPodsByPhase<any>(filteredPods), [filteredPods]);
+  // Date-ASC like the native twin, so the Happening nearby page shows the same
+  // order as the home rail and a "See all" continuation (?from=N) lands right
+  // after the rail's last card.
   const activePods = useMemo(
     () =>
-      filteredPods
-        .filter((p: any) => !isPastPod(p))
+      phases.upcoming
+        .slice()
         .sort(
           (a: any, b: any) =>
             new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
         ),
-    [filteredPods]
+    [phases]
+  );
+  // Earliest start first, so the pod that has been running longest leads the
+  // rail — the same date-ASC reading the other two rails give.
+  const ongoingPods = useMemo(
+    () =>
+      phases.ongoing
+        .slice()
+        .sort(
+          (a: any, b: any) =>
+            new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
+        ),
+    [phases]
   );
   const previousPods = useMemo(
     () =>
-      filteredPods
-        .filter(isPastPod)
+      phases.previous
+        .slice()
         .sort(
           (a: any, b: any) =>
             new Date(b.pod_date_time || 0).getTime() - new Date(a.pod_date_time || 0).getTime()
         ),
-    [filteredPods]
+    [phases]
   );
 
   const podsByClub = useMemo(() => {
@@ -504,6 +518,7 @@ export function useHomeData({
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
     totalPods: activePods.length,
     activePods,
+    ongoingPods,
     previousPods,
     hostNameOf,
     categoryLabelOf,

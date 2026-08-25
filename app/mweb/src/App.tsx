@@ -13,6 +13,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { NotifyHost } from './components/notify';
 import PodFeedbackPrompt from './components/pod-feedback';
 import AppPopupDialog from './components/app-popup';
+import DeletionNoticeDialog from './components/DeletionNoticeDialog';
 import AppRoutes from './app/AppRoutes';
 import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
@@ -150,6 +151,7 @@ export default function App() {
       {showBottomNav && <BottomNav />}
       {isAuthed && <PodFeedbackPrompt />}
       {isAuthed && <AppPopupDialog />}
+      {isAuthed && <DeletionNoticeDialog />}
       <OpenInAppBanner />
       <BrandFontLoader />
       <NotifyHost />

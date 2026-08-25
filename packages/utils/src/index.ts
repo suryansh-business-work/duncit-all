@@ -217,6 +217,14 @@ export {
   type SpotsBounds,
 } from './pod-spots';
 export {
+  POD_LIVE_TAIL_MS,
+  podPhase,
+  splitPodsByPhase,
+  type PodPhase,
+  type PodPhaseFields,
+  type PodsByPhase,
+} from './pod-phase';
+export {
   CART_BADGE_MAX,
   cartBadgeLabel,
   deriveCartEntry,
@@ -277,6 +285,18 @@ export {
   pickerBatchSize,
   type CoverCategoryNames,
 } from './cover-image';
+export {
+  BADGE_CONDITIONS,
+  BADGE_GOAL_KEY,
+  BADGE_WINDOW,
+  BADGE_WINDOW_KEY,
+  BADGE_WINDOWS,
+  badgeProgressPercent,
+  sortBadgeProgress,
+  type BadgeCondition,
+  type BadgeProgressLike,
+  type BadgeWindow,
+} from './badges';
 export {
   LEADERBOARD_CATEGORIES,
   LEADERBOARD_EARN_KEY,

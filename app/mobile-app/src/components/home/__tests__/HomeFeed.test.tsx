@@ -61,6 +61,7 @@ const base = {
   hasContent: true,
   clubsWithPods: [{ club, pods: [pod] }],
   featuredPods: [pod],
+  ongoingPods: [],
   previousPods: [],
   totalPods: 1,
   refetch: jest.fn(),
@@ -110,6 +111,19 @@ describe('HomeFeed', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PreviousPods');
     fireEvent.press(screen.getByTestId('pod-card-pod-old'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-old' });
+  });
+
+  // A pod that is RUNNING gets its own band between the feed and Previous Pods,
+  // and the only thing it offers is opening the pod — joining is already closed.
+  it('shows the Ongoing Pods rail and opens a running pod', () => {
+    mockedFeed.mockReturnValue({
+      ...base,
+      ongoingPods: [{ ...pod, id: 'now', pod_id: 'pod-now', pod_title: 'Live Jam' }],
+    });
+    renderWithProviders(<HomeFeed />);
+    expect(screen.getByTestId('ongoing-pods-rail')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-card-pod-now'));
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-now' });
   });
 
   it('shows the pull-to-refresh spinner while refetching loaded data', () => {

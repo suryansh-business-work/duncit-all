@@ -4,6 +4,7 @@ import { Text } from 'tamagui';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeFilterButton } from '@/components/home/HomeFilterButton';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
+import { OngoingPodsRail } from '@/components/home/OngoingPodsRail';
 import { PodCard } from '@/components/home/PodCard';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
 import type { HomePod, VibeCategory } from '@/hooks/useHomeFeed';
@@ -232,5 +233,22 @@ describe('PreviousPodsRail', () => {
     expect(onSeeAll).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-card-p1'));
     expect(onOpenPod).toHaveBeenCalled();
+  });
+});
+
+describe('OngoingPodsRail', () => {
+  it('renders nothing when no pod is running', () => {
+    renderWithProviders(<OngoingPodsRail pods={[]} onOpenPod={jest.fn()} />);
+    expect(screen.queryByTestId('ongoing-pods-rail')).toBeNull();
+  });
+
+  // No See-all here on purpose: the band is bounded by the pods’ own end
+  // times, so the only action a card offers is opening the pod.
+  it('lists running pods and opens one', () => {
+    const onOpenPod = jest.fn();
+    renderWithProviders(<OngoingPodsRail pods={[pod]} onOpenPod={onOpenPod} />);
+    expect(screen.getByText('Ongoing Pods')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-card-p1'));
+    expect(onOpenPod).toHaveBeenCalledWith(pod);
   });
 });

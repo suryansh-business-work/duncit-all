@@ -32,6 +32,7 @@ export interface CoinSettings {
   pod_join_earn_pct: number;
   shop_earn_pct: number;
   coins_per_referral: number;
+  pod_feedback_coins: number;
   updated_at: string;
 }
 
@@ -177,6 +178,7 @@ export const COIN_SETTINGS = gql`
       pod_join_earn_pct
       shop_earn_pct
       coins_per_referral
+      pod_feedback_coins
       updated_at
     }
   }
@@ -188,6 +190,7 @@ export const UPDATE_COIN_SETTINGS = gql`
       pod_join_earn_pct
       shop_earn_pct
       coins_per_referral
+      pod_feedback_coins
       updated_at
     }
   }

@@ -1,5 +1,16 @@
 import { gql } from '@apollo/client';
 
+/** The member's own open request, as both the panel and the post-login notice
+ * read it. */
+export interface PendingRequest {
+  id: string;
+  request_id: string;
+  status: string;
+  requested_at: string;
+  scheduled_delete_at: string;
+  days_remaining: number | null;
+}
+
 /** Auth-guarded account-security mutations (mirror the server resolvers). */
 export const REQUEST_PASSWORD_CHANGE_OTP = gql`
   mutation RequestPasswordChangeOtp($input: RequestPasswordChangeInput!) {
@@ -28,13 +39,19 @@ export const REQUEST_ACCOUNT_DELETION_OTP = gql`
   what it buys is a row in the Tech portal's queue. Everything below reads or
   writes that request — nothing here removes an account.
 */
+const DELETION_REQUEST_FIELDS = `
+  id
+  request_id
+  status
+  requested_at
+  scheduled_delete_at
+  days_remaining
+`;
+
 export const MY_ACCOUNT_DELETION_REQUEST = gql`
   query MyAccountDeletionRequest {
     myAccountDeletionRequest {
-      id
-      request_id
-      status
-      requested_at
+      ${DELETION_REQUEST_FIELDS}
     }
   }
 `;
@@ -42,10 +59,17 @@ export const MY_ACCOUNT_DELETION_REQUEST = gql`
 export const SUBMIT_ACCOUNT_DELETION_REQUEST = gql`
   mutation SubmitAccountDeletionRequest($input: SubmitAccountDeletionRequestInput!) {
     submitAccountDeletionRequest(input: $input) {
-      id
-      request_id
-      status
-      requested_at
+      ${DELETION_REQUEST_FIELDS}
+    }
+  }
+`;
+
+/** The window, so the warning quotes the number the server will actually stamp
+ * the request with rather than a "30" hardcoded next to the button. */
+export const ACCOUNT_DELETION_SETTINGS = gql`
+  query AccountDeletionSettings {
+    accountDeletionSettings {
+      retention_days
     }
   }
 `;

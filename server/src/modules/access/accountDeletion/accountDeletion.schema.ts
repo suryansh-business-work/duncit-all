@@ -39,10 +39,19 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
     surface: AccountDeletionSurface!
     status: AccountDeletionStatus!
     requested_at: String!
+    "The date the member was promised, stamped from the window when they asked."
+    scheduled_delete_at: String!
+    "Whole days left before that date. Null once the request is closed."
+    days_remaining: Int
     reviewed_at: String
     reviewed_by: ID
     note: String!
     purge_log: [AccountDeletionPurgeEntry!]!
+  }
+
+  "How long an account stays after its owner asks for it to go."
+  type AccountDeletionSettings {
+    retention_days: Int!
   }
 
   """
@@ -67,10 +76,16 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
     DELETE_DOCUMENTS — the documents are the member's and go entirely.
     REMOVE_FROM_DOCUMENTS — the member is one entry inside somebody else's
     document (a pod attendee, a comment, a signature), so only their entry is
-    pulled. The console shows this before it asks, because the two are not
-    remotely the same act.
+    pulled.
+    REDACT_RECORDS — a financial or audit record that outlives the account. The
+    row stays and the personal data on it is erased; what showed a name shows
+    "Deleted user".
+    The console shows this before it asks, because the three are not remotely
+    the same act.
     """
     purge_kind: String!
+    "Why this record is kept. Empty unless purge_kind is REDACT_RECORDS."
+    retention_reason: String!
   }
 
   type AccountDeletionDetail {
@@ -105,6 +120,12 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
   extend type Query {
     "The signed-in member's own open request, or null."
     myAccountDeletionRequest: AccountDeletionRequest
+    """
+    The retention window. Readable by any signed-in member, because both apps
+    warn with the number BEFORE anyone confirms — a promise the product makes
+    has to come from the same place the date is stamped from.
+    """
+    accountDeletionSettings: AccountDeletionSettings!
     "Tech console queue."
     accountDeletionRequestsTable(query: TableQueryInput): AccountDeletionRequestPage!
     "One request plus a live count of where that member still appears."
@@ -135,5 +156,13 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
     purgeAccountCompletely(request_doc_id: ID!): AccountDeletionDetail!
     "Turn a request down, with a reason."
     rejectAccountDeletionRequest(request_doc_id: ID!, note: String!): AccountDeletionDetail!
+    """
+    Change the retention window, in whole days (1–365).
+
+    Applies to requests filed after it. A member already waiting keeps the date
+    they were promised — moving somebody's deletion date under them is exactly
+    what a grace period is supposed to prevent.
+    """
+    updateAccountDeletionSettings(retention_days: Int!): AccountDeletionSettings!
   }
 `;

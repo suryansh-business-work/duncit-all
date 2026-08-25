@@ -30,6 +30,9 @@ exports:
   - 'formatMjml'
   - 'nationalPhoneDigits'
   - 'isStoryLive'
+  - 'podPhase'
+  - 'splitPodsByPhase'
+  - 'POD_LIVE_TAIL_MS'
   - 'clubCategoryKey'
   - 'productMatchesClub'
   - 'filterProductsForClub'
@@ -88,6 +91,13 @@ exports:
   - 'USERNAME_CHECK_DEBOUNCE_MS'
   - 'profileUrl'
   - 'buildUsernameLabels'
+  - 'BADGE_CONDITIONS'
+  - 'BADGE_GOAL_KEY'
+  - 'BADGE_WINDOWS'
+  - 'BADGE_WINDOW'
+  - 'BADGE_WINDOW_KEY'
+  - 'badgeProgressPercent'
+  - 'sortBadgeProgress'
 ---
 
 ## Why this exists
@@ -459,6 +469,28 @@ clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
 | `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
 | `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |
 
+### Pod phase — the Home rails
+
+A pod is not simply "upcoming or past". It leaves the upcoming feed the moment
+it STARTS — nobody can join a pod that is running, and the server refuses the
+booking — but it is not *previous* until it is actually over. Between those two
+instants it is **ONGOING**, and Home gives it its own rail on both mWeb and
+native. Before this split a pod that was happening right now dropped straight
+into Previous Pods.
+
+A pod's end is `pod_end_date_time` when the host set one, and
+`pod_date_time + POD_LIVE_TAIL_MS` (4h) when they did not — the same fallback
+the server states as a Mongo predicate in `pod.lifecycle.ts`, which is why the
+tail is one constant rather than a number typed out per surface. mWeb's
+`podStatus` and native's `podStatus` both read this, so a status chip and the
+rails can never place the same pod differently.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `POD_LIVE_TAIL_MS` | `number` | 4h — how long a pod with no set end stays live. |
+| `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
+| `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
+
 ### Notifications
 
 The server stores no notification "type", so the category is derived from the title.
@@ -687,6 +719,39 @@ leaderboardMedal(1); // 'gold'  ·  leaderboardMedal(4) → null (past the podiu
 The i18n keys are literals on purpose — the translation-key gate parses source statically and
 cannot follow a key assembled from the category name.
 
+
+## Badge vocabulary — the goal and the window it happens in
+
+Every badge states two things a member has to read before it means anything: the GOAL
+(`BADGE_GOAL_KEY`, whose copy takes the badge's threshold as `{target}`) and the WINDOW that
+goal has to happen inside (`BADGE_WINDOW`, keyed to a label by `BADGE_WINDOW_KEY`). The window
+follows from the CONDITION, never from an admin field — a monthly count resets with the
+calendar wherever it is rendered, and no one can configure that apart:
+
+```ts
+import {
+  BADGE_GOAL_KEY,
+  BADGE_WINDOW,
+  BADGE_WINDOW_KEY,
+  badgeProgressPercent,
+  sortBadgeProgress,
+} from '@duncit/utils';
+
+t(BADGE_GOAL_KEY.POD_ATTEND_COUNT, { vars: { target: 10 } }); // 'Attend 10 pods'
+BADGE_WINDOW.MONTHLY_POD_ATTEND_COUNT;                        // 'CALENDAR_MONTH'
+t(BADGE_WINDOW_KEY.CALENDAR_MONTH);        // 'Must all happen inside one calendar month'
+
+badgeProgressPercent({ achieved: false, current: 4, target: 10 }); // 40
+// An achieved badge always reads 100 — the metric can drift back below the
+// threshold (a cancelled ticket) and a bar sliding backwards under an
+// "Achieved" chip reads as a bug.
+badgeProgressPercent({ achieved: true, current: 3, target: 10 }); // 100
+
+sortBadgeProgress(rows); // earned first, then closest to unlocking
+```
+
+The placeholder is `{target}`, never `{count}`: the translator reserves `count` for its own
+plural counter and blanks an unmatched one out of the sentence.
 ## The app-open popup — one dismissal, one set of dimensions
 
 The marketing popup is rendered three times — MUI in mWeb, Tamagui in the native app and in
@@ -802,9 +867,9 @@ A failed `ask` falls back to `IDLE_USERNAME_CHECK`, which `usernameStatus` reads
 telling somebody their handle is taken because the network blinked would be worse than making
 them wait, and Save is disabled either way.
 
-`usernameFieldState` is everything the field then renders, derived once for both surfaces: the
+`usernameFieldState` is everything the field renders, derived once for both surfaces — the
 MUI field and the Tamagui field disagree about how to draw a text box and agree about
-absolutely everything else. Note the link — it previews the handle being TYPED once the server
+absolutely everything else. Note the link: it previews the handle being TYPED once the server
 has said yes, and otherwise the one that works today.
 
 ```ts
@@ -816,8 +881,7 @@ usernameFieldState({ value: 'ravi-plays', current: 'ravi-9x3m', check: IDLE_USER
 // { status: 'CHECKING', link: 'https://mweb.duncit.com/u/ravi-9x3m', errored: false }
 ```
 
-Seeing the new address before saving is what makes the warning about already-shared links
-land. The same pair is on the PROFILE, under the name and next to Share.
+The same pair is on the PROFILE, under the name and next to Share.
 
 ```ts
 profileUrl('https://mweb.duncit.com', 'ravi-9x3m'); // 'https://mweb.duncit.com/u/ravi-9x3m'

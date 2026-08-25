@@ -1,4 +1,10 @@
-import { buildPodShareMessage, meetingPlatformName, type PodShareLinks } from '@duncit/utils';
+import {
+  buildPodShareMessage,
+  meetingPlatformName,
+  podPhase,
+  type PodPhase,
+  type PodShareLinks,
+} from '@duncit/utils';
 
 import { config } from '@/constants/config';
 import { PodOccurrence } from '@/generated/graphql/graphql';
@@ -74,22 +80,20 @@ export function podOccurrenceLabel(occurrence?: string | null): string {
   return POD_OCCURRENCE_LABELS[occurrence as PodOccurrence] ?? occurrence.replaceAll('_', ' ');
 }
 
-// When a pod has no explicit end time, treat it as live for this long after start.
-const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
-
 export type PodStatus = 'LIVE' | 'UPCOMING' | 'ENDED';
 
+/** The chip vocabulary this surface speaks, over the shared time rule. */
+const STATUS_OF_PHASE: Record<PodPhase, PodStatus> = {
+  UPCOMING: 'UPCOMING',
+  ONGOING: 'LIVE',
+  PREVIOUS: 'ENDED',
+};
+
 /** Derives a pod's status from its start (and optional end) timestamp relative
- * to now. Mirrors mWeb's podStatus. */
+ * to now. The start/end/tail rule itself lives in @duncit/utils, shared with
+ * mWeb's podStatus and with the Home rails' Ongoing bucket. */
 export function podStatus(start?: string | null, end?: string | null): PodStatus {
-  if (!start) return 'UPCOMING';
-  const startMs = new Date(start).getTime();
-  if (Number.isNaN(startMs)) return 'UPCOMING';
-  const endMs = end ? new Date(end).getTime() : startMs + POD_LIVE_TAIL_MS;
-  const now = Date.now();
-  if (now < startMs) return 'UPCOMING';
-  if (now <= endMs) return 'LIVE';
-  return 'ENDED';
+  return STATUS_OF_PHASE[podPhase(start, end)];
 }
 
 /** True while a pod has not ended yet (live or upcoming) — used to hide past

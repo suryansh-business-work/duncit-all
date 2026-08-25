@@ -45,6 +45,7 @@ const sourceOptions = (t: Translate) => [
   { value: 'REFERRAL_EARN', label: t('finance.duncitCoin.referralReferrer') },
   { value: 'REFERRAL_SIGNUP', label: t('finance.duncitCoin.referralNewMember') },
   { value: 'GIFT_CARD_REDEEM', label: t('finance.duncitCoin.giftCard') },
+  { value: 'POD_FEEDBACK', label: t('finance.duncitCoin.podFeedback') },
   { value: 'ADMIN_GRANT', label: t('finance.duncitCoin.adminGrant') },
   { value: 'ADMIN_DEDUCT', label: t('finance.duncitCoin.adminDeduction') },
 ];

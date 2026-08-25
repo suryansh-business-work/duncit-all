@@ -10,6 +10,8 @@ import {
   TextField,
 } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
+import PurgeProgressList from './PurgeProgressList';
+import type { PurgeStep } from './useDeletionDetail';
 
 interface Props {
   open: boolean;
@@ -17,6 +19,8 @@ interface Props {
   code: string;
   name: string;
   busy: boolean;
+  /** The run, once it has started. Empty until the operator confirms. */
+  steps: PurgeStep[];
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -34,12 +38,18 @@ export default function PurgeAllDialog({
   code,
   name,
   busy,
+  steps,
   onConfirm,
   onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [typed, setTyped] = useState('');
   const matches = typed.trim().toUpperCase() === code.toUpperCase();
+  // Once a step exists the run has started, and the dialog stops being a
+  // confirmation: it is the only place the operator can watch what is
+  // happening, and it stays on the run even after the last step lands so a
+  // failure is still readable.
+  const started = steps.length > 0;
 
   const close = () => {
     setTyped('');
@@ -47,44 +57,50 @@ export default function PurgeAllDialog({
   };
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : close} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={busy ? undefined : close} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: 800 }}>
-        {t('tech.accountDeletions.confirmAllTitle', { vars: { name: name || code } })}
+        {started
+          ? t('tech.accountDeletions.runTitle', { vars: { code } })
+          : t('tech.accountDeletions.confirmAllTitle', { vars: { name: name || code } })}
       </DialogTitle>
       <DialogContent>
-        <Stack spacing={2}>
-          <DialogContentText>
-            {t('tech.accountDeletions.confirmAllMessage', { vars: { code } })}
-          </DialogContentText>
-          <TextField
-            autoFocus
-            fullWidth
-            size="small"
-            value={typed}
-            disabled={busy}
-            onChange={(event) => setTyped(event.target.value)}
-            label={t('tech.accountDeletions.confirmAllPrompt', { vars: { code } })}
-            slotProps={{
-              htmlInput: { 'data-testid': 'purge-all-confirm-input' }
-            }}
-          />
-        </Stack>
+        {started ? (
+          <PurgeProgressList steps={steps} />
+        ) : (
+          <Stack spacing={2}>
+            <DialogContentText>
+              {t('tech.accountDeletions.confirmAllMessage', { vars: { code } })}
+            </DialogContentText>
+            <TextField
+              autoFocus
+              fullWidth
+              size="small"
+              value={typed}
+              disabled={busy}
+              onChange={(event) => setTyped(event.target.value)}
+              label={t('tech.accountDeletions.confirmAllPrompt', { vars: { code } })}
+              slotProps={{
+                htmlInput: { 'data-testid': 'purge-all-confirm-input' },
+              }}
+            />
+          </Stack>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={close} disabled={busy}>
           {t('tech.accountDeletions.close')}
         </Button>
-        <Button
-          color="error"
-          variant="contained"
-          onClick={onConfirm}
-          disabled={!matches || busy}
-          data-testid="purge-all-confirm"
-        >
-          {busy
-            ? t('tech.accountDeletions.deletingAll')
-            : t('tech.accountDeletions.confirmAllCta')}
-        </Button>
+        {!started && (
+          <Button
+            color="error"
+            variant="contained"
+            onClick={onConfirm}
+            disabled={!matches || busy}
+            data-testid="purge-all-confirm"
+          >
+            {t('tech.accountDeletions.confirmAllCta')}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

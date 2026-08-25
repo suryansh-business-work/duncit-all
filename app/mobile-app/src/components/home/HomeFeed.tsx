@@ -32,6 +32,7 @@ import { HostCtaBanner } from '@/components/home/HostCtaBanner';
 import { HomeFilterButton } from '@/components/home/HomeFilterButton';
 import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
+import { OngoingPodsRail } from '@/components/home/OngoingPodsRail';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
 import { SomethingForYouRail } from '@/components/home/SomethingForYouRail';
 import { VerifyEmailBanner } from '@/components/home/VerifyEmailBanner';
@@ -56,6 +57,7 @@ export function HomeFeed() {
     hasContent,
     clubsWithPods,
     featuredPods,
+    ongoingPods,
     previousPods,
     totalPods,
     categoryLabelOf,
@@ -177,6 +179,10 @@ export function HomeFeed() {
                 />
               </TourAnchor>
             </Reveal>
+            <OngoingPodsRail
+              pods={ongoingPods}
+              onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+            />
             <HostCtaBanner
               isHost={isHost}
               onCreatePod={() => navigation.navigate('CreatePod')}

@@ -1,17 +1,7 @@
-import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
 import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { LanguageSelect } from '@duncit/ui';
 import { useTranslation } from '../i18n/useTranslation';
-
-const SET_MY_LOCALE = gql`
-  mutation SetMyLocale($locale: String!) {
-    setMyLocale(locale: $locale) {
-      user_id
-      locale
-    }
-  }
-`;
+import { useLocalePreference } from '../i18n/useLocalePreference';
 
 /**
  * Language preference on the shared portal profile page — every MUI portal gets
@@ -19,27 +9,15 @@ const SET_MY_LOCALE = gql`
  *
  * Renders nothing until the platform has at least two active locales, so
  * portals show no dead control before any language is configured.
+ *
+ * The switch-then-save behaviour lives in useLocalePreference, which the
+ * taskbar's clock tray offers as well — one mutation, two places to reach it.
  */
 export function ProfileLanguage() {
-  const { t, locale, locales, setLocale } = useTranslation();
-  const [save] = useMutation(SET_MY_LOCALE);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const { t } = useTranslation();
+  const { locale, locales, change, saved, error } = useLocalePreference();
 
   if (locales.length < 2) return null;
-
-  const change = async (code: string) => {
-    // Switch first: the language must change even if the profile write fails.
-    setLocale(code);
-    setError(null);
-    setSaved(false);
-    try {
-      await save({ variables: { locale: code } });
-      setSaved(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t('shell.profile.languageSaveFailed'));
-    }
-  };
 
   return (
     <>

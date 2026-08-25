@@ -25,6 +25,7 @@ jest.mock('@/hooks/useHomeFeed', () => ({
     hasContent: false,
     clubsWithPods: [],
     featuredPods: [],
+    ongoingPods: [],
     previousPods: [],
     totalPods: 0,
     refetch: jest.fn(),

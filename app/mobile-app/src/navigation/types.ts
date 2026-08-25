@@ -77,6 +77,7 @@ export type RootStackParamList = {
   Referral: undefined;
   DuncitCoin: undefined;
   Faqs: undefined;
+  Badges: undefined;
   TourGuide: undefined;
   PodPlans: undefined;
   Policies: undefined;

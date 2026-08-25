@@ -43,6 +43,13 @@ exports:
   - 'parseEnvRoles'
   - 'WelcomeDashboard'
   - 'AccountSummaryCard'
+  - 'Taskbar'
+  - 'WorkspaceProvider'
+  - 'useWorkspace'
+  - 'useWorkspaceWindow'
+  - 'withSeconds'
+  - 'supportedTimeZones'
+  - 'deviceTimeZone'
   - 'SHELL_FALLBACK'
 ---
 
@@ -272,6 +279,11 @@ console shut for all non-super users.
 | `redirectPathFromLocation` | `(location: RedirectLocation) => string` | `pathname + search + hash`. |
 | `parseEnvRoles` | `(raw: unknown, fallback?: string[]) => string[]` | Parsed roles, or the fallback. |
 | `useBranding` | `() => BrandingSummary` | Server branding for the chrome. |
+| `useWorkspace` | `() => WorkspaceValue | null` | The console's desk — what is running, what is minimised, where the Agent tab sits. `null` outside the shell. |
+| `useWorkspaceWindow` | `(window: WorkspaceWindow | null) => WorkspaceWindowHandle` | Put one window on the taskbar while it is open. `null` unregisters it. |
+| `withSeconds` | `(pattern: string) => string` | The admin's time pattern, counting seconds — `'hh:mm a'` → `'hh:mm:ss a'`. |
+| `supportedTimeZones` | `() => string[]` | Every IANA zone this browser knows; `[]` where it will not say. |
+| `deviceTimeZone` | `() => string` | The zone this machine is set to. |
 | `useColorMode` | `() => …` | Light/dark mode, re-exported from `@duncit/theme`. |
 
 ### Config types
@@ -435,6 +447,45 @@ only useful while current, and a reliable channel would replay stale ones after
 a hiccup, so the cursor would crawl through where it used to be. Control
 handover is the exception and is sent reliably.
 
+## The taskbar, and the desk behind it
+
+Every console has a fixed strip along its bottom. It is a **row of the shell's flex column**, not a
+bar positioned over the page: the content above it is genuinely shorter, so the last line of a long
+table is readable instead of sitting under the clock. `tokens.size.taskbarHeight` is the one number
+that says how tall it is — the sidebar's drawer paper, a maximised floating window and the Agent
+tab's travel all read it.
+
+**On the left, what is running.** Windows announce themselves rather than being listed:
+
+```tsx
+const taskbar = useWorkspaceWindow(
+  open ? { id: 'staff-chat', title: t('shell.chat.panel.title'), icon: 'CHAT' } : null
+);
+
+// `null` when it closes — and its minimised flag goes with it, so reopening
+// it later never comes back invisible.
+return open && !taskbar.minimised ? <ChatSidebar onMinimise={taskbar.minimise} /> : null;
+```
+
+`FloatingWindow` does this for you: pass it an `id` and an `icon` and minimising takes it off the
+page entirely. Rendered with no `WorkspaceProvider` above it — a test, a storybook — `docked` is
+false and it falls back to rolling up to its own title bar, which is what it did before there was a
+bar to go to.
+
+**On the right, the clock.** It ticks once a second off the shared formatter, so the admin's time
+source (server / browser / custom anchor) and patterns drive it exactly as they drive every other
+date on the page — a console whose clock disagreed with its own tables would be worse than no clock.
+Its tray sets the zone (follow the workspace, this device, or any IANA zone the browser knows),
+whether to count seconds, and the reader's language.
+
+**The Agent tab** is stuck to the left or right edge and dragged along it. Crossing the middle of
+the screen switches edges; a press that never travels more than 4px is a click, not a drag.
+
+All of it is **per person and kept on the server** (`shellWorkspaceState`), for the same reason
+staff chat's state is: the shell renders in all seventeen consoles and each is its own origin, so
+localStorage would mean "per portal you happen to have open". The position is stored as a fraction
+of the available travel, not a pixel offset, so a tab placed on a 4K monitor is still reachable on a
+laptop.
 ## Coverage gate
 
 100% statements / functions / lines, with `branches: -3`. That negative threshold caps the number of

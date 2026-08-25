@@ -6,6 +6,7 @@ import { ME_AND_POSTS } from './queries';
 import PostDialog from './PostDialog';
 import ProfileAccordions from './ProfileAccordions';
 import ProfileHeader from './ProfileHeader';
+import ProfileBadgesStrip from './ProfileBadgesStrip';
 import ProfilePostsGrid from './ProfilePostsGrid';
 import UploadDialog from './UploadDialog';
 
@@ -64,6 +65,10 @@ export default function ProfilePage() {
         onChanged={() => refetch()}
       />
 
+      {/* Directly under the followers / following row in the header — the
+          badges a member has actually earned, with the full catalogue one tap
+          away on /badges. */}
+      <ProfileBadgesStrip />
       <ProfileAccordions me={me} onSaved={() => refetch()} autoSendEmailOtp={verifyEmailRequested} />
       <ProfilePostsGrid posts={posts} onOpenPost={setOpenPostId} onNewPost={() => setUploadOpen(true)} />
 

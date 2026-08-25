@@ -78,8 +78,13 @@ export const REFERRAL_TILE: ProfileTile = {
 
 /** The "Manage Account" grouped list — the account destinations not in the grid.
  * E-commerce rows live in their own {@link SHOP_ITEMS} section. `showPodPlans`
- * gates the Pod Plans row, `showTourGuide` the Tour Guide row. */
-export function buildManageItems(showPodPlans: boolean, showTourGuide: boolean): ProfileTile[] {
+ * gates the Pod Plans row, `showTourGuide` the Tour Guide row. `badgesLabel`
+ * arrives already translated — this module holds no copy for new rows (rule 38). */
+export function buildManageItems(
+  showPodPlans: boolean,
+  showTourGuide: boolean,
+  badgesLabel: string,
+): ProfileTile[] {
   const items: ProfileTile[] = [
     {
       key: 'account',
@@ -106,10 +111,9 @@ export function buildManageItems(showPodPlans: boolean, showTourGuide: boolean):
       route: 'TourGuide',
     });
   }
-  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'help-outline', route: 'Faqs' });
   if (showPodPlans) {
-    // Pod Plans always slots in just before FAQs (the last row).
-    items.splice(-1, 0, {
+    // Pod Plans always slots in just before FAQs.
+    items.push({
       key: 'plans',
       label: 'Pod Plans',
       caption: '',
@@ -117,6 +121,15 @@ export function buildManageItems(showPodPlans: boolean, showTourGuide: boolean):
       route: 'PodPlans',
     });
   }
+  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'help-outline', route: 'Faqs' });
+  // Badges sits directly under FAQs, and is the last row of the section.
+  items.push({
+    key: 'badges',
+    label: badgesLabel,
+    caption: '',
+    icon: 'military-tech',
+    route: 'Badges',
+  });
   return items;
 }
 

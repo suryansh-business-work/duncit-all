@@ -22,6 +22,12 @@ export const badgeResolvers = {
     },
     userBadges: async (_p: unknown, args: { user_id: string }) =>
       badgeService.listForUser(args.user_id),
+    myBadgeProgress: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const uid = requireUser(ctx);
+      return badgeService.progressForUser(uid);
+    },
+    userBadgeProgress: async (_p: unknown, args: { user_id: string }) =>
+      badgeService.progressForUser(args.user_id),
   },
   Mutation: {
     createBadge: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

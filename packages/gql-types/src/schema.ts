@@ -42,6 +42,8 @@ export type AccountDeletionPurgeEntry = {
  */
 export type AccountDeletionRequest = {
   __typename?: 'AccountDeletionRequest';
+  /** Whole days left before that date. Null once the request is closed. */
+  days_remaining?: Maybe<Scalars['Int']['output']>;
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -53,6 +55,8 @@ export type AccountDeletionRequest = {
   requested_at: Scalars['String']['output'];
   reviewed_at?: Maybe<Scalars['String']['output']>;
   reviewed_by?: Maybe<Scalars['ID']['output']>;
+  /** The date the member was promised, stamped from the window when they asked. */
+  scheduled_delete_at: Scalars['String']['output'];
   status: AccountDeletionStatus;
   surface: AccountDeletionSurface;
   user_id: Scalars['ID']['output'];
@@ -64,6 +68,12 @@ export type AccountDeletionRequestPage = {
   page_size: Scalars['Int']['output'];
   rows: Array<AccountDeletionRequest>;
   total: Scalars['Int']['output'];
+};
+
+/** How long an account stays after its owner asks for it to go. */
+export type AccountDeletionSettings = {
+  __typename?: 'AccountDeletionSettings';
+  retention_days: Scalars['Int']['output'];
 };
 
 export type AccountDeletionStatus =
@@ -100,10 +110,16 @@ export type AccountDeletionTraceGroup = {
    * DELETE_DOCUMENTS — the documents are the member's and go entirely.
    * REMOVE_FROM_DOCUMENTS — the member is one entry inside somebody else's
    * document (a pod attendee, a comment, a signature), so only their entry is
-   * pulled. The console shows this before it asks, because the two are not
-   * remotely the same act.
+   * pulled.
+   * REDACT_RECORDS — a financial or audit record that outlives the account. The
+   * row stays and the personal data on it is erased; what showed a name shows
+   * "Deleted user".
+   * The console shows this before it asks, because the three are not remotely
+   * the same act.
    */
   purge_kind: Scalars['String']['output'];
+  /** Why this record is kept. Empty unless purge_kind is REDACT_RECORDS. */
+  retention_reason: Scalars['String']['output'];
 };
 
 export type ActiveUserBucket = {
@@ -1685,23 +1701,49 @@ export type BackoutStatus =
 export type Badge = {
   __typename?: 'Badge';
   badge_id: Scalars['String']['output'];
+  /** CATEGORY_POD_ATTEND_COUNT only: the category the attended pods must be in. */
+  category_id?: Maybe<Scalars['ID']['output']>;
   condition_type: BadgeConditionType;
   created_at: Scalars['String']['output'];
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
   is_active: Scalars['Boolean']['output'];
+  /** ROLE_GRANTED only: the role key that unlocks the badge. */
+  role_key: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
   threshold: Scalars['Int']['output'];
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
 };
 
 export type BadgeConditionType =
+  | 'CATEGORY_POD_ATTEND_COUNT'
   | 'CLUB_JOIN_COUNT'
+  | 'DISTINCT_CATEGORY_COUNT'
   | 'MANUAL'
+  | 'MONTHLY_POD_ATTEND_COUNT'
+  | 'PLUS_ONE_POD_COUNT'
+  | 'POD_ATTEND_COUNT'
   | 'POD_HOST_COUNT'
   | 'POD_JOIN_COUNT'
-  | 'POD_REFERRAL_COUNT';
+  | 'POD_REFERRAL_COUNT'
+  | 'ROLE_GRANTED';
+
+/**
+ * One badge measured against one member: the goal, how far along they are, and
+ * when they got there. Locked badges are returned too — the Badges section is
+ * what is still to be won as much as what already has been.
+ */
+export type BadgeProgress = {
+  __typename?: 'BadgeProgress';
+  achieved: Scalars['Boolean']['output'];
+  /** When the badge was first earned. Null while it is still locked. */
+  achieved_at?: Maybe<Scalars['String']['output']>;
+  badge: Badge;
+  current: Scalars['Int']['output'];
+  target: Scalars['Int']['output'];
+};
 
 export type BankAccountVerification = {
   __typename?: 'BankAccountVerification';
@@ -2897,6 +2939,11 @@ export type CoinBalance = {
   earn_pct: Scalars['Float']['output'];
   /** Every coin ever earned, so the total survives future spending. */
   lifetime_earned: Scalars['Float']['output'];
+  /**
+   * Flat coins currently paid for rating an attended pod. 0 means the reward is
+   * switched off, and the Duncit Coin page says nothing about it.
+   */
+  pod_feedback_coins: Scalars['Int']['output'];
   /** Percent of a shop order currently granted back as coins. */
   shop_earn_pct: Scalars['Float']['output'];
 };
@@ -2918,6 +2965,8 @@ export type CoinSettings = {
   __typename?: 'CoinSettings';
   /** Flat coins paid to EACH side of a referral — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
+  /** Flat coins paid for feedback on an attended pod (0 turns it off). */
+  pod_feedback_coins: Scalars['Int']['output'];
   /** Percent of a pod-ticket payment granted back to the buyer (0 turns it off). */
   pod_join_earn_pct: Scalars['Int']['output'];
   /** Percent of a shop/product order granted back to the buyer (0 turns it off). */
@@ -2928,6 +2977,7 @@ export type CoinSettings = {
 /** Every field is optional; an omitted one is left alone. */
 export type CoinSettingsInput = {
   coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
+  pod_feedback_coins?: InputMaybe<Scalars['Int']['input']>;
   pod_join_earn_pct?: InputMaybe<Scalars['Int']['input']>;
   shop_earn_pct?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -3436,10 +3486,13 @@ export type CreateAutoPodInput = {
 
 export type CreateBadgeInput = {
   badge_id?: InputMaybe<Scalars['String']['input']>;
+  category_id?: InputMaybe<Scalars['ID']['input']>;
   condition_type: BadgeConditionType;
   description?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  role_key?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
   threshold?: InputMaybe<Scalars['Int']['input']>;
   title: Scalars['String']['input'];
 };
@@ -5083,6 +5136,36 @@ export type EmailTemplateRender = {
   errors: Array<Scalars['String']['output']>;
   html: Scalars['String']['output'];
   subject: Scalars['String']['output'];
+};
+
+/**
+ * How much use one template has seen, counted from this log.
+ *
+ * Derived rather than stored: the number is a link INTO the log, and a counter
+ * on the template document would go on claiming 128 after the rows behind it
+ * were deleted. Raw-HTML sends carry no slug and are not counted.
+ */
+export type EmailTemplateUsage = {
+  __typename?: 'EmailTemplateUsage';
+  /** Attempts that tried and failed. */
+  failed: Scalars['Int']['output'];
+  /** The most recent attempt of any status. */
+  last_attempt_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * When it last actually went out, or null for a template that never has.
+   *
+   * Null while total is non-zero is a real and important state: a template that
+   * has only ever failed. It is not the same as never used.
+   */
+  last_sent_at?: Maybe<Scalars['String']['output']>;
+  /** Attempts that actually went out. */
+  sent: Scalars['Int']['output'];
+  /** Attempts deliberately not sent — a disabled template, a suppressed address. */
+  skipped: Scalars['Int']['output'];
+  /** The template slug these rows carry. Matches EmailTemplate.slug. */
+  slug: Scalars['String']['output'];
+  /** Every attempt, whatever became of it. */
+  total: Scalars['Int']['output'];
 };
 
 export type EmailTemplateVariable = {
@@ -8971,6 +9054,14 @@ export type Mutation = {
   unfollowUser: User;
   unsubscribeAllByToken: MailPreference;
   unsubscribeNewsletter: Scalars['Boolean']['output'];
+  /**
+   * Change the retention window, in whole days (1–365).
+   *
+   * Applies to requests filed after it. A member already waiting keeps the date
+   * they were promised — moving somebody's deletion date under them is exactly
+   * what a grace period is supposed to prevent.
+   */
+  updateAccountDeletionSettings: AccountDeletionSettings;
   /** Marketing edits per-position per-day pricing. */
   updateAdPricing: AdPricing;
   /** AI Portal: save the chip/dialog copy and the image-analysis prompt. */
@@ -8990,7 +9081,7 @@ export type Mutation = {
   updateChallenge: Challenge;
   updateClub: Club;
   updateClubAdminProfile: ClubAdminProfile;
-  /** Finance: set what a pod join, a shop order and a referral each pay. */
+  /** Finance: set what a pod join, a shop order, a referral and a pod rating each pay. */
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
@@ -11899,6 +11990,11 @@ export type MutationUnsubscribeAllByTokenArgs = {
 
 export type MutationUnsubscribeNewsletterArgs = {
   email: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateAccountDeletionSettingsArgs = {
+  retention_days: Scalars['Int']['input'];
 };
 
 
@@ -15431,6 +15527,12 @@ export type Query = {
   accountDeletionRequest: AccountDeletionDetail;
   /** Tech console queue. */
   accountDeletionRequestsTable: AccountDeletionRequestPage;
+  /**
+   * The retention window. Readable by any signed-in member, because both apps
+   * warn with the number BEFORE anyone confirms — a promise the product makes
+   * has to come from the same place the date is stamped from.
+   */
+  accountDeletionSettings: AccountDeletionSettings;
   /** Live ads for a placement (includes AUTO ads). Public — powers the app ad slots. */
   activeAds: Array<PublicAd>;
   /**
@@ -15777,6 +15879,14 @@ export type Query = {
   emailLogsTable: EmailLogTablePage;
   emailTemplate?: Maybe<EmailTemplate>;
   emailTemplateBySlug?: Maybe<EmailTemplate>;
+  /**
+   * Send counts and last-used dates, one entry per template slug.
+   *
+   * Beside the log rather than beside the templates because every figure in it
+   * is read off EmailLog — and deliberately NOT a field on EmailTemplate, which
+   * would be one aggregation per row on a page listing thirty-five of them.
+   */
+  emailTemplateUsage: Array<EmailTemplateUsage>;
   emailTemplates: Array<EmailTemplate>;
   envCategories: Array<EnvCategoryDef>;
   envEntries: Array<EnvEntry>;
@@ -15993,6 +16103,7 @@ export type Query = {
   myApiKeysTable: ApiKeyTablePage;
   /** Per-role counts of Auto Pods waiting on the caller — drives role-switch landing. */
   myAutoPodActionCounts: AutoPodActionCounts;
+  myBadgeProgress: Array<BadgeProgress>;
   myBadges: Array<UserBadge>;
   /** Warehouses of one of the caller's OWN brands (partner portal Brand Settings). */
   myBrandPickupLocations: Array<BrandPickupLocation>;
@@ -16474,6 +16585,7 @@ export type Query = {
   /**  Admin-only: account health for any user.  */
   userAccountHealth: HealthScore;
   userActivityYear: UserActivityYear;
+  userBadgeProgress: Array<BadgeProgress>;
   userBadges: Array<UserBadge>;
   /** Admin: the complete profile change history of one user, newest first. */
   userChangeLogsTable: UserChangeLogTablePage;
@@ -18632,6 +18744,11 @@ export type QueryUserAccountHealthArgs = {
 export type QueryUserActivityYearArgs = {
   user_id: Scalars['ID']['input'];
   year?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryUserBadgeProgressArgs = {
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -21317,10 +21434,13 @@ export type UpdateAutoPodInput = {
 };
 
 export type UpdateBadgeInput = {
+  category_id?: InputMaybe<Scalars['ID']['input']>;
   condition_type?: InputMaybe<BadgeConditionType>;
   description?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  role_key?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
   threshold?: InputMaybe<Scalars['Int']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };

@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
+import { useVideoPlayer } from 'expo-video';
 
 import { StatusRail } from '@/components/status/StatusRail';
 import { StatusTile } from '@/components/status/StatusTile';
@@ -31,6 +32,17 @@ jest.mock('@/stores/status.store', () => ({
 
 const mockedRail = useStoryRail as jest.Mock;
 const mockedUpload = useStatusUpload as jest.Mock;
+const mockedPlayer = useVideoPlayer as jest.Mock;
+
+/** The player the component under test built, and the events it subscribed to.
+ * expo-video is a native module, so the specs drive its listeners by hand. */
+const lastPlayer = () => mockedPlayer.mock.results.at(-1)?.value;
+const emit = (event: string, payload?: unknown) => {
+  const calls = lastPlayer().addListener.mock.calls as [string, (arg: unknown) => void][];
+  act(() => {
+    calls.filter(([name]) => name === event).forEach(([, handler]) => handler(payload));
+  });
+};
 
 const imageSlide = {
   id: 'p1',
@@ -107,14 +119,38 @@ describe('StatusTile', () => {
 });
 
 describe('StatusVideo', () => {
-  it('advances only when the clip reports it ended', () => {
+  it('starts the clip with sound and advances only when it plays to the end', () => {
     const onEnded = jest.fn();
-    renderWithProviders(<StatusVideo uri="http://x/clip.mp4" onEnded={onEnded} />);
-    const view = screen.getByTestId('status-video');
-    fireEvent(view, 'message', { nativeEvent: { data: 'playing' } });
+    renderWithProviders(<StatusVideo uri="http://x/clip.mp4" muted={false} onEnded={onEnded} />);
+    const player = lastPlayer();
+    expect(player.muted).toBe(false);
+    expect(player.loop).toBe(false);
+    expect(player.play).toHaveBeenCalled();
+
+    emit('statusChange', { status: 'loading' });
     expect(onEnded).not.toHaveBeenCalled();
-    fireEvent(view, 'message', { nativeEvent: { data: 'ended' } });
+    emit('playToEnd');
     expect(onEnded).toHaveBeenCalled();
+  });
+
+  it('re-asserts play once the remote clip reports it is ready', () => {
+    renderWithProviders(<StatusVideo uri="http://x/clip.mp4" muted onEnded={jest.fn()} />);
+    const player = lastPlayer();
+    expect(player.muted).toBe(true);
+    const before = player.play.mock.calls.length;
+    emit('statusChange', { status: 'readyToPlay' });
+    expect(player.play.mock.calls).toHaveLength(before + 1);
+  });
+
+  it('drops its listeners when the slide goes away', () => {
+    const view = renderWithProviders(
+      <StatusVideo uri="http://x/clip.mp4" muted={false} onEnded={jest.fn()} />,
+    );
+    const removals = lastPlayer().addListener.mock.results.map(
+      (result: { value: { remove: jest.Mock } }) => result.value.remove,
+    );
+    view.unmount();
+    removals.forEach((remove: jest.Mock) => expect(remove).toHaveBeenCalled());
   });
 });
 
@@ -162,8 +198,28 @@ describe('StatusViewer', () => {
     const onClose = jest.fn();
     renderWithProviders(<StatusViewer status={group as never} onClose={onClose} />);
     fireEvent.press(screen.getByTestId('status-next')); // → video slide
-    fireEvent(screen.getByTestId('status-video'), 'message', { nativeEvent: { data: 'ended' } });
+    emit('playToEnd');
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('offers the speaker only on a video slide, and it mutes the clip', () => {
+    renderWithProviders(<StatusViewer status={group as never} onClose={jest.fn()} />);
+    // The first slide is an image — nothing to silence.
+    expect(screen.queryByTestId('status-mute')).toBeNull();
+    fireEvent.press(screen.getByTestId('status-next')); // → video slide
+    expect(lastPlayer().muted).toBe(false);
+    fireEvent.press(screen.getByTestId('status-mute'));
+    expect(lastPlayer().muted).toBe(true);
+  });
+
+  it('treats a VIDEO slide with no media as an empty frame, not a player', () => {
+    const noMedia = {
+      ...mineGroup,
+      slides: [{ ...videoSlide, imageUrl: null }],
+    };
+    renderWithProviders(<StatusViewer status={noMedia as never} onClose={jest.fn()} />);
+    expect(screen.queryByTestId('status-video')).toBeNull();
+    expect(screen.queryByTestId('status-mute')).toBeNull();
   });
 
   it('renders nothing when the group has no slides', () => {

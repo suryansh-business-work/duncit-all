@@ -5,6 +5,7 @@ import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.m
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { userNameOrDeleted } from '@modules/access/accountDeletion/accountDeletion.retention';
 import { coinSettingsService } from './coin.settings.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -200,9 +201,13 @@ const toAdminRow = (
   return {
     id: t._id.toString(),
     user_id: String(t.user_id),
-    user_name: payment?.user_name || account?.name || '',
+    // The payment's frozen snapshot wins, and a purge redacts that snapshot to
+    // "Deleted user" — so a row backed by a payment reads correctly on its own.
+    // A grant or a referral has no payment behind it and resolves the account
+    // live, which is where a since-deleted member would otherwise go blank.
+    user_name: payment?.user_name || userNameOrDeleted(account, t.user_id),
     user_email: payment?.user_email || account?.email || '',
-    admin_name: admin?.name ?? '',
+    admin_name: userNameOrDeleted(admin, t.admin_id),
     type: t.type,
     amount: t.amount,
     balance_after: t.balance_after,

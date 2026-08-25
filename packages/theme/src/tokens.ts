@@ -66,6 +66,10 @@ export const tokens = {
     scrollbar: 8,
     helperGap: 5,
     headerHeight: 48,
+    // The fixed strip along the bottom of every console: what is running on the
+    // left, the clock on the right. Read by the shell layout, by the drawer
+    // papers beside it and by every floating window that must not hide under it.
+    taskbarHeight: 40,
     drawerWidth: 256,
   },
 

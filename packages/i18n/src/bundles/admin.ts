@@ -541,6 +541,33 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       threshold: 'Threshold',
       activeHint: 'Active (auto-evaluated)',
       deleteBadge: 'Delete badge',
+      // The badge catalogue members see under Badges in their sidebar. A badge
+      // states a goal and the window it must happen in; the window follows from
+      // the condition, so only the condition and its threshold are edited here.
+      title: 'Badges',
+      newBadge: 'New badge',
+      editBadge: 'Edit badge',
+      createBadge: 'Create badge',
+      deleteConfirm: 'Delete the badge "{title}"? It disappears from every member profile.',
+      category: 'Category',
+      categoryHint: 'Only pods in this category count toward the badge.',
+      categoryNone: 'No category selected',
+      role: 'Partner role',
+      roleHint: 'The badge unlocks the moment this role is granted.',
+      sortOrder: 'Sort order',
+      sortOrderHint: 'Lower numbers are listed first.',
+      goalPrefix: 'Goal',
+      condPodJoin: 'Pods joined',
+      condPodHost: 'Pods hosted',
+      condClubJoin: 'Clubs joined',
+      condPodReferral: 'Successful referrals',
+      condPodAttend: 'Pods attended',
+      condCategoryAttend: 'Pods attended in a category',
+      condPlusOne: 'Pods attended with a +1',
+      condDistinctCategory: 'Different categories attended',
+      condMonthlyAttend: 'Pods attended in one calendar month',
+      condRoleGranted: 'Partner role granted',
+      condManual: 'Awarded by an admin',
     },
 
     clubs: {

@@ -64,6 +64,7 @@ export const coinResolvers = {
           pod_join_earn_pct?: number | null;
           shop_earn_pct?: number | null;
           coins_per_referral?: number | null;
+          pod_feedback_coins?: number | null;
         };
       },
       ctx: GraphQLContext

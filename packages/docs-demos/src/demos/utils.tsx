@@ -1,6 +1,10 @@
 import {
+  BADGE_GOAL_KEY,
+  BADGE_WINDOW,
+  BADGE_WINDOW_KEY,
   HOST_FREE_SPOT_NOTE,
   authMessageCardState,
+  badgeProgressPercent,
   buildCommPreferenceLabels,
   canFollowBack,
   commChannelSummary,
@@ -12,14 +16,36 @@ import {
   participationInputFrom,
   payableSpots,
   podParticipationActions,
+  podPhase,
   podRefundState,
+  sortBadgeProgress,
+  splitPodsByPhase,
   usernameBlocksSave,
   usernameFieldState,
+  type BadgeCondition,
   type CommChannelState,
   type PodParticipationFields,
+  type PodPhaseFields,
   type UsernameRejection,
 } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+
+/** One badge's standing for one member, exactly as `myBadgeProgress` reports it. */
+interface BadgeMock {
+  rows: Array<{
+    title: string;
+    condition_type: BadgeCondition;
+    current: number;
+    target: number;
+    achieved: boolean;
+  }>;
+}
+
+/** A real booking row as the API hands it to every surface. */
+interface BookingMock {
+  pod_datetime: string;
+  fields: PodParticipationFields;
+}
 
 /** What the @handle field holds, plus the server's last answer about it. */
 interface HandleMock {
@@ -29,10 +55,10 @@ interface HandleMock {
   reason: UsernameRejection | null;
 }
 
-/** A real booking row as the API hands it to every surface. */
-interface BookingMock {
-  pod_datetime: string;
-  fields: PodParticipationFields;
+/** A slice of the Home feed, plus the instant the rails are drawn at. */
+interface PhaseMock {
+  now: string;
+  pods: Array<PodPhaseFields & { pod_id: string }>;
 }
 
 /** A pod's money, as the host sizing it sees it. */
@@ -254,11 +280,104 @@ export default defineDemos('utils', [
         ])
       ),
   }),
+  defineDemo<PhaseMock>({
+    id: 'pod-phase',
+    title: 'Which Home rail a pod lands on',
+    note:
+      "Move `now` past a pod's end and watch it cross from Ongoing to Previous. " +
+      'DUN-POD-5502 has no end set, so it rides the 4h tail instead.',
+    mock: {
+      now: '2026-08-25T19:30:00.000Z',
+      pods: [
+        {
+          pod_id: 'DUN-POD-4821',
+          pod_date_time: '2026-08-26T13:00:00.000Z',
+          pod_end_date_time: '2026-08-26T15:00:00.000Z',
+        },
+        {
+          pod_id: 'DUN-POD-4977',
+          pod_date_time: '2026-08-25T18:30:00.000Z',
+          pod_end_date_time: '2026-08-25T20:30:00.000Z',
+        },
+        {
+          pod_id: 'DUN-POD-5502',
+          pod_date_time: '2026-08-25T17:00:00.000Z',
+          pod_end_date_time: null,
+        },
+        {
+          pod_id: 'DUN-POD-4310',
+          pod_date_time: '2026-08-24T13:00:00.000Z',
+          pod_end_date_time: '2026-08-24T16:00:00.000Z',
+        },
+      ],
+    },
+    compute: (mock) => {
+      const now = new Date(mock.now).getTime();
+      const rails = splitPodsByPhase(mock.pods, now);
+      const counts = [
+        `Upcoming ${rails.upcoming.length}`,
+        `Ongoing ${rails.ongoing.length}`,
+        `Previous ${rails.previous.length}`,
+      ].join('   ·   ');
+      return {
+        ...Object.fromEntries(
+          mock.pods.map((pod) => [
+            pod.pod_id,
+            podPhase(pod.pod_date_time, pod.pod_end_date_time, now),
+          ])
+        ),
+        'Home rails': counts,
+      };
+    },
+  }),
+  defineDemo<BadgeMock>({
+    id: 'badges',
+    title: 'What a badge asks for, and how far along you are',
+    note:
+      'Flip `achieved` on the Monthly Maverick row: the bar pins to 100 and it jumps to the ' +
+      'top of the list. Note the window is read from the CONDITION — nothing here configures it.',
+    mock: {
+      rows: [
+        {
+          title: 'Legend',
+          condition_type: 'POD_ATTEND_COUNT',
+          current: 7,
+          target: 10,
+          achieved: false,
+        },
+        {
+          title: 'Monthly Maverick',
+          condition_type: 'MONTHLY_POD_ATTEND_COUNT',
+          current: 2,
+          target: 6,
+          achieved: false,
+        },
+        {
+          title: 'Duncit Host Partner',
+          condition_type: 'ROLE_GRANTED',
+          current: 1,
+          target: 1,
+          achieved: true,
+        },
+      ],
+    },
+    compute: (mock) =>
+      Object.fromEntries(
+        sortBadgeProgress(mock.rows).map((row) => [
+          row.title,
+          [
+            BADGE_GOAL_KEY[row.condition_type],
+            BADGE_WINDOW_KEY[BADGE_WINDOW[row.condition_type]],
+            `${badgeProgressPercent(row)}%`,
+          ].join(' · '),
+        ])
+      ),
+  }),
   defineDemo<HandleMock>({
     id: 'username',
     title: 'The @handle field, and the Save button it gates',
     note:
-      'Type into `typed` and watch the status and the link move together. `available` is the ' +
+      "Type into `typed` and watch the status and the link move together. `available` is the " +
       "server's debounced answer — set it false with reason TAKEN to see Save lock.",
     mock: {
       current: 'ravi-9x3m',

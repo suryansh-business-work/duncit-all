@@ -550,6 +550,13 @@ export const TECH_BUNDLE: NestedCatalogue = {
       status: 'Status',
       reviewed: 'Reviewed',
       noReason: 'No reason given',
+      // The window. Every open request counts down against the date it was
+      // stamped with, which is the date the member was actually told.
+      scheduled: 'Deletes on',
+      timeLeft: 'Time left',
+      daysLeft: '{count} days left',
+      dueNow: 'Due now',
+      dueOn: 'Deletes {date} · {count} days left',
       // The detail dialog.
       detailTitle: 'Deletion request {code}',
       traceTitle: 'Where this member appears',
@@ -561,18 +568,43 @@ export const TECH_BUNDLE: NestedCatalogue = {
       field: 'Field',
       records: 'Records',
       effect: 'Effect',
-      // The two things a "Delete" here can mean. They are not close enough to
-      // share a word: one destroys documents, the other edits somebody else's.
+      // The three things a "Delete" here can mean. They are not close enough to
+      // share a word: one destroys documents, one edits somebody else's, and
+      // one keeps a record on purpose.
       effectDelete: 'Deletes the records',
       effectRemove: 'Removes them from the records',
+      effectRedact: 'Keeps the record, erases the person',
       effectDeleteHint:
         'These documents belong to this member and will be deleted outright.',
       effectRemoveHint:
         'The member is one entry inside documents that belong to others — a pod attendee, a comment, a signature. Only their entry is removed; the document stays.',
+      effectRedactHint:
+        'A financial or audit record that has to outlive the account. The row stays and the personal data on it is erased — where it showed a name it will show "Deleted user".',
       deleteGroup: 'Delete',
       deletingGroup: 'Deleting…',
+      redactGroup: 'Erase details',
+      redactingGroup: 'Erasing…',
       deleteAll: 'Delete everything',
       deletingAll: 'Deleting…',
+      // The run itself, line by line, so a purge that reaches seventy
+      // collections never looks the same as one that hung on the first.
+      runTitle: 'Carrying out {code}',
+      stepProgress: '{done} of {total} done',
+      stepAccount: 'The account itself',
+      stepPending: '{count} records',
+      stepRemoved: '{count} removed',
+      stepRedacted: '{count} redacted',
+      // The retention window, set here and promised in both apps.
+      settingsTitle: 'Deletion settings',
+      settingsIntro:
+        'How long an account stays after its owner asks for it to go. Both apps show this number before anyone confirms, and the date it produces is stamped on their request.',
+      retentionDays: 'Days before deletion',
+      retentionHint: 'Between 1 and 365 days. The product promises 30.',
+      retentionRange: 'Enter a whole number of days between 1 and 365.',
+      settingsAppliesNext:
+        'This applies to requests filed after you save. Anyone already waiting keeps the date they were promised.',
+      settingsSave: 'Save',
+      settingsSaved: 'Deletion window updated.',
       accountRemoved: 'The account document has been removed.',
       accountPresent: 'The account document is still here.',
       // Confirmations. Both are irreversible, so both spell out the damage.

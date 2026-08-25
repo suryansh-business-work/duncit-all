@@ -432,6 +432,10 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       grantCoins: 'Grant coins',
       orderTotal: 'Order Total',
       period: 'Period',
+      podFeedback: 'Pod feedback',
+      podFeedbackRate: 'Pod feedback rate',
+      podFeedbackRateHelper:
+        'Duncit Coins awarded for submitting feedback on an attended Pod. Set to 0 to disable this reward.',
       podJoinEarnRate: 'Pod join earn rate',
       purchaseReward: 'Purchase reward',
       redeemed: 'Redeemed',

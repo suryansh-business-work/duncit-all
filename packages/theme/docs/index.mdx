@@ -173,6 +173,11 @@ MuiOutlinedInput, MuiChip, MuiTooltip, MuiTable, MuiTableHead, MuiTableCell,
 MuiListItemButton, MuiAlert, MuiAvatar
 ```
 
+`MuiTableHead` tints the header row, and that tint is **opaque in both modes**.
+It has to be: a `stickyHeader` table paints its header over the rows scrolling
+underneath it, and a translucent tint lets every one of those rows read through
+the column titles. If you override it, keep the colour opaque.
+
 `extend` adds to that set rather than replacing it:
 
 ```ts

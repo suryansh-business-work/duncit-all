@@ -58,6 +58,8 @@ export default function CallWindow({
 
   return (
     <FloatingWindow
+      id="staff-call"
+      icon="CALL"
       open={open}
       title={t(call.kind === 'VIDEO' ? 'shell.chat.call.videoWithName' : 'shell.chat.call.withName', {
         vars: { name },

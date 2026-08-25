@@ -26,13 +26,17 @@ const mockRequest = graphqlRequest as jest.Mock;
 
 const sheet = (over: Record<string, unknown> = {}) => ({
   email: 'meera@duncit.com',
-  all_enabled: true,
+  updated_at: '2026-08-20T10:00:00.000Z',
   categories: [
-    { category: 'POD_UPDATES', label: 'Pod updates', enabled: true },
-    { category: 'MARKETING', label: 'Offers', enabled: true },
+    { category: 'POD_UPDATES', required: false, enabled: true },
+    { category: 'MARKETING', required: false, enabled: true },
   ],
   ...over,
 });
+
+/** The same sheet with every category switched off — what a bulk opt-out answers with. */
+const allOff = () =>
+  sheet({ categories: sheet().categories.map((row) => ({ ...row, enabled: false })) });
 
 const loaded = (value = sheet()) => mockRequest.mockResolvedValue({ myMailPreferences: value });
 
@@ -91,7 +95,7 @@ describe('useMailPreferences — saving', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     const answered = sheet({
-      categories: [{ category: 'MARKETING', label: 'Offers', enabled: false }],
+      categories: [{ category: 'MARKETING', required: false, enabled: false }],
     });
     mockRequest.mockResolvedValueOnce({ setMyMailPreference: answered });
 
@@ -150,12 +154,12 @@ describe('useMailPreferences — saving', () => {
     await waitFor(() => expect(result.current.busyCategory).toBe(ALL_CATEGORIES));
 
     await act(async () => {
-      release({ setAllMyMailPreferences: sheet({ all_enabled: false }) });
+      release({ setAllMyMailPreferences: allOff() });
       await pending;
     });
 
     expect(result.current.busyCategory).toBeNull();
-    expect(result.current.preference?.all_enabled).toBe(false);
+    expect(result.current.preference?.categories.every((row) => !row.enabled)).toBe(true);
     expect(mockRequest).toHaveBeenLastCalledWith(
       MobileSetAllMailPreferencesDocument,
       { enabled: false },

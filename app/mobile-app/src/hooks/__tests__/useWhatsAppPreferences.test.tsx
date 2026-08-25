@@ -27,14 +27,19 @@ jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
 const sheet = (over: Record<string, unknown> = {}) => ({
-  phone: '+919876543210',
-  all_enabled: true,
+  destination: '+919876543210',
+  reachable: true,
+  updated_at: '2026-08-20T10:00:00.000Z',
   categories: [
-    { category: 'POD_REMINDERS', label: 'Pod reminders', enabled: true },
-    { category: 'MARKETING', label: 'Offers', enabled: true },
+    { category: 'POD_REMINDERS', required: false, enabled: true },
+    { category: 'MARKETING', required: false, enabled: true },
   ],
   ...over,
 });
+
+/** The same sheet with every category switched off — what a bulk opt-out answers with. */
+const allOff = () =>
+  sheet({ categories: sheet().categories.map((row) => ({ ...row, enabled: false })) });
 
 const loaded = (value = sheet()) => mockRequest.mockResolvedValue({ myWhatsappPreference: value });
 
@@ -50,7 +55,7 @@ describe('useWhatsAppPreferences — loading', () => {
     expect(result.current.isLoading).toBe(true);
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.preference?.phone).toBe('+919876543210');
+    expect(result.current.preference?.destination).toBe('+919876543210');
     expect(result.current.loadFailed).toBe(false);
     expect(mockRequest).toHaveBeenCalledWith(MobileWhatsappPreferenceDocument, undefined, {
       auth: true,
@@ -92,7 +97,7 @@ describe('useWhatsAppPreferences — saving', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     const answered = sheet({
-      categories: [{ category: 'MARKETING', label: 'Offers', enabled: false }],
+      categories: [{ category: 'MARKETING', required: false, enabled: false }],
     });
     mockRequest.mockResolvedValueOnce({ setMyWhatsappPreference: answered });
 
@@ -128,12 +133,12 @@ describe('useWhatsAppPreferences — saving', () => {
     await waitFor(() => expect(result.current.busyCategory).toBe(ALL_WHATSAPP_CATEGORIES));
 
     await act(async () => {
-      release({ setAllMyWhatsappPreferences: sheet({ all_enabled: false }) });
+      release({ setAllMyWhatsappPreferences: allOff() });
       await pending;
     });
 
     expect(result.current.busyCategory).toBeNull();
-    expect(result.current.preference?.all_enabled).toBe(false);
+    expect(result.current.preference?.categories.every((row) => !row.enabled)).toBe(true);
     expect(mockRequest).toHaveBeenLastCalledWith(
       MobileSetAllWhatsappPreferencesDocument,
       { enabled: false },

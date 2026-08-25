@@ -5,11 +5,8 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import {
   buildUsernameLabels,
-  canSaveUsername,
-  isUsernameError,
   normalizeUsername,
-  profileUrl,
-  usernameStatus,
+  usernameFieldState,
   type UsernameStatus,
 } from '@duncit/utils';
 import { useUsernameCheck } from './useUsernameCheck';
@@ -44,22 +41,17 @@ export default function UsernameField({ control, current, onStatusChange }: Read
 
   const typed = normalizeUsername(field.value);
   const check = useUsernameCheck(typed, current);
-  const status = usernameStatus({
+  const { status, link, errored } = usernameFieldState({
     value: typed,
     current,
-    checking: check.checking,
-    available: check.available,
-    reason: check.reason,
+    check,
+    origin: globalThis.window.location.origin,
   });
 
   useEffect(() => {
     onStatusChange(status);
   }, [onStatusChange, status]);
 
-  // The link previews the handle being typed once it is usable, and otherwise
-  // the one that works today. Hoisted so the branch sits at nesting zero.
-  const linkHandle = canSaveUsername(status) ? typed : current;
-  const link = linkHandle ? profileUrl(globalThis.window.location.origin, linkHandle) : '';
   const statusLine = labels.status(status, typed);
 
   return (
@@ -72,7 +64,7 @@ export default function UsernameField({ control, current, onStatusChange }: Read
         placeholder={labels.placeholder}
         size="small"
         fullWidth
-        error={isUsernameError(status)}
+        error={errored}
         helperText={statusLine || labels.hint}
         slotProps={{
           inputLabel: { shrink: true },

@@ -1,12 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
+  IDLE_USERNAME_CHECK,
+  USERNAME_CHECK_DEBOUNCE_MS,
   USERNAME_PATTERN,
   buildUsernameLabels,
   canSaveUsername,
   isUsernameError,
   normalizeUsername,
   profileUrl,
+  scheduleUsernameCheck,
   usernameBlocksSave,
+  usernameFieldState,
   usernameStatus,
   type UsernameStatus,
 } from '../src/username';
@@ -120,6 +124,145 @@ describe('profileUrl', () => {
     expect(profileUrl('https://mweb.duncit.com', CURRENT)).toBe(
       'https://mweb.duncit.com/u/ravi-9x3m',
     );
+  });
+});
+
+describe('usernameFieldState', () => {
+  const ORIGIN = 'https://mweb.duncit.com';
+  const state = (value: string, check = IDLE_USERNAME_CHECK, current: string | null = CURRENT) =>
+    usernameFieldState({ value, current, check, origin: ORIGIN });
+
+  it('shows the link that works today while the typed handle is unsettled', () => {
+    expect(state('ravi-plays')).toEqual({
+      status: 'CHECKING',
+      link: `${ORIGIN}/u/${CURRENT}`,
+      errored: false,
+    });
+  });
+
+  it('previews the NEW link the moment the server says the handle is free', () => {
+    const free = { checking: false, available: true, reason: null };
+    expect(state('ravi-plays', free)).toEqual({
+      status: 'AVAILABLE',
+      link: `${ORIGIN}/u/ravi-plays`,
+      errored: false,
+    });
+  });
+
+  it('keeps the old link and flags the error when the handle is taken', () => {
+    const taken = { checking: false, available: false, reason: 'TAKEN' } as const;
+    expect(state('ravi-plays', taken)).toEqual({
+      status: 'TAKEN',
+      link: `${ORIGIN}/u/${CURRENT}`,
+      errored: true,
+    });
+  });
+
+  it('has no link at all for an account with no handle and nothing usable typed', () => {
+    expect(state('', IDLE_USERNAME_CHECK, null)).toEqual({
+      status: 'IDLE',
+      link: '',
+      errored: false,
+    });
+  });
+});
+
+describe('scheduleUsernameCheck', () => {
+  const ask = vi.fn();
+  const onState = vi.fn();
+  const onError = vi.fn();
+  const schedule = (value: string, current: string | null = CURRENT) =>
+    scheduleUsernameCheck({ value, current, ask, onState, onError });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    ask.mockReset();
+    onState.mockReset();
+    onError.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.each([
+    ['an empty field', ''],
+    ['the handle already held', CURRENT],
+    ['a malformed handle', 'Ravi Plays'],
+  ])('never leaves the device for %s', async (_label, value) => {
+    schedule(value);
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS * 2);
+    expect(ask).not.toHaveBeenCalled();
+    expect(onState).toHaveBeenCalledWith(IDLE_USERNAME_CHECK);
+  });
+
+  it('debounces, then reports the answer', async () => {
+    ask.mockResolvedValue({ available: true, reason: null });
+    schedule('ravi-plays');
+    expect(onState).toHaveBeenCalledWith({ checking: true, available: null, reason: null });
+
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS - 1);
+    expect(ask).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(ask).toHaveBeenCalledWith('ravi-plays');
+    expect(onState).toHaveBeenLastCalledWith({
+      checking: false,
+      available: true,
+      reason: null,
+    });
+  });
+
+  it('treats a missing reason on a refusal as no reason rather than undefined', async () => {
+    ask.mockResolvedValue({ available: false });
+    schedule('ravi-plays');
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS);
+    expect(onState).toHaveBeenLastCalledWith({
+      checking: false,
+      available: false,
+      reason: null,
+    });
+  });
+
+  it('never fires a request that was cancelled before the debounce elapsed', async () => {
+    schedule('ravi-plays')();
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS * 2);
+    expect(ask).not.toHaveBeenCalled();
+  });
+
+  it('drops a reply for a value that is no longer in the field', async () => {
+    let settle: (answer: { available: boolean }) => void = () => undefined;
+    ask.mockReturnValue(
+      new Promise((resolve) => {
+        settle = resolve;
+      }),
+    );
+    const cancel = schedule('rav-x');
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS);
+    cancel();
+    onState.mockReset();
+
+    settle({ available: false });
+    await vi.advanceTimersByTimeAsync(1);
+    expect(onState).not.toHaveBeenCalled();
+  });
+
+  it('leaves the field waiting when the ask fails, and reports the error', async () => {
+    const boom = new Error('offline');
+    ask.mockRejectedValue(boom);
+    schedule('ravi-plays');
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS);
+    expect(onError).toHaveBeenCalledWith(boom, 'ravi-plays');
+    expect(onState).toHaveBeenLastCalledWith(IDLE_USERNAME_CHECK);
+  });
+
+  it('says nothing at all once a failed ask has been cancelled', async () => {
+    ask.mockRejectedValue(new Error('offline'));
+    const cancel = schedule('ravi-plays');
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS - 1);
+    cancel();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(onError).not.toHaveBeenCalled();
   });
 });
 

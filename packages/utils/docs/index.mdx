@@ -82,6 +82,10 @@ exports:
   - 'canSaveUsername'
   - 'isUsernameError'
   - 'usernameBlocksSave'
+  - 'usernameFieldState'
+  - 'scheduleUsernameCheck'
+  - 'IDLE_USERNAME_CHECK'
+  - 'USERNAME_CHECK_DEBOUNCE_MS'
   - 'profileUrl'
   - 'buildUsernameLabels'
 ---
@@ -774,8 +778,45 @@ usernameBlocksSave('IDLE', true);      // true  — a profile cannot go back to 
 usernameBlocksSave('IDLE', false);     // false — pre-handle account, save the rest anyway
 ```
 
-Under the field both surfaces render the LINK the handle produces rather than describing it —
-seeing the new address before saving is what makes the warning about already-shared links
+`scheduleUsernameCheck` owns the round trip itself — the 400ms debounce, the shape guard that
+keeps a malformed handle on the device, and the cleanup that drops a reply for a value no
+longer in the field. It returns that cleanup, which is exactly a React effect’s contract, so
+each app supplies only its transport and its logger and neither owns the logic:
+
+```ts
+useEffect(
+  () =>
+    scheduleUsernameCheck({
+      value,
+      current,
+      ask: (candidate) => client.query({ query: USERNAME_AVAILABILITY, variables: { username: candidate } })
+        .then((r) => r.data.usernameAvailability),
+      onState: setCheck,          // starts from IDLE_USERNAME_CHECK
+      onError: (error, candidate) => logs.mWeb.error('useUsernameCheck', 'availability', { error, candidate }),
+    }),
+  [client, current, value],
+);
+```
+
+A failed `ask` falls back to `IDLE_USERNAME_CHECK`, which `usernameStatus` reads as CHECKING —
+telling somebody their handle is taken because the network blinked would be worse than making
+them wait, and Save is disabled either way.
+
+`usernameFieldState` is everything the field then renders, derived once for both surfaces: the
+MUI field and the Tamagui field disagree about how to draw a text box and agree about
+absolutely everything else. Note the link — it previews the handle being TYPED once the server
+has said yes, and otherwise the one that works today.
+
+```ts
+const settled = { checking: false, available: true, reason: null };
+usernameFieldState({ value: 'ravi-plays', current: 'ravi-9x3m', check: settled, origin });
+// { status: 'AVAILABLE', link: 'https://mweb.duncit.com/u/ravi-plays', errored: false }
+
+usernameFieldState({ value: 'ravi-plays', current: 'ravi-9x3m', check: IDLE_USERNAME_CHECK, origin });
+// { status: 'CHECKING', link: 'https://mweb.duncit.com/u/ravi-9x3m', errored: false }
+```
+
+Seeing the new address before saving is what makes the warning about already-shared links
 land. The same pair is on the PROFILE, under the name and next to Share.
 
 ```ts

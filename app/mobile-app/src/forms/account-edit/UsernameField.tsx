@@ -5,11 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import {
   buildUsernameLabels,
-  canSaveUsername,
-  isUsernameError,
   normalizeUsername,
-  profileUrl,
-  usernameStatus,
+  usernameFieldState,
   type UsernameStatus,
 } from '@duncit/utils';
 
@@ -46,24 +43,18 @@ export function UsernameField({ control, current, onStatusChange }: Readonly<Use
 
   const typed = normalizeUsername(field.value);
   const check = useUsernameCheck(typed, current);
-  const status = usernameStatus({
+  const { status, link, errored } = usernameFieldState({
     value: typed,
     current,
-    checking: check.checking,
-    available: check.available,
-    reason: check.reason,
+    check,
+    origin: POD_WEB_BASE,
   });
 
   useEffect(() => {
     onStatusChange(status);
   }, [onStatusChange, status]);
 
-  // The link previews the handle being typed once it is usable, and otherwise
-  // the one that works today. Hoisted so the branch sits at nesting zero.
-  const linkHandle = canSaveUsername(status) ? typed : current;
-  const link = linkHandle ? profileUrl(POD_WEB_BASE, linkHandle) : '';
   const statusLine = labels.status(status, typed);
-  const errored = isUsernameError(status);
 
   return (
     <YStack gap={6}>

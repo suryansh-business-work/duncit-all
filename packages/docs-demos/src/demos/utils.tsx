@@ -7,17 +7,14 @@ import {
   commRowState,
   followBackLabelKey,
   followRequestRowState,
-  canSaveUsername,
   formatMoney,
-  isUsernameError,
   normalizeUsername,
   participationInputFrom,
   payableSpots,
   podParticipationActions,
   podRefundState,
-  profileUrl,
   usernameBlocksSave,
-  usernameStatus,
+  usernameFieldState,
   type CommChannelState,
   type PodParticipationFields,
   type UsernameRejection,
@@ -270,19 +267,17 @@ export default defineDemos('utils', [
       reason: null,
     },
     compute: (mock) => {
-      const status = usernameStatus({
+      const view = usernameFieldState({
         value: normalizeUsername(mock.typed),
         current: mock.current,
-        checking: false,
-        available: mock.available,
-        reason: mock.reason,
+        check: { checking: false, available: mock.available, reason: mock.reason },
+        origin: 'https://mweb.duncit.com',
       });
-      const preview = canSaveUsername(status) ? normalizeUsername(mock.typed) : mock.current;
       return {
-        Status: status,
-        'Save disabled': String(usernameBlocksSave(status, !!mock.current)),
-        'Shows as an error': String(isUsernameError(status)),
-        'Profile link': profileUrl('https://mweb.duncit.com', preview),
+        Status: view.status,
+        'Save disabled': String(usernameBlocksSave(view.status, !!mock.current)),
+        'Shows as an error': String(view.errored),
+        'Profile link': view.link,
       };
     },
   }),

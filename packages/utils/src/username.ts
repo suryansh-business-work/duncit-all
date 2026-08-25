@@ -104,6 +104,146 @@ export function usernameBlocksSave(status: UsernameStatus, hasCurrent: boolean):
 /** The shareable profile URL for a handle (or, before one exists, an id). */
 export const profileUrl = (origin: string, handle: string): string => `${origin}/u/${handle}`;
 
+export interface UsernameFieldStateInput {
+  /** What is in the field, already normalized. */
+  value: string;
+  /** The handle the account has now, or null while it has none. */
+  current: string | null;
+  /** The debounced check's latest answer for `value`. */
+  check: UsernameCheckState;
+  /** Where the profile link points — the browser origin, or the app's web base. */
+  origin: string;
+}
+
+export interface UsernameFieldState {
+  status: UsernameStatus;
+  /**
+   * The link the handle produces: the one being typed once the server has said
+   * yes to it, and otherwise the one that works today. Empty only for an
+   * account that has no handle and has not yet typed a usable one.
+   */
+  link: string;
+  /** The status is a refusal rather than progress — drives error styling. */
+  errored: boolean;
+}
+
+/**
+ * Everything the @handle field renders, derived once for both surfaces.
+ *
+ * The MUI field and the Tamagui field disagree about how to draw a text box and
+ * agree about absolutely everything else, so this is where "everything else"
+ * lives (rule 40). Showing the link for the handle being typed — rather than
+ * only the saved one — is the point of the field: seeing the new address before
+ * saving is what makes the warning about already-shared links land.
+ */
+export function usernameFieldState(
+  input: Readonly<UsernameFieldStateInput>,
+): UsernameFieldState {
+  const status = usernameStatus({
+    value: input.value,
+    current: input.current,
+    checking: input.check.checking,
+    available: input.check.available,
+    reason: input.check.reason,
+  });
+  const handle = canSaveUsername(status) ? input.value : input.current;
+  return {
+    status,
+    link: handle ? profileUrl(input.origin, handle) : '',
+    errored: isUsernameError(status),
+  };
+}
+
+/** Long enough that typing a whole handle costs one request, short enough that
+ * the answer arrives before the reader's finger leaves the key. */
+export const USERNAME_CHECK_DEBOUNCE_MS = 400;
+
+/** What the field knows about the value currently in it. */
+export interface UsernameCheckState {
+  checking: boolean;
+  /** The answer for the CURRENT value, or null while there is not one. */
+  available: boolean | null;
+  reason: UsernameRejection | null;
+}
+
+/**
+ * No answer yet — which `usernameStatus` reads as CHECKING, not as free.
+ *
+ * That is deliberate and is also what an unreachable server falls back to: a
+ * check that could not be made is not permission to save.
+ */
+export const IDLE_USERNAME_CHECK: UsernameCheckState = {
+  checking: false,
+  available: null,
+  reason: null,
+};
+
+/** The server's answer, narrowed to the two fields the field cares about. */
+export interface UsernameCheckAnswer {
+  available: boolean;
+  reason?: UsernameRejection | null;
+}
+
+export interface UsernameCheckOptions {
+  /** What is in the field, as typed. */
+  value: string;
+  /** The handle the account has now, or null while it has none. */
+  current: string | null;
+  /** Asks the server. Apollo on mWeb, `graphqlRequest` on native. */
+  ask: (candidate: string) => Promise<UsernameCheckAnswer>;
+  onState: (state: UsernameCheckState) => void;
+  /** Reported, never rendered — the field stays in its waiting state. */
+  onError: (error: unknown, candidate: string) => void;
+}
+
+/**
+ * Ask the server whether a handle is free, once the typing stops, and hand back
+ * the cleanup — which is exactly a React effect's contract, without either app
+ * having to own the logic (rule 40; the two hooks were byte-for-byte twins).
+ *
+ * Three things make this correct rather than merely debounced:
+ *  - a malformed value never leaves the device. Its shape is decidable here, so
+ *    a request for it would be a round trip whose answer was already known;
+ *  - the cleanup closes over THIS invocation, so a reply for a value no longer
+ *    in the field is dropped. Without that, a slow "taken" for `rav` lands
+ *    after a fast "available" for `ravi` and the field reports the wrong one;
+ *  - a failed ask falls back to IDLE, which reads as still-checking. Telling
+ *    somebody their handle is taken because the network blinked would be worse
+ *    than making them wait, and Save stays disabled either way.
+ */
+export function scheduleUsernameCheck(options: Readonly<UsernameCheckOptions>): () => void {
+  const candidate = normalizeUsername(options.value);
+  if (!candidate || candidate === options.current || !USERNAME_PATTERN.test(candidate)) {
+    options.onState(IDLE_USERNAME_CHECK);
+    return () => undefined;
+  }
+
+  let live = true;
+  options.onState({ checking: true, available: null, reason: null });
+  const timer = setTimeout(() => {
+    options.ask(candidate).then(
+      (answer) => {
+        if (!live) return;
+        options.onState({
+          checking: false,
+          available: answer.available,
+          reason: answer.reason ?? null,
+        });
+      },
+      (error) => {
+        if (!live) return;
+        options.onError(error, candidate);
+        options.onState(IDLE_USERNAME_CHECK);
+      },
+    );
+  }, USERNAME_CHECK_DEBOUNCE_MS);
+
+  return () => {
+    live = false;
+    clearTimeout(timer);
+  };
+}
+
 export type UsernameTranslate = (
   key: string,
   options?: { vars?: Record<string, string | number> },

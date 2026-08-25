@@ -1,19 +1,19 @@
+import { podPhase, type PodPhase } from '@duncit/utils';
+
 export type PodStatus = 'LIVE' | 'UPCOMING' | 'ENDED';
 
-// When a pod has no explicit end time, treat it as live for this long after start.
-const LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
-
-/** Derives a pod's status from its start (and optional end) timestamp relative to now. */
-export const podStatus = (start?: string | null, end?: string | null): PodStatus => {
-  if (!start) return 'UPCOMING';
-  const now = Date.now();
-  const startMs = new Date(start).getTime();
-  if (Number.isNaN(startMs)) return 'UPCOMING';
-  const endMs = end ? new Date(end).getTime() : startMs + LIVE_TAIL_MS;
-  if (now < startMs) return 'UPCOMING';
-  if (now <= endMs) return 'LIVE';
-  return 'ENDED';
+/** The chip vocabulary this surface speaks, over the shared time rule. */
+const STATUS_OF_PHASE: Record<PodPhase, PodStatus> = {
+  UPCOMING: 'UPCOMING',
+  ONGOING: 'LIVE',
+  PREVIOUS: 'ENDED',
 };
+
+/** Derives a pod's status from its start (and optional end) timestamp relative to now.
+ * The start/end/tail rule itself lives in @duncit/utils, so the status chip and
+ * the Home rails' Ongoing bucket can never read the same pod differently. */
+export const podStatus = (start?: string | null, end?: string | null): PodStatus =>
+  STATUS_OF_PHASE[podPhase(start, end)];
 
 /** True for pods that have not ended yet (live or upcoming) — used to hide past pods. */
 export const isPodActive = (start?: string | null, end?: string | null): boolean =>

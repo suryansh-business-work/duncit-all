@@ -12,10 +12,63 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import { useTranslation } from '@duncit/app-settings';
 import type { TraceGroup } from './queries';
 
 const DELETES_DOCUMENTS = 'DELETE_DOCUMENTS';
+const REDACTS_RECORDS = 'REDACT_RECORDS';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** The three things clearing a reference can mean, as one chip. Hoisted so the
+ * table does not define a component per render (S6478). */
+function EffectChip({ group }: Readonly<{ group: TraceGroup }>) {
+  const { t } = useTranslation();
+  if (group.purge_kind === REDACTS_RECORDS) {
+    return (
+      <Chip
+        size="small"
+        variant="outlined"
+        color="info"
+        icon={<ShieldOutlinedIcon />}
+        label={t('tech.accountDeletions.effectRedact')}
+        title={group.retention_reason || t('tech.accountDeletions.effectRedactHint')}
+      />
+    );
+  }
+  const deletes = group.purge_kind === DELETES_DOCUMENTS;
+  return (
+    <Chip
+      size="small"
+      variant="outlined"
+      color={deletes ? 'error' : 'default'}
+      label={
+        deletes
+          ? t('tech.accountDeletions.effectDelete')
+          : t('tech.accountDeletions.effectRemove')
+      }
+      title={
+        deletes
+          ? t('tech.accountDeletions.effectDeleteHint')
+          : t('tech.accountDeletions.effectRemoveHint')
+      }
+    />
+  );
+}
+
+/** What the row's own button says. A retained record is not being deleted, and
+ * a button that claims otherwise is the wrong thing to click twice. */
+function actionLabel(group: TraceGroup, busy: boolean, t: Translate): string {
+  if (group.purge_kind === REDACTS_RECORDS) {
+    return busy
+      ? t('tech.accountDeletions.redactingGroup')
+      : t('tech.accountDeletions.redactGroup');
+  }
+  return busy
+    ? t('tech.accountDeletions.deletingGroup')
+    : t('tech.accountDeletions.deleteGroup');
+}
 
 interface Props {
   trace: TraceGroup[];
@@ -66,7 +119,7 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
           {trace.map((group) => {
             const key = groupKey(group);
             const busy = busyKey === key;
-            const deletes = group.purge_kind === DELETES_DOCUMENTS;
+            const redacts = group.purge_kind === REDACTS_RECORDS;
             return (
               <TableRow key={key} hover>
                 <TableCell>
@@ -92,21 +145,7 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    color={deletes ? 'error' : 'default'}
-                    label={
-                      deletes
-                        ? t('tech.accountDeletions.effectDelete')
-                        : t('tech.accountDeletions.effectRemove')
-                    }
-                    title={
-                      deletes
-                        ? t('tech.accountDeletions.effectDeleteHint')
-                        : t('tech.accountDeletions.effectRemoveHint')
-                    }
-                  />
+                  <EffectChip group={group} />
                 </TableCell>
                 <TableCell align="right">
                   <Typography variant="body2">{group.count}</Typography>
@@ -114,16 +153,14 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
                 <TableCell align="right">
                   <Button
                     size="small"
-                    color="error"
-                    startIcon={<DeleteOutlineIcon />}
+                    color={redacts ? 'info' : 'error'}
+                    startIcon={redacts ? <ShieldOutlinedIcon /> : <DeleteOutlineIcon />}
                     disabled={!canDelete || !!busyKey}
                     onClick={() => onDelete(group)}
                     data-testid={`purge-${key}`}
                     sx={{ textTransform: 'none' }}
                   >
-                    {busy
-                      ? t('tech.accountDeletions.deletingGroup')
-                      : t('tech.accountDeletions.deleteGroup')}
+                    {actionLabel(group, busy, t)}
                   </Button>
                 </TableCell>
               </TableRow>

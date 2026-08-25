@@ -1,15 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import EmailSidebarList from '../../src/components/EmailSidebarList';
 
 /**
  * Replaces TemplateList.test — that component was two near-identical lists
  * (templates and fragments) and became this one. The behaviours it proved are
- * kept; the search and the row numbers are what it gained.
+ * kept; the search, the row numbers, the sort and the filters are what it
+ * gained.
  */
 const items = [
-  { key: 't1', primary: 'Welcome', secondary: 'welcome' },
-  { key: 't2', primary: 'Receipt', secondary: 'payment-receipt', off: true },
+  { key: 't1', primary: 'Welcome', secondary: 'welcome', count: 2, group: 'transactional' },
+  {
+    key: 't2',
+    primary: 'Receipt',
+    secondary: 'payment-receipt',
+    off: true,
+    count: 30,
+    group: 'billing',
+  },
 ];
 
 const renderList = (onSelect = vi.fn()) => {
@@ -24,6 +32,19 @@ const renderList = (onSelect = vi.fn()) => {
   );
   return onSelect;
 };
+
+/** MUI's select opens on mouseDown, then the option is a real listbox row. */
+const choose = (control: string, option: string) => {
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: control }));
+  fireEvent.click(within(screen.getByRole('listbox')).getByText(option));
+};
+
+/** The rows, top to bottom, as their titles. */
+const rowOrder = () =>
+  screen
+    .getAllByRole('button')
+    .map((row) => within(row).queryByText(/Welcome|Receipt/)?.textContent)
+    .filter(Boolean);
 
 describe('EmailSidebarList', () => {
   it('renders each row, marks an inactive one, and fires onSelect', () => {
@@ -109,5 +130,96 @@ describe('EmailSidebarList', () => {
       />
     );
     expect(screen.getByText('No templates yet.')).toBeInTheDocument();
+  });
+});
+
+describe('EmailSidebarList — sorting', () => {
+  it('opens in the order the server answered in', () => {
+    renderList();
+    expect(rowOrder()).toEqual(['Welcome', 'Receipt']);
+  });
+
+  it('re-sorts by name', () => {
+    renderList();
+    choose('Sort', 'Name A–Z');
+    expect(rowOrder()).toEqual(['Receipt', 'Welcome']);
+  });
+
+  it('re-sorts by the count each row carries', () => {
+    renderList();
+    choose('Sort', 'Most used');
+    expect(rowOrder()).toEqual(['Receipt', 'Welcome']);
+  });
+
+  it('leaves out the sorts the rows cannot answer', () => {
+    render(
+      <EmailSidebarList
+        items={[{ key: 'a', primary: 'A' }]}
+        selected="a"
+        onSelect={vi.fn()}
+        searchPlaceholder="Search"
+        emptyText="Nothing."
+      />
+    );
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Sort' }));
+    const options = within(screen.getByRole('listbox')).getAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual(['List order', 'Name A–Z', 'Name Z–A']);
+  });
+});
+
+describe('EmailSidebarList — filtering', () => {
+  it('narrows to the switched-off rows, then back', () => {
+    renderList();
+    choose('Status', 'Switched off only');
+    expect(rowOrder()).toEqual(['Receipt']);
+    choose('Status', 'Any status');
+    expect(rowOrder()).toEqual(['Welcome', 'Receipt']);
+  });
+
+  it('says the filters are what emptied the list, with no search term to blame', () => {
+    render(
+      <EmailSidebarList
+        items={[items[0]]}
+        selected="t1"
+        onSelect={vi.fn()}
+        searchPlaceholder="Search"
+        emptyText="No templates yet."
+      />
+    );
+    choose('Status', 'Switched off only');
+    expect(screen.getByText('Nothing matches the filters above.')).toBeInTheDocument();
+  });
+
+  /**
+   * The page owns this one: it is bound to ?fragment= in the URL, which is how
+   * the Fragments page asks "show me every template using this one".
+   */
+  it('renders the page’s own filter and reports a choice back to it', () => {
+    const onChange = vi.fn();
+    render(
+      <EmailSidebarList
+        items={items}
+        selected="t1"
+        onSelect={vi.fn()}
+        searchPlaceholder="Search"
+        emptyText="No templates yet."
+        filter={{
+          label: 'Header / footer',
+          allLabel: 'Any header / footer',
+          value: 'billing',
+          options: [
+            { value: 'transactional', label: 'Transactional' },
+            { value: 'billing', label: 'Billing' },
+          ],
+          onChange,
+        }}
+      />
+    );
+
+    // Already narrowed by the value the page passed in.
+    expect(rowOrder()).toEqual(['Receipt']);
+
+    choose('Header / footer', 'Transactional');
+    expect(onChange).toHaveBeenCalledWith('transactional');
   });
 });

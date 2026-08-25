@@ -4,7 +4,14 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
+// `useMutation` is here because the shell now saves the reader's console
+// arrangement (the taskbar clock, where the Agent tab was dragged to) — the
+// provider that does it is mounted by AppShell itself.
+vi.mock('@apollo/client', () => ({
+  useQuery: vi.fn(),
+  useMutation: () => [vi.fn(), { loading: false }],
+  gql: (s: TemplateStringsArray) => s,
+}));
 // A factory mock REPLACES the module, so anything the shell imports and this
 // object omits arrives as undefined — which is how `useBreadcrumbOverride`
 // became "No export is defined on the mock" and took the suite down. Only the

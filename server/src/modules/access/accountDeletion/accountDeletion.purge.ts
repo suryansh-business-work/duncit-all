@@ -1,5 +1,6 @@
-import mongoose, { type Model, type Schema } from 'mongoose';
+import mongoose, { type ClientSession, type Model, type Schema } from 'mongoose';
 import { traceFilter, type UserReference } from './accountDeletion.trace';
+import { isRetainedModel, redactionFor } from './accountDeletion.retention';
 
 /**
  * HOW a reference is cleared, which is not the same question as where it is.
@@ -15,8 +16,12 @@ import { traceFilter, type UserReference } from './accountDeletion.trace';
  *  - REMOVE_FROM_DOCUMENTS — the member is one entry in an array, or one
  *    sub-document inside one. Only their entry is pulled; the document stays
  *    for whoever it actually belongs to.
+ *  - REDACT_RECORDS — the document is a financial or audit record that has to
+ *    outlive the account (see `accountDeletion.retention.ts`). The row stays,
+ *    the personal data on it is overwritten, and what used to show a name
+ *    shows "Deleted user".
  */
-export type PurgeKind = 'DELETE_DOCUMENTS' | 'REMOVE_FROM_DOCUMENTS';
+export type PurgeKind = 'DELETE_DOCUMENTS' | 'REMOVE_FROM_DOCUMENTS' | 'REDACT_RECORDS';
 
 interface PlainPull {
   kind: 'REMOVE_FROM_DOCUMENTS';
@@ -37,7 +42,14 @@ interface DeleteDocs {
   kind: 'DELETE_DOCUMENTS';
 }
 
-export type PurgePlan = PlainPull | SubdocPull | DeleteDocs;
+interface RedactDocs {
+  kind: 'REDACT_RECORDS';
+  /** The `$set` that erases the person, or null when the reference carries no
+   * personal data and the row only has to be left alone. */
+  set: Readonly<Record<string, unknown>> | null;
+}
+
+export type PurgePlan = PlainPull | SubdocPull | DeleteDocs | RedactDocs;
 
 /**
  * Work out which of the three it is, from the schema.
@@ -48,7 +60,13 @@ export type PurgePlan = PlainPull | SubdocPull | DeleteDocs;
  * nested inside an array of sub-documents, which Mongo cannot write through a
  * plain dotted path at all, hence the all-positional `$[]`.
  */
-export function purgePlan(schema: Schema, fieldPath: string): PurgePlan {
+export function purgePlan(modelName: string, schema: Schema, fieldPath: string): PurgePlan {
+  // Retention answers before the schema does. A retained record's shape is
+  // irrelevant — whether the member is a scalar field or one entry in an array,
+  // the document is not this feature's to remove.
+  if (isRetainedModel(modelName)) {
+    return { kind: 'REDACT_RECORDS', set: redactionFor(modelName, fieldPath) };
+  }
   const parts = fieldPath.split('.');
   for (let i = 1; i < parts.length; i += 1) {
     const prefix = parts.slice(0, i).join('.');
@@ -69,26 +87,45 @@ export function purgePlan(schema: Schema, fieldPath: string): PurgePlan {
 
 /** What the console labels the button, without re-deriving it on the client. */
 export function purgeKind(modelName: string, fieldPath: string): PurgeKind {
+  if (isRetainedModel(modelName)) return 'REDACT_RECORDS';
   const model = mongoose.models[modelName];
   if (!model) return 'DELETE_DOCUMENTS';
-  return purgePlan(model.schema, fieldPath).kind;
+  return purgePlan(modelName, model.schema, fieldPath).kind;
 }
 
-/** Clear one member out of one reference. Returns how many documents changed. */
-export async function purgeReference(ref: UserReference, userId: string): Promise<number> {
+/**
+ * Clear one member out of one reference. Returns how many documents changed.
+ *
+ * Every write takes the caller's session, so the row it touches and the
+ * purge-log entry the caller writes about it commit together or not at all. A
+ * log that says a collection was cleared when it was not is worse than no log:
+ * it is the record the next operator trusts instead of re-counting.
+ */
+export async function purgeReference(
+  ref: UserReference,
+  userId: string,
+  session?: ClientSession
+): Promise<number> {
   const model = mongoose.models[ref.model_name] as Model<any>;
   const filter = traceFilter(ref, userId);
   const value = Object.values(filter)[0];
-  const plan = purgePlan(model.schema, ref.field_path);
+  const plan = purgePlan(ref.model_name, model.schema, ref.field_path);
 
   if (plan.kind === 'DELETE_DOCUMENTS') {
-    const res = await model.deleteMany(filter);
+    const res = await model.deleteMany(filter, { session });
     return res.deletedCount ?? 0;
+  }
+  if (plan.kind === 'REDACT_RECORDS') {
+    // Nothing personal on this reference — the row is an id, an amount and a
+    // date. It is kept exactly as it is, and reports 0 changed.
+    if (!plan.set) return 0;
+    const res = await model.updateMany(filter, { $set: plan.set }, { session });
+    return res.modifiedCount ?? 0;
   }
   const pull =
     plan.mode === 'SUBDOC'
       ? { [plan.path]: { [plan.matchPath]: value } }
       : { [plan.path]: value };
-  const res = await model.updateMany(filter, { $pull: pull });
+  const res = await model.updateMany(filter, { $pull: pull }, { session });
   return res.modifiedCount ?? 0;
 }

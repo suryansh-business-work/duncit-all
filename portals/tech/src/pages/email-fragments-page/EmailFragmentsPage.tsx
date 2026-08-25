@@ -17,6 +17,7 @@ import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
 import FragmentEditorPanel from './FragmentEditorPanel';
 import { useEmailFragments } from './useEmailFragments';
+import { fragmentSidebarItems } from './sidebar-items';
 import { useTranslation } from '@duncit/app-settings';
 
 /**
@@ -68,12 +69,7 @@ export default function EmailFragmentsPage() {
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <EmailSidebarList
-          items={f.list.map((fragment) => ({
-            key: fragment.key,
-            primary: fragment.name,
-            secondary: fragment.key,
-            off: !fragment.is_active,
-          }))}
+          items={fragmentSidebarItems(t, f.list, f.templatesByFragment)}
           selected={f.selected}
           onSelect={f.setSelected}
           searchPlaceholder="Search category"
@@ -86,6 +82,8 @@ export default function EmailFragmentsPage() {
             setDraft={f.setDraft}
             previewHtml={f.previewHtml}
             previewErrors={f.previewErrors}
+            previewLoading={f.previewLoading}
+            templates={f.templatesByFragment.get(f.draft.key) ?? []}
             dirty={f.dirty}
             busy={f.busy}
             onSave={f.save}

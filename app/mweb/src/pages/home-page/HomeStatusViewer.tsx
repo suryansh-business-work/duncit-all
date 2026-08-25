@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, Dialog, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
@@ -6,10 +6,13 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
+import StatusSlideVideo from './StatusSlideVideo';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export interface HomeStatusViewerSlide {
@@ -100,6 +103,10 @@ export default function HomeStatusViewer({
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  // A story video plays with its sound. The browser may refuse that on the
+  // first slide, in which case the clip reports back and the speaker below
+  // switches to "muted" rather than lying about it.
+  const [muted, setMuted] = useState(false);
   const frameRef = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const startedAtRef = useRef<number | null>(null);
@@ -112,7 +119,11 @@ export default function HomeStatusViewer({
     : [];
   const slides = item?.slides?.length ? item.slides : fallbackSlides;
   const current = slides[index] ?? slides[0];
-  const isVideo = current?.mediaType === 'VIDEO';
+  // A video slide is one that has a clip to play. A VIDEO row with no url is
+  // not one: it falls through to the placeholder, which the timer below still
+  // has to advance — nothing else would.
+  const videoSrc = current?.mediaType === 'VIDEO' ? current.mediaUrl : null;
+  const isVideo = !!videoSrc;
 
   useEffect(() => {
     setProgress(0);
@@ -162,6 +173,10 @@ export default function HomeStatusViewer({
     };
   }, [index, item, goNextStory, paused, slides.length, isVideo]);
 
+  // Stable, so flipping the speaker does not re-run the clip's play() effect
+  // on every render of the viewer.
+  const handleAutoplayBlocked = useCallback(() => setMuted(true), []);
+
   if (!item) return null;
 
   const goPrev = () => {
@@ -186,6 +201,11 @@ export default function HomeStatusViewer({
     if (cap > 0) setProgress(Math.min(1, video.currentTime / cap));
     if (video.currentTime >= cap) goNext();
   };
+
+  // A clip that cannot load must not park the story on a black frame: nothing
+  // drives the progress bar for a video but the clip itself, so the slide would
+  // sit there until the viewer closed it by hand.
+  const handleVideoError = () => goNext();
 
   const openTarget = () => {
     if (!item.targetUrl) return;
@@ -232,17 +252,16 @@ export default function HomeStatusViewer({
         onPointerLeave={() => setPaused(false)}
         sx={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', color: '#fff', touchAction: 'none' }}
       >
-        {current?.mediaType === 'VIDEO' ? (
-          <Box
+        {videoSrc ? (
+          <StatusSlideVideo
             key={`video-${index}`}
-            component="video"
-            src={current.mediaUrl ?? undefined}
-            autoPlay
-            muted
-            playsInline
+            src={videoSrc}
+            paused={paused}
+            muted={muted}
+            onBlocked={handleAutoplayBlocked}
             onTimeUpdate={handleVideoTime}
             onEnded={goNext}
-            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={handleVideoError}
           />
         ) : (
           nonVideoMedia
@@ -283,6 +302,16 @@ export default function HomeStatusViewer({
                 </Typography>
               )}
             </Box>
+            {isVideo && (
+              <IconButton
+                onClick={() => setMuted((value) => !value)}
+                aria-label={muted ? t('mweb.status.unmuteVideo') : t('mweb.status.muteVideo')}
+                data-testid="status-mute"
+                sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
+              >
+                {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+              </IconButton>
+            )}
             {onToggleLike && currentId && (
               <Stack
                 direction="row"

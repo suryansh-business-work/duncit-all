@@ -21,13 +21,15 @@ const mockedLoc = useLocations as jest.Mock;
 
 const future = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
 const past = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+const hours = (n: number) => new Date(Date.now() + n * 3_600_000).toISOString();
 
-const pod = (id: string, clubId: string, date: string) =>
+const pod = (id: string, clubId: string, date: string, end: string | null = null) =>
   ({
     id,
     pod_id: `p-${id}`,
     pod_title: `Pod ${id}`,
     pod_date_time: date,
+    pod_end_date_time: end,
     pod_type: 'FREE',
     pod_amount: 0,
     no_of_spots: 4,
@@ -234,6 +236,27 @@ describe('useHomeFeed', () => {
     expect(result.current.totalPods).toBe(1);
     // Newest-first ordering of the previous pods.
     expect(result.current.previousPods.map((p) => p.id)).toEqual(['old', 'older']);
+  });
+
+  // A pod that is RUNNING is in neither of the two rails Home used to have: it
+  // can no longer be joined, so it leaves the upcoming feed, but calling it
+  // "previous" while it still has an hour to run is what this bucket fixes.
+  it('keeps a running pod on its own ongoing rail until its end time passes', () => {
+    const running = pod('now', 'c1', hours(-1), hours(1));
+    const finished = pod('done', 'c1', hours(-3), hours(-1));
+    // No end set: the shared 4h live tail decides, so this one is still running.
+    const tailing = pod('tail', 'c1', hours(-2));
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+      pods: [running, finished, tailing, pod('up', 'c1', future(1))],
+      categories: [],
+    } as never;
+    const { result } = renderHook(() => useHomeFeed(''));
+    expect(result.current.ongoingPods.map((p) => p.id)).toEqual(['tail', 'now']);
+    expect(result.current.previousPods.map((p) => p.id)).toEqual(['done']);
+    expect(result.current.activePods.map((p) => p.id)).toEqual(['up']);
+    // A running pod is not counted as something still joinable nearby.
+    expect(result.current.totalPods).toBe(1);
   });
 });
 

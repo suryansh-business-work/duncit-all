@@ -8,7 +8,12 @@ import {
 import { giftCardPub } from './giftcard.service';
 import { giftCardSettingsService } from './giftcard.settings.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import { UserModel } from '@modules/access/user/user.model';
+import {
+  loadUserMap,
+  monthKeys,
+  userNameOrDeleted,
+  type UserInfo,
+} from '@utils/admin-ledger';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 /**
@@ -66,49 +71,14 @@ const GIFT_CARD_TXN_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { created_at: -1 },
 };
 
-interface UserInfo {
-  name: string;
-  email: string;
-}
-
-/** Names for the buyer/redeemer columns — an audit reads the person first. */
-async function loadUserMap(userIds: string[]): Promise<Map<string, UserInfo>> {
-  const unique = [...new Set(userIds.filter(Boolean))].filter((id) => Types.ObjectId.isValid(id));
-  if (unique.length === 0) return new Map();
-  const rows = await UserModel.find({ _id: { $in: unique } })
-    .select('email profile.first_name profile.last_name')
-    .lean();
-  return new Map(
-    rows.map((u: any) => [
-      String(u._id),
-      {
-        name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
-        email: u.email ?? '',
-      },
-    ])
-  );
-}
-
-/** UTC 'YYYY-MM' keys for the last `span` months, oldest first. */
-function monthKeys(span: number): string[] {
-  const now = new Date();
-  const keys: string[] = [];
-  for (let back = span - 1; back >= 0; back -= 1) {
-    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - back, 1));
-    const mm = String(month.getUTCMonth() + 1).padStart(2, '0');
-    keys.push(`${month.getUTCFullYear()}-${mm}`);
-  }
-  return keys;
-}
-
 const toCardRow = (card: IGiftCard, users: Map<string, UserInfo>) => {
   const purchaser = users.get(String(card.purchaser_user_id));
   const redeemer = card.redeemed_by_user_id ? users.get(String(card.redeemed_by_user_id)) : undefined;
   return {
     ...giftCardPub(card),
-    purchaser_name: purchaser?.name ?? '',
+    purchaser_name: userNameOrDeleted(purchaser, card.purchaser_user_id),
     purchaser_email: purchaser?.email ?? '',
-    redeemer_name: redeemer?.name ?? '',
+    redeemer_name: userNameOrDeleted(redeemer, card.redeemed_by_user_id),
     redeemer_email: redeemer?.email ?? '',
     payment_id: card.payment_id,
   };
@@ -121,7 +91,7 @@ const toTxnRow = (t: IGiftCardTransaction, users: Map<string, UserInfo>) => {
     gift_card_id: String(t.gift_card_id),
     code: t.code,
     user_id: String(t.user_id),
-    user_name: user?.name ?? '',
+    user_name: userNameOrDeleted(user, t.user_id),
     user_email: user?.email ?? '',
     type: t.type,
     amount: t.amount,

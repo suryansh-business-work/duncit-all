@@ -108,6 +108,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/clubs/auto-pods', titleKey: 'mweb.meta.autoPodsClub.title' },
   { pattern: '/clubs/manage', titleKey: 'mweb.meta.clubStudio.title' },
   { pattern: '/faqs', titleKey: 'mweb.meta.faqs.title' },
+  { pattern: '/badges', titleKey: 'mweb.meta.badges.title', descriptionKey: 'mweb.meta.badges.description' },
   { pattern: '/policies/:slug', titleKey: 'mweb.meta.policies.title' },
   { pattern: '/pod-ideas', titleKey: 'mweb.meta.podIdeas.title', descriptionKey: 'mweb.meta.podIdeas.description' },
   { pattern: '/referral', titleKey: 'mweb.meta.referral.title', descriptionKey: 'mweb.meta.referral.description' },

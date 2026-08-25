@@ -29,7 +29,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 export function AccountScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { me, health, isLoading, error, updateProfile, updateVisibility, refresh } = useAccount();
+  const { me, health, isLoading, error, setUsername, updateProfile, updateVisibility, refresh } =
+    useAccount();
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -115,6 +116,7 @@ export function AccountScreen() {
         me={me}
         onClose={() => setEditOpen(false)}
         onSave={updateProfile}
+        onSaveUsername={setUsername}
       />
     </StackScreen>
   );

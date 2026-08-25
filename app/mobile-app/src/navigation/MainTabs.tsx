@@ -1,6 +1,7 @@
 import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import { BottomNav } from '@/components/BottomNav';
+import { DeletionNoticeDialog } from '@/components/account/DeletionNoticeDialog';
 import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
 import { usePushNotificationDeepLink } from '@/hooks/usePushNotificationDeepLink';
 import { ChatsScreen } from '@/screens/ChatsScreen';
@@ -29,6 +30,7 @@ export function MainTabs() {
         <Tab.Screen name="Following" component={FollowingScreen} />
       </Tab.Navigator>
       <PodFeedbackPrompt />
+      <DeletionNoticeDialog />
     </>
   );
 }

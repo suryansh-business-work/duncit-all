@@ -1,5 +1,6 @@
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import MinimizeIcon from '@mui/icons-material/Minimize';
 import { useTranslation } from '../i18n/useTranslation';
 import ChatSettingsMenu from './ChatSettingsMenu';
 import StatusMenu from './StatusMenu';
@@ -14,6 +15,8 @@ interface Props {
   /** True while a recording is still uploading or converting — a note, not a lock. */
   busy: boolean;
   onClose: () => void;
+  /** Send the panel to the taskbar. Absent when there is no taskbar to go to. */
+  onMinimise?: () => void;
   /** The settings popover is opened from here AND from a conversation. */
   settingsOpen: boolean;
   onOpenSettings: () => void;
@@ -28,6 +31,7 @@ export default function PanelHeader({
   onStatus,
   busy,
   onClose,
+  onMinimise,
   settingsOpen,
   onOpenSettings,
   onCloseSettings,
@@ -55,6 +59,19 @@ export default function PanelHeader({
         onClose={onCloseSettings}
       />
       <StatusMenu status={status} onChange={onStatus} />
+      {/* The panel is a running thing, not a page — minimising leaves the
+          conversation exactly where it is and hands the page back its width. */}
+      {onMinimise && (
+        <Tooltip title={t('shell.chat.window.minimise')}>
+          <IconButton
+            size="small"
+            onClick={onMinimise}
+            aria-label={t('shell.chat.panel.minimiseLabel')}
+          >
+            <MinimizeIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
       {/*
         Always closable.
 

@@ -15,9 +15,18 @@ import { AppSidebar } from './AppSidebar';
 import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
 import type { ShellUser } from './user-display';
+import { Taskbar, WorkspaceProvider } from '../workspace';
 
 const MAIN_ID = 'app-main';
 const drawerWidth = tokens.size.drawerWidth;
+/**
+ * The sidebar stops at the taskbar.
+ *
+ * A permanent Drawer's paper is fixed to the VIEWPORT, not to the flex column
+ * beside it, so it runs the full height whatever the layout does — and its
+ * footer caption ended up behind the bar.
+ */
+const drawerPaperHeight = `calc(100% - ${tokens.size.taskbarHeight}px)`;
 
 /** The slice of a portal's `appConfig` the chrome needs — pass appConfig directly. */
 export interface AppShellPortalConfig {
@@ -119,115 +128,143 @@ export function AppShell({
       viewport gives the page body and the chat one scroller each, which is the
       only way the two can move independently.
     */
-    <Box sx={{ display: 'flex', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default' }}>
+    <WorkspaceProvider enabled={Boolean(user)}>
       <Box
-        component="a"
-        href={`#${MAIN_ID}`}
         sx={{
-          position: 'absolute',
-          left: -9999,
-          zIndex: (t) => t.zIndex.tooltip,
-          bgcolor: 'background.paper',
-          color: 'primary.main',
-          px: 2,
-          py: 1,
-          borderRadius: 1,
-          fontWeight: 700,
-          '&:focus': { left: 8, top: 8 },
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100dvh',
+          overflow: 'hidden',
+          bgcolor: 'background.default',
         }}
       >
-        {t('shell.chrome.skipToContent')}
-      </Box>
-      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label={t('shell.chrome.primaryNav')}>
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          ModalProps={{ keepMounted: true }}
-          sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: drawerWidth } }}
-        >
-          <AppSidebar
-            name={config.name}
-            nav={localizedNav}
-            user={user}
-            footerCaption={config.footerCaption}
-            onNavigate={() => setMobileOpen(false)}
-          />
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          open
-          sx={{ display: { xs: 'none', md: 'block' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' } }}
-        >
-          <AppSidebar name={config.name} nav={localizedNav} user={user} footerCaption={config.footerCaption} />
-        </Drawer>
-      </Box>
-      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <AppHeader
-          title={config.fullName ?? config.name}
-          name={config.name}
-          nav={localizedNav}
-          searchItems={localizedSearch}
-          user={user}
-          profileTo={profileTo}
-          onLogout={onLogout}
-          onOpenMobileNav={() => setMobileOpen(true)}
-          tools={tools}
-          chatOpen={chatOpen}
-          onToggleChat={toggleChat}
-          chatEnabled={features.chat}
-          appsEnabled={features.apps}
-        />
-        <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
-          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <BreadcrumbProvider>
-              <PortalPageTitle
-                nav={localizedNav}
-                shortName={config.name}
-                appName={config.fullName ?? config.name}
-                labelMap={breadcrumbLabelMap}
-              />
-              <AppBreadcrumbs nav={localizedNav} appName={config.name} labelMap={breadcrumbLabelMap} />
-              {/* The page's own scroller. `contain` stops a wheel that reaches
-                  the end of this box from carrying on into the chat beside it —
-                  scroll chaining is what made the two feel welded together. */}
-              <Box
-                component="main"
-                id={MAIN_ID}
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  minHeight: 0,
-                  overflowY: 'auto',
-                  overscrollBehavior: 'contain',
-                  p: { xs: 1.5, sm: 2.25, md: 3 },
-                }}
-              >
-                {children}
-              </Box>
-            </BreadcrumbProvider>
+        <Box sx={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
+          <Box
+            component="a"
+            href={`#${MAIN_ID}`}
+            sx={{
+              position: 'absolute',
+              left: -9999,
+              zIndex: (t) => t.zIndex.tooltip,
+              bgcolor: 'background.paper',
+              color: 'primary.main',
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              fontWeight: 700,
+              '&:focus': { left: 8, top: 8 },
+            }}
+          >
+            {t('shell.chrome.skipToContent')}
           </Box>
-          {/* Mounted whether or not it is showing: the socket that carries an
-              incoming call lives inside it, and a chat that only listens while
-              its sidebar is open is a phone that only rings while you hold it.
-              `open` decides what is on screen; the call window is separate and
-              appears over the page either way. */}
-          {showChat && (
-            <StaffChatPanel
-              open={chatOpen}
-              meId={user?.user_id ?? ''}
-              meName={user?.full_name ?? user?.first_name ?? undefined}
-              meRoles={user?.roles ?? []}
-              onClose={closeChat}
-              onRequestOpen={openChat}
+          <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label={t('shell.chrome.primaryNav')}>
+            <Drawer
+              variant="temporary"
+              open={mobileOpen}
+              onClose={() => setMobileOpen(false)}
+              ModalProps={{ keepMounted: true }}
+              sx={{
+                display: { xs: 'block', md: 'none' },
+                '& .MuiDrawer-paper': { width: drawerWidth, height: drawerPaperHeight },
+              }}
+            >
+              <AppSidebar
+                name={config.name}
+                nav={localizedNav}
+                user={user}
+                footerCaption={config.footerCaption}
+                onNavigate={() => setMobileOpen(false)}
+              />
+            </Drawer>
+            <Drawer
+              variant="permanent"
+              open
+              sx={{
+                display: { xs: 'none', md: 'block' },
+                '& .MuiDrawer-paper': {
+                  width: drawerWidth,
+                  boxSizing: 'border-box',
+                  height: drawerPaperHeight,
+                },
+              }}
+            >
+              <AppSidebar name={config.name} nav={localizedNav} user={user} footerCaption={config.footerCaption} />
+            </Drawer>
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <AppHeader
+              title={config.fullName ?? config.name}
+              name={config.name}
+              nav={localizedNav}
+              searchItems={localizedSearch}
+              user={user}
+              profileTo={profileTo}
+              onLogout={onLogout}
+              onOpenMobileNav={() => setMobileOpen(true)}
+              tools={tools}
+              chatOpen={chatOpen}
+              onToggleChat={toggleChat}
+              chatEnabled={features.chat}
+              appsEnabled={features.apps}
             />
-          )}
+            <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
+              <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                <BreadcrumbProvider>
+                  <PortalPageTitle
+                    nav={localizedNav}
+                    shortName={config.name}
+                    appName={config.fullName ?? config.name}
+                    labelMap={breadcrumbLabelMap}
+                  />
+                  <AppBreadcrumbs nav={localizedNav} appName={config.name} labelMap={breadcrumbLabelMap} />
+                  {/* The page's own scroller. `contain` stops a wheel that reaches
+                      the end of this box from carrying on into the chat beside it —
+                      scroll chaining is what made the two feel welded together. */}
+                  <Box
+                    component="main"
+                    id={MAIN_ID}
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      minHeight: 0,
+                      overflowY: 'auto',
+                      overscrollBehavior: 'contain',
+                      p: { xs: 1.5, sm: 2.25, md: 3 },
+                    }}
+                  >
+                    {children}
+                  </Box>
+                </BreadcrumbProvider>
+              </Box>
+              {/* Mounted whether or not it is showing: the socket that carries an
+                  incoming call lives inside it, and a chat that only listens while
+                  its sidebar is open is a phone that only rings while you hold it.
+                  `open` decides what is on screen; the call window is separate and
+                  appears over the page either way. */}
+              {showChat && (
+                <StaffChatPanel
+                  open={chatOpen}
+                  meId={user?.user_id ?? ''}
+                  meName={user?.full_name ?? user?.first_name ?? undefined}
+                  meRoles={user?.roles ?? []}
+                  onClose={closeChat}
+                  onRequestOpen={openChat}
+                />
+              )}
+            </Box>
+          </Box>
         </Box>
+
+        {/* The taskbar is a ROW of this column, not a bar fixed over the page:
+            the content above it is genuinely shorter, so the last line of a long
+            table is readable instead of sitting underneath the clock. */}
+        <Taskbar />
+
+        {/* Every console gets the Agent. Its tab is fixed-positioned, so it sits
+            outside the layout above and covers nothing until opened; what it will
+            actually DO is decided by the caller's own roles, server-side. */}
+        <AgentLauncher />
       </Box>
-      {/* Every console gets the Agent. It is fixed-positioned, so it sits
-          outside the flex layout above and covers nothing until opened; what
-          it will actually DO is decided by the caller's own roles, server-side. */}
-      <AgentLauncher />
-    </Box>
+    </WorkspaceProvider>
   );
 }

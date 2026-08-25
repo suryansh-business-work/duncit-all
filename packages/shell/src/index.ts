@@ -36,6 +36,23 @@ export { AppsDrawer, useShellTools, type ShellTool } from './chrome/AppsDrawer';
 export { FileManagerDialog } from './file-manager';
 export { StaffChatPanel } from './staff-chat';
 export { StaffChatButton } from './staff-chat/StaffChatButton';
+// The console taskbar and the per-user desk behind it. AppShell mounts both;
+// these are exported so a portal that lays out its own chrome, and the tests,
+// can reach the same registry rather than starting a second one.
+export {
+  Taskbar,
+  WorkspaceProvider,
+  deviceTimeZone,
+  supportedTimeZones,
+  useWorkspace,
+  useWorkspaceWindow,
+  withSeconds,
+  type AgentDock,
+  type DockEdge,
+  type WorkspaceProviderProps,
+  type WorkspaceWindow,
+  type WorkspaceWindowHandle,
+} from './workspace';
 export { ShellRuntimeProvider, useShellRuntime, type ShellRuntime } from './lib/runtime';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';
 export { ProfilePage } from './chrome/ProfilePage';

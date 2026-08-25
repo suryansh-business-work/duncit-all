@@ -34,6 +34,7 @@ describe('EditAccountDialog non-Error save failure', () => {
         me={{ first_name: 'Riya', roles: ['USER'] } as never}
         onClose={jest.fn()}
         onSave={onSave}
+        onSaveUsername={jest.fn()}
       />,
     );
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');

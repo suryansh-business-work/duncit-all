@@ -45,7 +45,7 @@ export default function AccountDeletionDetailDialog({
   const [purgeAllOpen, setPurgeAllOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const state = useDeletionDetail(row?.id ?? null, onChanged);
-  const { detail, loading, busyKey, purgingAll } = state;
+  const { detail, loading, busyKey, purgingAll, steps } = state;
 
   const request = detail?.request;
   const open = !!row;
@@ -58,12 +58,23 @@ export default function AccountDeletionDetailDialog({
     await state.deleteGroup(group);
   };
 
+  /**
+   * Start the run and leave the dialog on it.
+   *
+   * Deliberately does NOT close on success: the run's whole point is that the
+   * operator sees each reference clear one at a time, and closing the moment
+   * the last one lands throws away the only account of what just happened —
+   * including which step failed when one does.
+   */
   const confirmAll = async () => {
-    const ok = await state.deleteEverything();
-    if (ok) {
-      setPurgeAllOpen(false);
-      onClose();
-    }
+    await state.deleteEverything();
+  };
+
+  /** Closing the run closes the request with it — it is finished either way. */
+  const closeRun = () => {
+    setPurgeAllOpen(false);
+    state.resetSteps();
+    if (steps.length > 0) onClose();
   };
 
   return (
@@ -95,6 +106,18 @@ export default function AccountDeletionDetailDialog({
                 }}>
                   {formatDateTime(request.requested_at)}
                 </Typography>
+                {request.days_remaining !== null && (
+                  <Chip
+                    size="small"
+                    color={request.days_remaining > 3 ? 'default' : 'warning'}
+                    label={t('tech.accountDeletions.dueOn', {
+                      vars: {
+                        date: formatDateTime(request.scheduled_delete_at),
+                        count: request.days_remaining,
+                      },
+                    })}
+                  />
+                )}
               </Stack>
 
               <Stack spacing={0.25}>
@@ -220,10 +243,11 @@ export default function AccountDeletionDetailDialog({
         code={request?.request_id ?? ''}
         name={request?.name ?? ''}
         busy={purgingAll}
+        steps={steps}
         onConfirm={() => {
           confirmAll().catch(() => undefined);
         }}
-        onClose={() => setPurgeAllOpen(false)}
+        onClose={closeRun}
       />
 
       <RejectDialog

@@ -4,6 +4,7 @@ export { DobDateField, parseDob } from './DobDateField';
 export { DobCalendarSheet, buildYears } from './DobCalendarSheet';
 export { LocationSelect } from './LocationSelect';
 export { ContactFields } from './ContactFields';
+export { UsernameField, type UsernameFieldProps } from './UsernameField';
 export {
   accountEditDefaults,
   accountEditSchema,

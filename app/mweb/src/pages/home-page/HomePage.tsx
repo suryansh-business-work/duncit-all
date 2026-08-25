@@ -11,6 +11,7 @@ import HomeFeaturedPods from './HomeFeaturedPods';
 import HomeNearbyHeader from './HomeNearbyHeader';
 import HomeVibeChips from './HomeVibeChips';
 import HostCtaBanner from './HostCtaBanner';
+import OngoingPodsRail from './OngoingPodsRail';
 import ClubRecommendationRow from './ClubRecommendationRow';
 import ClubSection from './ClubSection';
 import PreviousPodsRail from './PreviousPodsRail';
@@ -45,6 +46,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     isHost,
     clubs,
     featuredPods,
+    ongoingPods,
     podsByClub,
     categoryChips,
     vibeCategories,
@@ -145,6 +147,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             onToggleSave={saved.signedIn ? saved.toggle : undefined}
           />
         </Box>
+        <OngoingPodsRail pods={ongoingPods} hostNameOf={hostNameOf} />
         <HostCtaBanner
           isHost={isHost}
           onCreatePod={() => navigate('/create-pod')}

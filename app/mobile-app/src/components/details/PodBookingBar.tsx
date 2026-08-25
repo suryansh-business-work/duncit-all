@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
+import { podPhase } from '@duncit/utils';
 
 import { BackoutInProcessBar } from '@/components/details/BackoutInProcessBar';
 import { SeatPicker } from '@/components/details/SeatPicker';
@@ -54,10 +55,12 @@ export function PodBookingBar({
   const canBackout = !!membershipState?.can_backout;
   const canCancelBackout = !!membershipState?.can_cancel_backout;
   const isFull = !isMember && !inProcess && membershipState?.can_join === false;
-  // Once the pod's date has passed, booking is closed for non-members — the
-  // server enforces the same rule on joinFree + payment order creation, so we
-  // replace the CTA with a notice (mirrors mWeb's PodActionPanel).
-  const isExpired = !!pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
+  // Once the pod has STARTED, booking is closed for non-members — the server
+  // enforces the same rule on joinFree + payment order creation, so we replace
+  // the CTA with a notice (mirrors mWeb's PodActionPanel). A pod that is still
+  // running says so rather than claiming it has already taken place.
+  const phase = podPhase(pod.pod_date_time, pod.pod_end_date_time);
+  const isExpired = phase !== 'UPCOMING';
   const showClosedNotice = !isHost && isExpired && !isMember && !inProcess;
   const showBookBar = !isHost && !showClosedNotice && !isMember && !inProcess;
 
@@ -79,7 +82,7 @@ export function PodBookingBar({
         <TourAnchor tour="pod-details" anchor="pod-book">
           <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
             {isHost ? <HostBar onGoToDashboard={onGoToDashboard} /> : null}
-            {showClosedNotice ? <ClosedNotice /> : null}
+            {showClosedNotice ? <ClosedNotice ongoing={phase === 'ONGOING'} /> : null}
             {!isHost && inProcess ? (
               <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
             ) : null}
@@ -140,14 +143,19 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
   );
 }
 
-/** Past-date state: booking is closed, no CTA. */
-function ClosedNotice() {
+/** Started state: booking is closed, no CTA. A pod that is still RUNNING gets
+ * its own sentence — telling a member it has "already taken place" while it is
+ * happening is the thing the Ongoing rail exists to stop saying. */
+function ClosedNotice({ ongoing }: Readonly<{ ongoing: boolean }>) {
   const { t } = useTranslation();
+  const message = ongoing
+    ? t('mweb.podDetails.bookingClosedOngoing')
+    : t('mweb.podDetails.bookingClosed');
   return (
     <XStack flex={1} alignItems="center" gap={8} testID="pod-booking-closed">
       <MaterialIcons name="event-busy" size={20} color={semantic.warning} />
       <Text flex={1} fontSize={13.5} fontWeight="600" color="$muted">
-        {t('mweb.podDetails.bookingClosed')}
+        {message}
       </Text>
     </XStack>
   );

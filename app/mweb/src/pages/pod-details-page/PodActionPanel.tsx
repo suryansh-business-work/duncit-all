@@ -5,6 +5,7 @@ import {
   Typography,
 } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
+import { podPhase } from '@duncit/utils';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { podUrl } from '../../utils/seoUrls';
 import BackoutInProcessPanel from './BackoutInProcessPanel';
@@ -76,14 +77,18 @@ export default function PodActionPanel({
     );
   }
 
-  // Once the pod's date has passed, booking is closed — block checkout entirely
-  // (the server enforces the same rule on joinFree + payment order creation).
-  const isExpired =
-    !!pod?.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
+  // Once the pod has STARTED, booking is closed — block checkout entirely (the
+  // server enforces the same rule on joinFree + payment order creation). A pod
+  // that is still running says so rather than claiming it has already happened.
+  const phase = podPhase(pod?.pod_date_time, pod?.pod_end_date_time);
+  const isExpired = phase !== 'UPCOMING';
+  const closedMessage = phase === 'ONGOING'
+    ? t('mweb.podDetails.bookingClosedOngoing')
+    : t('mweb.podDetails.bookingClosed');
   if (isExpired && !isMember && !inProcess) {
     return (
       <Alert severity="warning" sx={{ borderRadius: '16px' }}>
-        {t('mweb.podDetails.bookingClosed')}
+        {closedMessage}
       </Alert>
     );
   }

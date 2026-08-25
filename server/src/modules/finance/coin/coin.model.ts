@@ -5,6 +5,8 @@ export type CoinTxnType = 'CREDIT' | 'DEBIT';
  * PAYMENT_REFUND returns the coins a cancelled booking was paid with, less the
  * Backouts deduction — the coin half of the cash refund.
  * REFERRAL_EARN pays the referrer, REFERRAL_SIGNUP pays the person they brought.
+ * POD_FEEDBACK pays a guest for rating a pod they were marked present at — the
+ * one reward earned by saying something rather than by spending anything.
  * ADMIN_GRANT / ADMIN_DEDUCT are the manual, user-specific adjustments made from
  * Finance > Duncit Coin > Settings — the only rows a human types the amount for,
  * which is why they are the only ones that record who did it.
@@ -16,6 +18,7 @@ export type CoinTxnSource =
   | 'REFERRAL_EARN'
   | 'REFERRAL_SIGNUP'
   | 'GIFT_CARD_REDEEM'
+  | 'POD_FEEDBACK'
   | 'ADMIN_GRANT'
   | 'ADMIN_DEDUCT';
 
@@ -54,6 +57,10 @@ export interface ICoinTransaction extends Document {
   /** The gift card whose value became these coins. The same job as payment_id,
    * for the third way coins arrive — one card converts exactly once. */
   gift_card_id: string | null;
+  /** The rating this reward paid for. A guest holds ONE opinion of a pod —
+   * re-rating rewrites that same document — so its id is what keeps an edited
+   * rating from being paid for all over again. */
+  feedback_id: string | null;
   /** The admin who typed this adjustment, on ADMIN_GRANT / ADMIN_DEDUCT rows
    * only. A manual grant has no payment and no referral to explain it, so
    * without this the ledger cannot answer who created the coins. */
@@ -90,6 +97,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
         'REFERRAL_EARN',
         'REFERRAL_SIGNUP',
         'GIFT_CARD_REDEEM',
+        'POD_FEEDBACK',
         'ADMIN_GRANT',
         'ADMIN_DEDUCT',
       ],
@@ -100,6 +108,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     referral_id: { type: String, default: null },
     backout_id: { type: String, default: null },
     gift_card_id: { type: String, default: null },
+    feedback_id: { type: String, default: null },
     admin_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     earn_pct: { type: Number, default: 0 },
     spend_amount: { type: Number, default: 0 },
@@ -160,6 +169,17 @@ coinTxnSchema.index(
   { unique: true, partialFilterExpression: { gift_card_id: { $type: 'string' } } }
 );
 
+// The same guard for the fourth way coins arrive: rating a pod you attended.
+// Submitting again EDITS the one rating a guest holds — that is what lets the
+// shared feedback link reopen filled in — so without this index every re-save
+// would pay the reward again, and two taps racing each other would pay it
+// twice. New index: lands via the same syncIndexes() boot seed (`coinIndexes`
+// in index.ts).
+coinTxnSchema.index(
+  { feedback_id: 1, source: 1 },
+  { unique: true, partialFilterExpression: { feedback_id: { $type: 'string' } } }
+);
+
 /**
  * Every rule that decides how many coins a person is given, in one document.
  *
@@ -178,6 +198,10 @@ export interface ICoinSettings extends Document {
   /** Flat coins paid to BOTH sides of a referral — the referrer and the member
    * they brought. One rate, deliberately: two would let the promise drift. */
   coins_per_referral: number;
+  /** Flat coins paid for rating a pod the member actually attended. Flat rather
+   * than a percentage because nothing was spent — what is rewarded is the
+   * answer, and every answer is worth the same. 0 turns the reward off. */
+  pod_feedback_coins: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -188,6 +212,7 @@ const coinSettingsSchema = new Schema<ICoinSettings>(
     pod_join_earn_pct: { type: Number, default: 10, min: 0, max: 100 },
     shop_earn_pct: { type: Number, default: 10, min: 0, max: 100 },
     coins_per_referral: { type: Number, default: 50, min: 0 },
+    pod_feedback_coins: { type: Number, default: 10, min: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

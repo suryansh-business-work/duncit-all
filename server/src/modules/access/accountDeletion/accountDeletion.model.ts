@@ -49,6 +49,15 @@ export interface IAccountDeletionRequest extends Document {
   surface: DeletionRequestSurface;
   status: DeletionRequestStatus;
   requested_at: Date;
+  /**
+   * The date the member was promised, stamped when they asked.
+   *
+   * Stamped and not derived: the retention window is an admin setting, and
+   * somebody who was told "30 days" must not silently become "60 days" because
+   * the setting moved after they asked. Changing it applies to the next
+   * request, never to one already in the queue.
+   */
+  scheduled_delete_at: Date;
   reviewed_by: Types.ObjectId | null;
   reviewed_at: Date | null;
   note: string;
@@ -80,6 +89,7 @@ const schema = new Schema<IAccountDeletionRequest>(
     surface: { type: String, enum: DELETION_REQUEST_SURFACES, default: 'UNKNOWN' },
     status: { type: String, enum: DELETION_REQUEST_STATUSES, default: 'PENDING', index: true },
     requested_at: { type: Date, required: true },
+    scheduled_delete_at: { type: Date, required: true, index: true },
     reviewed_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     reviewed_at: { type: Date, default: null },
     note: { type: String, default: '', trim: true, maxlength: 2000 },
@@ -108,4 +118,41 @@ schema.index({ status: 1, requested_at: 1 });
 export const AccountDeletionRequestModel = model<IAccountDeletionRequest>(
   'AccountDeletionRequest',
   schema
+);
+
+/** The default the product promises today, and the seed for a fresh install. */
+export const DEFAULT_DELETION_RETENTION_DAYS = 30;
+
+/**
+ * How long an account stays after its owner asks for it to go.
+ *
+ * A singleton, so the number the apps warn with, the date stamped on a request
+ * and the countdown the Tech queue sorts by are all one value. The window is
+ * not a delay for its own sake: it is the grace period a member can change
+ * their mind in, and the apps say the date out loud precisely so nobody has to
+ * take "soon" on trust.
+ */
+export interface IAccountDeletionSettings extends Document {
+  retention_days: number;
+  updated_by: Types.ObjectId | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const settingsSchema = new Schema<IAccountDeletionSettings>(
+  {
+    retention_days: {
+      type: Number,
+      default: DEFAULT_DELETION_RETENTION_DAYS,
+      min: 1,
+      max: 365,
+    },
+    updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+export const AccountDeletionSettingsModel = model<IAccountDeletionSettings>(
+  'AccountDeletionSettings',
+  settingsSchema
 );

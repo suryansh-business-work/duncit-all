@@ -9,6 +9,8 @@ export { PrivacyToggleCard } from './PrivacyToggleCard';
 export { SecuritySection } from './SecuritySection';
 export { ChangePasswordDialog } from './ChangePasswordDialog';
 export { DeleteAccountDialog } from './DeleteAccountDialog';
+export { DeletionNoticeDialog } from './DeletionNoticeDialog';
+export { DeletionSubmittedDialog } from './DeletionSubmittedDialog';
 export { SecuritySheet } from './SecuritySheet';
 export { LanguageSection } from './LanguageSection';
 export { ConnectedAccountsSection } from './ConnectedAccountsSection';

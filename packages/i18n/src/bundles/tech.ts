@@ -62,6 +62,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       platform: 'Platform',
       portal: 'Portal',
       preview: 'Preview',
+      renderingPreview: 'Rendering preview…',
       range: 'Range',
       session: 'Session',
       source: 'Source',
@@ -187,6 +188,11 @@ export const TECH_BUNDLE: NestedCatalogue = {
       shipsWithDuncit: 'ships with Duncit',
       weekendBanner: 'Weekend banner',
       appliedToTemplates: 'Applied to templates',
+      noTemplateUsesThisYet: 'No template uses this header and footer yet.',
+      openTemplateInEmailTemplates: 'Open {name} in Email Templates',
+      showEveryTemplateUsingThis: 'Show every template using this header and footer',
+      templatesUseThis: '{count} templates use this header and footer',
+      usedByTemplates: 'Used by {count} templates',
     },
     emailLogs: {
       all: 'All',
@@ -201,6 +207,28 @@ export const TECH_BUNDLE: NestedCatalogue = {
       took: 'Took',
       noEmailsYet: 'No emails yet.',
     },
+    /**
+     * The picker down the left of Email Templates and Email Fragments.
+     *
+     * Its own namespace because both pages render the SAME component: a
+     * translator decides once what “Most used” means, rather than twice
+     * under two page names that could drift apart (rule 40).
+     */
+    emailSidebar: {
+      activeOnly: 'Active only',
+      anyStatus: 'Any status',
+      listOrder: 'List order',
+      mostUsed: 'Most used',
+      nameAZ: 'Name A–Z',
+      nameZA: 'Name Z–A',
+      nothingMatchesSearch: 'Nothing matches “{needle}”.',
+      nothingMatchesTheFilters: 'Nothing matches the filters above.',
+      recentlyUpdated: 'Recently updated',
+      showingOfTotal: '{shown} of {total}',
+      sort: 'Sort',
+      switchedOffOnly: 'Switched off only',
+      totalCount: '{count} total',
+    },
     emailsDashboard: {
       address: 'Address',
       deliveryAcrossEveryEmailTheProduct: 'Delivery across every email the product tried to send, including the attempts that never left.',
@@ -213,6 +241,10 @@ export const TECH_BUNDLE: NestedCatalogue = {
       recipientsAddressed: 'RECIPIENTS ADDRESSED',
     },
     emailTemplates: {
+      allChangesSaved: 'All changes saved',
+      anyHeaderFooter: 'Any header / footer',
+      autoSave: 'Auto-save',
+      autoSaveHint: 'Saves on its own a moment after you stop typing. Switch it off to save by hand.',
       aSwitchedOffTemplateSendsNothing: 'A switched-off template sends nothing, even when code asks for it. Every skipped send is recorded in Telemetry › Logs.',
       countedFromEmailLogs: 'Counted from Email Logs, including test sends. Emptying the log lowers these numbers.',
       failedCount: 'Failed {count}',
@@ -233,6 +265,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       slug: 'Slug',
       usedByCodeCannotBeEdited: 'Used by code; cannot be edited.',
       usedByCodeEGWelcome: 'Used by code, e.g. welcome, payment-receipt.',
+      unsavedChanges: 'Unsaved changes',
       usedForLivePreviewAndSend: 'Used for live preview and Send test email.',
       verifyMjml: 'Verify MJML',
     },
@@ -517,6 +550,13 @@ export const TECH_BUNDLE: NestedCatalogue = {
       status: 'Status',
       reviewed: 'Reviewed',
       noReason: 'No reason given',
+      // The window. Every open request counts down against the date it was
+      // stamped with, which is the date the member was actually told.
+      scheduled: 'Deletes on',
+      timeLeft: 'Time left',
+      daysLeft: '{count} days left',
+      dueNow: 'Due now',
+      dueOn: 'Deletes {date} · {count} days left',
       // The detail dialog.
       detailTitle: 'Deletion request {code}',
       traceTitle: 'Where this member appears',
@@ -528,18 +568,43 @@ export const TECH_BUNDLE: NestedCatalogue = {
       field: 'Field',
       records: 'Records',
       effect: 'Effect',
-      // The two things a "Delete" here can mean. They are not close enough to
-      // share a word: one destroys documents, the other edits somebody else's.
+      // The three things a "Delete" here can mean. They are not close enough to
+      // share a word: one destroys documents, one edits somebody else's, and
+      // one keeps a record on purpose.
       effectDelete: 'Deletes the records',
       effectRemove: 'Removes them from the records',
+      effectRedact: 'Keeps the record, erases the person',
       effectDeleteHint:
         'These documents belong to this member and will be deleted outright.',
       effectRemoveHint:
         'The member is one entry inside documents that belong to others — a pod attendee, a comment, a signature. Only their entry is removed; the document stays.',
+      effectRedactHint:
+        'A financial or audit record that has to outlive the account. The row stays and the personal data on it is erased — where it showed a name it will show "Deleted user".',
       deleteGroup: 'Delete',
       deletingGroup: 'Deleting…',
+      redactGroup: 'Erase details',
+      redactingGroup: 'Erasing…',
       deleteAll: 'Delete everything',
       deletingAll: 'Deleting…',
+      // The run itself, line by line, so a purge that reaches seventy
+      // collections never looks the same as one that hung on the first.
+      runTitle: 'Carrying out {code}',
+      stepProgress: '{done} of {total} done',
+      stepAccount: 'The account itself',
+      stepPending: '{count} records',
+      stepRemoved: '{count} removed',
+      stepRedacted: '{count} redacted',
+      // The retention window, set here and promised in both apps.
+      settingsTitle: 'Deletion settings',
+      settingsIntro:
+        'How long an account stays after its owner asks for it to go. Both apps show this number before anyone confirms, and the date it produces is stamped on their request.',
+      retentionDays: 'Days before deletion',
+      retentionHint: 'Between 1 and 365 days. The product promises 30.',
+      retentionRange: 'Enter a whole number of days between 1 and 365.',
+      settingsAppliesNext:
+        'This applies to requests filed after you save. Anyone already waiting keeps the date they were promised.',
+      settingsSave: 'Save',
+      settingsSaved: 'Deletion window updated.',
       accountRemoved: 'The account document has been removed.',
       accountPresent: 'The account document is still here.',
       // Confirmations. Both are irreversible, so both spell out the damage.

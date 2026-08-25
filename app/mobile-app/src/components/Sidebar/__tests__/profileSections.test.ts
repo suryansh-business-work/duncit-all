@@ -6,6 +6,10 @@ import {
   buildPartnerMenus,
 } from '../profileSections';
 
+/** The sidebar's Badges row arrives already translated, so the test passes the
+ * label the same way the component does. */
+const BADGES_LABEL = 'Badges';
+
 describe('profileSections', () => {
   it('exposes exactly four quick-action tiles pointing at real screens', () => {
     expect(PROFILE_GRID).toHaveLength(4);
@@ -19,12 +23,19 @@ describe('profileSections', () => {
   });
 
   it('builds the manage list (account rows only) without Pod Plans by default', () => {
-    const labels = buildManageItems(false, true).map((i) => i.label);
-    expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'Tour Guide', 'FAQs']);
+    const labels = buildManageItems(false, true, BADGES_LABEL).map((i) => i.label);
+    expect(labels).toEqual([
+      'Manage Account',
+      'Saved Items',
+      'Verification',
+      'Tour Guide',
+      'FAQs',
+      BADGES_LABEL,
+    ]);
   });
 
   it('inserts Pod Plans before FAQs when the flag is on', () => {
-    const labels = buildManageItems(true, true).map((i) => i.label);
+    const labels = buildManageItems(true, true, BADGES_LABEL).map((i) => i.label);
     expect(labels).toEqual([
       'Manage Account',
       'Saved Items',
@@ -32,17 +43,19 @@ describe('profileSections', () => {
       'Tour Guide',
       'Pod Plans',
       'FAQs',
+      BADGES_LABEL,
     ]);
   });
 
   it('routes every manage item to a Pod-Plans-gated screen name', () => {
-    expect(buildManageItems(true, true).map((i) => i.route)).toEqual([
+    expect(buildManageItems(true, true, BADGES_LABEL).map((i) => i.route)).toEqual([
       'Account',
       'Saved',
       'Verification',
       'TourGuide',
       'PodPlans',
       'Faqs',
+      'Badges',
     ]);
   });
 

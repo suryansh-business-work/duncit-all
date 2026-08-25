@@ -29,8 +29,15 @@ const STRING_USER_FIELD = /^(?:[a-z]+_)?user_id$/;
  *
  * `User` is the account itself, which the caller removes last and separately.
  * `AccountDeletionRequest` is the record of the request being carried out —
- * purging it mid-purge would erase the audit trail of the purge. */
-const SKIP_MODELS = new Set(['User', 'AccountDeletionRequest']);
+ * purging it mid-purge would erase the audit trail of the purge.
+ * `AccountDeletionSettings` is configuration that happens to remember which
+ * admin last saved it; it is nobody's personal data and listing it would put a
+ * row in front of an operator that must never be acted on. */
+const SKIP_MODELS = new Set([
+  'User',
+  'AccountDeletionRequest',
+  'AccountDeletionSettings',
+]);
 
 export interface UserReference {
   /** The mongoose model name, e.g. `Ticket`. */

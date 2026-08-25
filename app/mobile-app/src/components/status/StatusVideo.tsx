@@ -1,38 +1,60 @@
-import { WebView } from 'react-native-webview';
+import { useEffect, useRef } from 'react';
+import { StyleSheet } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
 
 interface StatusVideoProps {
   uri: string;
+  /** Sound state, owned by the viewer so its speaker button matches. */
+  muted: boolean;
   /** Fired when the clip finishes so the viewer can advance to the next slide. */
   onEnded: () => void;
 }
 
-const html = (uri: string) => `<!doctype html><html><head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<style>html,body{margin:0;height:100%;background:#000}video{width:100%;height:100%;object-fit:cover}</style>
-</head><body>
-<video src="${uri}" autoplay muted playsinline></video>
-<script>
-  var v = document.querySelector('video');
-  v.addEventListener('ended', function () {
-    window.ReactNativeWebView && window.ReactNativeWebView.postMessage('ended');
+/**
+ * Plays a story video with the app's own player — the same one the reels, the
+ * splash, the sidebar card and the story preview sheet already use.
+ *
+ * It used to render a WebView around a `<video>` tag written into an HTML
+ * string. That document has no origin of its own, so the remote clip was never
+ * fetched and the slide sat black and silent; the tag was also hardcoded
+ * `muted`, so a story's sound could not play even once the picture did.
+ */
+export function StatusVideo({ uri, muted, onEnded }: Readonly<StatusVideoProps>) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = false;
+    p.muted = muted;
+    p.play();
   });
-</script>
-</body></html>`;
+  // The viewer rebuilds `onEnded` on every render; holding it in a ref keeps
+  // the listener below from being torn down and re-added each time.
+  const endedRef = useRef(onEnded);
+  endedRef.current = onEnded;
 
-/** Plays a story video inside a WebView (the app ships no native video module)
- * and reports completion so the viewer auto-advances like an image slide. */
-export function StatusVideo({ uri, onEnded }: Readonly<StatusVideoProps>) {
+  useEffect(() => {
+    player.muted = muted;
+  }, [player, muted]);
+
+  // The viewer lives inside a Modal, where the setup-time play() can be
+  // swallowed before the remote source finishes loading — re-assert play once
+  // it reports ready (same as SidebarVenuesCard).
+  useEffect(() => {
+    const ready = player.addListener('statusChange', ({ status }) => {
+      if (status === 'readyToPlay') player.play();
+    });
+    const ended = player.addListener('playToEnd', () => endedRef.current());
+    return () => {
+      ready.remove();
+      ended.remove();
+    };
+  }, [player]);
+
   return (
-    <WebView
+    <VideoView
       testID="status-video"
-      originWhitelist={['*']}
-      source={{ html: html(uri) }}
-      style={{ flex: 1, backgroundColor: '#000000' }}
-      mediaPlaybackRequiresUserAction={false}
-      allowsInlineMediaPlayback
-      onMessage={(event) => {
-        if (event.nativeEvent.data === 'ended') onEnded();
-      }}
+      player={player}
+      style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' }}
+      contentFit="cover"
+      nativeControls={false}
     />
   );
 }

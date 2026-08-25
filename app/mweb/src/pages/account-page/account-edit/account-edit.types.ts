@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PERSON_NAME, PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   FALLBACK_DATE_FORMAT,
@@ -75,6 +76,14 @@ export const makeAccountEditSchema = (
   t: Translate = fallbackT,
 ) =>
   z.object({
+  /**
+   * The @handle, shaped by the pattern the server re-checks in `username.ts`,
+   * so the field cannot hold one `setMyUsername` would then refuse. No message:
+   * the status line under the field is localized copy from `buildUsernameLabels`
+   * (rule 38), and a second English sentence here is the one that would drift.
+   * Empty is allowed for an account minted before handles existed.
+   */
+  username: z.string().refine((v) => v === '' || USERNAME_PATTERN.test(normalizeUsername(v))),
   first_name: z
     .string()
     .trim()
@@ -116,6 +125,7 @@ export function toDobInput(value?: string | null): string {
 /** Build the form's initial values from the loaded user (empty-string safe). */
 export function accountEditDefaults(initial: Partial<AccountEditValues>): AccountEditValues {
   return {
+    username: '',
     first_name: '',
     last_name: '',
     bio: '',

@@ -9,6 +9,7 @@ export const MobileMyCoinBalanceDocument = gql(`
       lifetime_earned
       earn_pct
       shop_earn_pct
+      pod_feedback_coins
     }
   }
 `);
@@ -21,6 +22,7 @@ export const MobileMyCoinTransactionsDocument = gql(`
       lifetime_earned
       earn_pct
       shop_earn_pct
+      pod_feedback_coins
     }
     myCoinTransactions {
       id

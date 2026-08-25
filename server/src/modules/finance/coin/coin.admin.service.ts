@@ -5,6 +5,12 @@ import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.m
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
+import {
+  loadUserMap,
+  monthKeys,
+  userNameOrDeleted,
+  type UserInfo,
+} from '@utils/admin-ledger';
 import { coinSettingsService } from './coin.settings.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -65,48 +71,6 @@ interface PodInfo {
   id: string;
   title: string;
   slug: string;
-}
-
-interface UserInfo {
-  name: string;
-  email: string;
-}
-
-/**
- * Names for ledger rows that have no payment to take them from — referral
- * credits and manual adjustments — plus the admins who typed the manual ones.
- * Without this a growing share of the ledger renders a blank where a person
- * should be, which is exactly the column an audit reads first.
- */
-async function loadUserMap(userIds: string[]): Promise<Map<string, UserInfo>> {
-  const unique = [...new Set(userIds.filter(Boolean))].filter((id) =>
-    Types.ObjectId.isValid(id)
-  );
-  if (unique.length === 0) return new Map();
-  const rows = await UserModel.find({ _id: { $in: unique } })
-    .select('email profile.first_name profile.last_name')
-    .lean();
-  return new Map(
-    rows.map((u: any) => [
-      String(u._id),
-      {
-        name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
-        email: u.email ?? '',
-      },
-    ])
-  );
-}
-
-/** UTC 'YYYY-MM' keys for the last `span` months, oldest first. */
-function monthKeys(span: number): string[] {
-  const now = new Date();
-  const keys: string[] = [];
-  for (let back = span - 1; back >= 0; back -= 1) {
-    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - back, 1));
-    const mm = String(month.getUTCMonth() + 1).padStart(2, '0');
-    keys.push(`${month.getUTCFullYear()}-${mm}`);
-  }
-  return keys;
 }
 
 /** Scope the ledger to one pod by way of that pod's payments — both the pod
@@ -200,9 +164,13 @@ const toAdminRow = (
   return {
     id: t._id.toString(),
     user_id: String(t.user_id),
-    user_name: payment?.user_name || account?.name || '',
+    // The payment's frozen snapshot wins, and a purge redacts that snapshot to
+    // "Deleted user" — so a row backed by a payment reads correctly on its own.
+    // A grant or a referral has no payment behind it and resolves the account
+    // live, which is where a since-deleted member would otherwise go blank.
+    user_name: payment?.user_name || userNameOrDeleted(account, t.user_id),
     user_email: payment?.user_email || account?.email || '',
-    admin_name: admin?.name ?? '',
+    admin_name: userNameOrDeleted(admin, t.admin_id),
     type: t.type,
     amount: t.amount,
     balance_after: t.balance_after,

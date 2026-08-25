@@ -22,6 +22,10 @@ export const accountDeletionResolvers = {
       const user = requireAuth(ctx);
       return accountDeletionService.myRequest(user.id);
     },
+    accountDeletionSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return accountDeletionService.settings();
+    },
     accountDeletionRequestsTable: (
       _p: unknown,
       args: { query?: TableQueryInput | null },
@@ -75,6 +79,14 @@ export const accountDeletionResolvers = {
     ) => {
       const actor = requireRole(ctx, TECH_REVIEW);
       return accountDeletionService.reject(args.request_doc_id, args.note, actor.id);
+    },
+    updateAccountDeletionSettings: (
+      _p: unknown,
+      args: { retention_days: number },
+      ctx: GraphQLContext
+    ) => {
+      const actor = requireRole(ctx, TECH_REVIEW);
+      return accountDeletionService.updateSettings(args.retention_days, actor.id);
     },
   },
 };

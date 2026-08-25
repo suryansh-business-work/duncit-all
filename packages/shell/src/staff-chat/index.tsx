@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
+import { useWorkspaceWindow } from '../workspace';
 import ChatSidebar from './ChatSidebar';
 import ChatWindows from './ChatWindows';
 import { useCall } from './useCall';
@@ -43,6 +45,7 @@ export function StaffChatPanel({
   meName,
   meRoles = [],
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [peer, setPeer] = useState<Coworker | null>(null);
@@ -135,6 +138,17 @@ export function StaffChatPanel({
    */
   const busyStage = recorder.stage === 'UPLOADING' || recorder.stage === 'CONVERTING';
 
+  /*
+    The panel is a running window, so it belongs on the taskbar too.
+
+    Minimising is not closing: the socket stays up, the conversation stays
+    where it was, and the page beside it gets its full width back — which is
+    the thing people actually want when they say the chat is in the way.
+  */
+  const taskbar = useWorkspaceWindow(
+    open ? { id: 'staff-chat', title: t('shell.chat.panel.title'), icon: 'CHAT' } : null
+  );
+
   return (
     <>
       <ChatWindows
@@ -150,7 +164,7 @@ export function StaffChatPanel({
         }}
       />
 
-      {open && (
+      {open && !taskbar.minimised && (
         <ChatSidebar
           data={data}
           meId={meId}
@@ -175,6 +189,7 @@ export function StaffChatPanel({
           onPlayRecording={setPlayingRecording}
           busy={busyStage}
           onClose={onClose}
+          onMinimise={taskbar.docked ? taskbar.minimise : undefined}
           settingsOpen={settingsOpen}
           onOpenSettings={() => setSettingsOpen(true)}
           onCloseSettings={() => setSettingsOpen(false)}

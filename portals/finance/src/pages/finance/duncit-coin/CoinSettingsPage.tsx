@@ -50,6 +50,7 @@ export default function CoinSettingsPage() {
             pod_join_earn_pct: Number.parseInt(values.pod_join_earn_pct, 10),
             shop_earn_pct: Number.parseInt(values.shop_earn_pct, 10),
             coins_per_referral: Number.parseInt(values.coins_per_referral, 10),
+            pod_feedback_coins: Number.parseInt(values.pod_feedback_coins, 10),
           },
         },
       });

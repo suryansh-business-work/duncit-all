@@ -50,6 +50,47 @@ const renderRequested = (row: AccountDeletionRow) => (
   </Typography>
 );
 
+const renderScheduled = (row: AccountDeletionRow) => (
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
+    {formatDateTime(row.scheduled_delete_at)}
+  </Typography>
+);
+
+/** Urgency as a colour, so a queue that is running out is visible at a glance
+ * rather than needing every date read. */
+function remainingColor(days: number): 'error' | 'warning' | 'default' {
+  if (days <= 0) return 'error';
+  if (days <= 3) return 'warning';
+  return 'default';
+}
+
+/**
+ * How long is left on the promise.
+ *
+ * Only PENDING rows count down — a cancelled or completed request has no clock
+ * left to run, and a countdown on one reads as still scheduled. The server
+ * sends null in exactly that case, which is why this is a null check and not a
+ * status check repeated on the client.
+ */
+const renderRemaining = (t: Translate) => (row: AccountDeletionRow) => {
+  if (row.days_remaining === null) {
+    return (
+      <Typography variant="body2" sx={{
+        color: "text.disabled"
+      }}>
+        —
+      </Typography>
+    );
+  }
+  const label =
+    row.days_remaining === 0
+      ? t('tech.accountDeletions.dueNow')
+      : t('tech.accountDeletions.daysLeft', { vars: { count: row.days_remaining } });
+  return <Chip size="small" color={remainingColor(row.days_remaining)} label={label} />;
+};
+
 const renderReason = (t: Translate) => (row: AccountDeletionRow) => (
   <Typography
     variant="body2"
@@ -109,6 +150,21 @@ export default function AccountDeletionsTable({ fetchRows, refetchRef, onOpen }:
         headerName: t('tech.accountDeletions.requested'),
         width: 175,
         cellRenderer: renderRequested,
+      },
+      {
+        field: 'scheduled_delete_at',
+        headerName: t('tech.accountDeletions.scheduled'),
+        width: 175,
+        cellRenderer: renderScheduled,
+      },
+      {
+        // Not sortable on itself: the countdown is derived, and sorting by the
+        // date it counts down from is the same order.
+        field: 'days_remaining',
+        headerName: t('tech.accountDeletions.timeLeft'),
+        width: 125,
+        sortable: false,
+        cellRenderer: renderRemaining(t),
       },
       {
         field: 'reason',

@@ -17,9 +17,9 @@
  * d, so a story with 45 minutes left never reads as "0h".
  */
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import HomeStatusViewer, {
   statusRemainingLabel,
@@ -29,14 +29,25 @@ import HomeStatusViewer, {
 
 const testTheme = createTheme();
 
+/** jsdom ships `play`/`pause` as "not implemented" stubs that log and return
+ * undefined, so they are replaced outright rather than filled in — the viewer
+ * starts its own clips now and a spy is the only way to see that it did. */
+const play = vi.fn<[], Promise<void>>();
+const pause = vi.fn();
+
 beforeAll(() => {
   globalThis.ResizeObserver ??= class {
     observe() {}
     unobserve() {}
     disconnect() {}
   } as unknown as typeof ResizeObserver;
-  globalThis.HTMLMediaElement.prototype.play ??= () => Promise.resolve();
-  globalThis.HTMLMediaElement.prototype.pause ??= () => undefined;
+  globalThis.HTMLMediaElement.prototype.play = play;
+  globalThis.HTMLMediaElement.prototype.pause = pause;
+});
+
+beforeEach(() => {
+  play.mockReset().mockResolvedValue(undefined);
+  pause.mockReset();
 });
 
 const slide = (over: Partial<HomeStatusViewerSlide> = {}): HomeStatusViewerSlide => ({
@@ -236,6 +247,66 @@ describe('HomeStatusViewer', () => {
     });
 
     expect(document.body.querySelector('video')).not.toBeNull();
+  });
+
+  /**
+   * A story clip has to actually start, and it has to bring its sound.
+   *
+   * The element's own `autoplay` was not enough: the viewer mounts inside a
+   * Dialog portal, so the attempt is made before the remote clip has anything
+   * to show and is dropped — which left the slide black, silent, and frozen,
+   * because a video slide's progress bar is driven by `timeupdate` alone.
+   */
+  describe('video slides', () => {
+    const videoItem = () =>
+      item({ slides: [slide({ mediaType: 'VIDEO', mediaUrl: 'https://cdn.duncit.com/s.mp4' })] });
+
+    it('starts the clip itself, with its sound on, and offers a speaker', async () => {
+      viewer({ item: videoItem() });
+
+      const video = document.body.querySelector('video') as HTMLVideoElement;
+      expect(video.muted).toBe(false);
+      await waitFor(() => expect(play).toHaveBeenCalled());
+      expect(document.body.querySelector('[data-testid="status-mute"]')).not.toBeNull();
+    });
+
+    it('mutes the clip when the speaker is pressed', () => {
+      viewer({ item: videoItem() });
+      fireEvent.click(document.body.querySelector('[data-testid="status-mute"]') as HTMLElement);
+
+      expect((document.body.querySelector('video') as HTMLVideoElement).muted).toBe(true);
+    });
+
+    it('starts muted when the browser refuses to autoplay it with sound', async () => {
+      play.mockRejectedValueOnce(new Error('NotAllowedError'));
+
+      viewer({ item: videoItem() });
+
+      await waitFor(() =>
+        expect((document.body.querySelector('video') as HTMLVideoElement).muted).toBe(true),
+      );
+    });
+
+    it('holds the clip while the story is pressed, and resumes on release', () => {
+      viewer({ item: videoItem() });
+      // The press handlers sit on the slide stage — the clip's own parent.
+      const stage = (document.body.querySelector('video') as HTMLVideoElement)
+        .parentElement as HTMLElement;
+
+      fireEvent.pointerDown(stage, { clientX: 200 });
+      expect(pause).toHaveBeenCalled();
+      const resumedFrom = play.mock.calls.length;
+      fireEvent.pointerUp(stage, { clientX: 200 });
+      expect(play.mock.calls.length).toBeGreaterThan(resumedFrom);
+    });
+
+    it('moves on rather than parking the story on a clip that will not load', () => {
+      const { spies } = viewer({ item: videoItem() });
+
+      fireEvent.error(document.body.querySelector('video') as HTMLVideoElement);
+
+      expect(spies.onNext).toHaveBeenCalled();
+    });
   });
 
   it('moves between slides, and on to the next story at the end', () => {

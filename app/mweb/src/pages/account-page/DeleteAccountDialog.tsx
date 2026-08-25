@@ -14,13 +14,16 @@ import { parseApiError } from '../../utils/parseApiError';
 import {
   REQUEST_ACCOUNT_DELETION_OTP,
   SUBMIT_ACCOUNT_DELETION_REQUEST,
+  type PendingRequest,
 } from './security-queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSubmitted: () => void;
+  /** Hands the filed request up: the parent tells the member the date on it,
+   * then signs them out. */
+  onSubmitted: (request: PendingRequest) => void;
 }
 
 /**
@@ -45,10 +48,10 @@ export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Read
 
   const handleSubmit = async (values: DeleteAccountValues) => {
     try {
-      await submitRequest({
+      const { data } = await submitRequest({
         variables: { input: { otp: values.otp, reason: values.reason, surface: 'MWEB' } },
       });
-      onSubmitted();
+      onSubmitted(data.submitAccountDeletionRequest);
     } catch (e) {
       throw new Error(parseApiError(e));
     }

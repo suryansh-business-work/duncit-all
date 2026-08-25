@@ -16,6 +16,7 @@ const renderPane = (props: Partial<React.ComponentProps<typeof PreviewVariablesP
       setTab={setTab}
       previewHtml="<p>hi</p>"
       previewErrors={[]}
+      previewLoading={false}
       detected={[]}
       varsJson="{}"
       setVarsJson={setVarsJson}
@@ -29,7 +30,7 @@ const renderPane = (props: Partial<React.ComponentProps<typeof PreviewVariablesP
 describe('PreviewVariablesPane — preview tab', () => {
   it('renders the preview iframe and shows preview errors when present', () => {
     renderPane({ previewErrors: ['err one', 'err two', 'err three', 'err four'] });
-    expect(screen.getByTitle('preview')).toBeInTheDocument();
+    expect(screen.getByTitle('Preview')).toBeInTheDocument();
     // Only the first three errors are joined into the warning.
     expect(screen.getByText('err one · err two · err three')).toBeInTheDocument();
   });
@@ -76,6 +77,7 @@ describe('PreviewVariablesPane — variables tab', () => {
         setTab={vi.fn()}
         previewHtml=""
         previewErrors={[]}
+        previewLoading={false}
         detected={[]}
         varsJson="{}"
         setVarsJson={vi.fn()}
@@ -103,6 +105,7 @@ describe('PreviewVariablesPane — variables tab', () => {
         setTab={vi.fn()}
         previewHtml=""
         previewErrors={[]}
+        previewLoading={false}
         detected={[]}
         varsJson="{}"
         setVarsJson={vi.fn()}

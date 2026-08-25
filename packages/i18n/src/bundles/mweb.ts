@@ -260,6 +260,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       coin: { title: 'Duncit Coin' },
       leaderboard: { title: 'Leaderboard' },
+      badges: {
+        title: 'Badges',
+        description: 'Every Duncit badge, what it takes to unlock it, and how far along you are.',
+      },
       membership: {
         title: 'Membership',
         description: 'Duncit membership tiers — what each one gets you, and what it costs.',
@@ -326,10 +330,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     account: {
       preferences: 'Preferences',
-      // The @handle is minted by the server and never typed, so the only copy
-      // left is on the button that copies the link it produces — and that
-      // button lives on the PROFILE, beside the handle, not in settings.
+      // The @handle. It is minted by the server at signup and changed from Edit
+      // profile, where the field is debounce-checked against the server and the
+      // status line below is whichever of these the answer came back as.
       username: {
+        label: 'Username',
+        placeholder: 'your-handle',
+        hint: 'Lowercase letters, numbers and hyphens. Links you have already shared will stop working if you change it.',
+        linkLabel: 'Your profile link',
+        checking: 'Checking availability…',
+        available: '@{username} is available.',
+        current: 'This is your username.',
+        format: 'Use 3–30 lowercase letters, numbers and single hyphens.',
+        taken: 'That username is already taken.',
+        reserved: 'That username is reserved.',
+        saveFailed: 'That username could not be saved — somebody may have just taken it. Try another one.',
         copyLink: 'Copy profile link',
         linkCopied: 'Profile link copied',
       },
@@ -405,6 +420,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         confirmTitle: 'Request account deletion?',
         confirmMessage:
           'We will email you a 6-digit code to confirm it is you. Your account keeps working until our team removes it, and you can withdraw the request any time before then.',
+        // The same warning, with the window the admin has actually configured
+        // in it. Quoting the real number matters: it is the date the server
+        // stamps on the request and the one the member will be held to.
+        confirmMessageDays:
+          'Your account and everything on it will be deleted {days} days from now. We will email you a 6-digit code to confirm it is you, and you will be signed out once the request is filed. You can withdraw it any time before the {days} days are up by signing back in.',
         confirmCta: 'Send code',
         otpSent: 'Code sent to your email.',
         otpIntro: 'Enter the code to send your deletion request.',
@@ -416,7 +436,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         reasonPlaceholder: 'Tell us what went wrong…',
         submit: 'Send deletion request',
         submitting: 'Sending…',
-        submitted: 'Deletion request sent.',
         didntGetIt: 'Didn’t get it?',
         resend: 'Resend code',
         resending: 'Resending…',
@@ -426,9 +445,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
           'Our team is reviewing your request. Your account works normally until they remove it.',
         pendingRef: 'Reference {code}',
         pendingOn: 'Requested on {date}',
+        deletesOn: 'Your account will be deleted on {date}',
         withdraw: 'Withdraw request',
         withdrawing: 'Withdrawing…',
         withdrawn: 'Deletion request withdrawn.',
+        // Filing the request signs the member out, so this dialog is the last
+        // thing they see — it has to carry the date and the reference with it.
+        submittedTitle: 'Deletion request received',
+        submittedOn: 'Your account and everything on it will be deleted on {date}.',
+        submittedBody:
+          'You are being signed out now. Sign back in any time before that date and we will ask whether you would like to withdraw the request.',
+        signOutNow: 'Sign out',
+        // ...and this is that question, asked on the next sign-in.
+        noticeTitle: 'Your account is scheduled for deletion',
+        noticeDaysLeft: '{count} days left to change your mind.',
+        noticeBody:
+          'You asked us to delete your account. Everything on it goes on that date and cannot be brought back. Withdraw the request and nothing changes.',
+        noticeKeep: 'Keep the request',
         validation: {
           otpPattern: 'Enter the 6 digit code',
           reasonTooLong: 'Please keep this under 1000 characters',
@@ -617,6 +650,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       happeningNearbyTitle: 'Happening nearby',
       happeningNearbySubtitle: 'Curated events around you',
       happeningNearbyEmpty: 'No live pods around you right now.',
+      // The rail between the two: a pod that has started but not finished. It
+      // cannot be joined any more, so the rail says what it is rather than
+      // inviting a booking.
+      ongoingPodsTitle: 'Ongoing Pods',
+      ongoingPodsSubtitle: 'Happening right now — joining is closed',
       previousPodsTitle: 'Previous Pods',
       previousPodsSubtitle: 'Pods that have already taken place',
       previousPodsEmpty: 'No previous pods to show yet.',
@@ -902,8 +940,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Native only — its bar pairs every CTA with a caption on the left.
       youreHosting: "You're hosting",
       yourPod: 'Your Pod',
-      // Closed state.
+      // Closed state. A pod that is RUNNING has not "taken place" yet, so it
+      // gets its own sentence rather than being told it is over.
       bookingClosed: 'This pod has already taken place — booking is closed.',
+      bookingClosedOngoing: 'This pod is happening right now — joining is closed.',
       // Backout-in-process state.
       backoutLocked:
         'A replacement has been confirmed — this Backout request can no longer be cancelled. Your refund will be processed as per the backout policy.',
@@ -2247,6 +2287,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       lifetimeLabel: 'Lifetime earned',
       rateNote:
         'You earn {pct}% back as Duncit Coins when you join a pod, and {shopPct}% on shop orders. 1 coin = {symbol}1.',
+      // Stated only when Finance is actually paying it — "You earn 0 Duncit
+      // Coins" is a promise of nothing, which is worse than saying nothing.
+      feedbackRateNote: 'You earn {coins} Duncit Coins on your Attended Pod Feedback.',
       historyTitle: 'Transaction history',
       historyEmpty: 'No coin activity yet. Rewards from your payments will show up here.',
       earned: 'Earned',
@@ -2645,6 +2688,45 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     badges: {
       badgeDetails: 'Badge details',
+      // The Badges section — every badge the platform publishes, each one
+      // stating its GOAL and the WINDOW that goal has to happen in, plus how
+      // far along the member is. mWeb and native render the same list from the
+      // same `@duncit/utils` vocabulary (rules 27/40), and the profile shows
+      // the achieved ones underneath the followers row.
+      title: 'Badges',
+      sidebarLabel: 'Badges',
+      intro:
+        'Every badge below states its goal and the window it has to happen in. Reach the goal and the badge unlocks on your profile.',
+      goalLabel: 'Goal',
+      timelineLabel: 'Unlock timeline',
+      achieved: 'Achieved',
+      locked: 'Locked',
+      achievedOn: 'Achieved on {date}',
+      progressLabel: 'Progress',
+      progressValue: '{current} / {target}',
+      summary: '{unlocked} of {total} unlocked',
+      empty: 'No badges have been published yet. Check back soon.',
+      loadError: 'Your badges could not be loaded. Please try again.',
+      profileEmpty:
+        'No badges yet — join pods, bring a friend along and explore new categories to start unlocking them.',
+      viewAll: 'View all badges',
+      // One goal line per condition. {target} is the badge's threshold —
+      // deliberately not named `count`, which the translator reserves for its
+      // own plural counter and would blank out here.
+      goalPodJoin: 'Join {target} pods',
+      goalPodHost: 'Host {target} pods',
+      goalClubJoin: 'Join pods in {target} different clubs',
+      goalPodReferral: 'Bring {target} friends into pods',
+      goalPodAttend: 'Attend {target} pods',
+      goalCategoryAttend: 'Attend {target} pods in this category',
+      goalPlusOne: 'Bring a +1 along to {target} pods',
+      goalDistinctCategory: 'Attend pods across {target} different categories',
+      goalMonthlyAttend: 'Attend {target} pods inside one calendar month',
+      goalRoleGranted: 'Get approved as a Duncit partner',
+      goalManual: 'Awarded by the Duncit team',
+      windowLifetime: 'Counts everything since you joined Duncit',
+      windowCalendarMonth: 'Must all happen inside one calendar month',
+      windowOnApproval: 'Unlocks the moment your application is approved',
     },
     beClubAdmin: {
       beAClubAdmin: 'Be a Club Admin',
@@ -3057,8 +3139,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       sendSos: 'Send SOS',
     },
     status: {
+      muteVideo: 'Mute video',
       noOneHasViewedThisStory: 'No one has viewed this story yet.',
       openDetails: 'Open details',
+      unmuteVideo: 'Unmute video',
     },
     statusUpload: {
       preparingStatusUpload: 'Preparing status upload...',

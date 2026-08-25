@@ -10,24 +10,44 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import MediaPickerField from '../../components/MediaPickerField';
-import { CONDITIONS, type BadgeForm } from './queries';
 import { useTranslation } from '@duncit/shell';
+import MediaPickerField from '../../components/MediaPickerField';
+import BadgeScopeFields, {
+  type BadgeCategoryOption,
+  type BadgeRoleOption,
+} from './BadgeScopeFields';
+import { CONDITIONS, CONDITION_LABEL_KEY, hasThreshold, type BadgeForm } from './queries';
 
 interface Props {
   open: boolean;
   form: BadgeForm;
   setForm: (f: BadgeForm) => void;
   busy: boolean;
+  categories: readonly BadgeCategoryOption[];
+  roles: readonly BadgeRoleOption[];
   onClose: () => void;
   onSave: () => void;
 }
 
-export default function BadgeFormDialog({ open, form, setForm, busy, onClose, onSave }: Readonly<Props>) {
+/** Create or edit one badge — its copy, artwork, the condition that unlocks it
+ * and whatever that condition needs to be measurable. */
+export default function BadgeFormDialog({
+  open,
+  form,
+  setForm,
+  busy,
+  categories,
+  roles,
+  onClose,
+  onSave,
+}: Readonly<Props>) {
   const { t } = useTranslation();
+  const title = form.id ? t('admin.badgesPage.editBadge') : t('admin.badgesPage.newBadge');
+  const confirmLabel = form.id ? t('shell.common.save') : t('admin.badgesPage.createBadge');
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{form.id ? 'Edit Badge' : 'New Badge'}</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
@@ -60,24 +80,34 @@ export default function BadgeFormDialog({ open, form, setForm, busy, onClose, on
             fullWidth
           >
             {CONDITIONS.map((c) => (
-              <MenuItem key={c.v} value={c.v}>
-                {c.label}
+              <MenuItem key={c} value={c}>
+                {t(CONDITION_LABEL_KEY[c])}
               </MenuItem>
             ))}
           </TextField>
+          <BadgeScopeFields
+            form={form}
+            setForm={setForm}
+            categories={categories}
+            roles={roles}
+          />
           <TextField
             type="number"
             label={t('admin.badgesPage.threshold')}
             value={form.threshold}
-            onChange={(e) =>
-              setForm({ ...form, threshold: Math.max(1, +e.target.value || 1) })
-            }
-            disabled={form.condition_type === 'MANUAL'}
+            onChange={(e) => setForm({ ...form, threshold: Math.max(1, +e.target.value || 1) })}
+            disabled={!hasThreshold(form.condition_type)}
             fullWidth
           />
-          <Stack direction="row" spacing={1} sx={{
-            alignItems: "center"
-          }}>
+          <TextField
+            type="number"
+            label={t('admin.badgesPage.sortOrder')}
+            helperText={t('admin.badgesPage.sortOrderHint')}
+            value={form.sort_order}
+            onChange={(e) => setForm({ ...form, sort_order: +e.target.value || 0 })}
+            fullWidth
+          />
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Switch
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
@@ -89,7 +119,7 @@ export default function BadgeFormDialog({ open, form, setForm, busy, onClose, on
       <DialogActions>
         <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button onClick={onSave} variant="contained" disabled={!form.title || busy}>
-          {form.id ? 'Save' : 'Create'}
+          {confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>

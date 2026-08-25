@@ -23,6 +23,9 @@ vi.mock('../HomeSearch', () => ({
 vi.mock('../ClubSection', () => ({
   default: ({ club }: any) => <div>club:{club.id}</div>,
 }));
+vi.mock('../OngoingPodsRail', () => ({
+  default: ({ pods }: any) => <div>ongoing:{pods.length}</div>,
+}));
 vi.mock('../PreviousPodsRail', () => ({
   default: ({ pods }: any) => <div>previous:{pods.length}</div>,
 }));
@@ -65,6 +68,7 @@ const baseReturn = () => ({
   myStories: [],
   followedUsers: [],
   totalPods: 3,
+  ongoingPods: [{ id: 'og1' }],
   previousPods: [{ id: 'pp1' }],
   hostNameOf: () => 'Host',
 });
@@ -105,6 +109,7 @@ describe('HomePage', () => {
     expect(screen.getByText('3 pods nearby')).toBeInTheDocument();
     expect(screen.getByText('club:c1')).toBeInTheDocument();
     expect(screen.getByText('featured:2')).toBeInTheDocument();
+    expect(screen.getByText('ongoing:1')).toBeInTheDocument();
     expect(screen.getByText('previous:1')).toBeInTheDocument();
     expect(screen.getByText('ad-slot')).toBeInTheDocument();
     // content present => search + filter enabled

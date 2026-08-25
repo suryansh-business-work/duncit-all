@@ -9,6 +9,7 @@ import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import CategoryIcon from '@mui/icons-material/Category';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
@@ -39,6 +40,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   ideas: <LightbulbIcon />,
   plans: <CategoryIcon />,
   faqs: <HelpOutlineIcon />,
+  badges: <MilitaryTechIcon />,
   tour: <ExploreIcon />,
   shop: <StorefrontIcon />,
   orders: <LocalShippingIcon />,

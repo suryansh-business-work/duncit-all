@@ -60,12 +60,13 @@ export function coinsForBackoutRefund(opts: {
 
 const balancePub = (
   doc: ICoinBalance | null,
-  rates: { pod: number; shop: number }
+  rates: { pod: number; shop: number; podFeedback: number }
 ) => ({
   balance: doc?.balance ?? 0,
   lifetime_earned: doc?.lifetime_earned ?? 0,
   earn_pct: rates.pod,
   shop_earn_pct: rates.shop,
+  pod_feedback_coins: rates.podFeedback,
 });
 
 const txnPub = (t: ICoinTransaction) => ({
@@ -242,6 +243,62 @@ export const coinService = {
         source: 'GIFT_CARD_REDEEM',
         reason: opts.reason,
         gift_card_id: opts.giftCardId,
+      });
+      return value;
+    } catch (e) {
+      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
+        await CoinBalanceModel.updateOne(
+          { user_id: userId },
+          { $inc: { balance: -value, lifetime_earned: -value } }
+        );
+        return 0;
+      }
+      throw e;
+    }
+  },
+
+  /**
+   * Pay a guest for rating a pod they attended.
+   *
+   * The rate is read HERE rather than passed in, so the one place that decides
+   * what a rating is worth is the Finance setting — a caller that had to look it
+   * up first is a caller that can look up the wrong thing. A rate of 0 pays
+   * nothing and leaves no ledger row behind to explain.
+   *
+   * Idempotent per RATING, not per pod: submitting again edits the one opinion a
+   * guest holds, so a member who reopens the shared feedback link and changes
+   * their stars is paid once, not once per save. Enforced by the unique
+   * (feedback_id, source) index rather than a read-then-write check, because two
+   * taps racing each other would both pass that check. The loser undoes its own
+   * increment, exactly as the payment path does.
+   *
+   * @returns the coins actually credited (0 when the reward is off or this
+   * rating has already been paid for).
+   */
+  async creditForPodFeedback(opts: {
+    userId: string;
+    feedbackId: string;
+    reason: string;
+  }): Promise<number> {
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.feedbackId) return 0;
+    const value = Math.max(0, Math.floor(await coinSettingsService.podFeedbackCoins()));
+    if (value <= 0) return 0;
+
+    const userId = new Types.ObjectId(opts.userId);
+    try {
+      const balance = await CoinBalanceModel.findOneAndUpdate(
+        { user_id: userId },
+        { $inc: { balance: value, lifetime_earned: value } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      await CoinTransactionModel.create({
+        user_id: userId,
+        type: 'CREDIT',
+        amount: value,
+        balance_after: balance!.balance,
+        source: 'POD_FEEDBACK',
+        reason: opts.reason,
+        feedback_id: opts.feedbackId,
       });
       return value;
     } catch (e) {
@@ -479,7 +536,11 @@ export const coinService = {
 
   async getMyBalance(userId: string) {
     const settings = await coinSettingsService.get();
-    const rates = { pod: settings.pod_join_earn_pct, shop: settings.shop_earn_pct };
+    const rates = {
+      pod: settings.pod_join_earn_pct,
+      shop: settings.shop_earn_pct,
+      podFeedback: settings.pod_feedback_coins,
+    };
     if (!Types.ObjectId.isValid(userId)) return balancePub(null, rates);
     const doc = await CoinBalanceModel.findOne({ user_id: new Types.ObjectId(userId) });
     return balancePub(doc, rates);

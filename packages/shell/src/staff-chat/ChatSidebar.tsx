@@ -44,6 +44,8 @@ interface Props {
   /** True while a recording is still uploading or converting. */
   busy: boolean;
   onClose: () => void;
+  /** Send the panel to the taskbar; absent when there is no taskbar. */
+  onMinimise?: () => void;
   settingsOpen: boolean;
   onOpenSettings: () => void;
   onCloseSettings: () => void;
@@ -70,6 +72,7 @@ export default function ChatSidebar({
   onPlayRecording,
   busy,
   onClose,
+  onMinimise,
   settingsOpen,
   onOpenSettings,
   onCloseSettings,
@@ -84,6 +87,7 @@ export default function ChatSidebar({
         onStatus={data.presence.choose}
         busy={busy}
         onClose={onClose}
+        onMinimise={onMinimise}
         settingsOpen={settingsOpen}
         onOpenSettings={onOpenSettings}
         onCloseSettings={onCloseSettings}

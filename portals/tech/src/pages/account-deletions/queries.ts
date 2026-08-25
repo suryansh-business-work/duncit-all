@@ -11,6 +11,10 @@ export interface AccountDeletionRow {
   surface: string;
   status: string;
   requested_at: string;
+  /** The date the member was promised when they asked. */
+  scheduled_delete_at: string;
+  /** Whole days left before that date. Null once the request is closed. */
+  days_remaining: number | null;
   reviewed_at: string | null;
   note: string;
 }
@@ -21,8 +25,10 @@ export interface TraceGroup {
   field_path: string;
   id_kind: string;
   count: number;
-  /** DELETE_DOCUMENTS | REMOVE_FROM_DOCUMENTS — see the server schema. */
+  /** DELETE_DOCUMENTS | REMOVE_FROM_DOCUMENTS | REDACT_RECORDS — see the server schema. */
   purge_kind: string;
+  /** Why a REDACT_RECORDS row is kept. Empty for the other two. */
+  retention_reason: string;
 }
 
 export interface PurgeLogEntry {
@@ -50,6 +56,8 @@ const REQUEST_FIELDS = `
   surface
   status
   requested_at
+  scheduled_delete_at
+  days_remaining
   reviewed_at
   note
 `;
@@ -73,6 +81,7 @@ const DETAIL_FIELDS = `
     id_kind
     count
     purge_kind
+    retention_reason
   }
 `;
 
@@ -117,6 +126,22 @@ export const REJECT_ACCOUNT_DELETION = gql`
   mutation RejectAccountDeletionRequest($request_doc_id: ID!, $note: String!) {
     rejectAccountDeletionRequest(request_doc_id: $request_doc_id, note: $note) {
       ${DETAIL_FIELDS}
+    }
+  }
+`;
+
+export const ACCOUNT_DELETION_SETTINGS = gql`
+  query AccountDeletionSettings {
+    accountDeletionSettings {
+      retention_days
+    }
+  }
+`;
+
+export const UPDATE_ACCOUNT_DELETION_SETTINGS = gql`
+  mutation UpdateAccountDeletionSettings($retention_days: Int!) {
+    updateAccountDeletionSettings(retention_days: $retention_days) {
+      retention_days
     }
   }
 `;

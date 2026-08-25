@@ -7,12 +7,14 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
+import { buildUsernameLabels, normalizeUsername } from '@duncit/utils';
 import {
   AccountEditForm,
   accountEditDefaults,
   toUpdateProfileInput,
   type AccountEditValues,
 } from './account-edit';
+import { SET_MY_USERNAME } from './username-field';
 import { useUnsavedGuard } from './useUnsavedGuard';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -54,9 +56,27 @@ export interface EditAccountDialogProps {
 export default function EditAccountDialog({ open, onClose, initial, onSaved }: Readonly<EditAccountDialogProps>) {
   const { t } = useTranslation();
   const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE);
+  const [setUsername, { loading: renaming, error: renameError }] = useMutation(SET_MY_USERNAME);
   const guard = useUnsavedGuard(onClose);
+  // A refused rename is reported in the app's own words: the server's sentence
+  // is English-only, and the only thing the reader can act on is "pick another".
+  const saveError = renameError ? buildUsernameLabels(t).saveFailed : (error?.message ?? null);
 
   const handleSubmit = async (values: AccountEditValues) => {
+    // The handle goes FIRST and on its own mutation: it is the only field the
+    // server can still refuse after the field said yes (somebody can take it in
+    // the 400ms between the check and the tap), and a refusal there must leave
+    // the rest of the profile untouched rather than half-written.
+    // A refusal is swallowed rather than rethrown, because the form would then
+    // render the server's raw sentence over the localized one `saveError` picks.
+    const handle = normalizeUsername(values.username);
+    if (handle && handle !== normalizeUsername(initial.username)) {
+      const renamed = await setUsername({ variables: { username: handle } }).then(
+        () => true,
+        () => false,
+      );
+      if (!renamed) return;
+    }
     await updateProfile({ variables: { input: toUpdateProfileInput(values) } });
     onSaved();
     onClose();
@@ -69,8 +89,8 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
         <DialogContent dividers>
           <AccountEditForm
             defaultValues={accountEditDefaults(initial)}
-            loading={loading}
-            errorMessage={error?.message ?? null}
+            loading={loading || renaming}
+            errorMessage={saveError}
             onSubmit={handleSubmit}
             onDirtyChange={guard.setDirty}
             onRegisterReset={guard.registerReset}

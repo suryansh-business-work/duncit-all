@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { Modal } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
@@ -96,16 +96,52 @@ function StatusHeaderText({
   );
 }
 
+/** One of the header's round icon buttons (sound, kebab, close) — they only
+ * ever differ by their icon, label and what they do. */
+function StatusRoundButton({
+  testID,
+  label,
+  icon,
+  onPress,
+  spaced,
+}: Readonly<{
+  testID: string;
+  label: string;
+  icon: ComponentProps<typeof MaterialIcons>['name'];
+  onPress: () => void;
+  /** Every button but the last one leaves a gap before its neighbour. */
+  spaced?: boolean;
+}>) {
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      width={36}
+      height={36}
+      marginRight={spaced ? 8 : 0}
+      alignItems="center"
+      justifyContent="center"
+      borderRadius={18}
+      backgroundColor="rgba(255,255,255,0.16)"
+    >
+      <MaterialIcons name={icon} size={20} color="#ffffff" />
+    </XStack>
+  );
+}
+
 /** The slide media — a video plays to its end (or the 15s cap), an image just
  * fills the frame. Renders nothing while a slide carries no media. */
 function StatusMedia({
   isVideo,
   uri,
+  muted,
   onEnded,
-}: Readonly<{ isVideo: boolean; uri?: string | null; onEnded: () => void }>) {
+}: Readonly<{ isVideo: boolean; uri?: string | null; muted: boolean; onEnded: () => void }>) {
   return (
     <>
-      {isVideo && uri ? <StatusVideo uri={uri} onEnded={onEnded} /> : null}
+      {isVideo && uri ? <StatusVideo uri={uri} muted={muted} onEnded={onEnded} /> : null}
       {!isVideo && uri ? (
         <AppImage
           testID="status-viewer-image"
@@ -173,9 +209,14 @@ export function StatusViewer({
   const [menuOpen, setMenuOpen] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  // A story video plays with its sound; the speaker in the header turns it off.
+  const [muted, setMuted] = useState(false);
   const slides = status?.slides ?? [];
   const current = slides[index];
-  const isVideo = current?.mediaType === 'VIDEO';
+  // A video slide is one that has a clip to play. A VIDEO row with no media is
+  // not one: it falls through to the empty frame, which the timer below still
+  // has to advance — nothing else would.
+  const isVideo = current?.mediaType === 'VIDEO' && !!current?.imageUrl;
   // A rail that offers deletion at all passes `onDelete`; a rail whose slides
   // differ (the club page, where an admin may delete some and not others) also
   // marks each slide. Rails of the viewer's OWN stories mark nothing and every
@@ -291,37 +332,30 @@ export function StatusViewer({
                 subLabel={status?.subLabel}
                 remaining={remaining}
               />
-              {hasMenu && current ? (
-                <XStack
-                  testID="status-viewer-kebab"
-                  role="button"
-                  aria-label={t('contentReport.menuLabel')}
-                  onPress={() => setMenuOpen((open) => !open)}
-                  width={36}
-                  height={36}
-                  marginRight={8}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={18}
-                  backgroundColor="rgba(255,255,255,0.16)"
-                >
-                  <MaterialIcons name="more-vert" size={20} color="#ffffff" />
-                </XStack>
+              {isVideo ? (
+                <StatusRoundButton
+                  testID="status-mute"
+                  label={muted ? t('mweb.status.unmuteVideo') : t('mweb.status.muteVideo')}
+                  icon={muted ? 'volume-off' : 'volume-up'}
+                  onPress={() => setMuted((value) => !value)}
+                  spaced
+                />
               ) : null}
-              <XStack
+              {hasMenu && current ? (
+                <StatusRoundButton
+                  testID="status-viewer-kebab"
+                  label={t('contentReport.menuLabel')}
+                  icon="more-vert"
+                  onPress={() => setMenuOpen((open) => !open)}
+                  spaced
+                />
+              ) : null}
+              <StatusRoundButton
                 testID="status-viewer-close"
-                role="button"
-                aria-label={t('mweb.common.closeStatus')}
+                label={t('mweb.common.closeStatus')}
+                icon="close"
                 onPress={onClose}
-                width={36}
-                height={36}
-                alignItems="center"
-                justifyContent="center"
-                borderRadius={18}
-                backgroundColor="rgba(255,255,255,0.16)"
-              >
-                <MaterialIcons name="close" size={20} color="#ffffff" />
-              </XStack>
+              />
             </XStack>
             {hasMenu && menuOpen && current ? (
               <StatusViewerMenu
@@ -349,6 +383,7 @@ export function StatusViewer({
               <StatusMedia
                 isVideo={isVideo}
                 uri={current?.imageUrl}
+                muted={muted}
                 onEnded={() => advanceRef.current()}
               />
               <XStack position="absolute" top={0} bottom={0} left={0} right={0}>

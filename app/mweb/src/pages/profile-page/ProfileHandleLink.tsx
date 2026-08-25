@@ -16,11 +16,10 @@ interface Props {
  * The `@handle` under the name on your own profile — and the button that
  * copies the link it makes.
  *
- * The link belongs HERE rather than in Profile Settings. Settings is where you
- * change things, and the handle is not changeable: it is minted once by the
- * server. What somebody actually wants from it is to send it to a friend, and
- * they go looking for that on the profile they are about to share, next to the
- * name and the Share button — not three screens into their account.
+ * The link belongs HERE rather than in Profile Settings. The handle is CHANGED
+ * in Edit profile, beside the name it belongs to; what somebody wants from it
+ * on the profile is to send it to a friend, and they go looking for that next
+ * to the name and the Share button — not three screens into their account.
  */
 export default function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
   const { t } = useTranslation();

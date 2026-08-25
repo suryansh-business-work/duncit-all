@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { tokens } from '@duncit/theme';
 
 export interface WindowRect {
   x: number;
@@ -10,13 +11,19 @@ export interface WindowRect {
 export const MIN_WIDTH = 320;
 export const MIN_HEIGHT = 220;
 
-/** Keep a window on screen — a title bar dragged past the edge is unreachable. */
+/**
+ * Keep a window on screen — a title bar dragged past the edge is unreachable.
+ *
+ * The floor is the top of the TASKBAR rather than the bottom of the viewport:
+ * a window dropped over the bar would cover the button that brings it back.
+ */
 function clamp(rect: WindowRect): WindowRect {
+  const floor = globalThis.innerHeight - tokens.size.taskbarHeight;
   const maxX = Math.max(0, globalThis.innerWidth - rect.width);
-  const maxY = Math.max(0, globalThis.innerHeight - rect.height);
+  const maxY = Math.max(0, floor - rect.height);
   return {
     width: Math.max(MIN_WIDTH, Math.min(rect.width, globalThis.innerWidth)),
-    height: Math.max(MIN_HEIGHT, Math.min(rect.height, globalThis.innerHeight)),
+    height: Math.max(MIN_HEIGHT, Math.min(rect.height, floor)),
     x: Math.max(0, Math.min(rect.x, maxX)),
     y: Math.max(0, Math.min(rect.y, maxY)),
   };

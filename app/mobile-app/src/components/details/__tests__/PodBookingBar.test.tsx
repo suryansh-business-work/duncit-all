@@ -120,6 +120,24 @@ describe('PodBookingBar', () => {
     expect(screen.queryByTestId('pod-book')).toBeNull();
   });
 
+  // Joining is closed the moment a pod STARTS, not once it is over — so the
+  // notice must not tell somebody the pod "has already taken place" while it
+  // is still running. Same bar, different sentence.
+  it('says the pod is happening right now while it is still running', () => {
+    const runningPod = {
+      id: 'p1',
+      pod_amount: 200,
+      pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+      pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+    } as unknown as PodDetail;
+    renderBar({ pod: runningPod });
+    expect(screen.getByTestId('pod-booking-closed')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-book')).toBeNull();
+    expect(
+      screen.getByText('This pod is happening right now — joining is closed.'),
+    ).toBeOnTheScreen();
+  });
+
   it('still shows Pod Booked for a member even after the pod date passes', () => {
     const expiredPod = {
       id: 'p1',

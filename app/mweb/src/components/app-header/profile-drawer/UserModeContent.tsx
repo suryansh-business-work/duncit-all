@@ -111,7 +111,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       {showGiftCards && (
         <ManageAccountList title={t('mweb.giftCards.title')} items={giftCardItems} onNavigate={onNavigate} />
       )}
-      <ManageAccountList title={t('mweb.common.manageAccount')} items={buildManageItems(showPodPlans, showTourGuide)} onNavigate={onNavigate} />
+      <ManageAccountList title={t('mweb.common.manageAccount')} items={buildManageItems(showPodPlans, showTourGuide, t('mweb.badges.sidebarLabel'))} onNavigate={onNavigate} />
       {partnerMenus.map((menu) => (
         <ManageAccountList key={menu.key} title={menu.title} items={menu.items} onNavigate={onNavigate} />
       ))}

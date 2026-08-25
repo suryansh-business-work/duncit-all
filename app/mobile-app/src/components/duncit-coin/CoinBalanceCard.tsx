@@ -16,6 +16,9 @@ interface Props {
 export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const gold = useCoinGold();
+  // Finance can switch the feedback reward off, and a line reading "You earn 0
+  // Duncit Coins" promises nothing — so the rate decides whether it is stated.
+  const feedbackCoins = balance?.pod_feedback_coins ?? 0;
 
   return (
     <YStack
@@ -63,6 +66,11 @@ export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
           },
         })}
       </Text>
+      {feedbackCoins > 0 ? (
+        <Text testID="coin-feedback-rate" fontSize={11.5} color="$muted" marginTop={4}>
+          {t('mweb.coin.feedbackRateNote', { vars: { coins: feedbackCoins } })}
+        </Text>
+      ) : null}
     </YStack>
   );
 }

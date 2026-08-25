@@ -34,6 +34,7 @@ const settingsPub = (doc: ICoinSettings) => ({
   pod_join_earn_pct: doc.pod_join_earn_pct,
   shop_earn_pct: doc.shop_earn_pct,
   coins_per_referral: doc.coins_per_referral,
+  pod_feedback_coins: doc.pod_feedback_coins,
   updated_at: doc.updated_at?.toISOString?.() ?? '',
 });
 
@@ -73,10 +74,16 @@ export const coinSettingsService = {
     return (await this.get()).coins_per_referral;
   },
 
+  /** Flat coins paid for rating an attended pod. 0 means the reward is off. */
+  async podFeedbackCoins(): Promise<number> {
+    return (await this.get()).pod_feedback_coins;
+  },
+
   async update(input: {
     pod_join_earn_pct?: number | null;
     shop_earn_pct?: number | null;
     coins_per_referral?: number | null;
+    pod_feedback_coins?: number | null;
   }) {
     const doc = await this.get();
     if (input.pod_join_earn_pct != null) {
@@ -87,6 +94,9 @@ export const coinSettingsService = {
     }
     if (input.coins_per_referral != null) {
       doc.coins_per_referral = cleanCoins(input.coins_per_referral, doc.coins_per_referral);
+    }
+    if (input.pod_feedback_coins != null) {
+      doc.pod_feedback_coins = cleanCoins(input.pod_feedback_coins, doc.pod_feedback_coins);
     }
     await doc.save();
     return settingsPub(doc);

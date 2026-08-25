@@ -61,7 +61,15 @@ describe('CompletionMeter', () => {
 
 describe('AccountEditForm — discard button', () => {
   it('does nothing when pressed while pristine (disabled)', () => {
-    renderWithProviders(<EditAccountDialog open me={me} onClose={jest.fn()} onSave={jest.fn()} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={jest.fn()}
+        onSave={jest.fn()}
+        onSaveUsername={jest.fn()}
+      />,
+    );
 
     expect(isDisabled('account-edit-discard')).toBe(true);
     fireEvent.press(screen.getByTestId('account-edit-discard'));
@@ -70,7 +78,15 @@ describe('AccountEditForm — discard button', () => {
   });
 
   it('is disabled while pristine, enables on change, and reverts to loaded values', async () => {
-    renderWithProviders(<EditAccountDialog open me={me} onClose={jest.fn()} onSave={jest.fn()} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={jest.fn()}
+        onSave={jest.fn()}
+        onSaveUsername={jest.fn()}
+      />,
+    );
 
     // Pristine → discard disabled.
     expect(isDisabled('account-edit-discard')).toBe(true);
@@ -90,7 +106,15 @@ describe('AccountEditForm — discard button', () => {
 describe('EditAccountDialog — unsaved-changes guard', () => {
   it('closes immediately when there are no unsaved changes', () => {
     const onClose = jest.fn();
-    renderWithProviders(<EditAccountDialog open me={me} onClose={onClose} onSave={jest.fn()} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={onClose}
+        onSave={jest.fn()}
+        onSaveUsername={jest.fn()}
+      />,
+    );
 
     fireEvent.press(screen.getByTestId('edit-account-close'));
 
@@ -100,7 +124,15 @@ describe('EditAccountDialog — unsaved-changes guard', () => {
 
   it('confirms before closing when dirty — Keep editing stays open', async () => {
     const onClose = jest.fn();
-    renderWithProviders(<EditAccountDialog open me={me} onClose={onClose} onSave={jest.fn()} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={onClose}
+        onSave={jest.fn()}
+        onSaveUsername={jest.fn()}
+      />,
+    );
 
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await waitFor(() => expect(isDisabled('account-edit-discard')).toBe(false));
@@ -115,7 +147,15 @@ describe('EditAccountDialog — unsaved-changes guard', () => {
 
   it('confirms before closing when dirty — Discard reverts and closes', async () => {
     const onClose = jest.fn();
-    renderWithProviders(<EditAccountDialog open me={me} onClose={onClose} onSave={jest.fn()} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={onClose}
+        onSave={jest.fn()}
+        onSaveUsername={jest.fn()}
+      />,
+    );
 
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await waitFor(() => expect(isDisabled('account-edit-discard')).toBe(false));

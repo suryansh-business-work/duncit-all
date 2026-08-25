@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Stack, Typography } from '@mui/material';
+import { usernameBlocksSave, type UsernameStatus } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
+import { UsernameField } from '../username-field';
 import DobDateField from './DobDateField';
 import LocationSelect from './LocationSelect';
 import ContactFields from './ContactFields';
@@ -47,6 +49,9 @@ export default function AccountEditForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // The handle is checked against the server, which no Zod rule can wait for,
+  // so its verdict is held here and ANDed into the one Save button below.
+  const [handleStatus, setHandleStatus] = useState<UsernameStatus>('IDLE');
   // The joining age is admin-configured, so the schema is built from it.
   const minAge = useMinSignupAge();
   const { datePlaceholder } = useDateFormat();
@@ -76,6 +81,8 @@ export default function AccountEditForm({
     onRegisterReset?.(discard);
   });
 
+  const handleBlocked = usernameBlocksSave(handleStatus, !!defaultValues.username);
+
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
     try {
@@ -89,6 +96,11 @@ export default function AccountEditForm({
     <form noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
+        <UsernameField
+          control={control}
+          current={defaultValues.username || null}
+          onStatusChange={setHandleStatus}
+        />
         <Stack direction="row" spacing={1}>
           <RhfTextField
             control={control}
@@ -145,7 +157,11 @@ export default function AccountEditForm({
           >
             Discard changes
           </Button>
-          <Button type="submit" variant="contained" disabled={loading || !isDirty || !isValid}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading || !isDirty || !isValid || handleBlocked}
+          >
             {loading ? 'Saving…' : 'Save'}
           </Button>
         </Stack>

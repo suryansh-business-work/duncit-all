@@ -8,6 +8,11 @@ export const coinTypeDefs = /* GraphQL */ `
     earn_pct: Float!
     "Percent of a shop order currently granted back as coins."
     shop_earn_pct: Float!
+    """
+    Flat coins currently paid for rating an attended pod. 0 means the reward is
+    switched off, and the Duncit Coin page says nothing about it.
+    """
+    pod_feedback_coins: Int!
   }
 
   """
@@ -21,6 +26,8 @@ export const coinTypeDefs = /* GraphQL */ `
     shop_earn_pct: Int!
     "Flat coins paid to EACH side of a referral — the referrer and the new member."
     coins_per_referral: Int!
+    "Flat coins paid for feedback on an attended pod (0 turns it off)."
+    pod_feedback_coins: Int!
     updated_at: String!
   }
 
@@ -29,6 +36,7 @@ export const coinTypeDefs = /* GraphQL */ `
     pod_join_earn_pct: Int
     shop_earn_pct: Int
     coins_per_referral: Int
+    pod_feedback_coins: Int
   }
 
   "What one manual adjustment left behind, so the console can confirm it landed."
@@ -171,7 +179,7 @@ export const coinTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    "Finance: set what a pod join, a shop order and a referral each pay."
+    "Finance: set what a pod join, a shop order, a referral and a pod rating each pay."
     updateCoinSettings(input: CoinSettingsInput!): CoinSettings!
     """
     Finance: hand one named account coins, or take them back.

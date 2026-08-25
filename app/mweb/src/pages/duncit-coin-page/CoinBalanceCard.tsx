@@ -9,11 +9,14 @@ interface Props {
   currencySymbol: string;
 }
 
-/** The gold hero card: current balance, lifetime earned and the live rate. */
+/** The gold hero card: current balance, lifetime earned and the live rates. */
 export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const gold = coinGold(theme.palette.mode);
+  // Finance can switch the feedback reward off, and a line reading "You earn 0
+  // Duncit Coins" promises nothing — so the rate decides whether it is stated.
+  const feedbackCoins = balance?.pod_feedback_coins ?? 0;
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px', borderColor: gold }}>
@@ -83,6 +86,17 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
           },
         })}
       </Typography>
+      {feedbackCoins > 0 && (
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 0.5
+          }}>
+          {t('mweb.coin.feedbackRateNote', { vars: { coins: feedbackCoins } })}
+        </Typography>
+      )}
     </Paper>
   );
 }

@@ -146,7 +146,7 @@ export function SidebarUserContent({
       ) : null}
       <SidebarManageList
         title={t('mweb.common.manageAccount')}
-        items={buildManageItems(showPodPlans, showTourGuide)}
+        items={buildManageItems(showPodPlans, showTourGuide, t('mweb.badges.sidebarLabel'))}
         onNavigate={onNavigate}
       />
       {partnerMenus.map((menu) => (

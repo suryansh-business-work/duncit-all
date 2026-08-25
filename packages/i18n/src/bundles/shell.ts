@@ -750,6 +750,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     agent: {
       title: 'Agent',
       open: 'Open Agent',
+      dockHint: 'Open the Agent — drag to move this tab',
       close: 'Close',
       subtitle: 'Tell me what to create and I will set it up.',
       greeting:
@@ -768,6 +769,21 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       resultsTitle: 'What was created',
       failedLabel: 'Not created',
       capNote: 'The agent creates up to 10 at a time. Ask again for more.',
+    },
+    /**
+     * The strip along the bottom of every console: what is running on the left,
+     * the clock and its tray on the right.
+     */
+    taskbar: {
+      label: 'Taskbar',
+      restore: 'Restore {name}',
+      minimise: 'Minimise {name}',
+      clockLabel: 'Date and time',
+      timeZone: 'Time zone',
+      timeZoneHint: 'The zone every date and time in this console is read in.',
+      workspaceZone: 'Follow the workspace ({zone})',
+      deviceZone: 'This device ({zone})',
+      showSeconds: 'Count seconds',
     },
     /** Word-for-word identical to `mweb.slots` — see the note there. */
     slots: {
@@ -1120,6 +1136,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         close: 'Close chat',
         closeBusy: 'Close chat — the recording keeps saving in the background',
         open: 'Chat with a coworker',
+        minimiseLabel: 'Minimise the chat panel',
       },
       list: {
         searchPlaceholder: 'Search coworkers',

@@ -117,6 +117,8 @@ export interface Tpl {
   footer_note?: string;
   variables: { key: string; description?: string; sample?: string }[];
   is_active: boolean;
+  /** Server-written, never edited here — what "Recently updated" sorts on. */
+  updated_at?: string | null;
 }
 
 /** Every fragment, for the template's Header / footer picker. */

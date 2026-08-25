@@ -9,6 +9,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { EmailVerificationSection } from '@/components/account';
 import { useGoBack } from '@/hooks/useGoBack';
+import { ProfileBadgesStrip } from '@/components/badges';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfilePanels } from '@/components/profile/ProfilePanels';
 import { ProfilePostsGrid } from '@/components/profile/ProfilePostsGrid';
@@ -53,6 +54,10 @@ export function ProfileScreen() {
   const body = me ? (
     <ScrollView ref={scrollRef} flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
       <ProfileHeader me={me} onChanged={() => fireAndForget(refetch())} />
+      {/* Directly under the followers / following row in the header — the
+          badges the member has actually earned, with the full catalogue one
+          tap away on the Badges screen. */}
+      <ProfileBadgesStrip />
       <YStack
         paddingHorizontal={16}
         paddingBottom={4}

@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { useConfirm } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/shell';
 import {
   BADGES,
+  BADGE_CATEGORIES,
+  BADGE_ROLES,
   CREATE_BADGE,
   DELETE_BADGE,
   UPDATE_BADGE,
@@ -19,12 +16,15 @@ import {
 } from './queries';
 import BadgeCard from './BadgeCard';
 import BadgeFormDialog from './BadgeFormDialog';
-import { useConfirm } from '@duncit/dialogs';
-import { useTranslation } from '@duncit/shell';
 
+/** Admin > Badges — the catalogue every member's Badges section renders from.
+ * A badge states a goal and the condition that measures it; the seed ships the
+ * platform's own badges and everything here is editable on top of them. */
 export default function BadgesPage() {
   const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(BADGES);
+  const { data: categoryData } = useQuery(BADGE_CATEGORIES);
+  const { data: roleData } = useQuery(BADGE_ROLES);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<BadgeForm>(emptyBadge);
   const [createBadge, createState] = useMutation(CREATE_BADGE);
@@ -45,13 +45,19 @@ export default function BadgesPage() {
       image_url: b.image_url,
       condition_type: b.condition_type,
       threshold: b.threshold,
+      category_id: b.category_id ?? '',
+      role_key: b.role_key ?? '',
+      sort_order: b.sort_order ?? 0,
       is_active: b.is_active,
     });
     setOpen(true);
   };
 
   const save = async () => {
-    const { id, ...input } = form;
+    const { id, category_id, ...rest } = form;
+    // An empty select means "no category", which the server stores as null —
+    // sending '' would be cast to an ObjectId and blow up on the way in.
+    const input = { ...rest, category_id: category_id || null };
     if (id) {
       await updateBadge({ variables: { id, input } });
     } else {
@@ -64,7 +70,7 @@ export default function BadgesPage() {
   const remove = async (b: any) => {
     const ok = await confirm({
       title: t('admin.badgesPage.deleteBadge'),
-      message: `Delete badge "${b.title}"? This also revokes it from all users.`,
+      message: t('admin.badgesPage.deleteConfirm', { vars: { title: b.title } }),
       destructive: true,
       confirmLabel: t('shell.common.delete'),
     });
@@ -77,22 +83,21 @@ export default function BadgesPage() {
     <Box>
       <Stack
         direction="row"
-        sx={{
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2
-        }}>
-        <Typography variant="h5" sx={{
-          fontWeight: 700
-        }}>
-          Badges
+        sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          {t('admin.badgesPage.title')}
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
-          New Badge
+          {t('admin.badgesPage.newBadge')}
         </Button>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error.message}
+        </Alert>
+      )}
       {loading && !data && <CircularProgress />}
 
       <Box
@@ -112,6 +117,8 @@ export default function BadgesPage() {
         form={form}
         setForm={setForm}
         busy={busy}
+        categories={categoryData?.categories ?? []}
+        roles={roleData?.roles ?? []}
         onClose={() => setOpen(false)}
         onSave={save}
       />

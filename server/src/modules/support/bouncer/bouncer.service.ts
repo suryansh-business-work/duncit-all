@@ -23,6 +23,7 @@ import { hasMarkedAttendance, markedPodIdsFor } from '@modules/pods/ticket/atten
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { coinService } from '@modules/finance/coin/coin.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { getIo } from '@realtime/io';
 import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
@@ -483,6 +484,27 @@ export const bouncerService = {
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+
+    // Rating a pod you turned up to earns Duncit Coins, at whatever rate
+    // Finance has set. Keyed on the RATING rather than on this request, so
+    // editing an answer later never pays for it twice — which is why it is not
+    // hidden behind the `already` check the host notification uses: two taps
+    // racing each other both read `already` as false, and only the index knows
+    // better. A failure here must not lose the rating that has already been
+    // written, so it is logged rather than thrown.
+    await coinService
+      .creditForPodFeedback({
+        userId,
+        feedbackId: String(doc._id),
+        reason: `Feedback on "${pod.pod_title}"`,
+      })
+      .catch((e) =>
+        logs.server.error('bouncer', 'submitFeedback', {
+          error: e,
+          msg: 'Pod feedback coin reward failed',
+          feedbackId: String(doc._id),
+        })
+      );
 
     const pub = await toFeedbackPub(doc);
     emit('bouncer:feedback_new', pub, hostId ? String(hostId) : null);

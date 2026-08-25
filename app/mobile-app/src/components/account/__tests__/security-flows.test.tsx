@@ -183,7 +183,7 @@ describe('SecuritySection', () => {
     fireEvent.press(screen.getByTestId('password-changed-dialog-confirm'));
   });
 
-  it('confirms deletion, requests the OTP, deletes, then logs out', async () => {
+  it('confirms deletion, files the request, then signs the member out', async () => {
     mockRequest.mockResolvedValue({ requestAccountDeletionOtp: { ok: true } });
     renderWithProviders(<SecuritySection />);
     fireEvent.press(screen.getByTestId('open-delete-account'));
@@ -193,9 +193,23 @@ describe('SecuritySection', () => {
       auth: true,
     });
 
-    mockRequest.mockResolvedValueOnce({ deleteMyAccount: true });
+    mockRequest.mockResolvedValueOnce({
+      submitAccountDeletionRequest: {
+        id: 'r1',
+        request_id: 'DUN-ADR-1A2B3C',
+        status: 'PENDING',
+        requested_at: '2026-08-25T00:00:00.000Z',
+        scheduled_delete_at: '2026-09-24T00:00:00.000Z',
+        days_remaining: 30,
+      },
+    });
     fireEvent.changeText(screen.getByTestId('field-otp'), '123456');
     fireEvent.press(screen.getByTestId('delete-account-submit'));
+    // Filing does NOT sign out on its own — the member is told the date first,
+    // and the sign-out is the acknowledgement of it.
+    await waitFor(() => expect(screen.getByTestId('deletion-sign-out')).toBeOnTheScreen());
+    expect(logout).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('deletion-sign-out'));
     await waitFor(() => expect(logout).toHaveBeenCalled());
   });
 
@@ -215,9 +229,7 @@ describe('SecuritySection', () => {
     fireEvent.press(screen.getByTestId('open-delete-account'));
     fireEvent.press(screen.getByTestId('confirm-dialog-confirm'));
     await waitFor(() =>
-      expect(screen.getByTestId('security-section-error')).toHaveTextContent(
-        'Something went wrong.',
-      ),
+      expect(screen.getByTestId('deletion-panel-error')).toHaveTextContent('Something went wrong.'),
     );
     fireEvent.press(screen.getByTestId('open-delete-account'));
     fireEvent.press(screen.getByTestId('confirm-dialog-cancel'));
@@ -230,7 +242,7 @@ describe('SecuritySection', () => {
     fireEvent.press(screen.getByTestId('open-delete-account'));
     fireEvent.press(screen.getByTestId('confirm-dialog-confirm'));
     await waitFor(() =>
-      expect(screen.getByTestId('security-section-error')).toHaveTextContent('Too many requests'),
+      expect(screen.getByTestId('deletion-panel-error')).toHaveTextContent('Too many requests'),
     );
   });
 

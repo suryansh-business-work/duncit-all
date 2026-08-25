@@ -134,6 +134,18 @@ const homeStaticMock = () => ({
   result: { data: { clubs: CLUBS, publicHosts: PUBLIC_HOSTS, categories: CATEGORIES } },
 });
 
+const hoursFromNow = (n: number) => new Date(Date.now() + n * 60 * 60 * 1000).toISOString();
+
+/** The live half with a caller-supplied pod list — a phase test brings its own
+ * feed rather than moving the counts every other test here asserts on. */
+const livePodsMock = (pods: unknown[]) => ({
+  request: {
+    query: HOME_LIVE,
+    variables: { podFilter: { location_id: 'loc1', zone_name: 'zoneA', is_active: true } },
+  },
+  result: { data: { pods, stories: [] } },
+});
+
 const homeDataMock = (locationId: string, zoneName: string) => ({
   request: {
     query: HOME_LIVE,
@@ -400,5 +412,70 @@ describe('useHomeData', () => {
 
     // still functional after refetch
     await waitFor(() => expect(result.current.totalPods).toBeGreaterThan(0));
+  });
+
+  // A pod that is RUNNING is in neither of the two rails Home used to have: it
+  // can no longer be joined, so it leaves the upcoming feed, but calling it
+  // "previous" while it still has an hour to run is what this bucket fixes.
+  it('puts a running pod on the ongoing rail, and only moves it to previous once it ends', async () => {
+    const running = {
+      id: 'p_running',
+      club_id: 'club1',
+      pod_date_time: hoursFromNow(-1),
+      pod_end_date_time: hoursFromNow(1),
+      pod_type: 'PAID',
+      pod_amount: 100,
+      pod_hosts_id: [],
+      host_names: null,
+    };
+    const finished = { ...running, id: 'p_finished', pod_date_time: hoursFromNow(-3), pod_end_date_time: hoursFromNow(-1) };
+    const later = { ...running, id: 'p_later', pod_date_time: hoursFromNow(2), pod_end_date_time: hoursFromNow(4) };
+
+    const { result } = renderHook(() => useHomeData(baseParams), {
+      wrapper: wrapperWith([
+        livePodsMock([running, finished, later]),
+        homeStaticMock(),
+        headerMock,
+        followedClubsMock,
+        followedUsersMock,
+      ]),
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.ongoingPods.map((pod: any) => pod.id)).toEqual(['p_running']);
+    expect(result.current.previousPods.map((pod: any) => pod.id)).toEqual(['p_finished']);
+    expect(result.current.activePods.map((pod: any) => pod.id)).toEqual(['p_later']);
+    // The ongoing pod is not counted as something still joinable nearby.
+    expect(result.current.totalPods).toBe(1);
+  });
+
+  it('falls back to the 4h live tail for a pod whose host set no end time', async () => {
+    const noEnd = {
+      id: 'p_no_end',
+      club_id: 'club1',
+      pod_date_time: hoursFromNow(-1),
+      pod_end_date_time: null,
+      pod_type: 'PAID',
+      pod_amount: 100,
+      pod_hosts_id: [],
+      host_names: null,
+    };
+    const stale = { ...noEnd, id: 'p_stale', pod_date_time: hoursFromNow(-5) };
+
+    const { result } = renderHook(() => useHomeData(baseParams), {
+      wrapper: wrapperWith([
+        livePodsMock([noEnd, stale]),
+        homeStaticMock(),
+        headerMock,
+        followedClubsMock,
+        followedUsersMock,
+      ]),
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.ongoingPods.map((pod: any) => pod.id)).toEqual(['p_no_end']);
+    expect(result.current.previousPods.map((pod: any) => pod.id)).toEqual(['p_stale']);
   });
 });

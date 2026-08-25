@@ -10,6 +10,8 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useTranslation } from '@duncit/shell';
+import type { BadgeCondition } from '@duncit/utils';
+import { CONDITION_LABEL_KEY } from './queries';
 
 interface Props {
   badge: any;
@@ -60,7 +62,7 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
                 color: "text.secondary",
                 display: 'block'
               }}>
-              {badge.condition_type} ≥ {badge.threshold}
+              {t(CONDITION_LABEL_KEY[badge.condition_type as BadgeCondition])} ≥ {badge.threshold}
             </Typography>
             <Typography
               variant="body2"

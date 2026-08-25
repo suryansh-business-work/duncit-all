@@ -9,6 +9,7 @@ export const MY_COIN_BALANCE = gql`
       lifetime_earned
       earn_pct
       shop_earn_pct
+      pod_feedback_coins
     }
   }
 `;
@@ -20,6 +21,7 @@ export const MY_COIN_TRANSACTIONS = gql`
       lifetime_earned
       earn_pct
       shop_earn_pct
+      pod_feedback_coins
     }
     myCoinTransactions {
       id
@@ -53,4 +55,6 @@ export interface CoinBalance {
   /** Pod-join rate. Named `earn_pct` on the server since it predates the split. */
   earn_pct: number;
   shop_earn_pct: number;
+  /** Flat coins paid for rating an attended pod. 0 means the reward is off. */
+  pod_feedback_coins: number;
 }

@@ -180,11 +180,14 @@ export const MobileSubmitAccountDeletionRequestDocument = gql(`
       request_id
       status
       requested_at
+      scheduled_delete_at
+      days_remaining
     }
   }
 `);
 
-/** The member's own open request — what the banner in Profile Settings reads. */
+/** The member's own open request — what the banner in Profile Settings and the
+ * warning on the next sign-in both read. */
 export const MobileMyAccountDeletionRequestDocument = gql(`
   query MobileMyAccountDeletionRequest {
     myAccountDeletionRequest {
@@ -192,6 +195,18 @@ export const MobileMyAccountDeletionRequestDocument = gql(`
       request_id
       status
       requested_at
+      scheduled_delete_at
+      days_remaining
+    }
+  }
+`);
+
+/** The retention window, so the warning quotes the number the server will
+ * stamp the request with rather than a "30" hardcoded beside the button. */
+export const MobileAccountDeletionSettingsDocument = gql(`
+  query MobileAccountDeletionSettings {
+    accountDeletionSettings {
+      retention_days
     }
   }
 `);

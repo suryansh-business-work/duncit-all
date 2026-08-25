@@ -63,6 +63,7 @@ export const HOME_LIVE = gql`
       pod_id
       pod_title
       pod_date_time
+      pod_end_date_time
       pod_type
       pod_amount
       pod_attendees

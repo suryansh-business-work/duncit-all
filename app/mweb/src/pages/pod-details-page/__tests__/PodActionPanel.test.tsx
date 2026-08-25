@@ -9,6 +9,7 @@ const baseProps = {
     club_slug: string;
     pod_id: string;
     pod_date_time?: string;
+    pod_end_date_time?: string | null;
   },
   isFree: false,
   isHost: false,
@@ -69,6 +70,21 @@ describe('PodActionPanel', () => {
   it('shows a booking-closed warning once the pod date has passed for a non-member', () => {
     renderPanel({ pod: { ...baseProps.pod, pod_date_time: '2020-01-01T10:00:00Z' } });
     expect(screen.getByText(/booking is closed/i)).toBeInTheDocument();
+  });
+
+  // Joining is closed the moment a pod STARTS, not once it is over — so the
+  // warning must not tell somebody the pod "has already taken place" while it
+  // is still running. Same panel, different sentence.
+  it('says the pod is happening right now while it is still running', () => {
+    renderPanel({
+      pod: {
+        ...baseProps.pod,
+        pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+        pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+      },
+    });
+    expect(screen.getByText(/happening right now/i)).toBeInTheDocument();
+    expect(screen.queryByText(/already taken place/i)).not.toBeInTheDocument();
   });
 
   it('renders the backout-in-process panel and fires Keep My Spot', () => {

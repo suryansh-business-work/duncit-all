@@ -7,12 +7,10 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PetsIcon from '@mui/icons-material/Pets';
 import PersonIcon from '@mui/icons-material/Person';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import MyBadges from '../../components/MyBadges';
 import EmailVerificationForm from './email-verification-form';
 import PetProfileSection from './PetProfileSection';
 import ProfileAboutSection from './ProfileAboutSection';
@@ -64,15 +62,6 @@ export default function ProfileAccordions({
         </AccordionSummary>
         <AccordionDetails>
           <PetProfileSection pet={me.pet_profile} onSaved={onSaved} />
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<EmojiEventsIcon color="primary" />} label={t('mweb.profile.badges')} />
-        </AccordionSummary>
-        <AccordionDetails>
-          <MyBadges />
         </AccordionDetails>
       </Accordion>
 

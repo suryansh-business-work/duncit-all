@@ -243,3 +243,151 @@ describe('useEmailTemplateEditor — with data', () => {
     expect(result.current.tab).toBe('code');
   });
 });
+
+/**
+ * Auto-save runs on a timer, so every test here drives the clock rather than
+ * waiting on one — and the mocked list never changes, which is precisely the
+ * situation a naive "save while dirty" loop would never escape.
+ */
+describe('useEmailTemplateEditor — auto-save', () => {
+  beforeEach(() => {
+    m.data = { emailTemplates: [tpl] };
+  });
+
+  const tick = async (ms: number) => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  };
+
+  it('writes an edit on its own once the typing stops, and says nothing', async () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = mount();
+      act(() => result.current.setDraft({ ...result.current.draft!, name: 'Auto' }));
+      expect(result.current.dirty).toBe(true);
+      expect(m.run).not.toHaveBeenCalled(); // not on the keystroke
+
+      await tick(1300);
+      expect(m.run).toHaveBeenCalledTimes(1);
+      expect(result.current.savedAt).toEqual(expect.any(Number));
+      // Pressing Save says "Template saved"; the timer must not, or the
+      // screen fills with toasts nobody asked for.
+      expect(result.current.snack).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('never writes the same edit twice, however long the draft stays dirty', async () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = mount();
+      act(() => result.current.setDraft({ ...result.current.draft!, name: 'Auto' }));
+      await tick(1300);
+      expect(m.run).toHaveBeenCalledTimes(1);
+
+      // The mocked list still holds the ORIGINAL template, so the draft is
+      // still dirty — a loop keyed on `dirty` alone would save forever.
+      expect(result.current.dirty).toBe(true);
+      await tick(10_000);
+      expect(m.run).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('saves the NEXT edit, so switching off is the only way to stop it', async () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = mount();
+      act(() => result.current.setDraft({ ...result.current.draft!, name: 'One' }));
+      await tick(1300);
+      act(() => result.current.setDraft({ ...result.current.draft!, name: 'Two' }));
+      await tick(1300);
+      expect(m.run).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('writes nothing at all once the switch is off', async () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = mount();
+      act(() => result.current.setAutoSave(false));
+      act(() => result.current.setDraft({ ...result.current.draft!, name: 'Manual' }));
+      await tick(5000);
+      expect(m.run).not.toHaveBeenCalled();
+      expect(result.current.autoSave).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('speaks up when it fails — nobody pressed anything, so silence reads as saved', async () => {
+    vi.useFakeTimers();
+    try {
+      m.run.mockRejectedValueOnce(new Error('server said no'));
+      const { result } = mount();
+      act(() => result.current.setDraft({ ...result.current.draft!, name: 'Auto' }));
+      await tick(1300);
+      expect(result.current.snack).toEqual({ kind: 'error', msg: 'server said no' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  /**
+   * The editor used to reload the draft from every answer this query gave,
+   * and `cache-and-network` gives one after every save — so an edit typed
+   * while the save was in flight was silently thrown away.
+   */
+  it('keeps what is being typed when the list answers again', async () => {
+    const { result } = mount();
+    await waitFor(() => expect(result.current.draft).not.toBeNull());
+    act(() => result.current.setDraft({ ...result.current.draft!, name: 'Half-typed' }));
+
+    // A fresh object from the server: same template, new identity.
+    act(() => {
+      m.data = { emailTemplates: [{ ...tpl }] };
+    });
+    act(() => result.current.setSelected('t1'));
+
+    expect(result.current.draft!.name).toBe('Half-typed');
+  });
+});
+
+describe('useEmailTemplateEditor — preview loading', () => {
+  beforeEach(() => {
+    m.data = { emailTemplates: [tpl] };
+  });
+
+  it('is stale from the keystroke, not from the request', async () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = mount();
+      // Before the debounce has even elapsed — the silent half-second is
+      // most of what an operator experiences as lag.
+      expect(result.current.previewLoading).toBe(true);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(700);
+      });
+      expect(result.current.previewLoading).toBe(false);
+      expect(result.current.previewHtml).toBe('<p/>');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears the wait even when the render throws', async () => {
+    const { result } = mount();
+    await waitFor(() => expect(result.current.draft).not.toBeNull());
+    m.clientQuery.mockRejectedValueOnce(new Error('boom'));
+    await act(async () => {
+      await result.current.validateMjml();
+    });
+    expect(result.current.previewLoading).toBe(false);
+  });
+});

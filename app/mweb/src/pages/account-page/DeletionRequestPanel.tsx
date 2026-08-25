@@ -1,27 +1,24 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
+import { useUserData } from '@duncit/user-context';
 import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
+import DeletionSubmittedDialog from './DeletionSubmittedDialog';
 import { parseApiError } from '../../utils/parseApiError';
 import { formatDate } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
+  ACCOUNT_DELETION_SETTINGS,
   CANCEL_MY_ACCOUNT_DELETION_REQUEST,
   MY_ACCOUNT_DELETION_REQUEST,
   REQUEST_ACCOUNT_DELETION_OTP,
+  type PendingRequest,
 } from './security-queries';
 
 interface Props {
   onToast: (message: string) => void;
-}
-
-interface PendingRequest {
-  id: string;
-  request_id: string;
-  status: string;
-  requested_at: string;
 }
 
 /**
@@ -34,16 +31,20 @@ interface PendingRequest {
  */
 export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { logout } = useUserData();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [otpOpen, setOtpOpen] = useState(false);
+  const [submitted, setSubmitted] = useState<PendingRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { data, refetch } = useQuery(MY_ACCOUNT_DELETION_REQUEST, {
     fetchPolicy: 'cache-and-network',
   });
+  const { data: settingsData } = useQuery(ACCOUNT_DELETION_SETTINGS);
   const [requestOtp, { loading: requesting }] = useMutation(REQUEST_ACCOUNT_DELETION_OTP);
   const [cancelRequest, { loading: cancelling }] = useMutation(CANCEL_MY_ACCOUNT_DELETION_REQUEST);
 
   const pending: PendingRequest | null = data?.myAccountDeletionRequest ?? null;
+  const retentionDays: number | null = settingsData?.accountDeletionSettings?.retention_days ?? null;
 
   const startFlow = async () => {
     setError(null);
@@ -67,10 +68,9 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
     }
   };
 
-  const onSubmitted = () => {
+  const onSubmitted = (request: PendingRequest) => {
     setOtpOpen(false);
-    onToast(t('mweb.account.deletion.submitted'));
-    refetch().catch(() => undefined);
+    setSubmitted(request);
   };
 
   if (pending) {
@@ -79,6 +79,11 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         <Alert severity="warning" data-testid="deletion-pending">
           <AlertTitle>{t('mweb.account.deletion.pendingTitle')}</AlertTitle>
           <Typography variant="body2">{t('mweb.account.deletion.pendingBody')}</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>
+            {t('mweb.account.deletion.deletesOn', {
+              vars: { date: formatDate(pending.scheduled_delete_at) },
+            })}
+          </Typography>
           <Typography
             variant="caption"
             sx={{
@@ -134,7 +139,11 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
       <ConfirmDialog
         open={confirmOpen}
         title={t('mweb.account.deletion.confirmTitle')}
-        message={t('mweb.account.deletion.confirmMessage')}
+        message={
+          retentionDays === null
+            ? t('mweb.account.deletion.confirmMessage')
+            : t('mweb.account.deletion.confirmMessageDays', { vars: { days: retentionDays } })
+        }
         confirmLabel={t('mweb.account.deletion.confirmCta')}
         destructive
         busy={requesting}
@@ -147,6 +156,12 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         open={otpOpen}
         onClose={() => setOtpOpen(false)}
         onSubmitted={onSubmitted}
+      />
+      <DeletionSubmittedDialog
+        open={!!submitted}
+        code={submitted?.request_id ?? ''}
+        deletesOn={submitted?.scheduled_delete_at ?? ''}
+        onSignOut={logout}
       />
     </Stack>
   );

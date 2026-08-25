@@ -36,6 +36,7 @@ import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
 import { CreatePodScreen } from '@/screens/CreatePodScreen';
 import { PodPendingScreen } from '@/screens/PodPendingScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
+import { BadgesScreen } from '@/screens/BadgesScreen';
 import { TourGuideScreen } from '@/screens/TourGuideScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { PodAttendanceScreen } from '@/screens/PodAttendanceScreen';
@@ -191,6 +192,7 @@ export function RootNavigator() {
       <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
       <Stack.Screen name="HappeningNearby" component={HappeningNearbyScreen} />
       <Stack.Screen name="Faqs" component={FaqsScreen} />
+      <Stack.Screen name="Badges" component={BadgesScreen} />
       <Stack.Screen name="TourGuide" component={TourGuideScreen} />
       <Stack.Screen name="PodPlans" component={PodPlansScreen} />
       <Stack.Screen name="Policies" component={PoliciesScreen} />

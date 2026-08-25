@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
+import { usernameBlocksSave, type UsernameStatus } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -12,6 +13,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { ContactFields } from './ContactFields';
 import { DobDateField } from './DobDateField';
 import { LocationSelect } from './LocationSelect';
+import { UsernameField } from './UsernameField';
 import {
   accountEditDefaults,
   makeAccountEditSchema,
@@ -53,6 +55,9 @@ export function AccountEditForm({
   onRegisterReset,
 }: Readonly<AccountEditFormProps>) {
   const { t } = useTranslation();
+  // The handle is checked against the server, which no Zod rule can wait for,
+  // so its verdict is held here and ANDed into the one Save button below.
+  const [handleStatus, setHandleStatus] = useState<UsernameStatus>('IDLE');
   // The joining age is admin-configured, so the schema is built from it.
   const { minSignupAge } = useAppSettings();
   const storedDob = toDobInput(me?.dob);
@@ -75,6 +80,7 @@ export function AccountEditForm({
 
   const discard = () => reset(accountEditDefaults(me));
   const discardDisabled = loading || !isDirty;
+  const handleBlocked = usernameBlocksSave(handleStatus, !!me?.username);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -91,6 +97,12 @@ export function AccountEditForm({
           {errorMessage}
         </Text>
       ) : null}
+
+      <UsernameField
+        control={control}
+        current={me?.username ?? null}
+        onStatusChange={setHandleStatus}
+      />
 
       <XStack gap={12}>
         <YStack flex={1}>
@@ -158,7 +170,7 @@ export function AccountEditForm({
         testID="account-edit-submit"
         label={loading ? 'Saving…' : 'Save'}
         loading={loading}
-        disabled={loading || !isDirty || !isValid}
+        disabled={loading || !isDirty || !isValid || handleBlocked}
         onPress={handleSubmit(onSubmit)}
       />
     </YStack>

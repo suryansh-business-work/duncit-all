@@ -6,11 +6,13 @@ import {
   CREATE_FRAGMENT,
   DELETE_FRAGMENT,
   FRAGMENTS,
+  FRAGMENT_TEMPLATE_USAGE,
   RENDER,
   RESET_FRAGMENT,
   UPDATE_FRAGMENT,
   previewDocument,
   type Fragment,
+  type FragmentTemplateRef,
 } from './queries';
 
 type Snack = { kind: 'success' | 'error'; msg: string };
@@ -26,6 +28,12 @@ export function useEmailFragments() {
   const { data, loading, refetch } = useQuery<{ emailFragments: Fragment[] }>(FRAGMENTS, {
     fetchPolicy: 'cache-and-network',
   });
+  // Which templates each fragment wraps. Its own body-free query, so the
+  // count beside a fragment costs no MJML and never holds the editor back.
+  const { data: usageData } = useQuery<{ emailTemplates: FragmentTemplateRef[] }>(
+    FRAGMENT_TEMPLATE_USAGE,
+    { fetchPolicy: 'cache-and-network' }
+  );
   const [updateFragment] = useMutation(UPDATE_FRAGMENT);
   const [resetFragment] = useMutation(RESET_FRAGMENT);
   const [createFragment] = useMutation(CREATE_FRAGMENT);
@@ -36,10 +44,28 @@ export function useEmailFragments() {
   const [draft, setDraft] = useState<Fragment | null>(null);
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewErrors, setPreviewErrors] = useState<string[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [snack, setSnack] = useState<Snack | null>(null);
 
   const list = useMemo(() => data?.emailFragments ?? [], [data]);
+
+  /**
+   * The templates each fragment is consumed by, keyed by fragment key.
+   *
+   * Editing a header changes every email wrapped in it, so the number of
+   * them is the first thing worth knowing about a fragment — and clicking
+   * it opens Templates already narrowed to exactly those rows.
+   */
+  const templatesByFragment = useMemo(() => {
+    const map = new Map<string, FragmentTemplateRef[]>();
+    for (const tpl of usageData?.emailTemplates ?? []) {
+      const key = tpl.fragment_key;
+      if (!key) continue;
+      map.set(key, [...(map.get(key) ?? []), tpl]);
+    }
+    return map;
+  }, [usageData]);
 
   // `?key=` opens a named fragment — how an email log row links back to the
   // header/footer its email carried. First selection only, so a stale key in
@@ -64,6 +90,7 @@ export function useEmailFragments() {
 
   useEffect(() => {
     if (!draft) return;
+    setPreviewLoading(true);
     const id = setTimeout(async () => {
       try {
         const res = await client.query({
@@ -75,6 +102,8 @@ export function useEmailFragments() {
         setPreviewErrors(res.data?.renderEmailTemplate?.errors ?? []);
       } catch (e: any) {
         setPreviewErrors([e.message]);
+      } finally {
+        setPreviewLoading(false);
       }
     }, 600);
     return () => clearTimeout(id);
@@ -176,8 +205,10 @@ export function useEmailFragments() {
     setSelected,
     draft,
     setDraft,
+    templatesByFragment,
     previewHtml,
     previewErrors,
+    previewLoading,
     dirty,
     busy,
     snack,

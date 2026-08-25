@@ -1,22 +1,25 @@
 import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Box, Drawer, Fab, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Drawer, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AgentChat } from './AgentChat';
+import { AgentDockTab } from './AgentDockTab';
 import { AGENT_AVAILABILITY, type AgentAvailability } from './queries';
 
 /**
  * The Agent, offered from every console.
  *
- * A floating button rather than a header slot: the shell's header is already
- * full, and the Agent is something you reach for mid-task on whatever page you
- * happen to be on. The panel is a right-hand drawer, so it covers the page it
- * was opened over instead of reflowing it — nothing you were reading moves.
+ * A tab stuck to the edge of the viewport rather than a header slot: the
+ * shell's header is already full, and the Agent is something you reach for
+ * mid-task on whatever page you happen to be on. The tab is draggable and stays
+ * where each person leaves it — see AgentDockTab. The panel is a right-hand
+ * drawer, so it covers the page it was opened over instead of reflowing it —
+ * nothing you were reading moves.
  *
- * Availability is asked for once, when the button is first shown, so a console
+ * Availability is asked for once, when the tab is first shown, so a console
  * with no OpenAI key still renders the launcher and explains itself inside
  * rather than hiding a feature that merely needs configuring.
  */
@@ -37,24 +40,7 @@ export function AgentLauncher() {
 
   return (
     <>
-      <Tooltip title={t('shell.agent.open')}>
-        <Fab
-          color="primary"
-          size="medium"
-          aria-label={t('shell.agent.open')}
-          onClick={() => setOpen(true)}
-          sx={{
-            position: 'fixed',
-            right: { xs: 16, sm: 24 },
-            bottom: { xs: 16, sm: 24 },
-            // Above the app's own chrome, below MUI's modals — the same band
-            // the floating call window sits in.
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-          }}
-        >
-          <AutoAwesomeIcon />
-        </Fab>
-      </Tooltip>
+      <AgentDockTab onOpen={() => setOpen(true)} />
 
       <Drawer
         anchor="right"

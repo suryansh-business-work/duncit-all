@@ -38,6 +38,7 @@ const VenueSlotRequestsPage = lazy(() => import('../pages/venue-slot-requests-pa
 const VenueDetailsPage = lazy(() => import('../pages/VenueDetailsPage'));
 const VenuesPage = lazy(() => import('../pages/venues-page'));
 const FaqsPage = lazy(() => import('../pages/FaqsPage'));
+const BadgesPage = lazy(() => import('../pages/badges-page'));
 const PolicyPage = lazy(() => import('../pages/PolicyPage'));
 const PodIdeasPage = lazy(() => import('../pages/PodIdeasPage'));
 const ReferralPage = lazy(() => import('../pages/referral-page'));
@@ -190,6 +191,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/host/auto-pods" element={withAuth(<HostAutoPodsPage />)} />
         <Route path="/clubs/auto-pods" element={withAuth(<ClubAutoPodsPage />)} />
         <Route path="/faqs" element={withAuth(<FaqsPage />)} />
+        <Route path="/badges" element={withAuth(<BadgesPage />)} />
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
         <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />
         <Route path="/referral" element={withAuth(<ReferralPage />)} />

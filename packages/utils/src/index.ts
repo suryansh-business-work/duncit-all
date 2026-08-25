@@ -217,6 +217,14 @@ export {
   type SpotsBounds,
 } from './pod-spots';
 export {
+  POD_LIVE_TAIL_MS,
+  podPhase,
+  splitPodsByPhase,
+  type PodPhase,
+  type PodPhaseFields,
+  type PodsByPhase,
+} from './pod-phase';
+export {
   CART_BADGE_MAX,
   cartBadgeLabel,
   deriveCartEntry,
@@ -278,6 +286,18 @@ export {
   type CoverCategoryNames,
 } from './cover-image';
 export {
+  BADGE_CONDITIONS,
+  BADGE_GOAL_KEY,
+  BADGE_WINDOW,
+  BADGE_WINDOW_KEY,
+  BADGE_WINDOWS,
+  badgeProgressPercent,
+  sortBadgeProgress,
+  type BadgeCondition,
+  type BadgeProgressLike,
+  type BadgeWindow,
+} from './badges';
+export {
   LEADERBOARD_CATEGORIES,
   LEADERBOARD_EARN_KEY,
   LEADERBOARD_PERIODS,
@@ -333,9 +353,27 @@ export {
   type CommTranslate,
 } from './comm-preference';
 export {
+  IDLE_USERNAME_CHECK,
+  USERNAME_CHECK_DEBOUNCE_MS,
+  USERNAME_PATTERN,
   buildUsernameLabels,
+  canSaveUsername,
+  isUsernameError,
+  normalizeUsername,
   profileUrl,
+  scheduleUsernameCheck,
+  usernameBlocksSave,
+  usernameFieldState,
+  usernameStatus,
+  type UsernameCheckAnswer,
+  type UsernameCheckOptions,
+  type UsernameCheckState,
+  type UsernameFieldState,
+  type UsernameFieldStateInput,
   type UsernameLabels,
+  type UsernameRejection,
+  type UsernameStatus,
+  type UsernameStatusInput,
   type UsernameTranslate,
 } from './username';
 export {

@@ -17,6 +17,7 @@ export type ProfileIconKey =
   | 'ideas'
   | 'plans'
   | 'faqs'
+  | 'badges'
   | 'tour'
   | 'shop'
   | 'orders'
@@ -74,10 +75,17 @@ export const REFERRAL_TILE: ProfileTile = {
   to: '/referral',
 };
 
-/** The "Manage Account" grouped list — the account destinations not in the grid.
+/**
+ * The "Manage Account" grouped list — the account destinations not in the grid.
  * E-commerce rows live in their own {@link SHOP_ITEMS} section. `showPodPlans`
- * gates the Pod Plans row, `showTourGuide` the Tour Guide row. */
-export function buildManageItems(showPodPlans: boolean, showTourGuide: boolean): ProfileTile[] {
+ * gates the Pod Plans row, `showTourGuide` the Tour Guide row. `badgesLabel`
+ * arrives already translated — this module holds no copy for new rows (rule 38).
+ */
+export function buildManageItems(
+  showPodPlans: boolean,
+  showTourGuide: boolean,
+  badgesLabel: string
+): ProfileTile[] {
   const items: ProfileTile[] = [
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
@@ -86,11 +94,13 @@ export function buildManageItems(showPodPlans: boolean, showTourGuide: boolean):
   if (showTourGuide) {
     items.push({ key: 'tour', label: 'Tour Guide', caption: '', icon: 'tour', to: '/tour-guide' });
   }
-  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' });
   if (showPodPlans) {
-    // Pod Plans always slots in just before FAQs (the last row).
-    items.splice(items.length - 1, 0, { key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
+    // Pod Plans always slots in just before FAQs.
+    items.push({ key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
   }
+  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' });
+  // Badges sits directly under FAQs, and is the last row of the section.
+  items.push({ key: 'badges', label: badgesLabel, caption: '', icon: 'badges', to: '/badges' });
   return items;
 }
 

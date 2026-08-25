@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import AccountDeletionsTable from './AccountDeletionsTable';
 import AccountDeletionDetailDialog from './AccountDeletionDetailDialog';
+import DeletionSettingsDialog from './DeletionSettingsDialog';
 import { ACCOUNT_DELETIONS_TABLE, type AccountDeletionRow } from './queries';
 
 /**
@@ -20,6 +22,7 @@ export default function AccountDeletionsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<AccountDeletionRow | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const fetchRows = useApolloTableFetch<AccountDeletionRow>(
     client,
     ACCOUNT_DELETIONS_TABLE,
@@ -28,14 +31,28 @@ export default function AccountDeletionsPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h5">{t('tech.accountDeletions.title')}</Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {t('tech.accountDeletions.intro')}
-        </Typography>
-      </Box>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}
+      >
+        <Box>
+          <Typography variant="h5">{t('tech.accountDeletions.title')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
+            {t('tech.accountDeletions.intro')}
+          </Typography>
+        </Box>
+        <Button
+          startIcon={<SettingsOutlinedIcon />}
+          onClick={() => setSettingsOpen(true)}
+          sx={{ textTransform: 'none', flexShrink: 0 }}
+          data-testid="open-deletion-settings"
+        >
+          {t('tech.accountDeletions.settingsTitle')}
+        </Button>
+      </Stack>
       <AccountDeletionsTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}
@@ -46,6 +63,7 @@ export default function AccountDeletionsPage() {
         onClose={() => setSelected(null)}
         onChanged={() => refetchRef.current?.()}
       />
+      <DeletionSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Stack>
   );
 }

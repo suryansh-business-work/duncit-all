@@ -48,7 +48,7 @@ function toStep(group: TraceGroup): PurgeStep {
 /** The `removed` the server just wrote, read back off the log it wrote it to. */
 function lastRemoved(detail: DeletionDetail | undefined): number {
   const log = detail?.request?.purge_log ?? [];
-  return log.length > 0 ? (log[log.length - 1]?.removed ?? 0) : 0;
+  return log.at(-1)?.removed ?? 0;
 }
 
 /**

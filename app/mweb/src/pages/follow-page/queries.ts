@@ -15,7 +15,6 @@ export interface FeedPost {
   club_id?: string | null;
   image_url: string;
   media_type: 'IMAGE' | 'VIDEO';
-  kind: 'POST' | 'STORY';
   caption: string;
   likes_count: number;
   liked_by_me: boolean;
@@ -33,8 +32,9 @@ export interface FeedClub {
 }
 
 /**
- * Posts + still-active stories from the clubs/people the viewer follows,
- * newest first. Comment threads are loaded by the shared PostDialog on open.
+ * Posts from the clubs/people the viewer follows, newest first — stories are
+ * excluded server-side and stay on the story rails. Comment threads are loaded
+ * by the shared PostDialog on open.
  */
 export const FOLLOWING_FEED = gql`
   query FollowingFeed($source: FollowingFeedSource!, $limit: Int) {
@@ -44,7 +44,6 @@ export const FOLLOWING_FEED = gql`
       club_id
       image_url
       media_type
-      kind
       caption
       likes_count
       liked_by_me

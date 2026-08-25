@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Avatar, Box, Card, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, IconButton, Stack, Typography } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -81,9 +81,6 @@ export default function FeedPostCard({
             </Typography>
           </Box>
         </Stack>
-        {post.kind === 'STORY' && (
-          <Chip size="small" color="secondary" label="STORY" sx={{ height: 22, fontWeight: 700 }} />
-        )}
       </Stack>
 
       {post.media_type === 'VIDEO' ? (

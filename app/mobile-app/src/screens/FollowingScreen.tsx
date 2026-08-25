@@ -11,21 +11,24 @@ import { useDetailNav } from '@/hooks/useDetailNav';
 import { useFollowing } from '@/hooks/useFollowing';
 import { useFollowingFeed, type FeedPost, type FeedSource } from '@/hooks/useFollowingFeed';
 import { useMe } from '@/hooks/useMe';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Translate } from '@/i18n/fallback';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 const TABS: FeedSource[] = ['PEOPLE', 'CLUBS'];
 const TAB_LABELS: Record<FeedSource, string> = { PEOPLE: 'People', CLUBS: 'Clubs' };
-const EMPTY_TEXT: Record<FeedSource, string> = {
-  PEOPLE: 'No posts yet. Follow people to see their posts and stories here.',
-  CLUBS: 'No posts yet. Follow clubs to see their posts and stories here.',
-};
+const emptyText = (t: Translate): Record<FeedSource, string> => ({
+  PEOPLE: t('mweb.followPage.followPeopleToSeeTheirPosts'),
+  CLUBS: t('mweb.followPage.followClubsToSeeTheirPosts'),
+});
 
-/** Following tab — a social FEED of posts + active stories from the people and
- * clubs the user follows (like + comment via the existing post viewer). No pods.
- * mWeb FollowPage parity. */
+/** Following tab — a social FEED of posts from the people and clubs the user
+ * follows (like + comment via the existing post viewer). Stories are excluded
+ * server-side and stay on the story rails. No pods. mWeb FollowPage parity. */
 export function FollowingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   const { openClub } = useDetailNav();
   const { followedClubs } = useFollowing();
   const { data: meData } = useMe();
@@ -85,7 +88,7 @@ export function FollowingScreen() {
         testID="following-feed"
         isLoading={feed.isLoading}
         isEmpty={feed.posts.length === 0}
-        emptyText={EMPTY_TEXT[tab]}
+        emptyText={emptyText(t)[tab]}
         onRefresh={() => fireAndForget(feed.refetch())}
         data={feed.posts}
         keyExtractor={(post) => post.id}

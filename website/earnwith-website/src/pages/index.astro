@@ -10,7 +10,9 @@ import EarningsShots from '../components/EarningsShots.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import CtaBand from '../components/CtaBand.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
+
+const siteConfig = await siteContent();
 ---
 
 <Layout title={siteConfig.brand.title}>

@@ -1,7 +1,9 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
 import SmartLink from './SmartLink.astro';
 import RibbonMarquee from './RibbonMarquee.astro';
+
+const siteConfig = await siteContent();
 const { hero } = siteConfig;
 
 ---

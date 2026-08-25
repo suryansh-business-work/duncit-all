@@ -1,6 +1,8 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
 import SmartLink from './SmartLink.astro';
+
+const siteConfig = await siteContent();
 const { platform } = siteConfig;
 ---
 
@@ -17,7 +19,9 @@ const { platform } = siteConfig;
     />
     <div class="relative">
       <h2 class="text-3xl text-ink sm:text-4xl">
-        India's <span class="text-primary">Community</span><br />Earning Platform
+        {platform.headingLead} <span class="text-primary">{platform.headingAccent}</span><br />{
+          platform.headingTail
+        }
       </h2>
       <p class="mt-4 max-w-md text-ink-soft">{platform.text}</p>
       <SmartLink

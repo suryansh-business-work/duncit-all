@@ -2,7 +2,7 @@
 // Footer — links managed from the Website portal (Navigation → EARNWITH) and
 // the Policy Hub from the Legal portal; branding assets from Admin. The
 // configured groups are the fallback the portal overrides.
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
 import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
 import NewsletterSignup from './NewsletterSignup.astro';
 import RibbonMarquee from './RibbonMarquee.astro';
@@ -10,6 +10,8 @@ import SmartLink from './SmartLink.astro';
 import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
 import SocialLinks from '@duncit/brand/SocialLinks.astro';
 import FooterLogo from '@duncit/brand/FooterLogo.astro';
+
+const siteConfig = await siteContent();
 
 const { footer, mainSiteUrl } = siteConfig;
 
@@ -113,8 +115,8 @@ const year = new Date().getFullYear();
     <div
       class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-5 text-xs text-ink-soft"
     >
-      <span>© {year} Duncit. All rights reserved.</span>
-      <span>Built for communities in India.</span>
+      <span>© {year} {branding.app_name}. {footer.rights}</span>
+      <span>{footer.builtFor}</span>
     </div>
   </div>
 </footer>

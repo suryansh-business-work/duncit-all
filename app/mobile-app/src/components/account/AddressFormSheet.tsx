@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Modal } from 'react-native';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -105,8 +105,13 @@ export function AddressFormSheet({
   // The sheet sits flush on the bottom edge, which the edge-to-edge window lets
   // the Android navigation bar paint over — without this the Save row is under it.
   const bottomInset = useBottomInset();
-  // A new address opens with a suggested label the user can overwrite.
-  const blank = { ...blankAddressValues, label: t('mweb.account.addressLabelDefault') };
+  // A new address opens with a suggested label the user can overwrite. Memoised
+  // because the reset effect below depends on it: a fresh object every render
+  // would re-fire that effect on every keystroke and wipe what was being typed.
+  const blank = useMemo(
+    () => ({ ...blankAddressValues, label: t('mweb.account.addressLabelDefault') }),
+    [t],
+  );
   const { control, handleSubmit, reset } = useForm<AddressFormValues>({
     defaultValues: initial ?? blank,
     resolver: zodResolver(addressSchema),
@@ -115,7 +120,7 @@ export function AddressFormSheet({
 
   useEffect(() => {
     if (open) reset(initial ?? blank);
-  }, [open, initial, reset]);
+  }, [open, initial, reset, blank]);
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onCancel}>

@@ -18,10 +18,7 @@ import {
   MobileWhatsappPreferenceDocument,
 } from '@/graphql/whatsapp-preference';
 import { graphqlRequest } from '@/services/graphql.client';
-import {
-  ALL_WHATSAPP_CATEGORIES,
-  useWhatsAppPreferences,
-} from '@/hooks/useWhatsAppPreferences';
+import { ALL_WHATSAPP_CATEGORIES, useWhatsAppPreferences } from '@/hooks/useWhatsAppPreferences';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;

@@ -246,9 +246,16 @@ jobs:
         with:
           run_install: false
 
+      # `package-manager-cache` is new in setup-node@v5 and defaults to TRUE, so
+      # it detects pnpm from the lockfile and tries to save a store cache on the
+      # way out. This job never installs anything, so there is no store on disk
+      # and the post step ends in "Path Validation Error: Path(s) specified in
+      # the action for caching do(es) not exist" — which fails the job AFTER
+      # every real step has already passed, report published and comment posted.
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          package-manager-cache: false
 
       - name: Download the surface summaries
         continue-on-error: true

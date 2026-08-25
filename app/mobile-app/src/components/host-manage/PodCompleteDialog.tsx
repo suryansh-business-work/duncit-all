@@ -104,8 +104,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <YStack gap={12} paddingBottom={6}>
                     <Text fontSize={12.5} color="$muted">
-                      Upload party photos/videos (with the Duncit banner). Payouts are credited to
-                      the wallets on completion.
+                      {t('mweb.hostPodActions.completeHint')}
                     </Text>
                     {hasVenue ? (
                       <FormTextField

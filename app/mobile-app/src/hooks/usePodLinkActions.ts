@@ -82,9 +82,7 @@ function usePodLinkActions(kind: LinkKind) {
       await Clipboard.setStringAsync(await sharedLinkFor(pod));
       // The sheet has closed by now, so without this the host has no way of
       // knowing the copy landed.
-      setNotice(
-        feedback ? t('mweb.podFeedback.linkCopied') : t('mweb.podMedia.linkCopied'),
-      );
+      setNotice(feedback ? t('mweb.podFeedback.linkCopied') : t('mweb.podMedia.linkCopied'));
       globalThis.setTimeout(() => setNotice(null), NOTICE_MS);
     },
     [feedback, sharedLinkFor, t],

@@ -2209,7 +2209,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venue: 'Venue',
       venueHint: 'Pick the venue to request',
       completeHint:
-        'Upload your party photos/videos (with the Duncit banner). Your payout is credited to your wallet as soon as the pod is completed.',
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. Your payout is credited to your wallet as soon as the pod is completed.',
       venueBillAmount: 'Venue Bill Amount',
       venueBillRequired: 'Enter the venue bill amount',
       podMedia: 'Pod Media',

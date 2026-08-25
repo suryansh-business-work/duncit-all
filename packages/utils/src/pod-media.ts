@@ -15,29 +15,3 @@ export const podMediaPath = (podId: string): string => `/pod/${podId}/media`;
 /** The same path as a full URL, for a message that leaves the app. */
 export const podMediaLink = (podId: string, baseUrl: string): string =>
   `${baseUrl}${podMediaPath(podId)}`;
-
-/** One item as every surface renders it — the board's row, minus the plumbing. */
-export interface PodMediaItem {
-  url: string;
-  type: 'IMAGE' | 'VIDEO';
-  source: 'HOST' | 'GUEST';
-  uploaded_by_name: string;
-  uploaded_at?: string | null;
-  mine: boolean;
-  can_remove: boolean;
-}
-
-/**
- * Why a viewer cannot upload, as a translation key — never a sentence. The
- * board answers with a role and two booleans; turning those into the ONE thing
- * to say lives here so mWeb's page and the app's screen cannot say different
- * things about the same pod.
- */
-export function podMediaBlockedKey(
-  viewer: 'HOST' | 'GUEST' | 'NONE',
-  isCancelled: boolean,
-): string | null {
-  if (viewer === 'NONE') return 'mweb.podMedia.notInvited';
-  if (isCancelled) return 'mweb.podMedia.cancelled';
-  return null;
-}

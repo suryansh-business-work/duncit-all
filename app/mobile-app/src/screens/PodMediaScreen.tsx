@@ -137,7 +137,7 @@ export function PodMediaScreen() {
   };
 
   return (
-    <StackScreen title={labels.pageTitle}>
+    <StackScreen title={labels.pageTitle} testID="pod-media-screen">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>{body()}</ScrollView>
     </StackScreen>
   );

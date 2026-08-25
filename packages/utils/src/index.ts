@@ -156,12 +156,7 @@ export {
   type PodFeedbackInput,
   type PodFeedbackScores,
 } from './pod-feedback';
-export {
-  podMediaBlockedKey,
-  podMediaLink,
-  podMediaPath,
-  type PodMediaItem,
-} from './pod-media';
+export { podMediaLink, podMediaPath } from './pod-media';
 export {
   buildPodMediaLabels,
   mwebPodMediaLabels,

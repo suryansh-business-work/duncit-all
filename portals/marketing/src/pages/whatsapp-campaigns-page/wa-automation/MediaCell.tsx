@@ -24,9 +24,16 @@ export function MediaCell({ row, stateLabels, setLabel, onOpen }: Readonly<Media
   // The URL actually in play, readable without opening the dialog.
   const effectiveUrl = row.override_media_url || row.media_url;
   return (
-    <Stack spacing={0.25} alignItems="flex-start" sx={{ py: 0.5 }}>
+    <Stack
+      spacing={0.25}
+      sx={{
+        alignItems: "flex-start",
+        py: 0.5
+      }}>
       {state === 'NOT_NEEDED' ? (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {stateLabels.NOT_NEEDED}
         </Typography>
       ) : (

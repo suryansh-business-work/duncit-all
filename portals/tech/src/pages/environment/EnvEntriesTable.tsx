@@ -31,8 +31,12 @@ const getEnvEntryRowId = (e: EnvEntry) => e.id;
 
 const renderName = (e: EnvEntry) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">{e.name}</Typography>
-    <Typography variant="caption" color="text.secondary" component="div">{e.description}</Typography>
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 700
+    }}>{e.name}</Typography>
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>{e.description}</Typography>
   </Box>
 );
 const nameValue = (e: EnvEntry) => e.name;
@@ -56,7 +60,9 @@ const lastTestedValue = (e: EnvEntry) => {
 const renderPortals = (e: EnvEntry) =>
   e.assigned_portals.length
     ? <Typography variant="caption">{e.assigned_portals.join(', ')}</Typography>
-    : <Typography variant="caption" color="text.secondary">—</Typography>;
+    : <Typography variant="caption" sx={{
+    color: "text.secondary"
+  }}>—</Typography>;
 const portalsValue = (e: EnvEntry) => e.assigned_portals.join(', ');
 
 interface Props {
@@ -81,7 +87,9 @@ export default function EnvEntriesTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EnvEntry>[]>(() => {
     const renderActions = (e: EnvEntry) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
+      <Stack direction="row" component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Tooltip title={t('tech.environment.testConnection')}><IconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></IconButton></Tooltip>
         <Tooltip title={t('shell.common.edit')}><IconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></IconButton></Tooltip>
         <Tooltip title={t('tech.environment.setDefault')}><IconButton size="small" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</IconButton></Tooltip>

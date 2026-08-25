@@ -1,5 +1,5 @@
 import { IconButton, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '@duncit/app-settings';
 import type {
   LeaderboardCategory,
@@ -66,16 +66,20 @@ export default function RewardRowFields({ row, index, onChange, onRemove }: Read
           type="number"
           value={row.rank_from}
           onChange={(e) => onChange(index, { rank_from: toRank(e.target.value) })}
-          inputProps={{ min: 1, step: 1 }}
           sx={{ minWidth: 120 }}
+          slotProps={{
+            htmlInput: { min: 1, step: 1 }
+          }}
         />
         <TextField
           label={t('admin.leaderboard.rewardRankTo')}
           type="number"
           value={row.rank_to}
           onChange={(e) => onChange(index, { rank_to: toRank(e.target.value) })}
-          inputProps={{ min: 1, step: 1 }}
           sx={{ minWidth: 120 }}
+          slotProps={{
+            htmlInput: { min: 1, step: 1 }
+          }}
         />
       </Stack>
 
@@ -95,8 +99,15 @@ export default function RewardRowFields({ row, index, onChange, onRemove }: Read
         />
       </Stack>
 
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Stack direction="row" spacing={1} alignItems="center">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Switch checked={row.is_active} onChange={(_, value) => onChange(index, { is_active: value })} />
           <Typography variant="body2">{t('admin.leaderboard.rewardActive')}</Typography>
         </Stack>

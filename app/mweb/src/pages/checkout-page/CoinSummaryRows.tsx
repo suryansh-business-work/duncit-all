@@ -33,9 +33,17 @@ export default function CoinSummaryRows({
         bgcolor: COIN_GOLD_TINT,
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={0.75}
+        sx={{
+          alignItems: "center",
+          mb: 0.5
+        }}>
         <MonetizationOnIcon sx={{ fontSize: 18, color: gold }} />
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.coin.checkoutTitle')}
         </Typography>
       </Stack>
@@ -52,11 +60,21 @@ export default function CoinSummaryRows({
 
 function CoinRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Typography variant="caption" color="text.secondary">
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
-      <Typography variant="caption" fontWeight={700}>
+      <Typography variant="caption" sx={{
+        fontWeight: 700
+      }}>
         {value}
       </Typography>
     </Stack>

@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { logs } from '@duncit/logs';
 import { isStaleChunkError, reloadForStaleChunk } from './staleChunkReload';
 
@@ -49,12 +49,21 @@ export default class ErrorBoundary extends Component<Props, State> {
         data-testid="error-boundary-fallback"
         sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}
       >
-        <Stack spacing={2} alignItems="center" textAlign="center">
+        <Stack
+          spacing={2}
+          sx={{
+            alignItems: "center",
+            textAlign: "center"
+          }}>
           <ErrorOutlineIcon sx={{ fontSize: 56, color: 'error.main' }} />
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Something went wrong
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             An unexpected error occurred. Please try again.
           </Typography>
           <Button data-testid="error-boundary-retry" variant="contained" onClick={this.reset}>

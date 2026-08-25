@@ -21,16 +21,27 @@ export default function VenueCard({ venue, onReview }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" mb={1}>
-          <Typography variant="subtitle1" fontWeight={700}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            mb: 1
+          }}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {venue.venue_name || '(Unnamed venue)'}
           </Typography>
           <StatusChip status={venue.status} colorMap={STATUS_COLOR} />
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {venue.venue_type} · {[venue.locality, venue.city, venue.state].filter(Boolean).join(', ') || '—'} · cap {venue.capacity}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Step {venue.step_completed}/4 · PIN {venue.postal_code || '—'} · {venue.documents?.length ?? 0} document(s)
         </Typography>
         {venue.tags?.length > 0 && (
@@ -48,7 +59,9 @@ export default function VenueCard({ venue, onReview }: Readonly<Props>) {
             {venue.reviewer_notes}
           </Alert>
         )}
-        <Stack direction="row" spacing={1} mt={2}>
+        <Stack direction="row" spacing={1} sx={{
+          mt: 2
+        }}>
           <Button size="small" variant="outlined" onClick={() => onReview(venue)}>
             Review
           </Button>

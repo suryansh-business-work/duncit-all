@@ -24,7 +24,9 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
         }}
         aria-label={REFERRAL_TILE.label}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <Box
             sx={{
               width: 44,
@@ -40,10 +42,14 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
             <CardGiftcardIcon />
           </Box>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography fontWeight={600} noWrap>
+            <Typography noWrap sx={{
+              fontWeight: 600
+            }}>
               {REFERRAL_TILE.label}
             </Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <Typography variant="body2" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {REFERRAL_TILE.caption}
             </Typography>
           </Box>

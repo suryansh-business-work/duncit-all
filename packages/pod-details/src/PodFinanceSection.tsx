@@ -18,11 +18,21 @@ const statusChips = (t: Translate): Record<SettlementStatus, { label: string; co
 /** One label/value line of the summary above the waterfall. */
 function SummaryRow({ label, value }: Readonly<{ label: string; value: string | number }>) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={2}>
-      <Typography variant="body2" color="text.secondary">
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "baseline"
+      }}>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600}>
+      <Typography variant="body2" sx={{
+        fontWeight: 600
+      }}>
         {value}
       </Typography>
     </Stack>
@@ -75,7 +85,9 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
           />
           <Divider />
           <FinanceWaterfallList symbol={breakdown.currency_symbol} lines={lines} />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Payouts are released after Finance approval.
           </Typography>
         </Stack>

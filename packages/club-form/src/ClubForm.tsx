@@ -103,12 +103,22 @@ export default function ClubForm({
     <FormProvider {...methods}>
       <ClubFormDataProvider value={data}>
         <form noValidate onSubmit={submitFinal}>
-          <Grid container spacing={3} alignItems="flex-start">
-            <Grid item xs={12} lg={preview ? 7 : 12}>
+          <Grid container spacing={3} sx={{
+            alignItems: "flex-start"
+          }}>
+            <Grid
+              size={{
+                xs: 12,
+                lg: preview ? 7 : 12
+              }}>
               {fields}
             </Grid>
             {preview && (
-              <Grid item xs={12} lg={5}>
+              <Grid
+                size={{
+                  xs: 12,
+                  lg: 5
+                }}>
                 {/* Scrolls inside itself: the detail preview is taller than the
                     viewport on a long pod, and a plain sticky box would park
                     its bottom out of reach. */}

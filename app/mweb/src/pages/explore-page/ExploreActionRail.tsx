@@ -59,15 +59,14 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
     <Stack
       ref={ref}
       spacing={1.5}
-      alignItems="center"
-      justifyContent="flex-end"
       sx={{
+        alignItems: "center",
+        justifyContent: "flex-end",
         position: 'absolute',
         right: 12,
         top: 'calc(env(safe-area-inset-top) + 64px)',
-        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 110px)',
-      }}
-    >
+        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 110px)'
+      }}>
       {shown.map((action) => (
         <ExploreActionButton
           key={action.key}
@@ -107,7 +106,9 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
             }}
           >
             <ListItemIcon sx={{ color: action.active ? 'primary.main' : 'inherit' }}>{action.icon}</ListItemIcon>
-            <ListItemText primaryTypographyProps={{ fontWeight: 700 }}>{action.label}</ListItemText>
+            <ListItemText slotProps={{
+              primary: { sx: { fontWeight: 700 } }
+            }}>{action.label}</ListItemText>
           </MenuItem>
         ))}
       </Menu>

@@ -13,7 +13,12 @@ export function PodDetailHeader() {
         actions={<Button size="small" variant="outlined">Edit</Button>}
       />
 
-      <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: "wrap",
+          gap: 1
+        }}>
         <StatusChip status="APPROVED" />
         <StatusChip status="PENDING" />
         {/* products renders DRAFT as default, not the repo-wide warning. */}
@@ -23,7 +28,12 @@ export function PodDetailHeader() {
 
       <Divider />
 
-      <Stack direction="row" flexWrap="wrap" sx={{ gap: 4 }}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: "wrap",
+          gap: 4
+        }}>
         <InfoRow label="Pod ID" value="DUN-POD-4821" />
         <InfoRow label="Host" value="Ananya Rao" />
         <InfoRow label="Venue" value="The Table, 12th Main" />

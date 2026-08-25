@@ -36,7 +36,9 @@ function MatchedVenuesPanel() {
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <StorefrontIcon fontSize="small" color="action" />
         <Typography variant="subtitle2">{t('clubForm.linksSection.autoMatchedVenues')}</Typography>
         {ready && !loading && <Chip size="small" label={venues.length} color={venues.length ? 'primary' : 'default'} />}
@@ -48,9 +50,13 @@ function MatchedVenuesPanel() {
         </Alert>
       )}
       {ready && loading && (
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <CircularProgress size={18} />
-          <Typography variant="body2" color="text.secondary">{t('clubForm.linksSection.findingMatchingVenues')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('clubForm.linksSection.findingMatchingVenues')}</Typography>
         </Stack>
       )}
       {ready && error && <Alert severity="error">{error.message}</Alert>}

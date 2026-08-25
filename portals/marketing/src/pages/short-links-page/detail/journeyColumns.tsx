@@ -20,18 +20,23 @@ const stepColor = (step: string) => {
 const renderVisitor = (row: ShortLinkJourneyRow) => {
   if (!row.user_id) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Not signed in
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>Not signed in
+              </Typography>
     );
   }
   return (
     <Box sx={{ lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={600} component="div">
+      <Typography variant="body2" component="div" sx={{
+        fontWeight: 600
+      }}>
         {row.user_name ?? 'Unnamed'}
       </Typography>
       {row.user_email && (
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {row.user_email}
         </Typography>
       )}
@@ -53,18 +58,24 @@ const renderPaid = (row: ShortLinkJourneyRow) => {
   const count = row.conversions?.length ?? 0;
   if (row.converted_amount === null || row.converted_amount === undefined) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {EM_DASH}
       </Typography>
     );
   }
   return (
     <Box sx={{ lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={600} component="div">
+      <Typography variant="body2" component="div" sx={{
+        fontWeight: 600
+      }}>
         {formatINR(row.converted_amount)}
       </Typography>
       {count > 1 && (
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {count} payments
         </Typography>
       )}

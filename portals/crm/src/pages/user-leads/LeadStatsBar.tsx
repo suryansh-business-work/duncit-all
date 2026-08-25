@@ -31,22 +31,41 @@ export default function LeadStatsBar({ reloadKey }: Readonly<{ reloadKey: number
   return (
     <Grid container spacing={1.5} sx={{ mb: 2 }}>
       {cards(t).map((c) => (
-        <Grid key={c.key} item xs={6} md={3}>
+        <Grid
+          key={c.key}
+          size={{
+            xs: 6,
+            md: 3
+          }}>
           <Card variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ py: 1.5 }}>
-              <Stack direction="row" spacing={1.25} alignItems="center">
+              <Stack direction="row" spacing={1.25} sx={{
+                alignItems: "center"
+              }}>
                 <Stack
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{ width: 38, height: 38, borderRadius: 2, color: '#fff', bgcolor: c.color }}
-                >
+                  sx={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 38,
+                    height: 38,
+                    borderRadius: 2,
+                    color: '#fff',
+                    bgcolor: c.color
+                  }}>
                   {c.icon}
                 </Stack>
                 <div>
-                  <Typography variant="h6" fontWeight={800} lineHeight={1.1}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 800,
+                      lineHeight: 1.1
+                    }}>
                     {(stats?.[c.key] ?? 0).toLocaleString('en-IN')}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {c.label}
                   </Typography>
                 </div>

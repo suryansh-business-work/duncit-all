@@ -21,13 +21,19 @@ interface Props {
 const getBrandRowId = (b: EcommBrandRow) => b.id;
 
 const renderBrand = (b: EcommBrandRow) => (
-  <Stack direction="row" spacing={1} alignItems="center">
+  <Stack direction="row" spacing={1} sx={{
+    alignItems: "center"
+  }}>
     <Avatar src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
       {(b.brand_name || '?').charAt(0).toUpperCase()}
     </Avatar>
     <Box>
-      <Typography variant="body2" fontWeight={700}>{b.brand_name || 'Untitled brand'}</Typography>
-      <Typography variant="caption" color="text.secondary">{b.tagline || '—'}</Typography>
+      <Typography variant="body2" sx={{
+        fontWeight: 700
+      }}>{b.brand_name || 'Untitled brand'}</Typography>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>{b.tagline || '—'}</Typography>
     </Box>
   </Stack>
 );
@@ -41,7 +47,12 @@ const renderProducts = (b: EcommBrandRow) => (
 const renderOwner = (b: EcommBrandRow) => (
   <>
     <Typography variant="body2">{b.contact_person || '—'}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">{b.contact_email || b.contact_phone || '—'}</Typography>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>{b.contact_email || b.contact_phone || '—'}</Typography>
   </>
 );
 

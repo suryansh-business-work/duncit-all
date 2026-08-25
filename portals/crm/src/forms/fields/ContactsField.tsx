@@ -32,8 +32,16 @@ export default function ContactsField({ name }: Readonly<Props>) {
         const isPrimary = index === 0;
         return (
           <Card key={row.id} variant="outlined" sx={{ p: 1.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-              <Typography variant="subtitle2" fontWeight={700}>
+            <Stack
+              direction="row"
+              sx={{
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 1
+              }}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 700
+              }}>
                 {isPrimary ? 'Primary Contact' : `Contact ${index + 1}`}
               </Typography>
               {!isPrimary && (

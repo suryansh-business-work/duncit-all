@@ -29,13 +29,17 @@ export default function CompanionsChecklist({ title, people }: Readonly<Props>) 
         {title}
       </Typography>
       {people.map((person) => (
-        <Stack key={person.key} direction="row" spacing={1} alignItems="center">
+        <Stack key={person.key} direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <CheckCircleIcon color="success" fontSize="small" />
           <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0 }} noWrap>
             {person.primary}
           </Typography>
           {person.secondary && (
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {person.secondary}
             </Typography>
           )}

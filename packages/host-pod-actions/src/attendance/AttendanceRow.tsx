@@ -53,28 +53,35 @@ export default function AttendanceRow({
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1.25}
       data-testid={`attendance-row-${row.membership_id}`}
       sx={{
+        alignItems: "center",
         px: 1.25,
         py: 1.25,
         borderRadius: '16px',
         border: 1,
+
         // Green is the state, so it carries the border and the ground too.
         borderColor: marked ? 'success.main' : 'divider',
+
         // A TINT, not `success.light`: MUI pairs that shade with a near-white
         // `contrastText`, which lands under 4.5:1 on the body copy in this row.
         // The same rgba the native twin uses, so the two read identically.
-        bgcolor: marked ? 'rgba(46,160,67,0.14)' : 'background.paper',
-      }}
-    >
+        bgcolor: marked ? 'rgba(46,160,67,0.14)' : 'background.paper'
+      }}>
       <Avatar src={row.avatar_url || undefined} sx={{ width: 36, height: 36 }}>
         {(row.name[0] ?? '?').toUpperCase()}
       </Avatar>
 
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={0.75} sx={{ minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "center",
+            minWidth: 0
+          }}>
           <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
             {row.name}
           </Typography>
@@ -87,16 +94,33 @@ export default function AttendanceRow({
             />
           )}
         </Stack>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {caption}
         </Typography>
         {marked && row.verified_phone && (
-          <Typography variant="caption" color="text.secondary" noWrap display="block">
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             {labels.verifiedPhone(row.verified_phone)}
           </Typography>
         )}
         {state === 'NEEDS_COMPANIONS' && (
-          <Typography variant="caption" color="warning.main" display="block">
+          <Typography
+            variant="caption"
+            sx={{
+              color: "warning.main",
+              display: "block"
+            }}>
             {labels.companionsNeeded(row.companions_required)}
           </Typography>
         )}
@@ -111,7 +135,9 @@ export default function AttendanceRow({
           sx={{ fontWeight: 800 }}
         />
       ) : (
-        <Stack direction="row" alignItems="center" spacing={0.75}>
+        <Stack direction="row" spacing={0.75} sx={{
+          alignItems: "center"
+        }}>
           <RadioButtonUncheckedIcon fontSize="small" color="disabled" />
           {onMark && (
             <Button

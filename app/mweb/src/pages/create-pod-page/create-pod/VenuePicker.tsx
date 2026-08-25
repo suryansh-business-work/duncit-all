@@ -18,7 +18,12 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
   const { t } = useTranslation();
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         {requiredLabel(t('mweb.createPod.selectVenue'), required)}
       </Typography>
       <Stack direction="row" sx={{ mt: 1, gap: 1.25, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
@@ -55,14 +60,29 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
                     backgroundPosition: 'center',
                   }}
                 />
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ flex: 1 }}>
+                <Stack direction="row" spacing={0.5} sx={{
+                  alignItems: "center"
+                }}>
+                  <Typography
+                    variant="subtitle2"
+                    noWrap
+                    sx={{
+                      fontWeight: 700,
+                      flex: 1
+                    }}>
                     {venue.venue_name}
                   </Typography>
                   {selected && <CheckCircleIcon color="primary" fontSize="small" />}
                 </Stack>
                 {locality && (
-                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'text.secondary', mt: 0.25 }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    sx={{
+                      alignItems: "center",
+                      color: 'text.secondary',
+                      mt: 0.25
+                    }}>
                     <PlaceOutlinedIcon sx={{ fontSize: 14 }} />
                     <Typography variant="caption" noWrap>{locality}</Typography>
                   </Stack>

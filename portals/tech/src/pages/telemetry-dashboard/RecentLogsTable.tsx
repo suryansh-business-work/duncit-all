@@ -22,13 +22,17 @@ const renderLevel = (l: LogRow) => (
 );
 
 const renderWhen = (l: LogRow) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {formatDateTime(l.created_at)}
   </Typography>
 );
 
 const renderMessage = (l: LogRow) => (
-  <Typography variant="body2" color="text.secondary" noWrap title={l.error?.message ?? ''}>
+  <Typography variant="body2" noWrap title={l.error?.message ?? ''} sx={{
+    color: "text.secondary"
+  }}>
     {l.error ? `${l.error.name}: ${l.error.message}` : '—'}
   </Typography>
 );

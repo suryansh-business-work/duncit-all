@@ -51,11 +51,25 @@ function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Reado
           sx={{ position: 'absolute', left: 6, top: 0, bottom: 0, width: '2px', bgcolor: 'divider' }}
         />
       )}
-      <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ py: 0.6 }}>
+      <Stack
+        direction="row"
+        spacing={1.25}
+        sx={{
+          alignItems: "flex-start",
+          py: 0.6
+        }}>
         <Box sx={{ mt: 0.25, lineHeight: 0 }}>{TONE_ICON[copy.tone]}</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexWrap: 'wrap' }}>
-            <Typography variant="subtitle2" fontWeight={700}>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            sx={{
+              alignItems: "center",
+              flexWrap: 'wrap'
+            }}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 700
+            }}>
               {copy.title}
             </Typography>
             {node.state === 'current' && (
@@ -80,11 +94,18 @@ function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Reado
             )}
           </Stack>
           {node.at && (
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block"
+              }}>
               {formatDateTime(node.at)}
             </Typography>
           )}
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {copy.detail}
           </Typography>
         </Box>

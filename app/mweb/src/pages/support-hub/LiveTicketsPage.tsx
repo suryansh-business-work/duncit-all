@@ -28,13 +28,17 @@ export default function LiveTicketsPage() {
         variant="outlined"
         sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(33,150,243,0.08)', cursor: 'pointer' }}
       >
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <ForumIcon color="primary" />
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
               Chat live with an agent
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Get real-time answers without raising a ticket.
             </Typography>
           </Box>

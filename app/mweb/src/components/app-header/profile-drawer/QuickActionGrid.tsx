@@ -45,10 +45,21 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
       >
         {profileIcon(tile.icon)}
       </Box>
-      <Typography fontSize={14} fontWeight={600} noWrap>
+      <Typography
+        noWrap
+        sx={{
+          fontSize: 14,
+          fontWeight: 600
+        }}>
         {tile.label}
       </Typography>
-      <Typography fontSize={11.5} color="text.secondary" noWrap display="block">
+      <Typography
+        noWrap
+        sx={{
+          fontSize: 11.5,
+          color: "text.secondary",
+          display: "block"
+        }}>
         {tile.caption}
       </Typography>
     </Paper>
@@ -58,7 +69,14 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
 export default function QuickActionGrid({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
   return (
     <Box sx={{ px: 2, pb: 1.25 }}>
-      <Stack direction="row" flexWrap="wrap" sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: "wrap",
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 1.25
+        }}>
         {PROFILE_GRID.map((tile) => (
           <ActionTile key={tile.key} tile={tile} onNavigate={onNavigate} />
         ))}

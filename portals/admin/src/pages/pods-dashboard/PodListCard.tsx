@@ -32,12 +32,16 @@ export default function PodListCard({
         <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
           {title}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {subtitle}
         </Typography>
         <Stack spacing={1.25} sx={{ mt: 2 }}>
           {pods.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {emptyText}
             </Typography>
           )}
@@ -45,30 +49,43 @@ export default function PodListCard({
             <Stack
               key={pod.id}
               direction="row"
-              alignItems="center"
-              justifyContent="space-between"
               spacing={1.5}
-            >
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
               <Stack sx={{ minWidth: 0 }}>
                 <Link
                   component={RouterLink}
                   to={`/pods/${pod.id}`}
                   variant="body2"
-                  fontWeight={600}
                   noWrap
                   underline="hover"
+                  sx={{
+                    fontWeight: 600
+                  }}
                 >
                   {pod.title}
                 </Link>
-                <Typography variant="caption" color="text.secondary" noWrap>
+                <Typography variant="caption" noWrap sx={{
+                  color: "text.secondary"
+                }}>
                   {showRating ? `${pod.rating_count} ratings` : when(pod.starts_at)}
                 </Typography>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  flexShrink: 0
+                }}>
                 {showRating && pod.rating_average !== null && (
                   <>
                     <Rating value={pod.rating_average} precision={0.1} size="small" readOnly />
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {pod.rating_average.toFixed(1)}
                     </Typography>
                   </>

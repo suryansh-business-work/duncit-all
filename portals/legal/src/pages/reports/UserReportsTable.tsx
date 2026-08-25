@@ -46,15 +46,25 @@ export default function UserReportsTable({
 
   const columns = useMemo<DuncitColumn<ContentReport>[]>(() => {
     const renderTarget = (r: ContentReport) => (
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          minWidth: 0
+        }}>
         <Avatar variant="rounded" src={r.target_preview_url || undefined} sx={{ width: 34, height: 34 }}>
           <ImageNotSupportedOutlinedIcon fontSize="small" />
         </Avatar>
         <Stack sx={{ minWidth: 0 }}>
-          <Typography variant="body2" fontWeight={700} noWrap>
+          <Typography variant="body2" noWrap sx={{
+            fontWeight: 700
+          }}>
             {t(REPORT_TARGET_KEY[r.target_type])}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" noWrap sx={{
+            color: "text.secondary"
+          }}>
             {r.target_caption}
           </Typography>
         </Stack>

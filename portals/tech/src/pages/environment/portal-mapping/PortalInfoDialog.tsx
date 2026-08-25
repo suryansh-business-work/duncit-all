@@ -32,13 +32,17 @@ export default function PortalInfoDialog({ row, onClose }: Readonly<Props>) {
     <Dialog open={!!row} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
         {row?.portal.name} — assigned configs
-        <Typography variant="body2" color="text.secondary">{row?.portal.key}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{row?.portal.key}</Typography>
       </DialogTitle>
       <DialogContent dividers>
         {Array.from(groups.entries()).map(([category, entries], idx) => (
           <Box key={category}>
             {idx > 0 && <Divider sx={{ my: 1 }} />}
-            <Typography variant="overline" color="text.secondary">{category}</Typography>
+            <Typography variant="overline" sx={{
+              color: "text.secondary"
+            }}>{category}</Typography>
             <List dense disablePadding>
               {entries.map((entry) => (
                 <ListItem key={entry.id} disableGutters>

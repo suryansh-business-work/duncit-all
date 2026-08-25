@@ -82,11 +82,17 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
   };
 
   return (
-    <Drawer anchor="right" open={!!portal} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
+    <Drawer anchor="right" open={!!portal} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 420 } } }
+    }}>
       <Stack sx={{ height: '100%' }}>
         <Box sx={{ p: 2 }}>
-          <Typography variant="h6" fontWeight={800}>{portal?.name}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h6" sx={{
+            fontWeight: 800
+          }}>{portal?.name}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Select which environment entries are assigned to this portal.
           </Typography>
         </Box>
@@ -98,12 +104,14 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
             placeholder={t('tech.environment.searchConfigs')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }
             }}
           />
         </Box>
@@ -113,7 +121,14 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
           ) : (
             grouped.map(([cat, list]) => (
               <Box key={cat}>
-                <Typography variant="overline" color="text.secondary" sx={{ px: 2, pt: 1.5, display: 'block' }}>{cat}</Typography>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: "text.secondary",
+                    px: 2,
+                    pt: 1.5,
+                    display: 'block'
+                  }}>{cat}</Typography>
                 <List dense disablePadding>
                   {list.map((e) => (
                     <ListItemButton key={e.id} onClick={() => toggle(e.id)}>
@@ -131,7 +146,13 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
           )}
         </Box>
         <Divider />
-        <Stack direction="row" spacing={1} sx={{ p: 2 }} justifyContent="flex-end">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            justifyContent: "flex-end",
+            p: 2
+          }}>
           <Button onClick={onClose} disabled={setState.loading}>{t('shell.common.cancel')}</Button>
           <Button variant="contained" onClick={save} disabled={setState.loading}>
             {setState.loading ? 'Saving…' : `Save (${selected.size})`}

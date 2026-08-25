@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import EditNoteIcon from '@mui/icons-material/EditNote';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useDraftRetentionDays, formatDateTime } from '../utils/dateFormat';
 import { STEP_TITLES } from './create-pod-page/create-pod';
@@ -57,7 +57,13 @@ export default function HostDraftsCard() {
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <EditNoteIcon color="primary" />
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             Draft pods
@@ -76,15 +82,27 @@ export default function HostDraftsCard() {
               <Stack
                 key={draft.id}
                 direction="row"
-                alignItems="center"
                 spacing={1}
-                sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}
-              >
+                sx={{
+                  alignItems: "center",
+                  p: 1.25,
+                  borderRadius: '16px',
+                  border: 1,
+                  borderColor: 'divider'
+                }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle2" fontWeight={700} noWrap>
+                  <Typography variant="subtitle2" noWrap sx={{
+                    fontWeight: 700
+                  }}>
                     {draft.pod_title || 'Untitled pod'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap display="block">
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{
+                      color: "text.secondary",
+                      display: "block"
+                    }}>
                     Step {Math.min((draft.step ?? 0) + 1, STEP_TITLES.length)}/{STEP_TITLES.length} · {stepLabel}
                     {formatWhen(draft.updated_at) ? ` · ${formatWhen(draft.updated_at)}` : ''}
                   </Typography>

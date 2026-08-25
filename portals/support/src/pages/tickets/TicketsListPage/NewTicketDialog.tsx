@@ -74,7 +74,9 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
             ))}
           </TextField>
           <Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Description
             </Typography>
             <DuncitRichTextInput value={bodyHtml} onChange={setBodyHtml} aiContext="support ticket description" />

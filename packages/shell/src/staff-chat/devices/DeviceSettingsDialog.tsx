@@ -62,7 +62,9 @@ export default function DeviceSettingsDialog({
           <DevicePicker label={t('shell.chat.devices.microphone')} devices={devices.mics} value={micId} onChange={onMic} />
 
           <Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.chat.devices.inputLevel')}
             </Typography>
             <LinearProgress
@@ -70,7 +72,9 @@ export default function DeviceSettingsDialog({
               value={level}
               sx={{ height: 8, borderRadius: 1, mt: 0.5 }}
             />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t(testing ? 'shell.chat.devices.saySomething' : 'shell.chat.devices.pressTest')}
             </Typography>
           </Box>

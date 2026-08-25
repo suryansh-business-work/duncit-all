@@ -58,7 +58,14 @@ export default function MeetingReasonForm({
         error={!!errors.reason}
         helperText={errors.reason?.message ?? helperText}
       />
-      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.75, color: 'text.secondary' }}>
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          mt: 0.75,
+          color: 'text.secondary'
+        }}>
         <AutoAwesomeIcon sx={{ fontSize: 14 }} />
         <Typography variant="caption">{labels.aiMonitoring}</Typography>
       </Stack>

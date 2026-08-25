@@ -79,14 +79,21 @@ export default function CompanionsDialog({
       <DialogTitle sx={{ fontWeight: 700 }}>{t('admin.companions.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {`Ticket ${ticketCode ?? ''} admits more than one person. Add the other ${required} to mark attendance.`}
           </Typography>
           {rows.map((row, index) => (
             // The index IS the identity: these are positional slots created from
             // a count, never reordered, added to or removed.
             <Stack key={`companion-${index}`} spacing={1}>
-              <Typography variant="caption" sx={{ fontWeight: 700 }} color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>
                 {`Person ${index + 1}`}
               </Typography>
               <TextField

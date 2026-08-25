@@ -40,10 +40,14 @@ const getFaqRowId = (row: FaqRow) => row.id;
 
 const renderQuestion = (row: FaqRow) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} noWrap component="div">
+    <Typography variant="body2" noWrap component="div" sx={{
+      fontWeight: 600
+    }}>
       {row.question}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap component="div">
+    <Typography variant="caption" noWrap component="div" sx={{
+      color: "text.secondary"
+    }}>
       {row.answer}
     </Typography>
   </Box>

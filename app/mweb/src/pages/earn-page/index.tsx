@@ -54,7 +54,12 @@ export default function EarnPage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           {t('mweb.earn.earnWithDuncit')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           {t('mweb.earn.subtitle')}
         </Typography>
       </Stack>

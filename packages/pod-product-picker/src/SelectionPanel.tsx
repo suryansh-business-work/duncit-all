@@ -81,8 +81,16 @@ export default function SelectionPanel({
             )}
           </Box>
           <Typography variant="h6">{product.product_name}</Typography>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-            <Typography variant="subtitle1" color="primary.main">
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1
+            }}>
+            <Typography variant="subtitle1" sx={{
+              color: "primary.main"
+            }}>
               {t('podProduct.perUnit', { vars: { cost: formatMoney(product.unit_cost) } })}
             </Typography>
             <Chip
@@ -95,7 +103,9 @@ export default function SelectionPanel({
               }
             />
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {product.description?.trim() ||
               product.short_description?.trim() ||
               t('podProduct.noDescription')}
@@ -106,7 +116,12 @@ export default function SelectionPanel({
           <InfoLine label={t('podProduct.unitType')} value={product.unit_type} />
           <InfoLine label={t('podProduct.weightVolume')} value={product.weight_volume} />
           {product.tags && product.tags.length > 0 && (
-            <Stack direction="row" flexWrap="wrap" gap={0.5}>
+            <Stack
+              direction="row"
+              sx={{
+                flexWrap: "wrap",
+                gap: 0.5
+              }}>
               {product.tags.map((tag) => (
                 <Chip key={tag} size="small" variant="outlined" label={tag} />
               ))}
@@ -123,7 +138,9 @@ export default function SelectionPanel({
         <Typography variant="subtitle2" color={product ? 'text.primary' : 'text.disabled'}>
           {t('podProduct.quantity')}
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <IconButton
             aria-label={t('podProduct.decreaseQty')}
             onClick={() => step(-1)}
@@ -145,7 +162,9 @@ export default function SelectionPanel({
           </IconButton>
         </Stack>
         {product && atMax && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('podProduct.maxQtyHint', { vars: { count: stock } })}
           </Typography>
         )}

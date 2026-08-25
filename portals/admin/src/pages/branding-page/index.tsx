@@ -36,10 +36,14 @@ function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Reado
     <Accordion defaultExpanded={defaultExpanded} disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Box>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {subtitle}
           </Typography>
         </Box>
@@ -89,11 +93,15 @@ export default function BrandingPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <BrandingWatermarkIcon color="primary" />
         <Box>
           <Typography variant="h5">{t('admin.branding.title')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Identity, per-platform assets (favicon · logo · splash) — every app reads these live,
             nothing is hard-coded.
           </Typography>
@@ -151,7 +159,9 @@ export default function BrandingPage() {
       {opError && <Alert severity="error">{opError}</Alert>}
 
       <Divider />
-      <Stack direction="row" justifyContent="flex-end">
+      <Stack direction="row" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button variant="contained" size="large" onClick={submit} disabled={busy}>
           {busy ? 'Saving…' : 'Save Branding'}
         </Button>

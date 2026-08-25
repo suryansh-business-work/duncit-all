@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { useQuery } from '@apollo/client';
 import { Badge, IconButton, Tooltip } from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import { readToken, useShellRuntime } from '../lib/runtime';
 import { STAFF_UNREAD } from './queries';
 import { useStaffSocket } from './useStaffSocket';

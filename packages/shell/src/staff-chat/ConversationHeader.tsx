@@ -64,10 +64,13 @@ export default function ConversationHeader({
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
-      sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
-    >
+      sx={{
+        alignItems: "center",
+        p: 1,
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
       <IconButton size="small" onClick={onBack} aria-label={t('shell.chat.header.back')}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>
@@ -81,11 +84,18 @@ export default function ConversationHeader({
         <Typography variant="subtitle2" noWrap>
           {peer.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap component="div">
+        <Typography variant="caption" noWrap component="div" sx={{
+          color: "text.secondary"
+        }}>
           {presenceLine(status, lastSeen, t)}
         </Typography>
       </Box>
-      <Stack direction="row" alignItems="center" sx={{ flexShrink: 0 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          flexShrink: 0
+        }}>
         <Tooltip title={t('shell.chat.header.audioCall')}>
           <IconButton
             size="small"

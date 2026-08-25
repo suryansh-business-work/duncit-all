@@ -61,11 +61,21 @@ export default function BackoutRefundPage() {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <RequestQuoteIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>{t('finance.backoutRefund.backoutRefunds')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>{t('finance.backoutRefund.backoutRefunds')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Every Backout request with its lifecycle status — refunds unlock once the spot is filled.
           </Typography>
         </Box>

@@ -51,16 +51,15 @@ export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: s
         )}
         <Stack
           direction="row"
-          alignItems="flex-end"
-          justifyContent="space-between"
           sx={{
+            alignItems: "flex-end",
+            justifyContent: "space-between",
             position: 'relative',
             height: '100%',
             p: 2,
             background: 'rgba(0,0,0,0.45)',
-            color: '#fff',
-          }}
-        >
+            color: '#fff'
+          }}>
           <Box>
             <Typography sx={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>{t('mweb.common.venues')}</Typography>
             <Typography sx={{ fontSize: 12.5, fontWeight: 700, opacity: 0.85 }}>

@@ -19,19 +19,29 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
   const { t } = useTranslation();
   return (
     <Box sx={{ mb: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
         <Typography variant="caption" sx={{ fontWeight: 700 }}>
           Selected
         </Typography>
         <Chip size="small" label={`${urls.length} of ${max}`} color={urls.length ? 'primary' : 'default'} />
         {urls.length > 0 && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             The first one is the cover.
           </Typography>
         )}
       </Stack>
       {urls.length === 0 ? (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Pick up to {max} — from your device, from Pexels, or both.
         </Typography>
       ) : (

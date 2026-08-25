@@ -27,7 +27,15 @@ export default function MjmlEditorPane({ value, onChange, onValidate, templateId
   const [libOpen, setLibOpen] = useState(false);
   return (
     <Box sx={{ flex: 1, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          p: 1,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <CodeIcon fontSize="small" />
         <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.mjmlSource')}</Typography>
         <Tooltip title={t('crm.emailTemplates.formatAndTidy')}>

@@ -24,7 +24,11 @@ export default function MyCardsTab() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -41,7 +45,9 @@ export default function MyCardsTab() {
       ))}
       {gifted.length > 0 && (
         <>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.giftCards.giftedHeading')}
           </Typography>
           {gifted.map((card) => (

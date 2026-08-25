@@ -4,7 +4,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import OutboxIcon from '@mui/icons-material/Outbox';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import DoDisturbOnIcon from '@mui/icons-material/DoDisturbOn';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import type { EmailLogDashboardData } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
@@ -14,7 +14,9 @@ export default function HeadlineTiles({ data }: Readonly<{ data: EmailLogDashboa
   const { t } = useTranslation();
   const refusedColor = data.partially_refused > 0 ? 'warning.main' : 'text.secondary';
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} flexWrap="wrap" useFlexGap>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       <StatCard
         sx={TILE_SX}
         icon={<GroupsIcon fontSize="small" />}

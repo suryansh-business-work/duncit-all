@@ -18,14 +18,18 @@ function RewardRow({ reward }: Readonly<{ reward: LeaderboardReward }>) {
           vars: { from: reward.rank_from, to: reward.rank_to },
         });
   return (
-    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+    <Stack direction="row" spacing={1.5} sx={{
+      alignItems: "flex-start"
+    }}>
       <Chip size="small" label={rankLabel} sx={{ fontWeight: 700 }} />
       <Stack spacing={0.25} sx={{ minWidth: 0 }}>
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
           {reward.title}
         </Typography>
         {reward.description !== '' && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {reward.description}
           </Typography>
         )}
@@ -38,7 +42,12 @@ function RewardGroup({ title, rewards }: Readonly<{ title: string; rewards: Lead
   if (rewards.length === 0) return null;
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.6 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          letterSpacing: 0.6
+        }}>
         {title}
       </Typography>
       {rewards.map((reward) => (
@@ -59,19 +68,25 @@ export default function RewardsCard({ config, category }: Readonly<Props>) {
     <Card variant="outlined">
       <CardContent>
         <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <CardGiftcardIcon fontSize="small" color="primary" />
             <Stack spacing={0.25}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                 {t('mweb.leaderboard.rewardsTitle')}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('mweb.leaderboard.rewardsSubtitle')}
               </Typography>
             </Stack>
           </Stack>
           {rewards.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.leaderboard.rewardsEmpty')}
             </Typography>
           ) : (

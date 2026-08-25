@@ -36,7 +36,9 @@ export default function UrlButtonVariant({
 }: Readonly<Props>) {
   return (
     <Stack spacing={0.5}>
-      <Stack direction="row" spacing={1} alignItems="flex-start">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "flex-start"
+      }}>
         <TextField
           label={label}
           value={value}

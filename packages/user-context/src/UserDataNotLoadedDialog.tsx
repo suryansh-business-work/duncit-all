@@ -31,18 +31,22 @@ export default function UserDataNotLoadedDialog({
   return (
     <Dialog
       open={open}
-      disableEscapeKeyDown
-      // No outside-click dismissal: the app is unusable without user data, so
-      // we don't let the user accidentally dismiss the recovery prompt.
+      // Neither outside-click nor Escape dismisses this: the app is unusable
+      // without user data, so the recovery prompt cannot be waved away. MUI 9
+      // removed disableEscapeKeyDown, so Escape is refused here by reason.
       onClose={(_e, reason) => {
-        if (reason === 'backdropClick') return;
+        if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
       }}
-      PaperProps={{ sx: { borderRadius: 2.5, maxWidth: 420 } }}
+      slotProps={{
+        paper: { sx: { borderRadius: 2.5, maxWidth: 420 } }
+      }}
     >
       <DialogTitle sx={{ fontWeight: 900, pb: 1 }}>{t('session.notLoaded.title')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('session.notLoaded.body')}
           </Typography>
           {errorMessage && (
@@ -50,7 +54,9 @@ export default function UserDataNotLoadedDialog({
               {errorMessage}
             </Alert>
           )}
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('session.notLoaded.signOutHint')}
           </Typography>
         </Stack>

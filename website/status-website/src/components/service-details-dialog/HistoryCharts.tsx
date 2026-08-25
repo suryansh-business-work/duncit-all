@@ -55,7 +55,9 @@ function UptimeBar({ daily }: Readonly<{ daily: DailyUptime[] }>) {
     },
   };
   return (
-    <Box height={130}>
+    <Box sx={{
+      height: 130
+    }}>
       <Bar data={data} options={options} />
     </Box>
   );
@@ -92,7 +94,9 @@ function LatencyLine({ points }: Readonly<{ points: HistoryPoint[] }>) {
     },
   };
   return (
-    <Box height={150}>
+    <Box sx={{
+      height: 150
+    }}>
       <Line data={data} options={options} />
     </Box>
   );
@@ -118,7 +122,12 @@ export default function HistoryCharts({ history, failed }: Readonly<HistoryChart
   const hasLatency = history.points.some((point) => point.latency_ms !== null);
   if (!hasDaily && !hasLatency) {
     return (
-      <Typography variant="body2" color="text.secondary" py={1}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          py: 1
+        }}>
         {t('status.detail.noHistory')}
       </Typography>
     );
@@ -128,7 +137,9 @@ export default function HistoryCharts({ history, failed }: Readonly<HistoryChart
     <Stack spacing={2}>
       {hasDaily && (
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('status.detail.dailyUptime')}
           </Typography>
           <UptimeBar daily={history.daily} />
@@ -136,13 +147,17 @@ export default function HistoryCharts({ history, failed }: Readonly<HistoryChart
       )}
       {hasLatency ? (
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('status.detail.latency24h')}
           </Typography>
           <LatencyLine points={history.points} />
         </Box>
       ) : (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('status.detail.noLatency')}
         </Typography>
       )}

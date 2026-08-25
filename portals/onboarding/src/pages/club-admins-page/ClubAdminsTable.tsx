@@ -22,10 +22,17 @@ const getRowId = (row: ClubAdminRow) => row.id;
 
 const renderPerson = (row: ClubAdminRow) => (
   <Box>
-    <Typography variant="body2" fontWeight={700}>
+    <Typography variant="body2" sx={{
+      fontWeight: 700
+    }}>
       {row.full_name || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" display="block">
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {row.email || row.phone || '—'}
     </Typography>
   </Box>
@@ -42,7 +49,14 @@ const renderCategory = (row: ClubAdminRow) => (
 const renderClubs = (row: ClubAdminRow) => {
   if (row.assigned_clubs.length === 0) return <Typography variant="body2">—</Typography>;
   return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ py: 0.5 }}>
+    <Stack
+      direction="row"
+      spacing={0.5}
+      useFlexGap
+      sx={{
+        flexWrap: "wrap",
+        py: 0.5
+      }}>
       {row.assigned_clubs.map((club) => (
         <Chip key={club.id} size="small" variant="outlined" label={club.club_name} />
       ))}

@@ -45,12 +45,20 @@ export default function ScanConfirmationDialog({ result, text, onDone }: Readonl
   return (
     <Dialog open={!!result} onClose={onDone} fullWidth maxWidth="xs">
       <DialogContent>
-        <Stack spacing={1.5} alignItems="center" sx={{ textAlign: 'center', pt: 1 }}>
+        <Stack
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            textAlign: 'center',
+            pt: 1
+          }}>
           <CheckCircleIcon color="success" sx={{ fontSize: 56 }} />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
             {labels.attendanceMarked}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {text}
           </Typography>
         </Stack>

@@ -60,20 +60,30 @@ export function AgentLauncher() {
         anchor="right"
         open={open}
         onClose={close}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 420 }, display: 'flex', flexDirection: 'column' } }}
+        slotProps={{
+          paper: { sx: { width: { xs: '100%', sm: 420 }, display: 'flex', flexDirection: 'column' } }
+        }}
       >
         <Stack
           direction="row"
-          alignItems="center"
           spacing={1}
-          sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}
-        >
+          sx={{
+            alignItems: "center",
+            px: 2,
+            py: 1.5,
+            borderBottom: 1,
+            borderColor: 'divider'
+          }}>
           <AutoAwesomeIcon fontSize="small" color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 700
+            }}>
               {t('shell.agent.title')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.agent.subtitle')}
             </Typography>
           </Box>

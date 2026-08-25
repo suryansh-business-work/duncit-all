@@ -29,7 +29,11 @@ const movementColor: Record<string, 'success' | 'warning' | 'error' | 'default' 
 export default function StockMovementTimeline({ movements, loading }: Readonly<StockMovementTimelineProps>) {
   const { t } = useTranslation();
   if (loading && movements.length === 0) {
-    return <Typography variant="body2" color="text.secondary">{t('products.activity.loadingMovements')}</Typography>;
+    return (
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('products.activity.loadingMovements')}</Typography>
+    );
   }
   if (movements.length === 0) {
     return <Alert severity="info">{t('products.activity.noMovements')}</Alert>;
@@ -51,7 +55,9 @@ export default function StockMovementTimeline({ movements, loading }: Readonly<S
             <Typography variant="body2">
               {m.quantity > 0 ? `+${m.quantity}` : m.quantity} • Balance after: {m.balance_after}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {formatDateTime(m.created_at)} · {m.user_name || 'system'}
               {m.reason ? ` · ${m.reason}` : ''}
             </Typography>

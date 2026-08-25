@@ -161,7 +161,9 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" fontWeight={950}>{t('partners.listProductsPage.yourListedProducts')}</Typography>
+          <Typography variant="h6" sx={{
+            fontWeight: 950
+          }}>{t('partners.listProductsPage.yourListedProducts')}</Typography>
           {message && (
             <Alert severity={/deleted|updated|submitted/.test(message) ? 'success' : 'error'}>{message}</Alert>
           )}

@@ -115,7 +115,12 @@ interface DayHeaderProps {
 function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderProps>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center">
+    <Stack
+      direction="row"
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
       <Typography
         variant="body2"
         sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
@@ -144,7 +149,13 @@ interface DayBadgesProps {
 function DayBadges({ bucket, isSelected }: Readonly<DayBadgesProps>) {
   if (!bucket) return null;
   return (
-    <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ rowGap: 0.25 }}>
+    <Stack
+      direction="row"
+      spacing={0.25}
+      sx={{
+        flexWrap: "wrap",
+        rowGap: 0.25
+      }}>
       <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
       <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.light" fg="info.contrastText" />
       <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />

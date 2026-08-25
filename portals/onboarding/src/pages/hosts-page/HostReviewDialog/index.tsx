@@ -83,11 +83,27 @@ export default function HostReviewDialog({
     // picker's other host is already md for the same reason.
     <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ display: 'block', lineHeight: 1 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 800,
+            display: 'block',
+            lineHeight: 1
+          }}>
           Review host
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" fontWeight={900} sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 900,
+              flex: 1,
+              minWidth: 0
+            }}>
             {active.full_name || 'Host'}
           </Typography>
           <StatusChip status={active.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
@@ -109,7 +125,12 @@ export default function HostReviewDialog({
           />
 
           <Divider textAlign="left">
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               Earn with Duncit application
             </Typography>
           </Divider>

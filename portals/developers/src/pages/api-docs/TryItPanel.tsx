@@ -77,14 +77,18 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
         {busy ? t('developers.tryIt.sending') : t('developers.tryIt.send')}
       </Button>
       {!apiKey.trim() && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('developers.tryIt.needKey')}
         </Typography>
       )}
       {error && <Alert severity="error">{error}</Alert>}
       {status !== null && (
         <Box>
-          <Typography variant="caption" fontWeight={900} color={status < 400 ? 'success.main' : 'error.main'}>
+          <Typography variant="caption" color={status < 400 ? 'success.main' : 'error.main'} sx={{
+            fontWeight: 900
+          }}>
             {t('developers.tryIt.status', { vars: { status } })}
           </Typography>
           <Box

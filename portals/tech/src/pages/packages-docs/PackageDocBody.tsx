@@ -43,25 +43,48 @@ const CELL_SX = { border: 1, borderColor: 'divider', px: 1.25, py: 0.75, textAli
 
 const COMPONENTS: Components = {
   h1: ({ children }) => (
-    <Typography variant="h5" fontWeight={700} sx={{ mt: 3, mb: 1 }}>
+    <Typography
+      variant="h5"
+      sx={{
+        fontWeight: 700,
+        mt: 3,
+        mb: 1
+      }}>
       {children}
     </Typography>
   ),
   h2: ({ children }) => (
     <>
       <Divider sx={{ mt: 4, mb: 2 }} />
-      <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          mb: 1
+        }}>
         {children}
       </Typography>
     </>
   ),
   h3: ({ children }) => (
-    <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 2.5, mb: 0.75 }}>
+    <Typography
+      variant="subtitle1"
+      sx={{
+        fontWeight: 700,
+        mt: 2.5,
+        mb: 0.75
+      }}>
       {children}
     </Typography>
   ),
   h4: ({ children }) => (
-    <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 2, mb: 0.5 }}>
+    <Typography
+      variant="subtitle2"
+      sx={{
+        fontWeight: 700,
+        mt: 2,
+        mb: 0.5
+      }}>
       {children}
     </Typography>
   ),

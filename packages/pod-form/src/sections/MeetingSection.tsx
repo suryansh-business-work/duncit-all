@@ -87,21 +87,23 @@ export default function MeetingSection() {
               placeholder="https://meet.google.com/..."
               error={!!fieldState.error || !!generateError}
               helperText={fieldState.error?.message || generateError || 'Visible to joined members only.'}
-              InputProps={{
-                endAdornment: canAutoGenerate ? (
-                  <InputAdornment position="end">
-                    <Tooltip title={t('podForm.meetingSection.autoGenerateMeetingLink')}>
-                      <Button
-                        size="small"
-                        onClick={handleAutoGenerate}
-                        disabled={generating}
-                        startIcon={generating ? <CircularProgress size={14} /> : <AutoFixHighIcon fontSize="small" />}
-                      >
-                        {generating ? 'Generating…' : 'Generate'}
-                      </Button>
-                    </Tooltip>
-                  </InputAdornment>
-                ) : undefined,
+              slotProps={{
+                input: {
+                  endAdornment: canAutoGenerate ? (
+                    <InputAdornment position="end">
+                      <Tooltip title={t('podForm.meetingSection.autoGenerateMeetingLink')}>
+                        <Button
+                          size="small"
+                          onClick={handleAutoGenerate}
+                          disabled={generating}
+                          startIcon={generating ? <CircularProgress size={14} /> : <AutoFixHighIcon fontSize="small" />}
+                        >
+                          {generating ? 'Generating…' : 'Generate'}
+                        </Button>
+                      </Tooltip>
+                    </InputAdornment>
+                  ) : undefined,
+                }
               }}
             />
           )}

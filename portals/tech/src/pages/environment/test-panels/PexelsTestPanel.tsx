@@ -29,11 +29,15 @@ export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Searches Pexels with this API key and previews the results.
       </Typography>
       <Stack direction="row" spacing={1}>
-        <TextField label={t('tech.environment.searchQuery')} value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" autoComplete="off" inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }} />
+        <TextField label={t('tech.environment.searchQuery')} value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" autoComplete="off" slotProps={{
+          htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
+        }} />
         <Button startIcon={<SearchIcon />} variant="contained" onClick={search} disabled={loading}>
           {loading ? '…' : 'Load'}
         </Button>

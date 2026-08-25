@@ -121,7 +121,9 @@ export default function DocumentsListPage() {
               minRows={2}
             />
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Content
               </Typography>
               <DuncitRichTextInput value={content} onChange={setContent} minHeight={220} aiContext="legal document" />

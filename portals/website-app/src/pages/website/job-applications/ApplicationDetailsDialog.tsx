@@ -43,7 +43,9 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <span>{application.role_title}</span>
           <StatusChip status={application.status} colorMap={JOB_APPLICATION_STATUS_COLOR} />
         </Stack>

@@ -25,7 +25,9 @@ export default function HostHealthCard({ health, podsCompleted }: Readonly<Props
 
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 56,
@@ -43,18 +45,29 @@ export default function HostHealthCard({ health, podsCompleted }: Readonly<Props
           {health.total_score}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 900
+          }}>
             Profile health
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {BAND_HINT[health.band]}
           </Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
-          <Typography variant="h6" fontWeight={950}>
+          <Typography variant="h6" sx={{
+            fontWeight: 950
+          }}>
             {podsCompleted}
           </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 800
+            }}>
             pods settled
           </Typography>
         </Box>

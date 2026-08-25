@@ -133,7 +133,9 @@ export default function CatalogBrandProductsPage() {
         }
       />
 
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Every product this brand owns, including listings still awaiting review. Approving or
         denying a listing stays in Brands &amp; Products Review.
       </Typography>

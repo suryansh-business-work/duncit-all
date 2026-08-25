@@ -84,7 +84,12 @@ export default function AdjustHealthDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 900 }}>
         Adjust {subjectType === 'USER' ? 'user' : 'venue'} health
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block'
+          }}>
           {subjectLabel} · current {currentScore}/100
         </Typography>
       </DialogTitle>
@@ -108,11 +113,13 @@ export default function AdjustHealthDialog({
           <TextField
             label={t('onboarding.userDetails.magnitude')}
             type="number"
-            inputProps={{ min: 1, max: 100, step: 1 }}
             size="small"
             value={magnitude}
             onChange={(e) => setMagnitude(Number(e.target.value) || 0)}
             helperText={`Applied as ${deltaLabel}. Projected score: ${projected}/100.`}
+            slotProps={{
+              htmlInput: { min: 1, max: 100, step: 1 }
+            }}
           />
 
           <TextField
@@ -121,8 +128,10 @@ export default function AdjustHealthDialog({
             minRows={3}
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            inputProps={{ maxLength: 500 }}
             helperText={`${remark.length}/500 · The user sees this when they tap the meter.`}
+            slotProps={{
+              htmlInput: { maxLength: 500 }
+            }}
           />
 
           {error && <Alert severity="error">{error}</Alert>}

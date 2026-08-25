@@ -16,17 +16,29 @@ export default function SpendByCategory({
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle2" fontWeight={700}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            justifyContent: "space-between",
+            mb: 1.5
+          }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             Spend by category
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             messages · cost
           </Typography>
         </Stack>
 
         {rows.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Nothing sent in this window.
           </Typography>
         )}
@@ -34,11 +46,15 @@ export default function SpendByCategory({
         <Stack spacing={1.5}>
           {rows.map((row) => (
             <Box key={row.category || 'uncategorised'}>
-              <Stack direction="row" justifyContent="space-between" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{
+                justifyContent: "space-between"
+              }}>
                 <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                   {categoryLabel(row.category)}
                 </Typography>
-                <Typography variant="body2" fontWeight={700}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {`${row.messages.toLocaleString()} · ${waMoney(row.cost, currency)}`}
                 </Typography>
               </Stack>

@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -52,14 +53,23 @@ export default function FilterSidebar({ state, onChange, options }: Readonly<Pro
     <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }} data-testid="audience-filters">
       <Stack
         direction="row"
-        alignItems="center"
         spacing={1}
-        sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}
-      >
+        sx={{
+          alignItems: "center",
+          px: 2,
+          py: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <Badge badgeContent={count} color="primary">
           <FilterListIcon fontSize="small" />
         </Badge>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ flex: 1 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            flex: 1
+          }}>
           {t('marketing.targetAudience.filters')}
         </Typography>
         <Button size="small" disabled={count === 0} onClick={() => onChange(EMPTY_FILTERS)}>
@@ -70,7 +80,9 @@ export default function FilterSidebar({ state, onChange, options }: Readonly<Pro
       {sections(t).map(({ title, Body }, index) => (
         <Accordion key={title} defaultExpanded={index === 0} disableGutters elevation={0} square>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {title}
             </Typography>
           </AccordionSummary>

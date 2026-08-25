@@ -32,7 +32,15 @@ export default function CalendarMonth({ cursor, events, onEvent }: Readonly<Prop
     <Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
         {WEEKDAYS.map((d) => (
-          <Typography key={d} variant="caption" color="text.secondary" sx={{ p: 0.5, fontWeight: 700, textAlign: 'center' }}>{d}</Typography>
+          <Typography
+            key={d}
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              p: 0.5,
+              fontWeight: 700,
+              textAlign: 'center'
+            }}>{d}</Typography>
         ))}
       </Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: 1, borderLeft: 1, borderColor: 'divider' }}>
@@ -57,7 +65,9 @@ export default function CalendarMonth({ cursor, events, onEvent }: Readonly<Prop
               <Stack spacing={0.25}>
                 {dayEvents.slice(0, 3).map((e) => <EventPill key={e.id} event={e} onClick={onEvent} />)}
                 {dayEvents.length > 3 && (
-                  <Typography variant="caption" color="text.secondary">+{dayEvents.length - 3} more</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>+{dayEvents.length - 3} more</Typography>
                 )}
               </Stack>
             </Box>

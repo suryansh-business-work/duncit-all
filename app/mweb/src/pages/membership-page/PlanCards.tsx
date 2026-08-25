@@ -23,7 +23,14 @@ function PlanCard({ plan, ctaHint }: Readonly<{ plan: MembershipPlanData; ctaHin
       }}
     >
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <Typography
             variant="overline"
             sx={{ fontWeight: 800, letterSpacing: 1, color: accent ?? 'primary.main' }}
@@ -33,16 +40,29 @@ function PlanCard({ plan, ctaHint }: Readonly<{ plan: MembershipPlanData; ctaHin
           {plan.badge_label && <Chip size="small" label={plan.badge_label} />}
         </Stack>
 
-        <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 700,
+            lineHeight: 1.1
+          }}>
           {plan.price_label}
         </Typography>
         {plan.price_note && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {plan.price_note}
           </Typography>
         )}
         {plan.tagline && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, flex: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5,
+              flex: 1
+            }}>
             {plan.tagline}
           </Typography>
         )}

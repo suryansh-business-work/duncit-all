@@ -46,10 +46,17 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
     <Stack spacing={2}>
       <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
         <Stack spacing={1.25}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Call support now
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {target?.available
               ? `Dial ${target.phone}. We will answer in seconds.`
               : 'Support phone is not configured yet — please request a callback below.'}
@@ -70,10 +77,17 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
         <Stack spacing={1.5}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Request a callback
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             We will call you back on your registered phone number.
           </Typography>
           <TextField
@@ -83,7 +97,9 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             size="small"
             multiline
             minRows={2}
-            inputProps={{ maxLength: 500 }}
+            slotProps={{
+              htmlInput: { maxLength: 500 }
+            }}
           />
           {error && (
             <Alert severity="error" onClose={() => setError(null)}>

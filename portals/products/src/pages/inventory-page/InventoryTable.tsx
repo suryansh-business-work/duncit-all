@@ -3,8 +3,8 @@ import { Avatar, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/mater
 import EditIcon from '@mui/icons-material/Edit';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
@@ -35,11 +35,15 @@ const renderCover = (p: InventoryProductRow) => (
 
 const renderProduct = (p: InventoryProductRow) => (
   <Stack sx={{ lineHeight: 1.2 }} component="span">
-    <Typography variant="body2" fontWeight={600} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 600
+    }}>
       {p.product_name}
     </Typography>
     {p.brand_name && (
-      <Typography variant="caption" color="text.secondary" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {p.brand_name}
       </Typography>
     )}
@@ -84,30 +88,32 @@ export default function InventoryTable({
       const paused = p.is_active === false;
       const pauseLabel = paused ? 'Reactivate' : 'Temporarily deactivate';
       return (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(p)}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        {p.status !== 'ARCHIVED' && (
-          <Tooltip title={pauseLabel}>
-            <IconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(p)}>
-              {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
+        <Stack direction="row" component="span" sx={{
+          justifyContent: "flex-end"
+        }}>
+          <Tooltip title={t('shell.common.edit')}>
+            <IconButton size="small" onClick={() => onEdit(p)}>
+              <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-        )}
-        <Tooltip title={t('products.inventory.archive')}>
-          <IconButton size="small" onClick={() => onArchive(p)}>
-            <ArchiveIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={t('products.inventory.deletePermanently')}>
-          <IconButton size="small" color="error" onClick={() => onDelete(p)}>
-            <DeleteForeverIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+          {p.status !== 'ARCHIVED' && (
+            <Tooltip title={pauseLabel}>
+              <IconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(p)}>
+                {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title={t('products.inventory.archive')}>
+            <IconButton size="small" onClick={() => onArchive(p)}>
+              <ArchiveIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t('products.inventory.deletePermanently')}>
+            <IconButton size="small" color="error" onClick={() => onDelete(p)}>
+              <DeleteForeverIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
       );
     };
     return [

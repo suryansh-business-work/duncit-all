@@ -8,6 +8,7 @@
 // needs one to get its page.
 import PageLayout from '../../layouts/PageLayout.astro';
 import { fetchPolicies } from '../../lib/site-data';
+import { getTranslator } from '../../lib/i18n';
 
 export async function getStaticPaths() {
   const policies = await fetchPolicies();
@@ -17,18 +18,20 @@ export async function getStaticPaths() {
   }));
 }
 
+const { t } = await getTranslator();
 const { slug } = Astro.params;
 const { title } = Astro.props;
 ---
 
 <PageLayout
-  title={title ?? 'Policy'}
-  eyebrow="Policy Hub"
-  heading={title ?? 'Policy'}
-  intro="Published live from the Duncit Legal team."
+  title={title ?? t('website.main.policyDetail.fallbackTitle')}
+  eyebrow={t('website.main.policyDetail.eyebrow')}
+  heading={title ?? t('website.main.policyDetail.fallbackTitle')}
+  intro={t('website.main.policyDetail.intro')}
   heroImage="https://images.pexels.com/photos/7654588/pexels-photo-7654588.jpeg?auto=compress&cs=tinysrgb&w=1600"
 >
-  <div id="policyBody" data-policy-slug={slug}>
+  <div id="policyBody"
+    data-copy={JSON.stringify({ notFound: t('website.main.policyDetail.notFound'), empty: t('website.main.policyDetail.empty'), error: t('website.main.policyDetail.error') })} data-policy-slug={slug}>
     <div class="not-prose space-y-3" aria-hidden="true">
       <div class="skeleton h-8 w-2/3"></div>
       <div class="skeleton h-4"></div>
@@ -48,6 +51,8 @@ const { title } = Astro.props;
   import { urlConfigs } from '../../config/url-configs';
 
   const body = document.getElementById('policyBody');
+  // Handed over by the markup — a module script cannot read Astro frontmatter.
+  const COPY = JSON.parse(body?.dataset.copy ?? '{}');
   // The slug comes from the page itself now, not from the query string.
   const slug = body?.dataset.policySlug ?? '';
 
@@ -70,17 +75,16 @@ const { title } = Astro.props;
       const json = await res.json();
       const policy = json?.data?.policyBySlug;
       if (!policy) {
-        body.innerHTML =
-          '<p>This policy could not be found. It may have been renamed or retired.</p>';
+        body.innerHTML = `<p>${COPY.notFound}</p>`;
         return;
       }
       document.title = `${policy.title} — Duncit`;
       const heading = document.querySelector('[data-page-heading]') ?? document.querySelector('h1');
       if (heading) heading.textContent = policy.title;
       // Policy content is trusted HTML authored by our own Legal portal editor.
-      body.innerHTML = policy.content || '<p>No content published yet.</p>';
+      body.innerHTML = policy.content || `<p>${COPY.empty}</p>`;
     } catch {
-      body.innerHTML = '<p>The policy could not be loaded right now. Please try again later.</p>';
+      body.innerHTML = `<p>${COPY.error}</p>`;
     }
   }
 

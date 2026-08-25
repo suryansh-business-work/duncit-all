@@ -48,11 +48,20 @@ export default function RecipientMessageDialog({
       {recipient && (
         <>
           <DialogTitle sx={{ pb: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap"
+              }}>
               <span>{recipient.name || recipient.destination}</span>
               <StatusChip status={recipient.status} colorMap={WA_RECIPIENT_STATUS_COLORS} />
             </Stack>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {recipient.destination}
             </Typography>
           </DialogTitle>
@@ -66,7 +75,9 @@ export default function RecipientMessageDialog({
                   <Alert severity="warning">
                     {t('marketingWhatsapp.logs.messageNotDelivered')}
                   </Alert>
-                  <Typography variant="overline" color="text.secondary">
+                  <Typography variant="overline" sx={{
+                    color: "text.secondary"
+                  }}>
                     {t('marketingWhatsapp.logs.variablesTitle')}
                   </Typography>
                   <SentVariables params={recipient.template_params} body="" />

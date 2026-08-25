@@ -48,10 +48,14 @@ export default function OpenAiLogsPage() {
   return (
     <Box>
       <Stack sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           {t('ai.openAiLogs.title')}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('ai.openAiLogs.subtitle')}
         </Typography>
       </Stack>

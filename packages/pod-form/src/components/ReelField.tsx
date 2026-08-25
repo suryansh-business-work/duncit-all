@@ -1,6 +1,6 @@
 import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -77,7 +77,13 @@ export default function ReelField({ value, onChange, error, onPickVideo }: Reado
 
   return (
     <Box sx={{ mb: 2 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">{t('podForm.reelField.podReel')}</Typography>
         {onPickVideo && (
           <Button size="small" startIcon={<VideocamIcon />} onClick={pick}>

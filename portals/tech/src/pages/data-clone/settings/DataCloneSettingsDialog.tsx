@@ -85,7 +85,9 @@ export default function DataCloneSettingsDialog({ open, onClose }: Readonly<Prop
       <DialogTitle>{t('tech.dataClone.settingsTitle')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dataClone.settingsHint')}
           </Typography>
 

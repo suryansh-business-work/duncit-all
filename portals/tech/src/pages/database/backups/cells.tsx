@@ -1,7 +1,7 @@
 import { Box, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { formatBytes, formatDateTime } from '../../server/format';
 import {
@@ -55,7 +55,7 @@ const TRIGGER_COLOR: Record<BackupTrigger, 'default' | 'primary' | 'secondary'> 
  * A backup that failed is the one row on this page that must explain itself.
  */
 export const makeRenderStatus = (labels: StatusLabels) =>
-  function RenderStatus(row: BackupRow) {
+  (function RenderStatus(row: BackupRow) {
     if (row.status === 'RUNNING') {
       const running = row.trigger === 'UPLOADED' ? labels.CHECKING : labels.RUNNING;
       return (
@@ -84,10 +84,10 @@ export const makeRenderStatus = (labels: StatusLabels) =>
       );
     }
     return chip;
-  };
+  });
 
 export const makeRenderTrigger = (labels: TriggerLabels) =>
-  function RenderTrigger(row: BackupRow) {
+  (function RenderTrigger(row: BackupRow) {
     return (
       <Chip
         size="small"
@@ -96,7 +96,7 @@ export const makeRenderTrigger = (labels: TriggerLabels) =>
         label={labels[row.trigger]}
       />
     );
-  };
+  });
 
 /** Compressed size, with the uncompressed total and the ratio underneath. */
 export function renderSize(row: BackupRow) {
@@ -104,7 +104,9 @@ export function renderSize(row: BackupRow) {
   return (
     <Box sx={{ lineHeight: 1.3, py: 0.5 }}>
       <Typography variant="body2">{formatBytes(row.sizeBytes)}</Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {formatBytes(row.rawBytes)} · {compressionLabel(row)}
       </Typography>
     </Box>
@@ -119,10 +121,12 @@ export function renderSize(row: BackupRow) {
  * to restore, how old its data is, would only appear inside the restore dialog.
  */
 export const makeRenderFile = (labels: { noFile: string; taken: (when: string) => string }) =>
-  function RenderFile(row: BackupRow) {
+  (function RenderFile(row: BackupRow) {
     if (!row.fileName) {
       return (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {labels.noFile}
         </Typography>
       );
@@ -133,12 +137,14 @@ export const makeRenderFile = (labels: { noFile: string; taken: (when: string) =
     return (
       <Box sx={{ lineHeight: 1.3, py: 0.5 }}>
         <Typography variant="body2">{row.fileName}</Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {labels.taken(formatDateTime(row.archiveTakenAt))}
         </Typography>
       </Box>
     );
-  };
+  });
 
 export interface RowActions {
   onDownload: (row: BackupRow) => void;
@@ -158,13 +164,15 @@ export interface RowActions {
  * restoring from one, is the worst thing this page could offer.
  */
 export const makeRenderActions = (labels: ActionLabels, actions: RowActions) =>
-  function RenderActions(row: BackupRow) {
+  (function RenderActions(row: BackupRow) {
     if (row.status === 'RUNNING') {
       return <Typography variant="body2">—</Typography>;
     }
     if (!row.hasFile) {
       return (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {labels.noFile}
         </Typography>
       );
@@ -188,4 +196,4 @@ export const makeRenderActions = (labels: ActionLabels, actions: RowActions) =>
         </Tooltip>
       </Box>
     );
-  };
+  });

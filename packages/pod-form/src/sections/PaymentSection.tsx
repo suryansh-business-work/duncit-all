@@ -84,21 +84,27 @@ export default function PaymentSection() {
           ))}
         </TextField>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
         <TextField
           label={t('podForm.common.amount')}
           type="number"
           value={podAmount}
           onChange={(event) => setValue('pod_amount', Number(event.target.value) || 0, { shouldValidate: true })}
-          inputProps={{ min: 0, max: 1999 }}
           disabled={isFree}
           helperText={errors.pod_amount?.message || amountHint}
           error={!!errors.pod_amount}
           fullWidth
+          slotProps={{
+            htmlInput: { min: 0, max: 1999 }
+          }}
         />
         {spots.slidable ? (
           <Box sx={{ flex: 1, minWidth: 200 }} data-testid="pod-spots-slider">
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               No. of spots
             </Typography>
             <Slider
@@ -125,15 +131,23 @@ export default function PaymentSection() {
             type="number"
             value={noOfSpots}
             onChange={(event) => setValue('no_of_spots', Number(event.target.value) || 0, { shouldValidate: true })}
-            // Floored by the activity's minimum even with no venue to cap it.
-            inputProps={{ min: spots.min }}
             fullWidth
             error={!!errors.no_of_spots}
             helperText={errors.no_of_spots?.message ?? boundsHint ?? spotsHint}
+            slotProps={{
+              htmlInput: { min: spots.min }
+            }}
           />
         )}
         {config.showIsActive && isEdit && (
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ pt: 1, flexShrink: 0 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              pt: 1,
+              flexShrink: 0
+            }}>
             <Switch checked={isActive} onChange={(_, v) => setValue('is_active', v)} />
             <Typography variant="body2">{isActive ? 'Active' : 'Inactive'}</Typography>
           </Stack>

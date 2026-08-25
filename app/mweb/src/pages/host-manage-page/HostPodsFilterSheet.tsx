@@ -28,7 +28,9 @@ function ChipRow<T extends string>({
   onChange: (value: T) => void;
 }>) {
   return (
-    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={0.75} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       {items.map(([itemValue, label]) => {
         const selected = value === itemValue;
         return (
@@ -87,7 +89,12 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
     >
       <Stack spacing={2}>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Type
           </Typography>
           <ChipRow
@@ -97,7 +104,12 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
           />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Time
           </Typography>
           <ChipRow
@@ -107,7 +119,12 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
           />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Price
           </Typography>
           <ChipRow

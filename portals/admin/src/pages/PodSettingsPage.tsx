@@ -56,7 +56,9 @@ export default function PodSettingsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('admin.podSettings.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Platform-level defaults for the Create-a-Pod flow.
         </Typography>
       </Box>

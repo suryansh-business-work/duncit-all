@@ -28,17 +28,28 @@ function TrustBar() {
   return (
     <Stack
       direction="row"
-      justifyContent="space-around"
-      sx={{ bgcolor: 'action.hover', borderRadius: '16px', p: 1.5, mt: 1 }}
-    >
+      sx={{
+        justifyContent: "space-around",
+        bgcolor: 'action.hover',
+        borderRadius: '16px',
+        p: 1.5,
+        mt: 1
+      }}>
       {trustItems(t).map(({ Icon, title, caption }) => (
-        <Stack key={title} direction="row" spacing={1} alignItems="center">
+        <Stack key={title} direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Icon sx={{ color: 'primary.main' }} fontSize="small" />
           <Box>
             <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', lineHeight: 1.1 }}>
               {title}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                lineHeight: 1.1
+              }}>
               {caption}
             </Typography>
           </Box>
@@ -64,7 +75,11 @@ export default function ShopPage() {
 
   if (loading && !data)
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );

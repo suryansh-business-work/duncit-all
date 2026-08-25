@@ -20,7 +20,9 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
   if (locked) {
     return (
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', textAlign: 'center', bgcolor: 'action.hover' }}>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           This conversation has been marked as resolved.
         </Typography>
       </Paper>
@@ -38,7 +40,9 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
       <Stack spacing={1}>
         <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <TextField
             size="small"
             fullWidth

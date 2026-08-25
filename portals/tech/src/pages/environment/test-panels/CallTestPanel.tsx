@@ -48,7 +48,9 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Places a real test call from this Twilio entry.
       </Typography>
       <TextField
@@ -60,7 +62,9 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
         helperText={phoneError ? 'Enter a valid E.164 number with country code, e.g. +14155552671' : 'Include the country code (e.g. +91, +1)'}
         fullWidth
         autoComplete="off"
-        inputProps={{ autoComplete: 'off', inputMode: 'tel', 'data-1p-ignore': true, 'data-lpignore': true }}
+        slotProps={{
+          htmlInput: { autoComplete: 'off', inputMode: 'tel', 'data-1p-ignore': true, 'data-lpignore': true }
+        }}
       />
       <TextField
         label={t('tech.environment.extensionOptional')}
@@ -71,7 +75,9 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
         helperText={extValid ? 'Digits dialed after the call connects' : 'Extension must be 1–6 digits'}
         fullWidth
         autoComplete="off"
-        inputProps={{ autoComplete: 'off', inputMode: 'numeric', 'data-1p-ignore': true, 'data-lpignore': true }}
+        slotProps={{
+          htmlInput: { autoComplete: 'off', inputMode: 'numeric', 'data-1p-ignore': true, 'data-lpignore': true }
+        }}
       />
       <Button
         startIcon={<CallIcon />}

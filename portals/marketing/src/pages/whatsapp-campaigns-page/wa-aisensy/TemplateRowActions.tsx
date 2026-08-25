@@ -1,5 +1,5 @@
 import { IconButton, Tooltip } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '@duncit/app-settings';
 import type { AisensyTemplate } from '../queries';
 

@@ -13,7 +13,12 @@ interface Props {
 function Field({ label, value }: Readonly<{ label: string; value?: string | null }>) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {label}
       </Typography>
       <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
@@ -29,18 +34,32 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.5} sx={{ p: 2 }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Chip size="small" label={row.status} color={STATUS_COLOR[row.status] ?? 'default'} />
         <Chip size="small" variant="outlined" label={row.category} />
         <Chip size="small" variant="outlined" label={row.source_detail || row.source} />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {formatDateTime(row.created_at)} · {row.duration_ms} ms
         </Typography>
       </Stack>
 
       {/* The reason is the whole point of a row that is not SENT. */}
       {row.reason && (
-        <Typography variant="body2" color="error.main" sx={{ lineHeight: 1.4 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "error.main",
+            lineHeight: 1.4
+          }}>
           {row.reason}
         </Typography>
       )}
@@ -62,7 +81,12 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
         <Field label={t('tech.emailLogs.provider')} value={row.provider} />
         <Field label={t('tech.emailLogs.messageId')} value={row.message_id} />
         <Box>
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             Template
           </Typography>
           {row.template ? (
@@ -82,7 +106,12 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
           )}
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             Header / footer
           </Typography>
           {row.fragment_key ? (
@@ -102,7 +131,9 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
       </Box>
 
       {recipients.length > 120 && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {recipients.split(',').length} recipients on this message.
         </Typography>
       )}

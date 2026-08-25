@@ -30,8 +30,10 @@ export const addressSchema = z.object({
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
 
+/** The empty form. `label` is filled in by the sheet from the catalogue — it
+ * is prefilled copy the user reads, so it cannot live here as a literal. */
 export const blankAddressValues: AddressFormValues = {
-  label: 'Home',
+  label: '',
   name: '',
   phone: '',
   line1: '',
@@ -103,14 +105,16 @@ export function AddressFormSheet({
   // The sheet sits flush on the bottom edge, which the edge-to-edge window lets
   // the Android navigation bar paint over — without this the Save row is under it.
   const bottomInset = useBottomInset();
+  // A new address opens with a suggested label the user can overwrite.
+  const blank = { ...blankAddressValues, label: t('mweb.account.addressLabelDefault') };
   const { control, handleSubmit, reset } = useForm<AddressFormValues>({
-    defaultValues: initial ?? blankAddressValues,
+    defaultValues: initial ?? blank,
     resolver: zodResolver(addressSchema),
     mode: 'onTouched',
   });
 
   useEffect(() => {
-    if (open) reset(initial ?? blankAddressValues);
+    if (open) reset(initial ?? blank);
   }, [open, initial, reset]);
 
   return (

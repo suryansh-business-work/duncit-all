@@ -22,7 +22,9 @@ export default function PodExpenseKpis({ summary, currency, loading }: Readonly<
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2}>
+      <Stack direction="row" useFlexGap spacing={2} sx={{
+        flexWrap: "wrap"
+      }}>
         <StatCard
           label={t('finance.podExpense.totalPodSpend')}
           value={money(summary?.total_spent ?? 0)}
@@ -61,10 +63,22 @@ export default function PodExpenseKpis({ summary, currency, loading }: Readonly<
       {summary && summary.by_category.length > 0 && (
         <Card variant="outlined">
           <CardContent>
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {t('finance.podExpense.spendByCategory')}
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                flexWrap: "wrap",
+                mt: 1.5
+              }}>
               {summary.by_category.map((row) => (
                 <Chip
                   key={row.category}

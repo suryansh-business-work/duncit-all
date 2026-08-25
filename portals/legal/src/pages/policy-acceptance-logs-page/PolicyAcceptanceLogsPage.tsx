@@ -40,7 +40,9 @@ export default function PolicyAcceptanceLogsPage() {
 
       {/* Said out loud, because a table that opens on click looks exactly like
           one that does not until somebody tries it. */}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('legalAcceptanceLogs.detail.openHint')}
       </Typography>
 

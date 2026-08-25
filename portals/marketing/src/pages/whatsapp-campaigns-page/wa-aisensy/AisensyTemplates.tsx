@@ -33,7 +33,9 @@ const renderStatus = (template: AisensyTemplate) => (
 /** The first line of the body, so a row hints at the message without becoming
  * the message — the full text is one click away in the sample. */
 const renderBody = (template: AisensyTemplate) => (
-  <Typography variant="body2" color="text.secondary" noWrap>
+  <Typography variant="body2" noWrap sx={{
+    color: "text.secondary"
+  }}>
     {template.body}
   </Typography>
 );
@@ -146,12 +148,18 @@ export default function AisensyTemplates() {
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" alignItems="flex-start" spacing={2}>
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
         <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" fontWeight={800}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>
             {t('marketingWhatsapp.title')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('marketingWhatsapp.subtitle')}
           </Typography>
         </Stack>

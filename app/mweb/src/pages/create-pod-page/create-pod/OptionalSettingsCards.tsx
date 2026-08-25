@@ -43,13 +43,19 @@ function SettingCard({ panel, title, subtitle, summary, filled, onOpen }: Readon
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px', height: '100%' }}>
       <CardActionArea onClick={onOpen} sx={{ p: 1.5, height: '100%' }} aria-label={title}>
-        <Stack direction="row" spacing={1.25} alignItems="center">
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <Box sx={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
             {panel.icon}
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={700} noWrap>{title}</Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>{subtitle}</Typography>
+            <Typography variant="subtitle2" noWrap sx={{
+              fontWeight: 700
+            }}>{title}</Typography>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>{subtitle}</Typography>
           </Box>
           {filled ? <Chip label={summary} size="small" color="primary" /> : <ChevronRightIcon color="action" />}
         </Stack>
@@ -102,7 +108,13 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.1em' }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          letterSpacing: '0.1em'
+        }}>
         {t('mweb.createPod.optionalSettings')}
       </Typography>
       <Stack spacing={1.25} sx={{ mt: 1 }}>

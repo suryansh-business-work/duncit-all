@@ -74,7 +74,9 @@ export default function PodFeedbackPrompt() {
       </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ pt: 1 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.podFeedback.subtitle')}
           </Typography>
 

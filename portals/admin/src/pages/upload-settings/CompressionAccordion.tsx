@@ -56,7 +56,9 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>{t('admin.uploads.compressionTitle')}</Typography>
+        <Typography sx={{
+          fontWeight: 700
+        }}>{t('admin.uploads.compressionTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2.5}>
@@ -64,9 +66,13 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
             control={<Switch checked={imageOn} onChange={(e) => setImageOn(e.target.checked)} />}
             label={t('admin.uploads.compressImages')}
           />
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{
+            alignItems: { sm: 'center' }
+          }}>
             <Stack sx={{ flex: 1, px: 1 }}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Image quality: {quality}
               </Typography>
               <Slider
@@ -93,9 +99,13 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
             control={<Switch checked={videoOn} onChange={(e) => setVideoOn(e.target.checked)} />}
             label={t('admin.uploads.compressVideos')}
           />
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{
+            alignItems: { sm: 'center' }
+          }}>
             <Stack sx={{ flex: 1, px: 1 }}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Video CRF: {crf} (lower = higher quality, larger file)
               </Typography>
               <Slider

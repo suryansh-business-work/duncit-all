@@ -60,7 +60,9 @@ export function HostClaimDialog({
       <DialogTitle>{labels.confirmAssign}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 1 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {labels.confirmAssignBody}
           </Typography>
           {row ? (
@@ -72,7 +74,9 @@ export function HostClaimDialog({
                 </Typography>
               ) : null}
               {typeof row.expected_host_earnings === 'number' ? (
-                <Typography variant="body2" color="success.main">
+                <Typography variant="body2" sx={{
+                  color: "success.main"
+                }}>
                   {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
                 </Typography>
               ) : null}

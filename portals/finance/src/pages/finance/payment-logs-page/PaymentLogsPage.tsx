@@ -118,9 +118,20 @@ export default function PaymentLogsPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <ReceiptLongIcon color="primary" />
-        <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 700,
+            flex: 1
+          }}>
           {t('finance.payment.logsTitle')}
         </Typography>
       </Stack>

@@ -99,7 +99,7 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
             size="small"
             required
             hint={t('shell.coupons.codeHint')}
-            inputProps={{ style: { textTransform: 'uppercase' } }}
+            slotProps={{ htmlInput: { style: { textTransform: 'uppercase' } } }}
           />
           <RhfTextField
             control={control}

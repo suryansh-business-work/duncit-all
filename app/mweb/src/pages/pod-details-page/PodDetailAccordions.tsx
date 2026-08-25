@@ -82,7 +82,13 @@ export default function PodDetailAccordions({
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "flex-end",
+          mb: 1
+        }}>
         <Button
           size="small"
           startIcon={<UnfoldMoreIcon />}

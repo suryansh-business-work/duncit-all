@@ -23,7 +23,9 @@ export default function ErrorLogsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('shell.nav.errorLogs')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Server-operation failures caught by the shared error module on every surface — parsed
           GraphQL code, operation and path included. Rows follow the telemetry retention window.
         </Typography>

@@ -110,7 +110,12 @@ export default function EcommBrandPage() {
 
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
-          <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>{t('partners.ecommBrandPage.yourBrands')}</Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 900,
+              mb: 2
+            }}>{t('partners.ecommBrandPage.yourBrands')}</Typography>
           <PartnerBrandsTable
             fetchRows={fetchRows}
             refetchRef={refetchRef}

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import type { JSX, ReactNode } from 'react';
 
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),

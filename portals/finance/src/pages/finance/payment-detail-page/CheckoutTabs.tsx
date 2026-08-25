@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Card, CardContent, Typography } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { useTranslation, type DateFormatter, type Translator } from '@duncit/app-settings';
 import SegmentPanel from './SegmentPanel';
@@ -53,10 +53,17 @@ export default function CheckoutTabs({
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('finance.payment.artifactsTitle')}
         </Typography>
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {t('finance.payment.artifactsCaption')}
         </Typography>
         <DuncitTabs

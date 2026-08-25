@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { getSafeRedirectPath, redirectPathFromLocation } from '../utils/redirect';
 

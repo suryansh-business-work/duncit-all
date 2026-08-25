@@ -70,7 +70,9 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
     <Dialog open={!!doc} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         Edit Document
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {doc?.document_no}
         </Typography>
         <IconButton
@@ -118,7 +120,9 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
               onSaved();
             }}
           />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('legal.documents.activeHint')}
           </Typography>
         </Stack>

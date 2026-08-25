@@ -27,9 +27,10 @@ export function getTranslationColumns({
       const text = valueFor(row, locale.code);
       if (!text) {
         return (
-          <Typography variant="caption" color="text.disabled">
-            — not translated
-          </Typography>
+          <Typography variant="caption" sx={{
+            color: "text.disabled"
+          }}>— not translated
+                      </Typography>
         );
       }
       return (
@@ -47,11 +48,15 @@ export function getTranslationColumns({
       sortable: true,
       cellRenderer: (row: TranslationRow) => (
         <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={700} noWrap title={row.key}>
+          <Typography variant="body2" noWrap title={row.key} sx={{
+            fontWeight: 700
+          }}>
             {row.key}
           </Typography>
           {row.description && (
-            <Typography variant="caption" color="text.secondary" noWrap title={row.description}>
+            <Typography variant="caption" noWrap title={row.description} sx={{
+              color: "text.secondary"
+            }}>
               {row.description}
             </Typography>
           )}

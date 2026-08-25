@@ -43,12 +43,14 @@ export default function VibeTab({ label, icon, selected, onClick, layout }: Read
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      alignItems="center"
-      justifyContent="center"
       spacing={0.5}
       sx={{
+        alignItems: "center",
+        justifyContent: "center",
+
         // Fixed width so every tile in the rail matches (user ask).
         flex: '0 0 auto',
+
         width: 92,
         px: 1,
         py: 1.1,
@@ -56,23 +58,25 @@ export default function VibeTab({ label, icon, selected, onClick, layout }: Read
         borderStyle: 'solid',
         borderColor: selected ? 'primary.main' : 'divider',
         borderRadius: '16px',
+
         bgcolor: (theme) => {
           if (!selected) return theme.palette.background.paper;
           const tint = theme.palette.mode === 'dark' ? 0.16 : 0.07;
           return `rgba(255,79,115,${tint})`;
         },
+
         cursor: 'pointer',
         color: selected ? 'primary.main' : 'text.secondary',
         transition: 'border-color 160ms ease, background-color 160ms ease',
-        '&:hover': { borderColor: 'primary.main' },
-      }}
-    >
+        '&:hover': { borderColor: 'primary.main' }
+      }}>
       <Stack
         direction={direction}
-        alignItems="center"
-        justifyContent="center"
         spacing={isRow ? 0.75 : 0.5}
-      >
+        sx={{
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
         <Box sx={{ minHeight: isRow ? 'auto' : 46, display: 'grid', placeItems: 'center' }}>{icon}</Box>
         <Typography
           variant="caption"

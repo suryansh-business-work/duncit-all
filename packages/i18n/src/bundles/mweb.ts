@@ -373,6 +373,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       emailVerificationOtp: 'Email verification OTP',
       invalidOtp: 'Invalid OTP',
       keepEditing: 'Keep editing',
+      // Prefilled into the label field on a NEW address, so it is copy the user
+      // reads and edits before saving — not an enum. What they save is their
+      // own text, which is why translating the default is safe here.
+      addressLabelDefault: 'Home',
       labelHomeOffice: 'Label (Home, Office…)',
       landmark: 'Landmark',
       passwordUpdated: 'Password updated',

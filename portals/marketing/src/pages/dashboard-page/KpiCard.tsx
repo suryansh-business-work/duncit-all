@@ -18,7 +18,9 @@ interface Props {
 export default function KpiCard({ label, value, hint, icon, onOpen }: Readonly<Props>) {
   const body = (
     <CardContent>
-      <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "flex-start"
+      }}>
         <Box
           sx={{
             display: 'flex',
@@ -31,14 +33,24 @@ export default function KpiCard({ label, value, hint, icon, onOpen }: Readonly<P
           {icon}
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" color="text.secondary" component="div">
+          <Typography variant="caption" component="div" sx={{
+            color: "text.secondary"
+          }}>
             {label}
           </Typography>
-          <Typography variant="h5" fontWeight={800} component="div" sx={{ lineHeight: 1.2 }}>
+          <Typography
+            variant="h5"
+            component="div"
+            sx={{
+              fontWeight: 800,
+              lineHeight: 1.2
+            }}>
             {value}
           </Typography>
           {hint && (
-            <Typography variant="caption" color="text.secondary" component="div">
+            <Typography variant="caption" component="div" sx={{
+              color: "text.secondary"
+            }}>
               {hint}
             </Typography>
           )}

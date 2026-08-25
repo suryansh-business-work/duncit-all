@@ -19,12 +19,18 @@ export default function AspectRatingRow({ label, value, onChange, starLabel }: R
   return (
     <Stack
       direction="row"
-      alignItems="center"
-      justifyContent="space-between"
       spacing={1.5}
-      sx={{ py: 0.25 }}
-    >
-      <Typography variant="body2" fontWeight={600} sx={{ minWidth: 0 }}>
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+        py: 0.25
+      }}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 600,
+          minWidth: 0
+        }}>
         {label}
       </Typography>
       <Rating

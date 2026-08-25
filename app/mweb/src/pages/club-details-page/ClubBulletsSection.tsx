@@ -13,7 +13,9 @@ export default function ClubBulletsSection({ title, items }: Readonly<Props>) {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         {title}
       </Typography>
       <List dense disablePadding>
@@ -23,8 +25,10 @@ export default function ClubBulletsSection({ title, items }: Readonly<Props>) {
               <FiberManualRecordIcon sx={{ fontSize: 8, color: 'primary.main' }} />
             </ListItemIcon>
             <ListItemText
-              primaryTypographyProps={{ variant: 'body2', sx: { whiteSpace: 'pre-wrap' } }}
               primary={item}
+              slotProps={{
+                primary: { variant: 'body2', sx: { whiteSpace: 'pre-wrap' } }
+              }}
             />
           </ListItem>
         ))}

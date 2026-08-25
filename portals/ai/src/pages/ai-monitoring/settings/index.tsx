@@ -74,10 +74,14 @@ export default function AiMonitoringSettingsPage() {
   return (
     <Box>
       <Stack sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           AI Monitoring Settings
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           The wording shown beside every upload field, and the prompt every uploaded image is
           analysed with. Both apply everywhere the shared AI Monitoring package is used.
         </Typography>

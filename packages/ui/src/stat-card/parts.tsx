@@ -9,17 +9,16 @@ export function IconAdornment({ icon, iconColor, iconBox }: Readonly<Pick<StatCa
   if (iconBox) {
     return (
       <Stack
-        alignItems="center"
-        justifyContent="center"
         sx={{
+          alignItems: "center",
+          justifyContent: "center",
           width: iconBox.size ?? 40,
           height: iconBox.size ?? 40,
           borderRadius: iconBox.radius ?? 1.5,
           bgcolor: alpha(iconBox.color, iconBox.alpha ?? 0.16),
           color: iconBox.color,
-          flexShrink: 0,
-        }}
-      >
+          flexShrink: 0
+        }}>
         {icon}
       </Stack>
     );
@@ -36,7 +35,12 @@ type LabelTextProps = Pick<StatCardProps, 'label' | 'labelWeight' | 'labelSx'> &
 
 export function LabelText({ label, labelVariant, labelWeight, labelSx }: Readonly<LabelTextProps>) {
   return (
-    <Typography variant={labelVariant} color="text.secondary" fontWeight={labelWeight} sx={labelSx}>
+    <Typography
+      variant={labelVariant}
+      sx={[{
+        color: "text.secondary",
+        fontWeight: labelWeight
+      }, ...(Array.isArray(labelSx) ? labelSx : [labelSx])]}>
       {label}
     </Typography>
   );
@@ -63,15 +67,27 @@ export function ValueBlock({
   }
   const colorSx = valueColor ? { color: valueColor } : {};
   const valueEl = (
-    <Typography variant={valueVariant} fontWeight={valueWeight} noWrap={valueNoWrap} sx={mergeSx(colorSx, valueSx)}>
+    <Typography
+      variant={valueVariant}
+      noWrap={valueNoWrap}
+      sx={mergeSx({
+        fontWeight: valueWeight
+      }, mergeSx(colorSx, valueSx))}>
       {value}
     </Typography>
   );
   if (!sub) return valueEl;
   return (
-    <Stack direction="row" alignItems="baseline" sx={{ gap: 1 }}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "baseline",
+        gap: 1
+      }}>
       {valueEl}
-      <Typography variant="body2" color="text.secondary" noWrap>
+      <Typography variant="body2" noWrap sx={{
+        color: "text.secondary"
+      }}>
         {sub}
       </Typography>
     </Stack>

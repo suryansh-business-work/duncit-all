@@ -16,7 +16,13 @@ export default function LocationCityGrid({ cities, draftLocationId, onSelect }: 
 
   return (
     <>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, lineHeight: 1.4 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          lineHeight: 1.4
+        }}>
         City
       </Typography>
       <Box
@@ -47,7 +53,9 @@ export default function LocationCityGrid({ cities, draftLocationId, onSelect }: 
           );
         })}
         {cities.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No cities here yet.
           </Typography>
         )}

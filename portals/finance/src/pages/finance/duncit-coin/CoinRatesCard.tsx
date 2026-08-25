@@ -54,10 +54,14 @@ export default function CoinRatesCard({ control, currencySymbol }: Readonly<Prop
     <Card variant="outlined">
       <CardContent>
         <Stack spacing={0.5} sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             What Duncit pays out
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             1 coin = {currencySymbol}1 of reward value, spendable at checkout. A rate is read at the
             moment it is earned and never re-read, so changing it here never rewrites what somebody
             has already been paid.
@@ -66,7 +70,12 @@ export default function CoinRatesCard({ control, currencySymbol }: Readonly<Prop
 
         <Grid container spacing={2}>
           {fields(t).map((f) => (
-            <Grid item xs={12} sm={4} key={f.name}>
+            <Grid
+              key={f.name}
+              size={{
+                xs: 12,
+                sm: 4
+              }}>
               <Controller
                 name={f.name}
                 control={control}
@@ -80,8 +89,10 @@ export default function CoinRatesCard({ control, currencySymbol }: Readonly<Prop
                     inputMode="numeric"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message ?? f.helper}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{f.unit}</InputAdornment>,
+                    slotProps={{
+                      input: {
+                        endAdornment: <InputAdornment position="end">{f.unit}</InputAdornment>,
+                      }
                     }}
                   />
                 )}

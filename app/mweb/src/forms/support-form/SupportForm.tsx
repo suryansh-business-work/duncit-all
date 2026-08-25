@@ -85,7 +85,7 @@ export default function SupportForm({
           label={t('mweb.support.name')}
           autoComplete="name"
           hint="From your Duncit account"
-          InputProps={{ readOnly: true }}
+          slotProps={{ input: { readOnly: true } }}
         />
         <RhfTextField
           control={control}
@@ -94,7 +94,7 @@ export default function SupportForm({
           type="email"
           autoComplete="email"
           hint="From your Duncit account"
-          InputProps={{ readOnly: true }}
+          slotProps={{ input: { readOnly: true } }}
         />
         <Controller
           control={control}
@@ -107,12 +107,14 @@ export default function SupportForm({
               required
               size="small"
               fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <CategoryIcon fontSize="small" />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CategoryIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }
               }}
             >
               {CATEGORIES.map((c) => (
@@ -129,13 +131,13 @@ export default function SupportForm({
           label={t('mweb.common.subject')}
           required
           hint="3–120 characters"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <SubjectIcon fontSize="small" />
               </InputAdornment>
             ),
-          }}
+          } }}
         />
         <RhfTextField
           control={control}

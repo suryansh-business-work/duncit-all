@@ -22,9 +22,13 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
     return (
       <Card>
         <CardContent>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <CircularProgress size={18} />
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.podHistory.loadingProducts')}
             </Typography>
           </Stack>
@@ -37,9 +41,17 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <ShoppingBagIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.podHistory.productsAndTracking')}
           </Typography>
         </Stack>

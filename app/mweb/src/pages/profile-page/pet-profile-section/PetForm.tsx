@@ -59,7 +59,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
   return (
     <form onSubmit={submit}>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Controller
             control={control}
             name="photo_url"
@@ -73,7 +73,11 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             )}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Controller
             control={control}
             name="name"
@@ -88,7 +92,11 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             )}
           />
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid
+          size={{
+            xs: 6,
+            sm: 3
+          }}>
           <Controller
             control={control}
             name="species"
@@ -115,7 +123,11 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             )}
           />
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid
+          size={{
+            xs: 6,
+            sm: 3
+          }}>
           <Controller
             control={control}
             name="age"
@@ -138,7 +150,11 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             )}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Controller
             control={control}
             name="breed"
@@ -161,7 +177,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Controller
             control={control}
             name="bio"
@@ -184,7 +200,13 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
           {error.message}
         </Alert>
       )}
-      <Stack direction="row" spacing={1} sx={{ mt: 2 }} justifyContent="flex-end">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "flex-end",
+          mt: 2
+        }}>
         <Button onClick={onCancel} disabled={loading}>
           Cancel
         </Button>

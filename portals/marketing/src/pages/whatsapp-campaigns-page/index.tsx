@@ -101,11 +101,17 @@ export default function WhatsappCampaignsPage() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Stack spacing={0.25} mb={2}>
-        <Typography variant="h5" fontWeight={700}>
+      <Stack spacing={0.25} sx={{
+        mb: 2
+      }}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           WhatsApp
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Send an approved WhatsApp template to an audience, a few people or a list of numbers.
           Recipients come from what you pick; the AiSensy API key comes from the Tech portal.
         </Typography>

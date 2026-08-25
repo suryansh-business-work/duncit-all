@@ -1,7 +1,7 @@
 import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues, VariantOptionValue } from './list-products.types';
@@ -42,7 +42,7 @@ function VariantImages({ images, onAdd, onRemove }: Readonly<VariantImagesProps>
 }
 
 const numberField = (control: Control<ProductListingValues>, name: Path<ProductListingValues>, label: string) => (
-  <RhfTextField control={control} name={name} label={label} type="number" inputProps={{ min: 0, step: 0.1, inputMode: 'decimal' }} />
+  <RhfTextField control={control} name={name} label={label} type="number" slotProps={{ htmlInput: { min: 0, step: 0.1, inputMode: 'decimal' } }} />
 );
 
 interface Props {
@@ -70,7 +70,9 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
   return (
     <Stack spacing={2}>
       {optionValues.length > 0 ? (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           {optionValues.map((option) => (
             <Chip key={`${option.name}-${option.value}`} label={`${option.name}: ${option.value}`} size="small" color="primary" variant="outlined" />
           ))}

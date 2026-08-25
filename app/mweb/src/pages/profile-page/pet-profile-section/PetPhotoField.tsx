@@ -17,21 +17,25 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
     <>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <Avatar
           src={value || undefined}
-          imgProps={{
-            loading: 'lazy',
-            referrerPolicy: 'no-referrer',
-            onError: (e) => {
-              (e.currentTarget as HTMLImageElement).style.display = 'none';
-            },
-          }}
           sx={{
             width: 72,
             height: 72,
             bgcolor: 'primary.light',
             '& img': { objectFit: 'cover' },
+          }}
+          slotProps={{
+            img: {
+              loading: 'lazy',
+              referrerPolicy: 'no-referrer',
+              onError: (e) => {
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
+              },
+            }
           }}
         >
           <PetsIcon />

@@ -23,9 +23,10 @@ export default function MapEmbed({ address, mapLink, height = 220 }: Readonly<Pr
   const q = (address || '').trim();
   if (!q) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Add an address to preview the map.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>Add an address to preview the map.
+              </Typography>
     );
   }
   const src = `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;

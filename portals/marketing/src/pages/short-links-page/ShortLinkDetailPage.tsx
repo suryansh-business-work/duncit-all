@@ -152,10 +152,20 @@ export default function ShortLinkDetailPage() {
           {funnel.data && <FunnelCard funnel={funnel.data.shortLinkFunnel} />}
 
           <Box>
-            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                mb: 0.5
+              }}>
               Who followed this link
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mb: 1
+              }}>
               One row per click. Open a row for that person's timeline.
             </Typography>
             <DuncitTable<ShortLinkJourneyRow>
@@ -171,7 +181,12 @@ export default function ShortLinkDetailPage() {
           </Box>
 
           <Box>
-            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                mb: 1
+              }}>
               Every click
             </Typography>
             <DuncitTable<ShortLinkClickRow>

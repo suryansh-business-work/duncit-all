@@ -21,8 +21,18 @@ export default function SurveyQuestionField({ question: q, answer, onChange }: R
 
   return (
     <FormControl component="fieldset" fullWidth>
-      <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>{q.label}{q.required ? ' *' : ''}</Typography>
-      {q.help && <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>{q.help}</Typography>}
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 700,
+          mb: 0.5
+        }}>{q.label}{q.required ? ' *' : ''}</Typography>
+      {q.help && <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          mb: 0.5
+        }}>{q.help}</Typography>}
       {q.type === 'TEXT' && <TextField size="small" value={answer.value} onChange={(e) => onChange({ value: e.target.value })} fullWidth />}
       {q.type === 'TEXTAREA' && <TextField size="small" value={answer.value} onChange={(e) => onChange({ value: e.target.value })} fullWidth multiline minRows={3} />}
       {q.type === 'MCQ' && q.multi && (

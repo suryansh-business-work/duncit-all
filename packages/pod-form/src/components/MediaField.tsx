@@ -73,7 +73,13 @@ export default function MediaField({ label, value, onChange, helperText, error, 
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">
           {label}
           {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}

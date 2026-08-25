@@ -75,7 +75,9 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         slotProps={{ paper: { sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
       >
         <Stack spacing={1.25}>
-          <Typography variant="subtitle2" fontWeight={700}>{t('marketing.mjmlAiButton.createUpdateMjmlWithAi')}</Typography>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>{t('marketing.mjmlAiButton.createUpdateMjmlWithAi')}</Typography>
           <TextField
             autoFocus
             label={t('marketing.mjmlAiButton.instruction')}
@@ -88,7 +90,9 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
             fullWidth
           />
           {error && <Alert severity="error">{error}</Alert>}
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</Button>
             <Button size="small" variant="contained" onClick={generate} disabled={loading || !prompt.trim()} startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}>
               {loading ? 'Working...' : 'Apply'}

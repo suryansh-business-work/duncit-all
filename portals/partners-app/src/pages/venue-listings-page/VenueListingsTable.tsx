@@ -24,7 +24,9 @@ const availabilityDate = (value?: string | null) => formatDate(value) || 'Not av
 const getVenueRowId = (venue: VenueListingRow) => venue.id;
 
 const renderVenue = (venue: VenueListingRow) => (
-  <Stack direction="row" spacing={1.25} alignItems="center">
+  <Stack direction="row" spacing={1.25} sx={{
+    alignItems: "center"
+  }}>
     <Avatar
       variant="rounded"
       src={venue.cover_image_url || '/duncit-logo.svg'}
@@ -32,10 +34,14 @@ const renderVenue = (venue: VenueListingRow) => (
       sx={{ width: 32, height: 32, bgcolor: 'action.hover' }}
     />
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={900} noWrap component="div">
+      <Typography variant="body2" noWrap component="div" sx={{
+        fontWeight: 900
+      }}>
         {venue.venue_name || 'Untitled venue'}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="div">
+      <Typography variant="caption" noWrap component="div" sx={{
+        color: "text.secondary"
+      }}>
         {venue.venue_type || 'Venue'} · {venue.city || 'City pending'}
       </Typography>
     </Box>
@@ -47,7 +53,9 @@ const renderStatus = (venue: VenueListingRow) => (
 );
 
 const renderActions = (venue: VenueListingRow) => (
-  <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
+  <Stack direction="row" spacing={1} component="span" sx={{
+    justifyContent: "flex-end"
+  }}>
     {venue.status === 'APPROVED' && (
       <Button
         size="small"
@@ -120,7 +128,9 @@ export default function VenueListingsTable() {
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" fontWeight={950}>{t('partners.venueListingsPage.yourVenueRegistrations')}</Typography>
+          <Typography variant="h6" sx={{
+            fontWeight: 950
+          }}>{t('partners.venueListingsPage.yourVenueRegistrations')}</Typography>
           <DuncitTable<VenueListingRow>
             tableId="partners-app-venues"
             columns={columns(t)}

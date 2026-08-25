@@ -126,7 +126,11 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -151,7 +155,13 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
     >
       <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => { refetch().catch(() => undefined); }} />
       {pods.length === 0 ? (
-        <Stack alignItems="center" justifyContent="center" sx={{ height: '100%', px: 3 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            justifyContent: "center",
+            height: '100%',
+            px: 3
+          }}>
           <Alert severity="info">{t('mweb.explore.noPodsMatchTheseFilters')}</Alert>
         </Stack>
       ) : (

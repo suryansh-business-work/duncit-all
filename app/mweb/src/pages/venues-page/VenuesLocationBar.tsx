@@ -35,19 +35,31 @@ export default function VenuesLocationBar({ cityLabel }: Readonly<Props>) {
         bgcolor: 'background.paper',
       }}
     >
-      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          minWidth: 0
+        }}>
         <PlaceIcon sx={{ fontSize: 16, color: 'primary.main', flex: '0 0 auto' }} />
-        <Typography variant="caption" fontWeight={700} noWrap>
+        <Typography variant="caption" noWrap sx={{
+          fontWeight: 700
+        }}>
           {label}
         </Typography>
       </Stack>
       <Stack
         direction="row"
         spacing={0.25}
-        alignItems="center"
-        sx={{ color: 'primary.main', flex: '0 0 auto' }}
-      >
-        <Typography variant="caption" fontWeight={700}>
+        sx={{
+          alignItems: "center",
+          color: 'primary.main',
+          flex: '0 0 auto'
+        }}>
+        <Typography variant="caption" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.venues.change')}
         </Typography>
         <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />

@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -65,7 +65,9 @@ export default function FaqsPage() {
 
   return (
     <Stack spacing={2} sx={{ width: '100%', maxWidth: 760, mx: 'auto' }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 48, height: 48, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)', boxShadow: '0 14px 28px rgba(255,79,115,0.30)' }}>
           <HelpOutlineIcon />
         </Box>
@@ -73,7 +75,12 @@ export default function FaqsPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Got questions?
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Browse by topic. Can't find it? Support replies within 24h.
           </Typography>
         </Box>
@@ -86,14 +93,16 @@ export default function FaqsPage() {
           placeholder={t('mweb.common.searchQuestionsEGRefundHost')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
           sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999 } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
+          }}
         />
       </Paper>
 
@@ -137,7 +146,12 @@ export default function FaqsPage() {
 
       {filteredGroups.map((g) => (
         <Box key={g.super_category?.id ?? 'GENERIC'}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {g.super_category?.name ?? 'General'}
           </Typography>
           <Stack spacing={1} sx={{ mt: 1 }}>
@@ -149,7 +163,12 @@ export default function FaqsPage() {
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      whiteSpace: 'pre-wrap'
+                    }}>
                     {f.answer}
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>

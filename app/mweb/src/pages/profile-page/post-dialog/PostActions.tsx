@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SendIcon from '@mui/icons-material/Send';
@@ -32,7 +32,9 @@ export default function PostActions({
   const { t } = useTranslation();
   return (
     <Box sx={{ borderTop: 1, borderColor: 'divider', p: 1 }}>
-      <Stack direction="row" spacing={0.5} alignItems="center">
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
         <IconButton onClick={onLike} color={post.liked_by_me ? 'error' : 'default'}>
           {post.liked_by_me ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
@@ -40,7 +42,12 @@ export default function PostActions({
           <ChatBubbleOutlineIcon />
         </IconButton>
       </Stack>
-      <Typography variant="subtitle2" fontWeight={700} sx={{ px: 1 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          px: 1
+        }}>
         {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
       </Typography>
       <TextField
@@ -57,19 +64,21 @@ export default function PostActions({
           }
         }}
         sx={{ px: 1, mt: 0.5 }}
-        InputProps={{
-          disableUnderline: true,
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={onSend}
-                disabled={!comment.trim() || submitting}
-                color="primary"
-              >
-                <SendIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            disableUnderline: true,
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={onSend}
+                  disabled={!comment.trim() || submitting}
+                  color="primary"
+                >
+                  <SendIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }
         }}
       />
     </Box>

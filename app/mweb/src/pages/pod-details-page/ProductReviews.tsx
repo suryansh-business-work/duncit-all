@@ -95,20 +95,31 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
   return (
     <Stack spacing={1.5}>
       <Divider />
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         Ratings &amp; reviews
       </Typography>
       {summary && summary.total > 0 && (
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Rating value={summary.average_rating} precision={0.1} readOnly size="small" />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {summary.average_rating} · {summary.total} review{summary.total === 1 ? '' : 's'}
           </Typography>
         </Stack>
       )}
 
       <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
-        <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 600,
+            mb: 0.5
+          }}>
           Write a review
         </Typography>
         <Rating value={rating} onChange={(_, v) => setRating(v)} />
@@ -170,15 +181,23 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
       </Box>
 
       {loading && !data ? (
-        <Stack alignItems="center" sx={{ py: 2 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 2
+          }}>
           <CircularProgress size={22} />
         </Stack>
       ) : null}
       {reviews.map((r) => (
         <Box key={r.id} sx={{ borderTop: 1, borderColor: 'divider', pt: 1.25 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Avatar sx={{ width: 28, height: 28, fontSize: 13 }}>{(r.user_name[0] ?? 'U').toUpperCase()}</Avatar>
-            <Typography variant="body2" fontWeight={600}>
+            <Typography variant="body2" sx={{
+              fontWeight: 600
+            }}>
               {r.user_name}
             </Typography>
             <Rating value={r.rating} readOnly size="small" />
@@ -203,13 +222,24 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           )}
           {r.seller_reply && (
             <Box sx={{ mt: 0.75, ml: 2, p: 1, bgcolor: 'action.hover', borderRadius: '16px' }}>
-              <Typography variant="caption" fontWeight={600} color="primary.main">
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 600,
+                  color: "primary.main"
+                }}>
                 Seller response
               </Typography>
               <Typography variant="body2">{r.seller_reply}</Typography>
             </Box>
           )}
-          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{
+              alignItems: "center",
+              mt: 0.5
+            }}>
             <IconButton size="small" color={r.my_vote === 1 ? 'primary' : 'default'} onClick={() => vote(r.id, 1, r.my_vote)}>
               <ThumbUpOffAltIcon fontSize="small" />
             </IconButton>
@@ -222,7 +252,9 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         </Box>
       ))}
       {!loading && reviews.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No reviews yet — be the first!
         </Typography>
       )}

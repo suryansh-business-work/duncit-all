@@ -52,12 +52,25 @@ export default function BugDetailPage() {
   };
 
   const header = (
-    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
       <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/telemetry/bugs')}>
         Bugs
       </Button>
       {bug ? <Chip size="small" label={bug.status} color={statusColor(bug.status)} /> : null}
-      <Typography variant="h6" fontWeight={700} sx={{ wordBreak: 'break-word', flex: 1 }}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          wordBreak: 'break-word',
+          flex: 1
+        }}>
         {bug?.title ?? 'Bug'}
       </Typography>
     </Stack>
@@ -72,7 +85,9 @@ export default function BugDetailPage() {
             <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
               <BugDetailBody bug={bug} />
             </Paper>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               {STATUS_OPTIONS.map((opt) => (
                 <Button
                   key={opt.value}

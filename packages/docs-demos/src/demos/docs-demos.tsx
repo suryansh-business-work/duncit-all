@@ -29,7 +29,9 @@ export default defineDemos('docs-demos', [
           it immediately. That is the whole contract every demo on this page holds.
         </Alert>
         {mock.fields.map((entry) => (
-          <Stack key={entry.field} direction="row" spacing={1.5} alignItems="flex-start">
+          <Stack key={entry.field} direction="row" spacing={1.5} sx={{
+            alignItems: "flex-start"
+          }}>
             <Box sx={{ minWidth: 96 }}>
               <Chip
                 size="small"

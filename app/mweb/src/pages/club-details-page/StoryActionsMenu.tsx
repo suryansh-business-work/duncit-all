@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -49,7 +49,9 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
             <ListItemIcon>
               <DeleteOutlineIcon fontSize="small" color="error" />
             </ListItemIcon>
-            <ListItemText primaryTypographyProps={{ color: 'error' }}>
+            <ListItemText slotProps={{
+              primary: { color: 'error' }
+            }}>
               {t('contentReport.delete')}
             </ListItemText>
           </MenuItem>

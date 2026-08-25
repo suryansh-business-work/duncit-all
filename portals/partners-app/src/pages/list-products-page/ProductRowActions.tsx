@@ -4,9 +4,9 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { useTranslation } from '@duncit/shell';
 
 export interface ProductRowAction {

@@ -1,5 +1,5 @@
 import { Chip, Stack, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { actionsColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { AudienceListRow } from './helpers';
 import { useTranslation } from '@duncit/app-settings';
@@ -8,10 +8,14 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 
 const renderList = (row: AudienceListRow) => (
   <Stack spacing={0} sx={{ lineHeight: 1.3 }}>
-    <Typography variant="body2" fontWeight={700} noWrap>
+    <Typography variant="body2" noWrap sx={{
+      fontWeight: 700
+    }}>
       {row.name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap>
+    <Typography variant="caption" noWrap sx={{
+      color: "text.secondary"
+    }}>
       {row.description || EM_DASH}
     </Typography>
   </Stack>
@@ -30,9 +34,10 @@ const renderCriteria = (row: AudienceListRow) => {
   const count = row.filters.length;
   if (count === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Everyone
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>Everyone
+              </Typography>
     );
   }
   return <Typography variant="body2">{`${count} filter${count === 1 ? '' : 's'}`}</Typography>;

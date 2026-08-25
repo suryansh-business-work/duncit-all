@@ -124,9 +124,17 @@ export default function VenueLeadDetailPage() {
           <Stack spacing={2.5} sx={{ width: { lg: 360 }, flexShrink: 0 }}>
             <Card>
               <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: "center",
+                    mb: 1.25
+                  }}>
                   <StickyNote2Icon color="primary" />
-                  <Typography variant="subtitle1" fontWeight={800}>
+                  <Typography variant="subtitle1" sx={{
+                    fontWeight: 800
+                  }}>
                     Lead tracking
                   </Typography>
                 </Stack>
@@ -139,7 +147,13 @@ export default function VenueLeadDetailPage() {
                 {lead.remarks && (
                   <>
                     <Divider sx={{ my: 1 }} />
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: 700,
+                        letterSpacing: 0.4
+                      }}>
                       REMARKS
                     </Typography>
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
@@ -221,7 +235,9 @@ export default function VenueLeadDetailPage() {
     {
       value: 'linked-hosts',
       label: `Linked Hosts (${lead.linked_hosts.length})`,
-      icon: <LinkIcon fontSize="small" />,
+      icon: <LinkIcon sx={{
+        fontSize: "small"
+      }} />,
       render: () => (
         <LeadDetailCard
           title={t('crm.venueLeads.linkedHosts')}
@@ -229,7 +245,9 @@ export default function VenueLeadDetailPage() {
           icon={<LinkIcon color="primary" />}
         >
           {lead.linked_hosts.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               No hosts linked yet. Open Edit → "Linked Hosts" to associate host leads.
             </Typography>
           ) : (
@@ -257,14 +275,26 @@ export default function VenueLeadDetailPage() {
                     if (e.key === 'Enter') navigate(`/host-leads/${h.id}/view`);
                   }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }} useFlexGap flexWrap="wrap">
-                    <Typography variant="subtitle2" fontWeight={700}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    useFlexGap
+                    sx={{
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      mb: 0.5
+                    }}>
+                    <Typography variant="subtitle2" sx={{
+                      fontWeight: 700
+                    }}>
                       {h.host_name}
                     </Typography>
                     <StatusChip value={h.lead_status} />
                     <PriorityChip value={h.priority} />
                   </Stack>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {[h.host_type, h.city].filter(Boolean).join(' · ') || '—'}
                   </Typography>
                 </Card>
@@ -325,7 +355,14 @@ export default function VenueLeadDetailPage() {
         })}
       >
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={1.5}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             {lead.logo_url && (
               <Avatar
                 src={lead.logo_url}
@@ -334,10 +371,23 @@ export default function VenueLeadDetailPage() {
               />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h5" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 800,
+                  wordBreak: 'break-word'
+                }}>
                 {lead.venue_name}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  mt: 1
+                }}>
                 <StatusChip value={lead.lead_status} />
                 <PriorityChip value={lead.priority} />
                 {lead.city && (
@@ -363,11 +413,12 @@ export default function VenueLeadDetailPage() {
                 <Stack
                   direction="row"
                   spacing={0.5}
-                  sx={{ mt: 1 }}
-                  flexWrap="wrap"
                   useFlexGap
                   data-testid="venue-tags"
-                >
+                  sx={{
+                    flexWrap: "wrap",
+                    mt: 1
+                  }}>
                   {lead.tags.map((t) => (
                     <Chip key={t} size="small" label={`#${t}`} variant="outlined" />
                   ))}

@@ -52,7 +52,12 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
       {error ? (
         <Alert severity="warning">{error}</Alert>
       ) : (
-        <Typography variant="caption" color="text.secondary" textAlign="center">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            textAlign: "center"
+          }}>
           {labels.scanFrameHint}
         </Typography>
       )}

@@ -44,7 +44,9 @@ export default function BrandDetailDialog({
           sx={{ width: '100%', height: 128, borderRadius: '16px', objectFit: 'cover' }}
         />
       )}
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 52, height: 52 }}>
           <StorefrontIcon />
         </Avatar>
@@ -53,18 +55,31 @@ export default function BrandDetailDialog({
             {brand.brand_name}
           </Typography>
           {brand.tagline && (
-            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {brand.tagline}
             </Typography>
           )}
         </Box>
       </Stack>
       {brand.description && (
-        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            whiteSpace: 'pre-wrap'
+          }}>
           {brand.description}
         </Typography>
       )}
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {location && <Chip size="small" icon={<PlaceIcon />} label={location} />}
         {brand.established_year && (
           <Chip size="small" icon={<EventIcon />} label={`Since ${brand.established_year}`} />
@@ -77,7 +92,12 @@ export default function BrandDetailDialog({
       </Stack>
     </Stack>
   ) : (
-    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        py: 2
+      }}>
       Brand details are unavailable.
     </Typography>
   );
@@ -92,7 +112,11 @@ export default function BrandDetailDialog({
       </DialogTitle>
       <DialogContent>
         {loading && !brand ? (
-          <Stack alignItems="center" sx={{ py: 4 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}>
             <CircularProgress size={26} />
           </Stack>
         ) : (

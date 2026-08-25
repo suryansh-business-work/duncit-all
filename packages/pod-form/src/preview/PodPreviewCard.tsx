@@ -1,8 +1,9 @@
+import type { JSX } from 'react';
 import { Card, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import EventIcon from '@mui/icons-material/Event';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
-import PersonIcon from '@mui/icons-material/PersonOutline';
+import PersonIcon from '@mui/icons-material/PersonOutlined';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import PreviewMedia from './PreviewMedia';
 import type { PodPreviewModel } from './pod-preview-model';
@@ -10,9 +11,21 @@ import type { PodPreviewModel } from './pod-preview-model';
 /** One caption line inside the card's floating info panel. */
 function CardLine({ icon, text }: Readonly<{ icon: JSX.Element; text: string }>) {
   return (
-    <Stack direction="row" spacing={0.4} alignItems="center" sx={{ minWidth: 0 }}>
+    <Stack
+      direction="row"
+      spacing={0.4}
+      sx={{
+        alignItems: "center",
+        minWidth: 0
+      }}>
       {icon}
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+      <Typography
+        variant="caption"
+        noWrap
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         {text}
       </Typography>
     </Stack>
@@ -99,7 +112,13 @@ export default function PodPreviewCard({ model }: Readonly<{ model: PodPreviewMo
         >
           {model.title}
         </Typography>
-        <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <CardLine icon={<GroupIcon sx={smallIcon} />} text={model.spotsText} />
           <Chip
             size="small"

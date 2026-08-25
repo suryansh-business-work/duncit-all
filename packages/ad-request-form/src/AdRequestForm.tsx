@@ -73,7 +73,7 @@ export default function AdRequestForm({
   return (
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="ad_title"
@@ -82,7 +82,7 @@ export default function AdRequestForm({
             hint={t('adRequest.form.titleHint')}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="ad_description"
@@ -93,7 +93,11 @@ export default function AdRequestForm({
             hint={t('adRequest.form.descriptionHint')}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Controller
             control={control}
             name="ad_type"
@@ -119,7 +123,11 @@ export default function AdRequestForm({
             )}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <RhfTextField
             control={control}
             name="position"
@@ -134,7 +142,11 @@ export default function AdRequestForm({
             ))}
           </RhfTextField>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Controller
             control={control}
             name="start_at"
@@ -150,19 +162,24 @@ export default function AdRequestForm({
                     required: true,
                     error: !!fieldState.error,
                     helperText: fieldState.error?.message ?? t('adRequest.form.startDateHint'),
-                  },
-                }}
+                  }}}
               />
             )}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Controller
             control={control}
             name="duration_days"
             render={({ field }) => (
               <Box sx={{ px: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom id="ad-duration-label">
+                <Typography variant="body2" gutterBottom id="ad-duration-label" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('adRequest.form.duration', {
                     vars: {
                       days: t('adRequest.days', { count: field.value }),
@@ -185,7 +202,7 @@ export default function AdRequestForm({
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Controller
             control={control}
             name="media_url"
@@ -201,7 +218,7 @@ export default function AdRequestForm({
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="redirect_url"
@@ -209,7 +226,7 @@ export default function AdRequestForm({
             hint={t('adRequest.form.redirectUrlHint')}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="target_audience"
@@ -220,12 +237,14 @@ export default function AdRequestForm({
           />
         </Grid>
         {errorMessage && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
-        <Grid item xs={12}>
-          <Stack direction="row" justifyContent="flex-end">
+        <Grid size={12}>
+          <Stack direction="row" sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || !formState.isValid}>
               {submitLabel ?? t('adRequest.form.submit')}
             </Button>

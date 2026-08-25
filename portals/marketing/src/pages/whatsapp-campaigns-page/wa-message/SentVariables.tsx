@@ -12,7 +12,9 @@ function VariableRow({
 }: Readonly<{ position: number; value: string; meaning: string; blankLabel: string }>) {
   const filled = value.trim().length > 0;
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "flex-start"
+    }}>
       <Chip
         size="small"
         label={`{{${position}}}`}
@@ -21,14 +23,21 @@ function VariableRow({
       <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="body2"
-          fontWeight={filled ? 700 : 400}
           color={filled ? 'text.primary' : 'text.secondary'}
-          sx={{ wordBreak: 'break-word', fontStyle: filled ? 'normal' : 'italic' }}
-        >
+          sx={{
+            fontWeight: filled ? 700 : 400,
+            wordBreak: 'break-word',
+            fontStyle: filled ? 'normal' : 'italic'
+          }}>
           {filled ? value : blankLabel}
         </Typography>
         {meaning && (
-          <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              wordBreak: 'break-word'
+            }}>
             {meaning}
           </Typography>
         )}
@@ -61,7 +70,9 @@ export default function SentVariables({ params, labels, body }: Readonly<Props>)
 
   if (params.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('marketingWhatsapp.logs.variablesNone')}
       </Typography>
     );

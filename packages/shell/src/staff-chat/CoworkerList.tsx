@@ -44,7 +44,14 @@ const initials = (name: string) =>
 /** Their consoles, so you know who you are writing to before you write. */
 function RoleChips({ roles }: Readonly<{ roles: string[] }>) {
   return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.25 }}>
+    <Stack
+      direction="row"
+      spacing={0.5}
+      useFlexGap
+      sx={{
+        flexWrap: "wrap",
+        mt: 0.25
+      }}>
       {roles.slice(0, 3).map((role) => (
         <Chip key={role} size="small" variant="outlined" label={ROLE_LABEL[role] ?? role} />
       ))}
@@ -98,12 +105,14 @@ export default function CoworkerList({
           value={search}
           onChange={(event) => onSearch(event.target.value)}
           placeholder={t('shell.chat.list.searchPlaceholder')}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <TextField select size="small" fullWidth label={t('shell.chat.list.team')} value={role} onChange={(e) => onRole(e.target.value)}>
@@ -142,15 +151,23 @@ export default function CoworkerList({
               <ListItemText
                 primary={thread.peer.name}
                 secondary={`${thread.last_from_me ? t('shell.chat.list.you') : ''}${thread.last_text}`}
-                primaryTypographyProps={{ noWrap: true }}
-                secondaryTypographyProps={{ noWrap: true }}
-              />
+                slotProps={{
+                  primary: { noWrap: true },
+                  secondary: { noWrap: true }
+                }} />
             </ListItemButton>
             </ListItem>
           ))}
 
         {others.length > 0 && (
-          <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              px: 2,
+              py: 1,
+              display: 'block'
+            }}>
             {searching || role ? t('shell.chat.list.matching') : t('shell.chat.list.everyoneElse')}
           </Typography>
         )}
@@ -171,15 +188,22 @@ export default function CoworkerList({
             <ListItemText
               primary={person.name}
               secondary={<RoleChips roles={person.roles} />}
-              primaryTypographyProps={{ noWrap: true }}
-              secondaryTypographyProps={{ component: 'div' }}
-            />
+              slotProps={{
+                primary: { noWrap: true },
+                secondary: { component: 'div' }
+              }} />
           </ListItemButton>
           </ListItem>
         ))}
 
         {shownThreads.length === 0 && others.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 3 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              px: 2,
+              py: 3
+            }}>
             {t('shell.chat.list.nobody')}
           </Typography>
         )}

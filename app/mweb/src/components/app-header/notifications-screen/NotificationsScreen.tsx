@@ -80,12 +80,14 @@ export default function NotificationsScreen({
       open={open}
       fullScreen
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          backgroundImage: 'var(--duncit-app-bg)',
-          backgroundSize: '180% 180%',
-          animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
-        },
+      slotProps={{
+        paper: {
+          sx: {
+            backgroundImage: 'var(--duncit-app-bg)',
+            backgroundSize: '180% 180%',
+            animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
+          },
+        }
       }}
     >
       {/* A definite height (not min-height) makes this the scroll frame: the
@@ -95,10 +97,13 @@ export default function NotificationsScreen({
       <Stack sx={{ height: '100dvh', color: 'text.primary' }}>
         <Stack
           direction="row"
-          alignItems="center"
           spacing={1.25}
-          sx={{ px: 1.5, py: 1.25, flexShrink: 0 }}
-        >
+          sx={{
+            alignItems: "center",
+            px: 1.5,
+            py: 1.25,
+            flexShrink: 0
+          }}>
           <IconButton
             onClick={onClose}
             aria-label={t('mweb.common.closeNotifications')}
@@ -110,7 +115,12 @@ export default function NotificationsScreen({
             <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
               Notifications
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600
+              }}>
               {headerSubtitle}
             </Typography>
           </Box>
@@ -140,7 +150,9 @@ export default function NotificationsScreen({
         <Stack spacing={1} sx={{ px: 1.5, pb: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {visible.length === 0 && (
             <Box sx={{ p: 3, borderRadius: '16px', bgcolor: 'background.paper', textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {notifs.length === 0 ? 'No notifications yet.' : 'Nothing in this category.'}
               </Typography>
             </Box>

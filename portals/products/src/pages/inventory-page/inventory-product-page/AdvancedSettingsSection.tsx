@@ -41,7 +41,11 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <Controller
           control={control}
           name="sku"
@@ -59,22 +63,28 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
                 fieldState.error?.message ??
                 'Auto-generated 8 chars · uppercase / digits / hyphen'
               }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Tooltip title={t('products.advanced.generateSku')}>
-                      <Button size="small" onClick={onGenerate} disabled={generating}>
-                        <AutorenewIcon fontSize="small" />
-                      </Button>
-                    </Tooltip>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Tooltip title={t('products.advanced.generateSku')}>
+                        <Button size="small" onClick={onGenerate} disabled={generating}>
+                          <AutorenewIcon fontSize="small" />
+                        </Button>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           )}
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           control={control}
           name="barcode"
@@ -82,7 +92,11 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
           hint="Optional · printed/scanned at checkout"
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           select
           control={control}
@@ -97,7 +111,11 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
           ))}
         </RhfTextField>
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           select
           control={control}
@@ -112,11 +130,13 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
           ))}
         </RhfTextField>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
-          alignItems={{ sm: 'flex-start' }}
+          sx={{
+            alignItems: { sm: 'flex-start' }
+          }}
         >
           <QrPreview value={barcode || sku} caption={t('products.advanced.qrForSku')} />
         </Stack>

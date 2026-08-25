@@ -4,7 +4,9 @@ import type { WaterfallLine } from './waterfall-lines';
 function WaterfallRow({ symbol, line }: Readonly<{ symbol: string; line: WaterfallLine }>) {
   return (
     <Stack spacing={0}>
-      <Stack direction="row" justifyContent="space-between" spacing={2}>
+      <Stack direction="row" spacing={2} sx={{
+        justifyContent: "space-between"
+      }}>
         <Typography variant="body2" sx={{ fontWeight: line.strong ? 900 : 600 }}>
           {line.label}
         </Typography>
@@ -18,7 +20,9 @@ function WaterfallRow({ symbol, line }: Readonly<{ symbol: string; line: Waterfa
         </Typography>
       </Stack>
       {line.secondary && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {line.secondary}
         </Typography>
       )}

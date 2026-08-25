@@ -21,9 +21,13 @@ import { useTranslation } from '@duncit/app-settings';
 
 function Legend({ color, label }: Readonly<{ color: string; label: string }>) {
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center">
+    <Stack direction="row" spacing={0.75} sx={{
+      alignItems: "center"
+    }}>
       <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: color }} />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
     </Stack>
@@ -81,17 +85,27 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Add or manage this venue&apos;s bookable time slots on behalf of the partner. Hosts only see
         Available slots when creating a pod.
       </Typography>
       <Card variant="outlined">
         <CardContent>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 2
+            }}>
             <IconButton onClick={() => setMonth(subMonths(month, 1))} aria-label={t('onboarding.venueDetails.previousMonth')}>
               <ChevronLeftIcon />
             </IconButton>
-            <Typography variant="h6" fontWeight={900}>
+            <Typography variant="h6" sx={{
+              fontWeight: 900
+            }}>
               {format(month, 'MMMM yyyy')}
             </Typography>
             <IconButton onClick={() => setMonth(addMonths(month, 1))} aria-label={t('onboarding.venueDetails.nextMonth')}>
@@ -101,7 +115,11 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
           {loading && !data ? (
-            <Stack alignItems="center" sx={{ py: 4 }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                py: 4
+              }}>
               <CircularProgress size={24} />
             </Stack>
           ) : (

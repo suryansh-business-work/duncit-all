@@ -97,7 +97,9 @@ export default function FormFieldsCard() {
 
             <Divider />
 
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t('support.problemSettings.prompt')}
             </Typography>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
@@ -127,10 +129,14 @@ export default function FormFieldsCard() {
 
             <Divider />
 
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t('support.problemSettings.screenshots')}
             </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={2} sx={{
+              alignItems: "center"
+            }}>
               <FormControlLabel
                 control={
                   <Switch

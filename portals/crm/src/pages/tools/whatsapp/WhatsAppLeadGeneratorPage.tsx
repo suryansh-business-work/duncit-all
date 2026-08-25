@@ -47,9 +47,17 @@ export default function WhatsAppLeadGeneratorPage() {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 860, mx: 'auto' }}>
-      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1.25}
+        sx={{
+          alignItems: "center",
+          mb: 2
+        }}>
         <WhatsAppIcon sx={{ color: '#25D366' }} />
-        <Typography variant="h5" fontWeight={800}>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>
           WhatsApp Lead Generator
         </Typography>
       </Stack>

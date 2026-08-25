@@ -34,14 +34,30 @@ const COLORS: Record<Emphasis, string> = {
 
 function Row({ label, value, emphasis = 'default', detail }: Readonly<RowProps>) {
   return (
-    <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ py: 0.75 }}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        py: 0.75
+      }}>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={600} noWrap>{label}</Typography>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 600
+        }}>{label}</Typography>
         {detail ? (
-          <Typography variant="caption" color="text.secondary">{detail}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{detail}</Typography>
         ) : null}
       </Box>
-      <Typography variant="subtitle1" fontWeight={800} color={COLORS[emphasis]} sx={{ ml: 1.5 }}>
+      <Typography
+        variant="subtitle1"
+        color={COLORS[emphasis]}
+        sx={{
+          fontWeight: 800,
+          ml: 1.5
+        }}>
         {value}
       </Typography>
     </Stack>
@@ -50,7 +66,12 @@ function Row({ label, value, emphasis = 'default', detail }: Readonly<RowProps>)
 
 function SectionLabel({ text }: Readonly<{ text: string }>) {
   return (
-    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+    <Typography
+      variant="overline"
+      sx={{
+        color: "text.secondary",
+        fontWeight: 700
+      }}>
       {text}
     </Typography>
   );
@@ -68,9 +89,17 @@ export default function ResultsCard({ results }: Readonly<Props>) {
   return (
     <Card sx={{ position: { lg: 'sticky' }, top: { lg: 84 } }}>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <TrendingUpIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={800}>{t('finance.calculators.results')}</Typography>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>{t('finance.calculators.results')}</Typography>
         </Stack>
 
         <Box
@@ -84,16 +113,33 @@ export default function ResultsCard({ results }: Readonly<Props>) {
           })}
         >
           <SectionLabel text="Total Duncit revenue" />
-          <Typography variant="h4" fontWeight={900} color="primary.main">
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 900,
+              color: "primary.main"
+            }}>
             {formatRupees(results.duncit_revenue_total)}
           </Typography>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mt: 1
+            }}>
             <LinearProgress
               variant="determinate"
               value={hostShare}
               sx={{ flex: 1, height: 8, borderRadius: 1 }}
             />
-            <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100, textAlign: 'right' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                minWidth: 100,
+                textAlign: 'right'
+              }}>
               {results.host_earn_percent.toFixed(1)}% host take-home
             </Typography>
           </Stack>

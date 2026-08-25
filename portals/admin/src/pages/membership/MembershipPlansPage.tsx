@@ -31,13 +31,24 @@ export default function MembershipPlansPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Typography variant="h5" fontWeight={700}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Membership
           </Typography>
           <Chip size="small" color="warning" label={t('admin.membership.comingSoon')} />
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           The tiers and comparison table shown in the mobile app and mobile web. Toggle the{' '}
           <code>membership</code> feature flag to control visibility.
         </Typography>

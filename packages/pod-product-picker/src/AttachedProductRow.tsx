@@ -39,7 +39,9 @@ export default function AttachedProductRow({
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5 }}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 56,
@@ -65,16 +67,24 @@ export default function AttachedProductRow({
           )}
         </Box>
 
-        <Stack flexGrow={1} minWidth={0}>
+        <Stack
+          sx={{
+            flexGrow: 1,
+            minWidth: 0
+          }}>
           <Typography variant="subtitle2" noWrap>
             {product.product_name}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" noWrap sx={{
+            color: "text.secondary"
+          }}>
             {t('podProduct.perUnit', { vars: { cost: formatMoney(product.unit_cost) } })}
           </Typography>
         </Stack>
 
-        <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <IconButton
             size="small"
             aria-label={t('podProduct.decreaseQty')}

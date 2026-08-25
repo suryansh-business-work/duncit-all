@@ -69,7 +69,9 @@ export default function ConversationMenu({ onExport, onClear, onSettings }: Read
           <ListItemIcon>
             <DeleteSweepIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText primaryTypographyProps={{ color: 'error' }}>
+          <ListItemText slotProps={{
+            primary: { color: 'error' }
+          }}>
             {t('shell.chat.menu.clear')}
           </ListItemText>
         </MenuItem>

@@ -44,7 +44,9 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
             <Stack spacing={2}>
               <Card variant="outlined">
                 <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="subtitle2" fontWeight={800} gutterBottom>
+                  <Typography variant="subtitle2" gutterBottom sx={{
+                    fontWeight: 800
+                  }}>
                     Cancellation
                   </Typography>
                   <Row label={t('finance.cancellations.cancelledBy')} value={row.actor_name || KIND_LABELS[row.kind]} />
@@ -57,7 +59,9 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
 
               <Card variant="outlined">
                 <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="subtitle2" fontWeight={800} gutterBottom>
+                  <Typography variant="subtitle2" gutterBottom sx={{
+                    fontWeight: 800
+                  }}>
                     Attendee refunds
                   </Typography>
                   <Row label={t('finance.cancellations.attendeesOnThePod')} value={row.attendee_count} />
@@ -80,7 +84,9 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
 
               <Card variant="outlined">
                 <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="subtitle2" fontWeight={800} gutterBottom>
+                  <Typography variant="subtitle2" gutterBottom sx={{
+                    fontWeight: 800
+                  }}>
                     Venue
                   </Typography>
                   {row.venue_id ? (
@@ -90,12 +96,16 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
                         label={t('finance.cancellations.bookedSlotValue')}
                         value={money(row.currency_symbol, row.venue_amount)}
                       />
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         The venue's money for this booking — lost when the pod was cancelled.
                       </Typography>
                     </>
                   ) : (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       This pod had no venue booking.
                     </Typography>
                   )}

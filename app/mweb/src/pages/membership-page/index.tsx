@@ -32,7 +32,11 @@ export default function MembershipPage() {
   let body = null;
   if (loading && !pricing) {
     body = (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -50,18 +54,34 @@ export default function MembershipPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Typography variant="h6" fontWeight={700}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.membership.title')}
           </Typography>
           <Chip size="small" color="warning" label={t('mweb.membership.comingSoon')} />
         </Stack>
 
         <Box>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.membership.heading')}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5
+            }}>
             {t('mweb.membership.subheading')}
           </Typography>
         </Box>

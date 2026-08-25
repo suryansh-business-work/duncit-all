@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import {
   CREATE_SLOT_TEMPLATE,
   DELETE_SLOT_TEMPLATE,
@@ -85,11 +85,17 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
   return (
     <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <BookmarkBorderIcon fontSize="small" color="action" />
           <div>
-            <Typography fontWeight={800}>{t('partners.venueAvailabilityPage.saveAsTemplate')}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography sx={{
+              fontWeight: 800
+            }}>{t('partners.venueAvailabilityPage.saveAsTemplate')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Reuse this setup later in one tap
             </Typography>
           </div>
@@ -100,7 +106,9 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
           {templates.length > 0 && (
             <Stack spacing={1}>
               {templates.map((t: any) => (
-                <Stack key={t.id} direction="row" spacing={1} alignItems="center">
+                <Stack key={t.id} direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Chip size="small" label={t.name} onClick={() => apply(t)} sx={{ cursor: 'pointer' }} />
                   {t.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
                   <Box sx={{ flex: 1 }} />

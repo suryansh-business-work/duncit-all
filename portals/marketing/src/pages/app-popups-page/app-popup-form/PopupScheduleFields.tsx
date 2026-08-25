@@ -19,7 +19,11 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <Controller
           control={control}
           name="start_at"
@@ -35,14 +39,17 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
                   required: true,
                   error: !!fieldState.error,
                   helperText: fieldState.error?.message ?? 'When the popup starts showing',
-                },
-              }}
+                }}}
             />
           )}
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <Controller
           control={control}
           name="end_at"
@@ -58,14 +65,17 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
                   required: true,
                   error: !!fieldState.error,
                   helperText: fieldState.error?.message ?? 'It stops on its own after this',
-                },
-              }}
+                }}}
             />
           )}
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <RhfTextField
           control={control}
           name="platform"
@@ -82,7 +92,11 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
         </RhfTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 6
+        }}>
         <Controller
           control={control}
           name="enabled"

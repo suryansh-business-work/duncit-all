@@ -67,8 +67,16 @@ export default function VenueImagesField({
         {coverError && <FormHelperText error>{coverError}</FormHelperText>}
       </Stack>
       <Stack spacing={1}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-          <Typography variant="body2" color="text.secondary">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Other images
           </Typography>
           <Button
@@ -103,7 +111,9 @@ export default function VenueImagesField({
             ))}
           </Box>
         ) : (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Add venue photos for the public venue page.
           </Typography>
         )}

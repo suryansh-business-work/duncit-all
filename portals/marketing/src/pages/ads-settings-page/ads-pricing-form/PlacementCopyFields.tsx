@@ -22,15 +22,21 @@ export default function PlacementCopyFields({
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
         <Typography variant="subtitle2">{t('marketing.adsSettings.rateCardWording')}</Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           What advertisers read on duncit.com. Leave a field empty to use the default.
         </Typography>
       </Stack>
       <Grid container spacing={2}>
         {AD_POSITIONS.map((placement, index) => (
-          <Grid item xs={12} key={placement.position}>
+          <Grid key={placement.position} size={12}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 4
+                }}>
                 <RhfTextField
                   control={control}
                   name={`placements.${index}.label`}
@@ -38,7 +44,11 @@ export default function PlacementCopyFields({
                   hint="Shown as the placement's title"
                 />
               </Grid>
-              <Grid item xs={12} sm={8}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 8
+                }}>
                 <RhfTextField
                   control={control}
                   name={`placements.${index}.note`}

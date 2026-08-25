@@ -71,7 +71,13 @@ export default function FollowFeedList({
     return (
       <Box sx={{ p: 4, borderRadius: '16px', bgcolor: 'action.hover', textAlign: 'center' }}>
         <FavoriteBorderIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 1,
+            fontWeight: 700
+          }}>
           {emptyText}
         </Typography>
       </Box>

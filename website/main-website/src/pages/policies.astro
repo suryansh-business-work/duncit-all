@@ -2,20 +2,23 @@
 // Policy Hub — every active policy from the Legal portal. Fetched in the
 // browser so newly published policies appear without a site redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 ---
 
 <PageLayout
-  title="Policy Hub"
-  eyebrow="Policy Hub"
-  heading="Duncit policies"
-  intro="Every policy that governs Duncit, published live from our Legal team — always the current version."
+  title={t('website.main.policies.title')}
+  eyebrow={t('website.main.policies.eyebrow')}
+  heading={t('website.main.policies.heading')}
+  intro={t('website.main.policies.intro')}
   heroImage="https://images.pexels.com/photos/7654588/pexels-photo-7654588.jpeg?auto=compress&cs=tinysrgb&w=1600"
 >
   <!-- Thirteen policies is more than anyone scans. The field filters the list
        as you type; it stays hidden until the list has actually loaded, because
        a search box over four skeletons is a control that does nothing. -->
   <div class="not-prose mb-6 hidden" id="policySearchWrap">
-    <label class="sr-only" for="policySearch">Search policies</label>
+    <label class="sr-only" for="policySearch">{t('website.main.policies.searchLabel')}</label>
     <div class="relative">
       <i
         class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft"
@@ -24,14 +27,14 @@ import PageLayout from '../layouts/PageLayout.astro';
         id="policySearch"
         type="search"
         autocomplete="off"
-        placeholder="Search policies…"
+        placeholder={t('website.main.policies.searchPlaceholder')}
         class="w-full rounded-xl border-2 border-ink/10 bg-surface py-3 pl-11 pr-4 text-ink outline-none transition focus:border-primary"
       />
     </div>
     <p class="mt-2 text-sm text-ink-soft" id="policyCount" role="status" aria-live="polite"></p>
   </div>
 
-  <div id="policyList" class="not-prose grid sm:grid-cols-2 gap-4">
+  <div id="policyList" data-copy={JSON.stringify({ readCurrent: t('website.main.policies.readCurrent'), showAll: t('website.main.policies.showAll'), empty: t('website.main.policies.empty'), error: t('website.main.policies.error'), matchOne: t('website.main.policies.matchOne'), matchMany: t('website.main.policies.matchMany'), nothingMatches: t('website.main.policies.nothingMatches') })} class="not-prose grid sm:grid-cols-2 gap-4">
     <div class="skeleton h-28" aria-hidden="true"></div>
     <div class="skeleton h-28" aria-hidden="true"></div>
     <div class="skeleton h-28" aria-hidden="true"></div>
@@ -46,6 +49,8 @@ import PageLayout from '../layouts/PageLayout.astro';
   const searchWrap = document.getElementById('policySearchWrap');
   const search = document.getElementById('policySearch') as HTMLInputElement | null;
   const count = document.getElementById('policyCount');
+  // Handed over by the markup — a module script cannot read Astro frontmatter.
+  const COPY = JSON.parse(target?.dataset.copy ?? '{}');
 
   type Policy = { slug: string; title: string };
   let policies: Policy[] = [];
@@ -62,7 +67,7 @@ import PageLayout from '../layouts/PageLayout.astro';
          class="glass rounded-2xl p-5 flex items-center justify-between gap-3 hover:-translate-y-0.5 transition">
         <span>
           <span class="block font-head font-extrabold text-lg text-ink">${esc(policy.title)}</span>
-          <span class="block text-xs text-ink-soft mt-1">Read the current version</span>
+          <span class="block text-xs text-ink-soft mt-1">${COPY.readCurrent}</span>
         </span>
         <i class="fa-solid fa-arrow-right text-primary" aria-hidden="true"></i>
       </a>`;
@@ -83,13 +88,13 @@ import PageLayout from '../layouts/PageLayout.astro';
       : policies;
 
     if (count) {
-      const noun = matches.length === 1 ? 'policy matches' : 'policies match';
+      const noun = matches.length === 1 ? COPY.matchOne : COPY.matchMany;
       count.textContent = needle ? `${matches.length} ${noun} “${query.trim()}”` : '';
     }
 
     target.innerHTML = matches.length
       ? matches.map(card).join('')
-      : `<p class="text-ink-soft col-span-full">Nothing matches “${esc(query.trim())}”. <button type="button" data-clear-search class="font-bold text-primary underline">Show all policies</button></p>`;
+      : `<p class="text-ink-soft col-span-full">${COPY.nothingMatches} “${esc(query.trim())}”. <button type="button" data-clear-search class="font-bold text-primary underline">${COPY.showAll}</button></p>`;
   }
 
   async function load() {
@@ -104,14 +109,14 @@ import PageLayout from '../layouts/PageLayout.astro';
       policies = json?.data?.publicPolicies ?? [];
       if (!policies.length) {
         target.innerHTML =
-          '<p class="text-ink-soft col-span-full">No policies are published yet — check back soon.</p>';
+          `<p class="text-ink-soft col-span-full">${COPY.empty}</p>`;
         return;
       }
       searchWrap?.classList.remove('hidden');
       render('');
     } catch {
       target.innerHTML =
-        '<p class="text-ink-soft col-span-full">Policies could not be loaded right now. Please try again later.</p>';
+        `<p class="text-ink-soft col-span-full">${COPY.error}</p>`;
     }
   }
 

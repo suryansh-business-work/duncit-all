@@ -33,10 +33,17 @@ export default function CategorySummaryBanner({
       }}
     >
       <Stack spacing={0} sx={{ minWidth: 0 }}>
-        <Typography variant="caption" fontWeight={600} color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: "text.secondary"
+          }}>
           CATEGORY
         </Typography>
-        <Typography variant="body2" fontWeight={700} noWrap>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 700
+        }}>
           {text}
         </Typography>
       </Stack>

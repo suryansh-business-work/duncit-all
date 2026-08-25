@@ -55,9 +55,9 @@ export default function LinkedHostsField({ name, label }: Readonly<Props>) {
             loading={loading}
             onChange={(_, next) => field.onChange(next.map((h) => h.id))}
             onBlur={field.onBlur}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
+                const { key, ...tagProps } = getItemProps({ index });
                 return (
                   <Chip
                     key={key}
@@ -73,10 +73,14 @@ export default function LinkedHostsField({ name, label }: Readonly<Props>) {
             renderOption={(props, option) => (
               <li {...props} key={option.id}>
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>
                     {option.host_name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {[option.host_type, option.city, option.lead_status].filter(Boolean).join(' · ')}
                   </Typography>
                 </Box>
@@ -89,14 +93,18 @@ export default function LinkedHostsField({ name, label }: Readonly<Props>) {
                 label={labelText}
                 placeholder={selectedIds.length ? 'Add another…' : 'Search host leads…'}
                 helperText={t('crm.forms.optionalLinkHostLeadsWhoHost')}
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {loading ? <CircularProgress color="inherit" size={16} /> : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
+                slotProps={{
+                  ...params.slotProps,
+
+                  input: {
+                    ...params.slotProps.input,
+                    endAdornment: (
+                      <>
+                        {loading ? <CircularProgress color="inherit" size={16} /> : null}
+                        {params.slotProps.input.endAdornment}
+                      </>
+                    ),
+                  }
                 }}
               />
             )}

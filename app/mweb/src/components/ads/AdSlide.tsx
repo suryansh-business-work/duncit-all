@@ -17,8 +17,8 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
       </Box>
       <Stack
         spacing={1}
-        alignItems="flex-start"
         sx={{
+          alignItems: "flex-start",
           position: 'absolute',
           left: 0,
           right: 0,
@@ -27,9 +27,8 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
           pt: 6,
           pb: 'calc(env(safe-area-inset-bottom) + 24px)',
           background: 'linear-gradient(transparent, rgba(0,0,0,0.75))',
-          color: '#fff',
-        }}
-      >
+          color: '#fff'
+        }}>
         <Chip
           label={t('mweb.ads.sponsored')}
           size="small"

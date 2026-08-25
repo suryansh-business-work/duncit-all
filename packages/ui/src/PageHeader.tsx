@@ -26,7 +26,9 @@ export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titl
         {title}
       </Typography>
       {subtitle != null && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {subtitle}
         </Typography>
       )}
@@ -34,9 +36,21 @@ export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titl
   );
   if (actions) {
     return (
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" sx={mergeSx({ gap: 2 }, sx)}>
+      <Stack
+        direction="row"
+        sx={mergeSx({
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          flexWrap: "wrap"
+        }, mergeSx({ gap: 2 }, sx))}>
         {block}
-        <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 1
+          }}>
           {actions}
         </Stack>
       </Stack>

@@ -28,7 +28,12 @@ export default defineDemos('ui', [
     note: 'One tile per layout, with the numbers a real dashboard shows. Edit the mock to see the percent ring move.',
     mock: { disk_used_gb: 205, disk_total_gb: 250, pods_completed: 1284, host_payouts: 482150 },
     render: (mock) => (
-      <Stack direction="row" flexWrap="wrap" sx={{ gap: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: "wrap",
+          gap: 2
+        }}>
         <StatCard
           label="Disk usage"
           value={`${mock.disk_used_gb} GB`}
@@ -80,7 +85,9 @@ export default defineDemos('ui', [
           <InfoRow label="Spots" value={mock.spots} />
           <InfoRow variant="split" bold label="Collected" value={formatMoney(mock.total)} />
         </Paper>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           {mock.statuses.map((status) => (
             <StatusChip key={status} status={status} />
           ))}

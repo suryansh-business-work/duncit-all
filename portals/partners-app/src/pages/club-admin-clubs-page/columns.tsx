@@ -9,7 +9,9 @@ import { useTranslation } from '@duncit/shell';
 
 /** Thumbnail + name (+ verified badge) + slug caption — the primary club cell. */
 const renderClub = (club: ClubAdminClubInfoRow) => (
-  <Stack direction="row" spacing={1.25} alignItems="center">
+  <Stack direction="row" spacing={1.25} sx={{
+    alignItems: "center"
+  }}>
     <Avatar
       variant="rounded"
       src={club.cover_image_url ?? undefined}
@@ -19,13 +21,19 @@ const renderClub = (club: ClubAdminClubInfoRow) => (
       <GroupsIcon fontSize="small" color="disabled" />
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Stack direction="row" spacing={0.5} alignItems="center">
-        <Typography variant="body2" fontWeight={900} noWrap component="div">
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
+        <Typography variant="body2" noWrap component="div" sx={{
+          fontWeight: 900
+        }}>
           {club.club_name}
         </Typography>
         {club.is_verified && <VerifiedIcon color="primary" sx={{ fontSize: 16 }} />}
       </Stack>
-      <Typography variant="caption" color="text.secondary" noWrap component="div">
+      <Typography variant="caption" noWrap component="div" sx={{
+        color: "text.secondary"
+      }}>
         {club.slug}
       </Typography>
     </Box>
@@ -34,7 +42,9 @@ const renderClub = (club: ClubAdminClubInfoRow) => (
 
 /** "Pods" jump to the club's pod list (row click opens the club details). */
 const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
-  <Stack direction="row" justifyContent="flex-end" component="span">
+  <Stack direction="row" component="span" sx={{
+    justifyContent: "flex-end"
+  }}>
     <Button
       size="small"
       variant="outlined"

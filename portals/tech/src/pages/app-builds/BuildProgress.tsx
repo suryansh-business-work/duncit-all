@@ -29,7 +29,9 @@ interface StageRowProps {
 
 function StageRow({ stage, current, took }: Readonly<StageRowProps>) {
   return (
-    <Stack direction="row" spacing={1.25} alignItems="center">
+    <Stack direction="row" spacing={1.25} sx={{
+      alignItems: "center"
+    }}>
       <Box sx={{ display: 'flex', width: 18, justifyContent: 'center' }}>
         {current ? (
           <CircularProgress size={13} thickness={6} />
@@ -37,10 +39,17 @@ function StageRow({ stage, current, took }: Readonly<StageRowProps>) {
           <CheckCircleIcon sx={{ fontSize: 15 }} color="success" />
         )}
       </Box>
-      <Typography variant="body2" sx={{ flex: 1 }} fontWeight={current ? 600 : 400}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: current ? 600 : 400,
+          flex: 1
+        }}>
         {stage.name}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {took}
       </Typography>
     </Stack>
@@ -74,11 +83,15 @@ export default function BuildProgress({ build }: Readonly<Props>) {
         return <StageRow key={stage.at} stage={stage} current={isCurrent} took={took} />;
       })}
       {!live && stages.length > 0 && (
-        <Stack direction="row" spacing={1.25} alignItems="center">
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <Box sx={{ display: 'flex', width: 18, justifyContent: 'center' }}>
             <RadioButtonUncheckedIcon sx={{ fontSize: 15 }} color="disabled" />
           </Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.appBuilds.progressEnded')}
           </Typography>
         </Stack>

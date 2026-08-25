@@ -15,11 +15,15 @@ const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 const renderPerson = (row: MailPreferenceLogRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
     {row.user_name && (
-      <Typography variant="body2" fontWeight={700} component="div">
+      <Typography variant="body2" component="div" sx={{
+        fontWeight: 700
+      }}>
         {row.user_name}
       </Typography>
     )}
-    <Typography variant="caption" color="text.secondary" component="div">
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>
       {row.email}
     </Typography>
   </Box>

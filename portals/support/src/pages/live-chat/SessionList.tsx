@@ -36,7 +36,12 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
   }
   if (!sessions.length) {
     return (
-      <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          px: 1.5
+        }}>
         {emptyLabel}
       </Typography>
     );
@@ -67,9 +72,10 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
           <ListItemText
             primary={s.user.name}
             secondary={s.last_message_preview}
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
-            secondaryTypographyProps={{ variant: 'caption', noWrap: true }}
-          />
+            slotProps={{
+              primary: { variant: 'body2', noWrap: true, sx: { fontWeight: 700 } },
+              secondary: { variant: 'caption', noWrap: true }
+            }} />
           {s.status === 'CLOSED' && <Chip size="small" color="success" label={t('support.chat.filterResolved')} sx={{ ml: 0.5, mt: 0.25 }} />}
           {s.status !== 'CLOSED' && !s.agent_id && <Chip size="small" color="error" label={t('support.chat.newSession')} sx={{ ml: 0.5, mt: 0.25 }} />}
         </ListItemButton>

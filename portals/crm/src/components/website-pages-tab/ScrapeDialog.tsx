@@ -35,7 +35,12 @@ export default function ScrapeDialog({ open, website, loading, onClose, onConfir
       <DialogTitle>{t('crm.components.scrapeWebsitePages')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              wordBreak: 'break-all'
+            }}>
             Discovers pages from <strong>{website}</strong> (sitemap first, then homepage links) and saves them.
           </Typography>
           <TextField
@@ -44,11 +49,13 @@ export default function ScrapeDialog({ open, website, loading, onClose, onConfir
             label={t('crm.components.maxPagesToDiscover')}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            inputProps={{ min: MIN, max: MAX, inputMode: 'numeric' }}
             helperText={`Between ${MIN} and ${MAX}.`}
             error={!!value && !valid}
             autoFocus
             fullWidth
+            slotProps={{
+              htmlInput: { min: MIN, max: MAX, inputMode: 'numeric' }
+            }}
           />
           {!valid && !!value && <Alert severity="warning" sx={{ py: 0 }}>Enter a number from {MIN} to {MAX}.</Alert>}
         </Stack>

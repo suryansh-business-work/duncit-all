@@ -27,14 +27,25 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
         </Box>
       )}
       <Box sx={{ p: 1 }}>
-        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "primary.main",
+            fontWeight: 700
+          }}>
           {dateLabel}
         </Typography>
         <Typography
           variant="subtitle2"
-          fontWeight={700}
-          sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.15, minHeight: 34 }}
-        >
+          sx={{
+            fontWeight: 700,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            lineHeight: 1.15,
+            minHeight: 34
+          }}>
           {pod.pod_title}
         </Typography>
         <Button

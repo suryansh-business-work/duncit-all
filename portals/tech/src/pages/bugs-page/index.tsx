@@ -41,7 +41,9 @@ export default function BugsPage() {
   // to an account whose click could only end in Access Denied.
   const isSuperAdmin = user?.roles?.includes(SUPER_ROLE) ?? false;
   const toolbarActions = (
-    <Stack direction="row" spacing={0.5} alignItems="center">
+    <Stack direction="row" spacing={0.5} sx={{
+      alignItems: "center"
+    }}>
       <BugImportExport onImported={refetch} />
       {isSuperAdmin ? <BugDeleteAllButton onDeleted={afterDelete} /> : null}
     </Stack>
@@ -51,7 +53,9 @@ export default function BugsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">Bugs</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Error logs rolled up by page + platform, with occurrence counts and per-environment
           breakdowns. Open one to triage it, or select rows to delete them.
         </Typography>

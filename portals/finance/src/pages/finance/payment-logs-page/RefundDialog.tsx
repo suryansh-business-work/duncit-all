@@ -43,7 +43,9 @@ export default function RefundDialog({
               Refund <b>{fmt(refundFor.total, refundFor.currency_symbol)}</b> to{' '}
               {refundFor.user_name}?
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Payment ID: {refundFor.payment_id}
             </Typography>
             <TextField

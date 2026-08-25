@@ -47,7 +47,14 @@ export default function MessageReactions({ reactions, meId, nameOf, onReact }: R
   const groups = tally(reactions);
 
   return (
-    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25, flexWrap: 'wrap' }}>
+    <Stack
+      direction="row"
+      spacing={0.5}
+      sx={{
+        alignItems: "center",
+        mt: 0.25,
+        flexWrap: 'wrap'
+      }}>
       {groups.map(({ emoji, users }) => (
         <Tooltip key={emoji} title={users.map(nameOf).join(', ')}>
           <Chip

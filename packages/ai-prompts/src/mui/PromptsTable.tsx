@@ -28,8 +28,12 @@ const getPromptRowId = (p: AiPrompt) => p.id;
 
 const renderName = (p: AiPrompt, copy: PromptCopy) => (
   <Box sx={{ lineHeight: 1.3, py: 0.5 }}>
-    <Stack direction="row" alignItems="center" spacing={0.75}>
-      <Typography variant="body2" fontWeight={700} component="div">
+    <Stack direction="row" spacing={0.75} sx={{
+      alignItems: "center"
+    }}>
+      <Typography variant="body2" component="div" sx={{
+        fontWeight: 700
+      }}>
         {p.name}
       </Typography>
       <Chip
@@ -40,7 +44,9 @@ const renderName = (p: AiPrompt, copy: PromptCopy) => (
       />
     </Stack>
     {p.description && (
-      <Typography variant="caption" color="text.secondary" component="div">
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         {p.description}
       </Typography>
     )}
@@ -49,7 +55,12 @@ const renderName = (p: AiPrompt, copy: PromptCopy) => (
 
 /** The feed address. Monospaced because it is copied into a URL, not read as prose. */
 const renderKey = (p: AiPrompt) => (
-  <Typography variant="caption" fontFamily="monospace" color="text.secondary">
+  <Typography
+    variant="caption"
+    sx={{
+      fontFamily: "monospace",
+      color: "text.secondary"
+    }}>
     {p.key}
   </Typography>
 );

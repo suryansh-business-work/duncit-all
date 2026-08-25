@@ -16,15 +16,25 @@ export default function PackageDocHeader({ doc }: Readonly<{ doc: PackageDoc }>)
   return (
     <Stack spacing={1.5}>
       <Box>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           {doc.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.6 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5,
+            lineHeight: 1.6
+          }}>
           {doc.summary}
         </Typography>
       </Box>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         <Chip size="small" label={doc.category} color="primary" variant="outlined" />
         {doc.zeroDeps && <Chip size="small" label={t('tech.packagesDocs.zeroRuntimeDeps')} color="success" variant="outlined" />}
         {doc.frameworkFree && (
@@ -37,7 +47,12 @@ export default function PackageDocHeader({ doc }: Readonly<{ doc: PackageDoc }>)
 
       {doc.consumers.length > 0 && (
         <Box>
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             Imported by
           </Typography>
           <Typography variant="body2">{doc.consumers.join(' · ')}</Typography>
@@ -46,10 +61,18 @@ export default function PackageDocHeader({ doc }: Readonly<{ doc: PackageDoc }>)
 
       {doc.exports.length > 0 && (
         <Box>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block",
+              mb: 0.5
+            }}>
             Exports
           </Typography>
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={0.5} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             {doc.exports.map((name) => (
               <Chip
                 key={name}

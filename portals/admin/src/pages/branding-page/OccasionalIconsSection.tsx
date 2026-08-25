@@ -83,13 +83,23 @@ export default function OccasionalIconsSection() {
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
         <CelebrationIcon color="primary" />
         <Stack>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             Occasional icons
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Festive windows that swap the apps&apos; icons by date. The active window is picked
             using the app clock (Settings → Time zone &amp; source).
           </Typography>
@@ -113,7 +123,9 @@ export default function OccasionalIconsSection() {
 
         {err && <Alert severity="error">{err}</Alert>}
 
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{
+          justifyContent: "space-between"
+        }}>
           <Button
             startIcon={<AddIcon />}
             onClick={() => setRows((current) => [...current, blankRow(current.length)])}

@@ -105,7 +105,9 @@ export default function PaymentDetailsCard({
   return (
     <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} gutterBottom>{t('mweb.checkout.paymentDetails')}</Typography>
+        <Typography variant="subtitle1" gutterBottom sx={{
+          fontWeight: 700
+        }}>{t('mweb.checkout.paymentDetails')}</Typography>
         <Stack spacing={2} sx={{ mt: 3 }}>
           <CheckoutFields
             control={control}

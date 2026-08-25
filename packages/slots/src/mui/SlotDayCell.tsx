@@ -1,12 +1,12 @@
 import { Box } from '@mui/material';
-import { PickersDay, type PickersDayProps } from '@mui/x-date-pickers';
+import { PickerDay, type PickerDayProps } from '@mui/x-date-pickers';
 
 /**
  * A calendar day that shows whether it holds slots. Module scope, not nested in
  * the calendar (rule 26a S6478) — MUIX re-creates day cells constantly, and a
  * component redefined per render would remount every one of them.
  */
-export interface SlotDayCellProps extends PickersDayProps<Date> {
+export interface SlotDayCellProps extends PickerDayProps {
   /** Injected via `slots.day` + `slotProps.day`; MUIX passes it straight through. */
   hasSlots?: (day: Date) => boolean;
 }
@@ -15,7 +15,7 @@ export default function SlotDayCell({ hasSlots, ...dayProps }: Readonly<SlotDayC
   const marked = !dayProps.outsideCurrentMonth && hasSlots?.(dayProps.day) === true;
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      <PickersDay {...dayProps} />
+      <PickerDay {...dayProps} />
       {marked && !dayProps.selected && (
         <Box
           aria-hidden

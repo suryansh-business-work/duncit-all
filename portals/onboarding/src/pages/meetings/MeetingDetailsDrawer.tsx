@@ -37,15 +37,29 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
     ? [meeting.super_category_name, meeting.category_name, meeting.sub_category_name].filter(Boolean).join(' › ')
     : '';
   return (
-    <Drawer anchor="right" open={!!meeting} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
+    <Drawer anchor="right" open={!!meeting} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 380 } } }
+    }}>
       {meeting && (
         <Stack spacing={2} sx={{ p: 2 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Stack
+            direction="row"
+            sx={{
+              justifyContent: "space-between",
+              alignItems: "flex-start"
+            }}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="overline" color="text.secondary" fontWeight={800}>
+              <Typography
+                variant="overline"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 800
+                }}>
                 {KIND_LABEL[meeting.kind] ?? meeting.kind} meeting
               </Typography>
-              <Typography variant="h6" fontWeight={900}>
+              <Typography variant="h6" sx={{
+                fontWeight: 900
+              }}>
                 {meeting.user_name || meeting.contact_name || 'Applicant'}
               </Typography>
             </Box>
@@ -61,7 +75,12 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
 
           {meeting.meeting_link && !blocked && (
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>{t('onboarding.meetings.meetingLink')}</Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>{t('onboarding.meetings.meetingLink')}</Typography>
               <Box>
                 <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">{t('onboarding.meetings.joinMeeting')}</Link>
               </Box>

@@ -31,15 +31,29 @@ export default function ResetPasswordCard({
   if (done) {
     return (
       <AuthScreenFrame center>
-        <Stack spacing={2.2} alignItems="center" data-testid="reset-success">
+        <Stack spacing={2.2} data-testid="reset-success" sx={{
+          alignItems: "center"
+        }}>
           <CheckCircleRoundedIcon sx={{ fontSize: 72, color: 'success.main' }} />
-          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              textAlign: "center",
+              color: "text.primary"
+            }}>
             {t('mweb.resetPassword.successTitle')}{' '}
             <Box component="span" sx={{ color: 'success.main' }}>
               {t('mweb.resetPassword.successTitleAccent')}
             </Box>
           </Typography>
-          <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              color: "text.secondary",
+              maxWidth: 320
+            }}>
             {t('mweb.resetPassword.successSubtitle')}
           </Typography>
           <Button
@@ -59,15 +73,29 @@ export default function ResetPasswordCard({
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
-        <Stack alignItems="center" spacing={1.2}>
+        <Stack spacing={1.2} sx={{
+          alignItems: "center"
+        }}>
           <AuthLogo />
-          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              textAlign: "center",
+              color: "text.primary"
+            }}>
             {t('mweb.resetPassword.title')}{' '}
             <Box component="span" sx={{ color: auth.accent }}>
               {t('mweb.resetPassword.titleAccent')}
             </Box>
           </Typography>
-          <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              color: "text.secondary",
+              maxWidth: 320
+            }}>
             {t('mweb.resetPassword.subtitle', {
               vars: { email: email || t('mweb.resetPassword.emailFallback') },
             })}
@@ -76,8 +104,12 @@ export default function ResetPasswordCard({
 
         <ResetPasswordForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
 
-        <Stack spacing={0.5} alignItems="center">
-          <Typography variant="body2" color="text.secondary">
+        <Stack spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.resetPassword.didntGetIt')}{' '}
             <Link component="button" type="button" onClick={onResend} disabled={resending} underline="hover">
               {resending ? t('mweb.resetPassword.resending') : t('mweb.resetPassword.resend')}

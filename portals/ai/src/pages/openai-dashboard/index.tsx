@@ -39,13 +39,16 @@ export default function OpenAiDashboardPage() {
   const header = (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
-      justifyContent="space-between"
-      alignItems={{ xs: 'flex-start', sm: 'center' }}
       spacing={1}
-    >
+      sx={{
+        justifyContent: "space-between",
+        alignItems: { xs: 'flex-start', sm: 'center' }
+      }}>
       <Box>
         <Typography variant="h5">{t('ai.dashboard.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('ai.dashboard.subtitle')}
         </Typography>
       </Box>

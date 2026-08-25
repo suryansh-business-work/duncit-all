@@ -14,14 +14,30 @@ const aspectLabel = (aspect: string) =>
 /** One averaged part — the label, its stars and how many people said so. */
 function AspectAverage({ row }: Readonly<{ row: PodAspectRating }>) {
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5}>
-      <Typography variant="body2" fontWeight={600}>
+    <Stack
+      direction="row"
+      spacing={1.5}
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+      <Typography variant="body2" sx={{
+        fontWeight: 600
+      }}>
         {aspectLabel(row.aspect)}
       </Typography>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Rating value={row.average} precision={0.1} size="small" readOnly />
         {/* Fixed width so every "4.5 · 12" ends on the same right edge. */}
-        <Typography variant="caption" color="text.secondary" sx={{ width: 56, textAlign: 'right' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            width: 56,
+            textAlign: 'right'
+          }}>
           {row.average.toFixed(1)} · {row.count}
         </Typography>
       </Stack>
@@ -62,13 +78,22 @@ export default function PodFeedbackSection({ podId }: Readonly<{ podId: string }
     >
       {rated && summary && (
         <Stack spacing={2}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h3" fontWeight={900} lineHeight={1}>
+          <Stack direction="row" spacing={2} sx={{
+            alignItems: "center"
+          }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 900,
+                lineHeight: 1
+              }}>
               {summary.overall_average.toFixed(1)}
             </Typography>
             <Stack spacing={0.25}>
               <Rating value={summary.overall_average} precision={0.1} readOnly />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {summary.total} {summary.total === 1 ? 'rating' : 'ratings'}
               </Typography>
             </Stack>

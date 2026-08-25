@@ -65,9 +65,17 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
       <Stack spacing={2.5} sx={{ width: { lg: 360 }, flexShrink: 0 }}>
         <Card>
           <CardContent>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 1.25
+              }}>
               <StickyNote2Icon color="primary" />
-              <Typography variant="subtitle1" fontWeight={800}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 800
+              }}>
                 Lead tracking
               </Typography>
             </Stack>
@@ -80,7 +88,13 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
             {lead.notes && (
               <>
                 <Divider sx={{ my: 1 }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 700,
+                    letterSpacing: 0.4
+                  }}>
                   NOTES
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>

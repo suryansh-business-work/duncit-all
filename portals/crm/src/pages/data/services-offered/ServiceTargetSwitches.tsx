@@ -17,10 +17,18 @@ export default function ServiceTargetSwitches({ venue, host, onChange }: Readonl
   const both = venue && host;
   return (
     <Stack spacing={0.5}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          letterSpacing: 0.4
+        }}>
         AVAILABLE FOR · which lead form shows this service
       </Typography>
-      <Stack direction="row" flexWrap="wrap" useFlexGap spacing={2}>
+      <Stack direction="row" useFlexGap spacing={2} sx={{
+        flexWrap: "wrap"
+      }}>
         <FormControlLabel
           control={<Switch checked={venue} onChange={(e) => onChange({ venue: e.target.checked, host })} />}
           label={t('crm.common.venue')}

@@ -26,8 +26,12 @@ const getPortalRowId = (row: PortalRow) => row.portal.key;
 
 const renderPortal = (row: PortalRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">{row.portal.name}</Typography>
-    <Typography variant="caption" color="text.secondary" component="div">{row.portal.key}</Typography>
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 700
+    }}>{row.portal.name}</Typography>
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>{row.portal.key}</Typography>
   </Box>
 );
 const portalValue = (row: PortalRow) => row.portal.name;
@@ -57,7 +61,14 @@ export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAs
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PortalRow>[]>(() => {
     const renderActions = (row: PortalRow) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center" component="span">
+      <Stack
+        direction="row"
+        spacing={0.5}
+        component="span"
+        sx={{
+          justifyContent: "flex-end",
+          alignItems: "center"
+        }}>
         <Tooltip title={t('tech.environment.showAssignedConfigs')}>
           <span>
             <IconButton size="small" onClick={() => onInfo(row)} disabled={!row.entries.length}>

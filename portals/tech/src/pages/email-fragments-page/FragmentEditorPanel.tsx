@@ -34,7 +34,14 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
 
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-      <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <TextField
           size="small"
           label={t('shell.common.name')}
@@ -56,7 +63,9 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
       </Stack>
 
       {draft.description && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {draft.description}
         </Typography>
       )}
@@ -107,7 +116,9 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
         </Box>
       </Stack>
 
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
@@ -126,7 +137,9 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
           </Button>
         )}
         <Box sx={{ flex: 1 }} />
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {draft.is_system
             ? 'One of the nine that ship with Duncit — editable and switchable, never deletable.'
             : 'Your own fragment. Any template can pick it.'}

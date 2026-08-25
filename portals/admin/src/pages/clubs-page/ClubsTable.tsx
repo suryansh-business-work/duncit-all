@@ -40,10 +40,14 @@ const renderCover = (c: ClubRow) => (
 
 const renderClub = (c: ClubRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 600
+    }}>
       {c.club_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="div">
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>
       {c.club_id}
     </Typography>
   </Box>

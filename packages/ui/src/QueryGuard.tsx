@@ -44,7 +44,10 @@ export function QueryGuard({
   const { t } = useTranslation();
   if (loading) {
     return (
-      <Stack alignItems="center" sx={mergeSx({ py: 6 }, spinnerSx)}>
+      <Stack
+        sx={mergeSx({
+          alignItems: "center"
+        }, mergeSx({ py: 6 }, spinnerSx))}>
         <CircularProgress size={spinnerSize} />
       </Stack>
     );

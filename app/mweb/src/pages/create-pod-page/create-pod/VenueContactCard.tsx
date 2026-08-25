@@ -16,9 +16,16 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
 
   return (
     <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="create-pod-venue-contact">
-      <Typography variant="subtitle2" fontWeight={700}>{venue.venue_name}</Typography>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>{venue.venue_name}</Typography>
       {address && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{address}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.25
+          }}>{address}</Typography>
       )}
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
         {venue.owner_phone && (
@@ -31,10 +38,17 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
         </Button>
       </Stack>
       <Stack spacing={0.25} sx={{ mt: 1 }}>
-        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600
+          }}>
           {t('mweb.createPod.venueContact')}
         </Typography>
-        <Typography variant="body2" fontWeight={600}>{venue.owner_name || venue.venue_name}</Typography>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>{venue.owner_name || venue.venue_name}</Typography>
         {venue.owner_email && (
           <Link href={`mailto:${venue.owner_email}`} variant="body2" sx={{ wordBreak: 'break-all' }}>
             {venue.owner_email}

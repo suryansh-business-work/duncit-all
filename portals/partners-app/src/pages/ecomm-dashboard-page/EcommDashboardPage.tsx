@@ -43,7 +43,9 @@ export default function EcommDashboardPage() {
               background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
             }}
           >
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+              justifyContent: "space-between"
+            }}>
               <Box>
                 <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>
                   E-Commerce Brand

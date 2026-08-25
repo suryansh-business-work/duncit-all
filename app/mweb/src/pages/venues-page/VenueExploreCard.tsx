@@ -65,18 +65,30 @@ export default function VenueExploreCard({
             borderColor: 'divider',
           }}
         >
-          <Typography variant="subtitle1" fontWeight={700} color="text.primary" noWrap>
+          <Typography
+            variant="subtitle1"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              color: "text.primary"
+            }}>
             {venue.venue_name}
           </Typography>
           {meta && (
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {meta}
             </Typography>
           )}
           {location && (
-            <Stack direction="row" spacing={0.5} alignItems="center">
+            <Stack direction="row" spacing={0.5} sx={{
+              alignItems: "center"
+            }}>
               <PlaceIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="caption" noWrap sx={{
+                color: "text.secondary"
+              }}>
                 {location}
               </Typography>
             </Stack>

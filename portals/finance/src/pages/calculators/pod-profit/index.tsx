@@ -19,11 +19,17 @@ export default function PodProfitCalculatorPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <CalculateIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800}>{t('finance.calculators.podProfitCalculator')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('finance.calculators.podProfitCalculator')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Estimate the venue payout, host payout and Duncit revenue for a pod (ticket × spots) — mirrors the live finance engine.
           </Typography>
         </Box>
@@ -37,7 +43,9 @@ export default function PodProfitCalculatorPage() {
         </Button>
       </Stack>
 
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="flex-start">
+      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
         <Stack spacing={2} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
           <PodInputsCard inputs={inputs} onChange={set} />
           <VenueHostCard inputs={inputs} onChange={set} />

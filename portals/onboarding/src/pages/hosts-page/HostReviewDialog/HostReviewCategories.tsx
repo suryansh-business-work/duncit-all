@@ -39,21 +39,42 @@ export default function HostReviewCategories({
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }} data-testid="review-host-categories">
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ flex: 1 }}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            flex: 1
+          }}>
           Host categories
         </Typography>
         {saving && (
-          <Typography variant="caption" color="text.secondary" data-testid="categories-saving">
+          <Typography variant="caption" data-testid="categories-saving" sx={{
+            color: "text.secondary"
+          }}>
             Saving…
           </Typography>
         )}
       </Stack>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         Which Super › Category › Sub this host may create pods in. Changes save as you make them.
       </Typography>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ my: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          flexWrap: "wrap",
+          my: 1
+        }}>
         {categories.map((c) => (
           <Chip
             key={c.sub_category_id}
@@ -64,7 +85,9 @@ export default function HostReviewCategories({
           />
         ))}
         {categories.length === 0 && (
-          <Typography variant="body2" color="warning.main" data-testid="review-no-categories">
+          <Typography variant="body2" data-testid="review-no-categories" sx={{
+            color: "warning.main"
+          }}>
             No categories — this host cannot create pods until one is assigned.
           </Typography>
         )}
@@ -74,11 +97,14 @@ export default function HostReviewCategories({
         <Stack
           direction="row"
           spacing={1}
-          alignItems="center"
-          sx={{ mb: 1 }}
           data-testid="review-survey-category"
-        >
-          <Typography variant="caption" color="text.secondary">
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Applied with: <strong>{categoryPath(surveyCategory)}</strong>
           </Typography>
           {surveyPending && (

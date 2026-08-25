@@ -43,9 +43,13 @@ export default function VenueLeadEditorPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" fontWeight={800}>{isEdit ? `Edit ${lead?.venue_name}` : 'New Venue Lead'}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>{isEdit ? `Edit ${lead?.venue_name}` : 'New Venue Lead'}</Typography>
         {!isEdit && aiPrefill && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             AI-prefilled draft — review every section before saving.
           </Typography>
         )}

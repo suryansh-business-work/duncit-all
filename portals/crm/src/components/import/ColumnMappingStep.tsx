@@ -15,14 +15,18 @@ export default function ColumnMappingStep({ fields, headers, mapping, onChange }
   const set = (field: string, header: string) => onChange({ ...mapping, [field]: header });
   return (
     <Stack spacing={1.25}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Match each lead field to a column from your file. Required fields are marked. Leave as
         "— Ignore —" to skip a field.
       </Typography>
       <Box sx={{ maxHeight: 360, overflowY: 'auto', pr: 0.5 }}>
         <Stack spacing={1}>
           {fields.map((f) => (
-            <Stack key={f.field} direction="row" spacing={1} alignItems="center">
+            <Stack key={f.field} direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <Box sx={{ width: 200, flexShrink: 0 }}>
                 <Typography variant="body2" noWrap>
                   {f.label}

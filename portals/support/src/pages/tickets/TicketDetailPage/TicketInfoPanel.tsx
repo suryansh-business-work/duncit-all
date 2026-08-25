@@ -29,7 +29,14 @@ export default function TicketInfoPanel({ ticket }: Readonly<{ ticket: Ticket }>
 
   const content = (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <StatusChip status={ticket.status} colorMap={TICKET_STATUS_COLORS} />
         <StatusChip
           status={ticket.priority}

@@ -37,7 +37,11 @@ export default function BrandReviewDetailPage() {
 
   if (brandQuery.loading && !brandQuery.data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -57,18 +61,26 @@ export default function BrandReviewDetailPage() {
         <>
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+                alignItems: { sm: 'center' }
+              }}>
                 <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 64, height: 64 }}>
                   {brand.brand_name?.[0]?.toUpperCase() ?? '?'}
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="h5" fontWeight={800}>
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
+                    <Typography variant="h5" sx={{
+                      fontWeight: 800
+                    }}>
                       {brand.brand_name}
                     </Typography>
                     <StatusChip status={brand.status} colorMap={BRAND_STATUS_COLOR} />
                   </Stack>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     {[brand.city, brand.state].filter(Boolean).join(', ') || '—'} ·{' '}
                     {brand.contact_email || brand.contact_phone || 'No contact'}
                   </Typography>
@@ -80,7 +92,12 @@ export default function BrandReviewDetailPage() {
 
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 700,
+                  mb: 1.5
+                }}>
                 {t('products.brands.colApprovedProducts')}
               </Typography>
               <BrandProductsTable brandId={brandId} />
@@ -91,7 +108,13 @@ export default function BrandReviewDetailPage() {
             <CardContent>
               <BrandPickupPanel brandId={brandId} />
               <Divider sx={{ mt: 2 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  mt: 1,
+                  display: 'block'
+                }}>
                 Registering a location with ShipRocket lets SHIP orders pick up from this brand&apos;s warehouse.
               </Typography>
             </CardContent>

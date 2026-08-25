@@ -33,7 +33,11 @@ export default function DeliveryAvailabilitySection() {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <Stack spacing={1}>
           {switches(t).map((sw) => (
             <Controller
@@ -55,40 +59,68 @@ export default function DeliveryAvailabilitySection() {
           ))}
         </Stack>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <RhfNumberField
           control={control}
           name="delivery_charge"
           label={t('products.delivery.charge')}
           disabled={!deliveryAvailable}
           hint={chargeHint}
-          InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+          slotProps={{ input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> } }}
         />
       </Grid>
       {/* Duncit warehouses only — a brand product ships from the brand's own. */}
       {ownership === 'DUNCIT' && (
-        <Grid item xs={12} md={6}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 6
+          }}>
           <WarehouseSelect />
         </Grid>
       )}
-      <Grid item xs={12}>
-        <Typography variant="subtitle2" fontWeight={700}>
+      <Grid size={12}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>
           Shipping dimensions
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Package size and weight used by ShipRocket to rate and book couriers.
         </Typography>
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid
+        size={{
+          xs: 6,
+          md: 3
+        }}>
         <RhfNumberField control={control} name="length_cm" label={t('products.delivery.length')} hint="cm" />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid
+        size={{
+          xs: 6,
+          md: 3
+        }}>
         <RhfNumberField control={control} name="breadth_cm" label={t('products.delivery.breadth')} hint="cm" />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid
+        size={{
+          xs: 6,
+          md: 3
+        }}>
         <RhfNumberField control={control} name="height_cm" label={t('products.delivery.height')} hint="cm" />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid
+        size={{
+          xs: 6,
+          md: 3
+        }}>
         <RhfNumberField control={control} name="weight_kg" label={t('products.delivery.weight')} hint="kg" />
       </Grid>
     </Grid>

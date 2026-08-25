@@ -40,22 +40,46 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <Field label={t('products.orders.colBuyer')} value={order.buyer_name} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <Field label={t('products.orders.contact')} value={contactText} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <Field label={t('products.orders.colPod')} value={order.pod?.pod_title ?? '—'} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <Field label={t('products.orders.podDate')} value={podDateTime ?? '—'} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <Field label={t('products.orders.paymentRef')} value={order.payment_ref} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <Field label={t('products.orders.shipTo')} value={addressText} />
           </Grid>
         </Grid>
@@ -81,11 +105,15 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
                   </Avatar>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>
                     {item.name}
                     {item.variant_label ? ` — ${item.variant_label}` : ''}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {item.variant_sku || item.sku} · {item.ownership === 'DUNCIT' ? 'Duncit' : 'Brand'}
                   </Typography>
                 </TableCell>
@@ -103,16 +131,27 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
           </TableBody>
         </Table>
 
-        <Stack spacing={0.5} sx={{ mt: 1.5 }} alignItems="flex-end">
-          <Typography variant="body2" color="text.secondary">
+        <Stack
+          spacing={0.5}
+          sx={{
+            alignItems: "flex-end",
+            mt: 1.5
+          }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Items: {symbol}
             {order.items_total}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Shipping: {symbol}
             {order.shipping_charge}
           </Typography>
-          <Typography variant="subtitle1" fontWeight={800}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>
             Total: {symbol}
             {order.total}
           </Typography>

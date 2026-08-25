@@ -23,7 +23,11 @@ export default function StatusBreakdownChart({ title, counts }: Readonly<Props>)
   const total = ONBOARDING_STATUSES.reduce((acc, key) => acc + counts[key], 0);
 
   if (!total) {
-    return <Typography color="text.secondary">No {title.toLowerCase()} data yet.</Typography>;
+    return (
+      <Typography sx={{
+        color: "text.secondary"
+      }}>No {title.toLowerCase()} data yet.</Typography>
+    );
   }
 
   const data = {

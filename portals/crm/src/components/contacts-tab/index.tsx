@@ -30,7 +30,9 @@ export default function ContactsTab({ entity, leadId, leadName, contacts }: Read
     <LeadDetailCard title={t('crm.common.contacts')} icon={<ContactsIcon color="primary" />}>
       <Stack sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 1.5 }}>
         {contacts.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No contacts on file yet.
           </Typography>
         )}

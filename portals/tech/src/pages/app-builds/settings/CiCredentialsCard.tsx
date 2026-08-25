@@ -62,11 +62,13 @@ function IssuedToken({ issued }: Readonly<{ issued: AppBuildCiToken }>) {
         label={t('tech.appBuilds.ciSecretName')}
         value={issued.secret_name}
         size="small"
-        InputProps={{
-          readOnly: true,
-          endAdornment: (
-            <CopyAdornment value={issued.secret_name} label={t('tech.appBuilds.ciCopyName')} />
-          ),
+        slotProps={{
+          input: {
+            readOnly: true,
+            endAdornment: (
+              <CopyAdornment value={issued.secret_name} label={t('tech.appBuilds.ciCopyName')} />
+            ),
+          }
         }}
       />
       <TextField
@@ -75,15 +77,19 @@ function IssuedToken({ issued }: Readonly<{ issued: AppBuildCiToken }>) {
         size="small"
         multiline
         minRows={3}
-        InputProps={{
-          readOnly: true,
-          sx: { fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all' },
-          endAdornment: (
-            <CopyAdornment value={issued.token} label={t('tech.appBuilds.ciCopyValue')} />
-          ),
+        slotProps={{
+          input: {
+            readOnly: true,
+            sx: { fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all' },
+            endAdornment: (
+              <CopyAdornment value={issued.token} label={t('tech.appBuilds.ciCopyValue')} />
+            ),
+          }
         }}
       />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('tech.appBuilds.ciTokenOnce')}
       </Typography>
     </Stack>
@@ -138,10 +144,14 @@ export default function CiCredentialsCard({ settings }: Readonly<{ settings: App
       <CardContent>
         <Stack spacing={2}>
           <Box>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               {t('tech.appBuilds.ciTitle')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('tech.appBuilds.ciSubtitle')}
             </Typography>
           </Box>

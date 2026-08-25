@@ -10,7 +10,16 @@ interface Props {
 /** Lightweight "coming soon" scaffold for studio pages not yet built out. */
 export default function StudioStub({ icon, title, subtitle }: Readonly<Props>) {
   return (
-    <Stack spacing={2} alignItems="center" sx={{ maxWidth: 560, mx: 'auto', py: 8, px: 2, textAlign: 'center' }}>
+    <Stack
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        maxWidth: 560,
+        mx: 'auto',
+        py: 8,
+        px: 2,
+        textAlign: 'center'
+      }}>
       <Box
         sx={{
           width: 64,
@@ -27,7 +36,9 @@ export default function StudioStub({ icon, title, subtitle }: Readonly<Props>) {
       <Typography variant="h6" sx={{ fontWeight: 700 }}>
         {title}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {subtitle}
       </Typography>
     </Stack>

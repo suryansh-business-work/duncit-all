@@ -169,17 +169,23 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('shell.availability.recurringHint', { vars: { days: MAX_FUTURE_DAYS } })}
           </Typography>
           <FormControlLabel
             control={<Switch checked={wholeDay} onChange={(e) => setWholeDay(e.target.checked)} />}
             label={
               <Box>
-                <Typography variant="body2" fontWeight={800}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 800
+                }}>
                   {t('shell.slots.wholeDay')}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('shell.availability.recurringWholeDayHint')}
                 </Typography>
               </Box>
@@ -223,8 +229,10 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
             label={t('shell.availability.price')}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            inputProps={{ min: 0, step: 50 }}
             helperText={t('shell.availability.recurringPriceHint')}
+            slotProps={{
+              htmlInput: { min: 0, step: 50 }
+            }}
           />
           {error && (
             <Alert severity="error" onClose={() => setError(null)}>

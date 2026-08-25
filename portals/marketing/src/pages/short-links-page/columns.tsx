@@ -26,10 +26,18 @@ const channelText = (row: ShortLinkRow, sources: ShortLinkOption[]) =>
 
 const renderLink = (row: ShortLinkRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 700
+    }}>
       {row.label}
     </Typography>
-    <Typography variant="caption" color="text.secondary" fontFamily="monospace" component="div">
+    <Typography
+      variant="caption"
+      component="div"
+      sx={{
+        color: "text.secondary",
+        fontFamily: "monospace"
+      }}>
       /{row.code}
     </Typography>
   </Box>

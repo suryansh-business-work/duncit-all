@@ -22,7 +22,9 @@ export default function ResultAlert({ result }: Readonly<{ result: TestOutcome |
         <List dense disablePadding>
           {details.map((line) => (
             <ListItem key={line} disableGutters sx={{ py: 0 }}>
-              <ListItemText primaryTypographyProps={{ variant: 'body2' }} primary={line} />
+              <ListItemText primary={line} slotProps={{
+                primary: { variant: 'body2' }
+              }} />
             </ListItem>
           ))}
         </List>

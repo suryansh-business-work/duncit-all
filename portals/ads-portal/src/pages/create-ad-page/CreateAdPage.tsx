@@ -53,8 +53,14 @@ export default function CreateAdPage() {
         title={t('ads.create.title')}
         subtitle={t('ads.create.subtitle')}
       />
-      <Grid container spacing={2} alignItems="flex-start">
-        <Grid item xs={12} md={8}>
+      <Grid container spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 8
+          }}>
           <Card>
             <CardContent>
               <AdRequestForm
@@ -68,7 +74,11 @@ export default function CreateAdPage() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 4
+          }}>
           <Box sx={{ position: { md: 'sticky' }, top: { md: 16 } }}>
             <EstimateCard
               pricing={pricingData?.adPricing}

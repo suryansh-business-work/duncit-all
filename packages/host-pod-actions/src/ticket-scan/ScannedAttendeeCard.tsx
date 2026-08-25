@@ -30,7 +30,9 @@ function DetailRow({ icon, value, href }: Readonly<RowProps>) {
     </Typography>
   );
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "flex-start"
+    }}>
       <Box sx={{ color: 'text.secondary', display: 'flex', pt: 0.25 }}>{icon}</Box>
       {href ? (
         <Box component="a" href={href} sx={{ color: 'primary.main', textDecoration: 'none' }}>
@@ -84,7 +86,9 @@ export default function ScannedAttendeeCard({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Avatar src={attendee.profile_photo || undefined} sx={{ width: 64, height: 64 }}>
           {attendee.full_name.slice(0, 1).toUpperCase()}
         </Avatar>
@@ -92,7 +96,14 @@ export default function ScannedAttendeeCard({
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
             {attendee.full_name}
           </Typography>
-          <Stack direction="row" spacing={0.75} sx={{ mt: 0.5 }} flexWrap="wrap" useFlexGap>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            useFlexGap
+            sx={{
+              flexWrap: "wrap",
+              mt: 0.5
+            }}>
             <Chip size="small" color={presenceColor} label={presenceLabel} />
             {attendee.city && <Chip size="small" variant="outlined" label={attendee.city} />}
             {ticketCode && <Chip size="small" variant="outlined" label={ticketCode} />}
@@ -103,16 +114,15 @@ export default function ScannedAttendeeCard({
       <Stack
         direction="row"
         spacing={1.5}
-        alignItems="center"
         data-testid="scan-party-size"
         sx={{
+          alignItems: "center",
           p: 1.25,
           borderRadius: '16px',
           border: '2px solid',
           borderColor: 'primary.main',
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-        }}
-      >
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12)
+        }}>
         <Box
           sx={{
             width: 44,
@@ -137,7 +147,9 @@ export default function ScannedAttendeeCard({
       </Stack>
 
       {attendee.bio && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {attendee.bio}
         </Typography>
       )}

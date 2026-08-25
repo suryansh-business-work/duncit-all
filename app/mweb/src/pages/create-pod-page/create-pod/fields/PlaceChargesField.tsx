@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { PodPlaceCharge } from '../create-pod.types';
 
@@ -38,7 +38,13 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
         {t('mweb.createPod.placeCharges')}
       </Typography>
       {helperText && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mb: 1
+          }}>
           {helperText}
         </Typography>
       )}
@@ -48,7 +54,9 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
             key={keys.current[idx]}
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
-            alignItems={{ xs: 'stretch', sm: 'center' }}
+            sx={{
+              alignItems: { xs: 'stretch', sm: 'center' }
+            }}
           >
             <TextField
               label={t('mweb.createPod.chargeLabel')}
@@ -63,8 +71,10 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
               size="small"
               value={row.amount}
               onChange={(e) => update(idx, { amount: Number(e.target.value) || 0 })}
-              inputProps={{ min: 0, max: 100000 }}
               sx={{ flex: 1 }}
+              slotProps={{
+                htmlInput: { min: 0, max: 100000 }
+              }}
             />
             <TextField
               label={t('mweb.createPod.chargeNote')}

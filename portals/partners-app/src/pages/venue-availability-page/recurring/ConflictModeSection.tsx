@@ -25,10 +25,14 @@ export default function ConflictModeSection({ value, onChange }: Readonly<Props>
           control={<Radio size="small" />}
           label={
             <Stack>
-              <Typography variant="body2" fontWeight={700}>
+              <Typography variant="body2" sx={{
+                fontWeight: 700
+              }}>
                 {t('partners.venueAvailabilityPage.overlapSkip')}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('partners.venueAvailabilityPage.overlapSkipHint')}
               </Typography>
             </Stack>
@@ -39,10 +43,14 @@ export default function ConflictModeSection({ value, onChange }: Readonly<Props>
           control={<Radio size="small" color="error" />}
           label={
             <Stack>
-              <Typography variant="body2" fontWeight={700}>
+              <Typography variant="body2" sx={{
+                fontWeight: 700
+              }}>
                 {t('partners.venueAvailabilityPage.overlapReplace')}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('partners.venueAvailabilityPage.overlapReplaceHint')}
               </Typography>
             </Stack>

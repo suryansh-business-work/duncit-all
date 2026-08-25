@@ -23,7 +23,9 @@ export default function EstimateCard({ pricing, loading, position, durationDays 
     return (
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             {t('adRequest.estimate.title')}
           </Typography>
           <Skeleton height={28} />
@@ -41,7 +43,9 @@ export default function EstimateCard({ pricing, loading, position, durationDays 
   return (
     <Card>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+        <Typography variant="subtitle1" gutterBottom sx={{
+          fontWeight: 700
+        }}>
           {t('adRequest.estimate.title')}
         </Typography>
         <Stack spacing={1.25}>
@@ -61,7 +65,13 @@ export default function EstimateCard({ pricing, loading, position, durationDays 
             value={formatAdCost(perDay * durationDays, symbol)}
           />
         </Stack>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 1.5
+          }}>
           {t('adRequest.estimate.footnote')}
         </Typography>
       </CardContent>

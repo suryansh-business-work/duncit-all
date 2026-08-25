@@ -53,12 +53,14 @@ export function LanguageSelect({
       disabled={disabled}
       size={size}
       fullWidth={fullWidth}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <TranslateIcon fontSize="small" />
-          </InputAdornment>
-        ),
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <TranslateIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }
       }}
     >
       {options.map((option) => (

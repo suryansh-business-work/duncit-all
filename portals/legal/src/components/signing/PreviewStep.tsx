@@ -37,7 +37,9 @@ export default function PreviewStep({ pdfUrl, loading }: Readonly<Props>) {
           {t('legal.sign.noInlinePdf')}
         </Typography>
       </Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('legal.sign.viewerHint')}
       </Typography>
     </Stack>

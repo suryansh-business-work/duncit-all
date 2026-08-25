@@ -24,15 +24,14 @@ export default function AdTile({ ad, onOpen }: Readonly<{ ad: PublicAd; onOpen: 
         if (event.key === 'Enter' || event.key === ' ') onOpen();
       }}
       spacing={0.6}
-      alignItems="center"
       sx={{
+        alignItems: "center",
         width: 70,
         minHeight: 90,
         flex: '0 0 auto',
         cursor: 'pointer',
-        overflow: 'visible',
-      }}
-    >
+        overflow: 'visible'
+      }}>
       <Box
         sx={{
           width: 62,

@@ -23,15 +23,24 @@ export interface LifecycleStep {
  */
 export default function PodLifecycleStrip({ steps }: Readonly<{ steps: LifecycleStep[] }>) {
   return (
-    <Stack direction="row" alignItems="flex-start" sx={{ py: 1 }}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "flex-start",
+        py: 1
+      }}>
       {steps.map((step, index) => {
         const tone = step.failed ? 'error.main' : 'success.main';
         return (
           <Stack
             key={step.key}
-            alignItems="center"
-            sx={{ flex: 1, minWidth: 0, position: 'relative', px: 0.5 }}
-          >
+            sx={{
+              alignItems: "center",
+              flex: 1,
+              minWidth: 0,
+              position: 'relative',
+              px: 0.5
+            }}>
             {/* The connector runs from the previous dot to this one, behind
                 both, so it never adds width of its own. */}
             {index > 0 && (
@@ -60,10 +69,21 @@ export default function PodLifecycleStrip({ steps }: Readonly<{ steps: Lifecycle
             >
               {step.done && (step.failed ? <CloseIcon sx={{ fontSize: 18 }} /> : <CheckIcon sx={{ fontSize: 18 }} />)}
             </Box>
-            <Typography variant="body2" fontWeight={700} textAlign="center" sx={{ mt: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                textAlign: "center",
+                mt: 1
+              }}>
               {step.label}
             </Typography>
-            <Typography variant="caption" color="text.secondary" textAlign="center">
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                textAlign: "center"
+              }}>
               {step.when ? fmtDateTime(step.when) : 'Pending'}
             </Typography>
           </Stack>

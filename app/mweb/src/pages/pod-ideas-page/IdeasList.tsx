@@ -51,9 +51,10 @@ export default function IdeasList({
         <Box sx={{ mb: 3 }}>
           <Typography
             variant="overline"
-            color="text.secondary"
-            sx={{ fontWeight: 600 }}
-          >
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             Your submissions
           </Typography>
           <Stack spacing={1.5} sx={{ mt: 1 }}>

@@ -38,7 +38,9 @@ export default defineDemos('pod-details', [
       >
         <Stack spacing={1}>
           {mock.attendees.map((attendee) => (
-            <Stack key={attendee.id} direction="row" alignItems="center" spacing={1}>
+            <Stack key={attendee.id} direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <Typography variant="body2" sx={{ flex: 1 }}>
                 {attendee.name}
               </Typography>

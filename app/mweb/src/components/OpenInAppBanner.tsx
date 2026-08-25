@@ -137,13 +137,22 @@ export default function OpenInAppBanner() {
         p: 1.25,
       }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="flex-start">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "flex-start"
+      }}>
         <InstallMobileIcon color="primary" sx={{ mt: 0.25 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {t('mweb.openInApp.title')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             {t('mweb.openInApp.subtitle')}
           </Typography>
         </Box>

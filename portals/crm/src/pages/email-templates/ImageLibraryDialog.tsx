@@ -85,8 +85,19 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
         <AiMonitoringChip />
       </DialogTitle>
       <DialogContent dividers>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              flex: 1
+            }}>
             Uploaded images for this template. Use <b>{t('crm.emailTemplates.insert')}</b> to add an <code>&lt;mj-image&gt;</code>, or <b>Copy</b> the URL.
           </Typography>
           <Button variant="contained" size="small" startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
@@ -95,13 +106,24 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
         </Stack>
         {error && <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setError(null)}>{error}</Alert>}
         {images.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('crm.emailTemplates.noImagesYetClickUpload')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              py: 3,
+              textAlign: 'center'
+            }}>{t('crm.emailTemplates.noImagesYetClickUpload')}</Typography>
         ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
             {images.map((img) => (
               <Box key={img.url} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
                 <Box component="img" src={img.url} alt={img.name ?? ''} sx={{ width: '100%', height: 110, objectFit: 'cover', display: 'block', bgcolor: 'action.hover' }} />
-                <Stack direction="row" alignItems="center" sx={{ p: 0.5 }}>
+                <Stack
+                  direction="row"
+                  sx={{
+                    alignItems: "center",
+                    p: 0.5
+                  }}>
                   <Tooltip title="Insert <mj-image>">
                     <IconButton size="small" color="primary" onClick={() => onInsert(img.url)}><AddPhotoAlternateIcon fontSize="small" /></IconButton>
                   </Tooltip>

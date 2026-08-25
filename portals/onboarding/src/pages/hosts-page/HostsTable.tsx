@@ -26,12 +26,18 @@ const getHostRowId = (h: HostRow) => h.id;
 
 function CategoryCell({ categories }: Readonly<{ categories?: HostCategoryRow[] | null }>) {
   if (!categories || categories.length === 0) {
-    return <Typography variant="body2" color="text.secondary">—</Typography>;
+    return (
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>—</Typography>
+    );
   }
   return (
     <>
       {categories.map((c) => (
-        <Typography key={c.sub_category_id} variant="body2" display="block">
+        <Typography key={c.sub_category_id} variant="body2" sx={{
+          display: "block"
+        }}>
           {categoryPath(c) || '—'}
         </Typography>
       ))}
@@ -46,19 +52,31 @@ const renderHost = (h: HostRow) => (
       to={`/hosts/${h.id}`}
       underline="hover"
       variant="body2"
-      fontWeight={700}
       color="inherit"
+      sx={{
+        fontWeight: 700
+      }}
     >
       {h.full_name || '—'}
     </Link>
-    <Typography variant="caption" color="text.secondary" display="block">{h.user_id}</Typography>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>{h.user_id}</Typography>
   </>
 );
 
 const renderContact = (h: HostRow) => (
   <>
     <Typography variant="body2">{h.email || '—'}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {nationalPhoneDigits(h.phone) || '—'}
     </Typography>
   </>
@@ -69,8 +87,12 @@ const documentsValue = (h: HostRow) =>
 
 const renderDocuments = (h: HostRow) => (
   <>
-    <Typography variant="caption" display="block">PAN: {h.pan_number || '—'}</Typography>
-    <Typography variant="caption" display="block">Aadhar: {h.aadhar_number || '—'}</Typography>
+    <Typography variant="caption" sx={{
+      display: "block"
+    }}>PAN: {h.pan_number || '—'}</Typography>
+    <Typography variant="caption" sx={{
+      display: "block"
+    }}>Aadhar: {h.aadhar_number || '—'}</Typography>
   </>
 );
 

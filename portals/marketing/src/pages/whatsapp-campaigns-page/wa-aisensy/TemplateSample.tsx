@@ -63,7 +63,13 @@ function BubbleButton({ label, link }: Readonly<{ label: string; link: string }>
     >
       {label}
       {link && (
-        <Typography variant="caption" color="text.secondary" display="block" noWrap>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {link}
         </Typography>
       )}
@@ -118,13 +124,24 @@ export default function TemplateSample({ template, params, media, buttons }: Rea
         <Box sx={{ p: 1.25 }}>
           {mediaFormat && <BubbleMedia format={mediaFormat} media={media} />}
           {template.header && (
-            <Typography variant="body2" fontWeight={800} sx={{ mb: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 800,
+                mb: 0.5
+              }}>
               {template.header}
             </Typography>
           )}
           <BubbleBody body={template.body} params={params} />
           {template.footer && (
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.75 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block",
+                mt: 0.75
+              }}>
               {template.footer}
             </Typography>
           )}

@@ -14,10 +14,22 @@ const fmtDate = (iso: string) => {
 const getExpenseRowId = (e: any) => e.id;
 
 const renderCategory = (e: any) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} alignItems="flex-start">
+  <Stack
+    component="span"
+    sx={{
+      alignItems: "flex-start",
+      lineHeight: 1.2
+    }}>
     <Chip size="small" label={labelize(e.category)} />
     {e.description ? (
-      <Typography variant="caption" color="text.secondary" component="span" noWrap sx={{ maxWidth: 220 }}>
+      <Typography
+        variant="caption"
+        component="span"
+        noWrap
+        sx={{
+          color: "text.secondary",
+          maxWidth: 220
+        }}>
         {e.description}
       </Typography>
     ) : null}
@@ -25,7 +37,12 @@ const renderCategory = (e: any) => (
 );
 
 const renderVendor = (e: any) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} alignItems="flex-start">
+  <Stack
+    component="span"
+    sx={{
+      alignItems: "flex-start",
+      lineHeight: 1.2
+    }}>
     <Typography variant="body2" component="span">
       {e.vendor_name || '—'}
     </Typography>
@@ -58,13 +75,16 @@ export default function ExpenseTable({
     const renderRefund = (e: any) => {
       if (e.refund_total <= 0) return '—';
       return (
-        <Typography variant="body2" color="warning.main" component="span">
-          −{currency}{Number(e.refund_total).toFixed(2)}
+        <Typography variant="body2" component="span" sx={{
+          color: "warning.main"
+        }}>−{currency}{Number(e.refund_total).toFixed(2)}
         </Typography>
       );
     };
     const renderNet = (e: any) => (
-      <Typography variant="body2" fontWeight={700} component="span">
+      <Typography variant="body2" component="span" sx={{
+        fontWeight: 700
+      }}>
         {currency}{Number(e.net_amount).toFixed(2)}
       </Typography>
     );

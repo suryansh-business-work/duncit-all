@@ -76,23 +76,36 @@ export default function AccountDeletionDetailDialog({
           {loading && !detail && <LinearProgress />}
           {request && (
             <Stack spacing={2}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap"
+                }}>
                 <Chip
                   size="small"
                   color={STATUS_COLOR[request.status] ?? 'default'}
                   label={request.status}
                 />
                 <Chip size="small" variant="outlined" label={request.surface} />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatDateTime(request.requested_at)}
                 </Typography>
               </Stack>
 
               <Stack spacing={0.25}>
-                <Typography variant="subtitle1" fontWeight={700}>
+                <Typography variant="subtitle1" sx={{
+                  fontWeight: 700
+                }}>
                   {request.name || request.email}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {[request.email, request.phone].filter(Boolean).join(' · ')}
                 </Typography>
                 <Typography
@@ -107,10 +120,14 @@ export default function AccountDeletionDetailDialog({
               <Divider />
 
               <Stack spacing={0.5}>
-                <Typography variant="subtitle2" fontWeight={700}>
+                <Typography variant="subtitle2" sx={{
+                  fontWeight: 700
+                }}>
                   {t('tech.accountDeletions.traceTitle')}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('tech.accountDeletions.traceIntro')}
                 </Typography>
               </Stack>
@@ -130,14 +147,18 @@ export default function AccountDeletionDetailDialog({
 
               {request.purge_log.length > 0 && (
                 <Stack spacing={0.5}>
-                  <Typography variant="subtitle2" fontWeight={700}>
+                  <Typography variant="subtitle2" sx={{
+                    fontWeight: 700
+                  }}>
                     {t('tech.accountDeletions.purgeLogTitle')}
                   </Typography>
                   {request.purge_log.map((entry) => (
                     <Typography
                       key={`${entry.model_name}.${entry.field_path}.${entry.purged_at}`}
                       variant="caption"
-                      color="text.secondary"
+                      sx={{
+                        color: "text.secondary"
+                      }}
                     >
                       {t('tech.accountDeletions.purgeLogEntry', {
                         vars: {

@@ -35,7 +35,9 @@ export default function ShareStep({
   return (
     <Stack spacing={2} sx={{ mt: 2 }}>
       <Alert severity="success">{t('legal.sign.lockedNotice')}</Alert>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {t('legal.sign.shareHeading')}
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

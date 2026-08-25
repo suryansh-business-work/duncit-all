@@ -30,11 +30,15 @@ const renderKind = (row: PaymentReleaseRow) => <ReleaseKindChip kind={row.kind} 
 const renderPod = (row: PaymentReleaseRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
     <Link component={RouterLink} to={`/pod-finance/${row.pod_id}`} underline="hover">
-      <Typography variant="body2" fontWeight={700} component="span">
+      <Typography variant="body2" component="span" sx={{
+        fontWeight: 700
+      }}>
         {row.pod_title}
       </Typography>
     </Link>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.release_id}
     </Typography>
   </Stack>
@@ -45,7 +49,9 @@ const renderBeneficiary = (row: PaymentReleaseRow) => (
     <Typography variant="body2" component="span">
       {row.beneficiary_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.beneficiary_email}
     </Typography>
   </Stack>
@@ -62,7 +68,9 @@ const renderProof = (row: PaymentReleaseRow) => (
       <Typography variant="caption" component="span">{row.evidence_media.length} media files</Typography>
     ) : null}
     {row.notes && (
-      <Typography variant="caption" color="text.secondary" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {row.notes}
       </Typography>
     )}

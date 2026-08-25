@@ -15,7 +15,9 @@ export default function ReportSummary({ report }: Readonly<{ report: PackageUpda
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         <Chip variant="outlined" label={`${t('tech.packageUpdates.manifests')}: ${report.totalPackages}`} />
         <Chip
           variant="outlined"
@@ -33,7 +35,9 @@ export default function ReportSummary({ report }: Readonly<{ report: PackageUpda
         <Chip color="warning" variant="outlined" label={`${t('tech.packageUpdates.minor')}: ${report.minor}`} />
         <Chip color="info" variant="outlined" label={`${t('tech.packageUpdates.patch')}: ${report.patch}`} />
       </Stack>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {report.checkedAt
           ? `${t('tech.packageUpdates.lastChecked')}: ${formatDateTime(report.checkedAt)}`
           : t('tech.packageUpdates.neverChecked')}

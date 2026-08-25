@@ -120,8 +120,17 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
         <CardContent sx={{ textAlign: 'center', p: 3 }}>
           <PaymentLottie variant="success" size={140} />
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.successOverline')}</Typography>
-          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ mt: 0.5, lineHeight: 1.05 }}>{t('mweb.checkout.successTitle')}</Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              mt: 0.5,
+              lineHeight: 1.05
+            }}>{t('mweb.checkout.successTitle')}</Typography>
+          <Typography variant="body2" gutterBottom sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.checkout.successSubtitle')}
           </Typography>
           <Box sx={{ mt: 3, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
@@ -135,11 +144,17 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           {pod && (
             <Box sx={{ mt: 2, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
               <Stack spacing={1.25}>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <EventAvailableIcon color="primary" />
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography fontWeight={700} noWrap>{pod.pod_title}</Typography>
-                    <Typography variant="caption" color="text.secondary">{formatDateTime(pod.pod_date_time)}</Typography>
+                    <Typography noWrap sx={{
+                      fontWeight: 700
+                    }}>{pod.pod_title}</Typography>
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>{formatDateTime(pod.pod_date_time)}</Typography>
                   </Box>
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -151,9 +166,13 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
                   </Button>
                 </Stack>
                 {venueTotal > 0 && (
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
                     <StorefrontIcon fontSize="small" color="action" />
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {t('mweb.checkout.venueChargesPaid', {
                         vars: { amount: formatMoney(payment.currency_symbol, venueTotal) },
                       })}
@@ -180,9 +199,20 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
 
 function Row({ label, value, bold, mono }: Readonly<{ label: string; value: string; bold?: boolean; mono?: boolean }>) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center">
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500}>{label}</Typography>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500} sx={mono ? { fontFamily: 'monospace' } : undefined}>{value}</Typography>
+    <Stack
+      direction="row"
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} sx={{
+        fontWeight: bold ? 700 : 500
+      }}>{label}</Typography>
+      <Typography
+        variant={bold ? 'subtitle1' : 'body2'}
+        sx={[{
+          fontWeight: bold ? 700 : 500
+        }, mono ? { fontFamily: 'monospace' } : false]}>{value}</Typography>
     </Stack>
   );
 }

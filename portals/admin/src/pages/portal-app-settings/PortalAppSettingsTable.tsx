@@ -46,7 +46,9 @@ function FeatureCell({
 }: Readonly<FeatureCellProps>) {
   if (!hasConsoleHeader(row)) {
     return (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {naLabel}
       </Typography>
     );
@@ -56,8 +58,10 @@ function FeatureCell({
       <Switch
         checked={row[field]}
         disabled={busyKey === row.key}
-        inputProps={{ 'aria-label': `${headerName} — ${row.name}` }}
         onChange={(e) => onToggle(row, field, e.target.checked)}
+        slotProps={{
+          input: { 'aria-label': `${headerName} — ${row.name}` }
+        }}
       />
     </Tooltip>
   );
@@ -81,11 +85,17 @@ function buildColumns({ t, busyKey, onToggle }: ColumnDeps): DuncitColumn<Portal
 
   const renderName = (row: PortalAppRow) => (
     <Box sx={{ lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={700} component="div">
+      <Typography variant="body2" component="div" sx={{
+        fontWeight: 700
+      }}>
         {row.name}
       </Typography>
-      <Stack direction="row" spacing={0.5} alignItems="center" component="span">
-        <Typography variant="caption" color="text.secondary">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        alignItems: "center"
+      }}>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {row.key}
         </Typography>
         <Chip size="small" variant="outlined" label={kindLabel[row.kind]} />
@@ -106,7 +116,9 @@ function buildColumns({ t, busyKey, onToggle }: ColumnDeps): DuncitColumn<Portal
         <OpenInNewIcon sx={{ fontSize: 14 }} />
       </Link>
     ) : (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         —
       </Typography>
     );

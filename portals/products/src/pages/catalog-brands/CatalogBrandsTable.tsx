@@ -28,10 +28,14 @@ const contactValue = (b: CatalogBrandRow) =>
 
 const renderBrand = (b: CatalogBrandRow) => (
   <Stack sx={{ lineHeight: 1.2 }} component="span">
-    <Typography variant="body2" fontWeight={600} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 600
+    }}>
       {b.brand_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {contactValue(b)}
     </Typography>
   </Stack>
@@ -72,7 +76,9 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       onManage(b);
     };
     const renderActions = (b: CatalogBrandRow) => (
-      <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
+      <Stack direction="row" spacing={1} component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button
           size="small"
           variant="outlined"

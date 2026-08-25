@@ -100,7 +100,13 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
 
   return (
     <Box sx={{ flex: 1, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <Stack direction="row" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <DuncitTabs items={paneTabs(t)} value={tab} onChange={setTab} sx={{ flex: 1, minHeight: 40 }} />
         {tab === 'preview' && (
           <Tooltip title={t('crm.emailTemplates.fullScreenPreview')}>
@@ -114,8 +120,20 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
           {previewErrors.length > 0 && <Alert severity="warning" sx={{ borderRadius: 0 }}>{previewErrors.slice(0, 3).join(' · ')}</Alert>}
           <iframe title="preview" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen>
-            <Stack direction="row" alignItems="center" sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1 }}>Preview · {draft.name}</Typography>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                p: 1,
+                borderBottom: 1,
+                borderColor: 'divider'
+              }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 700,
+                  flex: 1
+                }}>Preview · {draft.name}</Typography>
               <IconButton onClick={() => setFullscreen(false)} aria-label={t('crm.emailTemplates.closeFullScreen')}><CloseIcon /></IconButton>
             </Stack>
             <iframe title="preview-fullscreen" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
@@ -125,7 +143,9 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
         <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
           <Stack spacing={2}>
             <Stack spacing={0.5}>
-              <Stack direction="row" alignItems="center">
+              <Stack direction="row" sx={{
+                alignItems: "center"
+              }}>
                 <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.detectedInTemplate')}</Typography>
                 <Button size="small" onClick={onImportDetected} disabled={!detected.length}>{t('crm.emailTemplates.syncAll')}</Button>
               </Stack>
@@ -137,7 +157,9 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               )}
             </Stack>
             {draft.target === 'STATIC' ? (
-              <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.staticTemplateNoLeadVariablesDetected')}</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{t('crm.emailTemplates.staticTemplateNoLeadVariablesDetected')}</Typography>
             ) : (
               <VariableChips
                 title={`Available for ${targetNoun}`}
@@ -149,16 +171,22 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
 
             <Divider />
             <Typography variant="subtitle2">{t('crm.emailTemplates.defaultValues')}</Typography>
-            <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.usedForPreviewAndAsThe')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{t('crm.emailTemplates.usedForPreviewAndAsThe')}</Typography>
             <VariablesValuesEditor variables={draft.variables} values={sampleValues} onChange={setSampleValues} emptyHint="Add variables above to set default values." />
 
             <Typography variant="subtitle2">{t('crm.emailTemplates.declaredVariables')}</Typography>
             {draft.variables.length === 0 ? (
-              <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.addFromTheChipsAbove')}</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{t('crm.emailTemplates.addFromTheChipsAbove')}</Typography>
             ) : (
               <Stack spacing={1}>
                 {declaredRows.map(({ v, index, key }) => (
-                  <Stack key={key} direction="row" spacing={1} alignItems="center">
+                  <Stack key={key} direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
                     <TextField
                       size="small"
                       value={v.key}

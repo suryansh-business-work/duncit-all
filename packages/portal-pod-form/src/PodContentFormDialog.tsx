@@ -88,7 +88,12 @@ export default function PodContentFormDialog({
           <Stack spacing={2}>
             {readOnlyContext.length > 0 && (
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'action.hover' }}>
-                <Typography variant="overline" color="text.secondary" fontWeight={800}>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 800
+                  }}>
                   {t('shell.podContent.readOnlyHeading')}
                 </Typography>
                 <Stack spacing={0.25} sx={{ mt: 0.5 }}>
@@ -126,8 +131,16 @@ export default function PodContentFormDialog({
             />
 
             <Box>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 0.5
+                }}>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('shell.podContent.images')}
                 </Typography>
                 {!imagesDisabled && onPickImage && (
@@ -159,7 +172,9 @@ export default function PodContentFormDialog({
                   ))}
                 </Box>
               ) : (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('shell.podContent.noImages')}
                 </Typography>
               )}

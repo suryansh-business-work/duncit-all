@@ -13,7 +13,9 @@ import { formatDateTime, useTranslation } from '@duncit/app-settings';
 const getRowId = (row: TelemetryLogRow) => row.id;
 
 const renderWhen = (row: TelemetryLogRow) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {formatDateTime(row.created_at)}
   </Typography>
 );

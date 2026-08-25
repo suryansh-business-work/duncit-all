@@ -55,7 +55,9 @@ export default function AvatarVariant({
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "center"
+      }}>
         {value ? (
           <Avatar
             src={value}
@@ -85,9 +87,12 @@ export default function AvatarVariant({
         <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             variant="caption"
-            color="text.secondary"
-            sx={{ fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}
-          >
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              textTransform: 'uppercase'
+            }}>
             {label}
           </Typography>
           <Stack direction="row" spacing={1}>
@@ -116,7 +121,9 @@ export default function AvatarVariant({
             )}
           </Stack>
           {helperText && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {helperText}
             </Typography>
           )}

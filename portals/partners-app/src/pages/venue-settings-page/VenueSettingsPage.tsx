@@ -76,7 +76,11 @@ export default function VenueSettingsPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress size={28} />
       </Stack>
     );
@@ -85,10 +89,14 @@ export default function VenueSettingsPage() {
   return (
     <Stack spacing={2.25} sx={{ width: '100%', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           {t('partners.venueSettingsPage.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('partners.venueSettingsPage.subtitle')}
         </Typography>
       </Stack>
@@ -114,7 +122,9 @@ export default function VenueSettingsPage() {
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={1.5}>
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant="subtitle1" sx={{
+                  fontWeight: 600
+                }}>
                   {t('partners.venueSettingsPage.cancellationTitle')}
                 </Typography>
                 <CancellationPolicyForm

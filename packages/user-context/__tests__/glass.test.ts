@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { glass } from '../src/login-screen/glass';
 
-const themeWith = (mode: 'light' | 'dark') => ({ palette: { mode } }) as never;
+const themeWith = (mode: 'light' | 'dark') => (({
+  palette: { mode }
+}) as never);
 
 describe('glass', () => {
   it('returns a light frosted surface', () => {

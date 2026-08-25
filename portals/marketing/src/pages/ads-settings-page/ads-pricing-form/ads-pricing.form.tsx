@@ -36,7 +36,9 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
       <Typography variant="subtitle2" gutterBottom>
         Live example
       </Typography>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        alignItems: { sm: 'center' }
+      }}>
         <TextField
           select
           size="small"
@@ -55,12 +57,16 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
           size="small"
           label={t('marketing.common.days')}
           type="number"
-          inputProps={{ min: Number(values.min_days) || 1, max: Number(values.max_days) || 30 }}
           value={days}
           onChange={(e) => setDays(e.target.value)}
           sx={{ width: 110 }}
+          slotProps={{
+            htmlInput: { min: Number(values.min_days) || 1, max: Number(values.max_days) || 30 }
+          }}
         />
-        <Typography variant="body1" fontWeight={700}>
+        <Typography variant="body1" sx={{
+          fontWeight: 700
+        }}>
           {exampleText}
         </Typography>
       </Stack>
@@ -90,19 +96,30 @@ export default function AdsPricingForm({
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
         {AD_POSITIONS.map((p) => (
-          <Grid item xs={12} sm={6} md={4} key={p.position}>
+          <Grid
+            key={p.position}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <RhfTextField
               control={control}
               name={p.priceField}
               label={`${p.label} — per day`}
               type="number"
-              inputProps={{ min: 0, step: '0.01' }}
+              slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
               hint="Price charged per day for this placement"
               required
             />
           </Grid>
         ))}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 4
+          }}>
           <RhfTextField
             control={control}
             name="currency_symbol"
@@ -115,41 +132,53 @@ export default function AdsPricingForm({
             numbers and the server refuses anything outside them, so a length
             the public page offers can never be one a submission is rejected
             for. */}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 4
+          }}>
           <RhfTextField
             control={control}
             name="min_days"
             label={t('marketing.adsSettings.minimumCampaignDays')}
             type="number"
-            inputProps={{ min: 1, step: 1 }}
+            slotProps={{ htmlInput: { min: 1, step: 1 } }}
             hint="Shortest campaign an advertiser may book"
             required
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 4
+          }}>
           <RhfTextField
             control={control}
             name="max_days"
             label={t('marketing.adsSettings.maximumCampaignDays')}
             type="number"
-            inputProps={{ min: 1, step: 1 }}
+            slotProps={{ htmlInput: { min: 1, step: 1 } }}
             hint="Longest campaign an advertiser may book"
             required
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <PlacementCopyFields control={control} />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <AdsPricingExample values={values} />
         </Grid>
         {errorMessage && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
-        <Grid item xs={12}>
-          <Stack direction="row" justifyContent="flex-end">
+        <Grid size={12}>
+          <Stack direction="row" sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button
               type="submit"
               variant="contained"

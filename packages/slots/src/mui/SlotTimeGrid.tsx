@@ -73,7 +73,9 @@ export default function SlotTimeGrid({
               '&:hover': { borderColor: slot.disabled ? 'divider' : 'primary.main' },
             }}
           >
-            <Typography variant="body2" fontWeight={900}>
+            <Typography variant="body2" sx={{
+              fontWeight: 900
+            }}>
               {time}
             </Typography>
             {secondary && (

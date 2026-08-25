@@ -20,8 +20,12 @@ export default function ManagedOptionRow({ row, busy, disableActions, onToggleAc
     <TableRow hover>
       <TableCell>{row.sort_order}</TableCell>
       <TableCell>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="body2" fontWeight={600}>{row.name}</Typography>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>{row.name}</Typography>
           {!row.is_active && <Chip size="small" label={t('crm.common.inactive')} color="warning" />}
         </Stack>
       </TableCell>

@@ -64,7 +64,12 @@ function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
   const navigate = useNavigate();
   const emptyOrList =
     pods.length === 0 ? (
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mt: 1
+        }}>
         No pods yet.
       </Typography>
     ) : (
@@ -97,7 +102,13 @@ function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mt: 1
+        }}>
         <Typography variant="subtitle2">{t('mweb.common.yourPods')}</Typography>
         <Chip size="small" label={pods.length} />
       </Stack>
@@ -128,7 +139,9 @@ export default function UserHostPanel() {
   if (!host) {
     return (
       <Stack spacing={1.5}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {isHost
             ? "You're a host. Complete your host profile to add payout and verification details."
             : 'You have not started a host profile yet.'}
@@ -142,19 +155,25 @@ export default function UserHostPanel() {
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: 'rgba(255,193,7,0.16)', color: 'warning.main', display: 'grid', placeItems: 'center' }}>
           <WorkspacePremiumIcon fontSize="small" />
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{t('mweb.profile.hostApplication')}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {isApproved ? 'Approved host profile' : `Step ${completed} of 4 completed`}
           </Typography>
         </Box>
         <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
       </Stack>
-      <Stack direction="row" spacing={0.75} alignItems="center">
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
         {labels.map((label, index) => {
           const done = index < completed || isApproved;
           return (
@@ -168,7 +187,9 @@ export default function UserHostPanel() {
         })}
       </Stack>
       {(host.approved_at || host.submitted_at) && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {host.approved_at ? `Approved ${formatDate(host.approved_at)}` : `Submitted ${formatDate(host.submitted_at)}`}
         </Typography>
       )}

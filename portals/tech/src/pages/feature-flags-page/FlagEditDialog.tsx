@@ -62,7 +62,9 @@ export default function FlagEditDialog({
             multiline
             minRows={2}
           />
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Switch
               checked={editing.enabled}
               onChange={(_, v) => setEditing((p) => ({ ...p, enabled: v }))}

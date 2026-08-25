@@ -45,21 +45,36 @@ export default function PodClubCard({ clubId }: Readonly<Props>) {
     >
       {club && (
         <Stack spacing={2}>
-          <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
-            <Typography variant="body2" fontWeight={800}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              alignItems: "baseline",
+              flexWrap: "wrap"
+            }}>
+            <Typography variant="body2" sx={{
+              fontWeight: 800
+            }}>
               {club.club_name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               /{club.club_slug}
             </Typography>
           </Stack>
           {admins.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               This club has no club admins.
             </Typography>
           )}
           {admins.map((admin) => (
-            <Stack key={admin.id} direction="row" spacing={1.5} alignItems="center">
+            <Stack key={admin.id} direction="row" spacing={1.5} sx={{
+              alignItems: "center"
+            }}>
               <Avatar src={admin.avatar_url ?? undefined} sx={{ width: 32, height: 32 }}>
                 {(admin.name?.[0] ?? '?').toUpperCase()}
               </Avatar>

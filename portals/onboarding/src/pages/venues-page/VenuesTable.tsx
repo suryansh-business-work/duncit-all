@@ -32,12 +32,19 @@ const renderVenue = (v: VenueRow) => (
       to={`/venues/${v.id}`}
       underline="hover"
       variant="body2"
-      fontWeight={700}
       color="inherit"
+      sx={{
+        fontWeight: 700
+      }}
     >
       {v.venue_name}
     </Link>
-    <Typography variant="caption" color="text.secondary" display="block">{v.venue_type}</Typography>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>{v.venue_type}</Typography>
   </>
 );
 
@@ -57,14 +64,24 @@ const renderCategory = (v: VenueRow) => <Typography variant="body2">{categoryVal
 const renderLocation = (v: VenueRow) => (
   <>
     <Typography variant="body2">{locationValue(v)}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">{v.postal_code || '—'}</Typography>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>{v.postal_code || '—'}</Typography>
   </>
 );
 
 const renderOwner = (v: VenueRow) => (
   <>
     <Typography variant="body2">{v.owner_name || '—'}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">{v.owner_phone || v.owner_email || '—'}</Typography>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>{v.owner_phone || v.owner_email || '—'}</Typography>
   </>
 );
 

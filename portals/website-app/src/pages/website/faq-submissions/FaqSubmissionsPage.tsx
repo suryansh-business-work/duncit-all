@@ -38,7 +38,9 @@ export default function FaqSubmissionsPage() {
       updateStatus({ variables: { id: row.id, status } }).catch(() => undefined);
     };
     const renderActions = (row: FaqSubmission) => (
-      <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
+      <Stack direction="row" spacing={1} component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button
           size="small"
           variant="outlined"
@@ -100,7 +102,9 @@ export default function FaqSubmissionsPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" sx={{
+        fontWeight: 700
+      }}>
         FAQ Submission
       </Typography>
       <DuncitTable<FaqSubmission>

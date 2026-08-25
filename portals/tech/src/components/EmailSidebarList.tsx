@@ -7,6 +7,7 @@ import {
   ListItemButton,
   ListItemText,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -19,6 +20,75 @@ export interface SidebarItem {
   secondary?: string;
   /** Renders an "off" chip. */
   off?: boolean;
+  /**
+   * A number the row carries — the Templates list puts its send count here.
+   *
+   * Not a link, deliberately: the row is already a button, and an anchor
+   * inside one is neither valid nor reachable by keyboard. The clickable
+   * version of the same number lives in the editor beside it.
+   */
+  badge?: { label: string; title: string; muted?: boolean };
+}
+
+/**
+ * One row, hoisted out of the list's `.map` so the list itself stays a list.
+ *
+ * The number down the left is the row's position in what is CURRENTLY visible,
+ * not in the unfiltered set — a filtered list renumbers from 1.
+ */
+function SidebarRow({
+  item,
+  position,
+  selected,
+  onSelect,
+}: Readonly<{
+  item: SidebarItem;
+  position: number;
+  selected: boolean;
+  onSelect: (key: string) => void;
+}>) {
+  return (
+    <ListItemButton
+      selected={selected}
+      onClick={() => onSelect(item.key)}
+      sx={{ alignItems: 'flex-start', gap: 1 }}
+    >
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          minWidth: 22,
+          textAlign: 'right',
+          pt: 0.35,
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+        {position}
+      </Typography>
+      <ListItemText
+        primary={item.primary}
+        secondary={
+          item.secondary ? (
+            <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 11 }}>
+              {item.secondary}
+            </Box>
+          ) : undefined
+        }
+        sx={{ my: 0 }}
+      />
+      {item.badge && (
+        <Tooltip title={item.badge.title}>
+          <Chip
+            size="small"
+            variant="outlined"
+            color={item.badge.muted ? 'default' : 'primary'}
+            label={item.badge.label}
+            sx={{ mt: 0.25, fontVariantNumeric: 'tabular-nums' }}
+          />
+        </Tooltip>
+      )}
+      {item.off && <Chip size="small" label="off" sx={{ mt: 0.25 }} />}
+    </ListItemButton>
+  );
 }
 
 interface Props {
@@ -83,15 +153,22 @@ export default function EmailSidebarList({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={searchPlaceholder}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
-        <Typography variant="caption" color="text.secondary" sx={{ pl: 0.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            pl: 0.5
+          }}>
           {filtered.length === items.length
             ? `${items.length} total`
             : `${filtered.length} of ${items.length}`}
@@ -100,37 +177,23 @@ export default function EmailSidebarList({
 
       <List dense disablePadding sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {filtered.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              p: 2
+            }}>
             {search.trim() ? `Nothing matches “${search.trim()}”.` : emptyText}
           </Typography>
         )}
         {filtered.map((item, index) => (
-          <ListItemButton
+          <SidebarRow
             key={item.key}
+            item={item}
+            position={index + 1}
             selected={selected === item.key}
-            onClick={() => onSelect(item.key)}
-            sx={{ alignItems: 'flex-start', gap: 1 }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ minWidth: 22, textAlign: 'right', pt: 0.35, fontVariantNumeric: 'tabular-nums' }}
-            >
-              {index + 1}
-            </Typography>
-            <ListItemText
-              primary={item.primary}
-              secondary={
-                item.secondary ? (
-                  <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 11 }}>
-                    {item.secondary}
-                  </Box>
-                ) : undefined
-              }
-              sx={{ my: 0 }}
-            />
-            {item.off && <Chip size="small" label="off" sx={{ mt: 0.25 }} />}
-          </ListItemButton>
+            onSelect={onSelect}
+          />
         ))}
       </List>
     </Box>

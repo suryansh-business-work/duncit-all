@@ -33,7 +33,9 @@ export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Create a test chat against {label} using this entry's API key.
       </Typography>
       <TextField
@@ -44,7 +46,9 @@ export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
         minRows={2}
         fullWidth
         autoComplete="off"
-        inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
+        slotProps={{
+          htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
+        }}
       />
       <Button startIcon={<ChatIcon />} variant="contained" onClick={send} disabled={loading}>
         {loading ? 'Creating…' : `Create ${label} chat`}

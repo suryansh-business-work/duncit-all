@@ -64,23 +64,25 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
           placeholder={t('mweb.search.searchClubsPodsCategoriesOrActivities')}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
-          inputProps={{ 'aria-label': 'Search Duncit', enterKeyHint: 'search' }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: value ? (
-              <InputAdornment position="end">
-                <IconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ) : null,
-          }}
           sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper', minHeight: 48 } }}
-        />
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: value ? (
+                <InputAdornment position="end">
+                  <IconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            },
+
+            htmlInput: { 'aria-label': 'Search Duncit', enterKeyHint: 'search' }
+          }} />
         {showSuggestions && (
           <Paper
             elevation={6}
@@ -90,8 +92,16 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
               {suggestions.map((s) => (
                 <ListItemButton key={`${s.kind}:${s.text}`} onClick={() => pick(s.text)}>
                   <SearchIcon fontSize="small" color="action" sx={{ mr: 1.25 }} />
-                  <ListItemText primary={s.text} primaryTypographyProps={{ fontWeight: 700, noWrap: true }} />
-                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1, flex: '0 0 auto' }}>
+                  <ListItemText primary={s.text} slotProps={{
+                    primary: { noWrap: true, sx: { fontWeight: 700 } }
+                  }} />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      ml: 1,
+                      flex: '0 0 auto'
+                    }}>
                     {kindLabel[s.kind] ?? s.kind}
                   </Typography>
                 </ListItemButton>

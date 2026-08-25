@@ -20,7 +20,9 @@ interface Props {
 const getPlanRowId = (r: PlanRow) => r.id;
 
 const renderName = (r: PlanRow) => (
-  <Stack direction="row" spacing={1.25} alignItems="center" component="span">
+  <Stack direction="row" spacing={1.25} component="span" sx={{
+    alignItems: "center"
+  }}>
     <Box
       component="span"
       sx={{
@@ -32,10 +34,22 @@ const renderName = (r: PlanRow) => (
       }}
     />
     <Box sx={{ lineHeight: 1.2 }} component="span">
-      <Typography variant="body2" fontWeight={600} component="span" display="block">
+      <Typography
+        variant="body2"
+        component="span"
+        sx={{
+          fontWeight: 600,
+          display: "block"
+        }}>
         {r.name}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="span" display="block">
+      <Typography
+        variant="caption"
+        component="span"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {r.tagline}
       </Typography>
     </Box>
@@ -46,10 +60,22 @@ const renderKey = (r: PlanRow) => <code>{r.key}</code>;
 
 const renderPrice = (r: PlanRow) => (
   <Box component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="span" display="block">
+    <Typography
+      variant="body2"
+      component="span"
+      sx={{
+        fontWeight: 600,
+        display: "block"
+      }}>
       {r.price_label || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span" display="block">
+    <Typography
+      variant="caption"
+      component="span"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>
       {r.price_note}
     </Typography>
   </Box>

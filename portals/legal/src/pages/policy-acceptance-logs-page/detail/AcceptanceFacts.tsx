@@ -22,7 +22,9 @@ export default function AcceptanceFacts({ acceptance, formatDateTime }: Readonly
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 800
+      }}>
         {t('legalAcceptanceLogs.detail.sectionAcceptance')}
       </Typography>
       <InfoRow
@@ -57,7 +59,9 @@ export default function AcceptanceFacts({ acceptance, formatDateTime }: Readonly
         value={acceptance.content_hash}
         valueSx={{ ...MONO, wordBreak: 'break-all' }}
       />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('legalAcceptanceLogs.detail.contentHashHint')}
       </Typography>
     </Stack>

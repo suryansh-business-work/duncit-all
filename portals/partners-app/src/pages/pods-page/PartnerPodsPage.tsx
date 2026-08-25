@@ -45,10 +45,18 @@ export default function PartnerPodsPage() {
   return (
     <Stack spacing={2.5}>
       <Box sx={{ p: 2.25, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' }
+          }}>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.podsPage.partnerPods')}</Typography>
-            <Typography variant="h4" fontWeight={950}>{t('partners.podsPage.createAndManagePods')}</Typography>
+            <Typography variant="h4" sx={{
+              fontWeight: 950
+            }}>{t('partners.podsPage.createAndManagePods')}</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.podsPage.useTheSamePodSetupFlow')}</Typography>
           </Box>
           <Button variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>{t('partners.podsPage.addPod')}</Button>

@@ -20,16 +20,24 @@ interface StatCardProps {
 function StatCard({ stat, t }: Readonly<StatCardProps>) {
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+      <Typography variant="subtitle1" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         {t(CATEGORY_LABEL_KEYS[stat.category])}
       </Typography>
       <Stack spacing={0.5}>
         {STAT_LINES.map((line) => (
-          <Stack key={line.field} direction="row" justifyContent="space-between" spacing={2}>
-            <Typography variant="body2" color="text.secondary" noWrap>
+          <Stack key={line.field} direction="row" spacing={2} sx={{
+            justifyContent: "space-between"
+          }}>
+            <Typography variant="body2" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {t(line.labelKey)}
             </Typography>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {formatDateTime(stat[line.field])}
             </Typography>
           </Stack>

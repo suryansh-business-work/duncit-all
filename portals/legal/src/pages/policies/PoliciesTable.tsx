@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import HistoryIcon from '@mui/icons-material/History';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import MailOutlineIcon from '@mui/icons-material/MailOutlined';
 import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { Policy } from '../../graphql/policies';
 import { useTranslation } from '@duncit/shell';
@@ -26,7 +26,9 @@ interface Props {
 const getPolicyRowId = (p: Policy) => p.id;
 
 const renderTitle = (p: Policy) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {p.title}
   </Typography>
 );
@@ -52,7 +54,9 @@ export default function PoliciesTable({
       <Chip size="small" color={p.is_active ? 'success' : 'default'} label={activeLabel(p)} />
     );
     const renderActions = (p: Policy) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Tooltip title={t('legal.policies.versions.action')}>
           <IconButton size="small" aria-label={t('legal.policies.versions.action')} onClick={() => onHistory(p)}>
             <HistoryIcon fontSize="small" />

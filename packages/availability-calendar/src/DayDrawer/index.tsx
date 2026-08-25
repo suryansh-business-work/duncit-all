@@ -43,14 +43,28 @@ export default function DayDrawer({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Drawer anchor="right" open={open && !!date} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
+    <Drawer anchor="right" open={open && !!date} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 380 } } }
+    }}>
       <Stack spacing={2} sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 900
+              }}>
               Availability
             </Typography>
-            <Typography variant="h6" fontWeight={900}>
+            <Typography variant="h6" sx={{
+              fontWeight: 900
+            }}>
               {date ? formatDate(date) : ''}
             </Typography>
           </Box>

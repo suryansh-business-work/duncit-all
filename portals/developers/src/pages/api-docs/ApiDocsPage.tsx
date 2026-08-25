@@ -28,10 +28,14 @@ export default function ApiDocsPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" fontWeight={900}>
+        <Typography variant="h5" sx={{
+          fontWeight: 900
+        }}>
           {t('developers.apiDocs.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {/* The host and header name are substituted rather than written into
               the sentence, so a translation cannot fork the values an
               integrator is meant to copy. */}
@@ -54,12 +58,23 @@ export default function ApiDocsPage() {
       {API_ENDPOINTS.map((endpoint) => (
         <Accordion key={endpoint.id} disableGutters variant="outlined" sx={{ borderRadius: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+            <Stack
+              direction="row"
+              spacing={1.25}
+              sx={{
+                alignItems: "center",
+                minWidth: 0
+              }}>
               <Chip size="small" color={METHOD_COLOR[endpoint.method]} label={endpoint.method} sx={{ fontWeight: 900 }} />
               <Typography sx={{ fontFamily: 'monospace', fontSize: 13 }} noWrap>
                 {endpoint.path}
               </Typography>
-              <Typography variant="body2" fontWeight={800} sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 800,
+                  display: { xs: 'none', sm: 'block' }
+                }}>
                 {t(endpoint.titleKey)}
               </Typography>
               <Chip size="small" variant="outlined" label={endpoint.scope} />
@@ -67,7 +82,9 @@ export default function ApiDocsPage() {
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {t(endpoint.descriptionKey)}
               </Typography>
               <Box
@@ -76,7 +93,12 @@ export default function ApiDocsPage() {
               >
                 {buildCurl(endpoint, {}, apiKey)}
               </Box>
-              <Typography variant="caption" fontWeight={900} color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 900,
+                  color: "text.secondary"
+                }}>
                 {t('developers.apiDocs.sampleResponse')}
               </Typography>
               <Box
@@ -86,7 +108,12 @@ export default function ApiDocsPage() {
                 {endpoint.sampleResponse}
               </Box>
               <Divider />
-              <Typography variant="caption" fontWeight={900} color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 900,
+                  color: "text.secondary"
+                }}>
                 {t('developers.apiDocs.tryIt')}
               </Typography>
               <TryItPanel endpoint={endpoint} apiKey={apiKey} />

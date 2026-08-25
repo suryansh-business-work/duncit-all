@@ -69,11 +69,22 @@ export default function SurveysListPage() {
     <Stack spacing={2.5}>
       <Box><BackButton onClick={() => navigate('/surveys')}>{t('onboarding.surveys.backToSurveys')}</BackButton></Box>
 
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Icon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={800}>{meta.title}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{meta.title}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Category-specific {meta.label} surveys shown before onboarding. Manage the fallback with Default Survey.
           </Typography>
         </Box>
@@ -84,7 +95,11 @@ export default function SurveysListPage() {
       <ScopePicker value={scope} onChange={setScope} />
 
       {catsLoading && superIds.length === 0 && (
-        <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}><CircularProgress /></Stack>
       )}
       {!catsLoading && superIds.length === 0 && (
         <Alert severity="info">{t('onboarding.surveys.noCategorySpecificSurveysYetThe')}</Alert>

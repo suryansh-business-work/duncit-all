@@ -1,4 +1,4 @@
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 /**
  * When the schedule is owed a run. Pure, so the awkward cases — a server that
@@ -49,7 +49,7 @@ function occurrenceOn(day: Date, time: TimeOfDay, zone: string): Date {
     0,
     0,
   );
-  return zonedTimeToUtc(wall, zone);
+  return fromZonedTime(wall, zone);
 }
 
 /** The same zone-local day, `days` earlier. */
@@ -78,7 +78,7 @@ export function lastDueAt(
   const time = parseTimeOfDay(schedule.time_of_day);
   if (!time) return null;
 
-  const zonedNow = utcToZonedTime(now, zone);
+  const zonedNow = toZonedTime(now, zone);
   const weekly = schedule.frequency === 'WEEKLY';
   const back = weekly ? daysSinceWeekday(zonedNow, schedule.weekday) : 0;
   const candidate = occurrenceOn(shiftDays(zonedNow, back), time, zone);
@@ -96,7 +96,7 @@ export function nextRunAt(
   const time = parseTimeOfDay(schedule.time_of_day);
   const previous = lastDueAt(schedule, now, zone);
   if (!time || !previous) return null;
-  const zonedPrevious = utcToZonedTime(previous, zone);
+  const zonedPrevious = toZonedTime(previous, zone);
   const step = schedule.frequency === 'WEEKLY' ? -7 : -1;
   return occurrenceOn(shiftDays(zonedPrevious, step), time, zone);
 }

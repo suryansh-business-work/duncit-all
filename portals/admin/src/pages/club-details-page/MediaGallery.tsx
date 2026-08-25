@@ -19,9 +19,17 @@ export default function MediaGallery({ title, icon, items, emptyText }: Readonly
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           {icon}
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 900
+          }}>
             {title}
           </Typography>
           <Chip size="small" label={items.length} sx={{ ml: 0.5 }} />
@@ -29,7 +37,9 @@ export default function MediaGallery({ title, icon, items, emptyText }: Readonly
         <Divider sx={{ mb: 1.5 }} />
 
         {items.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {emptyText}
           </Typography>
         ) : (

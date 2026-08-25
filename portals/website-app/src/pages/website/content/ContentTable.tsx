@@ -20,15 +20,21 @@ interface Props {
 const getContentRowId = (item: WebsiteContentItem) => item.id;
 
 const renderEntry = (item: WebsiteContentItem) => (
-  <Stack direction="row" spacing={1.5} alignItems="center">
+  <Stack direction="row" spacing={1.5} sx={{
+    alignItems: "center"
+  }}>
     <Avatar src={item.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
       <ImageIcon fontSize="small" />
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={600} noWrap component="div">
+      <Typography variant="body2" noWrap component="div" sx={{
+        fontWeight: 600
+      }}>
         {item.title}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="div">
+      <Typography variant="caption" noWrap component="div" sx={{
+        color: "text.secondary"
+      }}>
         /{item.slug}
       </Typography>
     </Box>
@@ -56,7 +62,9 @@ export default function ContentTable({
 
   const columns = useMemo<DuncitColumn<WebsiteContentItem>[]>(() => {
     const renderActions = (item: WebsiteContentItem) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
+      <Stack direction="row" component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <IconButton size="small" onClick={() => onEdit(item)} aria-label={t('shell.common.edit')}>
           <EditIcon fontSize="small" />
         </IconButton>

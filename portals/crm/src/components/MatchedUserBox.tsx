@@ -22,16 +22,29 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
   return (
     <Card variant="outlined" sx={{ borderColor: 'success.main' }} data-testid="matched-user-box">
       <CardContent>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <Avatar src={matched.profile_photo || undefined} sx={{ bgcolor: 'success.main' }}>
             {(matched.full_name || 'U')[0]?.toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography variant="subtitle2" fontWeight={800}>{matched.full_name || 'Duncit user'}</Typography>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap"
+              }}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 800
+              }}>{matched.full_name || 'Duncit user'}</Typography>
               <MatchedUserChip matched={matched} />
             </Stack>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {[matched.email, matched.phone].filter(Boolean).join(' · ') || '—'}
             </Typography>
           </Box>

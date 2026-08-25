@@ -14,13 +14,19 @@ function Tile({ label, value, hint, color }: Readonly<TileProps>) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 132 }}>
       <CardContent sx={{ py: 1.5 }}>
-        <Typography variant="h5" fontWeight={900} color={color}>
+        <Typography variant="h5" color={color} sx={{
+          fontWeight: 900
+        }}>
           {value.toLocaleString()}
         </Typography>
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {label}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {hint}
         </Typography>
       </CardContent>
@@ -36,7 +42,9 @@ function Tile({ label, value, hint, color }: Readonly<TileProps>) {
 export default function SummaryTiles({ campaign }: Readonly<{ campaign: WaCampaignRow }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={1.5} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       <Tile
         label={t('marketing.whatsappCampaigns.inTheAudience')}
         value={campaign.recipient_count}

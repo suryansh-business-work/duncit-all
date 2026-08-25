@@ -123,7 +123,13 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
           <Typography component="span" sx={{ fontWeight: 700, display: 'block' }}>
             Scan attendee tickets
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap display="block">
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             {pod?.pod_title}
           </Typography>
         </Box>
@@ -131,9 +137,16 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
       <DialogContent dividers>
         <Stack spacing={1.5}>
           {scanState.loading && (
-            <Stack alignItems="center" sx={{ py: 3 }} spacing={1}>
+            <Stack
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                py: 3
+              }}>
               <CircularProgress size={24} />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Checking the ticket…
               </Typography>
             </Stack>

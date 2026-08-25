@@ -22,26 +22,41 @@ export default function ConversationHeader({ channel }: Readonly<{ channel: Slac
     <Stack
       direction="row"
       spacing={1}
-      alignItems="center"
-      sx={{ px: 2, py: 1.25, borderBottom: 1, borderColor: 'divider' }}
-    >
+      sx={{
+        alignItems: "center",
+        px: 2,
+        py: 1.25,
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
       <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.75} sx={{
+          alignItems: "center"
+        }}>
           {channel.is_private ? (
             <LockIcon sx={{ fontSize: 16 }} color="action" />
           ) : (
-            <Typography component="span" color="text.secondary" fontWeight={800}>
+            <Typography
+              component="span"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 800
+              }}>
               #
             </Typography>
           )}
-          <Typography fontWeight={900} noWrap>
+          <Typography noWrap sx={{
+            fontWeight: 900
+          }}>
             {channel.name}
           </Typography>
           {!channel.is_member && (
             <Chip size="small" color="warning" variant="outlined" label={t('tech.slack.notMember')} />
           )}
         </Stack>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {t('tech.slack.channelMeta', {
             vars: { id: channel.id, members: String(channel.num_members) },
           })}

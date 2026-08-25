@@ -97,7 +97,12 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         Edit Club Admin
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           {row.club_admin_no || '—'}
         </Typography>
       </DialogTitle>
@@ -130,11 +135,15 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
           />
 
           <Stack spacing={0.5}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 700
+            }}>
               Category
             </Typography>
             <AdminCategorySelect value={category} onChange={setCategory} direction="column" />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Decides which clubs can be assigned in Review.
             </Typography>
           </Stack>
@@ -147,8 +156,10 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
             onChange={(e) => setCommission(e.target.value)}
             error={!commissionValid}
             helperText={commissionValid ? '0 inherits the platform default.' : 'Enter 0–100.'}
-            InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
             sx={{ width: 220 }}
+            slotProps={{
+              input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
+            }}
           />
         </Stack>
       </DialogContent>

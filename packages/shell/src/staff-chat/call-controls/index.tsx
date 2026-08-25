@@ -43,7 +43,9 @@ export default function CallControls({
   const hangUpLabel = t(phase === 'ringing' ? 'shell.chat.call.cancel' : 'shell.chat.call.hangUp');
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       {phase === 'incoming' ? (
         <>
           <Button

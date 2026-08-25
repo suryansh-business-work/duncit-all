@@ -70,7 +70,13 @@ export default function GpsLocationPicker({
         {busy ? 'Locating…' : 'Use my location'}
       </Button>
       {geocoded?.city && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 0.5
+          }}>
           Detected: {geocoded.city}
           {geocoded.pincode ? ` · ${geocoded.pincode}` : ''}
         </Typography>

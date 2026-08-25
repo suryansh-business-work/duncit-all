@@ -98,7 +98,13 @@ export default function LocationDialog({
   const applyLabel = draftZone ? `Apply · ${draftZone}` : zonesLabel;
 
   const title = (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        minWidth: 0
+      }}>
       <Box
         sx={{
           width: 34,
@@ -119,7 +125,13 @@ export default function LocationDialog({
         <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
           Choose your location
         </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.25 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            lineHeight: 1.25
+          }}>
           Country, state, city &amp; area — pods are filtered by this.
         </Typography>
       </Box>
@@ -132,7 +144,13 @@ export default function LocationDialog({
       onClose={onClose}
       title={title}
       actions={
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            width: '100%'
+          }}>
           <Button color="error" onClick={onClose} sx={{ fontWeight: 600 }}>
             Cancel
           </Button>

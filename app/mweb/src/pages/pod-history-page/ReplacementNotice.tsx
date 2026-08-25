@@ -18,8 +18,12 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
 
   return (
     <Box sx={{ mt: 1.5 }}>
-      <Stack direction="row" alignItems="center" spacing={0.5}>
-        <Typography variant="body2" fontWeight={600}>
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
           {t('mweb.podHistory.findingReplacement')}
         </Typography>
         <IconButton
@@ -32,7 +36,13 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
         </IconButton>
       </Stack>
       <Collapse in={open}>
-        <Typography variant="body2" color="success.main" fontWeight={600} sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "success.main",
+            fontWeight: 600,
+            mt: 0.5
+          }}>
           {t('mweb.podHistory.replacementRefundNote', { vars: { pct } })}
         </Typography>
       </Collapse>

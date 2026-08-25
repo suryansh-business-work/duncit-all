@@ -98,8 +98,8 @@ export default function RegisterVenueForm({
             <Stack
               direction="row"
               spacing={1.25}
-              mt={3}
               sx={{
+                mt: 3,
                 position: 'sticky',
                 bottom: 12,
                 zIndex: 2,
@@ -109,9 +109,8 @@ export default function RegisterVenueForm({
                 bgcolor: 'background.paper',
                 border: 1,
                 borderColor: 'divider',
-                boxShadow: 4,
-              }}
-            >
+                boxShadow: 4
+              }}>
               <SaveBar
                 mode={mode}
                 active={active as EditableSectionKey | 'review'}

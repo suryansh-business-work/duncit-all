@@ -59,10 +59,18 @@ export default function ToggleSettingCard({
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-start"
+          }}>
           <Box>
             <Typography variant="subtitle1">{title}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {description}
             </Typography>
           </Box>
@@ -75,11 +83,19 @@ export default function ToggleSettingCard({
               onChange={(e) => {
                 flip(e.target.checked).catch(() => undefined);
               }}
-              inputProps={{ 'aria-label': title }}
+              slotProps={{
+                input: { 'aria-label': title }
+              }}
             />
           )}
         </Stack>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 1
+          }}>
           {checked ? onHint : offHint}
         </Typography>
         {err && (

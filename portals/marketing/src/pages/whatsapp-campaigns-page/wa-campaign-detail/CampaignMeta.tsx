@@ -7,8 +7,21 @@ import type { WaCampaignRow } from '../queries';
 /** One label/value line. Hoisted so it isn't redefined each render (S6478). */
 function MetaRow({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
-      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 150, fontWeight: 700 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "baseline",
+        flexWrap: "wrap"
+      }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          minWidth: 150,
+          fontWeight: 700
+        }}>
         {label}
       </Typography>
       {children}
@@ -41,7 +54,9 @@ export default function CampaignMeta({ campaign, audienceText, currency }: Reado
   return (
     <Stack spacing={0.75}>
       <MetaRow label={t('marketing.whatsappCampaigns.whatsappCampaign')}>
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {campaign.wa_campaign_name}
         </Typography>
       </MetaRow>
@@ -55,10 +70,14 @@ export default function CampaignMeta({ campaign, audienceText, currency }: Reado
       {/* The rate sits beside the total on purpose: a cost with no rate under
           it cannot be checked against the rate card. */}
       <MetaRow label={t('marketing.common.cost')}>
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {waMoney(campaign.cost, currency)}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {costHint(campaign, currency)}
         </Typography>
       </MetaRow>

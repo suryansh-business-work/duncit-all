@@ -43,7 +43,13 @@ export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Pr
           borderColor: isAgent ? 'primary.main' : 'divider',
         }}
       >
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 0.5
+          }}>
           <Typography variant="caption" sx={{ fontWeight: 700 }}>
             {msg.author_name || (isAgent ? 'Support' : 'User')}
           </Typography>

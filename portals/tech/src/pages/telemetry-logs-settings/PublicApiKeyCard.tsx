@@ -60,7 +60,9 @@ export default function PublicApiKeyCard() {
       <CardContent>
         <Stack spacing={1.5}>
           <Typography variant="h6">{t('tech.telemetryLogsSettings.publicJsonFeeds')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             The Bugs and Logs sections each offer a “Copy GET API” button. The URL it gives you
             returns the same rows as JSON and needs no login — the key below is what stands in for
             one.
@@ -81,7 +83,9 @@ export default function PublicApiKeyCard() {
           >
             {sample || 'Loading…'}
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             <Button size="small" startIcon={<ContentCopyIcon />} disabled={!key} onClick={copy}>
               Copy example URL
             </Button>
@@ -100,7 +104,9 @@ export default function PublicApiKeyCard() {
               </Button>
             ) : null}
           </Stack>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Filters go on the URL: <code>level</code>, <code>environment</code>, <code>source</code>,{' '}
             <code>user_id</code>, <code>session_id</code>, <code>since_hours</code> and{' '}
             <code>limit</code> for logs; <code>status</code>, <code>source</code> and{' '}

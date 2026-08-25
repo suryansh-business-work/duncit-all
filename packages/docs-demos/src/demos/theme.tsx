@@ -35,7 +35,9 @@ export default defineDemos('theme', [
       >
         <Paper sx={{ p: 2.5, borderRadius: 2 }}>
           <Stack spacing={2}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               <Button variant="contained">Create pod</Button>
               <Button variant="outlined">Cancel</Button>
               <Button variant="text">Learn more</Button>

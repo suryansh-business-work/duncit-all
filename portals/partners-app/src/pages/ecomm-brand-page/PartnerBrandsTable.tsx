@@ -4,8 +4,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
-import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EcommBrandRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
@@ -36,15 +36,21 @@ interface Props {
 const getBrandRowId = (brand: EcommBrandRow) => brand.id;
 
 const renderBrand = (brand: EcommBrandRow) => (
-  <Stack direction="row" spacing={1} alignItems="center">
+  <Stack direction="row" spacing={1} sx={{
+    alignItems: "center"
+  }}>
     <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
       {(brand.brand_name || '?').charAt(0).toUpperCase()}
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={700} noWrap component="div">
+      <Typography variant="body2" noWrap component="div" sx={{
+        fontWeight: 700
+      }}>
         {brand.brand_name || 'Untitled brand'}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="div">
+      <Typography variant="caption" noWrap component="div" sx={{
+        color: "text.secondary"
+      }}>
         {brand.tagline || '—'}
       </Typography>
     </Box>
@@ -81,7 +87,9 @@ export default function PartnerBrandsTable({
       const locked = brand.status === 'SUBMITTED' || brand.status === 'APPROVED';
       const paused = brand.is_active === false;
       return (
-        <Stack direction="row" justifyContent="flex-end" component="span">
+        <Stack direction="row" component="span" sx={{
+          justifyContent: "flex-end"
+        }}>
           {brand.status === 'APPROVED' && (
             <Tooltip title={t('partners.common.productManagement')}>
               <IconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>

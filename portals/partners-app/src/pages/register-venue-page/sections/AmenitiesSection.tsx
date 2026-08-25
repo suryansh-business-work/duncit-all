@@ -80,9 +80,20 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
           control={form.control}
           render={({ field }) => (
             <Stack spacing={1}>
-              <Typography variant="subtitle2" fontWeight={800}>{group.label}</Typography>
-              <Typography variant="caption" color="text.secondary">{group.hint}</Typography>
-              <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }} role="group" aria-label={group.label}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 800
+              }}>{group.label}</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{group.hint}</Typography>
+              <Stack
+                direction="row"
+                role="group"
+                aria-label={group.label}
+                sx={{
+                  flexWrap: "wrap",
+                  gap: 1
+                }}>
                 {group.options.map((option) => (
                   <OptionChip
                     key={option}
@@ -98,7 +109,9 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
           )}
         />
       ))}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         These appear on your public venue page and help hosts pick the right space.
       </Typography>
     </Stack>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
 import { Accordion, AccordionDetails, AccordionSummary, Button, Chip, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
@@ -65,7 +65,13 @@ export default function ClubSections() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "flex-end",
+          mb: 1
+        }}>
         <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen}>
           Expand all
         </Button>
@@ -92,8 +98,12 @@ export default function ClubSections() {
           }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 600
+              }}>{section.title}</Typography>
               {errorCount(section.id) > 0 && (
                 <Chip size="small" color="error" label={`${errorCount(section.id)} required`} />
               )}

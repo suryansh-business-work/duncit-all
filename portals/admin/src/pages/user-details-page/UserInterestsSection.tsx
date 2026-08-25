@@ -14,16 +14,29 @@ export default function UserInterestsSection({ user }: Readonly<{ user: any }>) 
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <InterestsIcon color="primary" />
           <Typography variant="subtitle1">{t('admin.surveys.interests')}</Typography>
         </Stack>
         {interests.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No survey interests saved yet.
           </Typography>
         ) : (
-          <Stack direction="row" sx={{ gap: 1 }} flexWrap="wrap">
+          <Stack
+            direction="row"
+            sx={{
+              flexWrap: "wrap",
+              gap: 1
+            }}>
             {interests.map((category: any) => (
               <Chip
                 key={category.id}
@@ -36,7 +49,13 @@ export default function UserInterestsSection({ user }: Readonly<{ user: any }>) 
           </Stack>
         )}
         {(user.interest_category_ids ?? []).length > 0 && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block',
+              mt: 1.5
+            }}>
             Stored by category ID for dynamic category updates.
           </Typography>
         )}

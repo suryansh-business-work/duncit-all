@@ -125,15 +125,21 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
         <>
           {keys.length > 0 && (
             <>
-              <Typography variant="caption" color="text.secondary">{t('crm.components.variableValuesAutoFilledFromThis')}</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{t('crm.components.variableValuesAutoFilledFromThis')}</Typography>
               <VariablesValuesEditor variables={editorVars} values={vars} onChange={setVars} />
             </>
           )}
           {selected.attachments.length > 0 && (
-            <Typography variant="caption" color="text.secondary">{selected.attachments.length} attachment(s) will be sent.</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{selected.attachments.length} attachment(s) will be sent.</Typography>
           )}
           {errors.length > 0 && <Alert severity="warning">{errors.slice(0, 2).join(' · ')}</Alert>}
-          <Typography variant="caption" color="text.secondary">{t('crm.common.preview')}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{t('crm.common.preview')}</Typography>
           <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', height: 220, bgcolor: 'background.default' }}>
             <iframe title="template-preview" srcDoc={html} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           </Box>

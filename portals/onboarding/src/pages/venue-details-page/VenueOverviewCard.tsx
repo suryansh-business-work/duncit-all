@@ -24,19 +24,29 @@ export default function VenueOverviewCard({ venue }: Readonly<{ venue: AdminVenu
             sx={{ width: 140, height: 140, borderRadius: 2, objectFit: 'cover', bgcolor: 'action.hover', flex: '0 0 auto' }}
           />
           <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap"
+              }}>
               <StatusChip status={venue.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
               {venue.venue_type && <Chip size="small" variant="outlined" label={venue.venue_type} />}
               {typeof venue.capacity === 'number' && venue.capacity > 0 && (
                 <Chip size="small" variant="outlined" label={`Capacity ${venue.capacity}`} />
               )}
             </Stack>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {locationLine || 'Location not set'}
               {venue.postal_code ? ` · ${venue.postal_code}` : ''}
             </Typography>
             {venue.address_line1 && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {venue.address_line1}
               </Typography>
             )}
@@ -45,12 +55,24 @@ export default function VenueOverviewCard({ venue }: Readonly<{ venue: AdminVenu
                 {venue.description}
               </Typography>
             )}
-            <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={0.5} sx={{ mt: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                flexWrap: "wrap",
+                rowGap: 0.5,
+                mt: 0.5
+              }}>
               {venue.tags?.map((tag) => (
                 <Chip key={tag} size="small" variant="outlined" label={tag} />
               ))}
             </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: 0.5
+              }}>
               Owner: {venue.owner_name || '—'}
               {venue.owner_phone ? ` · ${venue.owner_phone}` : ''}
               {venue.owner_email ? ` · ${venue.owner_email}` : ''}

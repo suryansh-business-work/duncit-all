@@ -21,7 +21,12 @@ function PodiumSpot({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
   const color = medal ? MEDAL_COLOR[medal] : 'transparent';
   const size = entry.rank === 1 ? 76 : 60;
   return (
-    <Stack spacing={0.5} alignItems="center" sx={{ width: 96 }}>
+    <Stack
+      spacing={0.5}
+      sx={{
+        alignItems: "center",
+        width: 96
+      }}>
       <Avatar
         src={entry.avatar_url || undefined}
         sx={{ width: size, height: size, border: `3px solid ${color}` }}
@@ -36,7 +41,9 @@ function PodiumSpot({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
       <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center' }} noWrap>
         {entry.name || t('mweb.leaderboard.anonymous')}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {entry.points} {t('mweb.leaderboard.pointsShort')}
       </Typography>
     </Stack>
@@ -48,16 +55,21 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1.5}
       sx={{
+        alignItems: "center",
         px: 1.5,
         py: 1,
         borderRadius: '12px',
-        ...(entry.is_me && { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08) }),
-      }}
-    >
-      <Typography variant="body2" color="text.secondary" sx={{ width: 32, fontWeight: 700 }}>
+        ...(entry.is_me && { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08) })
+      }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          width: 32,
+          fontWeight: 700
+        }}>
         #{entry.rank}
       </Typography>
       <Avatar src={entry.avatar_url || undefined} sx={{ width: 36, height: 36 }}>
@@ -68,7 +80,9 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
       </Typography>
       <Typography variant="body2" sx={{ fontWeight: 700 }}>
         {entry.points}{' '}
-        <Typography component="span" variant="caption" color="text.secondary">
+        <Typography component="span" variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.leaderboard.pointsShort')}
         </Typography>
       </Typography>
@@ -83,7 +97,13 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
 
   if (rows.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          py: 4,
+          textAlign: 'center'
+        }}>
         {t('mweb.leaderboard.emptyBoard')}
       </Typography>
     );
@@ -96,7 +116,13 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" justifyContent="center" alignItems="flex-end" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "center",
+          alignItems: "flex-end"
+        }}>
         {podiumOrder.map((entry) => (
           <PodiumSpot key={entry.user_id} entry={entry} />
         ))}

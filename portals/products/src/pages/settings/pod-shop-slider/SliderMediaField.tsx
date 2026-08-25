@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { describeAttachment } from '@duncit/media-picker';
@@ -52,7 +52,13 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">{t('products.settings.sliderMedia')}</Typography>
         <Button
           size="small"
@@ -72,7 +78,9 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
             textAlign: 'center',
           }}
         >
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             No slider media yet — add images or videos to show at the top of the Pod Shop.
           </Typography>
         </Box>
@@ -84,7 +92,9 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
               spacing={1}
               sx={{ p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}
             >
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
               {item.type === 'VIDEO' ? (
                 <Box
                   component="video"

@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -21,9 +22,13 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 function Title({ icon, label }: Readonly<{ icon: JSX.Element; label: string }>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       {icon}
-      <Typography fontWeight={700}>{label}</Typography>
+      <Typography sx={{
+        fontWeight: 700
+      }}>{label}</Typography>
     </Stack>
   );
 }

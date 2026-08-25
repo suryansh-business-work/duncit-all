@@ -11,8 +11,15 @@ export default function InfoLine({ label, value }: Readonly<Props>) {
   const text = value?.trim();
   if (!text) return null;
   return (
-    <Stack direction="row" justifyContent="space-between" gap={2}>
-      <Typography variant="caption" color="text.secondary">
+    <Stack
+      direction="row"
+      sx={{
+        justifyContent: "space-between",
+        gap: 2
+      }}>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
       <Typography variant="caption" sx={{ textAlign: 'right' }}>

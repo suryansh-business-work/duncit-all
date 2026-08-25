@@ -180,7 +180,12 @@ export default function PodIdeasPage() {
       />
 
       <Stack spacing={0.75} sx={{ mb: 2 }}>
-        <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           Filter by category
         </Typography>
         <CategoryCascade value={filterScope} onChange={setFilterScope} allowAll />

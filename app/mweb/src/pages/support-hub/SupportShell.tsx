@@ -30,7 +30,9 @@ export default function SupportShell({
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <IconButton
           size="small"
           onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
@@ -58,7 +60,13 @@ export default function SupportShell({
             {title}
           </Typography>
           {subtitle && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600
+              }}>
               {subtitle}
             </Typography>
           )}

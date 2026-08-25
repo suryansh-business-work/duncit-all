@@ -19,8 +19,10 @@ export interface UserAddress extends AddressFormValues {
   email: string;
 }
 
+/** The empty form. `label` is filled in by the form from the catalogue — it
+ * is prefilled copy the user reads, so it cannot live here as a literal. */
 export const blankAddressValues: AddressFormValues = {
-  label: 'Home',
+  label: '',
   name: '',
   phone: '',
   line1: '',

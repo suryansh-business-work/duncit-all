@@ -23,7 +23,9 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 // two that read copy take `t` through a factory, which keeps the column
 // definition a plain reference instead of an inline arrow.
 const renderWhen = (row: StatusReportRow) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {formatDateTime(row.created_at)}
   </Typography>
 );
@@ -61,7 +63,9 @@ const renderWebsite = (t: Translate) => (row: StatusReportRow) => {
   const url = reportWebsite(row);
   if (!url) {
     return (
-      <Typography variant="body2" color="text.disabled">
+      <Typography variant="body2" sx={{
+        color: "text.disabled"
+      }}>
         {t('tech.statusReports.unknownWebsite')}
       </Typography>
     );

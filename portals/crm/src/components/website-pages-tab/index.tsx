@@ -109,10 +109,19 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
     <Stack spacing={2}>
       <Card>
         <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             <LanguageIcon color="primary" />
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={800}>{t('crm.common.website')}</Typography>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 800
+              }}>{t('crm.common.website')}</Typography>
               <ExternalLink variant="body2" href={website} />
             </Box>
             <Chip size="small" variant="outlined" label={`${pages.length} page${pages.length === 1 ? '' : 's'} saved`} />
@@ -137,10 +146,20 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
       <Card>
         <CardContent>
           {loading && pages.length === 0 && (
-            <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
+            <Stack
+              sx={{
+                alignItems: "center",
+                py: 4
+              }}><CircularProgress /></Stack>
           )}
           {!loading && pages.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                py: 2,
+                textAlign: 'center'
+              }}>
               No pages yet. Click "Scrape pages" to discover and save this website's pages.
             </Typography>
           )}

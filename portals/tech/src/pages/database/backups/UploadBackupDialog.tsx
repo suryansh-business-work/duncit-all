@@ -69,7 +69,9 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
       <DialogTitle>{t('tech.dbBackup.uploadTitle')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dbBackup.uploadIntro')}
           </Typography>
 
@@ -95,7 +97,9 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
             </Typography>
           )}
 
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dbBackup.uploadLimit', { vars: { size: formatBytes(maxBytes) } })}
           </Typography>
 
@@ -105,7 +109,9 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
           {phase === 'sending' && (
             <Stack spacing={0.5}>
               <LinearProgress variant="determinate" value={percent} />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('tech.dbBackup.uploadProgress', { vars: { percent: String(percent) } })}
               </Typography>
             </Stack>
@@ -113,7 +119,9 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
           {phase === 'reading' && (
             <Stack spacing={0.5}>
               <LinearProgress />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {t('tech.dbBackup.uploadReading')}
               </Typography>
             </Stack>

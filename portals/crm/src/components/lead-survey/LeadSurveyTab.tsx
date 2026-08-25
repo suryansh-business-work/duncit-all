@@ -69,8 +69,15 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
   if (loading && !data) return <QueryGuard loading spinnerSx={{ py: 4 }} />;
 
   const picker = showPicker && (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+      alignItems: { sm: 'center' }
+    }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         Multiple categories — pick which survey to use:
       </Typography>
       {categories.length > 0 && (

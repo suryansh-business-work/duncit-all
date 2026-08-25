@@ -16,10 +16,14 @@ export default function ProductOrdersPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography variant="h4" sx={{
+          fontWeight: 700
+        }}>
           Product orders
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Every product order placed inside a pod — fulfilment ops for shipping and pickup.
         </Typography>
       </Box>

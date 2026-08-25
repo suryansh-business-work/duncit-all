@@ -60,10 +60,14 @@ export default function PodPlansPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>
           Pod Plans
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Free, Premium and upcoming plan tiers shown in the mobile web app. Toggle the{' '}
           <code>pod_plans_section</code> feature flag to control visibility.
         </Typography>

@@ -32,7 +32,14 @@ export default function GoogleMapPreview({ title, parts, lat, lng }: Readonly<Pr
 
   return (
     <Box sx={{ mt: 1 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">{heading}</Typography>
         <Button size="small" href={mapUrl} target="_blank" rel="noreferrer" startIcon={<OpenInNewIcon />}>
           {t('podForm.mapPreview.openMap')}
@@ -48,7 +55,9 @@ export default function GoogleMapPreview({ title, parts, lat, lng }: Readonly<Pr
           sx={{ width: '100%', height: 240, border: 0, borderRadius: 1, display: 'block' }}
         />
       ) : (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('podForm.mapPreview.keyMissing')}
         </Typography>
       )}

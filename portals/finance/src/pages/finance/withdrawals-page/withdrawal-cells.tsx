@@ -22,10 +22,14 @@ const ROLE_COLOR: Record<WithdrawerRole, ChipColor> = {
 /** Withdrawer Name — who asked, with the address the payout advice goes to. */
 export const renderWithdrawer = (w: WithdrawalRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 700
+    }}>
       {w.beneficiary_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {w.beneficiary_email}
     </Typography>
   </Stack>
@@ -55,7 +59,9 @@ export const renderAccount = (w: WithdrawalRow) => {
         {accountDetails(w)}
       </Typography>
       {holder ? (
-        <Typography variant="caption" color="text.secondary" component="span">
+        <Typography variant="caption" component="span" sx={{
+          color: "text.secondary"
+        }}>
           {holder}
         </Typography>
       ) : null}
@@ -64,10 +70,17 @@ export const renderAccount = (w: WithdrawalRow) => {
 };
 
 export const renderStatus = (w: WithdrawalRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} alignItems="flex-start">
+  <Stack
+    component="span"
+    sx={{
+      alignItems: "flex-start",
+      lineHeight: 1.2
+    }}>
     <Chip size="small" color={STATUS_COLOR[w.status] ?? 'default'} label={w.status} />
     {w.reject_reason ? (
-      <Typography variant="caption" color="text.secondary" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {w.reject_reason}
       </Typography>
     ) : null}
@@ -99,7 +112,9 @@ export const renderAmount = (formatted: string, share: string | null) => (
       {formatted}
     </Typography>
     {share ? (
-      <Typography variant="caption" color="text.secondary" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {`${share} from this pod`}
       </Typography>
     ) : null}

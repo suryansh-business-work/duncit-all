@@ -25,14 +25,27 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
 
   return (
     <Stack spacing={1.25}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 0.25
+        }}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <HistoryIcon color="action" />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               Previous Pods
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               Already taken place
             </Typography>
           </Box>

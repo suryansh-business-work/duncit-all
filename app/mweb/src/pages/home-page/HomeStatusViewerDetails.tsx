@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import type { HomeStatusViewerSlide } from './HomeStatusViewer';
 
 interface Props {
@@ -43,7 +43,13 @@ export default function HomeStatusViewerDetails({
         </Typography>
       )}
       {current?.commentCount != null && (
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'rgba(255,255,255,0.92)' }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            color: 'rgba(255,255,255,0.92)'
+          }}>
           <ChatBubbleOutlineIcon fontSize="small" />
           <Typography variant="caption">{current.commentCount}</Typography>
         </Stack>

@@ -142,10 +142,17 @@ export default function ClubDetailsPage() {
       <ClubSocialLinks club={club} />
       {club.club_description && (
         <Box>
-          <Typography variant="h6" fontWeight={700} gutterBottom>
+          <Typography variant="h6" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             About
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              whiteSpace: 'pre-wrap'
+            }}>
             {club.club_description}
           </Typography>
         </Box>

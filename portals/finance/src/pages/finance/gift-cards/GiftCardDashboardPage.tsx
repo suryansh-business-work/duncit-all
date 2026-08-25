@@ -60,11 +60,14 @@ export default function GiftCardDashboardPage() {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={2}
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            justifyContent="space-between"
-          >
+            sx={{
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              justifyContent: "space-between"
+            }}>
             <Box>
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <CardGiftcardIcon color="primary" />
                 <Typography variant="h4" sx={{ fontWeight: 800 }}>
                   {t('finance.giftCards.dashboardTitle')}

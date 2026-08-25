@@ -44,14 +44,20 @@ export default function SentMessage({ campaignName, params, labels, note }: Read
 
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         {t('marketingWhatsapp.logs.messageTitle')}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('marketingWhatsapp.logs.messageHint')}
       </Typography>
       {note && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {note}
         </Typography>
       )}
@@ -62,7 +68,9 @@ export default function SentMessage({ campaignName, params, labels, note }: Read
         <Alert severity="info">{t('marketingWhatsapp.logs.messageUnknown')}</Alert>
       )}
 
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         {t('marketingWhatsapp.logs.variablesTitle')}
       </Typography>
       <SentVariables params={params} labels={labels} body={template?.body ?? ''} />

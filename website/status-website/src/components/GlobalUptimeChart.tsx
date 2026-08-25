@@ -62,15 +62,37 @@ export default function GlobalUptimeChart({ global, overallUptime }: Readonly<Gl
   if (!global || global.length === 0) return null;
   return (
     <Paper variant="outlined" sx={{ p: 2.5, mb: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" flexWrap="wrap" gap={1}>
-        <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.12em', fontWeight: 700 }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          flexWrap: "wrap",
+          gap: 1
+        }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            letterSpacing: '0.12em',
+            fontWeight: 700
+          }}>
           {t('status.board.overallUptimeHeading')}
         </Typography>
-        <Typography variant="h6" fontWeight={800} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 800,
+            fontVariantNumeric: 'tabular-nums'
+          }}>
           {formatUptime(overallUptime)}
         </Typography>
       </Stack>
-      <Box height={120} mt={1}>
+      <Box
+        sx={{
+          height: 120,
+          mt: 1
+        }}>
         <Bar
           data={buildData(global, theme, t('status.board.overallUptime'))}
           options={buildOptions(theme, global)}

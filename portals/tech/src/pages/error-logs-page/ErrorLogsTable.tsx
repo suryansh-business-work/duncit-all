@@ -36,7 +36,9 @@ const renderMessage = (row: ErrorLogRow) => (
 const renderUser = (row: ErrorLogRow) => <UserCell user={row.user} />;
 
 const renderWhen = (row: ErrorLogRow) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {formatDateTime(row.created_at)}
   </Typography>
 );

@@ -12,15 +12,21 @@ function ChargeRow({ line, money }: Readonly<{ line: StatementLine; money: (n: n
   const { t } = useTranslation();
   return (
     <Box sx={{ px: 1.5, py: 0.75 }}>
-      <Stack direction="row" justifyContent="space-between" spacing={2}>
+      <Stack direction="row" spacing={2} sx={{
+        justifyContent: "space-between"
+      }}>
         <Typography variant="body2" color={line.deduction ? 'text.primary' : 'text.secondary'}>
           {line.label}
         </Typography>
-        <Typography variant="body2" fontWeight={line.deduction ? 700 : 500}>
+        <Typography variant="body2" sx={{
+          fontWeight: line.deduction ? 700 : 500
+        }}>
           {money(line.amount)}
         </Typography>
       </Stack>
-      <Typography variant="caption" color="text.secondary" component="div">
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.createPod.formula', { vars: { formula: line.formula } })}
       </Typography>
     </Box>
@@ -53,11 +59,17 @@ function ChargeSection({ title, amount, tint, error, children }: Readonly<Sectio
         aria-expanded={open}
         sx={{ width: '100%', px: 1.5, py: 1, justifyContent: 'space-between', textAlign: 'left' }}
       >
-        <Typography variant="body2" fontWeight={600}>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
           {title}
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Typography variant="body2" fontWeight={600}>
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {amount}
           </Typography>
           <ExpandMoreIcon
@@ -119,14 +131,22 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
         aria-expanded={open}
         sx={{ width: '100%', px: 1.5, py: 1.25, justifyContent: 'space-between', textAlign: 'left' }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <ReceiptLongOutlinedIcon fontSize="small" color="primary" />
-          <Typography variant="subtitle2" fontWeight={700}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.createPod.govtCharges')}
           </Typography>
         </Stack>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Typography variant="subtitle2" fontWeight={700}>
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             {money(statement.total_deductions)}
           </Typography>
           <ExpandMoreIcon
@@ -154,11 +174,21 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
               </ChargeSection>
             );
           })}
-          <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, pt: 0.5 }}>
-            <Typography variant="body2" fontWeight={600}>
+          <Stack
+            direction="row"
+            sx={{
+              justifyContent: "space-between",
+              px: 1.5,
+              pt: 0.5
+            }}>
+            <Typography variant="body2" sx={{
+              fontWeight: 600
+            }}>
               {t('mweb.createPod.totalDeductions')}
             </Typography>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {money(statement.total_deductions)}
             </Typography>
           </Stack>

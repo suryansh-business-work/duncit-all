@@ -95,12 +95,19 @@ export function ProfilePage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 } }}>
-      <Typography variant="h5" fontWeight={800} mb={2}>
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 800,
+          mb: 2
+        }}>
         Your profile
       </Typography>
 
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+          alignItems: { xs: 'flex-start', sm: 'center' }
+        }}>
           <Avatar
             src={user?.profile_photo || undefined}
             sx={{ width: 72, height: 72, bgcolor: 'primary.main', fontSize: 28, fontWeight: 800 }}
@@ -108,10 +115,14 @@ export function ProfilePage() {
             {initials(user, 'U')}
           </Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h6" fontWeight={800} noWrap>
+            <Typography variant="h6" noWrap sx={{
+              fontWeight: 800
+            }}>
               {name}
             </Typography>
-            <Typography color="text.secondary" noWrap>
+            <Typography noWrap sx={{
+              color: "text.secondary"
+            }}>
               {email || '—'}
             </Typography>
             {/* Read-only on purpose: the consoles sign in with a password or an
@@ -119,14 +130,24 @@ export function ProfilePage() {
                 here. What the line answers is "which Gmail also opens this
                 account", which mWeb and the app can grant. */}
             {googleEmail && (
-              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{
+                  alignItems: "center",
+                  minWidth: 0
+                }}>
                 <GoogleIcon sx={{ fontSize: 14, color: '#4285f4' }} />
-                <Typography variant="caption" color="text.secondary" noWrap>
+                <Typography variant="caption" noWrap sx={{
+                  color: "text.secondary"
+                }}>
                   {googleEmail}
                 </Typography>
               </Stack>
             )}
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Signed in to {branding.appName || 'Duncit'}
             </Typography>
           </Box>
@@ -160,14 +181,29 @@ export function ProfilePage() {
                 Profile updated.
               </Alert>
             )}
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: 0.4 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 800,
+                letterSpacing: 0.4
+              }}>
               {t('shell.profile.accessRoles')}
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                flexWrap: "wrap",
+                mt: 1
+              }}>
               {roles.length > 0 ? (
                 roles.map((role) => <Chip key={role} label={humaniseRole(role)} size="small" />)
               ) : (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   {t('shell.profile.noRoles')}
                 </Typography>
               )}

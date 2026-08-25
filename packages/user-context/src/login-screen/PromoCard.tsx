@@ -65,11 +65,26 @@ export default function PromoCard({ title, text, brandName, t = sessionT }: Read
           </>
         )}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 2, position: 'relative' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mt: 2,
+          position: 'relative'
+        }}>
         {text}
       </Typography>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 'auto', pt: 3 }}>
-        <Typography variant="caption" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mt: 'auto',
+          pt: 3
+        }}>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('session.promo.by', { vars: { brand: brandName } })}
         </Typography>
         <Button

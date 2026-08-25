@@ -30,8 +30,18 @@ export function ManualLogComposer(props: Readonly<Props>) {
         bgcolor: alpha(theme.palette.primary.main, 0.04),
       })}
     >
-      <Stack direction="row" alignItems="center" sx={{ mb: 1.5 }}>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 700,
+            flex: 1
+          }}>
           New manual log
         </Typography>
         <IconButton size="small" aria-label={t('shell.common.cancel')} onClick={onCancel} disabled={saving}>
@@ -45,7 +55,9 @@ export function ManualLogComposer(props: Readonly<Props>) {
         value={summary}
         onChange={(event) => props.onSummaryChange(event.target.value)}
         sx={{ mb: 1.5 }}
-        inputProps={{ 'data-testid': 'manual-log-title' }}
+        slotProps={{
+          htmlInput: { 'data-testid': 'manual-log-title' }
+        }}
       />
       <DuncitRichTextInput
         value={body.html}
@@ -57,7 +69,13 @@ export function ManualLogComposer(props: Readonly<Props>) {
           {error}
         </Alert>
       ) : null}
-      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "flex-end",
+          mt: 1.5
+        }}>
         <Button onClick={onCancel} disabled={saving}>
           {t('shell.common.cancel')}
         </Button>

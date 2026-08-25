@@ -88,7 +88,9 @@ export function PromptDialog({ open, prompt, apiOrigin, onClose, onSaved }: Read
             {error}
           </Alert>
         )}
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
             <PromptForm
               initialValues={initialValues}

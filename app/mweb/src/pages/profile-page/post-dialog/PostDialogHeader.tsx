@@ -1,6 +1,6 @@
 import { Avatar, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import { sharePost } from '../../../utils/share';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -22,14 +22,22 @@ export default function PostDialogHeader({
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1.5}
-      sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}
-    >
+      sx={{
+        alignItems: "center",
+        p: 1.5,
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
       <Avatar src={post.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
         {(post.author?.first_name?.[0] ?? 'U').toUpperCase()}
       </Avatar>
-      <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          flex: 1
+        }}>
         {post.author?.full_name ?? 'User'}
       </Typography>
       <Tooltip title={t('mweb.profile.sharePost')}>

@@ -24,9 +24,12 @@ export default function MessageComposer({
     <Stack
       direction="row"
       spacing={1}
-      alignItems="center"
-      sx={{ px: { xs: 1.25, sm: 2 }, py: 1, bgcolor: 'transparent' }}
-    >
+      sx={{
+        alignItems: "center",
+        px: { xs: 1.25, sm: 2 },
+        py: 1,
+        bgcolor: 'transparent'
+      }}>
       <Tooltip title={t('mweb.chatRoom.image')}>
         <IconButton onClick={onOpenPicker} sx={{ bgcolor: 'action.hover' }}>
           <ImageIcon />
@@ -46,15 +49,17 @@ export default function MessageComposer({
             onSend();
           }
         }}
-        InputProps={{
-          sx: { borderRadius: 999, bgcolor: 'background.paper', boxShadow: '0 10px 28px rgba(9,7,18,0.14)' },
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton size="small" onClick={(e) => onOpenEmoji(e.currentTarget)}>
-                <EmojiEmotionsIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            sx: { borderRadius: 999, bgcolor: 'background.paper', boxShadow: '0 10px 28px rgba(9,7,18,0.14)' },
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={(e) => onOpenEmoji(e.currentTarget)}>
+                  <EmojiEmotionsIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }
         }}
       />
       <IconButton color="primary" onClick={onSend} disabled={!text.trim()} sx={{ width: 46, height: 46, bgcolor: 'primary.main', color: 'primary.contrastText', '&:hover': { bgcolor: 'primary.dark' }, '&.Mui-disabled': { bgcolor: 'action.disabledBackground' } }}>

@@ -33,15 +33,18 @@ export default function TestVariableFields({
 }: Readonly<Props>) {
   if (variables.length === 0) {
     return (
-      <Typography variant="caption" color="text.secondary">
-        This template has no variables — nothing to fill in.
-      </Typography>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>This template has no variables — nothing to fill in.
+              </Typography>
     );
   }
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Values for this test. Blank renders as an empty space, exactly as a real send would.
       </Typography>
       <Stack spacing={1.25} sx={{ mt: 1 }}>

@@ -57,13 +57,13 @@ const config = (): HostPodActionsConfig => ({
 });
 
 const pod = (over: Partial<HostPodTarget> = {}): HostPodTarget =>
-  ({
+  (({
     id: 'pod-1',
     pod_title: 'Sunday Badminton',
     pod_description: 'Doubles at Court 2, all levels welcome.',
     pod_images_and_videos: [{ url: 'https://cdn.duncit.com/pod/a.jpg', type: 'IMAGE' }],
-    ...over,
-  }) as HostPodTarget;
+    ...over
+  }) as HostPodTarget);
 
 const wrap = (ui: ReactNode) =>
   render(

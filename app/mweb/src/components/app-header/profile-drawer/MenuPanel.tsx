@@ -79,7 +79,13 @@ export default function MenuPanel({
       <Box
         sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
       >
-        <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700,
+            letterSpacing: 0.4
+          }}>
           {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
         </Typography>
         <IconButton
@@ -123,21 +129,34 @@ export default function MenuPanel({
               <ListItemText
                 primary={t('mweb.common.switchRole')}
                 secondary={STUDIO_LABEL[effectiveMode]}
-                primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                slotProps={{
+                  primary: { sx: { fontSize: 14, fontWeight: 600 } }
+                }}
               />
             </ListItemButton>
           </Box>
         )}
 
         <Divider />
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.1 }}>
-          <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1.1
+          }}>
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "center"
+          }}>
             {isDark ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
               Dark mode
             </Typography>
           </Stack>
-          <Switch checked={isDark} onChange={colorMode.toggle} inputProps={{ 'aria-label': 'Toggle dark mode' }} />
+          <Switch checked={isDark} onChange={colorMode.toggle} slotProps={{
+            input: { 'aria-label': 'Toggle dark mode' }
+          }} />
         </Stack>
         {publicPolicies.length > 0 && (
           <>

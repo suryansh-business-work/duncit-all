@@ -15,7 +15,7 @@ type Pending = { row: AdRequestRow; action: 'stop' | 'delete' } | null;
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const copy = (t: Translate) => ({
+const copy = (t: Translate) => (({
   stop: {
     title: t('marketing.liveAds.stopThisAd2'),
     confirmLabel: t('marketing.liveAds.stopAd'),
@@ -23,13 +23,14 @@ const copy = (t: Translate) => ({
     body: (name: string) =>
       `“${name}” stops showing immediately. The record is kept for billing, and it cannot be restarted — the advertiser would need a new request.`,
   },
+
   delete: {
     title: t('marketing.liveAds.deleteThisAd2'),
     confirmLabel: t('shell.common.delete'),
     busyLabel: 'Deleting…',
     body: (name: string) => `“${name}” is removed permanently, along with its billing record.`,
-  },
-}) as const;
+  }
+}) as const);
 
 /** Everything showing right now, with the two things you need in a hurry:
  * stop it, or remove it. */
@@ -73,13 +74,23 @@ export default function LiveAdsPage() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 2
+        }}>
         <LiveTvIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Live Ads
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Everything showing on the app right now. Open a row for the full detail, or stop it here.
           </Typography>
         </Box>

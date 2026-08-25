@@ -91,8 +91,8 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
           set({ titles: Array.from(new Set((v as string[]).map((t) => t.trim()).filter(Boolean))) });
           setTitleInput('');
         }}
-        renderTags={(tags, getTagProps) =>
-          tags.map((tag, index) => <Chip size="small" label={tag} {...getTagProps({ index })} key={tag} />)
+        renderValue={(tags, getItemProps) =>
+          tags.map((tag, index) => <Chip size="small" label={tag} {...getItemProps({ index })} key={tag} />)
         }
         renderInput={(params) => (
           <TextField

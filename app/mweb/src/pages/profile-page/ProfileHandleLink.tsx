@@ -28,7 +28,13 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
 
   if (!username) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+      <Typography
+        variant="body2"
+        noWrap
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         {fallback}
       </Typography>
     );
@@ -50,14 +56,16 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
         onClick={copy}
         direction="row"
         spacing={0.5}
-        alignItems="center"
-        justifyContent="center"
         aria-label={labels.copyLink}
         sx={{
+          alignItems: "center",
+          justifyContent: "center",
+
           // A flex element is block-level, so it would fill the card and the
           // hover fill would span it — `fit-content` keeps the target the
           // size of the handle it is on.
           width: 'fit-content',
+
           mx: 'auto',
           px: 1,
           py: 0.25,
@@ -67,9 +75,8 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
           bgcolor: 'transparent',
           color: 'text.secondary',
           font: 'inherit',
-          '&:hover': { bgcolor: 'action.hover' },
-        }}
-      >
+          '&:hover': { bgcolor: 'action.hover' }
+        }}>
         <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
           {labels.handle(username)}
         </Typography>

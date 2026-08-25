@@ -56,10 +56,20 @@ export default function AuthLogo({ tagline }: Readonly<Props>) {
   }
 
   return (
-    <Stack alignItems="center" spacing={1} sx={{ mb: 1 }}>
+    <Stack
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        mb: 1
+      }}>
       {logoContent}
       {tagline && (
-        <Typography variant="body2" color="text.secondary" textAlign="center">
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            textAlign: "center"
+          }}>
           {tagline}
         </Typography>
       )}

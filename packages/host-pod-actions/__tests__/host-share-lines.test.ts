@@ -25,7 +25,7 @@ const waterfall = {
 };
 
 const settlement = (has_venue: boolean): PodSettlement =>
-  ({
+  (({
     currency_symbol: '₹',
     collected_total: 1200,
     has_venue,
@@ -34,8 +34,8 @@ const settlement = (has_venue: boolean): PodSettlement =>
     booked_seats: 10,
     attended_total: 1000,
     attendees: [],
-    waterfall,
-  }) as PodSettlement;
+    waterfall
+  }) as PodSettlement);
 
 const keys = (has_venue: boolean) => buildHostShareLines(settlement(has_venue)).map((l) => l.key);
 

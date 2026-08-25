@@ -30,7 +30,11 @@ export default function HostDashboardPage() {
 
   if (meQ.loading && !meQ.data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -53,7 +57,9 @@ export default function HostDashboardPage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <SpaceDashboardIcon fontSize="small" />
         </Box>
@@ -61,7 +67,12 @@ export default function HostDashboardPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Dashboard
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {meQ.data?.me?.full_name ? `Welcome back, ${meQ.data.me.full_name}` : 'Your host overview'}
           </Typography>
         </Box>
@@ -78,7 +89,13 @@ export default function HostDashboardPage() {
         {stats.map((item) => (
           <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "primary.main",
+                  fontWeight: 700
+                }}>
                 {item.label}
               </Typography>
               <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }}>
@@ -96,7 +113,9 @@ export default function HostDashboardPage() {
       {health && (
         <Card variant="outlined" sx={{ borderRadius: '16px' }}>
           <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+              alignItems: "center"
+            }}>
               <HealthMeter
                 score={health.total_score}
                 band={health.band}
@@ -109,7 +128,9 @@ export default function HostDashboardPage() {
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {bandHint(health.band)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   Keep your profile and verification up to date to rank higher with guests.
                 </Typography>
               </Box>

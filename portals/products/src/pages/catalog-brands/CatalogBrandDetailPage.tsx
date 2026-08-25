@@ -45,7 +45,11 @@ export default function CatalogBrandDetailPage() {
 
   if (brandQuery.loading && !brandQuery.data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -76,7 +80,9 @@ export default function CatalogBrandDetailPage() {
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 700
+            }}>
               Brand details
             </Typography>
             {error && (

@@ -159,7 +159,12 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
 
   return (
     <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 900
+        }}>
         Add availability
       </Typography>
       {isHoliday && (

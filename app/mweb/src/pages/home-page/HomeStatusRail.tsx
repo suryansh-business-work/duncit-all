@@ -120,7 +120,14 @@ export default function HomeStatusRail({
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content', px: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1.1}
+          sx={{
+            alignItems: "flex-start",
+            width: 'max-content',
+            px: 1.5
+          }}>
           <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
           {/* The sponsored tile sits second, right after "Your story" (mock). */}
           {ad && <AdTile ad={ad} onOpen={() => setAdOpen(true)} />}
@@ -139,10 +146,14 @@ export default function HomeStatusRail({
           <Stack
             direction="row"
             spacing={0.6}
-            alignItems="center"
             aria-hidden
-            sx={{ pt: 3, pl: 0.75, opacity: 0.55, flex: '0 0 auto' }}
-          >
+            sx={{
+              alignItems: "center",
+              pt: 3,
+              pl: 0.75,
+              opacity: 0.55,
+              flex: '0 0 auto'
+            }}>
             <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
             <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
             <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />

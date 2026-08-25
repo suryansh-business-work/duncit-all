@@ -82,7 +82,9 @@ export default function PodPendingSummaryCard({ view }: Readonly<{ view: PodPend
             sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: '16px' }}
           />
         )}
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {pod.pod_title}
         </Typography>
         {rows.map((row) => (

@@ -60,37 +60,61 @@ export default function PickupLocationForm({
       <form noValidate onSubmit={submit}>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <RhfTextField control={control} name="nickname" label={t('products.pickup.nickname')} required hint="e.g. Main warehouse" />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <RhfTextField control={control} name="contact_name" label={t('products.pickup.contactName')} required hint=" " />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <RhfTextField control={control} name="phone" label={t('shell.common.phone')} required hint="10-digit mobile number" />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <RhfTextField control={control} name="email" label={t('shell.common.email')} type="email" required hint=" " />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <RhfTextField control={control} name="address_line1" label={t('products.pickup.addressLine1')} required hint=" " />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <RhfTextField control={control} name="address_line2" label={t('products.pickup.addressLine2')} hint="Optional" />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <RhfTextField control={control} name="city" label={t('products.pickup.city')} required hint=" " />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <RhfTextField control={control} name="state" label={t('products.pickup.state')} required hint=" " />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <RhfTextField control={control} name="pincode" label={t('products.pickup.pincode')} required hint="6-digit PIN" />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <RhfTextField control={control} name="country" label={t('products.pickup.country')} required hint=" " />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Controller
                 control={control}
                 name="is_default"

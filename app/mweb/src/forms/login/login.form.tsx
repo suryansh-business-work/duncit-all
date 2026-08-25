@@ -70,13 +70,13 @@ export default function LoginForm({
           placeholder={t('mweb.auth.emailPlaceholder')}
           autoComplete="email"
           size="small"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <EmailOutlinedIcon fontSize="small" />
               </InputAdornment>
             ),
-          }}
+          } }}
         />
         <RhfTextField
           control={control}
@@ -88,7 +88,7 @@ export default function LoginForm({
           placeholder={t('mweb.login.passwordPlaceholder')}
           autoComplete="current-password"
           size="small"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <LockOutlinedIcon fontSize="small" />
@@ -110,7 +110,7 @@ export default function LoginForm({
                 </IconButton>
               </InputAdornment>
             ),
-          }}
+          } }}
         />
         <Button
           type="submit"

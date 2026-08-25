@@ -40,7 +40,9 @@ export default function FailureAlert({ failure, onDismiss }: Readonly<Props>) {
       <AlertTitle sx={{ mb: hasDetail ? 0.5 : 0 }}>{headline}</AlertTitle>
 
       {hasDetail && (
-        <Stack spacing={0.5} alignItems="flex-start">
+        <Stack spacing={0.5} sx={{
+          alignItems: "flex-start"
+        }}>
           <Stack direction="row" spacing={1}>
             <Button size="small" color="inherit" onClick={() => setShowing((value) => !value)}>
               {showing ? t('shell.chat.failure.hideDetails') : t('shell.chat.failure.showDetails')}

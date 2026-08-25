@@ -49,12 +49,18 @@ interface Props {
 /** Right-side drawer hosting the category-specific interactive test. */
 export default function TestDrawer({ entry, onClose }: Readonly<Props>) {
   return (
-    <Drawer anchor="right" open={!!entry} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 440 } } }}>
+    <Drawer anchor="right" open={!!entry} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 440 } } }
+    }}>
       {entry && (
         <Stack sx={{ height: '100%' }}>
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6" fontWeight={800}>Test {entry.name}</Typography>
-            <Typography variant="body2" color="text.secondary">{entry.category}</Typography>
+            <Typography variant="h6" sx={{
+              fontWeight: 800
+            }}>Test {entry.name}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{entry.category}</Typography>
           </Box>
           <Divider />
           <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>

@@ -29,7 +29,9 @@ interface Props {
 const getRequestRowId = (r: HostRequest) => r.id;
 
 const renderRequestNo = (r: HostRequest) => (
-  <Typography variant="body2" fontWeight={700}>{r.request_no}</Typography>
+  <Typography variant="body2" sx={{
+    fontWeight: 700
+  }}>{r.request_no}</Typography>
 );
 
 const hostNameValue = (r: HostRequest) => r.host_name || '—';

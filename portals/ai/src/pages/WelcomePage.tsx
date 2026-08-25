@@ -26,13 +26,23 @@ export default function WelcomePage() {
       content: (
         <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
           <CardContent>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                alignItems: "center",
+                mb: 1.5
+              }}>
               <WavingHandIcon color="primary" />
-              <Typography variant="h6" fontWeight={700}>
+              <Typography variant="h6" sx={{
+                fontWeight: 700
+              }}>
                 {t('ai.welcome.greeting', { vars: { name } })}
               </Typography>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('ai.welcome.body', { vars: { portal: portalLabel } })}
             </Typography>
             <Stack direction="row" spacing={1} sx={{ mt: 2 }}>

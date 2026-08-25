@@ -116,9 +116,17 @@ export default function HostLeadDetailPage() {
           <Stack spacing={2.5} sx={{ width: { lg: 360 }, flexShrink: 0 }}>
             <Card>
               <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: "center",
+                    mb: 1.25
+                  }}>
                   <StickyNote2Icon color="primary" />
-                  <Typography variant="subtitle1" fontWeight={800}>
+                  <Typography variant="subtitle1" sx={{
+                    fontWeight: 800
+                  }}>
                     Lead tracking
                   </Typography>
                 </Stack>
@@ -131,7 +139,13 @@ export default function HostLeadDetailPage() {
                 {lead.notes && (
                   <>
                     <Divider sx={{ my: 1 }} />
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: 700,
+                        letterSpacing: 0.4
+                      }}>
                       NOTES
                     </Typography>
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
@@ -259,7 +273,14 @@ export default function HostLeadDetailPage() {
         })}
       >
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={1.5}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             {lead.profile_photo_url && (
               <Avatar
                 src={lead.profile_photo_url}
@@ -267,10 +288,23 @@ export default function HostLeadDetailPage() {
               />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h5" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 800,
+                  wordBreak: 'break-word'
+                }}>
                 {lead.host_name}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  mt: 1
+                }}>
                 <StatusChip value={lead.lead_status} />
                 <PriorityChip value={lead.priority} />
                 {lead.city && <Chip size="small" icon={<LocationOnIcon fontSize="small" />} label={lead.city} variant="outlined" />}
@@ -290,11 +324,12 @@ export default function HostLeadDetailPage() {
                 <Stack
                   direction="row"
                   spacing={0.5}
-                  sx={{ mt: 1 }}
-                  flexWrap="wrap"
                   useFlexGap
                   data-testid="host-tags"
-                >
+                  sx={{
+                    flexWrap: "wrap",
+                    mt: 1
+                  }}>
                   {lead.tags.map((t) => (
                     <Chip key={t} size="small" label={`#${t}`} variant="outlined" />
                   ))}

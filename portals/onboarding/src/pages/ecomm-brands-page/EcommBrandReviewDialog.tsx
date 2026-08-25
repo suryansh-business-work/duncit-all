@@ -110,11 +110,27 @@ export default function EcommBrandReviewDialog({
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ display: 'block', lineHeight: 1 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 800,
+            display: 'block',
+            lineHeight: 1
+          }}>
           Review brand
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" fontWeight={900} sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 900,
+              flex: 1,
+              minWidth: 0
+            }}>
             {active?.brand_name || 'Brand'}
           </Typography>
           {active?.status && (
@@ -132,14 +148,18 @@ export default function EcommBrandReviewDialog({
               sx={{ width: '100%', maxHeight: 150, objectFit: 'cover', borderRadius: 1.5 }}
             />
           )}
-          {active?.tagline && <Typography variant="body2" fontStyle="italic">{active.tagline}</Typography>}
+          {active?.tagline && <Typography variant="body2" sx={{
+            fontStyle: "italic"
+          }}>{active.tagline}</Typography>}
           <InfoRow label={t('shell.common.description')} value={active?.description || '—'} />
           <InfoRow label={t('shell.nav.categories')} value={(active?.product_categories ?? []).join(', ') || '—'} />
           <InfoRow label={t('onboarding.common.owner')} value={[active?.contact_person, active?.contact_email, active?.contact_phone].filter(Boolean).join(' · ') || '—'} />
           <InfoRow label={t('onboarding.ecommBrands.businessAndLegal')} value={business || '—'} />
           <InfoRow label={t('onboarding.common.address')} value={address || '—'} />
           {(active?.website_url || active?.instagram_url) && (
-            <Stack direction="row" spacing={2} flexWrap="wrap">
+            <Stack direction="row" spacing={2} sx={{
+              flexWrap: "wrap"
+            }}>
               {active?.website_url && <Link href={active.website_url} target="_blank" rel="noreferrer" variant="body2">{t('onboarding.ecommBrands.website')}</Link>}
               {active?.instagram_url && <Link href={active.instagram_url} target="_blank" rel="noreferrer" variant="body2">{t('onboarding.ecommBrands.instagram')}</Link>}
             </Stack>
@@ -147,8 +167,20 @@ export default function EcommBrandReviewDialog({
           {bank && <InfoRow label={t('onboarding.common.payout')} value={bank} />}
           {documents.length > 0 && (
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>{t('shell.nav.documents')}</Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mt: 0.5 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>{t('shell.nav.documents')}</Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  flexWrap: "wrap",
+                  rowGap: 1,
+                  mt: 0.5
+                }}>
                 {documents.map((doc: any) => (
                   <Chip key={doc.url} size="small" component={Link} href={doc.url} target="_blank" rel="noreferrer" clickable label={doc.type} variant="outlined" />
                 ))}
@@ -167,15 +199,25 @@ export default function EcommBrandReviewDialog({
           />
 
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-            <Typography variant="subtitle2" fontWeight={800}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 800
+            }}>
               {t('onboarding.ecommBrands.productSalesCommission')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('onboarding.ecommBrands.productSalesCommissionHint', {
                 vars: { pct: defaultCommissionPct ?? '—' },
               })}
             </Typography>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                alignItems: "center",
+                mt: 1.5
+              }}>
               <TextField
                 label={t('onboarding.ecommBrands.productSalesCommission')}
                 type="number"
@@ -184,10 +226,11 @@ export default function EcommBrandReviewDialog({
                 onChange={(e) => setCommission(e.target.value)}
                 error={!commissionValid}
                 helperText={commissionValid ? undefined : t('onboarding.common.commissionRange')}
-                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Product sales commission percentage' }}
-                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 fullWidth
-              />
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+                  htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Product sales commission percentage' }
+                }} />
               <Button
                 variant="outlined"
                 size="small"

@@ -112,10 +112,11 @@ export default function FollowRequestActions({
       <Stack
         direction="row"
         spacing={1}
-        alignItems="center"
-        sx={{ mt: 1 }}
         onClick={(event) => event.stopPropagation()}
-      >
+        sx={{
+          alignItems: "center",
+          mt: 1
+        }}>
         {settledLabel && (
           <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
             {settledLabel}

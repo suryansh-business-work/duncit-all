@@ -79,15 +79,18 @@ function HostPodsContent() {
       >
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={2}
-        >
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' }
+          }}>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>
               Partner tools · Host
             </Typography>
-            <Typography variant="h4" fontWeight={950}>
+            <Typography variant="h4" sx={{
+              fontWeight: 950
+            }}>
               Your Pods
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>

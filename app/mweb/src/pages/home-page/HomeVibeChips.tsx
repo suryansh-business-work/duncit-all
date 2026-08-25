@@ -84,15 +84,35 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" spacing={0.75} alignItems="flex-start" justifyContent="space-between" sx={{ px: 0.25 }}>
+      <Stack
+        direction="row"
+        spacing={0.75}
+        sx={{
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          px: 0.25
+        }}>
         <Box sx={{ minWidth: 0 }}>
-          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             <AutoAwesomeIcon color="primary" sx={{ fontSize: 18 }} />
             <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
               {headingText}
             </Typography>
           </Stack>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mt: 0.25 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600,
+              display: 'block',
+              mt: 0.25
+            }}>
             {subheadingText}
           </Typography>
         </Box>

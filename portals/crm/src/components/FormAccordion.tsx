@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { getNested } from '../forms/getNested';
 
 interface Props {
@@ -85,15 +85,24 @@ export default function FormAccordion({ title, children, defaultExpanded, fieldP
           '&:hover': { bgcolor: hasError ? alpha(theme.palette.error.main, 0.1) : undefined },
         })}
       >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            flex: 1,
+            minWidth: 0
+          }}>
           {hasError && <ErrorOutlineIcon color="error" fontSize="small" />}
           <Typography
             variant="subtitle2"
-            fontWeight={700}
             color={hasError ? 'error.main' : undefined}
             noWrap
-            sx={{ flex: 1, minWidth: 0 }}
-          >
+            sx={{
+              fontWeight: 700,
+              flex: 1,
+              minWidth: 0
+            }}>
             {title}
           </Typography>
           {hasError && (

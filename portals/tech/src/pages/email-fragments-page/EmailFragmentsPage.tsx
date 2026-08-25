@@ -41,12 +41,22 @@ export default function EmailFragmentsPage() {
 
   return (
     <FillViewport>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2
+        }}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Email Fragments
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             A header and a footer, wrapped around a template's body. Nine ship with Duncit, one per
             email category; add as many of your own as you need.
           </Typography>
@@ -84,7 +94,9 @@ export default function EmailFragmentsPage() {
           />
         ) : (
           <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-            <Typography color="text.secondary">{t('tech.emailFragments.selectACategoryFromTheLeft')}</Typography>
+            <Typography sx={{
+              color: "text.secondary"
+            }}>{t('tech.emailFragments.selectACategoryFromTheLeft')}</Typography>
           </Box>
         )}
       </Stack>

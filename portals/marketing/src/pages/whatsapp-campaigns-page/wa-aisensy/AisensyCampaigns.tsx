@@ -140,8 +140,16 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" alignItems="flex-start" spacing={2}>
-        <Typography variant="body2" color="text.secondary" sx={{ flex: 1, minWidth: 0 }}>
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            flex: 1,
+            minWidth: 0
+          }}>
           Campaigns as AiSensy has them right now. A send only works against one whose status is
           Live. Open a row to see the message it sends, or use Send to point it at people.
         </Typography>

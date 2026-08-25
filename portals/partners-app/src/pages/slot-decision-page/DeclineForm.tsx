@@ -18,7 +18,9 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         Why are you declining?
       </Typography>
       <TextField
@@ -28,10 +30,14 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
         minRows={3}
         fullWidth
         placeholder={t('partners.slotDecisionPage.eGTheSpaceIsAlready')}
-        inputProps={{ maxLength: 280 }}
         helperText={`Shared with the host so they can follow up · ${trimmed.length}/280`}
+        slotProps={{
+          htmlInput: { maxLength: 280 }
+        }}
       />
-      <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1} justifyContent="flex-end">
+      <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1} sx={{
+        justifyContent: "flex-end"
+      }}>
         <Button onClick={onCancel} disabled={busy}>
           Keep it pending
         </Button>

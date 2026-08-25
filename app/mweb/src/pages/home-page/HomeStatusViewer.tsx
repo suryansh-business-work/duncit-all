@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Dialog, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -216,7 +216,9 @@ export default function HomeStatusViewer({
   );
 
   return (
-    <Dialog open={!!item} fullScreen onClose={onClose} PaperProps={{ sx: { bgcolor: '#08070b' } }}>
+    <Dialog open={!!item} fullScreen onClose={onClose} slotProps={{
+      paper: { sx: { bgcolor: '#08070b' } }
+    }}>
       <Box
         onPointerDown={(event) => {
           setPaused(true);
@@ -263,7 +265,9 @@ export default function HomeStatusViewer({
               );
             })}
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Box
               component={item.avatarUrl ? 'img' : 'div'}
               src={item.avatarUrl || undefined}
@@ -280,7 +284,13 @@ export default function HomeStatusViewer({
               )}
             </Box>
             {onToggleLike && currentId && (
-              <Stack direction="row" spacing={0.25} alignItems="center" sx={{ color: '#fff' }}>
+              <Stack
+                direction="row"
+                spacing={0.25}
+                sx={{
+                  alignItems: "center",
+                  color: '#fff'
+                }}>
                 <IconButton
                   onClick={toggleLike}
                   aria-label={liked ? 'Unlike story' : 'Like story'}

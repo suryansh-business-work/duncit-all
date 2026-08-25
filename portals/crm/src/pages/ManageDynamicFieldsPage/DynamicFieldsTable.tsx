@@ -65,7 +65,12 @@ export default function DynamicFieldsTable({
         {rows.length === 0 && !draftOpen && (
           <TableRow>
             <TableCell colSpan={6} align="center">
-              <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  py: 3
+                }}>
                 No dynamic fields yet. Click "New field" to add one — it will appear on every lead
                 edit form.
               </Typography>
@@ -87,15 +92,21 @@ export default function DynamicFieldsTable({
               <DragIndicatorIcon fontSize="small" sx={{ color: 'text.disabled' }} aria-label={t('crm.managedynamicfieldspage.dragToReorder')} />
             </TableCell>
             <TableCell>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="body2" fontWeight={600}>
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 600
+                }}>
                   {row.label}
                 </Typography>
                 {row.required && <Chip size="small" label={t('crm.managedynamicfieldspage.required')} color="warning" />}
                 {row.kind === 'select' && row.multi && <Chip size="small" label={t('crm.managedynamicfieldspage.multi')} variant="outlined" />}
               </Stack>
               {row.hint && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {row.hint}
                 </Typography>
               )}

@@ -151,11 +151,15 @@ export default function CategoriesPage() {
   return (
     <Stack spacing={3} sx={{ minHeight: 'calc(100vh - 140px)' }}>
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <CategoryIcon color="primary" />
           <Typography variant="h5">{t('admin.categories.title')}</Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Manage Super Categories (Human / Pet), their categories and sub-categories. Click an
           item to drill down.
         </Typography>

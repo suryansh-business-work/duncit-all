@@ -107,7 +107,9 @@ export default function PodPicker({ value, onChange }: Readonly<Props>) {
             <Typography variant="body2" noWrap>
               {podLabel(option)}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {podCaption(option)}
             </Typography>
           </Stack>
@@ -119,14 +121,18 @@ export default function PodPicker({ value, onChange }: Readonly<Props>) {
           size="small"
           label={t('finance.common.pod')}
           placeholder={placeholder}
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading ? <CircularProgress size={16} /> : null}
-                {params.InputProps.endAdornment}
-              </>
-            ),
+          slotProps={{
+            ...params.slotProps,
+
+            input: {
+              ...params.slotProps.input,
+              endAdornment: (
+                <>
+                  {loading ? <CircularProgress size={16} /> : null}
+                  {params.slotProps.input.endAdornment}
+                </>
+              ),
+            }
           }}
         />
       )}

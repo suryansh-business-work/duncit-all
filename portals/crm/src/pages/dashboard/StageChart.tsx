@@ -83,14 +83,23 @@ export default function StageChart({ data, title }: Readonly<Props>) {
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             {titleText}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Distribution of venue and host leads across pipeline stages.
           </Typography>
         </Stack>
         <div style={{ height: 280, width: '100%' }}>
           {data.length === 0 ? (
-            <Stack alignItems="center" justifyContent="center" sx={{ height: '100%' }}>
-              <Typography variant="body2" color="text.secondary">
+            <Stack
+              sx={{
+                alignItems: "center",
+                justifyContent: "center",
+                height: '100%'
+              }}>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No leads in the selected period.
               </Typography>
             </Stack>

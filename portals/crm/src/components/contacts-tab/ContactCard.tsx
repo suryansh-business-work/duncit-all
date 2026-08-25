@@ -13,7 +13,9 @@ interface Props {
 }
 
 const Row = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
-  <Stack direction="row" spacing={1} alignItems="center">
+  <Stack direction="row" spacing={1} sx={{
+    alignItems: "center"
+  }}>
     {icon}
     {children}
   </Stack>
@@ -25,13 +27,24 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
   const waNumber = (contact.whatsapp_number || '').replace(/\D/g, '');
   return (
     <Card variant="outlined" sx={{ p: 1.5 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mb: 0.75 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.75
+        }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" fontWeight={700} noWrap>
+          <Typography variant="subtitle2" noWrap sx={{
+            fontWeight: 700
+          }}>
             {contact.name || (index === 0 ? 'Primary contact' : `Contact ${index + 1}`)}
           </Typography>
           {contact.role && (
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {contact.role}
             </Typography>
           )}

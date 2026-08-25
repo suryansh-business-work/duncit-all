@@ -20,9 +20,10 @@ export default function RangeFilter({ range, custom, onRangeChange, onCustomChan
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={1.5}
-          alignItems={{ md: 'center' }}
-          justifyContent="space-between"
-        >
+          sx={{
+            alignItems: { md: 'center' },
+            justifyContent: "space-between"
+          }}>
           <ToggleButtonGroup
             size="small"
             value={range}

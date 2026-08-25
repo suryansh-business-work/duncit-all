@@ -26,11 +26,20 @@ const dash = (v?: string | null) => v || '—';
 
 const renderName = (c: Challenge) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 700
+    }}>
       {c.name}
     </Typography>
     {c.description && (
-      <Typography variant="caption" color="text.secondary" component="div" sx={{ maxWidth: 320 }} noWrap>
+      <Typography
+        variant="caption"
+        component="div"
+        noWrap
+        sx={{
+          color: "text.secondary",
+          maxWidth: 320
+        }}>
         {c.description}
       </Typography>
     )}

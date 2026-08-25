@@ -44,7 +44,9 @@ export default function ContactActionFormContent({
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {user.full_name || user.email || user.user_id}
           </Typography>
           <TextField
@@ -69,7 +71,7 @@ export default function ContactActionFormContent({
                 name="duration_seconds"
                 label={t('admin.contact.durationSeconds')}
                 type="number"
-                inputProps={{ min: 0, step: 1 }}
+                slotProps={{ htmlInput: { min: 0, step: 1 } }}
               />
               <RhfTextField control={control} name="recording_url" label={t('admin.contact.recordingUrl')} />
             </Stack>

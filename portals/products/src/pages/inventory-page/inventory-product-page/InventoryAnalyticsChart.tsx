@@ -75,13 +75,18 @@ export default function InventoryAnalyticsChart({ points, loading }: Readonly<In
   }, []);
 
   if (loading && points.length === 0) {
-    return <Typography variant="body2" color="text.secondary">{t('products.activity.loadingAnalytics')}</Typography>;
+    return (
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('products.activity.loadingAnalytics')}</Typography>
+    );
   }
   if (points.every((p) => p.in_qty === 0 && p.out_qty === 0)) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        No stock activity in the last 30 days.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>No stock activity in the last 30 days.
+              </Typography>
     );
   }
   return (

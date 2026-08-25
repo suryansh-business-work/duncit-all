@@ -93,8 +93,14 @@ export default function RunAdDialog({ product, adKind, open, onClose, onSubmitte
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
-        <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={8}>
+        <Grid container spacing={2} sx={{
+          alignItems: "flex-start"
+        }}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 8
+            }}>
             <AdRequestForm
               key={`${product?.id ?? 'none'}-${adKind}`}
               initialValues={initialValues}
@@ -106,7 +112,11 @@ export default function RunAdDialog({ product, adKind, open, onClose, onSubmitte
               durationWindow={adDurationWindow(pricingData?.adPricing)}
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <Box sx={{ position: { md: 'sticky' }, top: { md: 8 } }}>
               <EstimateCard
                 pricing={pricingData?.adPricing}

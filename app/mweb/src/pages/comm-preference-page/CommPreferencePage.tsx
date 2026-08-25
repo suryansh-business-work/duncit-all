@@ -25,10 +25,14 @@ export default function CommPreferencePage() {
 
   const heading = (
     <Stack spacing={0.5}>
-      <Typography variant="h6" fontWeight={800}>
+      <Typography variant="h6" sx={{
+        fontWeight: 800
+      }}>
         {labels.title}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {labels.blurb}
       </Typography>
     </Stack>

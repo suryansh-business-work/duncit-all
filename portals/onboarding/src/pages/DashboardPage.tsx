@@ -66,7 +66,12 @@ function StatusCard({ to, title, chartTitle, counts }: StatusCardProps) {
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardActionArea onClick={() => navigate(to)} sx={{ height: '100%' }}>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 800,
+              mb: 1
+            }}>
             {title}
           </Typography>
           <StatusBreakdownChart title={chartTitle} counts={counts} />
@@ -191,7 +196,9 @@ export default function DashboardPage() {
     <DuncitDashboard
       dashboardId="onboarding.overview"
       header={
-        <Stack direction="row" alignItems="center" spacing={1.75}>
+        <Stack direction="row" spacing={1.75} sx={{
+          alignItems: "center"
+        }}>
           <Avatar
             src={me?.profile_photo || undefined}
             sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontWeight: 800 }}
@@ -199,10 +206,14 @@ export default function DashboardPage() {
             {firstName.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
-            <Typography variant="h5" fontWeight={800}>
+            <Typography variant="h5" sx={{
+              fontWeight: 800
+            }}>
               Welcome back, {firstName}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {appConfig.tagline}
             </Typography>
             <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>

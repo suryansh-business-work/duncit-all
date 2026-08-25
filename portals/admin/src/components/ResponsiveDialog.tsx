@@ -57,15 +57,17 @@ export default function ResponsiveDialog({
         onClose={onClose}
         onOpen={() => {}}
         disableSwipeToOpen
-        PaperProps={{
-          sx: {
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            maxHeight: sheetMaxHeight,
-            display: 'flex',
-            flexDirection: 'column',
-            pb: 'env(safe-area-inset-bottom)',
-          },
+        slotProps={{
+          paper: {
+            sx: {
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              maxHeight: sheetMaxHeight,
+              display: 'flex',
+              flexDirection: 'column',
+              pb: 'env(safe-area-inset-bottom)',
+            },
+          }
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1, pb: 0.5 }}>
@@ -74,11 +76,20 @@ export default function ResponsiveDialog({
         {title && (
           <Stack
             direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: 2, pt: 0.5, pb: 1 }}
-          >
-            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ minWidth: 0 }}>
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              px: 2,
+              pt: 0.5,
+              pb: 1
+            }}>
+            <Typography
+              variant="subtitle1"
+              noWrap
+              sx={{
+                fontWeight: 700,
+                minWidth: 0
+              }}>
               {title}
             </Typography>
             <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>

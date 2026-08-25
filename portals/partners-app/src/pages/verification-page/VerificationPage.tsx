@@ -28,7 +28,11 @@ export default function VerificationPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -39,13 +43,25 @@ export default function VerificationPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <VerifiedUserIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700} lineHeight={1}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1
+            }}>
             {t('partners.verification.title')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {t('partners.verification.subtitle')}
           </Typography>
         </Box>

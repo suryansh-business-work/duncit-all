@@ -11,7 +11,12 @@ import {
 import type { PromptVariable } from '../src/types';
 
 const variable = (over: Partial<PromptVariable> & { name: string }): PromptVariable =>
-  ({ required: false, example: '', description: '', ...over }) as PromptVariable;
+  (({
+    required: false,
+    example: '',
+    description: '',
+    ...over
+  }) as PromptVariable);
 
 describe('renderPrompt', () => {
   it('fills the placeholders it was given', () => {

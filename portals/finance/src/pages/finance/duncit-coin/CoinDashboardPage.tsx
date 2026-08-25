@@ -55,17 +55,22 @@ export default function CoinDashboardPage() {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={2}
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            justifyContent="space-between"
-          >
+            sx={{
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              justifyContent: "space-between"
+            }}>
             <Box>
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <MonetizationOnIcon color="primary" />
                 <Typography variant="h4" sx={{ fontWeight: 800 }}>
                   Duncit Coin
                 </Typography>
               </Stack>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 How many coins the platform has granted, how many users have spent, and what is still
                 outstanding. 1 coin = 1 {stats?.currency_symbol ?? '₹'} of reward value.
               </Typography>

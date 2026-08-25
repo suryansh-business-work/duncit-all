@@ -71,7 +71,12 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
   return (
     <Box sx={{ maxWidth: 880, mx: 'auto' }}>
       {!hideTitle && (
-        <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            mb: 2
+          }}>
           {policy.title}
         </Typography>
       )}
@@ -108,9 +113,12 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
       {!hideUpdated && (
         <Typography
           variant="caption"
-          color="text.secondary"
-          sx={{ mt: 4, display: 'block', textAlign: 'right' }}
-        >
+          sx={{
+            color: "text.secondary",
+            mt: 4,
+            display: 'block',
+            textAlign: 'right'
+          }}>
           Last updated {formatDate(policy.updated_at)}
         </Typography>
       )}

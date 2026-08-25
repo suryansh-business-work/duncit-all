@@ -53,8 +53,12 @@ function VenueChipsSection({ title, items }: Readonly<{ title: string; items?: s
   if (!items?.length) return null;
   return (
     <Stack spacing={1}>
-      <Typography variant="h6" fontWeight={700}>{title}</Typography>
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Typography variant="h6" sx={{
+        fontWeight: 700
+      }}>{title}</Typography>
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {items.map((item) => <Chip key={item} label={item} variant="outlined" />)}
       </Stack>
     </Stack>
@@ -108,8 +112,12 @@ export default function VenueDetailsPage() {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ alignSelf: 'flex-start' }}>
           Back
         </Button>
-        <Typography variant="h5" fontWeight={700}>{t('mweb.venueDetailsPage.venueNotFound')}</Typography>
-        <Typography color="text.secondary">
+        <Typography variant="h5" sx={{
+          fontWeight: 700
+        }}>{t('mweb.venueDetailsPage.venueNotFound')}</Typography>
+        <Typography sx={{
+          color: "text.secondary"
+        }}>
           This venue link may be unavailable or the venue may not be approved yet.
         </Typography>
       </Stack>
@@ -118,7 +126,13 @@ export default function VenueDetailsPage() {
 
   return (
     <Stack spacing={3} sx={{ pb: 4 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>Back</Button>
         <Button startIcon={<ContentCopyIcon />} onClick={copyLink}>{t('mweb.venueDetailsPage.copyLink')}</Button>
       </Stack>
@@ -135,30 +149,47 @@ export default function VenueDetailsPage() {
           </ButtonBase>
         ) : (
           <Box sx={{ minHeight: 220, display: 'grid', placeItems: 'center', px: 3, bgcolor: 'action.hover' }}>
-            <Typography variant="h4" fontWeight={600} textAlign="center">{venue.venue_name}</Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 600,
+                textAlign: "center"
+              }}>{venue.venue_name}</Typography>
           </Box>
         )}
       </Box>
 
       <Stack spacing={1}>
-        <Typography variant="h4" fontWeight={600}>{venue.venue_name}</Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Typography variant="h4" sx={{
+          fontWeight: 600
+        }}>{venue.venue_name}</Typography>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           <Chip label={venue.venue_type} />
           <Chip label={`${venue.capacity} capacity`} />
           {venue.tags?.map((tag: string) => <Chip key={tag} label={tag} variant="outlined" />)}
         </Stack>
       </Stack>
 
-      {venue.description && <Typography color="text.secondary">{venue.description}</Typography>}
+      {venue.description && <Typography sx={{
+        color: "text.secondary"
+      }}>{venue.description}</Typography>}
 
       <Divider />
 
       <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <PlaceIcon color="primary" fontSize="small" />
-          <Typography variant="h6" fontWeight={700}>{t('mweb.common.location')}</Typography>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>{t('mweb.common.location')}</Typography>
         </Stack>
-        <Typography color="text.secondary">
+        <Typography sx={{
+          color: "text.secondary"
+        }}>
           {addressParts(venue).map((part) => part?.trim()).filter(Boolean).join(', ')}
         </Typography>
         <VenueMapPreview title={venue.venue_name} parts={addressParts(venue)} lat={venue.lat} lng={venue.lng} />

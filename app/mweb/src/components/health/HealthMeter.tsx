@@ -91,28 +91,44 @@ export default function HealthMeter({
           />
         </svg>
         <Stack
-          alignItems="center"
           sx={{
+            alignItems: "center",
             position: 'absolute',
             inset: 0,
             justifyContent: 'flex-end',
             pb: 0.5,
-            pointerEvents: 'none',
-          }}
-        >
+            pointerEvents: 'none'
+          }}>
           <Typography sx={{ fontWeight: 700, fontSize: size * 0.28, lineHeight: 1, color }}>
             {safeScore}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             / 100
           </Typography>
         </Stack>
       </Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mt: 1 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          mt: 1
+        }}>
         {labelText}
       </Typography>
       {caption && (
-        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 0.25 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            textAlign: 'center',
+            mt: 0.25
+          }}>
           {caption}
         </Typography>
       )}

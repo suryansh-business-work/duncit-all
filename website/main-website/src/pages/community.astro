@@ -1,45 +1,45 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 ---
 
 <PageLayout
-  title="Community"
-  eyebrow="Tribe vibes"
-  heading="The Duncit Community"
-  intro="A growing crew of vibe-seekers, builders, hosts, and friends-of-friends."
+  title={t('website.main.community.title')}
+  eyebrow={t('website.main.community.eyebrow')}
+  heading={t('website.main.community.heading')}
+  intro={t('website.main.community.intro')}
   heroImage="https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=1600&q=80&auto=format&fit=crop"
 >
-  <h2>What's the vibe?</h2>
-  <p>
-    The Duncit community is welcoming, curious, and a little bit weird (in the best way).
-    We celebrate the awkward small talk that becomes real friendship, the random meetups that
-    turn into traditions, and the late-night DMs that change someone's week.
-  </p>
+  <h2>{t('website.main.community.vibeHeading')}</h2>
+  <p>{t('website.main.community.vibeText')}</p>
 
-  <h2>Ways to plug in</h2>
+  <h2>{t('website.main.community.plugHeading')}</h2>
   <ul>
-    <li><strong>Discord.</strong> Hang out, share memes, and meet the team in real time.</li>
-    <li><strong>Beta program.</strong> Get early access and shape the app.</li>
-    <li><strong>Local hosts.</strong> Run small meetups in your city — we'll help.</li>
-    <li><strong>Creator collective.</strong> If you make stuff and want to collaborate, hi.</li>
+    <li><strong>{t('website.main.community.plug1Label')}</strong> {t('website.main.community.plug1Text')}</li>
+    <li><strong>{t('website.main.community.plug2Label')}</strong> {t('website.main.community.plug2Text')}</li>
+    <li><strong>{t('website.main.community.plug3Label')}</strong> {t('website.main.community.plug3Text')}</li>
+    <li><strong>{t('website.main.community.plug4Label')}</strong> {t('website.main.community.plug4Text')}</li>
   </ul>
 
   <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
     <a href="/#download" class="block p-6 rounded-2xl bg-primary text-white sticker hover:-translate-y-0.5 transition">
       <i class="fa-solid fa-rocket text-3xl mb-2"></i>
-      <div class="font-head font-bold text-xl">Get the app</div>
-      <div class="text-sm opacity-90 mt-1">Match by energy on Android &amp; iOS</div>
+      <div class="font-head font-bold text-xl">{t('website.main.community.getAppTitle')}</div>
+      <div class="text-sm opacity-90 mt-1">{t('website.main.community.getAppText')}</div>
     </a>
     <a href="/contact" class="block p-6 rounded-2xl bg-secondary text-white sticker hover:-translate-y-0.5 transition">
       <i class="fa-solid fa-hand-peace text-3xl mb-2"></i>
-      <div class="font-head font-bold text-xl">Say hi</div>
-      <div class="text-sm opacity-90 mt-1">Hosts, creators &amp; collaborators welcome</div>
+      <div class="font-head font-bold text-xl">{t('website.main.community.sayHiTitle')}</div>
+      <div class="text-sm opacity-90 mt-1">{t('website.main.community.sayHiText')}</div>
     </a>
   </div>
 
-  <h2>Read the rules</h2>
+  <h2>{t('website.main.community.rulesHeading')}</h2>
   <p>
-    Before posting, please skim the <a href="/guidelines">community guidelines</a>.
-    They're short and mostly common sense, but they keep the vibe right.
+    {t('website.main.community.rulesText')}
+    <a href="/guidelines">{t('website.main.community.rulesLink')}</a>.
+    {t('website.main.community.rulesTextAfter')}
   </p>
 </PageLayout>

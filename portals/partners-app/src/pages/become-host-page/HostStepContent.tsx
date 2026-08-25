@@ -22,7 +22,9 @@ export default function HostStepContent({ step, s1, s2, s3, set1, set2, set3, op
     return (
       <Stack spacing={2}>
         <TextField label={t('partners.becomeHostPage.fullName')} required value={s1.full_name} onChange={(e) => set1({ ...s1, full_name: e.target.value })} />
-        <TextField label={t('shell.common.email')} type="email" required value={s1.email} disabled helperText={t('partners.becomeHostPage.lockedToYourDuncitAccount')} InputProps={{ readOnly: true }} />
+        <TextField label={t('shell.common.email')} type="email" required value={s1.email} disabled helperText={t('partners.becomeHostPage.lockedToYourDuncitAccount')} slotProps={{
+          input: { readOnly: true }
+        }} />
         <TextField label={t('shell.common.phone')} required value={s1.phone} onChange={(e) => set1({ ...s1, phone: e.target.value })} />
         <DateField label="DOB" value={s1.dob} onChange={(iso) => set1({ ...s1, dob: iso })} minDate={getHostDobMinDate()} maxDate={getHostDobMaxDate()} />
       </Stack>
@@ -49,7 +51,9 @@ export default function HostStepContent({ step, s1, s2, s3, set1, set2, set3, op
   return (
     <Stack spacing={1}>
       <Typography variant="body1">{t('partners.becomeHostPage.submitYourApplicationForReview')}</Typography>
-      <Typography variant="caption" color="text.secondary">{s1.full_name} - {s1.email}</Typography>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>{s1.full_name} - {s1.email}</Typography>
     </Stack>
   );
 }

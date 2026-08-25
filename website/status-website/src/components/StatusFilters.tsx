@@ -29,24 +29,27 @@ export default function StatusFilters({ value, groupTitles, onChange }: Readonly
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
       spacing={1.5}
-      alignItems={{ xs: 'stretch', sm: 'center' }}
-      mb={3}
-    >
+      sx={{
+        alignItems: { xs: 'stretch', sm: 'center' },
+        mb: 3
+      }}>
       <TextField
         size="small"
         placeholder={t('status.board.search')}
         value={value.query}
         onChange={(event) => onChange({ ...value, query: event.target.value })}
         sx={{ flex: 1 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-        inputProps={{ 'aria-label': t('status.board.searchAria') }}
-      />
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          },
+
+          htmlInput: { 'aria-label': t('status.board.searchAria') }
+        }} />
       <TextField
         size="small"
         select

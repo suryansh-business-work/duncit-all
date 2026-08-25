@@ -40,7 +40,13 @@ const ZONES = [
 /** Row label + control, so the settings line up without a table. */
 function Row({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
       <Typography variant="body2">{label}</Typography>
       {children}
     </Stack>
@@ -132,7 +138,9 @@ export default function ChatSettingsBody({ settings, onChange }: Readonly<Props>
           value={settings.timeZone}
           onChange={(event) => onChange('timeZone', event.target.value)}
           sx={{ minWidth: 132 }}
-          inputProps={{ 'aria-label': t('shell.chat.settings.timesIn') }}
+          slotProps={{
+            htmlInput: { 'aria-label': t('shell.chat.settings.timesIn') }
+          }}
         >
           {ZONES.map((zone) => (
             <MenuItem key={zone.value || 'device'} value={zone.value}>
@@ -147,10 +155,14 @@ export default function ChatSettingsBody({ settings, onChange }: Readonly<Props>
           size="small"
           checked={settings.enterToSend}
           onChange={(event) => onChange('enterToSend', event.target.checked)}
-          inputProps={{ 'aria-label': t('shell.chat.settings.enterSends') }}
+          slotProps={{
+            input: { 'aria-label': t('shell.chat.settings.enterSends') }
+          }}
         />
       </Row>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t(
           settings.enterToSend
             ? 'shell.chat.settings.enterHint'

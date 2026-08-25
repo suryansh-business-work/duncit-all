@@ -13,46 +13,55 @@ const { t } = await getTranslator();
 
 const FALLBACK_GROUPS = [
   {
-    label: 'About',
+    label: t("website.main.nav.about"),
+    icon: "fa-circle-info",
     links: [
-      { id: 'n-about', label: 'About us', url: '/about' },
-      { id: 'n-newsroom', label: 'Newsroom', url: '/newsroom' },
-      { id: 'n-careers', label: 'Careers', url: '/careers' },
-      { id: 'n-contact', label: 'Contact us', url: '/contact' },
+      { id: "n-about", label: t("website.main.nav.aboutUs"), url: "/about" },
+      { id: "n-newsroom", label: t("website.main.nav.newsroom"), url: "/newsroom" },
+      { id: "n-careers", label: t("website.main.nav.careers"), url: "/careers" },
+      { id: "n-contact", label: t("website.main.nav.contactUs"), url: "/contact" },
     ],
   },
   {
-    label: 'Community',
+    label: t("website.main.nav.community"),
+    icon: "fa-people-group",
     links: [
-      { id: 'n-community', label: 'Community', url: '/community' },
-      { id: 'n-guidelines', label: 'Guidelines', url: '/guidelines' },
-      { id: 'n-blog', label: 'Blog', url: '/blog' },
+      { id: "n-community", label: t("website.main.nav.community"), url: "/community" },
+      { id: "n-guidelines", label: t("website.main.nav.guidelines"), url: "/guidelines" },
+      { id: "n-blog", label: t("website.main.nav.blog"), url: "/blog" },
     ],
   },
   {
-    label: 'Safety Hub',
+    label: t("website.main.nav.safetyHub"),
+    icon: "fa-shield-heart",
     links: [
-      { id: 'n-approach', label: 'Our approach', url: '/safety/approach' },
-      { id: 'n-advice', label: 'Advice', url: '/safety/advice' },
-      { id: 'n-tools', label: 'Safety Tools', url: '/safety/tools' },
-      { id: 'n-resources', label: 'Resources', url: '/safety/resources' },
+      { id: "n-approach", label: t("website.main.nav.ourApproach"), url: "/safety/approach" },
+      { id: "n-advice", label: t("website.main.nav.advice"), url: "/safety/advice" },
+      { id: "n-tools", label: t("website.main.nav.safetyTools"), url: "/safety/tools" },
+      { id: "n-resources", label: t("website.main.nav.resources"), url: "/safety/resources" },
     ],
   },
   {
-    label: 'Support',
+    label: t("website.main.nav.support"),
+    icon: "fa-life-ring",
     links: [
-      { id: 'n-help', label: 'Help Center', url: '/help' },
-      { id: 'n-faq', label: 'FAQ', url: '/faq' },
+      { id: "n-help", label: t("website.main.nav.helpCenter"), url: "/help" },
+      { id: "n-faq", label: t("website.main.nav.faq"), url: "/faq" },
     ],
   },
 ];
 
+// The Navigation manager owns the labels when it answers, and its groups are
+// stored in English — so the icon for a PORTAL group is still looked up by its
+// English label. A FALLBACK group carries its own icon instead, because its
+// label is translated and an icon map keyed on display text stops matching the
+// moment the display text changes language.
 const GROUP_ICONS: Record<string, string> = {
-  About: 'fa-circle-info',
-  Community: 'fa-people-group',
-  'Safety Hub': 'fa-shield-heart',
-  Support: 'fa-life-ring',
-  'Policy Hub': 'fa-lock',
+  About: "fa-circle-info",
+  Community: "fa-people-group",
+  "Safety Hub": "fa-shield-heart",
+  Support: "fa-life-ring",
+  "Policy Hub": "fa-lock",
 };
 
 const navGroups = await fetchNavGroups('MAIN', 'HEADER', FALLBACK_GROUPS as never);
@@ -60,15 +69,15 @@ const policies = await fetchPolicies();
 const sections = [
   ...navGroups.map((group) => ({
     title: group.label,
-    icon: GROUP_ICONS[group.label] ?? 'fa-hashtag',
+    icon: (group as { icon?: string }).icon ?? GROUP_ICONS[group.label] ?? 'fa-hashtag',
     links: group.links.map((link) => ({ href: link.url, label: link.label })),
   })),
   {
-    title: 'Policy Hub',
+    title: t('website.footer.policyHub'),
     icon: 'fa-lock',
     links: [
       ...policies.map((policy) => ({ href: `/policy/${policy.slug}`, label: policy.title })),
-      { href: '/policies', label: 'All policies' },
+      { href: '/policies', label: t('website.footer.allPolicies') },
     ],
   },
 ];

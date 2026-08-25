@@ -89,9 +89,10 @@ export default function DocumentDetailPage() {
     }
     if (!doc) {
       return (
-        <Typography variant="body2" color="text.secondary">
-          This document could not be found.
-        </Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>This document could not be found.
+                  </Typography>
       );
     }
     if (editing) {
@@ -113,14 +114,22 @@ export default function DocumentDetailPage() {
     }
     return (
       <>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <Chip size="small" color="primary" label={doc.document_type} />
           <DocumentActiveSwitch
             documentId={doc.id}
             isActive={doc.is_active}
             onChanged={() => refetch()}
           />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Updated by {doc.updated_by_name || '—'} · v{doc.version_count}
           </Typography>
         </Stack>
@@ -130,7 +139,9 @@ export default function DocumentDetailPage() {
           {doc.content ? (
             <DuncitRichTextInput value={doc.content} onChange={() => undefined} readOnly bare />
           ) : (
-            <Typography variant="body2" color="text.secondary">{t('legal.documents.noContent')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('legal.documents.noContent')}</Typography>
           )}
         </Paper>
 
@@ -140,17 +151,23 @@ export default function DocumentDetailPage() {
             Update history
           </Typography>
           {doc.versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               No edits yet — this is the original version.
             </Typography>
           ) : (
             <Stack spacing={0.75}>
               {doc.versions.map((v) => (
-                <Stack key={v.id} direction="row" spacing={1} alignItems="center">
+                <Stack key={v.id} direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
                     {v.updated_by_name || 'Unknown'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {formatDateTime(v.created_at)}
                   </Typography>
                 </Stack>
@@ -164,7 +181,9 @@ export default function DocumentDetailPage() {
 
   const headerActions =
     doc && !editing ? (
-      <Stack direction="row" spacing={0.5} flexWrap="wrap">
+      <Stack direction="row" spacing={0.5} sx={{
+        flexWrap: "wrap"
+      }}>
         <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>{t('shell.common.edit')}</Button>
         <Button size="small" startIcon={<PrintIcon />} onClick={onPrint}>{t('legal.documents.print')}</Button>
         <Button size="small" startIcon={<DownloadIcon />} onClick={onDownload}>{t('legal.documents.download')}</Button>

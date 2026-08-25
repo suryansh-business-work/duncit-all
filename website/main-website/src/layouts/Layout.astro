@@ -3,6 +3,9 @@ import '../styles/global.css';
 import { fetchBranding } from '../lib/site-data';
 import { urlConfigs } from '../config/url-configs';
 import { SHORT_CODE_PATTERN } from '../lib/short-link';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 
 interface Props {
   title: string;
@@ -11,7 +14,7 @@ interface Props {
 
 const {
   title,
-  description = 'Duncit — the friendship platform that matches people by energy, not algorithms.',
+  description = t('website.main.layout.siteDescription'),
 } = Astro.props;
 
 // Admin-managed favicon (Branding → Website Logos), baked in at build time.

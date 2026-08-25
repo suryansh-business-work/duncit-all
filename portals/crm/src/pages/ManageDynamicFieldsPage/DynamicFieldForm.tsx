@@ -32,7 +32,12 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
   const set = (patch: Partial<DraftState>) => onChange({ ...draft, ...patch });
   return (
     <Card variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          mb: 1.5
+        }}>
         {draft.id ? `Edit field — ${draft.label || draft.name}` : 'New field'}
       </Typography>
       <Stack spacing={1.5}>
@@ -45,7 +50,9 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
             value={draft.label}
             onChange={(e) => set({ label: e.target.value })}
             helperText={t('crm.managedynamicfieldspage.whatTheUserSeesOnThe')}
-            inputProps={{ 'aria-label': 'dynamic-field-label' }}
+            slotProps={{
+              htmlInput: { 'aria-label': 'dynamic-field-label' }
+            }}
           />
           <TextField
             size="small"
@@ -79,26 +86,34 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
           <TextField
             fullWidth size="small" label={t('crm.managedynamicfieldspage.placeholder')} value={draft.placeholder}
             onChange={(e) => set({ placeholder: e.target.value })}
-            inputProps={{ 'aria-label': 'dynamic-field-placeholder' }}
+            slotProps={{
+              htmlInput: { 'aria-label': 'dynamic-field-placeholder' }
+            }}
           />
           <TextField
             fullWidth size="small" label={t('crm.managedynamicfieldspage.defaultValue')} value={draft.default_value}
             onChange={(e) => set({ default_value: e.target.value })}
-            inputProps={{ 'aria-label': 'dynamic-field-default' }}
+            slotProps={{
+              htmlInput: { 'aria-label': 'dynamic-field-default' }
+            }}
           />
         </Stack>
         <TextField
           fullWidth size="small" label={t('crm.managedynamicfieldspage.hint')} value={draft.hint}
           onChange={(e) => set({ hint: e.target.value })}
           helperText={t('crm.managedynamicfieldspage.shownBeneathTheInputAsGuidance')}
-          inputProps={{ 'aria-label': 'dynamic-field-hint' }}
+          slotProps={{
+            htmlInput: { 'aria-label': 'dynamic-field-hint' }
+          }}
         />
 
         {draft.kind === 'select' && (
           <DynamicFieldOptionsEditor options={draft.options} onChange={(options) => set({ options })} />
         )}
 
-        <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={2} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           <FormControlLabel
             control={<Checkbox checked={draft.applies_to_venue} onChange={(e) => set({ applies_to_venue: e.target.checked })} />}
             label={t('crm.managedynamicfieldspage.appliesToVenueLeads')}
@@ -121,7 +136,9 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
           />
         </Stack>
 
-        <Stack direction="row" justifyContent="flex-end" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button onClick={onCancel} disabled={busy}>
             {t('shell.common.cancel')}
           </Button>

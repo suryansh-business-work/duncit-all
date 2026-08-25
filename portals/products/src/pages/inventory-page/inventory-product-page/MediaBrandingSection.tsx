@@ -18,7 +18,7 @@ export default function MediaBrandingSection({ onError }: Readonly<MediaBranding
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <ImagesField
           images={images}
           coverUrl={imageUrl}
@@ -28,8 +28,10 @@ export default function MediaBrandingSection({ onError }: Readonly<MediaBranding
           }}
         />
       </Grid>
-      <Grid item xs={12}>
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+      <Grid size={12}>
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <AiDescribeButton
             values={values}
             onApply={(copy) => {

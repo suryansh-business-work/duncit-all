@@ -76,7 +76,12 @@ export default function PodTimelineSection({ pod }: Readonly<Props>) {
 
         <Box>
           <Divider sx={{ mb: 2 }} />
-          <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1.5 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              mb: 1.5
+            }}>
             Activity
           </Typography>
           {error && <Alert severity="error">{error.message}</Alert>}

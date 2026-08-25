@@ -1,18 +1,21 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 ---
 
 <PageLayout
-  title="Blog"
-  eyebrow="Notes & stories"
-  heading="The Duncit Blog"
-  intro="Product updates, design notes, friendship research, and the occasional rant."
+  title={t('website.main.blog.title')}
+  eyebrow={t('website.main.blog.eyebrow')}
+  heading={t('website.main.blog.heading')}
+  intro={t('website.main.blog.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1600&q=80&auto=format&fit=crop"
 >
   <WebsiteContentList type="BLOG" variant="cards" />
 
-  <h2>Subscribe</h2>
-  <p>Get one short email a week. No spam, just the good stuff. <a href="/">Join the list →</a></p>
+  <h2>{t('website.main.blog.subscribe')}</h2>
+  <p>{t('website.main.blog.subscribeText')} <a href="/">{t('website.main.blog.joinList')}</a></p>
 </PageLayout>

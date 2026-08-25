@@ -39,7 +39,9 @@ export default function VenueManagePage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <StorefrontIcon fontSize="small" />
         </Box>
@@ -47,7 +49,12 @@ export default function VenueManagePage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Venue Studio
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             List your space, run events, get discovered
           </Typography>
         </Box>
@@ -60,7 +67,13 @@ export default function VenueManagePage() {
         {[{ label: t('mweb.venueManagePage.listed'), value: venueCount, icon: <StorefrontIcon fontSize="small" /> }, { label: t('mweb.common.capacity'), value: capacity || '-', icon: <ChairIcon fontSize="small" /> }, { label: t('mweb.venueManagePage.status'), value: venue?.status ?? 'New', icon: <InsightsIcon fontSize="small" /> }].map((item) => (
           <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Stack direction="row" spacing={0.75} alignItems="center" color="primary.main">
+              <Stack
+                direction="row"
+                spacing={0.75}
+                sx={{
+                  alignItems: "center",
+                  color: "primary.main"
+                }}>
                 {item.icon}
                 <Typography variant="caption" sx={{ fontWeight: 700 }} noWrap>{item.label}</Typography>
               </Stack>
@@ -79,7 +92,12 @@ export default function VenueManagePage() {
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             Pods at your venue
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             Bookings over the last 2 and next 3 months
           </Typography>
           <SimpleBarChart data={buildMonthlyCounts(venuePods.map((p) => p.pod_date_time))} />
@@ -101,10 +119,17 @@ export default function VenueManagePage() {
 
       <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Stack direction="row" alignItems="center" sx={{ mb: 1.5 }}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              mb: 1.5
+            }}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{t('mweb.venueManagePage.yourVenues')}</Typography>
-              <Typography variant="caption" color="text.secondary">{venueCount} listed</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{venueCount} listed</Typography>
             </Box>
             <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
           </Stack>

@@ -26,7 +26,11 @@ export default function OnboardingTrendChart({ buckets }: Readonly<Props>) {
   );
 
   if (!hasData) {
-    return <Typography color="text.secondary">{t('onboarding.dashboard.noSubmissionsInThisPeriodYet')}</Typography>;
+    return (
+      <Typography sx={{
+        color: "text.secondary"
+      }}>{t('onboarding.dashboard.noSubmissionsInThisPeriodYet')}</Typography>
+    );
   }
 
   const data = {

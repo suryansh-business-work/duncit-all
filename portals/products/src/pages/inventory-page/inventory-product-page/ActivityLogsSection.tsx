@@ -103,7 +103,9 @@ export default function ActivityLogsSection({
                       ? `Changed: ${log.changed_fields.join(', ')}`
                       : log.notes || 'No additional detail'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {formatDateTime(log.created_at)} · {log.user_name || 'system'}
                   </Typography>
                 </Box>

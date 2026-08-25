@@ -51,8 +51,15 @@ export default function LanguageSection() {
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                flex: 1
+              }}>
               {t('mweb.account.preferences')}
             </Typography>
             {saving && <CircularProgress size={16} data-testid="language-saving" />}

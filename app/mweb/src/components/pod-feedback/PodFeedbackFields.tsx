@@ -58,7 +58,9 @@ export default function PodFeedbackFields({
         onChange={(event) => onMessage(event.target.value)}
         multiline
         minRows={2}
-        inputProps={{ maxLength: 1000 }}
+        slotProps={{
+          htmlInput: { maxLength: 1000 }
+        }}
       />
     </>
   );

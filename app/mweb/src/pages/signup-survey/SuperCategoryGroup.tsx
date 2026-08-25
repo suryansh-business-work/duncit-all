@@ -55,18 +55,32 @@ export function SuperCategoryGroup({
           }}
         >
           {emoji && <Box component="span" sx={{ fontSize: 18, lineHeight: 1 }}>{emoji}</Box>}
-          <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit' }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 600,
+              color: 'inherit'
+            }}>
             {superCategory.name}
           </Typography>
         </Box>
 
         {categories.length === 0 && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             No interests in this group yet.
           </Typography>
         )}
 
-        <Stack direction="row" flexWrap="wrap" justifyContent="center" useFlexGap spacing={1.15}>
+        <Stack
+          direction="row"
+          useFlexGap
+          spacing={1.15}
+          sx={{
+            flexWrap: "wrap",
+            justifyContent: "center"
+          }}>
           {categories.flatMap((category) => [category, ...(childrenByParent.get(category.id) ?? [])]).map((item, index) => (
             <SurveyChip
               key={item.id}

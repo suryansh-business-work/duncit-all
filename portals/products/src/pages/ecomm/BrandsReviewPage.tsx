@@ -49,12 +49,18 @@ export default function BrandsReviewPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        justifyContent: "space-between"
+      }}>
         <Box>
-          <Typography variant="h4" fontWeight={950}>
+          <Typography variant="h4" sx={{
+            fontWeight: 950
+          }}>
             Brands Review
           </Typography>
-          <Typography color="text.secondary">
+          <Typography sx={{
+            color: "text.secondary"
+          }}>
             Approve or reject the e-commerce brands partners submit for onboarding.
           </Typography>
         </Box>

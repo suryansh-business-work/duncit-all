@@ -29,7 +29,7 @@ export default function CheckboxGroupField({ name, label, options }: Readonly<Pr
                     key={option}
                     control={<Checkbox size="small" checked={value.includes(option)} onChange={() => toggle(option)} />}
                     label={option}
-                    componentsProps={{ typography: { variant: 'body2' } }}
+                    slotProps={{ typography: { variant: 'body2' } }}
                   />
                 ))}
               </Box>

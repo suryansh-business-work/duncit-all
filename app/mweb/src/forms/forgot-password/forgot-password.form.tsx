@@ -52,13 +52,13 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
           placeholder={t('mweb.auth.emailPlaceholder')}
           autoComplete="email"
           size="small"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <EmailOutlinedIcon fontSize="small" />
               </InputAdornment>
             ),
-          }}
+          } }}
         />
         {emailError && (
           <FormHelperText error role="alert" sx={{ mt: -1, mx: 1.75 }}>

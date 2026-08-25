@@ -22,7 +22,13 @@ export default function ProductListingEditorPage() {
   const product = stateProduct || data?.myProductListings?.find((item: any) => item.id === productId) || null;
 
   if ((accessLoading && !accessData) || (editing && loading && !product)) {
-    return <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress size={24} /></Stack>;
+    return (
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}><CircularProgress size={24} /></Stack>
+    );
   }
 
   const notFound = editing && !product && !loading;
@@ -34,13 +40,17 @@ export default function ProductListingEditorPage() {
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
-        <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
             {t('partners.venueAvailabilityPage.back')}
           </Button>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>{editing ? 'Edit product' : 'New product'}</Typography>
-            <Typography variant="h4" fontWeight={950}>{editing ? product?.product_name || 'Product listing' : 'Add Product'}</Typography>
+            <Typography variant="h4" sx={{
+              fontWeight: 950
+            }}>{editing ? product?.product_name || 'Product listing' : 'Add Product'}</Typography>
           </Box>
         </Stack>
       </Box>

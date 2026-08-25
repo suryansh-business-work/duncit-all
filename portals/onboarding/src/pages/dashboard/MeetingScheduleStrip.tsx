@@ -27,16 +27,31 @@ export default function MeetingScheduleStrip({
         <Card key={kind} variant="outlined" sx={{ height: '100%' }}>
           <CardActionArea onClick={() => onOpen(kind)} sx={{ height: '100%' }}>
             <CardContent>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  mb: 0.5
+                }}>
                 <EventIcon fontSize="small" color="primary" />
-                <Typography variant="overline" color="text.secondary" fontWeight={800}>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 800
+                  }}>
                   {KIND_LABEL[kind]} meetings
                 </Typography>
               </Stack>
-              <Typography variant="h4" fontWeight={900}>
+              <Typography variant="h4" sx={{
+                fontWeight: 900
+              }}>
                 {counts[kind]}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 View requests
               </Typography>
             </CardContent>

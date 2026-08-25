@@ -68,7 +68,9 @@ export default function ReplyMessageStep({
         )}
       />
 
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {TEMPLATE_TOKENS.map((token) => (
           <Chip key={token} size="small" variant="outlined" label={token} />
         ))}
@@ -85,7 +87,9 @@ export default function ReplyMessageStep({
               }
               label={t('support.mailAutomation.aiLabel')}
             />
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('support.mailAutomation.aiHint')}
             </Typography>
           </Stack>
@@ -106,7 +110,9 @@ export default function ReplyMessageStep({
 
       {preview && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-          <Typography variant="subtitle2" fontWeight={800}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>
             {t('support.mailAutomation.previewTitle')}
           </Typography>
           <Alert severity="info" sx={{ my: 1 }}>

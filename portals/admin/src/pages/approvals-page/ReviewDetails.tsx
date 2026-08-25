@@ -13,7 +13,14 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
   const isReviewed = request.status !== 'PENDING';
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <StatusChip status={request.status} />
         {request.kind && <Chip size="small" variant="outlined" color="secondary" label={request.kind} />}
         {request.source_portal && (
@@ -22,13 +29,17 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
       </Stack>
 
       {request.summary && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {request.summary}
         </Typography>
       )}
 
       <Divider textAlign="left">
-        <Typography variant="overline" color="text.secondary">
+        <Typography variant="overline" sx={{
+          color: "text.secondary"
+        }}>
           {t('admin.verification.details')}
         </Typography>
       </Divider>
@@ -36,7 +47,12 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
       <Stack spacing={1.25}>
         {request.details.map((d) => (
           <Stack key={d.label} spacing={0.25}>
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {d.label}
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -48,7 +64,9 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
 
       {isReviewed && (
         <Alert severity={request.status === 'APPROVED' ? 'success' : 'error'}>
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {request.status} by {request.reviewed_by_name || 'Unknown'}
             {request.reviewed_at ? ` · ${formatDateTime(request.reviewed_at)}` : ''}
           </Typography>

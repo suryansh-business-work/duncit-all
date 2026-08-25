@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckIcon from '@mui/icons-material/Check';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { isSameDay } from 'date-fns';
 import type { VenueSlotRow } from '../types';
 import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
@@ -95,7 +95,12 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
 
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 900
+        }}>
         {t('shell.availability.existingSlots')}
       </Typography>
       {error && (
@@ -104,26 +109,50 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
         </Alert>
       )}
       {slots.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 1
+          }}>
           {t('shell.availability.noSlotsForDate')}
         </Typography>
       ) : (
         <Stack spacing={1} sx={{ mt: 1 }}>
           {slots.map((slot) => (
             <Box key={slot.id} sx={{ p: 1.25, borderRadius: 1.5, border: 1, borderColor: 'divider' }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" fontWeight={800}>
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 800
+                }}>
                   {slotWhenLabel(slot, t)}
                 </Typography>
-                <Stack direction="row" spacing={0.75} alignItems="center">
-                  <Typography variant="caption" fontWeight={800} color="text.secondary">
+                <Stack direction="row" spacing={0.75} sx={{
+                  alignItems: "center"
+                }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 800,
+                      color: "text.secondary"
+                    }}>
                     {priceLabel(slot.price, t)}
                   </Typography>
                   <Chip size="small" color={STATUS_COLOR[slot.status]} label={slot.status} />
                 </Stack>
               </Stack>
               {slot.space_label && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    display: 'block'
+                  }}>
                   {slot.space_label}
                   {slot.capacity
                     ? ` · ${t('shell.availability.holdsCapacity', { vars: { capacity: slot.capacity } })}`
@@ -131,7 +160,9 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                 </Typography>
               )}
               {slot.booked_pod_title && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {slot.status === 'PENDING'
                     ? t('shell.availability.requestedByPod')
                     : t('shell.availability.bookedByPod')}
@@ -139,7 +170,12 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                 </Typography>
               )}
               {slot.status === 'PENDING' && (
-                <Typography variant="caption" color="info.main" sx={{ display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "info.main",
+                    display: 'block'
+                  }}>
                   {t('shell.availability.awaitingDecision')}
                 </Typography>
               )}

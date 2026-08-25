@@ -18,7 +18,14 @@ export default function StatTile({
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary', mb: 0.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            color: 'text.secondary',
+            mb: 0.5
+          }}>
           <AppIcon name={icon} fontSize="small" />
           <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>
             {label}
@@ -28,7 +35,9 @@ export default function StatTile({
           {value}
         </Typography>
         {hint && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {hint}
           </Typography>
         )}

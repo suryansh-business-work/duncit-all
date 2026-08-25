@@ -8,7 +8,12 @@ import { formatINR } from '@duncit/utils';
 /** One tile per StatCard layout, with the numbers a real dashboard shows. */
 export function DashboardTiles() {
   return (
-    <Stack direction="row" flexWrap="wrap" sx={{ gap: 2 }}>
+    <Stack
+      direction="row"
+      sx={{
+        flexWrap: "wrap",
+        gap: 2
+      }}>
       <StatCard
         label="Disk usage"
         value="205 GB"

@@ -8,11 +8,17 @@ export default function AmenitiesPage() {
   const { t } = useTranslation();
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <DeckIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{t('shell.nav.amenitiesManagement')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('shell.nav.amenitiesManagement')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Facilities a venue can offer (e.g. Parking, AC, Stage). Shown as checkboxes on the Venue Lead form. Not tied to any Super, Category or Sub Category.
           </Typography>
         </Box>

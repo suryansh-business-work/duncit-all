@@ -21,7 +21,9 @@ interface Props {
 const getRowId = (g: GrievanceTicket) => g.id;
 
 const renderSubject = (g: GrievanceTicket) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {g.subject}
   </Typography>
 );

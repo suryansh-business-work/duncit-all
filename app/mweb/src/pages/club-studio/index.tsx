@@ -16,7 +16,9 @@ export default function ClubStudioPage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box
           sx={{
             width: 38,
@@ -34,7 +36,12 @@ export default function ClubStudioPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             {t('mweb.studioPods.clubStudio')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {t('mweb.studioPods.clubSubtitle')}
           </Typography>
         </Box>

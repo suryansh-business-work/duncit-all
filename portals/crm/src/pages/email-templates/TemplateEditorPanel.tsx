@@ -32,7 +32,9 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
   const { draft, setDraft } = p;
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-      <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1.5} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         <TextField size="small" label={t('shell.common.name')} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} sx={{ flex: '1 1 200px' }} />
         <TextField size="small" label={t('crm.emailTemplates.slug')} value={draft.slug} disabled sx={{ flex: '1 1 160px' }} helperText={t('crm.emailTemplates.usedByCodeCannotBeEdited')} />
         <TextField

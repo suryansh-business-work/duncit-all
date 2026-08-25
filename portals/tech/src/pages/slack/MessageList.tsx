@@ -21,12 +21,22 @@ function MessageRow({
         {message.user_name.slice(0, 1).toUpperCase()}
       </Avatar>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={0.75} alignItems="baseline" flexWrap="wrap">
-          <Typography variant="body2" fontWeight={800}>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "baseline",
+            flexWrap: "wrap"
+          }}>
+          <Typography variant="body2" sx={{
+            fontWeight: 800
+          }}>
             {message.user_name}
           </Typography>
           {message.is_bot && <Chip size="small" variant="outlined" label={botLabel} />}
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {formatTime(messageDate(message.ts))}
           </Typography>
         </Stack>
@@ -36,7 +46,9 @@ function MessageRow({
           {message.text}
         </Typography>
         {message.reply_count > 0 && (
-          <Typography variant="caption" color="primary.main">
+          <Typography variant="caption" sx={{
+            color: "primary.main"
+          }}>
             {repliesLabel}
           </Typography>
         )}
@@ -70,7 +82,9 @@ export default function MessageList({ messages, channelId }: Readonly<Props>) {
           <Box key={m.ts}>
             {isNewDay && (
               <Divider sx={{ my: 1 }}>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatDate(messageDate(m.ts))}
                 </Typography>
               </Divider>

@@ -92,7 +92,11 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -147,7 +151,9 @@ export default function AccountPage() {
       {health && (
         <Card>
           <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+              alignItems: "center"
+            }}>
               <HealthMeter
                 score={health.total_score}
                 band={health.band}
@@ -160,7 +166,9 @@ export default function AccountPage() {
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {bandHeadline(health.band)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   Base score: {health.base_score}
                   {health.delta_sum !== 0 && (
                     <>
@@ -169,7 +177,9 @@ export default function AccountPage() {
                   )}
                 </Typography>
                 {health.adjustments.length > 0 && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {health.adjustments.length} admin remark{health.adjustments.length === 1 ? '' : 's'} — tap the meter to read.
                   </Typography>
                 )}

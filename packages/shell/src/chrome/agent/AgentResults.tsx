@@ -1,6 +1,6 @@
 import { Box, Chip, List, ListItem, ListItemText, Typography } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AgentResultItem } from './queries';
@@ -20,7 +20,9 @@ export function AgentResults({ items }: Readonly<{ items: AgentResultItem[] }>) 
 
   return (
     <Box sx={{ mt: 1 }}>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('shell.agent.resultsTitle')}
       </Typography>
       <List dense disablePadding sx={{ mt: 0.25 }}>
@@ -42,7 +44,9 @@ export function AgentResults({ items }: Readonly<{ items: AgentResultItem[] }>) 
                 <Box
                   sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}
                 >
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 600
+                  }}>
                     {item.title}
                   </Typography>
                   {item.ref ? (
@@ -59,7 +63,12 @@ export function AgentResults({ items }: Readonly<{ items: AgentResultItem[] }>) 
                 </Box>
               }
               secondary={
-                <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    wordBreak: 'break-word'
+                  }}>
                   {item.when ? `${formatDateTime(item.when)} · ${item.detail}` : item.detail}
                 </Typography>
               }

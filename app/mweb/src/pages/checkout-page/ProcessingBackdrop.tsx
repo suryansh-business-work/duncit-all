@@ -23,7 +23,9 @@ export default function ProcessingBackdrop({ open, message }: Readonly<Props>) {
     <Backdrop open={open} sx={{ zIndex: (t) => t.zIndex.modal + 1, bgcolor: 'rgba(3,7,18,0.72)', backdropFilter: 'blur(8px)', p: 2 }}>
       <Box sx={{ width: 'min(360px, calc(100vw - 32px))', px: 3, py: 3, borderRadius: '16px', textAlign: 'center', color: '#fff', bgcolor: 'rgba(17,24,39,0.92)', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 24px 70px rgba(0,0,0,0.42)' }}>
         <PaymentLottie variant="processing" size={118} />
-        <Typography variant="subtitle1" fontWeight={700}>{title}</Typography>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>{title}</Typography>
         {message ? (
           <Typography data-testid="checkout-confirming" variant="body2" sx={{ mt: 1, color: 'rgba(255,255,255,0.92)' }}>{message}</Typography>
         ) : null}

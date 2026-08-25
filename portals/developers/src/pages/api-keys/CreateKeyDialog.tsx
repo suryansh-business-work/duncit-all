@@ -66,20 +66,27 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
             <TextField
               value={rawKey}
               fullWidth
-              InputProps={{
-                readOnly: true,
-                sx: { fontFamily: 'monospace' },
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton aria-label={t('developers.createKey.copyAria')} onClick={copy}>
-                      <ContentCopyIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  readOnly: true,
+                  sx: { fontFamily: 'monospace' },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton aria-label={t('developers.createKey.copyAria')} onClick={copy}>
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
             {copied && (
-              <Typography variant="caption" color="success.main" fontWeight={800}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "success.main",
+                  fontWeight: 800
+                }}>
                 {t('developers.createKey.copied')}
               </Typography>
             )}

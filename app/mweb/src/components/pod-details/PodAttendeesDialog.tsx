@@ -104,7 +104,12 @@ export default function PodAttendeesDialog({
       </DialogTitle>
       <DialogContent dividers sx={{ p: 1 }}>
         {people.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              p: 2
+            }}>
             {t('mweb.podDetails.noAttendeesYet')}
           </Typography>
         ) : (
@@ -136,18 +141,20 @@ export default function PodAttendeesDialog({
                         <Typography
                           component="span"
                           variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 0.75 }}
-                        >
+                          sx={{
+                            color: "text.secondary",
+                            ml: 0.75
+                          }}>
                           {otherMembersLabel(person.seats ?? 1, t)}
                         </Typography>
                       )}
                     </>
                   }
                   secondary={t('mweb.podDetails.viewProfile')}
-                  primaryTypographyProps={{ fontWeight: person.is_host ? 700 : 600, fontSize: 14 }}
-                  secondaryTypographyProps={{ fontSize: 12 }}
-                />
+                  slotProps={{
+                    primary: { sx: { fontWeight: person.is_host ? 700 : 600, fontSize: 14 } },
+                    secondary: { sx: { fontSize: 12 } }
+                  }} />
                 {person.is_host && (
                   <Chip
                     size="small"
@@ -163,7 +170,13 @@ export default function PodAttendeesDialog({
         {spotFills.length > 0 && (
           <>
             <Divider sx={{ my: 1 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ px: 2, fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                px: 2,
+                fontWeight: 600
+              }}>
               {t('mweb.podDetails.spotFilled')}
             </Typography>
             <List disablePadding>
@@ -181,12 +194,11 @@ export default function PodAttendeesDialog({
                   <ListItemText
                     primary={fill.old_name}
                     secondary={fill.filled_by_label}
-                    primaryTypographyProps={{
-                      fontSize: 14,
-                      sx: { textDecoration: 'line-through', color: 'text.disabled' },
-                    }}
-                    secondaryTypographyProps={{ fontSize: 12 }}
-                  />
+                    slotProps={{
+                      primary: { sx: { fontSize: 14, ...{ textDecoration: 'line-through', color: 'text.disabled' } } },
+
+                      secondary: { sx: { fontSize: 12 } }
+                    }} />
                 </ListItemButton>
               ))}
             </List>

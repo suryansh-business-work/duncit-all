@@ -35,7 +35,9 @@ export default function PricePanel({ preview }: Readonly<Props>) {
   const breakdown = () => {
     if (podAmount <= 0 || noOfSpots <= 0) {
       return (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.createPod.previewPrompt')}
         </Typography>
       );
@@ -43,7 +45,9 @@ export default function PricePanel({ preview }: Readonly<Props>) {
     // A 1-spot pod is the host's own free seat — there is nothing to bill.
     if (noOfSpots === 1) {
       return (
-        <Typography variant="caption" color="text.secondary" data-testid="price-panel-host-only">
+        <Typography variant="caption" data-testid="price-panel-host-only" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.createPod.hostOnlyPod')}
         </Typography>
       );
@@ -59,17 +63,28 @@ export default function PricePanel({ preview }: Readonly<Props>) {
     return (
       <Stack spacing={1.25}>
         <Stack spacing={0.25}>
-          <Stack direction="row" justifyContent="space-between" spacing={2}>
-            <Typography variant="body2" fontWeight={600}>
+          <Stack direction="row" spacing={2} sx={{
+            justifyContent: "space-between"
+          }}>
+            <Typography variant="body2" sx={{
+              fontWeight: 600
+            }}>
               {t('mweb.createPod.totalCollection', {
                 vars: { price: fmt(podAmount), spots: projection.payable_spots },
               })}
             </Typography>
-            <Typography variant="body2" fontWeight={700} color="success.main">
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: "success.main"
+              }}>
               {fmt(w.amount)}
             </Typography>
           </Stack>
-          <Typography variant="caption" color="text.secondary" data-testid="price-panel-included-gst">
+          <Typography variant="caption" data-testid="price-panel-included-gst" sx={{
+            color: "text.secondary"
+          }}>
             {statement.collection.included_gst_note}
           </Typography>
         </Stack>
@@ -92,13 +107,22 @@ export default function PricePanel({ preview }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: '16px' }} data-testid="create-pod-price-panel">
       <Stack spacing={1.25}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <InsightsIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" fontWeight={700}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.createPod.potentialEarnings')}
           </Typography>
         </Stack>
-        <Typography variant="caption" fontWeight={600} color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: "text.secondary"
+          }}>
           {t('mweb.createPod.takeHome')}
         </Typography>
         {noOfSpots > 0 && (
@@ -112,7 +136,9 @@ export default function PricePanel({ preview }: Readonly<Props>) {
           </Alert>
         )}
         {breakdown()}
-        <Typography variant="caption" color="text.secondary" data-testid="price-panel-estimate-note">
+        <Typography variant="caption" data-testid="price-panel-estimate-note" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.createPod.earningsEstimateNote')}
         </Typography>
       </Stack>

@@ -30,7 +30,9 @@ export default function StatusReportsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('tech.statusReports.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('tech.statusReports.intro')}
         </Typography>
       </Box>

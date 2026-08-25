@@ -32,7 +32,9 @@ function BulletList({ items }: Readonly<{ items: string[] }>) {
           <ListItemIcon sx={{ minWidth: 30, mt: 0.5 }}>
             <CheckCircleIcon fontSize="small" color="primary" />
           </ListItemIcon>
-          <ListItemText primary={item} primaryTypographyProps={{ variant: 'body2' }} />
+          <ListItemText primary={item} slotProps={{
+            primary: { variant: 'body2' }
+          }} />
         </ListItem>
       ))}
     </List>
@@ -56,9 +58,17 @@ export default function ClubContentSections({ club }: Readonly<{ club: ClubDetai
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <ArticleIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 900
+          }}>
             Club Detail content
           </Typography>
         </Stack>
@@ -67,7 +77,12 @@ export default function ClubContentSections({ club }: Readonly<{ club: ClubDetai
         <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
           {blocks.map((block) => (
             <Box key={block.title}>
-              <Typography variant="caption" color="text.secondary" fontWeight={800}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 800
+                }}>
                 {block.title.toUpperCase()}
               </Typography>
               <BulletList items={block.items} />
@@ -77,19 +92,31 @@ export default function ClubContentSections({ club }: Readonly<{ club: ClubDetai
 
         {faqs.length > 0 && (
           <Box sx={{ mt: blocks.length > 0 ? 2 : 0 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={800}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 800
+              }}>
               FAQS
             </Typography>
             <Stack spacing={1} sx={{ mt: 1 }}>
               {faqs.map((faq) => (
                 <Accordion key={faq.question} disableGutters variant="outlined">
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="body2" fontWeight={700}>
+                    <Typography variant="body2" sx={{
+                      fontWeight: 700
+                    }}>
                       {faq.question}
                     </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                        whiteSpace: 'pre-wrap'
+                      }}>
                       {faq.answer}
                     </Typography>
                   </AccordionDetails>

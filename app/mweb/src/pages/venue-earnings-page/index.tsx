@@ -14,7 +14,11 @@ export default function VenueEarningsPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -34,7 +38,9 @@ export default function VenueEarningsPage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <PaidIcon fontSize="small" />
         </Box>
@@ -42,7 +48,12 @@ export default function VenueEarningsPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Earnings
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             Your venue payouts across all pods
           </Typography>
         </Box>
@@ -52,7 +63,13 @@ export default function VenueEarningsPage() {
 
       <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 1
+            }}>
             <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
               Payout history
             </Typography>

@@ -25,23 +25,35 @@ export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: R
       <Card sx={{ borderRadius: '16px' }}>
         <CardContent sx={{ textAlign: 'center', p: 3 }}>
           <PaymentLottie variant="success" size={140} />
-          <Typography variant="h5" fontWeight={700} gutterBottom>
+          <Typography variant="h5" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.giftCards.successTitle')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {body}
           </Typography>
           <Box sx={{ mt: 2.5, p: 2, borderRadius: '16px', bgcolor: 'action.hover', textAlign: 'left' }}>
             <Stack spacing={0.8}>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography variant="subtitle2" fontWeight={700}>
+              <Stack direction="row" sx={{
+                justifyContent: "space-between"
+              }}>
+                <Typography variant="subtitle2" sx={{
+                  fontWeight: 700
+                }}>
                   {t('mweb.checkout.amountPaid')}
                 </Typography>
-                <Typography variant="subtitle2" fontWeight={700}>
+                <Typography variant="subtitle2" sx={{
+                  fontWeight: 700
+                }}>
                   {formatMoney(payment.total, { symbol: payment.currency_symbol })}
                 </Typography>
               </Stack>
-              <Stack direction="row" justifyContent="space-between">
+              <Stack direction="row" sx={{
+                justifyContent: "space-between"
+              }}>
                 <Typography variant="body2">{t('mweb.checkout.paymentId')}</Typography>
                 <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                   {payment.payment_id}

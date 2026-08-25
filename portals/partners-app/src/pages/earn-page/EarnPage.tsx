@@ -46,13 +46,25 @@ export default function EarnPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', width: '100%', pb: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <VolunteerActivismIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700} lineHeight={1}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1
+            }}>
             {t('partners.earn.title')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {t('partners.earn.subtitle')}
           </Typography>
         </Box>

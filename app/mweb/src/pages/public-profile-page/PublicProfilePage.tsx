@@ -112,7 +112,9 @@ export default function PublicProfilePage() {
 
   return (
     <Stack spacing={3} sx={{ pt: 1, pb: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <IconButton
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.goBack')}
@@ -120,14 +122,18 @@ export default function PublicProfilePage() {
         >
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           Profile
         </Typography>
       </Stack>
 
       <PublicProfileHeader user={u} viewerId={data?.me?.user_id} />
       {!isOwner && (
-        <Stack direction="row" justifyContent="center">
+        <Stack direction="row" sx={{
+          justifyContent: "center"
+        }}>
           <FollowButton
             status={status}
             loading={followState.loading || unfollowState.loading || cancelState.loading}

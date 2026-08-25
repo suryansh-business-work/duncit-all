@@ -57,7 +57,9 @@ export default function BubbleBody({
             }
             if (event.key === 'Escape') onCancel();
           }}
-          inputProps={{ 'aria-label': 'Edit message' }}
+          slotProps={{
+            htmlInput: { 'aria-label': 'Edit message' }
+          }}
         />
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
           Enter saves · Esc cancels

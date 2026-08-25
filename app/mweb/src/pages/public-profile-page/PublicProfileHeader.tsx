@@ -25,10 +25,14 @@ function CountStat({
 }: Readonly<{ value: number; label: string; onClick: () => void }>) {
   return (
     <Box onClick={onClick} role="button" sx={{ textAlign: 'center', cursor: 'pointer' }}>
-      <Typography component="span" fontWeight={700}>
+      <Typography component="span" sx={{
+        fontWeight: 700
+      }}>
         {value}
       </Typography>{' '}
-      <Typography component="span" variant="body2" color="text.secondary">
+      <Typography component="span" variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
     </Box>
@@ -39,18 +43,27 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
   const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
   return (
-    <Stack alignItems="center" spacing={1.5}>
+    <Stack spacing={1.5} sx={{
+      alignItems: "center"
+    }}>
       <Avatar
         src={user.profile_photo || undefined}
         sx={{ width: 96, height: 96, fontSize: 36 }}
       >
         {user.full_name?.[0]?.toUpperCase() ?? '?'}
       </Avatar>
-      <Typography variant="h5" fontWeight={700} textAlign="center">
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 700,
+          textAlign: "center"
+        }}>
         {user.full_name || 'Duncit user'}
       </Typography>
       {user.username && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           @{user.username}
         </Typography>
       )}
@@ -67,7 +80,13 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
         />
       </Stack>
       {(user.city || user.zone) && (
-        <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            color: "text.secondary"
+          }}>
           <PlaceIcon fontSize="small" />
           <Typography variant="body2">
             {[user.zone, user.city].filter(Boolean).join(', ')}
@@ -76,7 +95,13 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
       )}
       {user.bio && (
         <Box sx={{ px: 1, mt: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', textAlign: 'center' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              whiteSpace: 'pre-wrap',
+              textAlign: 'center'
+            }}>
             {user.bio}
           </Typography>
         </Box>

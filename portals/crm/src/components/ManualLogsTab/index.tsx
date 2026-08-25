@@ -65,14 +65,26 @@ export default function ManualLogsTab({
   };
   return (
     <Stack spacing={2}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'center' }} spacing={1.5}>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+        alignItems: { sm: 'center' }
+      }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            flex: 1
+          }}>
           <EventNoteIcon color="primary" />
           <Box>
-            <Typography variant="subtitle1" fontWeight={800}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 800
+            }}>
               Manual logs
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Notes captured by the team. Rich text · grouped by day · newest first.
             </Typography>
           </Box>

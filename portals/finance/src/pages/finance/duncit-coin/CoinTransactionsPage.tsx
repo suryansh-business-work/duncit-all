@@ -52,10 +52,13 @@ export default function CoinTransactionsPage() {
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={2}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        justifyContent="space-between"
-      >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        sx={{
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: "space-between"
+        }}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <ReceiptLongIcon color="primary" />
           <Typography variant="h5" sx={{ fontWeight: 900 }}>
             Coin Transactions

@@ -42,7 +42,9 @@ function SourceChips({ refs }: Readonly<{ refs?: SourceRef[] }>) {
     return <span>—</span>;
   }
   return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap component="span">
+    <Stack direction="row" spacing={0.5} useFlexGap component="span" sx={{
+      flexWrap: "wrap"
+    }}>
       {refs.map((r) => (
         <Chip key={r.jid} size="small" variant="outlined" label={r.name || r.jid} />
       ))}

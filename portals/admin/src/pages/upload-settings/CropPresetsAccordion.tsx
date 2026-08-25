@@ -51,11 +51,15 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>{t('admin.uploads.cropTitle')}</Typography>
+        <Typography sx={{
+          fontWeight: 700
+        }}>{t('admin.uploads.cropTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Presets offered by the crop step of every upload dialog. Resolutions were researched
             from the actual render sites across the apps — see each preset&apos;s note.
           </Typography>
@@ -64,19 +68,28 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
               key={preset.key}
               direction={{ xs: 'column', md: 'row' }}
               spacing={1.5}
-              alignItems={{ md: 'center' }}
-              sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'action.hover' }}
-            >
+              sx={{
+                alignItems: { md: 'center' },
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: 'action.hover'
+              }}>
               <Switch
                 checked={preset.enabled}
                 onChange={(e) => patch(preset.key, { enabled: e.target.checked })}
-                inputProps={{ 'aria-label': `${preset.label} enabled` }}
+                slotProps={{
+                  input: { 'aria-label': `${preset.label} enabled` }
+                }}
               />
               <Stack sx={{ flex: 1, minWidth: 180 }}>
-                <Typography variant="body2" fontWeight={700}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {preset.label}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {PRESET_USAGE_NOTES[preset.key] ?? 'Custom preset.'}
                 </Typography>
               </Stack>

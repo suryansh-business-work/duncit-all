@@ -75,8 +75,8 @@ export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
       target={sameApp ? undefined : '_blank'}
       rel={sameApp ? undefined : 'noreferrer'}
       underline="none"
-      color="inherit"
       sx={{
+        color: "inherit",
         display: 'block',
         my: 0.5,
         maxWidth: 340,
@@ -85,9 +85,8 @@ export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
         borderColor: 'divider',
         overflow: 'hidden',
         bgcolor: 'background.paper',
-        '&:hover': { borderColor: 'primary.main' },
-      }}
-    >
+        '&:hover': { borderColor: 'primary.main' }
+      }}>
       {preview.image && (
         <Box
           component="img"
@@ -98,8 +97,16 @@ export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
         />
       )}
       <Stack spacing={0.5} sx={{ p: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              flex: 1
+            }}>
             {preview.internal ? `${preview.portal} console` : (target?.hostname ?? url)}
           </Typography>
           {!sameApp && <OpenInNewIcon sx={{ fontSize: 13, color: 'text.secondary' }} />}
@@ -113,9 +120,13 @@ export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
         {preview.description && (
           <Typography
             variant="caption"
-            color="text.secondary"
-            sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-          >
+            sx={{
+              color: "text.secondary",
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
             {preview.description}
           </Typography>
         )}

@@ -32,20 +32,31 @@ export function PromptVariables({ kind, variables }: Readonly<VariablesProps>) {
   const copy = usePromptCopy();
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {copy.variablesTitle}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="p">
+      <Typography variant="caption" component="p" sx={{
+        color: "text.secondary"
+      }}>
         {kind === 'CODE' ? copy.variablesHintCode : copy.variablesHintAi}
       </Typography>
       {variables.length === 0 ? (
-        <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.disabled",
+            mt: 0.5
+          }}>
           {copy.variablesEmpty}
         </Typography>
       ) : (
         <Stack spacing={0.75} sx={{ mt: 1 }}>
           {variables.map((v) => (
-            <Stack key={v.name} direction="row" spacing={1} alignItems="flex-start">
+            <Stack key={v.name} direction="row" spacing={1} sx={{
+              alignItems: "flex-start"
+            }}>
               <Tooltip title={copy.copyVariable}>
                 <Chip
                   size="small"
@@ -57,17 +68,23 @@ export function PromptVariables({ kind, variables }: Readonly<VariablesProps>) {
                 />
               </Tooltip>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={600}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 600
+                }}>
                   {v.label}
                   {v.required && (
-                    <Typography component="span" variant="caption" color="primary.main">
+                    <Typography component="span" variant="caption" sx={{
+                      color: "primary.main"
+                    }}>
                       {' '}
                       · required
                     </Typography>
                   )}
                 </Typography>
                 {v.description && (
-                  <Typography variant="caption" color="text.secondary" component="div">
+                  <Typography variant="caption" component="div" sx={{
+                    color: "text.secondary"
+                  }}>
                     {v.description}
                   </Typography>
                 )}
@@ -85,30 +102,39 @@ export function PromptUsage({ usage }: Readonly<{ usage: AiPrompt['usage'] }>) {
   const copy = usePromptCopy();
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {copy.usageTitle}
       </Typography>
       {usage.length === 0 ? (
-        <Typography variant="body2" color="text.disabled">
+        <Typography variant="body2" sx={{
+          color: "text.disabled"
+        }}>
           {copy.usageEmpty}
         </Typography>
       ) : (
         <Stack spacing={1} sx={{ mt: 0.5 }}>
           {usage.map((u) => (
             <Box key={`${u.file}:${u.surface}`}>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" sx={{
+                fontWeight: 600
+              }}>
                 {u.surface}
               </Typography>
-              <Typography variant="caption" color="text.secondary" component="div">
+              <Typography variant="caption" component="div" sx={{
+                color: "text.secondary"
+              }}>
                 {u.trigger}
               </Typography>
               <Typography
                 variant="caption"
-                fontFamily="monospace"
-                color="text.disabled"
                 component="div"
-                sx={{ wordBreak: 'break-all' }}
-              >
+                sx={{
+                  fontFamily: "monospace",
+                  color: "text.disabled",
+                  wordBreak: 'break-all'
+                }}>
                 {u.file}
               </Typography>
             </Box>
@@ -129,10 +155,14 @@ export function PromptPreview({ content, variables }: Readonly<PreviewProps>) {
   const copy = usePromptCopy();
   return (
     <Box>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {copy.previewTitle}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="p">
+      <Typography variant="caption" component="p" sx={{
+        color: "text.secondary"
+      }}>
         {copy.previewHint}
       </Typography>
       <Box

@@ -124,9 +124,13 @@ export default function ActivityJourneyChart({ events }: Readonly<Props>) {
           <Stack spacing={1}>
             {topPages.map((item) => (
               <Box key={item.page}>
-                <Stack direction="row" justifyContent="space-between" spacing={1}>
+                <Stack direction="row" spacing={1} sx={{
+                  justifyContent: "space-between"
+                }}>
                   <Typography variant="caption" noWrap>{item.page}</Typography>
-                  <Typography variant="caption" color="text.secondary">{item.count}</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{item.count}</Typography>
                 </Stack>
                 <Box sx={{ height: 6, borderRadius: 999, bgcolor: 'action.hover', mt: 0.4 }}>
                   <Box
@@ -145,9 +149,17 @@ export default function ActivityJourneyChart({ events }: Readonly<Props>) {
       </Stack>
 
       <Box sx={{ mt: 1.5, overflowX: 'auto', pb: 0.5 }}>
-        <Stack direction="row" spacing={1.25} alignItems="stretch" sx={{ minWidth: 'max-content' }}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          sx={{
+            alignItems: "stretch",
+            minWidth: 'max-content'
+          }}>
           {steps.map((event, index) => (
-            <Stack key={event.id} direction="row" spacing={1.25} alignItems="center">
+            <Stack key={event.id} direction="row" spacing={1.25} sx={{
+              alignItems: "center"
+            }}>
               <Box
                 sx={{
                   width: 190,
@@ -159,12 +171,32 @@ export default function ActivityJourneyChart({ events }: Readonly<Props>) {
                   bgcolor: alpha(theme.palette.primary.main, 0.04),
                 }}
               >
-                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                  <Typography variant="caption" color="text.secondary">{formatTime(event.occurred_at)}</Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{formatTime(event.occurred_at)}</Typography>
                   <Chip size="small" color={actionColor(event.event_type)} label={event.event_type} />
                 </Stack>
-                <Typography variant="body2" fontWeight={700} noWrap sx={{ mt: 0.75 }}>{pageLabel(event)}</Typography>
-                <Typography variant="caption" color="text.secondary" noWrap display="block">{eventLabel(event)}</Typography>
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{
+                    fontWeight: 700,
+                    mt: 0.75
+                  }}>{pageLabel(event)}</Typography>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{
+                    color: "text.secondary",
+                    display: "block"
+                  }}>{eventLabel(event)}</Typography>
               </Box>
               {index < steps.length - 1 && (
                 <Box sx={{ width: 28, height: 2, bgcolor: 'divider', borderRadius: 999 }} />

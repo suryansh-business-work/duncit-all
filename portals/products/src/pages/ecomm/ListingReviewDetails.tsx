@@ -28,7 +28,9 @@ export default function ListingReviewDetails({ row }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {row.listing_submitted_by_name || 'Partner'}
         {row.brand_name ? ` · ${row.brand_name}` : ''} · {row.inventory_count} units · ₹
         {row.unit_cost} · {deliveryTargetLabel(row.delivery_target)}
@@ -108,7 +110,9 @@ export default function ListingReviewDetails({ row }: Readonly<Props>) {
       )}
 
       {!hasVariants && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {row.size_label} · {row.color} · {row.height_cm}cm · {row.weight_kg}kg
         </Typography>
       )}

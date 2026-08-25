@@ -74,15 +74,23 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
       <Stack
         direction="row"
         spacing={0.75}
-        alignItems="center"
-        sx={{ height: 72, px: 1, maxWidth: 168, border: 1, borderColor: 'divider', borderRadius: '16px' }}
-      >
+        sx={{
+          alignItems: "center",
+          height: 72,
+          px: 1,
+          maxWidth: 168,
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: '16px'
+        }}>
         {info.kind === 'video' ? <MovieIcon color="action" /> : <InsertDriveFileIcon color="action" />}
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="caption" noWrap sx={{ display: 'block', fontWeight: 700 }}>
             {info.name}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {typeLabel(info.ext)}
           </Typography>
         </Box>
@@ -121,8 +129,19 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            flex: 1
+          }}>
           Attach files ({attachments.length}/5)
         </Typography>
         <Button

@@ -29,9 +29,17 @@ export default function ClubPodsCard({ pods }: Readonly<{ pods: ClubPodRow[] }>)
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <EventIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 900
+          }}>
             {t('admin.clubs.pods')}
           </Typography>
           <Chip size="small" label={pods.length} sx={{ ml: 0.5 }} />
@@ -39,7 +47,12 @@ export default function ClubPodsCard({ pods }: Readonly<{ pods: ClubPodRow[] }>)
         <Divider />
 
         {pods.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ pt: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              pt: 2
+            }}>
             No pods in this club yet.
           </Typography>
         ) : (
@@ -53,7 +66,9 @@ export default function ClubPodsCard({ pods }: Readonly<{ pods: ClubPodRow[] }>)
                 <ListItemText
                   primary={pod.pod_title}
                   secondary={`${fmtDate(pod.pod_date_time)} · ${priceLabel(pod)}`}
-                  primaryTypographyProps={{ fontWeight: 700, noWrap: true }}
+                  slotProps={{
+                    primary: { noWrap: true, sx: { fontWeight: 700 } }
+                  }}
                 />
                 <Chip
                   size="small"

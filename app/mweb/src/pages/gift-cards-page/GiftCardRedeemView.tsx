@@ -47,10 +47,17 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
         : t('mweb.giftCards.redeemAlreadyBody');
     return (
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: '16px', textAlign: 'center' }}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.giftCards.redeemSuccessTitle')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           {body}
         </Typography>
         <Button
@@ -82,16 +89,25 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
         code={card.code}
       />
       {card.sender_name && (
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.giftCards.claimFrom', { vars: { sender: card.sender_name } })}
         </Typography>
       )}
       {card.message && (
-        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            fontStyle: 'italic'
+          }}>
           {card.message}
         </Typography>
       )}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
       </Typography>
       {statusBody ? (

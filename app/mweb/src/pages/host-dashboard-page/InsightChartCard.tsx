@@ -15,13 +15,21 @@ export default function InsightChartCard({ title, subtitle, empty, action, child
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
-        <Stack direction="row" alignItems="flex-start" spacing={1} sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "flex-start",
+            mb: 1
+          }}>
           <Stack sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
             {subtitle ? (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {subtitle}
               </Typography>
             ) : null}
@@ -29,8 +37,18 @@ export default function InsightChartCard({ title, subtitle, empty, action, child
           {action}
         </Stack>
         {empty ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ py: 5 }}>
-            <Typography variant="body2" color="text.secondary" fontWeight={700}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              justifyContent: "center",
+              py: 5
+            }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               No data available
             </Typography>
           </Stack>

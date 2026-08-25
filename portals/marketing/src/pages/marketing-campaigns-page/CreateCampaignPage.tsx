@@ -110,22 +110,34 @@ export default function CreateCampaignPage() {
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
           Campaigns
         </Button>
         <Stack spacing={0.25}>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             New campaign
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Write the MJML email, pick who receives it, then send or schedule.
           </Typography>
         </Stack>
       </Stack>
 
-      <Grid container spacing={2} alignItems="stretch">
-        <Grid item xs={12} lg={6}>
+      <Grid container spacing={2} sx={{
+        alignItems: "stretch"
+      }}>
+        <Grid
+          size={{
+            xs: 12,
+            lg: 6
+          }}>
           <Card>
             <CardContent>
               <MarketingCampaignForm
@@ -142,7 +154,11 @@ export default function CreateCampaignPage() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} lg={6}>
+        <Grid
+          size={{
+            xs: 12,
+            lg: 6
+          }}>
           <CampaignPreview
             html={preview?.html ?? ''}
             errors={preview?.errors ?? []}

@@ -92,17 +92,37 @@ export default function CalendarSection() {
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap",
+            mb: 1.5
+          }}>
           <EventIcon color="primary" />
-          <Typography variant="h6" fontWeight={800} sx={{ mr: 1 }}>{t('crm.components.remindersCalendar')}</Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 800,
+              mr: 1
+            }}>{t('crm.components.remindersCalendar')}</Typography>
           {view !== 'upcoming' && (
-            <Stack direction="row" alignItems="center">
+            <Stack direction="row" sx={{
+              alignItems: "center"
+            }}>
               <IconButton size="small" onClick={() => step(-1)}><ChevronLeftIcon /></IconButton>
               <Button size="small" onClick={() => setCursor(new Date())}>{t('crm.components.today')}</Button>
               <IconButton size="small" onClick={() => step(1)}><ChevronRightIcon /></IconButton>
             </Stack>
           )}
-          <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 160 }}>{title}</Typography>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              minWidth: 160
+            }}>{title}</Typography>
           <Box sx={{ flex: 1 }} />
           <TextField select size="small" label={t('shell.common.type')} value={entity} onChange={(e) => setEntity(e.target.value as EntityFilter)} sx={{ minWidth: 120 }}>
             <MenuItem value="ALL">All</MenuItem>
@@ -122,7 +142,11 @@ export default function CalendarSection() {
         </ToggleButtonGroup>
 
         {loading && events.length === 0 && (
-          <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}><CircularProgress /></Stack>
         )}
         {(!loading || events.length > 0) && view === 'month' && (
           <CalendarMonth cursor={cursor} events={events} onEvent={onEvent} />

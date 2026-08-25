@@ -85,7 +85,9 @@ export default function RolesPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('admin.roles.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Each role grants access to one portal. Assign roles to users from User Management.
         </Typography>
       </Box>

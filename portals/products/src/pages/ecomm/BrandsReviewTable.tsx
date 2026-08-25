@@ -1,7 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Avatar, Button, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { BRAND_STATUS_COLOR } from './brandStatus';
@@ -26,10 +26,14 @@ const renderLogo = (b: EcommBrandRow) => (
 
 const renderBrand = (b: EcommBrandRow) => (
   <Stack sx={{ lineHeight: 1.2 }} component="span">
-    <Typography variant="body2" fontWeight={600} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 600
+    }}>
       {b.brand_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {b.contact_email || b.contact_phone || '—'}
     </Typography>
   </Stack>

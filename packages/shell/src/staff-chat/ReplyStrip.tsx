@@ -21,16 +21,27 @@ export default function ReplyStrip({ replyTo, nameOf, onCancel }: Readonly<Props
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
-      sx={{ px: 1.5, py: 0.75, borderTop: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
-    >
+      sx={{
+        alignItems: "center",
+        px: 1.5,
+        py: 0.75,
+        borderTop: 1,
+        borderColor: 'divider',
+        bgcolor: 'action.hover'
+      }}>
       <Box sx={{ width: 3, alignSelf: 'stretch', bgcolor: 'primary.main', borderRadius: 1 }} />
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>
           {t('shell.chat.composer.replyingTo', { vars: { name: nameOf(replyTo.from_user_id) } })}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            color: "text.secondary",
+            display: 'block'
+          }}>
           {replyTo.text || replyTo.attachment_name || t('shell.chat.composer.attachment')}
         </Typography>
       </Box>

@@ -46,9 +46,13 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
   return (
     <Stack spacing={0.5}>
       {title && <Typography variant="subtitle2">{title}</Typography>}
-      <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={0.5} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         {items.length === 0 ? (
-          <Typography variant="caption" color="text.secondary">{emptyHint ?? 'None'}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{emptyHint ?? 'None'}</Typography>
         ) : (
           items.map((it) => {
             const selected = declared.has(it.slug);

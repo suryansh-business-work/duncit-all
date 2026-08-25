@@ -18,23 +18,33 @@ export default function IdeaCommentsList({
   return (
     <Stack spacing={1.5} sx={{ mt: 1, maxHeight: 320, overflowY: 'auto' }}>
       {comments.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No comments yet — be the first.
         </Typography>
       )}
       {comments.map((c: any) => {
         const canDelete = myId && (c.author_id === myId || ideaAuthorId === myId);
         return (
-          <Stack key={c.id} direction="row" spacing={1.5} alignItems="flex-start">
+          <Stack key={c.id} direction="row" spacing={1.5} sx={{
+            alignItems: "flex-start"
+          }}>
             <Avatar src={c.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
               {(c.author?.first_name?.[0] ?? 'U').toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="baseline">
-                <Typography variant="body2" fontWeight={600}>
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "baseline"
+              }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 600
+                }}>
                   {c.author?.full_name ?? 'Member'}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatRelative(c.created_at)}
                 </Typography>
               </Stack>

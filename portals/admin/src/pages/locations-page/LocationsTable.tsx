@@ -34,10 +34,14 @@ const renderImage = (loc: LocationRow) => (
 
 const renderCity = (loc: LocationRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} component="div">
+    <Typography variant="body2" component="div" sx={{
+      fontWeight: 600
+    }}>
       {loc.city || loc.location_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="div">
+    <Typography variant="caption" component="div" sx={{
+      color: "text.secondary"
+    }}>
       {loc.country}
     </Typography>
   </Box>
@@ -46,15 +50,18 @@ const renderCity = (loc: LocationRow) => (
 const renderZones = (loc: LocationRow) => {
   if (loc.location_zones.length === 0) {
     return (
-      <Typography variant="caption" color="text.secondary" component="span">
-        No areas
-      </Typography>
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>No areas
+              </Typography>
     );
   }
   const visible = loc.location_zones.slice(0, VISIBLE_ZONE_CHIPS);
   const overflow = loc.location_zones.length - visible.length;
   return (
-    <Stack direction="row" spacing={0.5} component="span" alignItems="center">
+    <Stack direction="row" spacing={0.5} component="span" sx={{
+      alignItems: "center"
+    }}>
       {visible.map((z) => (
         <Chip key={`${loc.id}-${z.zone_name}-${z.pincode}`} size="small" label={zoneLabel(z)} />
       ))}

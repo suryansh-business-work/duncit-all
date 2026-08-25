@@ -45,13 +45,22 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   let body: ReactNode;
   if (loading && users.length === 0) {
     body = (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={22} />
       </Stack>
     );
   } else if (userIds.length === 0) {
     body = (
-      <Typography sx={{ px: 3, pb: 3 }} color="text.secondary">
+      <Typography
+        sx={{
+          color: "text.secondary",
+          px: 3,
+          pb: 3
+        }}>
         No likes yet.
       </Typography>
     );
@@ -68,7 +77,9 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
             <ListItemText
               primary={u.full_name || u.first_name || 'User'}
               secondary={u.username ? `@${u.username}` : undefined}
-              primaryTypographyProps={{ fontWeight: 600 }}
+              slotProps={{
+                primary: { sx: { fontWeight: 600 } }
+              }}
             />
           </ListItemButton>
         ))}
@@ -77,8 +88,16 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" slotProps={{
+      paper: { sx: { borderRadius: '16px' } }
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          pr: 1
+        }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.explore.likedBy')}</DialogTitle>
         <IconButton aria-label={t('mweb.common.close')} onClick={onClose}>
           <CloseIcon />

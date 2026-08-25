@@ -68,7 +68,9 @@ export default function AiMonitoringForm({
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={1.5}>
-              <Typography variant="subtitle1" fontWeight={700}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 700
+              }}>
                 {t('ai.settings.noticeTitle')}
               </Typography>
               <Alert severity="info">
@@ -139,7 +141,9 @@ export default function AiMonitoringForm({
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={1.5}>
-              <Typography variant="subtitle1" fontWeight={700}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 700
+              }}>
                 {t('ai.settings.promptTitle')}
               </Typography>
               <Alert severity="warning">
@@ -158,7 +162,9 @@ export default function AiMonitoringForm({
                 multiline
                 minRows={10}
               />
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Chip
                   size="small"
                   color="primary"
@@ -172,7 +178,9 @@ export default function AiMonitoringForm({
           </CardContent>
         </Card>
 
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button type="submit" variant="contained" disabled={submitting || !formState.isValid}>
             {submitting ? t('shell.common.saving') : t('ai.settings.submit')}
           </Button>

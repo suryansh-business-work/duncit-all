@@ -45,7 +45,13 @@ export default function UserPickList({
 
   if (users.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          p: 3,
+          textAlign: 'center'
+        }}>
         {emptyText}
       </Typography>
     );
@@ -64,14 +70,18 @@ export default function UserPickList({
                   checked={selected.has(user.id)}
                   tabIndex={-1}
                   disableRipple
-                  inputProps={{ 'aria-labelledby': labelId }}
+                  slotProps={{
+                    input: { 'aria-labelledby': labelId }
+                  }}
                 />
               </ListItemIcon>
               <ListItemText
                 id={labelId}
                 primary={user.full_name}
                 secondary={contactLine(user)}
-                primaryTypographyProps={{ fontWeight: 600 }}
+                slotProps={{
+                  primary: { sx: { fontWeight: 600 } }
+                }}
               />
             </ListItemButton>
           </ListItem>

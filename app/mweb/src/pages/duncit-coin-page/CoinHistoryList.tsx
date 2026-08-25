@@ -18,14 +18,18 @@ function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>
       <ListItemText
         primary={txn.reason || label}
         secondary={`${label} · ${formatDateTime(txn.created_at)}`}
-        primaryTypographyProps={{ fontWeight: 600, variant: 'body2' }}
-        secondaryTypographyProps={{ variant: 'caption' }}
-      />
+        slotProps={{
+          primary: { variant: 'body2', sx: { fontWeight: 600 } },
+          secondary: { variant: 'caption' }
+        }} />
       <Typography
-        fontWeight={700}
         variant="body2"
-        sx={{ color: credit ? gold : 'text.primary', whiteSpace: 'nowrap', pl: 1 }}
-      >
+        sx={{
+          fontWeight: 700,
+          color: credit ? gold : 'text.primary',
+          whiteSpace: 'nowrap',
+          pl: 1
+        }}>
         {sign}
         {txn.amount}
       </Typography>
@@ -46,7 +50,9 @@ export default function CoinHistoryList({ transactions }: Readonly<Props>) {
     return (
       <Stack spacing={1}>
         <Typography variant="subtitle2">{t('mweb.coin.historyTitle')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.coin.historyEmpty')}
         </Typography>
       </Stack>

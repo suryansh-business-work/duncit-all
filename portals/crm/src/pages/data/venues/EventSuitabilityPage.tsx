@@ -8,11 +8,17 @@ export default function EventSuitabilityPage() {
   const { t } = useTranslation();
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <CelebrationIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{t('shell.nav.eventSuitabilityManagement')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('shell.nav.eventSuitabilityManagement')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Event types a venue is suitable for (e.g. Birthday Party, Workshop). Drives the suitability picker on the Venue Lead form. Not tied to any Super, Category or Sub Category.
           </Typography>
         </Box>

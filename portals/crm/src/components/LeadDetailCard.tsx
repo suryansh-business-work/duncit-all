@@ -14,11 +14,21 @@ export function LeadDetailCard({ title, subtitle, icon, action, children }: Read
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.25 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.25
+          }}>
           {icon}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={800}>{title}</Typography>
-            {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 800
+            }}>{title}</Typography>
+            {subtitle && <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{subtitle}</Typography>}
           </Box>
           {action}
         </Stack>
@@ -39,9 +49,14 @@ export function LeadDetailRow({ label, value }: Readonly<RowProps>) {
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5} sx={{ py: 0.5 }}>
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ width: { sm: 170 }, flexShrink: 0, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}
-      >
+        sx={{
+          color: "text.secondary",
+          width: { sm: 170 },
+          flexShrink: 0,
+          fontWeight: 700,
+          letterSpacing: 0.3,
+          textTransform: 'uppercase'
+        }}>
         {label}
       </Typography>
       <Box sx={{ flex: 1, minWidth: 0 }}>

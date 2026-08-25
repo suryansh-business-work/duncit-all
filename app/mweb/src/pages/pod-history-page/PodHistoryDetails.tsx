@@ -146,12 +146,21 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
           record itself as shown. */}
       <Card data-tour="booking-summary">
         <CardContent>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+            alignItems: { sm: 'center' }
+          }}>
             <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: '16px', bgcolor: 'action.hover' }}>
               <EventIcon />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75, flexWrap: 'wrap' }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  mb: 0.75,
+                  flexWrap: 'wrap'
+                }}>
                 {/* "Visited" once the pod has happened — "Joined" is a promise
                     about something still ahead. */}
                 <Chip size="small" color={STATUS_CHIP[item.status].color} label={statusLabel} />
@@ -181,15 +190,24 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
                   />
                 )}
               </Stack>
-              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.1 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  lineHeight: 1.1
+                }}>
                 {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {pod?.pod_date_time
                   ? formatDateTime(pod.pod_date_time)
                   : t('mweb.podHistory.dateNotAvailable')}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {priceCaption}
               </Typography>
             </Box>
@@ -199,7 +217,9 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
 
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.podHistory.actions')}
           </Typography>
           <PodHistoryActions
@@ -242,14 +262,18 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
 
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.podHistory.timeline')}
           </Typography>
           <PodHistoryTimeline item={item} />
         </CardContent>
       </Card>
 
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+      <Stack direction="row" spacing={1} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         <Button component={RouterLink} to="/policies/backout-terms" size="small" startIcon={<RuleIcon />}>
           {t('mweb.podHistory.backoutTerms')}
         </Button>

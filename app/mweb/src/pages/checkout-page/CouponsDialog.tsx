@@ -36,7 +36,13 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
       </DialogTitle>
       <DialogContent>
         {coupons.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              py: 3,
+              textAlign: 'center'
+            }}>
             {t('mweb.checkout.couponsEmpty')}
           </Typography>
         ) : (
@@ -64,8 +70,12 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
               >
                 <LocalOfferIcon color="primary" />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" spacing={0.75} alignItems="center">
-                    <Typography variant="subtitle2" fontWeight={700}>
+                  <Stack direction="row" spacing={0.75} sx={{
+                    alignItems: "center"
+                  }}>
+                    <Typography variant="subtitle2" sx={{
+                      fontWeight: 700
+                    }}>
                       {coupon.code}
                     </Typography>
                     <Chip
@@ -75,7 +85,9 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
                       sx={{ height: 20, fontWeight: 600 }}
                     />
                   </Stack>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {coupon.description ||
                       (coupon.scope === 'POD'
                         ? t('mweb.checkout.couponForPod')

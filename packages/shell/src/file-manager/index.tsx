@@ -105,7 +105,9 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h6">{t('shell.fileManager.title')}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Every file uploaded to ImageKit. Upload, find one, copy its link at any size.
           </Typography>
         </Box>
@@ -139,7 +141,13 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
         )}
 
         {manager.files.length === 0 && !manager.loading ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 6, textAlign: 'center' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              py: 6,
+              textAlign: 'center'
+            }}>
             {manager.search ? t('shell.fileManager.noMatches', { vars: { query: manager.search } }) : t('shell.fileManager.emptyUploads')}
           </Typography>
         ) : (
@@ -166,10 +174,11 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
         <Stack
           direction="row"
           spacing={1}
-          alignItems="center"
-          justifyContent="center"
-          sx={{ pt: 3 }}
-        >
+          sx={{
+            alignItems: "center",
+            justifyContent: "center",
+            pt: 3
+          }}>
           <Button
             size="small"
             disabled={manager.page === 0 || manager.loading}

@@ -110,11 +110,15 @@ export default function PodAttendeesSection({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {countLine}
       </Typography>
       {count === 0 ? (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.podDetails.beFirstToJoin')}
         </Typography>
       ) : (
@@ -151,7 +155,13 @@ export default function PodAttendeesSection({
               </Avatar>
             ))}
           </AvatarGroup>
-          <Typography variant="caption" color="primary.main" sx={{ ml: 1, fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "primary.main",
+              ml: 1,
+              fontWeight: 600
+            }}>
             {t('mweb.podDetails.viewAll')}
           </Typography>
         </ButtonBase>
@@ -159,7 +169,9 @@ export default function PodAttendeesSection({
       {fillRows.length > 0 && (
         <Stack spacing={0.25}>
           {fillRows.map((fill) => (
-            <Typography key={fill.key} variant="caption" color="text.secondary">
+            <Typography key={fill.key} variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               <Typography
                 component="span"
                 variant="caption"

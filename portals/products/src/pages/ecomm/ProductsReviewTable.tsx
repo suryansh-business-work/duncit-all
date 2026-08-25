@@ -21,15 +21,21 @@ const submitterCaption = (r: ProductListingRow) =>
   [r.listing_submitted_by_name || 'Partner', r.size_label, r.color].filter(Boolean).join(' · ');
 
 const renderProduct = (r: ProductListingRow) => (
-  <Stack direction="row" spacing={1} alignItems="center" component="span">
+  <Stack direction="row" spacing={1} component="span" sx={{
+    alignItems: "center"
+  }}>
     <Avatar src={r.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
       {r.product_name?.[0]?.toUpperCase() ?? '?'}
     </Avatar>
     <Stack sx={{ lineHeight: 1.2, minWidth: 0 }} component="span">
-      <Typography variant="body2" fontWeight={600} noWrap component="span">
+      <Typography variant="body2" noWrap component="span" sx={{
+        fontWeight: 600
+      }}>
         {r.product_name}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="span">
+      <Typography variant="caption" noWrap component="span" sx={{
+        color: "text.secondary"
+      }}>
         {submitterCaption(r)}
       </Typography>
     </Stack>
@@ -47,7 +53,9 @@ const renderCommission = (r: ProductListingRow) => (
     <Typography variant="body2" component="span">
       {r.commission_pct}%
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {r.is_duncit_delivery_partner ? 'Delivery partner' : 'Not delivery partner'}
     </Typography>
   </Stack>

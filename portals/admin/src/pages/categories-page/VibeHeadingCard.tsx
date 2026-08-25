@@ -50,13 +50,23 @@ export default function VibeHeadingCard() {
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
         <AutoAwesomeIcon color="primary" />
         <Stack>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             Vibe section heading
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Heading and sub-heading shown over the category filter on Home. Applies to mWeb
             and the mobile app; leave a field empty to keep the app&apos;s default copy.
           </Typography>
@@ -86,7 +96,12 @@ export default function VibeHeadingCard() {
         </Alert>
       )}
 
-      <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "flex-end",
+          mt: 1.5
+        }}>
         <Button variant="contained" onClick={save} disabled={busy || !dirty}>
           {busy ? 'Saving…' : 'Save'}
         </Button>

@@ -58,7 +58,16 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
     : null;
 
   return (
-    <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} alignItems="center" flexWrap="wrap" useFlexGap data-testid="lead-contact-actions">
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      data-testid="lead-contact-actions"
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap",
+        mt: 1.5
+      }}>
       <Tooltip title={mobile ? `Call ${mobile}` : 'No phone number on file'}>
         <span>
           <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label={t('crm.components.callOptions')} sx={{ height: CALL_HEIGHT }}>

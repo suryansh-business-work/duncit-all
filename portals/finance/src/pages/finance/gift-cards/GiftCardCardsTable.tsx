@@ -39,7 +39,9 @@ const buildColumns = (
       <Typography variant="body2" noWrap component="span">
         {themeName(row)}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="span">
+      <Typography variant="caption" noWrap component="span" sx={{
+        color: "text.secondary"
+      }}>
         {row.scope_type}
       </Typography>
     </Stack>

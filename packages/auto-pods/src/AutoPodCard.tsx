@@ -85,10 +85,14 @@ export function AutoPodCard({
       {image ? <AutoPodCover url={image} /> : null}
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
         <Box>
-          <Typography variant="subtitle1" fontWeight={600} noWrap title={row.pod_title}>
+          <Typography variant="subtitle1" noWrap title={row.pod_title} sx={{
+            fontWeight: 600
+          }}>
             {row.pod_title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {row.auto_pod_no}
             {row.category_name ? ` · ${row.category_name}` : ''}
           </Typography>
@@ -98,13 +102,17 @@ export function AutoPodCard({
 
         {venue ? (
           <Stack spacing={0.5}>
-            <Stack direction="row" spacing={0.75} alignItems="center">
+            <Stack direction="row" spacing={0.75} sx={{
+              alignItems: "center"
+            }}>
               <PlaceIcon fontSize="small" color="action" />
               <Typography variant="body2" noWrap title={venue.venue_name}>
                 {venue.venue_name}
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={0.75} alignItems="center">
+            <Stack direction="row" spacing={0.75} sx={{
+              alignItems: "center"
+            }}>
               <EventIcon fontSize="small" color="action" />
               <Typography variant="body2">{formatWhen(venue.pod_date_time)}</Typography>
             </Stack>
@@ -113,19 +121,25 @@ export function AutoPodCard({
 
         <Divider />
 
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{
+          flexWrap: "wrap"
+        }}>
           <Chip size="small" variant="outlined" label={`${labels.priceLabel}: ${formatMoney(row.pod_amount)}`} />
           <Chip size="small" variant="outlined" label={`${labels.spotsLabel}: ${row.no_of_spots}`} />
         </Stack>
 
         {typeof row.expected_host_earnings === 'number' ? (
-          <Typography variant="body2" color="success.main">
+          <Typography variant="body2" sx={{
+            color: "success.main"
+          }}>
             {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
           </Typography>
         ) : null}
 
         {waitingOn ? (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {labels.waitingOn(waitingOn)}
           </Typography>
         ) : null}

@@ -35,9 +35,10 @@ export default function DemoOutput({ output }: Readonly<Props>) {
   const rows = Object.entries(output);
   if (rows.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        This demo returned nothing for the current mock.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>This demo returned nothing for the current mock.
+              </Typography>
     );
   }
   return (

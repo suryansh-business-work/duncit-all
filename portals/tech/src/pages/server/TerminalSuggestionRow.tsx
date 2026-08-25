@@ -96,9 +96,10 @@ export default function TerminalSuggestionRow({
         <ListItemText
           primary={label}
           secondary={secondary}
-          primaryTypographyProps={{ fontWeight: 600, fontSize: 13 }}
-          secondaryTypographyProps={{ component: 'div', fontSize: 12 }}
-        />
+          slotProps={{
+            primary: { sx: { fontWeight: 600, fontSize: 13 } },
+            secondary: { component: 'div', sx: { fontSize: 12 } }
+          }} />
         {running ? <CircularProgress size={16} sx={{ mt: 0.5, ml: 1 }} /> : null}
       </ListItemButton>
     </ListItem>

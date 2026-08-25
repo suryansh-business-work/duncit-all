@@ -13,7 +13,12 @@ export default function HealthSection({ health, failed }: Readonly<HealthSection
   const { t } = useTranslation();
   if (failed) {
     return (
-      <Typography variant="body2" color="text.secondary" py={1}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          py: 1
+        }}>
         {t('status.detail.healthUnavailable')}
       </Typography>
     );
@@ -48,9 +53,21 @@ export default function HealthSection({ health, failed }: Readonly<HealthSection
       <DetailRow label={t('status.detail.node')} value={health.node} />
       <DetailRow label={t('status.detail.platform')} value={health.platform} />
       <DetailRow label={t('status.detail.hostname')} value={health.hostname} />
-      <Box pt={1.5}>
-        <Stack direction="row" justifyContent="space-between" mb={0.5}>
-          <Typography variant="body2" fontWeight={700} color="text.secondary">
+      <Box sx={{
+        pt: 1.5
+      }}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            mb: 0.5
+          }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 700,
+              color: "text.secondary"
+            }}>
             {t('status.detail.memory')}
           </Typography>
           <Typography variant="body2">

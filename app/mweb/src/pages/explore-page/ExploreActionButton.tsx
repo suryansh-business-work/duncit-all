@@ -21,7 +21,9 @@ export default function ExploreActionButton({
   onLabelClick,
 }: Readonly<Props>) {
   return (
-    <Stack alignItems="center" spacing={0.25}>
+    <Stack spacing={0.25} sx={{
+      alignItems: "center"
+    }}>
       <IconButton
         onClick={onClick}
         disabled={loading}

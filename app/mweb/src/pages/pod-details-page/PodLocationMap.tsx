@@ -22,8 +22,16 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
 
   return (
     <Box sx={{ mt: 1.5 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.75 }}>
-        <Typography variant="caption" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.75
+        }}>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.podDetails.mapPreview')}
         </Typography>
         <Button

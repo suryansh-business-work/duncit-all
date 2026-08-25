@@ -52,11 +52,18 @@ function NavCard({ icon, heading, caption, to }: NavCardProps) {
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardActionArea onClick={() => navigate(to)} sx={{ height: '100%' }}>
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "center"
+          }}>
             {icon}
             <Box>{heading}</Box>
           </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mt: 0.5
+            }}>
             {caption}
           </Typography>
         </CardContent>

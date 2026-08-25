@@ -60,11 +60,18 @@ export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Read
       <DialogContent dividers>
         <Stack spacing={1.5}>
           {info && <Alert severity="info">{info}</Alert>}
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.account.deletion.otpIntro')}
           </Typography>
           <DeleteAccountForm loading={submitting} onSubmit={handleSubmit} />
-          <Typography variant="body2" color="text.secondary" textAlign="center">
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              textAlign: "center"
+            }}>
             {t('mweb.account.deletion.didntGetIt')}{' '}
             <Link
               component="button"

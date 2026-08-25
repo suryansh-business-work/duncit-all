@@ -79,10 +79,14 @@ export default function RewardsEditor({ savedRewards }: Readonly<Props>) {
     <Paper variant="outlined" sx={{ p: 2.5 }}>
       <Stack spacing={2}>
         <Stack>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             {t('admin.leaderboard.rewardsCardTitle')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('admin.leaderboard.rewardsCardSubtitle')}
           </Typography>
         </Stack>
@@ -92,7 +96,9 @@ export default function RewardsEditor({ savedRewards }: Readonly<Props>) {
           <RewardRowFields key={row.uid} row={row} index={index} onChange={update} onRemove={remove} />
         ))}
 
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{
+          justifyContent: "space-between"
+        }}>
           <Button
             startIcon={<AddIcon />}
             onClick={() => setRows((current) => [...current, blankReward()])}

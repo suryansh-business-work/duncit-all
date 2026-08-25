@@ -22,13 +22,17 @@ import {
 const getRowId = (row: DependencyUpdate) => `${row.kind}:${row.name}`;
 
 const renderName = (row: DependencyUpdate) => (
-  <Typography variant="body2" fontWeight={600} noWrap title={row.name}>
+  <Typography variant="body2" noWrap title={row.name} sx={{
+    fontWeight: 600
+  }}>
     {row.name}
   </Typography>
 );
 
 const renderRange = (row: DependencyUpdate) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {row.range}
   </Typography>
 );
@@ -104,10 +108,14 @@ export default function PackageDepsDialog({ pkg, onClose }: Readonly<Props>) {
     <Dialog open={pkg != null} onClose={onClose} fullWidth maxWidth="lg">
       <DialogTitle>
         <Stack spacing={0.25}>
-          <Typography variant="h6" fontWeight={800}>
+          <Typography variant="h6" sx={{
+            fontWeight: 800
+          }}>
             {pkg?.name}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {pkg?.path}
           </Typography>
         </Stack>

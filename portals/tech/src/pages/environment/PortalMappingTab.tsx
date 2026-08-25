@@ -40,7 +40,12 @@ export default function PortalMappingTab() {
 
   return (
     <>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1.5
+        }}>
         Search a portal, view its assigned configs, then assign which environment entries it uses.
       </Typography>
       <PortalMappingTable fetchRows={fetchRows} refetchRef={refetchRef} onInfo={setInfo} onAssign={setActive} />

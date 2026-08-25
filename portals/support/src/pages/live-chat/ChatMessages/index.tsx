@@ -20,7 +20,9 @@ export default function ChatMessages({ messages, userLastReadAt }: Readonly<Prop
       {groups.map((group) => (
         <Stack key={group.key} spacing={1.25}>
           <Divider>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {group.label}
             </Typography>
           </Divider>

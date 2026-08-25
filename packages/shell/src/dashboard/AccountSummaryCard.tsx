@@ -21,11 +21,20 @@ const formatDate = (value?: string | null) => {
 
 function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <Grid item xs={12} sm={6} md={3}>
-      <Typography variant="caption" color="text.secondary">
+    <Grid
+      size={{
+        xs: 12,
+        sm: 6,
+        md: 3
+      }}>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600} noWrap title={value}>
+      <Typography variant="body2" noWrap title={value} sx={{
+        fontWeight: 600
+      }}>
         {value}
       </Typography>
     </Grid>
@@ -45,7 +54,9 @@ export function AccountSummaryCard({ user }: Readonly<{ user?: AccountSummaryUse
     <Card>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             Your account
           </Typography>
           <Grid container spacing={2}>

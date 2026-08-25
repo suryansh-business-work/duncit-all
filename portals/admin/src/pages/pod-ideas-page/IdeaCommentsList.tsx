@@ -20,26 +20,38 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
   return (
     <>
       <Divider sx={{ mb: 2 }} />
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         {t('admin.podIdeas.colComments')}
       </Typography>
       <Stack spacing={1.5} sx={{ mt: 1 }}>
         {comments.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No comments yet.
           </Typography>
         )}
         {comments.map((c) => (
-          <Stack key={c.id} direction="row" spacing={1.5} alignItems="flex-start">
+          <Stack key={c.id} direction="row" spacing={1.5} sx={{
+            alignItems: "flex-start"
+          }}>
             <Avatar sx={{ width: 32, height: 32 }}>
               {(c.author?.full_name?.[0] ?? 'U').toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1 }}>
-              <Stack direction="row" spacing={1} alignItems="baseline">
-                <Typography variant="body2" fontWeight={600}>
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "baseline"
+              }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 600
+                }}>
                   {c.author?.full_name ?? 'Member'}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatDateTime(c.created_at)}
                 </Typography>
               </Stack>

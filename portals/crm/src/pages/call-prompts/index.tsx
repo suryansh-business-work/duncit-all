@@ -44,13 +44,19 @@ export default function CallPromptsPage() {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <SmartToyIcon color="primary" />
-          <Typography variant="h5" fontWeight={800}>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>
             Static Content
           </Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Reusable context blocks the AI agent speaks in during an AI Call.
         </Typography>
       </Box>

@@ -9,9 +9,20 @@ export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNotic
   const { t } = useTranslation();
   return (
     <Box sx={{ mb: 1.5, mx: 'auto', maxWidth: 420, p: 1.25, borderRadius: '16px', bgcolor: 'rgba(112,70,255,0.12)', border: '1px solid rgba(112,70,255,0.24)' }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "primary.main",
+              fontWeight: 700
+            }}>
             POD CHAT
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>

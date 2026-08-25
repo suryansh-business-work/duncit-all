@@ -4,7 +4,9 @@ export default function ClubDetailsSkeleton() {
   return (
     <Stack spacing={3}>
       <Skeleton variant="rectangular" height={280} sx={{ borderRadius: '16px' }} />
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <Skeleton variant="rounded" width={64} height={64} />
         <Box sx={{ flex: 1 }}>
           <Skeleton width="50%" height={36} />

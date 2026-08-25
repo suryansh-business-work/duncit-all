@@ -96,7 +96,9 @@ export function AppHeader({
               <MenuIcon />
             </IconButton>
             <Box component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0 }}>
-              <Typography variant="subtitle2" fontWeight={800} noWrap>
+              <Typography variant="subtitle2" noWrap sx={{
+                fontWeight: 800
+              }}>
                 {title}
               </Typography>
             </Box>

@@ -42,7 +42,11 @@ export default function WalletPage() {
 
   if (loading && !data) {
     return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 8
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -62,7 +66,9 @@ export default function WalletPage() {
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <AccountBalanceWalletIcon color="primary" />
         <Typography variant="h4" sx={{ fontWeight: 700, flex: 1 }}>
           Wallet
@@ -73,23 +79,32 @@ export default function WalletPage() {
 
       <Card variant="outlined" sx={{ borderRadius: '16px', background: 'linear-gradient(135deg, rgba(255,79,115,0.12), rgba(255,122,89,0.12))' }}>
         <CardContent>
-          <Typography variant="caption" sx={{ fontWeight: 700 }} color="primary.main">
+          <Typography
+            variant="caption"
+            sx={{
+              color: "primary.main",
+              fontWeight: 700
+            }}>
             Available balance
           </Typography>
           <Typography variant="h3" sx={{ fontWeight: 700, my: 0.5 }}>
             {currency}
             {balance.toFixed(2)}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {PAYOUT_LABEL[wallet?.payout_mode] ?? ''} · Next cycle {fmtDate(wallet?.next_payout_at)}
           </Typography>
           {minAmount > 0 && (
             <Typography
               variant="caption"
-              display="block"
-              sx={{ mt: 0.5, fontWeight: 600 }}
               color={eligible ? 'text.secondary' : 'warning.main'}
-            >
+              sx={{
+                display: "block",
+                mt: 0.5,
+                fontWeight: 600
+              }}>
               {minNotice}
             </Typography>
           )}
@@ -117,13 +132,23 @@ export default function WalletPage() {
           ) : (
             <Stack spacing={1}>
               {withdrawals.map((w: any) => (
-                <Stack key={w.id} direction="row" alignItems="center" spacing={1}>
+                <Stack key={w.id} direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={700}>
+                    <Typography variant="body2" sx={{
+                      fontWeight: 700
+                    }}>
                       {currency}
                       {w.amount.toFixed(2)} · {w.payout_method}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap display="block">
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{
+                        color: "text.secondary",
+                        display: "block"
+                      }}>
                       Requested {fmtDate(w.created_at)}
                       {w.reject_reason ? ` · ${w.reject_reason}` : ''}
                     </Typography>
@@ -147,16 +172,24 @@ export default function WalletPage() {
           ) : (
             <Stack spacing={1}>
               {transactions.map((t: any) => (
-                <Stack key={t.id} direction="row" alignItems="center" spacing={1}>
+                <Stack key={t.id} direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={700} noWrap>
+                    <Typography variant="body2" noWrap sx={{
+                      fontWeight: 700
+                    }}>
                       {t.reason || t.source}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {fmtDate(t.created_at)}
                     </Typography>
                   </Box>
-                  <Typography variant="body2" fontWeight={700} color={t.type === 'CREDIT' ? 'success.main' : 'error.main'}>
+                  <Typography variant="body2" color={t.type === 'CREDIT' ? 'success.main' : 'error.main'} sx={{
+                    fontWeight: 700
+                  }}>
                     {t.type === 'CREDIT' ? '+' : '−'}
                     {currency}
                     {t.amount.toFixed(2)}

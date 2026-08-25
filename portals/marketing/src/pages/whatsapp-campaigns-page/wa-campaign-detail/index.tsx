@@ -99,14 +99,25 @@ export default function WaCampaignDetailDialog({
   return (
     <Dialog open={!!campaignId} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pb: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <span>{campaign?.name ?? 'Campaign'}</span>
           {campaign && <StatusChip status={campaign.status} colorMap={WA_STATUS_COLORS} />}
         </Stack>
       </DialogTitle>
       <DialogContent dividers>
         {loading && !campaign ? (
-          <Stack alignItems="center" sx={{ py: 6 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 6
+            }}>
             <CircularProgress />
           </Stack>
         ) : null}
@@ -125,10 +136,14 @@ export default function WaCampaignDetailDialog({
             />
 
             <Stack spacing={0.5}>
-              <Typography variant="subtitle2" fontWeight={900}>
+              <Typography variant="subtitle2" sx={{
+                fontWeight: 900
+              }}>
                 Recipients
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Sent means AiSensy accepted the message and returned an id for it. WhatsApp
                 delivered/read status is not part of that answer.
               </Typography>

@@ -7,12 +7,19 @@ export default function ChatClosedNotice() {
     <Stack
       direction="row"
       spacing={1}
-      alignItems="center"
-      justifyContent="center"
-      sx={{ px: { xs: 1.25, sm: 2 }, py: 1.75 }}
-    >
+      sx={{
+        alignItems: "center",
+        justifyContent: "center",
+        px: { xs: 1.25, sm: 2 },
+        py: 1.75
+      }}>
       <LockOutlinedIcon fontSize="small" color="disabled" />
-      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600
+        }}>
         This pod has ended — chat is closed.
       </Typography>
     </Stack>

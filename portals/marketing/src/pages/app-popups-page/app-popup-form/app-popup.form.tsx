@@ -43,7 +43,7 @@ export default function AppPopupForm({
   return (
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RhfTextField
             control={control}
             name="name"
@@ -53,7 +53,7 @@ export default function AppPopupForm({
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Controller
             control={control}
             name="image_url"
@@ -73,34 +73,40 @@ export default function AppPopupForm({
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Divider />
-          <Typography variant="overline" color="text.secondary">
+          <Typography variant="overline" sx={{
+            color: "text.secondary"
+          }}>
             Schedule & platform
           </Typography>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <PopupScheduleFields control={control} />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Divider />
-          <Typography variant="overline" color="text.secondary">
+          <Typography variant="overline" sx={{
+            color: "text.secondary"
+          }}>
             Audience & action
           </Typography>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <PopupAudienceFields control={control} audienceLists={audienceLists} />
         </Grid>
 
         {errorMessage && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
 
-        <Grid item xs={12}>
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Grid size={12}>
+          <Stack direction="row" spacing={1} sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button onClick={onCancel} disabled={busy}>
               Cancel
             </Button>

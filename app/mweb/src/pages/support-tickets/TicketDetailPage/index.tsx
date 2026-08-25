@@ -107,9 +107,10 @@ export default function TicketDetailPage() {
   }
   if (!ticket) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        This ticket could not be found.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>This ticket could not be found.
+              </Typography>
     );
   }
 

@@ -17,7 +17,14 @@ interface Props {
 export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive, onSave, onSendTest, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
       <Button variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy}>
         {busy ? 'Saving…' : t('shell.common.save')}
       </Button>
@@ -29,7 +36,9 @@ export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive
         sx={{ ml: 1 }}
       />
       <Box sx={{ flex: 1 }} />
-      {dirty && <Typography variant="caption" color="warning.main">{t('crm.emailTemplates.unsavedChanges')}</Typography>}
+      {dirty && <Typography variant="caption" sx={{
+        color: "warning.main"
+      }}>{t('crm.emailTemplates.unsavedChanges')}</Typography>}
     </Stack>
   );
 }

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 import { DuncitTable, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
@@ -45,7 +45,9 @@ const artifactSearchText = (artifact: PaymentArtifact) =>
 const renderStatus = (artifact: PaymentArtifact, t: Translator['t']) => {
   const { labelKey, color, Icon } = ARTIFACT_STATES[artifactState(artifact)];
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center" component="span">
+    <Stack direction="row" spacing={0.75} component="span" sx={{
+      alignItems: "center"
+    }}>
       <Icon fontSize="small" sx={{ color }} />
       <Typography variant="body2" component="span">
         {t(labelKey)}
@@ -57,7 +59,9 @@ const renderStatus = (artifact: PaymentArtifact, t: Translator['t']) => {
 const renderRefs = (artifact: PaymentArtifact, t: Translator['t']) => {
   if (artifact.refs.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary" component="span">
+      <Typography variant="body2" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {EM_DASH}
       </Typography>
     );
@@ -68,7 +72,9 @@ const renderRefs = (artifact: PaymentArtifact, t: Translator['t']) => {
         {artifact.refs.join(', ')}
       </Typography>
       {artifact.count > 1 && (
-        <Typography variant="caption" color="text.secondary" component="span">
+        <Typography variant="caption" component="span" sx={{
+          color: "text.secondary"
+        }}>
           {t('finance.payment.recordCount', { vars: { n: artifact.count } })}
         </Typography>
       )}

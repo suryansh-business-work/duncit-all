@@ -22,7 +22,9 @@ export default function ImportResultView({ result }: Readonly<{ result: ImportRe
   return (
     <Box>
       <Alert severity={result.failed === 0 ? 'success' : 'warning'} sx={{ mb: result.errors.length ? 1.5 : 0 }}>
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           Imported {result.inserted} of {result.inserted + result.failed} rows
           {result.failed > 0 ? ` · ${result.failed} failed` : ''}
         </Typography>

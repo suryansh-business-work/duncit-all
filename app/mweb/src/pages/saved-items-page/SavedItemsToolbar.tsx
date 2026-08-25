@@ -79,22 +79,26 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
   const resetCategory = () => onFilters({ ...filters, superId: '', categoryId: '', subId: '' });
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <TextField
         size="small"
         fullWidth
         placeholder={t('mweb.common.searchSavedPods')}
         value={search}
         onChange={(event) => onSearch(event.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-        inputProps={{ 'aria-label': 'Search saved pods' }}
-      />
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          },
+
+          htmlInput: { 'aria-label': 'Search saved pods' }
+        }} />
       <Badge color="primary" badgeContent={filterCount} overlap="circular">
         <IconButton aria-label={t('mweb.savedItems.filterByCategory')} onClick={(event) => setFilterAnchor(event.currentTarget)}>
           <TuneIcon />
@@ -112,7 +116,9 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Stack spacing={2} sx={{ p: 2, width: 288 }}>
-          <Typography fontWeight={600}>{t('mweb.savedItems.filterByCategory')}</Typography>
+          <Typography sx={{
+            fontWeight: 600
+          }}>{t('mweb.savedItems.filterByCategory')}</Typography>
           <LevelSelect label={t('mweb.common.superCategory')} value={filters.superId} options={superCategories(categories)} onChange={setSuper} />
           <LevelSelect
             label={t('mweb.common.category')}

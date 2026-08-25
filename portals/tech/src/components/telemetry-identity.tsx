@@ -45,7 +45,13 @@ export function UserCell({ user }: Readonly<{ user: TelemetryUserRef | null }>) 
   const { t } = useTranslation();
   if (!user?.id) {
     return (
-      <Stack direction="row" spacing={0.5} alignItems="center" color="text.disabled">
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          color: "text.disabled"
+        }}>
         <PersonOffIcon fontSize="small" />
         <Typography variant="body2">{t('tech.telemetryIdentity.signedOut')}</Typography>
       </Stack>

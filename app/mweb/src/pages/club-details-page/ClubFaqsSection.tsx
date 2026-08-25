@@ -16,7 +16,9 @@ export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         FAQs
       </Typography>
       {faqs.map((faq) => (
@@ -35,12 +37,19 @@ export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
           }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 700
+            }}>
               {faq.question}
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                whiteSpace: 'pre-wrap'
+              }}>
               {faq.answer}
             </Typography>
           </AccordionDetails>

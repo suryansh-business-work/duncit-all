@@ -27,9 +27,10 @@ export default function HostApplyBanner() {
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={2}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        sx={{ p: { xs: 2.25, sm: 3 } }}
-      >
+        sx={{
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          p: { xs: 2.25, sm: 3 }
+        }}>
         <Box
           sx={{
             width: 48,

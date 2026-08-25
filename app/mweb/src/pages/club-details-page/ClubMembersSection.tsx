@@ -48,7 +48,9 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         Club Members
       </Typography>
       <ButtonBase
@@ -79,7 +81,13 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
             </Avatar>
           ))}
         </AvatarGroup>
-        <Typography variant="caption" color="primary.main" sx={{ ml: 1, fontWeight: 600 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "primary.main",
+            ml: 1,
+            fontWeight: 600
+          }}>
           View all
         </Typography>
       </ButtonBase>

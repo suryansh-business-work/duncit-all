@@ -71,8 +71,12 @@ function ReviewRow({
   };
   return (
     <Box sx={{ py: 1.5 }}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography fontWeight={800}>{review.user_name}</Typography>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
+        <Typography sx={{
+          fontWeight: 800
+        }}>{review.user_name}</Typography>
         <Rating value={review.rating} readOnly size="small" />
       </Stack>
       {review.comment && (
@@ -93,7 +97,14 @@ function ReviewRow({
           ))}
         </Stack>
       )}
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, color: 'text.secondary' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mt: 0.5,
+          color: 'text.secondary'
+        }}>
         <ThumbUpAltIcon sx={{ fontSize: 15 }} />
         <Typography variant="caption">{review.up_votes}</Typography>
         <ThumbDownAltIcon sx={{ fontSize: 15 }} />
@@ -139,13 +150,23 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
 
   return (
     <Box sx={{ p: 2.5, borderRadius: 2, border: 1, borderColor: 'divider' }}>
-      <Typography variant="h6" fontWeight={900}>
+      <Typography variant="h6" sx={{
+        fontWeight: 900
+      }}>
         Ratings &amp; reviews
       </Typography>
       {summary && summary.total > 0 && (
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mt: 0.5
+          }}>
           <Rating value={summary.average_rating} precision={0.1} readOnly size="small" />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {summary.average_rating} · {summary.total} review{summary.total === 1 ? '' : 's'}
           </Typography>
         </Stack>
@@ -156,7 +177,11 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
         </Alert>
       )}
       {loading && !data ? (
-        <Stack alignItems="center" sx={{ py: 2 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 2
+          }}>
           <CircularProgress size={22} />
         </Stack>
       ) : null}
@@ -167,7 +192,12 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
         </Box>
       ))}
       {!loading && reviews.length === 0 && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 1
+          }}>
           No reviews yet for this product.
         </Typography>
       )}

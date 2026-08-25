@@ -16,7 +16,9 @@ export default function FeedbackPanel({ rating, comment }: Readonly<Props>) {
       <Typography variant="overline" sx={{ fontWeight: 800, display: 'block', mb: 0.5 }}>
         User feedback
       </Typography>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Box component="span" sx={{ fontSize: 24, lineHeight: 1 }} aria-hidden>
           {option.emoji}
         </Box>
@@ -25,7 +27,13 @@ export default function FeedbackPanel({ rating, comment }: Readonly<Props>) {
         </Typography>
       </Stack>
       {comment && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, fontStyle: 'italic' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.75,
+            fontStyle: 'italic'
+          }}>
           “{comment}”
         </Typography>
       )}

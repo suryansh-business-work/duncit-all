@@ -82,8 +82,7 @@ export default function ScheduleFields({ control, errors, weekly }: Readonly<Pro
                 sx: { minWidth: 160 },
                 error: !!errors.timeOfDay,
                 helperText: errors.timeOfDay?.message,
-              },
-            }}
+              }}}
           />
         )}
       />

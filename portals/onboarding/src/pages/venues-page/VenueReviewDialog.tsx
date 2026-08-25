@@ -103,11 +103,27 @@ export default function VenueReviewDialog({
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ display: 'block', lineHeight: 1 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 800,
+            display: 'block',
+            lineHeight: 1
+          }}>
           Review venue
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" fontWeight={900} sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 900,
+              flex: 1,
+              minWidth: 0
+            }}>
             {active?.venue_name || 'Venue'}
           </Typography>
           {active?.status && (
@@ -118,7 +134,14 @@ export default function VenueReviewDialog({
       <DialogContent dividers>
         <Stack spacing={2}>
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mb: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                flexWrap: "wrap",
+                rowGap: 1,
+                mb: 1
+              }}>
               {active?.venue_type && <Chip size="small" variant="outlined" label={active.venue_type} />}
               {typeof active?.capacity === 'number' && (
                 <Chip size="small" variant="outlined" label={`Capacity ${active.capacity}`} />
@@ -132,7 +155,14 @@ export default function VenueReviewDialog({
               </Typography>
             )}
             {capacityItems.length > 0 && (
-              <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mb: 1 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  flexWrap: "wrap",
+                  rowGap: 1,
+                  mb: 1
+                }}>
                 {capacityItems.map((item: any) => (
                   <Chip key={item.label} size="small" label={`${item.label}: ${item.capacity}`} />
                 ))}
@@ -146,10 +176,22 @@ export default function VenueReviewDialog({
 
           {documents.length > 0 && (
             <Box>
-              <Typography variant="overline" color="text.secondary" fontWeight={800}>
+              <Typography
+                variant="overline"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 800
+                }}>
                 Documents
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mt: 0.5 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  flexWrap: "wrap",
+                  rowGap: 1,
+                  mt: 0.5
+                }}>
                 {documents.map((doc: any) => (
                   <Chip
                     key={doc.url}
@@ -177,10 +219,14 @@ export default function VenueReviewDialog({
           />
 
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-            <Typography variant="subtitle2" fontWeight={800}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 800
+            }}>
               Venue deductions
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               The commission Duncit takes from the venue payout (after GST). Defaults to the{' '}
               {defaultCommissionPct ?? '—'}% set in Finance → Default Deductions; change it here to
               override it for this venue only, or set 0 to always follow the default.
@@ -194,10 +240,11 @@ export default function VenueReviewDialog({
                 onChange={(e) => setCommission(e.target.value)}
                 error={!valid(commission)}
                 helperText={valid(commission) ? undefined : 'Enter a number between 0 and 100.'}
-                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Venue commission percentage' }}
-                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 fullWidth
-              />
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+                  htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Venue commission percentage' }
+                }} />
             </Stack>
             <Button
               variant="outlined"

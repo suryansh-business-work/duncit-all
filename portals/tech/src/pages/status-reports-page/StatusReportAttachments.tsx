@@ -33,11 +33,20 @@ export default function StatusReportAttachments({
       <Box>
         <Typography variant="subtitle2">{t('tech.statusReports.reporterScreenshots')}</Typography>
         {reporterImages.length === 0 ? (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.statusReports.noScreenshots')}
           </Typography>
         ) : (
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              flexWrap: "wrap",
+              mt: 1
+            }}>
             {reporterImages.map((url) => (
               <Link
                 key={url}

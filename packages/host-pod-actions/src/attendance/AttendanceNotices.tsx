@@ -65,7 +65,9 @@ function ClubAdminRow({
   const dial = admin.phone.replace(/[^\d+]/g, '');
   const wa = admin.whatsapp.replace(/\D/g, '');
   return (
-    <Stack direction="row" spacing={1.25} alignItems="center">
+    <Stack direction="row" spacing={1.25} sx={{
+      alignItems: "center"
+    }}>
       <Avatar src={admin.avatar_url || undefined} sx={{ width: 34, height: 34 }}>
         {(admin.name[0] ?? '?').toUpperCase()}
       </Avatar>
@@ -117,11 +119,15 @@ export function ClubAdminHelpCard({
       <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
         {labels.clubAdminTitle}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {labels.clubAdminBody}
       </Typography>
       {admins.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {labels.clubAdminNone}
         </Typography>
       ) : (

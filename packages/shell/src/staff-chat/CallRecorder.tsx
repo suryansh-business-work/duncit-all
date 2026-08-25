@@ -83,7 +83,9 @@ export default function CallRecorder({
 
   if (stage === 'RECORDING') {
     return (
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         {/* The dot is the whole point: a recording that is not obviously
             running is a recording somebody did not know they were in. */}
         <Box
@@ -100,7 +102,9 @@ export default function CallRecorder({
             '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
           }}
         />
-        <Typography variant="caption" color="error.main" role="status">
+        <Typography variant="caption" role="status" sx={{
+          color: "error.main"
+        }}>
           {t('shell.chat.recorder.recording', { vars: { clock: clock(elapsed) } })}
         </Typography>
       </Stack>
@@ -111,7 +115,9 @@ export default function CallRecorder({
   if (busyKey) {
     return (
       <Box>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t(busyKey)} {pct > 0 ? `${pct}%` : ''}
         </Typography>
         <LinearProgress
@@ -125,8 +131,17 @@ export default function CallRecorder({
 
   // READY.
   return (
-    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-      <Typography variant="caption" color="success.main">
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
+      <Typography variant="caption" sx={{
+        color: "success.main"
+      }}>
         {t('shell.chat.recorder.saved')}
       </Typography>
       <Box sx={{ flex: 1 }} />

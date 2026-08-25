@@ -50,12 +50,22 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
 
   if (!canView) {
     return (
-      <Stack alignItems="center" spacing={1} sx={{ py: 5, color: 'text.secondary' }}>
+      <Stack
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          py: 5,
+          color: 'text.secondary'
+        }}>
         <LockIcon />
-        <Typography variant="subtitle1" fontWeight={600}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 600
+        }}>
           This account is private
         </Typography>
-        <Typography variant="body2" textAlign="center">
+        <Typography variant="body2" sx={{
+          textAlign: "center"
+        }}>
           Follow this account to see their posts and status.
         </Typography>
       </Stack>
@@ -100,7 +110,13 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
   );
 
   const emptyGrid = (
-    <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        textAlign: "center",
+        py: 4
+      }}>
       No posts yet.
     </Typography>
   );
@@ -138,9 +154,18 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
         </Stack>
       )}
 
-      <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center" sx={{ py: 1 }}>
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          justifyContent: "center",
+          py: 1
+        }}>
         <GridOnIcon fontSize="small" />
-        <Typography variant="caption" letterSpacing={1.5}>
+        <Typography variant="caption" sx={{
+          letterSpacing: 1.5
+        }}>
           POSTS
         </Typography>
       </Stack>

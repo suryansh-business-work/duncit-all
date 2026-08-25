@@ -14,7 +14,13 @@ export default function SummaryTiles({ totals, loading }: Readonly<Props>) {
         const Icon = t.icon;
         const value = loading ? '…' : totals?.[t.key] ?? 0;
         return (
-          <Grid item xs={6} sm={4} md={2.4} key={t.key}>
+          <Grid
+            key={t.key}
+            size={{
+              xs: 6,
+              sm: 4,
+              md: 2.4
+            }}>
             <StatCard
               layout="split"
               label={t.label}

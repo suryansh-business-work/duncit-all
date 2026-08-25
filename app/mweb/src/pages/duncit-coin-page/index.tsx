@@ -22,7 +22,9 @@ export default function DuncitCoinPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Stack spacing={2}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.coin.title')}
         </Typography>
 
@@ -31,7 +33,11 @@ export default function DuncitCoinPage() {
         <CoinBalanceCard balance={balance} currencySymbol={currencySymbol} />
 
         {loading && !data ? (
-          <Stack alignItems="center" sx={{ py: 3 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 3
+            }}>
             <CircularProgress size={24} />
           </Stack>
         ) : (

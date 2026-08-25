@@ -1,6 +1,6 @@
 import { Box, Button, IconButton, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
 import { EMPTY_CATEGORY, Fieldset, RhfAdminCategory } from '@duncit/category';
 import type { ProductListingValues } from './list-products.types';
@@ -19,7 +19,9 @@ export default function CategoryRows({ control }: Readonly<{ control: Control<Pr
     >
       <Stack spacing={2}>
         {fields.map((field, index) => (
-          <Stack key={field.id} direction="row" spacing={1} alignItems="flex-start">
+          <Stack key={field.id} direction="row" spacing={1} sx={{
+            alignItems: "flex-start"
+          }}>
             <Box sx={{ flex: 1 }}>
               <RhfAdminCategory
                 control={control}

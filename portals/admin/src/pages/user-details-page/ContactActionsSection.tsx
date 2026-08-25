@@ -43,7 +43,9 @@ const renderNotes = (a: ContactActionRow) => (
       </Typography>
     )}
     {a.notes && (
-      <Typography variant="caption" color="text.secondary" component="span">
+      <Typography variant="caption" component="span" sx={{
+        color: "text.secondary"
+      }}>
         {a.notes}
       </Typography>
     )}
@@ -95,7 +97,9 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       }
     };
     const renderActions = (a: ContactActionRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
+      <Stack direction="row" component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <IconButton size="small" color="error" onClick={() => remove(a)} aria-label={t('admin.contact.deleteLog')}>
           <DeleteIcon fontSize="small" />
         </IconButton>
@@ -141,10 +145,14 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
   return (
     <Stack spacing={2}>
       <Stack spacing={0.25}>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           Call &amp; Email Logs
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Filter user outreach by type, status, or notes.
         </Typography>
       </Stack>

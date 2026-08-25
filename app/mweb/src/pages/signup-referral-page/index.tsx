@@ -53,12 +53,28 @@ export default function SignupReferralPage() {
     <AuthBackground>
       <AuthScreenFrame>
         <Stack spacing={2}>
-          <Stack alignItems="center" spacing={1.1} sx={{ pt: 0.5 }}>
+          <Stack
+            spacing={1.1}
+            sx={{
+              alignItems: "center",
+              pt: 0.5
+            }}>
             <AuthLogo />
-            <Typography variant="h5" fontWeight={700} textAlign="center" color="text.primary">
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                textAlign: "center",
+                color: "text.primary"
+              }}>
               {t('mweb.referral.promptTitle')}
             </Typography>
-            <Typography variant="body2" textAlign="center" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: "center",
+                color: "text.secondary"
+              }}>
               {t('mweb.referral.promptBodyPlain')}
             </Typography>
           </Stack>
@@ -72,7 +88,9 @@ export default function SignupReferralPage() {
             helperText={malformed ? t('mweb.referral.validation.codePattern') : ' '}
             size="small"
             fullWidth
-            inputProps={{ 'aria-label': t('mweb.referral.codeLabel') }}
+            slotProps={{
+              htmlInput: { 'aria-label': t('mweb.referral.codeLabel') }
+            }}
           />
 
           {error && <Alert severity="error">{error}</Alert>}

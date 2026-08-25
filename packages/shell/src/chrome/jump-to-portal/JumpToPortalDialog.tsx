@@ -64,7 +64,9 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         {t('shell.jumpToPortal.title')}
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('shell.jumpToPortal.subtitle')}
         </Typography>
         <IconButton
@@ -91,14 +93,24 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
             )}
             <Accordion defaultExpanded disableGutters>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography fontWeight={700}>{t('shell.jumpToPortal.accessTitle')}</Typography>
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
+                  <Typography sx={{
+                    fontWeight: 700
+                  }}>{t('shell.jumpToPortal.accessTitle')}</Typography>
                   <Chip size="small" label={accessible.length} />
                 </Stack>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0 }}>
                 {accessible.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      px: 2,
+                      py: 1
+                    }}>
                     {t('shell.jumpToPortal.noneAccessible')}
                   </Typography>
                 ) : (
@@ -112,19 +124,34 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
             </Accordion>
             <Accordion disableGutters>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography fontWeight={700}>{t('shell.jumpToPortal.noAccessTitle')}</Typography>
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
+                  <Typography sx={{
+                    fontWeight: 700
+                  }}>{t('shell.jumpToPortal.noAccessTitle')}</Typography>
                   <Chip size="small" label={locked.length} />
                 </Stack>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0 }}>
                 {locked.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      px: 2,
+                      py: 1
+                    }}>
                     {t('shell.jumpToPortal.allAccess')}
                   </Typography>
                 ) : (
                   <>
-                    <Typography variant="caption" color="text.secondary" sx={{ px: 2 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        px: 2
+                      }}>
                       {t('shell.jumpToPortal.noAccessHint')}
                     </Typography>
                     <List dense disablePadding>

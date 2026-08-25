@@ -22,13 +22,17 @@ export default function ResolvedNotice({
   let windowNote: React.ReactNode;
   if (reopenable && reopenDeadline) {
     windowNote = (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         You can reopen this until {formatDateTime(reopenDeadline)}
       </Typography>
     );
   } else {
     windowNote = (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         The reopen window has passed — raise a new ticket if you still need help.
       </Typography>
     );
@@ -36,9 +40,17 @@ export default function ResolvedNotice({
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
-      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
         <Stack sx={{ minWidth: 0 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             This ticket is {statusLabel}. Re-open it to continue.
           </Typography>
           {windowNote}

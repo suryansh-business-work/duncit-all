@@ -79,7 +79,11 @@ export default function ProductSettingsPage() {
 
   if ((accessLoading && !accessData) || (loading && !product)) {
     return (
-      <Stack alignItems="center" sx={{ py: 5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -100,7 +104,12 @@ export default function ProductSettingsPage() {
         <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
           {t('partners.venueAvailabilityPage.back')}
         </Button>
-        <Typography variant="h4" fontWeight={950} sx={{ mt: 1 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 950,
+            mt: 1
+          }}>
           {product?.product_name || 'Product'} settings
         </Typography>
       </Box>
@@ -112,7 +121,9 @@ export default function ProductSettingsPage() {
             <Stack spacing={2.25} component="form" onSubmit={onSubmit}>
               {saved && <Alert severity="success">{t('partners.listProductsPage.settingsSaved')}</Alert>}
               {apiError && <Alert severity="error">{apiError}</Alert>}
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Currently {available} unit{available === 1 ? '' : 's'} available.
               </Typography>
               <RhfTextField
@@ -120,7 +131,7 @@ export default function ProductSettingsPage() {
                 name="low_stock_alert"
                 label={t('partners.listProductsPage.lowStockThreshold')}
                 type="number"
-                inputProps={{ min: 0, step: 1, inputMode: 'numeric' }}
+                slotProps={{ htmlInput: { min: 0, step: 1, inputMode: 'numeric' } }}
                 hint="The product row is highlighted, and you can be notified, when available stock drops to this number or below."
                 sx={{ maxWidth: 260 }}
               />

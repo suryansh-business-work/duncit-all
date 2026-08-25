@@ -65,13 +65,22 @@ export default function RecurringAvailabilityDialog({
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="lg" fullScreen={fullScreen} scroll="paper">
       <DialogTitle sx={{ pr: 6 }}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <EventRepeatIcon color="primary" />
           <Box>
-            <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1.1 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 900,
+                lineHeight: 1.1
+              }}>
               Recurring availability
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Create slots with custom timing, pricing and venue settings.
             </Typography>
           </Box>
@@ -91,7 +100,13 @@ export default function RecurringAvailabilityDialog({
           )}
           {datesPicked && result.errors.length > 0 && <Alert severity="warning">{result.errors[0]}</Alert>}
 
-          <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ pt: 0.5 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 800,
+              pt: 0.5
+            }}>
             Advanced settings
           </Typography>
           <VenueRulesAccordion venueId={venueId} rules={venueSettings.rules} onSaved={onDone} />

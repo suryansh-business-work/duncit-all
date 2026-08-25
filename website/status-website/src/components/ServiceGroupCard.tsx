@@ -10,12 +10,16 @@ interface GroupProps {
 
 export default function ServiceGroupCard({ group, summary, onSelect }: Readonly<GroupProps>) {
   return (
-    <Box component="section" mb={4}>
+    <Box component="section" sx={{
+      mb: 4
+    }}>
       <Typography
         variant="overline"
-        color="text.secondary"
-        sx={{ letterSpacing: '0.12em', fontWeight: 700 }}
-      >
+        sx={{
+          color: "text.secondary",
+          letterSpacing: '0.12em',
+          fontWeight: 700
+        }}>
         {group.title}
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, overflow: 'hidden' }}>

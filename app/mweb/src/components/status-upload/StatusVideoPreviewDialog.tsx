@@ -105,7 +105,12 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
                 valueLabelDisplay="auto"
                 valueLabelFormat={fmt}
               />
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 700
+                }}>
                 Posting {fmt(start)} – {fmt(windowEnd)} of {fmt(duration)}
               </Typography>
             </>

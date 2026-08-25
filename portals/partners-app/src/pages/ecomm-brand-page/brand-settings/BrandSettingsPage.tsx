@@ -89,7 +89,11 @@ export default function BrandSettingsPage() {
 
   if ((brandsLoading && !brandsData) || (loading && !data)) {
     return (
-      <Stack alignItems="center" sx={{ py: 5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -111,7 +115,12 @@ export default function BrandSettingsPage() {
         >
           {t('partners.venueAvailabilityPage.back')}
         </Button>
-        <Typography variant="h4" fontWeight={950} sx={{ mt: 1 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 950,
+            mt: 1
+          }}>
           {brand?.brand_name || 'Brand'} settings
         </Typography>
         <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
@@ -124,7 +133,9 @@ export default function BrandSettingsPage() {
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={950}>{t('partners.ecommBrandPage.warehouses')}</Typography>
+              <Typography variant="h6" sx={{
+                fontWeight: 950
+              }}>{t('partners.ecommBrandPage.warehouses')}</Typography>
               <Alert severity="info">
                 Every new warehouse — and every edit to an existing one — is reviewed by the Duncit team.
                 A product can only be listed against an approved warehouse, so saving changes here sends

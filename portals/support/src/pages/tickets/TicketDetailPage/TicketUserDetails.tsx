@@ -37,7 +37,13 @@ function DetailRow({
 }: Readonly<{ icon: ReactNode; value?: string | null; empty?: string; verified?: boolean }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary' }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        color: 'text.secondary'
+      }}>
       {icon}
       <Typography
         variant="body2"
@@ -69,13 +75,17 @@ export default function TicketUserDetails({
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Avatar src={user.avatar_url || undefined} sx={{ width: 40, height: 40 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 800 }} noWrap>
             {user.name}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Ticket raised by
           </Typography>
         </Box>

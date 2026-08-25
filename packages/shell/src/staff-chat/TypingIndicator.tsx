@@ -39,10 +39,12 @@ export default function TypingIndicator({ at, name }: Readonly<Props>) {
     <Stack
       direction="row"
       spacing={1}
-      alignItems="center"
       aria-live="polite"
-      sx={{ px: 1.5, pb: 0.5 }}
-    >
+      sx={{
+        alignItems: "center",
+        px: 1.5,
+        pb: 0.5
+      }}>
       <Stack
         direction="row"
         spacing={0.5}
@@ -72,7 +74,9 @@ export default function TypingIndicator({ at, name }: Readonly<Props>) {
           />
         ))}
       </Stack>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('shell.chat.thread.typing', { vars: { name } })}
       </Typography>
     </Stack>

@@ -82,7 +82,9 @@ export default function JobApplicationsPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" sx={{
+        fontWeight: 700
+      }}>
         Job Applications
       </Typography>
       <DuncitTable<JobApplication>

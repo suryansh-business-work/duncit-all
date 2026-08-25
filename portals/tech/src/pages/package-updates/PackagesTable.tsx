@@ -16,7 +16,9 @@ type CountTone = 'error' | 'warning' | 'info' | 'text.primary';
  */
 function CountCell({ value, tone }: Readonly<{ value: number; tone: CountTone }>) {
   return (
-    <Typography variant="body2" fontWeight={value > 0 ? 700 : 400} color={value > 0 ? tone : 'text.disabled'}>
+    <Typography variant="body2" color={value > 0 ? tone : 'text.disabled'} sx={{
+      fontWeight: value > 0 ? 700 : 400
+    }}>
       {value}
     </Typography>
   );
@@ -24,8 +26,16 @@ function CountCell({ value, tone }: Readonly<{ value: number; tone: CountTone }>
 
 function NameCell({ row, privateLabel }: Readonly<{ row: PackageUpdate; privateLabel: string }>) {
   return (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
-      <Typography variant="body2" fontWeight={600} noWrap title={row.name}>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        alignItems: "center",
+        minWidth: 0
+      }}>
+      <Typography variant="body2" noWrap title={row.name} sx={{
+        fontWeight: 600
+      }}>
         {row.name}
       </Typography>
       {row.private && <Chip size="small" variant="outlined" label={privateLabel} />}
@@ -34,7 +44,9 @@ function NameCell({ row, privateLabel }: Readonly<{ row: PackageUpdate; privateL
 }
 
 const renderPath = (row: PackageUpdate) => (
-  <Typography variant="body2" color="text.secondary" noWrap title={row.path}>
+  <Typography variant="body2" noWrap title={row.path} sx={{
+    color: "text.secondary"
+  }}>
     {row.path}
   </Typography>
 );

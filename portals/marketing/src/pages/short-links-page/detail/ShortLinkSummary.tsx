@@ -21,10 +21,14 @@ function Stat({ label, value }: Readonly<StatProps>) {
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           {label}
         </Typography>
-        <Typography variant="h5" fontWeight={800} component="div">
+        <Typography variant="h5" component="div" sx={{
+          fontWeight: 800
+        }}>
           {value}
         </Typography>
       </CardContent>
@@ -76,7 +80,12 @@ export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Re
             {qr && (
               // flexShrink 0 so the code stays scannable rather than being
               // squeezed by a long destination beside it.
-              <Stack alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+              <Stack
+                spacing={0.5}
+                sx={{
+                  alignItems: "center",
+                  flexShrink: 0
+                }}>
                 <Box
                   component="img"
                   src={qr}

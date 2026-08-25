@@ -41,11 +41,21 @@ export default function SpotsStepper({
   if (slidable) {
     return (
       <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '16px' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-          <Typography variant="subtitle2" fontWeight={700}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             {totalSpots}
           </Typography>
-          <Typography variant="h6" fontWeight={700} data-testid="spots-value" aria-label={totalSpots}>
+          <Typography variant="h6" data-testid="spots-value" aria-label={totalSpots} sx={{
+            fontWeight: 700
+          }}>
             {value}
           </Typography>
         </Stack>
@@ -64,7 +74,9 @@ export default function SpotsStepper({
           data-testid="spots-slider"
         />
         {boundsHint && (
-          <Typography variant="caption" color="text.secondary" data-testid="spots-bounds-hint">
+          <Typography variant="caption" data-testid="spots-bounds-hint" sx={{
+            color: "text.secondary"
+          }}>
             {boundsHint}
           </Typography>
         )}
@@ -77,23 +89,39 @@ export default function SpotsStepper({
     <Box>
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
         spacing={1}
-        sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '16px' }}
-      >
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 1.5,
+          border: 1,
+          borderColor: error ? 'error.main' : 'divider',
+          borderRadius: '16px'
+        }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" fontWeight={700}>{totalSpots}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>{totalSpots}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {readOnly ? t('mweb.createPod.spotsFixedHint') : t('mweb.createPod.spotsHint')}
           </Typography>
         </Box>
         {readOnly ? (
-          <Typography variant="h6" fontWeight={700} sx={{ px: 1.5 }} aria-label={totalSpots}>
+          <Typography
+            variant="h6"
+            aria-label={totalSpots}
+            sx={{
+              fontWeight: 700,
+              px: 1.5
+            }}>
             {value}
           </Typography>
         ) : (
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <IconButton aria-label={t('mweb.createPod.decreaseSpots')} size="small" disabled={value <= min} onClick={() => set(value - 1)} sx={{ border: 1, borderColor: 'divider' }}>
               <RemoveIcon fontSize="small" />
             </IconButton>
@@ -103,7 +131,9 @@ export default function SpotsStepper({
               value={value}
               onChange={(e) => set(Number.parseInt(e.target.value, 10))}
               sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 700 } }}
-              inputProps={{ 'aria-label': totalSpots, min, max }}
+              slotProps={{
+                htmlInput: { 'aria-label': totalSpots, min, max }
+              }}
             />
             <IconButton aria-label={t('mweb.createPod.increaseSpots')} size="small" disabled={value >= max} onClick={() => set(value + 1)} sx={{ border: 1, borderColor: 'divider' }}>
               <AddIcon fontSize="small" />

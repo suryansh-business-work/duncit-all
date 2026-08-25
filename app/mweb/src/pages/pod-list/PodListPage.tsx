@@ -153,30 +153,41 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
 
   return (
     <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, minHeight: '100%' }}>
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         {icon}
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
             {title}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700
+            }}>
             {subtitle}
           </Typography>
         </Box>
       </Stack>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           size="small"
           fullWidth
           placeholder={t('mweb.home.searchPods')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         {filterAction}

@@ -64,7 +64,9 @@ export default function CoinUserPicker({ value, onChange, disabled }: Readonly<P
         <Box component="li" {...props} key={option.id}>
           <Box>
             <Typography variant="body2">{option.full_name || option.email}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {option.email} · holds {option.balance} coins
             </Typography>
           </Box>

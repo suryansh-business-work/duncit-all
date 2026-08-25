@@ -36,10 +36,14 @@ export default function UserChangeLogsSection({ userId }: Readonly<{ userId: str
   return (
     <Stack spacing={2}>
       <Stack spacing={0.25}>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('admin.profile.changeLogs')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Every profile change ever made to this account — by the user from Native or mWeb, or by an
           admin from this portal. Entries are append-only, so nothing here is overwritten.
         </Typography>

@@ -72,10 +72,14 @@ export default function MonacoBlock({
     >
       <Stack
         direction="row"
-        alignItems="center"
         spacing={0.5}
-        sx={{ px: 1, py: 0.5, borderBottom: 1, borderColor: 'divider' }}
-      >
+        sx={{
+          alignItems: "center",
+          px: 1,
+          py: 0.5,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         {badge && (
           <Chip size="small" label={badge} sx={{ fontFamily: 'monospace', fontSize: 11 }} />
         )}

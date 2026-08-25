@@ -29,14 +29,19 @@ function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<R
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
-      sx={{ py: 0.5, borderBottom: 1, borderColor: 'divider' }}
-    >
+      sx={{
+        alignItems: "center",
+        py: 0.5,
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
       <Checkbox
         checked={accepted}
         onChange={(e) => onToggle(policy.id, e.target.checked)}
-        inputProps={{ 'aria-label': policy.title }}
+        slotProps={{
+          input: { 'aria-label': policy.title }
+        }}
       />
       <Typography variant="body2" sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
         {policy.title}
@@ -77,9 +82,17 @@ export default function PolicyAcceptanceList({
   }
   if (loading) {
     return (
-      <Stack direction="row" alignItems="center" spacing={1.25} sx={{ py: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1.25}
+        sx={{
+          alignItems: "center",
+          py: 2
+        }}>
         <CircularProgress size={18} />
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('policyAcceptance.loading')}
         </Typography>
       </Stack>

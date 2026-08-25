@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import { ADD_REFUND, CREATE_EXPENSE, DELETE_EXPENSE, EXPENSE_CATEGORIES, PAYMENT_METHODS, REMOVE_REFUND, UPDATE_EXPENSE, labelize } from './queries';
@@ -91,9 +91,21 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
   const saveLabel = editing ? 'Save changes' : 'Add expense';
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 440 }, p: 2.5 } }}>
-      <Stack direction="row" alignItems="center" sx={{ mb: 1 }}>
-        <Typography variant="h6" fontWeight={800} sx={{ flex: 1 }}>
+    <Drawer anchor="right" open={open} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 440 }, p: 2.5 } }
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 800,
+            flex: 1
+          }}>
           {editing ? 'Expense details' : 'New expense'}
         </Typography>
         {editing && (
@@ -112,7 +124,9 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
         <TextField select label={t('finance.expenseManagement.category')} value={form.category} onChange={(e) => set('category')(e.target.value)} fullWidth>
           {EXPENSE_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{labelize(c)}</MenuItem>)}
         </TextField>
-        <TextField label={t('finance.common.amount')} required type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} fullWidth />
+        <TextField label={t('finance.common.amount')} required type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} fullWidth slotProps={{
+          input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
+        }} />
         <TextField label={t('finance.expenseManagement.vendorPayee')} value={form.vendor_name} onChange={(e) => set('vendor_name')(e.target.value)} fullWidth />
         <TextField select label={t('finance.expenseManagement.paymentMethod')} value={form.payment_method} onChange={(e) => set('payment_method')(e.target.value)} fullWidth>
           {PAYMENT_METHODS.map((m) => <MenuItem key={m} value={m}>{labelize(m)}</MenuItem>)}

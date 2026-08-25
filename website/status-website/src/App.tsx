@@ -64,7 +64,12 @@ export default function App() {
               <StatusFilters value={filters} groupTitles={groupTitles} onChange={setFilters} />
             )}
             {noMatches && (
-              <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  py: 4,
+                  textAlign: 'center'
+                }}>
                 No services match your filters.
               </Typography>
             )}

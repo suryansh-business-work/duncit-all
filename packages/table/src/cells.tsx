@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { JSX, ReactNode } from 'react';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
@@ -302,7 +302,9 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
     width,
     sortable: false,
     cellRenderer: (row) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         {renderExtra?.(row)}
         {onEdit && (
           <RowActionButton

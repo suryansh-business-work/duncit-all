@@ -61,34 +61,38 @@ export default function PhoneField({ name, label, size = 'small', required }: Re
           required={required}
           error={!!fieldState.error}
           helperText={fieldState.error?.message ?? ' '}
-          inputProps={{ inputMode: 'numeric' }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start" sx={{ mr: 0.5 }}>
-                <TextField
-                  select
-                  value={currentDial}
-                  onChange={(e) => onDialChange(e.target.value)}
-                  size={size}
-                  variant="standard"
-                  sx={{
-                    minWidth: 78,
-                    '& .MuiInput-underline:before': { borderBottom: 'none' },
-                    '& .MuiInput-underline:after': { borderBottom: 'none' },
-                    '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
-                  }}
-                  SelectProps={{ MenuProps: { PaperProps: { sx: { maxHeight: 320 } } } }}
-                >
-                  {codeOptions.map((opt) => (
-                    <MenuItem key={opt.key} value={opt.dial}>
-                      {opt.label} {opt.dial}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </InputAdornment>
-            ),
-          }}
-        />
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                  <TextField
+                    select
+                    value={currentDial}
+                    onChange={(e) => onDialChange(e.target.value)}
+                    size={size}
+                    variant="standard"
+                    sx={{
+                      minWidth: 78,
+                      '& .MuiInput-underline:before': { borderBottom: 'none' },
+                      '& .MuiInput-underline:after': { borderBottom: 'none' },
+                      '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                    }}
+                    slotProps={{
+                      select: { MenuProps: { slotProps: { paper: { sx: { maxHeight: 320 } } } } }
+                    }}
+                  >
+                    {codeOptions.map((opt) => (
+                      <MenuItem key={opt.key} value={opt.dial}>
+                        {opt.label} {opt.dial}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </InputAdornment>
+              ),
+            },
+
+            htmlInput: { inputMode: 'numeric' }
+          }} />
       )}
     />
   );

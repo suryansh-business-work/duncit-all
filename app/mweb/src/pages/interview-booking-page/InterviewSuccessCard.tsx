@@ -12,12 +12,27 @@ export default function InterviewSuccessCard({ submittedRef }: Readonly<Intervie
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Card>
         <CardContent>
-          <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
+          <Stack
+            spacing={2}
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}>
             <CheckCircleIcon color="success" sx={{ fontSize: 64 }} />
-            <Typography variant="h5" fontWeight={700} textAlign="center">
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                textAlign: "center"
+              }}>
               Application received!
             </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                textAlign: "center"
+              }}>
               We've emailed you a confirmation. Our team will review your request and confirm one
               of your preferred meeting slots shortly.
             </Typography>

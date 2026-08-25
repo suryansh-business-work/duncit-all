@@ -49,14 +49,22 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
       <DialogTitle>{submission.subject || '(no subject)'}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             From <b>{submission.name}</b> ({submission.email}) ·{' '}
             {formatDateTime(submission.created_at)}
           </Typography>
           <Typography sx={{ whiteSpace: 'pre-wrap' }}>{submission.message}</Typography>
           {submission.attachments && submission.attachments.length > 0 && (
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  display: 'block',
+                  mb: 1
+                }}>
                 Attachments ({submission.attachments.length})
               </Typography>
               <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>

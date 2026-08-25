@@ -46,7 +46,9 @@ export default function TicketHeader({
   };
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
       </IconButton>

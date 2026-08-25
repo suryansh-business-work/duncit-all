@@ -10,7 +10,12 @@ const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : 'â
 function Row({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Box sx={{ py: 0.4 }}>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: "block"
+        }}>
         {label}
       </Typography>
       <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
@@ -88,24 +93,39 @@ export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
       <Divider sx={{ my: 1 }} />
 
       <Box>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block",
+            mb: 0.5
+          }}>
           Tags
         </Typography>
         {file.tags.length > 0 ? (
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={0.5} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             {file.tags.map((tag) => (
               <Chip key={tag} size="small" label={tag} />
             ))}
           </Stack>
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             None
           </Typography>
         )}
       </Box>
 
       <Box sx={{ pt: 1 }}>
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: "block"
+          }}>
           Original
         </Typography>
         <Link href={file.url} target="_blank" rel="noreferrer" variant="body2" sx={{ wordBreak: 'break-all' }}>

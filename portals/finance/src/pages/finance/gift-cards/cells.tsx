@@ -9,7 +9,9 @@ export const renderPerson = (name: string, email: string) => (
     <Typography variant="body2" noWrap component="span" sx={{ fontWeight: 700 }}>
       {name || EM_DASH}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap component="span">
+    <Typography variant="caption" noWrap component="span" sx={{
+      color: "text.secondary"
+    }}>
       {email || EM_DASH}
     </Typography>
   </Stack>

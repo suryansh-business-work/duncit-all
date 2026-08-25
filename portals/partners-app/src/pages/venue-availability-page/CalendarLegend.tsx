@@ -3,9 +3,13 @@ import { useTranslation } from '@duncit/shell';
 
 function LegendItem({ color, label }: Readonly<{ color: string; label: string }>) {
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center">
+    <Stack direction="row" spacing={0.75} sx={{
+      alignItems: "center"
+    }}>
       <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: color }} />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
     </Stack>

@@ -48,9 +48,15 @@ export default function RefundBreakupDialog({
               <Box sx={{ bgcolor: 'action.hover', borderRadius: 2, p: 1.5 }}>
                 <Stack spacing={0.5} divider={<Divider flexItem />}>
                   {buildRefundBreakup(refundFor, sym, deductionPct).map((line) => (
-                    <Stack key={line.key} direction="row" justifyContent="space-between">
-                      <Typography variant="body2" fontWeight={line.bold ? 700 : 400}>{line.label}</Typography>
-                      <Typography variant="body2" fontWeight={line.bold ? 700 : 400}>{line.value}</Typography>
+                    <Stack key={line.key} direction="row" sx={{
+                      justifyContent: "space-between"
+                    }}>
+                      <Typography variant="body2" sx={{
+                        fontWeight: line.bold ? 700 : 400
+                      }}>{line.label}</Typography>
+                      <Typography variant="body2" sx={{
+                        fontWeight: line.bold ? 700 : 400
+                      }}>{line.value}</Typography>
                     </Stack>
                   ))}
                 </Stack>

@@ -31,11 +31,15 @@ function ConfirmStage({ mock }: Readonly<{ mock: ConfirmMock }>) {
   };
 
   return (
-    <Stack direction="row" spacing={2} alignItems="center">
+    <Stack direction="row" spacing={2} sx={{
+      alignItems: "center"
+    }}>
       <Button variant="contained" color={mock.destructive ? 'error' : 'primary'} onClick={ask}>
         {mock.title}
       </Button>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Last answer: <strong>{answer}</strong>
       </Typography>
     </Stack>

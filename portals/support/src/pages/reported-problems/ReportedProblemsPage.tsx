@@ -40,7 +40,9 @@ function ReporterCell({ row }: CellProps) {
       <Typography variant="body2" noWrap>
         {row.user_name || 'Unknown'}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap>
+      <Typography variant="caption" noWrap sx={{
+        color: "text.secondary"
+      }}>
         {row.user_email}
       </Typography>
     </Stack>

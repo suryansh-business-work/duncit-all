@@ -112,8 +112,12 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
           control={<Switch checked={noExpire} onChange={(_, v) => setNoExpire(v)} color="warning" />}
           label={
             <Box>
-              <Typography variant="body2" fontWeight={600}>{t('tech.jwtExpirySection.tokensNeverExpire')}</Typography>
-              <Typography variant="caption" color="text.secondary">{t('tech.jwtExpirySection.notRecommendedForProduction')}</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 600
+              }}>{t('tech.jwtExpirySection.tokensNeverExpire')}</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>{t('tech.jwtExpirySection.notRecommendedForProduction')}</Typography>
             </Box>
           }
         />
@@ -124,9 +128,11 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
             type="number"
             value={value}
             onChange={(e) => setValue(Math.max(1, Number(e.target.value) || 1))}
-            inputProps={{ min: 1 }}
             disabled={noExpire}
             sx={{ maxWidth: 160 }}
+            slotProps={{
+              htmlInput: { min: 1 }
+            }}
           />
           <TextField
             label={t('tech.jwtExpirySection.unit')}
@@ -141,7 +147,9 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
             ))}
           </TextField>
           <Box sx={{ alignSelf: 'center' }}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {noExpire
                 ? 'Tokens issued from now will not expire.'
                 : `Tokens will expire after ${value}${unit} (${value} ${UNIT_LABELS[unit].toLowerCase()}).`}
@@ -150,7 +158,9 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
         </Stack>
         {opError && <Alert severity="error">{opError}</Alert>}
         {data?.appSettings?.updated_at && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Last updated {formatDateTime(data.appSettings.updated_at)}
           </Typography>
         )}
@@ -163,14 +173,17 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={1}
-          sx={{ mb: 2 }}
-        >
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: 2
+          }}>
           <Box>
             <Typography variant="subtitle1">{t('tech.jwtExpirySection.authenticationJwtTokenExpiry')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Controls how long access tokens issued at login remain valid.
             </Typography>
           </Box>

@@ -85,7 +85,13 @@ export default function CreateAudienceListPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="flex-start" spacing={2} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: "flex-start",
+          mb: 1
+        }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <BackHeader
             onBack={requestLeave}
@@ -96,7 +102,13 @@ export default function CreateAudienceListPage() {
         </Box>
         {/* Actions live at the top: step 1 is a full-height table, and a Next
             button below it is off-screen the moment the audience is big. */}
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ pt: 0.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            pt: 0.5
+          }}>
           <Chip
             icon={<GroupIcon />}
             color={matched ? 'primary' : 'default'}
@@ -147,7 +159,9 @@ export default function CreateAudienceListPage() {
           a trip to step 2 and back. */}
       <Box sx={{ display: step === 0 ? 'block' : 'none' }}>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Filter down to the people you want. The list saves these filters, so it keeps matching
             new signups after you save it.
           </Typography>

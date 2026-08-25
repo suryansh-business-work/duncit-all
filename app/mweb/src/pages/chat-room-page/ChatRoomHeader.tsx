@@ -21,10 +21,14 @@ export default function ChatRoomHeader({
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
-      sx={{ px: { xs: 1.25, sm: 2 }, py: 1, bgcolor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(14px)' }}
-    >
+      sx={{
+        alignItems: "center",
+        px: { xs: 1.25, sm: 2 },
+        py: 1,
+        bgcolor: 'rgba(0,0,0,0.08)',
+        backdropFilter: 'blur(14px)'
+      }}>
       <IconButton onClick={onBack} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
       </IconButton>
@@ -39,7 +43,13 @@ export default function ChatRoomHeader({
           <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
             {label}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {messageCount} message{messageCount === 1 ? '' : 's'}
           </Typography>
         </Box>

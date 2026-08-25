@@ -1,7 +1,7 @@
 import { Box, Link, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/EventOutlined';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
-import PersonIcon from '@mui/icons-material/PersonOutline';
+import PersonIcon from '@mui/icons-material/PersonOutlined';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
 import type { SlotDecisionRow } from './queries';
@@ -17,26 +17,45 @@ export default function SlotSummary({ request }: Readonly<{ request: SlotDecisio
 
   return (
     <Stack spacing={1.25}>
-      <Typography variant="h6" fontWeight={700}>
+      <Typography variant="h6" sx={{
+        fontWeight: 700
+      }}>
         {request.pod_title}
       </Typography>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <EventIcon fontSize="small" color="action" />
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {window}
         </Typography>
       </Stack>
       {place && (
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <PlaceIcon fontSize="small" color="action" />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {place}
           </Typography>
         </Stack>
       )}
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <PersonIcon fontSize="small" color="action" />
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Hosted by {request.host_name || 'a host'}
         </Typography>
         {request.host_email && (
@@ -52,7 +71,9 @@ export default function SlotSummary({ request }: Readonly<{ request: SlotDecisio
       </Stack>
       {request.pod_description && (
         <Box sx={{ pt: 0.5 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {request.pod_description}
           </Typography>
         </Box>

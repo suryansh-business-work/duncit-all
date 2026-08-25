@@ -24,7 +24,12 @@ export default function HeaderCartButton({ label }: Readonly<{ label?: string }>
   // button — a wrapper-provided label would float alone while the cart is empty.
   if (!entry.visible) return null;
   return (
-    <Stack alignItems="center" spacing={0.1} sx={{ flex: '0 0 auto' }}>
+    <Stack
+      spacing={0.1}
+      sx={{
+        alignItems: "center",
+        flex: '0 0 auto'
+      }}>
       <IconButton
         aria-label={t('mweb.cart.open', { count: entry.count })}
         onClick={() => navigate('/cart')}

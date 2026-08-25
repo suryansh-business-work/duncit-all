@@ -106,7 +106,11 @@ export default function MailAutomationPage() {
 
   if (configured.loading && !configured.data) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -170,7 +174,9 @@ export default function MailAutomationPage() {
       {/* Everything in that table except the mailbox itself is read-only here.
           Saying where it IS editable saves a hunt for a button this page will
           never have. */}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('tech.mailAutomation.ruleHint')}
       </Typography>
     </Stack>

@@ -16,7 +16,9 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{
+        alignItems: "center"
+      }}>
         <Avatar
           src={form.logo_url || undefined}
           variant="rounded"
@@ -31,11 +33,15 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
           {form.app_name?.[0]?.toUpperCase() ?? 'D'}
         </Avatar>
         <Box>
-          <Typography variant="subtitle2" color="text.secondary">
+          <Typography variant="subtitle2" sx={{
+            color: "text.secondary"
+          }}>
             Live preview
           </Typography>
           <Typography variant="h5">{form.app_name || 'App name'}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {form.support_email || 'support@example.com'}
           </Typography>
         </Box>

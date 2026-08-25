@@ -56,7 +56,12 @@ export default function TourGuidePage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Tour Guide
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           Take a guided walkthrough of any screen, as often as you like.
         </Typography>
       </Stack>
@@ -69,17 +74,22 @@ export default function TourGuidePage() {
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={1.5}
-                  alignItems={{ sm: 'center' }}
-                  justifyContent="space-between"
-                >
+                  sx={{
+                    alignItems: { sm: 'center' },
+                    justifyContent: "space-between"
+                  }}>
                   <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
+                    <Stack direction="row" spacing={1} sx={{
+                      alignItems: "center"
+                    }}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         {tour.title}
                       </Typography>
                       {done && <Chip size="small" label={t('mweb.tourGuide.completed')} color="success" />}
                     </Stack>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       {tour.caption}
                     </Typography>
                   </Stack>

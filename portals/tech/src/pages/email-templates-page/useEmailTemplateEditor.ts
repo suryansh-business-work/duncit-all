@@ -5,9 +5,11 @@ import {
   DELETE,
   FRAGMENT_OPTIONS,
   RENDER,
+  TEMPLATE_USAGE,
   TEMPLATES,
   UPDATE,
   type FragmentOption,
+  type TemplateUsage,
   type Tpl,
 } from './queries';
 import { useConfirm } from '@duncit/dialogs';
@@ -28,6 +30,11 @@ export function useEmailTemplateEditor() {
     loading: fragmentsLoading,
     error: fragmentsError,
   } = useQuery<{ emailFragments: FragmentOption[] }>(FRAGMENT_OPTIONS);
+  // Its own query, so a page of MJML bodies is not refetched to move a tally,
+  // and a slow roll-up over the whole log never holds the editor back.
+  const { data: usageData, refetch: refetchUsage } = useQuery<{
+    emailTemplateUsage: TemplateUsage[];
+  }>(TEMPLATE_USAGE, { fetchPolicy: 'cache-and-network' });
   const [updateTpl] = useMutation(UPDATE);
   const [deleteTpl] = useMutation(DELETE);
   const client = useApolloClient();
@@ -46,6 +53,12 @@ export function useEmailTemplateEditor() {
 
   const list = data?.emailTemplates ?? [];
   const fragmentOptions = fragmentData?.emailFragments ?? [];
+  // Keyed by slug because that is what the log rows carry — a template renamed
+  // in the editor keeps its slug, and so keeps its history.
+  const usageBySlug = useMemo(
+    () => new Map((usageData?.emailTemplateUsage ?? []).map((u) => [u.slug, u])),
+    [usageData]
+  );
 
   // `?slug=` opens a named template — how an email log row links back to the
   // template it came from. Only on the first selection: once someone has picked
@@ -172,6 +185,8 @@ export function useEmailTemplateEditor() {
     loading,
     hasData: !!data,
     refetch,
+    usageBySlug,
+    refetchUsage,
     selected,
     setSelected,
     draft,

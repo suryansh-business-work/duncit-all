@@ -101,10 +101,12 @@ export function AuthSplitLayout({
         <FormInner>
           <Stack
             direction="row"
-            alignItems="center"
             spacing={1.25}
-            sx={{ display: { xs: 'flex', md: 'none' }, mb: 3 }}
-          >
+            sx={{
+              alignItems: "center",
+              display: { xs: 'flex', md: 'none' },
+              mb: 3
+            }}>
             <Box
               component="img"
               src={logoUrl}
@@ -124,7 +126,9 @@ export function AuthSplitLayout({
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {subtitle}
               </Typography>
             )}
@@ -135,7 +139,12 @@ export function AuthSplitLayout({
 
       <ImagePane image={loginImage}>
         <ImageOverlay>
-          <Stack alignItems="center" spacing={1.5} sx={{ mt: { md: 6, lg: 8 } }}>
+          <Stack
+            spacing={1.5}
+            sx={{
+              alignItems: "center",
+              mt: { md: 6, lg: 8 }
+            }}>
             <Box
               component="img"
               src={logoUrl}

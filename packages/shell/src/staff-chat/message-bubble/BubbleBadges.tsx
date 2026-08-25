@@ -28,7 +28,14 @@ export default function BubbleBadges({ message, own, nameOf, repliedTo }: Readon
       )}
 
       {message.forwarded_from && (
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ opacity: 0.75, mb: 0.25 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            opacity: 0.75,
+            mb: 0.25
+          }}>
           <ForwardIcon sx={{ fontSize: 13 }} />
           <Typography variant="caption">Forwarded from {nameOf(message.forwarded_from)}</Typography>
         </Stack>

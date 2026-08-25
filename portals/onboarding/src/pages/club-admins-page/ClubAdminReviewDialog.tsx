@@ -90,10 +90,14 @@ export default function ClubAdminReviewDialog({
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <span>{t('onboarding.clubAdmins.reviewClubAdmin')}</span>
           <StatusChip status={active.status} colorMap={STATUS_COLOR} />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {active.club_admin_no || '—'}
           </Typography>
         </Stack>
@@ -119,15 +123,28 @@ export default function ClubAdminReviewDialog({
           <Divider />
 
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 700,
+                mb: 0.5
+              }}>
               {t('onboarding.clubAdmins.payCommission2')}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: 'block',
+                mb: 1
+              }}>
               {t('onboarding.clubAdmins.payCommissionHint', {
                 vars: { pct: defaultCommissionPct ?? '—' },
               })}
             </Typography>
-            <Stack direction="row" spacing={1} alignItems="flex-start">
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "flex-start"
+            }}>
               <TextField
                 size="small"
                 type="number"
@@ -136,10 +153,11 @@ export default function ClubAdminReviewDialog({
                 onChange={(e) => setCommission(e.target.value)}
                 error={!commissionValid}
                 helperText={commissionValid ? undefined : t('onboarding.common.commissionRange')}
-                inputProps={{ min: 0, max: 100, step: 1 }}
-                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 sx={{ width: 200 }}
-              />
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+                  htmlInput: { min: 0, max: 100, step: 1 }
+                }} />
               <Button
                 variant="outlined"
                 disabled={!commissionValid || unchanged || savingCommission}

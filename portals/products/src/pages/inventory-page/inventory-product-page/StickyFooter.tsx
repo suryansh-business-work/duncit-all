@@ -37,9 +37,10 @@ export default function StickyFooter({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
-        justifyContent="flex-end"
-        alignItems={{ sm: 'center' }}
-      >
+        sx={{
+          justifyContent: "flex-end",
+          alignItems: { sm: 'center' }
+        }}>
         <Box sx={{ flex: 1, color: 'text.secondary', fontSize: 13 }}>
           {dirty ? 'You have unsaved changes' : 'All changes saved'}
         </Box>

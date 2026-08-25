@@ -84,7 +84,12 @@ export default function SosContent({ selected }: Readonly<Props>) {
           bgcolor: 'rgba(76,175,80,0.08)',
         }}
       >
-        <Stack spacing={1.5} alignItems="center" textAlign="center">
+        <Stack
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            textAlign: "center"
+          }}>
           <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
             SOS sent. Help is on the way.
@@ -95,7 +100,9 @@ export default function SosContent({ selected }: Readonly<Props>) {
             label={active.status === 'ACKNOWLEDGED' ? 'Acknowledged by team' : 'Awaiting response'}
             sx={{ fontWeight: 600 }}
           />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             We notified the host and admin team. Stay on this screen until someone reaches you.
           </Typography>
         </Stack>
@@ -114,13 +121,17 @@ export default function SosContent({ selected }: Readonly<Props>) {
           bgcolor: 'rgba(244,67,54,0.08)',
         }}
       >
-        <Stack direction="row" spacing={1.25} alignItems="flex-start">
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "flex-start"
+        }}>
           <WarningAmberIcon color="error" />
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
               Only tap SOS in a real emergency
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Your live location, profile phone and pod context will be shared with the host & admin.
             </Typography>
           </Box>
@@ -135,8 +146,10 @@ export default function SosContent({ selected }: Readonly<Props>) {
         size="small"
         multiline
         minRows={2}
-        inputProps={{ maxLength: 500 }}
         fullWidth
+        slotProps={{
+          htmlInput: { maxLength: 500 }
+        }}
       />
 
       {error && (

@@ -32,8 +32,21 @@ const STATUS_COLORS: StatusColorMap = {
 /** One label/value line. Hoisted so it isn't redefined each render (S6478). */
 function MetaRow({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
-      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 170, fontWeight: 700 }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "baseline",
+        flexWrap: "wrap"
+      }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          minWidth: 170,
+          fontWeight: 700
+        }}>
         {label}
       </Typography>
       {children}
@@ -76,14 +89,25 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
   return (
     <Dialog open={Boolean(logId)} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <span>{t('marketingWhatsapp.logs.detailTitle')}</span>
           {log && <StatusChip status={log.status} colorMap={STATUS_COLORS} />}
         </Stack>
       </DialogTitle>
       <DialogContent dividers>
         {loading && !log && (
-          <Stack alignItems="center" sx={{ py: 6 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 6
+            }}>
             <CircularProgress />
           </Stack>
         )}
@@ -95,7 +119,9 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
             {/* The whole point of opening the row: why it did not arrive. */}
             {log.reason && <Alert severity="info">{log.reason}</Alert>}
 
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('marketingWhatsapp.logs.detailHint')}
             </Typography>
 

@@ -50,7 +50,12 @@ export default function EcommStatCards({ stats }: Readonly<{ stats?: PartnerEcom
   const { t } = useTranslation();
   const cards = ecommStatCards(stats ?? emptyEcommStats, t);
   return (
-    <Stack direction="row" flexWrap="wrap" gap={1.5}>
+    <Stack
+      direction="row"
+      sx={{
+        flexWrap: "wrap",
+        gap: 1.5
+      }}>
       {cards.map((card) => (
         <Card
           key={card.key}
@@ -58,14 +63,26 @@ export default function EcommStatCards({ stats }: Readonly<{ stats?: PartnerEcom
           sx={{ borderRadius: 1.25, minWidth: { xs: '100%', sm: 156 }, flex: '1 1 156px' }}
         >
           <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={900}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 900
+              }}>
               {card.label}
             </Typography>
-            <Typography variant="h6" fontWeight={950}>
+            <Typography variant="h6" sx={{
+              fontWeight: 950
+            }}>
               {card.value}
             </Typography>
             {card.caption && (
-              <Typography variant="caption" color="success.main" fontWeight={800}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "success.main",
+                  fontWeight: 800
+                }}>
                 {card.caption}
               </Typography>
             )}

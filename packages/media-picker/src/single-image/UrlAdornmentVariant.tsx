@@ -54,27 +54,29 @@ export default function UrlAdornmentVariant({
         error={externalError || !!error}
         helperText={error || helperText}
         placeholder={t('media.picker.urlPlaceholder')}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Tooltip title={t('media.picker.fromDevice')}>
-                <span>
-                  <IconButton size="small" onClick={openPicker} disabled={disabled || busy}>
-                    {busy ? <CircularProgress size={18} /> : <ImageIcon fontSize="small" />}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <Tooltip title={t('media.picker.fromDevice')}>
+                  <span>
+                    <IconButton size="small" onClick={openPicker} disabled={disabled || busy}>
+                      {busy ? <CircularProgress size={18} /> : <ImageIcon fontSize="small" />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </InputAdornment>
+            ),
+            endAdornment: value ? (
+              <InputAdornment position="end">
+                <Tooltip title={t('media.picker.open')}>
+                  <IconButton size="small" onClick={() => window.open(value, '_blank')}>
+                    <OpenInNewIcon fontSize="small" />
                   </IconButton>
-                </span>
-              </Tooltip>
-            </InputAdornment>
-          ),
-          endAdornment: value ? (
-            <InputAdornment position="end">
-              <Tooltip title={t('media.picker.open')}>
-                <IconButton size="small" onClick={() => window.open(value, '_blank')}>
-                  <OpenInNewIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </InputAdornment>
-          ) : null,
+                </Tooltip>
+              </InputAdornment>
+            ) : null,
+          }
         }}
       />
       {value && (
@@ -95,7 +97,12 @@ export default function UrlAdornmentVariant({
             alt="preview"
             sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, bgcolor: 'action.hover' }}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              wordBreak: 'break-all'
+            }}>
             {value}
           </Typography>
         </Box>

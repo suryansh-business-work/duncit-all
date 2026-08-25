@@ -17,7 +17,13 @@ export default function MetricGrid({ title, icon, metrics, highlight, onInfo, on
   if (metrics.length === 0) return null;
   return (
     <Box sx={{ mb: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
         {icon && <AppIcon name={icon} color="primary" />}
         <Typography variant={highlight ? 'h6' : 'subtitle1'} sx={{ fontWeight: 700 }}>
           {title}
@@ -25,7 +31,14 @@ export default function MetricGrid({ title, icon, metrics, highlight, onInfo, on
       </Stack>
       <Grid container spacing={2}>
         {metrics.map((metric) => (
-          <Grid key={metric.key} item xs={12} sm={6} md={highlight ? 3 : 4} lg={highlight ? 2 : 3}>
+          <Grid
+            key={metric.key}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: highlight ? 3 : 4,
+              lg: highlight ? 2 : 3
+            }}>
             <KpiCard metric={metric} onInfo={onInfo} onSettings={onSettings} />
           </Grid>
         ))}

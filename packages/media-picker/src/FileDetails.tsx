@@ -51,11 +51,30 @@ export default function FileDetails({ file, dims }: Readonly<Props>) {
   if (duration) chips.push(duration);
 
   return (
-    <Stack spacing={0.75} alignItems="center" sx={{ width: '100%', maxWidth: 480 }}>
-      <Typography variant="body2" fontWeight={700} noWrap sx={{ maxWidth: '100%' }}>
+    <Stack
+      spacing={0.75}
+      sx={{
+        alignItems: "center",
+        width: '100%',
+        maxWidth: 480
+      }}>
+      <Typography
+        variant="body2"
+        noWrap
+        sx={{
+          fontWeight: 700,
+          maxWidth: '100%'
+        }}>
         {file.name}
       </Typography>
-      <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          flexWrap: "wrap",
+          justifyContent: "center"
+        }}>
         {chips.map((chip) => (
           <Chip key={chip} label={chip} size="small" variant="outlined" />
         ))}

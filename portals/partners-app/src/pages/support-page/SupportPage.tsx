@@ -43,10 +43,14 @@ export default function SupportPage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 920, mx: 'auto' }}>
       <Box sx={{ p: 2.25, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.25}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{
+          justifyContent: "space-between"
+        }}>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.supportPage.partnerSupport')}</Typography>
-            <Typography variant="h4" fontWeight={950}>{t('partners.supportPage.needHelp')}</Typography>
+            <Typography variant="h4" sx={{
+              fontWeight: 950
+            }}>{t('partners.supportPage.needHelp')}</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.supportPage.sendHostVenueProductPayoutOr')}</Typography>
           </Box>
           <Chip icon={<SupportAgentIcon />} label={t('partners.supportPage.supportDesk')} sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, bgcolor: 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 900, '& .MuiChip-icon': { color: '#fff' } }} />
@@ -56,8 +60,12 @@ export default function SupportPage() {
         <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="h6" fontWeight={950}>{t('partners.supportPage.createSupportRequest')}</Typography>
-              <Typography variant="body2" color="text.secondary">{t('partners.supportPage.yourAccountEmailIsUsedFor')}</Typography>
+              <Typography variant="h6" sx={{
+                fontWeight: 950
+              }}>{t('partners.supportPage.createSupportRequest')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('partners.supportPage.yourAccountEmailIsUsedFor')}</Typography>
             </Box>
             {loadingAccount && !data ? <CircularProgress size={24} /> : (
               <SupportForm initialValues={{ name, email: me?.email || '' }} loading={loading} errorMessage={error} onSubmit={handleSubmit} />

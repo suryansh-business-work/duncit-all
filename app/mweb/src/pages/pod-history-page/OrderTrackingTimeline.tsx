@@ -20,8 +20,12 @@ export default function OrderTrackingTimeline({ steps }: Readonly<{ steps: Timel
         }
         const isLast = i === steps.length - 1;
         return (
-          <Stack key={step.status} direction="row" spacing={1.25} alignItems="flex-start">
-            <Stack alignItems="center">
+          <Stack key={step.status} direction="row" spacing={1.25} sx={{
+            alignItems: "flex-start"
+          }}>
+            <Stack sx={{
+              alignItems: "center"
+            }}>
               <Icon sx={{ fontSize: 18, color }} />
               {!isLast && <Box sx={{ width: 2, height: 16, bgcolor: step.done ? 'success.main' : 'divider' }} />}
             </Stack>

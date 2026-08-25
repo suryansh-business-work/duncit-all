@@ -45,6 +45,14 @@ export const emailLogResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return emailLogService.dashboard(args.range_days);
     },
+    // Read by the Templates page, not this one — the counts it puts on every
+    // template are the log's, so the log answers for them and for who may see
+    // them. Same roles: a slug and a tally give away nothing the table beside
+    // them does not.
+    emailTemplateUsage: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return emailLogService.usageByTemplate();
+    },
   },
   Mutation: {
     deleteEmailLogs: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {

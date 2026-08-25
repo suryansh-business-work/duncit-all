@@ -56,7 +56,9 @@ function ChannelIdentity({
   }
   if (!resolved.trim()) return null;
   return (
-    <Typography variant="caption" color="warning.main">
+    <Typography variant="caption" sx={{
+      color: "warning.main"
+    }}>
       {unknownHint}
     </Typography>
   );
@@ -169,7 +171,9 @@ export default function AppBuildSettingsForm({
           channels={channels}
           unknownHint={t('tech.appBuilds.channelUnknown')}
         />
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button type="submit" variant="contained" disabled={busy}>
             {busy ? t('tech.appBuilds.saving') : t('tech.appBuilds.save')}
           </Button>

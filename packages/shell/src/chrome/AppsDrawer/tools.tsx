@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import LaunchIcon from '@mui/icons-material/Launch';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';

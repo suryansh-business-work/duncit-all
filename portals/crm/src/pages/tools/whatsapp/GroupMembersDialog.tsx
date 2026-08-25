@@ -30,7 +30,11 @@ export default function GroupMembersDialog({
       <DialogTitle>{group?.name || 'Members'}</DialogTitle>
       <DialogContent dividers>
         {loading ? (
-          <Stack alignItems="center" sx={{ py: 4 }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 4
+            }}>
             <CircularProgress size={24} />
           </Stack>
         ) : (
@@ -42,7 +46,9 @@ export default function GroupMembersDialog({
                 secondary={`+${m.phone}${m.is_business ? ' · Business' : ''}`}
               />
             ))}
-            {members.length === 0 && <Typography color="text.secondary">{t('crm.tools.noMembersFound')}</Typography>}
+            {members.length === 0 && <Typography sx={{
+              color: "text.secondary"
+            }}>{t('crm.tools.noMembersFound')}</Typography>}
           </List>
         )}
       </DialogContent>

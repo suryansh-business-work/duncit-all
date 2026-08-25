@@ -49,8 +49,15 @@ const getPodRowId = (pod: PodRow) => pod.id;
 
 const renderPod = (pod: PodRow) => (
   <>
-    <Typography variant="body2" fontWeight={700}>{pod.pod_title}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">{pod.club_slug || '—'}</Typography>
+    <Typography variant="body2" sx={{
+      fontWeight: 700
+    }}>{pod.pod_title}</Typography>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: "block"
+      }}>{pod.club_slug || '—'}</Typography>
   </>
 );
 

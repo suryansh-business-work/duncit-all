@@ -46,7 +46,9 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
     return (
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No approved venues yet — list yours to be featured here.
           </Typography>
         </CardContent>
@@ -57,7 +59,12 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
   return (
     <Grid container spacing={2}>
       {venues.map((v) => (
-        <Grid item xs={12} sm={6} key={v.id}>
+        <Grid
+          key={v.id}
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Card variant="outlined" sx={{ height: '100%', borderRadius: '16px', overflow: 'hidden', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
             {v.cover_image_url ? (
               <CardMedia
@@ -76,13 +83,17 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                   justifyContent: 'center',
                 }}
               >
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   No image
                 </Typography>
               </Box>
             )}
             <CardContent>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
                     {v.venue_name}
@@ -96,7 +107,9 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                 />
               </Stack>
               {v.venue_type && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {v.venue_type}
                 </Typography>
               )}
@@ -106,13 +119,17 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                 sx={{ mt: 0.5, color: 'text.secondary', fontSize: 13 }}
               >
                 {(v.city || v.state) && (
-                  <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Stack direction="row" spacing={0.5} sx={{
+                    alignItems: "center"
+                  }}>
                     <LocationOnIcon fontSize="inherit" />
                     <span>{[v.locality, v.city, v.state].filter(Boolean).join(', ')}</span>
                   </Stack>
                 )}
                 {v.capacity != null && (
-                  <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Stack direction="row" spacing={0.5} sx={{
+                    alignItems: "center"
+                  }}>
                     <PeopleIcon fontSize="inherit" />
                     <span>{v.capacity}</span>
                   </Stack>
@@ -133,7 +150,13 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                 </Typography>
               )}
               {v.postal_code && (
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    display: "block",
+                    mt: 0.5
+                  }}>
                   PIN: {v.postal_code}
                 </Typography>
               )}

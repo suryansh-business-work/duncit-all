@@ -60,8 +60,16 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
   };
 
   return (
-    <Drawer anchor="right" open onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
+    <Drawer anchor="right" open onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 420 } } }
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 2
+        }}>
         <Typography variant="h6">{metric.label}</Typography>
         <IconButton onClick={onClose} aria-label={t('shell.common.close')}>
           <CloseIcon />
@@ -80,13 +88,20 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
 
         {mode === 'info' ? (
           <>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" sx={{
+              color: "text.secondary"
+            }}>
               What is this?
             </Typography>
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               {metric.definition}
             </Typography>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: "text.secondary",
+                mt: 2
+              }}>
               Formula
             </Typography>
             <Typography variant="body2" sx={{ mt: 0.5, fontFamily: 'monospace' }}>
@@ -95,14 +110,18 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
           </>
         ) : (
           <>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" sx={{
+              color: "text.secondary"
+            }}>
               Formula
             </Typography>
             <Typography variant="body2" sx={{ mt: 0.5, mb: 2, fontFamily: 'monospace' }}>
               {metric.formula}
             </Typography>
             {keys.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 This metric is computed automatically — nothing to configure.
               </Typography>
             ) : (

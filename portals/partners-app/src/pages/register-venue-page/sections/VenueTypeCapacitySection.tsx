@@ -58,22 +58,39 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
         )}
       />
       <Stack spacing={0.5}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2" fontWeight={800}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>
             Capacity{' '}
-            <Typography component="span" variant="caption" color="error.main" fontWeight={800}>
+            <Typography
+              component="span"
+              variant="caption"
+              sx={{
+                color: "error.main",
+                fontWeight: 800
+              }}>
               (required)
             </Typography>
           </Typography>
           {total > 0 && <Chip size="small" label={`Total: ${total}`} color="primary" variant="outlined" />}
         </Stack>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           List each space or unit with its own capacity — e.g. "Banquet hall" 120, "Rooftop tables" 40.
         </Typography>
       </Stack>
       {typeof listError === 'string' && listError && <FormHelperText error>{listError}</FormHelperText>}
       {fields.map((row, index) => (
-        <Stack key={row.id} direction="row" spacing={1} alignItems="flex-start">
+        <Stack key={row.id} direction="row" spacing={1} sx={{
+          alignItems: "flex-start"
+        }}>
           <Controller
             name={`capacity_items.${index}.label`}
             control={control}
@@ -100,9 +117,11 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
                 required
                 size="small"
                 sx={{ minWidth: 130 }}
-                inputProps={{ min: 1, step: 1 }}
                 error={Boolean(fieldState.error)}
                 helperText={fieldState.error?.message ?? 'People it holds'}
+                slotProps={{
+                  htmlInput: { min: 1, step: 1 }
+                }}
               />
             )}
           />

@@ -41,7 +41,12 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
             {error}
           </Alert>
         )}
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           Tell us why you need to re-open this — it helps our team pick up where you left off. (optional)
         </Typography>
         <TextField
@@ -53,7 +58,9 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
           onChange={(e) => setReason(e.target.value)}
           multiline
           minRows={2}
-          inputProps={{ maxLength: 500 }}
+          slotProps={{
+            htmlInput: { maxLength: 500 }
+          }}
         />
       </DialogContent>
       <DialogActions>

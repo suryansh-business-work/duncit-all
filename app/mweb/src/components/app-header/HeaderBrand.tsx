@@ -27,9 +27,7 @@ export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandPr
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1.25}
-      sx={{ cursor: 'pointer', minWidth: 0 }}
       onClick={goHome}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -40,7 +38,11 @@ export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandPr
       role="button"
       tabIndex={0}
       aria-label={t('mweb.appHeader.goToHomeAndRefresh')}
-    >
+      sx={{
+        alignItems: "center",
+        cursor: 'pointer',
+        minWidth: 0
+      }}>
       {logoUrl ? (
         <Box
           component="img"

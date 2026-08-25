@@ -21,13 +21,19 @@ export default function PreviewPane({ title, hint, blocks }: Readonly<PreviewPan
   return (
     <Stack spacing={2}>
       <Box>
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.75} sx={{
+          alignItems: "center"
+        }}>
           <VisibilityIcon fontSize="small" color="action" />
-          <Typography variant="subtitle2" fontWeight={800}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>
             {title}
           </Typography>
         </Stack>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {hint}
         </Typography>
       </Box>
@@ -36,10 +42,12 @@ export default function PreviewPane({ title, hint, blocks }: Readonly<PreviewPan
         <Box key={block.id}>
           <Typography
             variant="overline"
-            color="text.secondary"
-            fontWeight={800}
-            sx={{ display: 'block', mb: 0.5 }}
-          >
+            sx={{
+              color: "text.secondary",
+              fontWeight: 800,
+              display: 'block',
+              mb: 0.5
+            }}>
             {block.label}
           </Typography>
           {block.node}

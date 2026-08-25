@@ -119,11 +119,17 @@ export default function MeetingAvailabilityPage() {
 
   return (
     <Stack spacing={2.5} sx={{ maxWidth: 720 }}>
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <EventAvailableIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{t('shell.nav.meetingAvailability')}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{t('shell.nav.meetingAvailability')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Working hours that generate the bookable onboarding slots (times are IST). Booked slots are disabled for other applicants automatically.
           </Typography>
         </Box>
@@ -134,7 +140,9 @@ export default function MeetingAvailabilityPage() {
           <Stack spacing={2}>
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 0.5 }}>{t('onboarding.meetings.workingDays')}</Typography>
-              <Stack direction="row" flexWrap="wrap" useFlexGap>
+              <Stack direction="row" useFlexGap sx={{
+                flexWrap: "wrap"
+              }}>
                 {days(t).map((day) => (
                   <FormControlLabel
                     key={day.value}
@@ -165,8 +173,10 @@ export default function MeetingAvailabilityPage() {
                 label={t('onboarding.meetings.slotLengthMinutes')}
                 value={slotMinutes}
                 onChange={(e) => setSlotMinutes(e.target.value)}
-                inputProps={{ min: 10, max: 240 }}
                 fullWidth
+                slotProps={{
+                  htmlInput: { min: 10, max: 240 }
+                }}
               />
               <TextField
                 size="small"
@@ -174,12 +184,16 @@ export default function MeetingAvailabilityPage() {
                 label={t('onboarding.meetings.bookingHorizonDays')}
                 value={horizonDays}
                 onChange={(e) => setHorizonDays(e.target.value)}
-                inputProps={{ min: 1, max: 60 }}
                 fullWidth
+                slotProps={{
+                  htmlInput: { min: 1, max: 60 }
+                }}
               />
             </Stack>
             {saveError && <Alert severity="error">{saveError}</Alert>}
-            <Stack direction="row" justifyContent="flex-end">
+            <Stack direction="row" sx={{
+              justifyContent: "flex-end"
+            }}>
               <Button variant="contained" onClick={submit} disabled={saving}>
                 {saving ? 'Saving…' : 'Save availability'}
               </Button>

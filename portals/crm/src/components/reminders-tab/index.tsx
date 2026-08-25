@@ -59,25 +59,49 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
     >
       {error && <Alert severity="error" sx={{ mb: 1 }}>{parseApiError(error)}</Alert>}
       {loading && reminders.length === 0 && (
-        <Stack alignItems="center" sx={{ py: 3 }}><CircularProgress /></Stack>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 3
+          }}><CircularProgress /></Stack>
       )}
       {!loading && reminders.length === 0 && (
-        <Typography variant="body2" color="text.secondary">{t('crm.components.noRemindersYet')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('crm.components.noRemindersYet')}</Typography>
       )}
       {reminders.length > 0 && (
         <Stack spacing={1}>
           {reminders.map((r) => (
-            <Stack key={r.id} direction="row" spacing={1} alignItems="center" sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+            <Stack
+              key={r.id}
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 1
+              }}>
               <Tooltip title={r.status === 'DONE' ? 'Mark pending' : 'Mark done'}>
                 <IconButton size="small" color={r.status === 'DONE' ? 'success' : 'default'} onClick={() => toggleMut({ variables: { id: r.id } })}>
                   {r.status === 'DONE' ? <CheckCircleIcon fontSize="small" /> : <RadioButtonUncheckedIcon fontSize="small" />}
                 </IconButton>
               </Tooltip>
               <Stack sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={700} sx={{ textDecoration: r.status === 'DONE' ? 'line-through' : 'none' }} noWrap>
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{
+                    fontWeight: 700,
+                    textDecoration: r.status === 'DONE' ? 'line-through' : 'none'
+                  }}>
                   {r.title}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {formatDateTime(r.due_at)}{r.notes ? ` · ${r.notes}` : ''}
                 </Typography>
               </Stack>

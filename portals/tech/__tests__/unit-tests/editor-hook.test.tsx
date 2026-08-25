@@ -50,6 +50,30 @@ const mount = (url = '/emails/templates') =>
     wrapper: ({ children }) => <MemoryRouter initialEntries={[url]}>{children}</MemoryRouter>,
   });
 
+describe('useEmailTemplateEditor — send counts', () => {
+  it('keys the roll-up by slug, which is what the log rows carry', async () => {
+    m.data = {
+      emailTemplates: [tpl],
+      emailTemplateUsage: [
+        { slug: tpl.slug, sent: 12, skipped: 0, failed: 1, total: 13, last_sent_at: 'x', last_attempt_at: 'y' },
+        { slug: 'some-other', sent: 4, skipped: 0, failed: 0, total: 4, last_sent_at: 'z', last_attempt_at: 'z' },
+      ],
+    };
+    const { result } = mount();
+    await waitFor(() => expect(result.current.usageBySlug.size).toBe(2));
+    expect(result.current.usageBySlug.get(tpl.slug)?.sent).toBe(12);
+    // A template with no rows in the log is simply absent — the strip renders
+    // that as a zero rather than the page inventing an entry for it.
+    expect(result.current.usageBySlug.get('never-sent')).toBeUndefined();
+  });
+
+  it('has an empty map, not a crash, before the roll-up answers', () => {
+    m.data = { emailTemplates: [tpl] };
+    const { result } = mount();
+    expect(result.current.usageBySlug.size).toBe(0);
+  });
+});
+
 describe('useEmailTemplateEditor — empty state', () => {
   it('exposes empty list + null draft and guards save/delete/import', async () => {
     const { result } = mount();

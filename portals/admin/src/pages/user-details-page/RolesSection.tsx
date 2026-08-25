@@ -15,13 +15,16 @@ export default function RolesSection({ user, roleByKey, onManageRoles }: Readonl
       <CardContent>
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 2 }}
-        >
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 2
+          }}>
           <Box>
             <Typography variant="subtitle1">{t('admin.roles.title')}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Roles determine what this user can do.
             </Typography>
           </Box>
@@ -36,7 +39,12 @@ export default function RolesSection({ user, roleByKey, onManageRoles }: Readonl
         {(user.roles ?? []).length === 0 ? (
           <Alert severity="warning">{t('admin.roles.empty')}</Alert>
         ) : (
-          <Stack direction="row" sx={{ gap: 1 }} flexWrap="wrap">
+          <Stack
+            direction="row"
+            sx={{
+              flexWrap: "wrap",
+              gap: 1
+            }}>
             {user.roles.map((r: string) => (
               <Chip
                 key={r}

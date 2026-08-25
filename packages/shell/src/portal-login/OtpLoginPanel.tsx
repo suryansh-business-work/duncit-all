@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import MailOutlineIcon from '@mui/icons-material/MailOutlined';
 import { useTranslation } from '../i18n/useTranslation';
 import LoginIcon from '@mui/icons-material/Login';
 
@@ -55,7 +55,9 @@ export default function OtpLoginPanel({
     return (
       <Stack spacing={1.25}>
         <Divider>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             or
           </Typography>
         </Divider>
@@ -86,7 +88,9 @@ export default function OtpLoginPanel({
   return (
     <Stack spacing={1.5}>
       <Divider>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           sign in with a code
         </Typography>
       </Divider>
@@ -106,7 +110,9 @@ export default function OtpLoginPanel({
 
       {sent ? (
         <>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             If that address can sign in here, a {OTP_LENGTH}-digit code is on its way. It expires in
             a few minutes and only works for this portal.
           </Typography>
@@ -117,12 +123,14 @@ export default function OtpLoginPanel({
             fullWidth
             size="small"
             sx={pillSx}
-            inputProps={{
-              inputMode: 'numeric',
-              autoComplete: 'one-time-code',
-              'aria-label': 'One-time code',
-            }}
             disabled={busy}
+            slotProps={{
+              htmlInput: {
+                inputMode: 'numeric',
+                autoComplete: 'one-time-code',
+                'aria-label': 'One-time code',
+              }
+            }}
           />
           <Button
             type="button"
@@ -143,9 +151,12 @@ export default function OtpLoginPanel({
               setCode('');
             }}
             underline="none"
-            color="text.secondary"
-            sx={{ alignSelf: 'center', fontSize: 13, fontWeight: 600 }}
-          >
+            sx={{
+              color: "text.secondary",
+              alignSelf: 'center',
+              fontSize: 13,
+              fontWeight: 600
+            }}>
             Use a different address
           </Link>
         </>
@@ -172,9 +183,12 @@ export default function OtpLoginPanel({
           setCode('');
         }}
         underline="none"
-        color="text.secondary"
-        sx={{ alignSelf: 'center', fontSize: 13, fontWeight: 600 }}
-      >
+        sx={{
+          color: "text.secondary",
+          alignSelf: 'center',
+          fontSize: 13,
+          fontWeight: 600
+        }}>
         Use my password instead
       </Link>
     </Stack>

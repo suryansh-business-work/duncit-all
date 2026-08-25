@@ -52,21 +52,33 @@ export default function ShopProductCard({
             {product.product_name}
           </Typography>
           {product.brand_name && (
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {product.brand_name}
             </Typography>
           )}
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.25 }}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              mt: 0.25
+            }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>
               {priceFormat(product.unit_cost)}
             </Typography>
             {hasRating && (
-              <Stack direction="row" alignItems="center" spacing={0.25}>
+              <Stack direction="row" spacing={0.25} sx={{
+                alignItems: "center"
+              }}>
                 <StarRoundedIcon sx={{ fontSize: 16, color: '#f5a623' }} />
                 <Typography variant="caption" sx={{ fontWeight: 600 }}>
                   {summary.average_rating.toFixed(1)}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   ({summary.total})
                 </Typography>
               </Stack>

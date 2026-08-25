@@ -52,7 +52,9 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
   return (
     <Accordion defaultExpanded>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>{t('admin.uploads.sizesTitle')}</Typography>
+        <Typography sx={{
+          fontWeight: 700
+        }}>{t('admin.uploads.sizesTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2.5}>
@@ -83,9 +85,9 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
             options={IMAGE_FORMAT_OPTIONS}
             value={imageFormats}
             onChange={(_e, value) => setImageFormats(value.map((v) => v.toLowerCase()))}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => (
-                <Chip label={option} size="small" {...getTagProps({ index })} key={option} />
+                <Chip label={option} size="small" {...getItemProps({ index })} key={option} />
               ))
             }
             renderInput={(params) => (
@@ -99,9 +101,9 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
             options={VIDEO_FORMAT_OPTIONS}
             value={videoFormats}
             onChange={(_e, value) => setVideoFormats(value.map((v) => v.toLowerCase()))}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => (
-                <Chip label={option} size="small" {...getTagProps({ index })} key={option} />
+                <Chip label={option} size="small" {...getItemProps({ index })} key={option} />
               ))
             }
             renderInput={(params) => (

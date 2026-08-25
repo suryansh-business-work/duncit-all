@@ -64,7 +64,9 @@ export const detailValue = (item: VerificationItem) => {
 };
 
 const EmptyDetail = () => (
-  <Typography variant="caption" color="text.secondary" component="span">
+  <Typography variant="caption" component="span" sx={{
+    color: "text.secondary"
+  }}>
     —
   </Typography>
 );
@@ -96,7 +98,9 @@ interface ReviewCellProps {
 }
 
 const NoReview = () => (
-  <Typography variant="caption" color="text.secondary" component="span">
+  <Typography variant="caption" component="span" sx={{
+    color: "text.secondary"
+  }}>
     No review needed
   </Typography>
 );
@@ -114,7 +118,14 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
   // rewrites who reviewed it and when — so the row goes quiet once it is done.
   if (item.status === 'APPROVED' || item.status === 'REJECTED') return <NoReview />;
   return (
-    <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center" component="span">
+    <Stack
+      direction="row"
+      spacing={1}
+      component="span"
+      sx={{
+        justifyContent: "flex-end",
+        alignItems: "center"
+      }}>
       <TextField
         size="small"
         placeholder={t('admin.verification.rejectReason')}

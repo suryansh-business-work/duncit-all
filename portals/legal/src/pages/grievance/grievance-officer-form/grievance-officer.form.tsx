@@ -83,7 +83,9 @@ export default function GrievanceOfficerForm({
               hint="Optional — published only if you fill it in."
             />
 
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={2} sx={{
+              alignItems: "center"
+            }}>
               <Button
                 type="submit"
                 variant="contained"
@@ -92,7 +94,9 @@ export default function GrievanceOfficerForm({
                 Save
               </Button>
               {updatedAt && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Last updated {updatedAt}
                 </Typography>
               )}

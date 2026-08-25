@@ -26,10 +26,14 @@ const getRowId = (row: PodPaymentRow) => row.id;
 
 const renderPayer = (row: PodPaymentRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
+    <Typography variant="body2" component="span" sx={{
+      fontWeight: 700
+    }}>
       {row.user_name}
     </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
+    <Typography variant="caption" component="span" sx={{
+      color: "text.secondary"
+    }}>
       {row.user_email}
     </Typography>
   </Stack>

@@ -39,13 +39,23 @@ export default function MinimumAmountField({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {ROLE_LABELS[role]}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {ROLE_HINTS[role]}
         </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start" sx={{ mt: 2 }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            alignItems: "flex-start",
+            mt: 2
+          }}>
           <Controller
             name={field}
             control={control}
@@ -62,7 +72,9 @@ export default function MinimumAmountField({
                   fieldState.error?.message ??
                   `A ${ROLE_LABELS[role]} can only raise a withdrawal once their withdrawable balance reaches this.`
                 }
-                InputProps={{ startAdornment: <InputAdornment position="start">{currency}</InputAdornment> }}
+                slotProps={{
+                  input: { startAdornment: <InputAdornment position="start">{currency}</InputAdornment> }
+                }}
               />
             )}
           />

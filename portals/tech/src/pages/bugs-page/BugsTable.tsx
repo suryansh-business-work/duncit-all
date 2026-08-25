@@ -1,6 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { UserCell } from '../../components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
@@ -13,13 +13,17 @@ const renderStatus = (b: BugRow) => (
 );
 
 const renderTitle = (b: BugRow) => (
-  <Typography variant="body2" fontWeight={600} noWrap title={b.title}>
+  <Typography variant="body2" noWrap title={b.title} sx={{
+    fontWeight: 600
+  }}>
     {b.title}
   </Typography>
 );
 
 const renderLastSeen = (b: BugRow) => (
-  <Typography variant="body2" color="text.secondary">
+  <Typography variant="body2" sx={{
+    color: "text.secondary"
+  }}>
     {formatDateTime(b.last_seen_at)}
   </Typography>
 );
@@ -65,7 +69,9 @@ export default function BugsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<BugRow>[]>(() => {
     const renderActions = (b: BugRow) => (
-      <Stack direction="row" spacing={0.5} alignItems="center">
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
         <Button size="small" variant="outlined" onClick={() => onOpen(b)}>
           Triage
         </Button>

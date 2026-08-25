@@ -24,8 +24,16 @@ interface Props {
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" slotProps={{
+      paper: { sx: { borderRadius: '16px' } }
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          pr: 1
+        }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
         <IconButton aria-label={t('mweb.search.closeFilter')} onClick={onClose}>
           <CloseIcon />
@@ -33,7 +41,9 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
       </Stack>
       <Box sx={{ px: 3, pb: 2 }}>
         {categories.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No categories available yet.
           </Typography>
         ) : (

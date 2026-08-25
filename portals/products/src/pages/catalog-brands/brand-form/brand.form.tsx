@@ -153,7 +153,9 @@ export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<
       <Stack spacing={3}>
         {groups.map((group) => (
           <Stack key={group.title} spacing={1}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 700
+            }}>
               {group.title}
             </Typography>
             <Box sx={gridTwo}>

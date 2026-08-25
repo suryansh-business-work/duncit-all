@@ -54,16 +54,26 @@ export default function HostPodRow({
         '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      <Stack direction="row" spacing={0.5} sx={{
+        alignItems: "center"
+      }}>
         <Box
           component={RouterLink}
           to={podPath}
           sx={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
         >
-          <Typography variant="subtitle2" fontWeight={700} noWrap>
+          <Typography variant="subtitle2" noWrap sx={{
+            fontWeight: 700
+          }}>
             {pod.pod_title}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap display="block">
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              display: "block"
+            }}>
             {formatDate(pod.pod_date_time)}
             {pod.zone_name ? ` · ${pod.zone_name}` : ''}
           </Typography>

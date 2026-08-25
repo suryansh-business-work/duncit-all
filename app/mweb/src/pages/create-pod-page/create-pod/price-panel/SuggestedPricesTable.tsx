@@ -18,25 +18,34 @@ function SuggestedPriceRow({ price, payout, description, testId }: Readonly<RowP
     <Stack
       direction="row"
       spacing={1.5}
-      justifyContent="space-between"
-      alignItems="flex-start"
       data-testid={testId}
-      sx={{ px: 1.5, py: 1.125, borderTop: 1, borderColor: 'divider' }}
-    >
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        px: 1.5,
+        py: 1.125,
+        borderTop: 1,
+        borderColor: 'divider'
+      }}>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="body2" fontWeight={600}>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
           {price}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {description}
         </Typography>
       </Box>
       <Typography
         variant="body2"
-        fontWeight={700}
-        color="success.main"
-        sx={{ whiteSpace: 'nowrap' }}
-      >
+        sx={{
+          fontWeight: 700,
+          color: "success.main",
+          whiteSpace: 'nowrap'
+        }}>
         {payout}
       </Typography>
     </Stack>
@@ -67,13 +76,26 @@ export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>
       <Stack
         direction="row"
         spacing={1.5}
-        justifyContent="space-between"
-        sx={{ px: 1.5, py: 1.125, bgcolor: 'action.hover' }}
-      >
-        <Typography variant="caption" fontWeight={700} color="text.secondary">
+        sx={{
+          justifyContent: "space-between",
+          px: 1.5,
+          py: 1.125,
+          bgcolor: 'action.hover'
+        }}>
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 700,
+            color: "text.secondary"
+          }}>
           {t('mweb.createPod.suggestedPrice')}
         </Typography>
-        <Typography variant="caption" fontWeight={700} color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 700,
+            color: "text.secondary"
+          }}>
           {t('mweb.createPod.whatYouGet')}
         </Typography>
       </Stack>

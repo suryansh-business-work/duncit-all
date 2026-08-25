@@ -23,7 +23,11 @@ export default function WhatsAppPreferencePage() {
 
   if (state.loading) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -67,13 +71,17 @@ export default function WhatsAppPreferencePage() {
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" fontWeight={800}>
+        <Typography variant="h6" sx={{
+          fontWeight: 800
+        }}>
           {t('whatsappPreference.title')}
         </Typography>
         {/* Only worth saying when there is a number to name — with none, the
             card below explains the state instead of a sentence about nobody. */}
         {reachable && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('whatsappPreference.subtitle', { vars: { destination } })}
           </Typography>
         )}

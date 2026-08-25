@@ -50,7 +50,13 @@ export default function BubbleFooter({
   const showTools = !deleted && !editing;
 
   return (
-    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
+    <Stack
+      direction="row"
+      spacing={0.5}
+      sx={{
+        alignItems: "center",
+        mt: 0.25
+      }}>
       <Tooltip title={at ? formats.full.format(at) : ''}>
         <Typography variant="caption" sx={{ opacity: 0.7, flex: 1, cursor: 'default' }}>
           {at ? formats.time.format(at) : ''}

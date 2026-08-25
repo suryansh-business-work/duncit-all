@@ -21,7 +21,9 @@ export default function ClosedNotice({ reopenable, reopenDeadline, formatDateTim
         <Typography variant="caption" sx={{ fontWeight: 700 }}>
           This conversation has been marked as resolved.
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {windowText}
         </Typography>
       </Stack>

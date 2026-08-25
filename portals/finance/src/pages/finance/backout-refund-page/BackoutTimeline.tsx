@@ -24,7 +24,12 @@ export default function BackoutTimeline({ participation, podDateTime, backoutNo 
   return (
     <Card variant="outlined" sx={{ width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           Backout Timeline
         </Typography>
         {participation ? (
@@ -34,7 +39,9 @@ export default function BackoutTimeline({ participation, podDateTime, backoutNo 
             highlightBackoutNo={backoutNo}
           />
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             The booking behind this request is no longer on file.
           </Typography>
         )}

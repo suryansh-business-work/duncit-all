@@ -31,27 +31,38 @@ export default function DynamicFieldOptionsEditor({ options, onChange }: Readonl
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Options
       </Typography>
       <Stack spacing={1} sx={{ mt: 0.5 }}>
         {rows.map(({ opt, index, key }) => (
-          <Stack key={key} direction="row" spacing={1} alignItems="center">
+          <Stack key={key} direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <TextField
               size="small"
               label={t('crm.managedynamicfieldspage.value')}
               value={opt.value}
               onChange={(e) => update(index, { value: e.target.value })}
-              inputProps={{ 'aria-label': `option-value-${index}` }}
               sx={{ flex: 1 }}
+              slotProps={{
+                htmlInput: { 'aria-label': `option-value-${index}` }
+              }}
             />
             <TextField
               size="small"
               label={t('crm.managedynamicfieldspage.label')}
               value={opt.label}
               onChange={(e) => update(index, { label: e.target.value })}
-              inputProps={{ 'aria-label': `option-label-${index}` }}
               sx={{ flex: 1 }}
+              slotProps={{
+                htmlInput: { 'aria-label': `option-label-${index}` }
+              }}
             />
             <Tooltip title={t('crm.managedynamicfieldspage.removeOption')}>
               <IconButton size="small" color="error" aria-label={`remove-option-${index}`} onClick={() => remove(index)}>

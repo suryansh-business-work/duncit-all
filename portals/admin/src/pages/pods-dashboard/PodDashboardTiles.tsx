@@ -81,7 +81,13 @@ export default function PodDashboardTiles({ totals, seats, money, ratings, loadi
   return (
     <Grid container spacing={2}>
       {tiles.map((tile) => (
-        <Grid item xs={6} sm={4} md={2.4} key={tile.key}>
+        <Grid
+          key={tile.key}
+          size={{
+            xs: 6,
+            sm: 4,
+            md: 2.4
+          }}>
           <StatCard
             layout="split"
             label={tile.label}

@@ -35,7 +35,9 @@ export default function PodExpenseForm({
       <Stack spacing={2}>
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         <PodExpenseFields control={control} currency={currency} />
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button onClick={onCancel} disabled={busy}>
             {t('shell.common.cancel')}
           </Button>

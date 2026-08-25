@@ -61,7 +61,9 @@ export default function PodProductsField({
       <Typography variant="subtitle2">{t('podProduct.attachedTitle')}</Typography>
 
       {value.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('podProduct.attachedEmpty')}
         </Typography>
       )}
@@ -86,7 +88,9 @@ export default function PodProductsField({
         );
       })}
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        alignItems: { sm: 'center' }
+      }}>
         <Button
           variant="outlined"
           startIcon={<AddShoppingCartIcon />}

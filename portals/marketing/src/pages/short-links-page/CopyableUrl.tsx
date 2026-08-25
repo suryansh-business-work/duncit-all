@@ -34,15 +34,17 @@ export default function CopyableUrl({ url, label }: Readonly<Props>) {
   return (
     <Stack spacing={0.5} sx={{ minWidth: 0 }}>
       {label && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {label}
         </Typography>
       )}
       <Stack
         direction="row"
-        alignItems="center"
         spacing={1}
         sx={{
+          alignItems: "center",
           border: 1,
           borderColor: 'divider',
           borderRadius: 1,
@@ -50,14 +52,16 @@ export default function CopyableUrl({ url, label }: Readonly<Props>) {
           pl: 1.5,
           pr: 0.5,
           py: 0.75,
-          minWidth: 0,
-        }}
-      >
+          minWidth: 0
+        }}>
         <Typography
           variant="body2"
-          fontFamily="monospace"
-          sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
-        >
+          sx={{
+            fontFamily: "monospace",
+            flex: 1,
+            minWidth: 0,
+            overflowWrap: 'anywhere'
+          }}>
           {url}
         </Typography>
         <Tooltip title={TITLES[state]}>

@@ -10,7 +10,13 @@ import type { StudioPod } from './types';
 function PodFact({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Stack direction="row" spacing={0.5} sx={{ minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+      <Typography
+        variant="caption"
+        noWrap
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         {label}
       </Typography>
       <Typography variant="caption" sx={{ fontWeight: 700 }} noWrap>
@@ -55,7 +61,9 @@ export default function StudioPodRow({ pod, currencySymbol }: Readonly<Props>) {
         bgcolor: 'background.paper',
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={0.75}>
+      <Stack direction="row" spacing={0.75} sx={{
+        alignItems: "center"
+      }}>
         <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700 }} noWrap>
           {pod.pod_title}
         </Typography>
@@ -67,7 +75,13 @@ export default function StudioPodRow({ pod, currencySymbol }: Readonly<Props>) {
         />
       </Stack>
 
-      <Stack direction="row" alignItems="center" spacing={0.5} color="text.secondary">
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          color: "text.secondary"
+        }}>
         <EventIcon sx={{ fontSize: 14 }} />
         <Typography variant="caption" noWrap sx={{ flex: 1 }}>
           {formatDateTime(pod.pod_date_time)} · {pod.owner_name}

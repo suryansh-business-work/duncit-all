@@ -71,7 +71,9 @@ export default function ReviewSection({ form }: Readonly<Props>) {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="subtitle1" fontWeight={900}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 900
+      }}>
         Review your registration
       </Typography>
       <Stack spacing={1}>
@@ -97,7 +99,9 @@ export default function ReviewSection({ form }: Readonly<Props>) {
         <Row label={t('partners.registerVenuePage.ownerEmail')} value={values.owner_email} />
         <Row label={t('partners.registerVenuePage.ownerPhone')} value={values.owner_phone} />
       </Stack>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Submitting sends your application for review. You can keep editing until it is submitted;
         rejected applications can be updated and resubmitted.
       </Typography>

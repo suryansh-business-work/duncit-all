@@ -3,7 +3,7 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Chip, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import { AddressForm, type AddressFormValues, type UserAddress } from './address-book-form';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -99,8 +99,16 @@ export default function AddressBookSection() {
 
   return (
     <Box sx={{ p: 2, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <HomeWorkIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             Address Book
@@ -113,7 +121,9 @@ export default function AddressBookSection() {
       {error && <Alert severity="error">{error.message}</Alert>}
       {notice && <Alert severity="error" onClose={() => setNotice(null)}>{notice}</Alert>}
       {!loading && addresses.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Save delivery addresses here to pick them quickly at checkout.
         </Typography>
       )}
@@ -123,17 +133,29 @@ export default function AddressBookSection() {
             key={address.id}
             direction="row"
             spacing={1}
-            alignItems="center"
-            sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}
-          >
+            sx={{
+              alignItems: "center",
+              p: 1.25,
+              borderRadius: '16px',
+              border: 1,
+              borderColor: 'divider'
+            }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Stack direction="row" spacing={0.75} alignItems="center">
+              <Stack direction="row" spacing={0.75} sx={{
+                alignItems: "center"
+              }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {address.label}
                 </Typography>
                 {address.is_default && <Chip size="small" color="primary" label={t('mweb.account.default')} sx={{ fontWeight: 600 }} />}
               </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} noWrap>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "text.secondary",
+                  display: 'block'
+                }}>
                 {oneLine(address)}
               </Typography>
             </Box>

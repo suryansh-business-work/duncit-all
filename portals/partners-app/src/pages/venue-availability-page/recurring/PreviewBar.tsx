@@ -26,10 +26,13 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         spacing={2}
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        justifyContent="space-between"
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        sx={{
+          alignItems: { xs: 'flex-start', md: 'center' },
+          justifyContent: "space-between"
+        }}>
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <Box
             sx={{
               width: 46,
@@ -45,25 +48,48 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
             <EventAvailableIcon />
           </Box>
           <Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={800}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 800
+              }}>
               Slots to be created
             </Typography>
-            <Typography variant="h4" fontWeight={950} color="primary.main" sx={{ lineHeight: 1.05 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 950,
+                color: "primary.main",
+                lineHeight: 1.05
+              }}>
               {summary.total} Slots
             </Typography>
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={2.5} flexWrap="wrap" rowGap={1}>
+        <Stack
+          direction="row"
+          spacing={2.5}
+          sx={{
+            flexWrap: "wrap",
+            rowGap: 1
+          }}>
           {spaceLabels.map((label) => (
             <Box key={label || 'whole-venue'}>
-              <Typography variant="caption" fontWeight={800}>
+              <Typography variant="caption" sx={{
+                fontWeight: 800
+              }}>
                 {label || 'Whole venue'}
               </Typography>
-              <Typography variant="body2" fontWeight={900}>
+              <Typography variant="body2" sx={{
+                fontWeight: 900
+              }}>
                 {summary.bySpace[label].count} Slots
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {fmt(summary.bySpace[label].price)} · cap {summary.bySpace[label].capacity}
               </Typography>
             </Box>
@@ -71,16 +97,29 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
         </Stack>
 
         <Box sx={{ textAlign: { md: 'right' } }}>
-          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 800
+            }}>
             Total revenue (est.)
           </Typography>
-          <Typography variant="h5" fontWeight={950}>
+          <Typography variant="h5" sx={{
+            fontWeight: 950
+          }}>
             {fmt(summary.estimatedRevenue)}
           </Typography>
         </Box>
       </Stack>
       {skips.length > 0 && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 1
+          }}>
           Auto-skipped: {skips.join(' · ')}
         </Typography>
       )}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { HEADER_DATA } from '../../components/app-header/queries';
@@ -86,7 +86,9 @@ export default function SupportTicketsPage() {
     >
       <Stack spacing={2.25}>
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.12)' }}>
-          <Stack direction="row" alignItems="center" spacing={1.25}>
+          <Stack direction="row" spacing={1.25} sx={{
+            alignItems: "center"
+          }}>
             <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
               {['primary.main', 'secondary.main', 'info.main'].map((color) => (
                 <Avatar
@@ -101,7 +103,12 @@ export default function SupportTicketsPage() {
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
                 Help squad is ready
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 600
+                }}>
                 Average reply within 24 hours
               </Typography>
             </Box>
@@ -120,13 +127,17 @@ export default function SupportTicketsPage() {
             cursor: 'pointer',
           }}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <HelpOutlineIcon color="success" />
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 Maybe answered already?
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Tap to read quick answers before sending a ticket.
               </Typography>
             </Box>
@@ -135,10 +146,17 @@ export default function SupportTicketsPage() {
 
         <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
           <Box sx={{ mb: 1 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               Tell us what's going on
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Add the steps, screenshots, and expected result so we can fix it faster.
             </Typography>
           </Box>

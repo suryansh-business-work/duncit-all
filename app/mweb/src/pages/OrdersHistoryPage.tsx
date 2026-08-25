@@ -14,7 +14,11 @@ export default function OrdersHistoryPage() {
 
   if (loading && orders.length === 0)
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -22,12 +26,22 @@ export default function OrdersHistoryPage() {
 
   if (orders.length === 0) {
     return (
-      <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
+      <Stack
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          py: 8,
+          textAlign: 'center'
+        }}>
         <LocalShippingIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           No product orders yet
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Products you buy from a pod&apos;s shop will show up here with tracking.
         </Typography>
       </Stack>
@@ -40,14 +54,25 @@ export default function OrdersHistoryPage() {
         <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
           My Product Orders
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5,
+            fontWeight: 700
+          }}>
           Every product you bought from a Pod Shop, with live tracking
         </Typography>
       </Box>
       {orders.map((order) => (
         <Stack key={order.id} spacing={0.5}>
           {order.pod?.pod_title && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600
+              }}>
               {order.pod.pod_title}
             </Typography>
           )}

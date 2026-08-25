@@ -80,14 +80,20 @@ export default function CoinMonthlyChart({ buckets, loading }: Readonly<Props>) 
         <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
           Month by month distribution
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Coins earned on payments against coins spent at checkout, per calendar month (UTC).
         </Typography>
         <Box sx={{ height: 300, mt: 2 }}>
           {hasData ? (
             <Bar data={data} options={options} />
           ) : (
-            <Typography color="text.secondary" sx={{ pt: 4 }}>
+            <Typography
+              sx={{
+                color: "text.secondary",
+                pt: 4
+              }}>
               {loading ? 'Loading coin activity…' : 'No coin activity in this period yet.'}
             </Typography>
           )}

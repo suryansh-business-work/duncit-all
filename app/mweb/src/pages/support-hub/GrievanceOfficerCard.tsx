@@ -30,14 +30,20 @@ export default function GrievanceOfficerCard({ officer }: Readonly<Props>) {
         {t('grievance.officerTitle')}
       </Typography>
       {filled.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('grievance.officerEmpty')}
         </Typography>
       ) : (
         <Stack spacing={0.5}>
           {filled.map(([label, value]) => (
-            <Stack key={label} direction="row" spacing={2} justifyContent="space-between">
-              <Typography variant="body2" color="text.secondary">
+            <Stack key={label} direction="row" spacing={2} sx={{
+              justifyContent: "space-between"
+            }}>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {label}
               </Typography>
               <Typography variant="body2" sx={{ textAlign: 'right', wordBreak: 'break-word' }}>

@@ -69,12 +69,22 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Box>
-          <Typography variant="subtitle2" fontWeight={700}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 700
+          }}>
             Assign Clubs
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Clubs matching {categoryPath(row)}
           </Typography>
         </Box>
@@ -117,7 +127,9 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
             <ListItemText
               sx={{ px: 2, py: 1 }}
               primary={
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   No clubs match this category yet.
                 </Typography>
               }
@@ -131,7 +143,9 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
               <ListItemText
                 primary={club.club_name}
                 secondary={club.matches_category ? undefined : 'Outside their category'}
-                secondaryTypographyProps={{ color: 'warning.main', variant: 'caption' }}
+                slotProps={{
+                  secondary: { color: 'warning.main', variant: 'caption' }
+                }}
               />
             </ListItemButton>
           ))}

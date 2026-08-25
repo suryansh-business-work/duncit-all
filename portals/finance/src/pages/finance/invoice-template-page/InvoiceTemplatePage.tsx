@@ -58,13 +58,23 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <ReceiptLongIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             {meta.title}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {meta.subtitle}
           </Typography>
         </Box>
@@ -83,7 +93,13 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
             <TextField label={t('finance.common.footerNote')} value={form.footer} onChange={(e) => set('footer')(e.target.value)} fullWidth />
             <TextField label={t('finance.invoiceTemplate.emailNoteCoveringMessage')} value={form.note} onChange={(e) => set('note')(e.target.value)} multiline minRows={2} fullWidth />
           </Stack>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block",
+              mt: 2
+            }}>
             Business identity (name, address, GSTIN, logo, currency) is shared — set it under Invoices → Business Identity.
           </Typography>
         </CardContent>

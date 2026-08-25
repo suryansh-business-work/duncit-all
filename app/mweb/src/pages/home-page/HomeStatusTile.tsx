@@ -44,8 +44,8 @@ export default function HomeStatusTile({
       type="button"
       onClick={onClick}
       spacing={0.6}
-      alignItems="center"
       sx={{
+        alignItems: "center",
         width: 70,
         minHeight: 90,
         flex: '0 0 auto',
@@ -56,9 +56,8 @@ export default function HomeStatusTile({
         cursor: 'pointer',
         font: 'inherit',
         touchAction: 'manipulation',
-        overflow: 'visible',
-      }}
-    >
+        overflow: 'visible'
+      }}>
       <Box
         sx={{
           width: 62,

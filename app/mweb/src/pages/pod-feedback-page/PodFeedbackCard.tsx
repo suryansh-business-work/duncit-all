@@ -47,10 +47,14 @@ export default function PodFeedbackCard({
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.podFeedback.title', { vars: { title: podTitle } })}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.podFeedback.subtitle')}
           </Typography>
           {rated && <Alert severity="info">{t('mweb.podFeedback.alreadyRated')}</Alert>}
@@ -66,7 +70,9 @@ export default function PodFeedbackCard({
           {failed && <Alert severity="error">{t('mweb.podFeedback.failed')}</Alert>}
           {saved && <Alert severity="success">{t('mweb.podFeedback.saved')}</Alert>}
 
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button onClick={onLeave}>
               {saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.skip')}
             </Button>

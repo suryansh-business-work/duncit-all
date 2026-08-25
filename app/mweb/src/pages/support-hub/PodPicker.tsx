@@ -18,7 +18,9 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
   if (loading && !options.length) {
     return (
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Loading your pods…
         </Typography>
       </Paper>
@@ -27,7 +29,9 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
   if (!options.length) {
     return (
       <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <EventIcon color="action" />
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
             You haven’t joined any pods yet. Join a pod to use live support.
@@ -52,7 +56,9 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
               <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
                 {opt.title}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {formatDateTime(opt.startsAt)}
               </Typography>
             </Stack>

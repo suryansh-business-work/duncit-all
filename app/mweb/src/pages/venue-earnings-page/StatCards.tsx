@@ -26,7 +26,13 @@ export default function StatCards({ summary }: Readonly<{ summary: VenueEarnings
       {stats.map((item) => (
         <Card key={item.label} variant="outlined" sx={{ flex: '1 1 40%', minWidth: 0, borderRadius: '16px' }}>
           <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-            <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "primary.main",
+                fontWeight: 700
+              }}>
               {item.label}
             </Typography>
             <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }} noWrap>

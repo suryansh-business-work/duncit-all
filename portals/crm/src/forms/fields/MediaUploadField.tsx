@@ -69,11 +69,25 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700,
+            letterSpacing: 0.3,
+            textTransform: 'uppercase'
+          }}>
           {label}
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <AiMonitoringChip />
           <Button
             size="small"
@@ -110,7 +124,9 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
         </Box>
       )}
 
-      {helperText && <Typography variant="caption" color="text.secondary">{helperText}</Typography>}
+      {helperText && <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>{helperText}</Typography>}
       <input
         ref={inputRef}
         type="file"

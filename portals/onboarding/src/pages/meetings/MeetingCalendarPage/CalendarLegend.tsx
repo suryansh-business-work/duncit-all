@@ -8,9 +8,13 @@ export default function CalendarLegend() {
       {ALL_DISPLAY_STATUSES.map((s) => {
         const meta = statusMeta(s);
         return (
-          <Stack key={s} direction="row" alignItems="center" spacing={0.5}>
+          <Stack key={s} direction="row" spacing={0.5} sx={{
+            alignItems: "center"
+          }}>
             <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: meta.color }} />
-            <Typography variant="caption" color="text.secondary">{meta.label}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{meta.label}</Typography>
           </Stack>
         );
       })}

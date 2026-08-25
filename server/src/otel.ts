@@ -41,7 +41,7 @@ function initOtelLogs(): void {
     const exporter = new OTLPLogExporter({ url: endpoint });
     const provider = new LoggerProvider({
       resource,
-      processors: [new BatchLogRecordProcessor(exporter)],
+      processors: [new BatchLogRecordProcessor({ exporter })],
     });
     logsApi.setGlobalLoggerProvider(provider);
 

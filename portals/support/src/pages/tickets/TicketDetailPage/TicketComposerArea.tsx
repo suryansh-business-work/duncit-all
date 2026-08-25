@@ -80,7 +80,14 @@ export default function TicketComposerArea({
        own — a long reply must not push the conversation off the screen. */
     <Box sx={{ flexShrink: 0, '& .ProseMirror': { maxHeight: 220, overflowY: 'auto' } }}>
       <DuncitRichTextInput value={bodyHtml} onChange={onBodyHtml} minHeight={96} compact aiContext="support ticket reply" />
-      <Stack direction="row" alignItems="flex-end" justifyContent="space-between" sx={{ mt: 1 }} spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          mt: 1
+        }}>
         <AttachmentUploadField
           value={attachments}
           onChange={onAttachments}

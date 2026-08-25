@@ -56,19 +56,35 @@ export default function PodActivityFeed({ entries, colorMap }: Readonly<Props>) 
               )}
             </Box>
             <Stack spacing={0.25} sx={{ minWidth: 0, pb: last ? 0 : 2.5 }}>
-              <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Typography variant="body2" fontWeight={700}>
+              <Stack
+                direction="row"
+                spacing={0.75}
+                useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap"
+                }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {entry.actor_name || entry.source}
                 </Typography>
                 <StatusChip status={entry.action} colorMap={colorMap} />
                 <Chip label={entry.source} size="small" variant="outlined" />
               </Stack>
               {entry.note && (
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    whiteSpace: 'pre-wrap'
+                  }}>
                   {entry.note}
                 </Typography>
               )}
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {fmtDateTime(entry.created_at)}
               </Typography>
             </Stack>

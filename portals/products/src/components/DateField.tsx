@@ -58,8 +58,7 @@ export default function DateField({
           error,
           helperText,
           size,
-        },
-      }}
+        }}}
     />
   );
 }

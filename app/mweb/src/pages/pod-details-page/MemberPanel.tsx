@@ -61,14 +61,18 @@ function MemberNote({
   const { t } = useTranslation();
   if (canBackout) {
     return (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.backoutNote', { vars: { pct: deductionPct } })}
       </Typography>
     );
   }
   if (isExpired) {
     return (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.alreadyTakenPlace')}
       </Typography>
     );

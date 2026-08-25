@@ -85,22 +85,31 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
   );
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
       <TextField
         size="small"
         placeholder={placeholder}
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
-        inputProps={{ 'aria-label': placeholder }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-          endAdornment: searchInput ? clearAdornment : undefined,
-        }}
-      />
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: searchInput ? clearAdornment : undefined,
+          },
+
+          htmlInput: { 'aria-label': placeholder }
+        }} />
       {hasFilterableColumns ? (
         <Badge badgeContent={filters.length} color="primary">
           <Button

@@ -74,7 +74,11 @@ export default function RegisterVenuePage() {
 
   if ((loading && !data) || (configQuery.loading && !configQuery.data)) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 6
+        }}>
         <CircularProgress size={28} />
       </Stack>
     );
@@ -90,7 +94,9 @@ export default function RegisterVenuePage() {
           background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="flex-start" spacing={1.25}>
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "flex-start"
+        }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" sx={{ opacity: 0.8, letterSpacing: 0.4, lineHeight: 1, fontWeight: 800 }}>
               {t('partners.venueListingsPage.venueRegistration')}

@@ -21,7 +21,9 @@ export default function PodRatingsCard({ aspects, total, days }: Readonly<Props>
         <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
           What guests scored
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {total > 0
             ? `${total} ratings in the last ${days} days`
             : `No ratings in the last ${days} days`}
@@ -31,20 +33,27 @@ export default function PodRatingsCard({ aspects, total, days }: Readonly<Props>
             <Stack
               key={row.aspect}
               direction="row"
-              alignItems="center"
-              justifyContent="space-between"
               spacing={1.5}
-            >
-              <Typography variant="body2" fontWeight={600}>
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+              <Typography variant="body2" sx={{
+                fontWeight: 600
+              }}>
                 {POD_FEEDBACK_ASPECT_LABEL[row.aspect as PodFeedbackAspect] ?? row.aspect}
               </Typography>
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Rating value={row.average} precision={0.1} size="small" readOnly />
                 <Typography
                   variant="caption"
-                  color="text.secondary"
-                  sx={{ minWidth: 62, textAlign: 'right' }}
-                >
+                  sx={{
+                    color: "text.secondary",
+                    minWidth: 62,
+                    textAlign: 'right'
+                  }}>
                   {row.average.toFixed(1)} · {row.count}
                 </Typography>
               </Stack>

@@ -34,7 +34,9 @@ export default function GiftRecipientFields({
 
   return (
     <Box>
-      <Typography variant="subtitle1" fontWeight={700}>
+      <Typography variant="subtitle1" sx={{
+        fontWeight: 700
+      }}>
         {t('mweb.giftCards.forHeading')}
       </Typography>
       <ToggleButtonGroup
@@ -65,7 +67,9 @@ export default function GiftRecipientFields({
             label={t('mweb.giftCards.recipientNameLabel')}
             value={name}
             onChange={(event) => onName(event.target.value)}
-            inputProps={{ maxLength: 160 }}
+            slotProps={{
+              htmlInput: { maxLength: 160 }
+            }}
           />
           <TextField
             fullWidth
@@ -75,7 +79,9 @@ export default function GiftRecipientFields({
             value={message}
             onChange={(event) => onMessage(event.target.value)}
             helperText={t('mweb.giftCards.messageHint')}
-            inputProps={{ maxLength: 300 }}
+            slotProps={{
+              htmlInput: { maxLength: 300 }
+            }}
           />
         </Stack>
       )}

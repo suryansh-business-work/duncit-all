@@ -3,7 +3,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { RhfTextField } from '@duncit/forms';
 import type { CancellationPolicyValues } from './cancellation-policy.types';
 
@@ -28,7 +28,9 @@ export default function CancellationTierRow({
   t,
 }: Readonly<CancellationTierRowProps>) {
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+      alignItems: "flex-start"
+    }}>
       <RhfTextField
         control={control}
         name={`tiers.${index}.hours_before`}

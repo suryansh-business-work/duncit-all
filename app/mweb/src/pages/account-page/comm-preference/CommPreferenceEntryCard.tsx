@@ -25,13 +25,19 @@ export default function CommPreferenceEntryCard() {
     <Card variant="outlined" data-testid="comm-preference-entry">
       <CardActionArea component={RouterLink} to={COMM_PREFERENCE_PATH}>
         <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "center"
+          }}>
             <ForumOutlinedIcon color="action" />
             <Stack sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={700}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: 700
+              }}>
                 {labels.title}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {labels.entryHint}
               </Typography>
             </Stack>

@@ -61,7 +61,13 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
   );
 
   const logsContent = logs.length === 0 ? (
-    <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        py: 4,
+        textAlign: 'center'
+      }}>
       No communication yet. Email or call from the actions above to start the log.
     </Typography>
   ) : (
@@ -75,17 +81,34 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <ForumIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" fontWeight={800}>{t('crm.components.communicationLog')}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="h6" sx={{
+              fontWeight: 800
+            }}>{t('crm.components.communicationLog')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Calls via Twilio, emails via SMTP. Transcripts are fetched from Servam AI for recorded calls.
             </Typography>
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }} useFlexGap flexWrap="wrap">
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            flexWrap: "wrap",
+            mb: 2
+          }}>
           <Chip
             label={`All (${total})`}
             color={filter === 'ALL' ? 'primary' : 'default'}

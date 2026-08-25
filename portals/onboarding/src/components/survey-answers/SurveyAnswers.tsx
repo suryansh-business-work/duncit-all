@@ -31,24 +31,38 @@ export default function SurveyAnswers({ userId, kind, title }: Readonly<Props>) 
   return (
     <Box data-testid="survey-answers">
       {title && (
-        <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700,
+            display: "block"
+          }}>
           {titleText}
         </Typography>
       )}
       {loading && items.length === 0 && (
-        <Stack alignItems="center" sx={{ py: 2 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 2
+          }}>
           <CircularProgress size={22} />
         </Stack>
       )}
       {!loading && items.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No survey answers on file.
         </Typography>
       )}
       <Stack spacing={0.75} sx={{ mt: 0.5 }}>
         {items.map((it) => (
           <Box key={`${it.label}-${it.answer}`}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {it.label}
             </Typography>
             <Typography variant="body2">{it.answer || '—'}</Typography>

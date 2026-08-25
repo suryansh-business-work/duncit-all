@@ -35,7 +35,12 @@ export default function CoinsCard({ coins, coinsRedeemed, coinsEarned, formatDat
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 300, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           {t('finance.payment.coinsTitle')}
         </Typography>
         <Stack spacing={1}>
@@ -45,7 +50,9 @@ export default function CoinsCard({ coins, coinsRedeemed, coinsEarned, formatDat
         <Divider sx={{ my: 1.5 }} />
 
         {coins.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('finance.payment.coinsEmpty')}
           </Typography>
         )}
@@ -53,9 +60,17 @@ export default function CoinsCard({ coins, coinsRedeemed, coinsEarned, formatDat
         <Stack spacing={1.25} divider={<Divider flexItem />}>
           {coins.map((line) => (
             <Stack key={coinLineKey(line)} spacing={0.5}>
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}>
                 <StatusChip status={line.type} colorMap={COIN_TYPE_COLORS} />
-                <Typography variant="body2" fontWeight={700}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {COIN_SIGNS[line.type] ?? ''}
                   {line.amount}
                 </Typography>
@@ -66,7 +81,9 @@ export default function CoinsCard({ coins, coinsRedeemed, coinsEarned, formatDat
               {line.earn_pct > 0 && (
                 <InfoRow variant="split" label={t('finance.payment.earnRate')} value={`${line.earn_pct}%`} />
               )}
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {formatDateTime(line.at)}
               </Typography>
             </Stack>

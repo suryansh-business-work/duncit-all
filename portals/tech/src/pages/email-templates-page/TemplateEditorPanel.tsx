@@ -1,5 +1,6 @@
 import { FormControlLabel, Stack, Switch, TextField, Tooltip } from '@mui/material';
-import type { FragmentOption, Tpl } from './queries';
+import type { FragmentOption, TemplateUsage, Tpl } from './queries';
+import TemplateUsageStrip from './TemplateUsageStrip';
 import MjmlEditorPane from './MjmlEditorPane';
 import PreviewVariablesPane from './PreviewVariablesPane';
 import EditorActionsBar from './EditorActionsBar';
@@ -9,6 +10,8 @@ import { useTranslation } from '@duncit/app-settings';
 interface Props {
   draft: Tpl;
   setDraft: (t: Tpl) => void;
+  /** This template's tally from the email log. Null while it is still loading. */
+  usage: TemplateUsage | null;
   dirty: boolean;
   busy: boolean;
   tab: 'preview' | 'code';
@@ -34,6 +37,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
   const {
     draft,
     setDraft,
+    usage,
     dirty,
     busy,
     tab,
@@ -55,7 +59,13 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
 
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-      <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+      {/* Above the fields, because "has anyone ever received this?" is the
+          question that decides whether the rest of the panel is worth editing. */}
+      <TemplateUsageStrip slug={draft.slug} usage={usage} />
+
+      <Stack direction="row" spacing={1.5} useFlexGap sx={{
+        flexWrap: "wrap"
+      }}>
         <TextField
           size="small"
           label={t('shell.common.name')}

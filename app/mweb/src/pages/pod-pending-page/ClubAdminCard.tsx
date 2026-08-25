@@ -60,10 +60,17 @@ export default function ClubAdminCard({
   return (
     <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="club-admin-card">
       <Stack spacing={1.25}>
-        <Typography variant="caption" fontWeight={600} color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: "text.secondary"
+          }}>
           {caption ?? t('mweb.podPending.clubAdminCaption')}
         </Typography>
-        <Stack direction="row" spacing={1.25} alignItems="center">
+        <Stack direction="row" spacing={1.25} sx={{
+          alignItems: "center"
+        }}>
           <Avatar
             src={admin.profile_photo ?? undefined}
             alt={admin.name}
@@ -72,14 +79,21 @@ export default function ClubAdminCard({
           >
             <PersonIcon />
           </Avatar>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              minWidth: 0
+            }}>
             {admin.name}
           </Typography>
         </Stack>
         {rows.map((row) => (
           <InfoRow key={row.label} {...row} />
         ))}
-        <Stack direction="row" spacing={2} flexWrap="wrap">
+        <Stack direction="row" spacing={2} sx={{
+          flexWrap: "wrap"
+        }}>
           {admin.phone && (
             <Button
               href={telUrl(admin.phone)}

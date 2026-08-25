@@ -88,7 +88,9 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Pick an open slot — our onboarding team will meet you then to take you through the next steps.
       </Typography>
 
@@ -108,18 +110,22 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
           size="small"
           label="Ext."
           value={contactExt}
-          InputProps={{ readOnly: true }}
           disabled
           sx={{ width: 96 }}
+          slotProps={{
+            input: { readOnly: true }
+          }}
         />
         <TextField
           size="small"
           label={t('mweb.common.phone')}
           value={contactPhone}
-          InputProps={{ readOnly: true }}
           disabled
           helperText={t('mweb.surveyGate.fromYourProfile')}
           fullWidth
+          slotProps={{
+            input: { readOnly: true }
+          }}
         />
       </Stack>
       <TextField size="small" label={t('mweb.surveyGate.anythingWeShouldKnowOptional')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />

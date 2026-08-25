@@ -19,10 +19,17 @@ export default function ReportPreview({ report }: Readonly<{ report: ContentRepo
   if (!url) {
     return (
       <Box>
-        <Typography variant="overline" color="text.secondary" fontWeight={700}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           {t('reportLogs.detailPreview')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('reportLogs.detailPreviewMissing')}
         </Typography>
       </Box>
@@ -33,7 +40,12 @@ export default function ReportPreview({ report }: Readonly<{ report: ContentRepo
 
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         {t('reportLogs.detailPreview')}
       </Typography>
       <Stack spacing={0.75}>
@@ -51,11 +63,15 @@ export default function ReportPreview({ report }: Readonly<{ report: ContentRepo
           }}
         />
         {report?.target_caption && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {report.target_caption}
           </Typography>
         )}
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {people}
         </Typography>
       </Stack>

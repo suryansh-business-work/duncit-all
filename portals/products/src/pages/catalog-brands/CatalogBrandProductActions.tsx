@@ -2,8 +2,8 @@ import { IconButton, Stack, Tooltip } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
-import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import type { CatalogBrandProductRow } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -41,7 +41,9 @@ export default function CatalogBrandProductActions({
   const pauseLabel = paused ? 'Reactivate' : 'Temporarily deactivate';
 
   return (
-    <Stack direction="row" justifyContent="flex-end" component="span">
+    <Stack direction="row" component="span" sx={{
+      justifyContent: "flex-end"
+    }}>
       <Tooltip title={t('shell.common.edit')}>
         <IconButton
           size="small"

@@ -63,13 +63,21 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
   return (
     <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'error.light', borderRadius: 2, '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           <DeleteForeverIcon fontSize="small" color="error" />
           <div>
-            <Typography fontWeight={800} color="error.main">
+            <Typography
+              sx={{
+                fontWeight: 800,
+                color: "error.main"
+              }}>
               Bulk actions
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Delete or update many upcoming slots at once
             </Typography>
           </div>
@@ -77,7 +85,9 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Filter (all optional — empty means every upcoming non-booked slot). Booked slots are never affected.
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -89,7 +99,14 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
           {(deleteError || updateError) && (
             <Alert severity="error">{(deleteError ?? updateError)?.message}</Alert>
           )}
-          <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              flexWrap: "wrap",
+              rowGap: 1,
+              alignItems: "center"
+            }}>
             <Button color="error" variant="outlined" onClick={() => setConfirm({ text: 'Delete all matching upcoming slots? This cannot be undone.', run: runDelete })}>
               Delete matching
             </Button>
@@ -100,8 +117,12 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
               Enable
             </Button>
           </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <TextField size="small" type="number" label={t('partners.venueAvailabilityPage.newPrice')} value={price} onChange={(e) => setPrice(e.target.value)} sx={{ maxWidth: 160 }} inputProps={{ min: 0 }} />
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
+            <TextField size="small" type="number" label={t('partners.venueAvailabilityPage.newPrice')} value={price} onChange={(e) => setPrice(e.target.value)} sx={{ maxWidth: 160 }} slotProps={{
+              htmlInput: { min: 0 }
+            }} />
             <Button
               variant="outlined"
               disabled={price === ''}

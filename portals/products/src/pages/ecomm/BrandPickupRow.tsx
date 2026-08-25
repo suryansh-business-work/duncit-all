@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -49,10 +49,24 @@ export default function BrandPickupRow({
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-start"
+          }}>
           <Box sx={{ minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-              <Typography variant="subtitle2" fontWeight={700} noWrap>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 0.5
+              }}>
+              <Typography variant="subtitle2" noWrap sx={{
+                fontWeight: 700
+              }}>
                 {location.nickname}
               </Typography>
               {location.is_default && <Chip size="small" color="primary" label={t('products.pickup.default')} />}
@@ -63,10 +77,14 @@ export default function BrandPickupRow({
                 <Chip size="small" color="warning" variant="outlined" label={t('products.pickup.notRegistered')} />
               )}
             </Stack>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {location.contact_name} · {location.phone}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {[location.address_line1, location.address_line2, location.city, location.state, location.pincode]
                 .filter(Boolean)
                 .join(', ')}

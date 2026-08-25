@@ -50,7 +50,12 @@ export default function MyTicketsList() {
 
   const emptyOrList =
     items.length === 0 ? (
-      <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          p: 1.5
+        }}>
         {filter === 'ALL' ? "You haven't raised any tickets yet." : `No ${LABEL[filter].toLowerCase()} tickets.`}
       </Typography>
     ) : (
@@ -62,12 +67,20 @@ export default function MyTicketsList() {
             onClick={() => navigate(`/tickets/${t.id}`)}
             sx={{ p: 1.5, borderRadius: '16px', cursor: 'pointer' }}
           >
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
                   {t.subject}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   {ticketNo(t.id)} · {t.category} ·{' '}
                   {formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}
                 </Typography>
@@ -81,7 +94,12 @@ export default function MyTicketsList() {
 
   return (
     <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         Your tickets
       </Typography>
       <DuncitTabs

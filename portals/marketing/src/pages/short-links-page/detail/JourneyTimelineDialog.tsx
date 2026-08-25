@@ -40,11 +40,15 @@ export default function JourneyTimelineDialog({
   return (
     <Dialog open fullWidth maxWidth="sm" onClose={onClose}>
       <DialogTitle sx={{ pb: 0.5 }}>
-        <Typography variant="h6" component="div" fontWeight={700}>
+        <Typography variant="h6" component="div" sx={{
+          fontWeight: 700
+        }}>
           {journey.user_name ?? 'Visitor who never signed in'}
         </Typography>
         {journey.user_email && (
-          <Typography variant="body2" component="div" color="text.secondary">
+          <Typography variant="body2" component="div" sx={{
+            color: "text.secondary"
+          }}>
             {journey.user_email}
           </Typography>
         )}
@@ -72,7 +76,12 @@ export default function JourneyTimelineDialog({
 
           {payments.length > 0 && (
             <Box>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 700,
+                  mb: 1
+                }}>
                 Payments
               </Typography>
               <Stack spacing={1.5}>
@@ -81,11 +90,15 @@ export default function JourneyTimelineDialog({
                     key={payment.payment_id}
                     direction="row"
                     spacing={1.5}
-                    alignItems="center"
                     data-testid="conversion-row"
+                    sx={{
+                      alignItems: "center"
+                    }}
                   >
                     <Chip size="small" color="success" label={formatINR(payment.amount)} />
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {formatDateTime(payment.at)}
                     </Typography>
                   </Stack>
@@ -95,11 +108,18 @@ export default function JourneyTimelineDialog({
           )}
 
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 700,
+                mb: 1
+              }}>
               Timeline
             </Typography>
             {journey.steps.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 This click never reported back — the visitor followed the link but the app never
                 loaded, or they left before it did.
               </Typography>
@@ -110,15 +130,19 @@ export default function JourneyTimelineDialog({
                   key={entry.step}
                   direction="row"
                   spacing={1.5}
-                  alignItems="center"
                   data-testid="timeline-step"
+                  sx={{
+                    alignItems: "center"
+                  }}
                 >
                   <Chip
                     size="small"
                     label={stepLabel(entry.step)}
                     color={entry.step === 'PAID' ? 'success' : 'default'}
                   />
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {formatDateTime(entry.at)}
                   </Typography>
                 </Stack>

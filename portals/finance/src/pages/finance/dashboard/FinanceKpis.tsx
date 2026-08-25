@@ -60,7 +60,9 @@ export default function FinanceKpis() {
   const sym = stats?.currency_symbol ?? '';
 
   return (
-    <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2}>
+    <Stack direction="row" useFlexGap spacing={2} sx={{
+      flexWrap: "wrap"
+    }}>
       {cards(t).map((card) => {
         const stat = stats?.[card.key];
         return (

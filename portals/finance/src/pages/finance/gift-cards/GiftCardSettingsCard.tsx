@@ -103,9 +103,17 @@ export default function GiftCardSettingsCard() {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 2
+          }}>
           <TuneIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {t('finance.giftCards.settingsTitle')}
           </Typography>
         </Stack>
@@ -117,7 +125,7 @@ export default function GiftCardSettingsCard() {
         )}
 
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="denominations"
               control={control}
@@ -135,7 +143,12 @@ export default function GiftCardSettingsCard() {
             />
           </Grid>
           {NUMBER_FIELDS.map((name) => (
-            <Grid item xs={12} sm={4} key={name}>
+            <Grid
+              key={name}
+              size={{
+                xs: 12,
+                sm: 4
+              }}>
               <PolicyNumberField name={name} label={labels[name]} control={control} />
             </Grid>
           ))}

@@ -36,13 +36,19 @@ export default function GlobalSwitchCard({
         borderColor: enabled ? 'success.main' : 'warning.main',
       }}
     >
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
+        alignItems: { md: 'center' }
+      }}>
         <WhatsAppIcon color={enabled ? 'success' : 'disabled'} fontSize="large" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h6" fontWeight={800}>
+          <Typography variant="h6" sx={{
+            fontWeight: 800
+          }}>
             {t('adminWhatsapp.globalLabel')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('adminWhatsapp.globalHelp')}
           </Typography>
         </Box>
@@ -62,8 +68,10 @@ export default function GlobalSwitchCard({
           checked={enabled}
           disabled={busy}
           color="success"
-          inputProps={{ 'aria-label': t('adminWhatsapp.globalLabel') }}
           onChange={(event) => onToggle(event.target.checked)}
+          slotProps={{
+            input: { 'aria-label': t('adminWhatsapp.globalLabel') }
+          }}
         />
       </Stack>
     </Paper>

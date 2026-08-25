@@ -30,7 +30,9 @@ export default function AccountDeletionsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('tech.accountDeletions.title')}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('tech.accountDeletions.intro')}
         </Typography>
       </Box>

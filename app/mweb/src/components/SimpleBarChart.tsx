@@ -37,12 +37,33 @@ interface Props {
 export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <Stack direction="row" spacing={1.25} alignItems="flex-end" sx={{ height, pt: 1 }}>
+    <Stack
+      direction="row"
+      spacing={1.25}
+      sx={{
+        alignItems: "flex-end",
+        height,
+        pt: 1
+      }}>
       {data.map((d) => (
-        <Stack key={d.label} spacing={0.5} alignItems="center" sx={{ flex: 1, height: '100%' }}>
+        <Stack
+          key={d.label}
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            flex: 1,
+            height: '100%'
+          }}>
           {/* The bar scales inside this flex track, so the value/label rows can
               never overflow the card (overlap fix, B4-1). */}
-          <Stack spacing={0.5} alignItems="center" sx={{ flex: 1, width: '100%', justifyContent: 'flex-end' }}>
+          <Stack
+            spacing={0.5}
+            sx={{
+              alignItems: "center",
+              flex: 1,
+              width: '100%',
+              justifyContent: 'flex-end'
+            }}>
             <Typography variant="caption" sx={{ fontWeight: 700, lineHeight: 1 }}>
               {d.value}
             </Typography>
@@ -58,7 +79,12 @@ export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) 
               }}
             />
           </Stack>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600
+            }}>
             {d.label}
           </Typography>
         </Stack>

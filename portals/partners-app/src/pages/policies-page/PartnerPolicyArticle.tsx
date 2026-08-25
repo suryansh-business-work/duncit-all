@@ -15,7 +15,12 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight={950} sx={{ mb: 2 }}>{policy.title}</Typography>
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: 950,
+          mb: 2
+        }}>{policy.title}</Typography>
       <Box
         className="ql-editor"
         sx={{
@@ -29,7 +34,14 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
         }}
         dangerouslySetInnerHTML={{ __html: policy.content || '' }}
       />
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 4, display: 'block', textAlign: 'right' }}>Last updated {formatDate(policy.updated_at)}</Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          mt: 4,
+          display: 'block',
+          textAlign: 'right'
+        }}>Last updated {formatDate(policy.updated_at)}</Typography>
       {loading && <CircularProgress size={18} sx={{ position: 'fixed', top: 80, right: 24 }} />}
     </Box>
   );

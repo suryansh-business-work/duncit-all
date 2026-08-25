@@ -89,27 +89,38 @@ function HubTile({ card }: Readonly<{ card: HubCard }>) {
       >
         <Stack
           direction="row"
-          alignItems="center"
           spacing={2}
           sx={{
+            alignItems: "center",
             minHeight: 118,
             backgroundColor: alpha(card.accent, 0.075),
             borderBottom: (t) => `1px solid ${t.palette.divider}`,
-            px: 2,
-          }}
-        >
+            px: 2
+          }}>
           <ModuleIcon kind={card.icon} color={card.accent} />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1 }}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                lineHeight: 1
+              }}>
               Module
             </Typography>
-            <Typography variant="h6" fontWeight={800} sx={{ color: card.accent }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 800,
+                color: card.accent
+              }}>
               {card.title}
             </Typography>
           </Box>
         </Stack>
         <CardContent sx={{ flex: 1 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {card.description}
           </Typography>
         </CardContent>
@@ -143,7 +154,9 @@ export default function HubPage() {
         header={
           <Box>
             <TypingWelcome />
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" sx={{
+              color: "text.secondary"
+            }}>
               Pick a module to get started. Each section opens its own focused workspace.
             </Typography>
           </Box>

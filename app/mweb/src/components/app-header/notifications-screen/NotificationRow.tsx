@@ -79,7 +79,9 @@ export default function NotificationRow({
         '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
       }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Avatar
           src={notification?.image_url || undefined}
           sx={{ width: 48, height: 48, bgcolor: unread ? 'rgba(255,255,255,0.24)' : 'primary.main' }}
@@ -87,7 +89,9 @@ export default function NotificationRow({
           <RowIcon />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack direction="row" spacing={0.75} alignItems="center">
+          <Stack direction="row" spacing={0.75} sx={{
+            alignItems: "center"
+          }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1, minWidth: 0, ...CLAMP_2 }}>
               {notification?.title ?? 'Notification'}
             </Typography>
@@ -95,7 +99,9 @@ export default function NotificationRow({
               {formatRelative(item.created_at)}
             </Typography>
           </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Typography
               variant="body2"
               sx={{ flex: 1, minWidth: 0, opacity: unread ? 0.92 : 0.75, ...CLAMP_2 }}

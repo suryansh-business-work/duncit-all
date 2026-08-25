@@ -74,7 +74,13 @@ export default function MediaField({ label, value, onChange, helperText, error, 
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1
+        }}>
         <Typography variant="subtitle2">{requiredLabel(label, required)}</Typography>
         <Button size="small" startIcon={<AddIcon />} onClick={() => pickInto('new')}>
           Add image

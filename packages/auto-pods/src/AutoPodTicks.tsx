@@ -18,7 +18,9 @@ export interface AutoPodTicksProps {
  */
 export function AutoPodTicks({ row, labels, size = 'small' }: Readonly<AutoPodTicksProps>) {
   return (
-    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={0.75} useFlexGap sx={{
+      flexWrap: "wrap"
+    }}>
       {autoPodTicks(row).map((tick) => (
         <Chip
           key={tick.role}

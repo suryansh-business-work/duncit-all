@@ -44,8 +44,15 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
   return (
     <Card>
       <CardContent>
-        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'center', sm: 'flex-start' }} spacing={2}>
-          <Stack alignItems="center" spacing={1.25} sx={{ minWidth: 140 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+          alignItems: { xs: 'center', sm: 'flex-start' }
+        }}>
+          <Stack
+            spacing={1.25}
+            sx={{
+              alignItems: "center",
+              minWidth: 140
+            }}>
             <Avatar src={form.profile_photo || undefined} sx={{ width: 96, height: 96, fontSize: 36, bgcolor: 'primary.main' }}>
               {(form.first_name?.[0] ?? '?').toUpperCase()}
             </Avatar>
@@ -61,7 +68,14 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
           <Stack spacing={1.25} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
             <Stack spacing={0.5}>
               <Typography variant="h6" noWrap>{form.first_name} {form.last_name}</Typography>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap"
+                }}>
                 <Chip size="small" label={statusMeta.label} color={statusMeta.color} />
                 {user.is_email_verified && (
                   <Tooltip title={t('admin.profile.emailVerified')}>

@@ -12,8 +12,8 @@ export default function VenueCommercialSection({ config }: Readonly<{ config: Cr
     <Stack spacing={1.5}>
       <MultiSelectField name="pricing_models" label={t('crm.forms.pricingModel')} options={config.pricing_models} />
       <FieldGrid>
-        <FormField name="expected_charges" label={t('crm.forms.expectedCharges')} size="small" inputProps={{ inputMode: 'numeric' }} />
-        <FormField name="security_deposit" label={t('crm.forms.securityDeposit')} size="small" inputProps={{ inputMode: 'numeric' }} />
+        <FormField name="expected_charges" label={t('crm.forms.expectedCharges')} size="small" slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
+        <FormField name="security_deposit" label={t('crm.forms.securityDeposit')} size="small" slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
       </FieldGrid>
       <FieldGrid>
         <SwitchField name="gst_applicable" label={t('crm.forms.gstApplicable')} />

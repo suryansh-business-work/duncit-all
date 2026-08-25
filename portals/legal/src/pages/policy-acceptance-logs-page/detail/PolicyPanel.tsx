@@ -22,7 +22,9 @@ interface Props {
 export default function PolicyPanel({ policy, acceptedHash, formatDateTime }: Readonly<Props>) {
   const { t } = useTranslation();
   const heading = (
-    <Typography variant="subtitle2" fontWeight={800}>
+    <Typography variant="subtitle2" sx={{
+      fontWeight: 800
+    }}>
       {t('legalAcceptanceLogs.detail.sectionPolicy')}
     </Typography>
   );

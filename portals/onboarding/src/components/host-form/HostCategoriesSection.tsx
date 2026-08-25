@@ -1,6 +1,6 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import HostCategoryPicker from './HostCategoryPicker';
 import type { HostCategoryValue, HostEditValues } from '../../forms/host';
@@ -22,17 +22,23 @@ export default function HostCategoriesSection() {
   return (
     <Stack spacing={1.5}>
       <Box>
-        <Typography variant="subtitle2" fontWeight={800}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 800
+        }}>
           Host categories
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Categories this host operates in. A host can work across multiple super-categories —
           requested categories are marked, and you can add or remove more here.
         </Typography>
       </Box>
 
       {fields.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No categories assigned yet. Add the first one below.
         </Typography>
       ) : (
@@ -45,11 +51,17 @@ export default function HostCategoriesSection() {
                 key={field.id}
                 direction="row"
                 spacing={1}
-                alignItems="center"
-                sx={{ p: 1, borderRadius: 1.5, border: 1, borderColor: 'divider' }}
-              >
+                sx={{
+                  alignItems: "center",
+                  p: 1,
+                  borderRadius: 1.5,
+                  border: 1,
+                  borderColor: 'divider'
+                }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={700} noWrap>
+                  <Typography variant="body2" noWrap sx={{
+                    fontWeight: 700
+                  }}>
                     {path(category)}
                   </Typography>
                   {requested ? (

@@ -46,7 +46,9 @@ export default function BrandReviewDetails({ brand }: Readonly<Props>) {
       <InfoRow label={t('products.brandForm.businessSection')} value={business || DASH} />
 
       {(brand.website_url || brand.instagram_url) && (
-        <Stack direction="row" spacing={2} flexWrap="wrap">
+        <Stack direction="row" spacing={2} sx={{
+          flexWrap: "wrap"
+        }}>
           {brand.website_url && (
             <Link href={brand.website_url} target="_blank" rel="noreferrer" variant="body2">
               Website
@@ -64,7 +66,13 @@ export default function BrandReviewDetails({ brand }: Readonly<Props>) {
         <InfoRow
           label={t('products.review.documents')}
           value={
-            <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                flexWrap: "wrap",
+                rowGap: 1
+              }}>
               {documents.map((doc) => (
                 <Chip
                   key={doc.url}

@@ -49,7 +49,13 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
 
   return (
     <Stack spacing={1} sx={{ mb: 1.5 }}>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, lineHeight: 1.4 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          lineHeight: 1.4
+        }}>
         Country
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
@@ -67,8 +73,19 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
         })}
       </Box>
 
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, lineHeight: 1.4 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700,
+            lineHeight: 1.4
+          }}>
           State
         </Typography>
         {(activeCountry?.states.length ?? 0) > 6 && (
@@ -77,14 +94,16 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
             placeholder={t('mweb.common.searchState')}
             value={stateQuery}
             onChange={(e) => setStateQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
             sx={{ width: 190, '& .MuiOutlinedInput-root': { minHeight: 36, borderRadius: 999, bgcolor: 'action.hover' }, '& input': { fontSize: 13 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }
+            }}
           />
         )}
       </Stack>
@@ -99,7 +118,9 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
           />
         ))}
         {states.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No matching states.
           </Typography>
         )}

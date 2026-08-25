@@ -100,7 +100,9 @@ export default function AttendanceOtpDialog({
       <DialogTitle sx={{ fontWeight: 800 }}>{labels.otpTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.75} sx={{ pt: 0.5 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {labels.otpBody(row?.name ?? '')}
           </Typography>
 
@@ -188,7 +190,9 @@ export default function AttendanceOtpDialog({
                     fullWidth
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
-                    inputProps={{ inputMode: 'numeric', maxLength: 6 }}
+                    slotProps={{
+                      htmlInput: { inputMode: 'numeric', maxLength: 6 }
+                    }}
                   />
                 )}
               />

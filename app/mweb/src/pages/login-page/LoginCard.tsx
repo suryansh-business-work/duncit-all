@@ -37,15 +37,29 @@ export default function LoginCard({
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
-        <Stack alignItems="center" spacing={1.2}>
+        <Stack spacing={1.2} sx={{
+          alignItems: "center"
+        }}>
           <AuthLogo />
-          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              textAlign: "center",
+              color: "text.primary"
+            }}>
             {t('mweb.login.title')}{' '}
             <Box component="span" sx={{ color: auth.accent }}>
               {t('mweb.login.titleAccent')}
             </Box>
           </Typography>
-          <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 300 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              color: "text.secondary",
+              maxWidth: 300
+            }}>
             {t('mweb.login.subtitle')}
           </Typography>
         </Stack>
@@ -53,29 +67,37 @@ export default function LoginCard({
         <Stack
           direction="row"
           spacing={1}
-          alignItems="center"
           sx={{
+            alignItems: "center",
             px: 1.25,
             py: 1,
             borderRadius: '16px',
             bgcolor: 'action.hover',
             border: 1,
-            borderColor: 'divider',
-          }}
-        >
+            borderColor: 'divider'
+          }}>
           <Stack direction="row" spacing={-0.7}>
             {auth.avatars.map((color) => (
               <Box key={color} sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: color, border: `2px solid ${auth.avatarRing}` }} />
             ))}
           </Stack>
-          <Typography variant="caption" fontWeight={600} color="text.primary">
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 600,
+              color: "text.primary"
+            }}>
             {t('mweb.login.avatarsCaption')}
           </Typography>
         </Stack>
 
         <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
 
-        <Stack alignItems="flex-end" sx={{ mt: -1 }}>
+        <Stack
+          sx={{
+            alignItems: "flex-end",
+            mt: -1
+          }}>
           <Link component={RouterLink} to="/forgot-password" underline="hover" variant="body2">
             {t('mweb.login.forgotPassword')}
           </Link>
@@ -83,7 +105,9 @@ export default function LoginCard({
 
         <Divider>{t('mweb.auth.or')}</Divider>
 
-        <Stack spacing={1.4} alignItems="center">
+        <Stack spacing={1.4} sx={{
+          alignItems: "center"
+        }}>
           <GoogleSignInButton
             onCredential={onGoogleCredential}
             loading={gLoading}
@@ -94,14 +118,18 @@ export default function LoginCard({
               {gError}
             </Alert>
           )}
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.login.newHere')}{' '}
             <Link component={RouterLink} to="/register" underline="hover">
               {t('mweb.login.createOne')}
             </Link>
           </Typography>
           <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
-          <Typography variant="caption" color="text.disabled">
+          <Typography variant="caption" sx={{
+            color: "text.disabled"
+          }}>
             {t('mweb.auth.appVersion', { vars: { version: __APP_VERSION__ } })}
           </Typography>
         </Stack>

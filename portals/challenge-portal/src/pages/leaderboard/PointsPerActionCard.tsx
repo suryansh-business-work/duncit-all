@@ -81,10 +81,14 @@ export default function PointsPerActionCard({ settings }: Readonly<Props>) {
     <Paper variant="outlined" sx={{ p: 2.5 }}>
       <Stack spacing={2}>
         <Stack>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             {t('admin.leaderboard.pointsCardTitle')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('admin.leaderboard.pointsCardSubtitle')}
           </Typography>
         </Stack>
@@ -96,12 +100,16 @@ export default function PointsPerActionCard({ settings }: Readonly<Props>) {
             type="number"
             value={form[item.field]}
             onChange={(e) => setForm((current) => ({ ...current, [item.field]: e.target.value }))}
-            inputProps={{ min: 0, step: 1 }}
             fullWidth
+            slotProps={{
+              htmlInput: { min: 0, step: 1 }
+            }}
           />
         ))}
 
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button variant="contained" onClick={submit} disabled={busy}>
             {busy ? t('admin.leaderboard.saving') : t('admin.leaderboard.save')}
           </Button>

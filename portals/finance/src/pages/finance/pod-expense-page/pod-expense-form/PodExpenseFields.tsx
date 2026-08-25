@@ -92,8 +92,7 @@ export default function PodExpenseFields({
                 fullWidth: true,
                 error: !!fieldState.error,
                 helperText: fieldState.error?.message ?? ' ',
-              },
-            }}
+              }}}
           />
         )}
       />
@@ -118,11 +117,13 @@ export default function PodExpenseFields({
             onChange={(event) =>
               field.onChange(event.target.value === '' ? Number.NaN : Number(event.target.value))
             }
-            InputProps={{
-              startAdornment: <InputAdornment position="start">{currency}</InputAdornment>,
-            }}
             error={!!fieldState.error}
             helperText={fieldState.error?.message ?? ' '}
+            slotProps={{
+              input: {
+                startAdornment: <InputAdornment position="start">{currency}</InputAdornment>,
+              }
+            }}
           />
         )}
       />

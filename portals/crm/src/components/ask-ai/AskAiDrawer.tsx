@@ -84,13 +84,31 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
       anchor="right"
       open={open}
       variant="persistent"
-      PaperProps={{ sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: `calc(100% - ${HEADER_HEIGHT}px)`, borderLeft: 1, borderColor: 'divider' } }}
+      slotProps={{
+        paper: { sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: `calc(100% - ${HEADER_HEIGHT}px)`, borderLeft: 1, borderColor: 'divider' } }
+      }}
     >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          p: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
         <SmartToyIcon color="secondary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" fontWeight={800} noWrap>{t('crm.components.askAi')}</Typography>
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>About {leadName}</Typography>
+          <Typography variant="subtitle1" noWrap sx={{
+            fontWeight: 800
+          }}>{t('crm.components.askAi')}</Typography>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              display: 'block'
+            }}>About {leadName}</Typography>
         </Box>
         <IconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ flexShrink: 0 }}><CloseIcon /></IconButton>
       </Stack>
@@ -98,7 +116,9 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
       <Stack spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
         {messages.length === 0 && (
           <Stack spacing={1}>
-            <Typography variant="body2" color="text.secondary">{t('crm.components.askAnythingAboutThisLeadTry')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('crm.components.askAnythingAboutThisLeadTry')}</Typography>
             {SUGGESTIONS.map((s) => (
               <Box key={s} onClick={() => send(s)} sx={{ cursor: 'pointer', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, px: 1.25, py: 0.75, fontSize: 13 }}>
                 {s}
@@ -109,7 +129,9 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
         {messages.map((m) => {
           const isUser = m.role === 'user';
           return (
-            <Stack key={m.id} direction={isUser ? 'row-reverse' : 'row'} spacing={1} alignItems="flex-start">
+            <Stack key={m.id} direction={isUser ? 'row-reverse' : 'row'} spacing={1} sx={{
+              alignItems: "flex-start"
+            }}>
               <Avatar sx={{ width: 26, height: 26, bgcolor: isUser ? 'primary.main' : 'secondary.main' }}>
                 {isUser ? <PersonIcon sx={{ fontSize: 16 }} /> : <SmartToyIcon sx={{ fontSize: 16 }} />}
               </Avatar>
@@ -127,12 +149,24 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
             </Stack>
           );
         })}
-        {loading && <Stack direction="row" spacing={1} alignItems="center"><CircularProgress size={16} /><Typography variant="caption" color="text.secondary">Thinking…</Typography></Stack>}
+        {loading && <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}><CircularProgress size={16} /><Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>Thinking…</Typography></Stack>}
         {error && <Typography variant="caption" color="error">{error}</Typography>}
         <div ref={endRef} />
       </Stack>
 
-      <Stack direction="row" spacing={1} alignItems="flex-end" sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "flex-end",
+          p: 1.5,
+          borderTop: 1,
+          borderColor: 'divider'
+        }}>
         <TextField
           size="small"
           fullWidth

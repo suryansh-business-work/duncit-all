@@ -52,11 +52,19 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
 
   return (
     <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: attachments.length ? 1 : 0 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: attachments.length ? 1 : 0
+        }}>
         <AttachFileIcon fontSize="small" color="action" />
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle2">{t('crm.emailTemplates.attachments')}</Typography>
-          <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.imageOrVideoSentWithEvery')}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{t('crm.emailTemplates.imageOrVideoSentWithEvery')}</Typography>
         </Box>
         <AiMonitoringChip />
         <Button size="small" variant="outlined" startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
@@ -65,7 +73,14 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
       </Stack>
       {error && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setError(null)}>{error}</Alert>}
       {attachments.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            flexWrap: "wrap",
+            mt: 1
+          }}>
           {attachments.map((a) => (
             <Chip
               key={a.url}

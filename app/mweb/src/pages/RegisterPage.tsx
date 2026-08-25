@@ -108,15 +108,31 @@ export default function RegisterPage() {
       <AuthModeToggle />
       <AuthScreenFrame>
         <Stack spacing={1.45}>
-          <Stack alignItems="center" spacing={1.1} sx={{ pt: 0.5 }}>
+          <Stack
+            spacing={1.1}
+            sx={{
+              alignItems: "center",
+              pt: 0.5
+            }}>
             <AuthLogo />
-            <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                textAlign: "center",
+                color: "text.primary"
+              }}>
               {t('mweb.signup.title')}{' '}
               <Box component="span" sx={{ color: auth.accent }}>
                 {t('mweb.signup.titleAccent')}
               </Box>
             </Typography>
-            <Typography variant="body2" textAlign="center" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: "center",
+                color: "text.secondary"
+              }}>
               {t('mweb.signup.subtitle')}
             </Typography>
           </Stack>

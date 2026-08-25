@@ -132,7 +132,11 @@ export default function PodCancelDialog({
         <Stack component="form" id="pod-cancel-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2">{labels.cancelIntro(podTitle)}</Typography>
           {impactQ.loading && (
-            <Stack alignItems="center" sx={{ py: 1 }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                py: 1
+              }}>
               <CircularProgress size={20} />
             </Stack>
           )}

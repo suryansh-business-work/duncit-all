@@ -104,8 +104,10 @@ export default function MomentLightbox({
       open={index !== null}
       onClose={close}
       fullScreen
-      PaperProps={{ sx: { bgcolor: 'rgba(0,0,0,0.94)' } }}
       aria-label={t('mweb.moments.momentPreview')}
+      slotProps={{
+        paper: { sx: { bgcolor: 'rgba(0,0,0,0.94)' } }
+      }}
     >
       <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
         <Stack
@@ -147,10 +149,13 @@ export default function MomentLightbox({
           </>
         )}
         <Stack
-          alignItems="center"
-          justifyContent="center"
-          sx={{ width: '100%', height: '100%', p: 2 }}
-        >
+          sx={{
+            alignItems: "center",
+            justifyContent: "center",
+            width: '100%',
+            height: '100%',
+            p: 2
+          }}>
           {moment.type === 'VIDEO' ? (
             <Box
               component="video"

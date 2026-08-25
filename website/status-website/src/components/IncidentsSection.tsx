@@ -1,5 +1,5 @@
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import { formatDate } from '../utils/format';
 import { useTranslation } from '../i18n';
 import { stateChipColor, stateLabel } from '../utils/status';
@@ -18,9 +18,18 @@ function IncidentRow({ incident, divider }: Readonly<{ incident: Incident; divid
     : `Since ${formatDate(incident.started_at)}`;
   return (
     <Box sx={{ py: 1.75, ...(divider ? { borderBottom: 1, borderColor: 'divider' } : {}) }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Chip size="small" color={stateChipColor(incident.impact)} label={IMPACT_LABEL[incident.impact]} />
-        <Typography fontWeight={700}>{incident.title}</Typography>
+        <Typography sx={{
+          fontWeight: 700
+        }}>{incident.title}</Typography>
         <Chip size="small" variant="outlined" label={incident.service_name} />
         <Chip
           size="small"
@@ -31,11 +40,18 @@ function IncidentRow({ incident, divider }: Readonly<{ incident: Incident; divid
         />
       </Stack>
       {incident.body && (
-        <Typography variant="body2" color="text.secondary" mt={0.5}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           {incident.body}
         </Typography>
       )}
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {range}
       </Typography>
     </Box>
@@ -46,17 +62,27 @@ export default function IncidentsSection({ incidents }: Readonly<{ incidents: In
   const { t } = useTranslation();
   if (incidents === null) return null;
   return (
-    <Box component="section" mb={4}>
+    <Box component="section" sx={{
+      mb: 4
+    }}>
       <Typography
         variant="overline"
-        color="text.secondary"
-        sx={{ letterSpacing: '0.12em', fontWeight: 700 }}
-      >
+        sx={{
+          color: "text.secondary",
+          letterSpacing: '0.12em',
+          fontWeight: 700
+        }}>
         {t('status.board.pastIncidents')}
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, px: 2.5, py: incidents.length ? 0.5 : 2.5 }}>
         {incidents.length === 0 ? (
-          <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              color: "text.secondary"
+            }}>
             <CheckCircleOutlineIcon fontSize="small" color="success" />
             <Typography variant="body2">{t('status.board.noIncidents')}</Typography>
           </Stack>

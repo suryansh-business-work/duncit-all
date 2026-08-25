@@ -52,10 +52,14 @@ export default function CouponsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" fontWeight={900}>
+        <Typography variant="h5" sx={{
+          fontWeight: 900
+        }}>
           {t('shell.coupons.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('shell.coupons.subtitle')}
         </Typography>
       </Box>

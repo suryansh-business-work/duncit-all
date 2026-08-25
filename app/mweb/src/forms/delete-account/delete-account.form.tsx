@@ -48,15 +48,15 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           hint={t('mweb.account.deletion.otpHint')}
           placeholder={t('mweb.account.deletion.otpPlaceholder')}
           digitsOnly
-          inputProps={{ inputMode: 'numeric', maxLength: 6 }}
-          size="small"
-          InputProps={{
+          slotProps={{ input: {
             startAdornment: (
               <InputAdornment position="start">
                 <PinOutlinedIcon fontSize="small" />
               </InputAdornment>
             ),
-          }}
+          }, htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+          size="small"
+          
         />
         <RhfTextField
           control={control}

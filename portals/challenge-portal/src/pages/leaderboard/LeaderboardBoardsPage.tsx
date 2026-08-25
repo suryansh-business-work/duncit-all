@@ -33,13 +33,19 @@ export default function LeaderboardBoardsPage() {
     <DuncitDashboard
       dashboardId="challenge.leaderboardBoards"
       header={
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <EmojiEventsIcon color="primary" />
           <Stack>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" sx={{
+              fontWeight: 700
+            }}>
               {t('admin.leaderboard.boardsTitle')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('admin.leaderboard.boardsSubtitle')}
             </Typography>
           </Stack>

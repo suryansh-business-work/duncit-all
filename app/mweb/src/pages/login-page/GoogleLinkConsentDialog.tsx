@@ -44,9 +44,19 @@ export default function GoogleLinkConsentDialog({
   const { t } = useTranslation();
 
   return (
-    <Dialog open={open} onClose={onDeny} disableEscapeKeyDown fullWidth maxWidth="xs">
+    <Dialog
+      open={open}
+      // Consent is an explicit choice: Escape must not stand in for "deny".
+      onClose={(_e, reason) => {
+        if (reason !== 'escapeKeyDown') onDeny();
+      }}
+      fullWidth
+      maxWidth="xs"
+    >
       <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <GoogleIcon fontSize="small" />
           <span>{t('mweb.login.linkConsentTitle')}</span>
         </Stack>
@@ -56,7 +66,9 @@ export default function GoogleLinkConsentDialog({
           <Typography variant="body2">
             {t('mweb.login.linkConsentBody', { vars: { email } })}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.login.linkConsentDetail')}
           </Typography>
           {error && <Alert severity="error">{error}</Alert>}

@@ -20,57 +20,81 @@ export default function PricingTaxSection() {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfNumberField
           control={control}
           required
           name="unit_cost"
           label={t('products.pricing.unitCost')}
           hint="Reference cost for internal accounting"
-          InputProps={{ startAdornment: rupee }}
+          slotProps={{ input: { startAdornment: rupee } }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfNumberField
           control={control}
           required
           name="purchase_price"
           label={t('products.pricing.purchasePrice')}
           hint="What you pay the supplier"
-          InputProps={{ startAdornment: rupee }}
+          slotProps={{ input: { startAdornment: rupee } }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfNumberField
           control={control}
           required
           name="selling_price"
           label={t('products.pricing.sellingPrice')}
           hint="Listed price before tax / discount"
-          InputProps={{ startAdornment: rupee }}
+          slotProps={{ input: { startAdornment: rupee } }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfNumberField
           control={control}
           required
           name="tax_percent"
           label={t('products.pricing.taxGst')}
           hint="0, 5, 12, 18 or 28"
-          InputProps={{ endAdornment: percent }}
+          slotProps={{ input: { endAdornment: percent } }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfNumberField
           control={control}
           required
           name="discount_percent"
           label={t('products.pricing.discount')}
           hint="0 if no promotion"
-          InputProps={{ endAdornment: percent }}
+          slotProps={{ input: { endAdornment: percent } }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 4
+        }}>
         <RhfTextField
           control={control}
           name="weight_volume"
@@ -78,7 +102,7 @@ export default function PricingTaxSection() {
           hint='Free-form, e.g. "500 ml", "1 kg"'
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Alert severity="info">
           Effective price after discount &amp; tax: <strong>₹{net.toFixed(2)}</strong>
         </Alert>

@@ -12,13 +12,23 @@ export interface InfoRowProps {
  * Native twin: components/pod-pending/InfoRow.tsx (rule 27). */
 export default function InfoRow({ icon, label, value, testId }: Readonly<InfoRowProps>) {
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start" data-testid={testId}>
+    <Stack direction="row" spacing={1} data-testid={testId} sx={{
+      alignItems: "flex-start"
+    }}>
       <Box sx={{ color: 'text.secondary', display: 'flex', mt: '2px' }}>{icon}</Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="caption" fontWeight={600} color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: "text.secondary",
+            display: "block"
+          }}>
           {label}
         </Typography>
-        <Typography variant="body2" fontWeight={700}>
+        <Typography variant="body2" sx={{
+          fontWeight: 700
+        }}>
           {value}
         </Typography>
       </Box>

@@ -28,10 +28,14 @@ export default function MediaListRow({
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
-      sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}
-    >
+      sx={{
+        alignItems: "center",
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1,
+        p: 1
+      }}>
       {VIDEO_RE.test(url) ? (
         <Box
           component="video"
@@ -66,17 +70,18 @@ export default function MediaListRow({
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="caption"
-          color="text.secondary"
           sx={{
+            color: "text.secondary",
             display: 'block',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
+            textOverflow: 'ellipsis'
+          }}>
           {url}
         </Typography>
-        <Typography variant="caption" color="text.disabled">
+        <Typography variant="caption" sx={{
+          color: "text.disabled"
+        }}>
           #{index + 1}
         </Typography>
       </Box>

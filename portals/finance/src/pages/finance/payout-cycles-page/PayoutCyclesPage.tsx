@@ -79,13 +79,23 @@ export default function PayoutCyclesPage() {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          mb: 3
+        }}>
         <CalendarMonthIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             Payout Cycles
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             When approved venue and host payouts are disbursed.
           </Typography>
         </Box>
@@ -94,7 +104,9 @@ export default function PayoutCyclesPage() {
       <Stack spacing={2}>
         <Card variant="outlined">
           <CardContent>
-            <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+            <Typography variant="subtitle1" gutterBottom sx={{
+              fontWeight: 700
+            }}>
               Disbursement schedule
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1 }}>
@@ -129,7 +141,13 @@ export default function PayoutCyclesPage() {
               </Stack>
             )}
 
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block",
+                mt: 2
+              }}>
               Immediate releases as soon as Finance approves a payout. Weekly runs on the chosen day; Month end on the
               last day of the month — both at the chosen time.
             </Typography>

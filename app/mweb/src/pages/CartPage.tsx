@@ -33,12 +33,22 @@ export default function CartPage() {
 
   if (groups.length === 0) {
     return (
-      <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
+      <Stack
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          py: 8,
+          textAlign: 'center'
+        }}>
         <ShoppingCartIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.cart.empty')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.cart.emptyBody')}
         </Typography>
         <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
@@ -64,8 +74,16 @@ export default function CartPage() {
           onRemove={(line) => removeLine(podId, cartLineKey(line))}
         />
       ))}
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.5 }}>
-        <Typography variant="body2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 0.5
+        }}>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('mweb.cart.total')}
         </Typography>
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>

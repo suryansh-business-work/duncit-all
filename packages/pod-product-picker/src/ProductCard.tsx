@@ -44,7 +44,9 @@ export default function ProductCard({ product, selected, added, onSelect, t }: R
         aria-pressed={selected}
         sx={{ height: '100%', alignItems: 'stretch', p: 1.5 }}
       >
-        <Stack spacing={1} height="100%">
+        <Stack spacing={1} sx={{
+          height: "100%"
+        }}>
           <Box
             sx={{
               position: 'relative',
@@ -78,27 +80,38 @@ export default function ProductCard({ product, selected, added, onSelect, t }: R
             {product.product_name}
           </Typography>
           {product.brand_name && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {product.brand_name}
             </Typography>
           )}
           {blurb && (
             <Typography
               variant="caption"
-              color="text.secondary"
               sx={{
+                color: "text.secondary",
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
-            >
+                overflow: 'hidden'
+              }}>
               {blurb}
             </Typography>
           )}
-          <Box flexGrow={1} />
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-            <Typography variant="subtitle2" color="primary.main">
+          <Box sx={{
+            flexGrow: 1
+          }} />
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1
+            }}>
+            <Typography variant="subtitle2" sx={{
+              color: "primary.main"
+            }}>
               {t('podProduct.perUnit', { vars: { cost: formatMoney(product.unit_cost) } })}
             </Typography>
             <StockChip added={added} outOfStock={outOfStock} stock={stock} t={t} />
@@ -125,7 +138,9 @@ function StockChip({ added, outOfStock, stock, t }: Readonly<StockChipProps>) {
     return <Chip size="small" color="default" label={t('podProduct.outOfStock')} />;
   }
   return (
-    <Typography variant="caption" color="text.secondary">
+    <Typography variant="caption" sx={{
+      color: "text.secondary"
+    }}>
       {t('podProduct.unitsLeft', { vars: { count: stock } })}
     </Typography>
   );

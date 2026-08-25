@@ -39,7 +39,9 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
   return (
     <Stack spacing={2.5}>
       {sizes.note && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {sizes.note}
         </Typography>
       )}
@@ -63,7 +65,9 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
       />
 
       <Stack spacing={1}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "center"
+        }}>
           <Typography variant="subtitle2">{t('admin.branding.splash')}</Typography>
           <ToggleButtonGroup
             size="small"

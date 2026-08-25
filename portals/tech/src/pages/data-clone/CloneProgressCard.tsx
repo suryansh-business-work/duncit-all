@@ -21,10 +21,14 @@ const STATUS_KEY: Record<CloneJobStatus, string> = {
 function Stat({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Stack spacing={0.25}>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" sx={{
+        fontWeight: 700
+      }}>
         {value}
       </Typography>
     </Stack>
@@ -48,9 +52,22 @@ export default function CloneProgressCard({ job }: Readonly<{ job: CloneJob }>) 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Stack spacing={1.5}>
-        <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            flexWrap: "wrap"
+          }}>
           <Chip size="small" color={STATUS_COLOR[job.status]} label={t(STATUS_KEY[job.status])} />
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1, minWidth: 0 }} noWrap>
+          <Typography
+            variant="body2"
+            noWrap
+            sx={{
+              color: "text.secondary",
+              flex: 1,
+              minWidth: 0
+            }}>
             {copyingLabel}
           </Typography>
         </Stack>
@@ -61,7 +78,9 @@ export default function CloneProgressCard({ job }: Readonly<{ job: CloneJob }>) 
           <LinearProgress variant="determinate" value={percent} />
         )}
 
-        <Stack direction="row" spacing={4} flexWrap="wrap">
+        <Stack direction="row" spacing={4} sx={{
+          flexWrap: "wrap"
+        }}>
           <Stat label={t('tech.dataClone.collections')} value={progressLabel} />
           <Stat
             label={t('tech.dataClone.documentsCopied')}
@@ -70,17 +89,25 @@ export default function CloneProgressCard({ job }: Readonly<{ job: CloneJob }>) 
           <Stat label={t('tech.dataClone.dataCopied')} value={formatBytes(job.bytesCopied)} />
         </Stack>
 
-        <Stack direction="row" spacing={2} flexWrap="wrap">
-          <Typography variant="caption" color="text.secondary">
+        <Stack direction="row" spacing={2} sx={{
+          flexWrap: "wrap"
+        }}>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('tech.dataClone.startedAt', { vars: { when: formatDateTime(job.startedAt) } })}
           </Typography>
           {job.finishedAt && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('tech.dataClone.finishedAt', { vars: { when: formatDateTime(job.finishedAt) } })}
             </Typography>
           )}
           {job.startedBy && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('tech.dataClone.startedBy', { vars: { who: job.startedBy } })}
             </Typography>
           )}

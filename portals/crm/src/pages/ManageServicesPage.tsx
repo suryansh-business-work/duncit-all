@@ -169,13 +169,17 @@ export default function ManageServicesPage({
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <HandymanIcon color="primary" />
         <Box sx={{ flex: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {subtitle}
           </Typography>
         </Box>
@@ -199,7 +203,11 @@ export default function ManageServicesPage({
       <Card>
         <CardContent sx={{ p: 0 }}>
           {loading && rows.length === 0 ? (
-            <Stack alignItems="center" sx={{ py: 6 }}>
+            <Stack
+              sx={{
+                alignItems: "center",
+                py: 6
+              }}>
               <CircularProgress />
             </Stack>
           ) : (
@@ -219,9 +227,11 @@ export default function ManageServicesPage({
                       <TextField
                         size="small"
                         value={draft.sort_order}
-                        inputProps={{ inputMode: 'numeric' }}
                         onChange={(e) => setDraft({ ...draft, sort_order: e.target.value })}
                         sx={{ width: 70 }}
+                        slotProps={{
+                          htmlInput: { inputMode: 'numeric' }
+                        }}
                       />
                     </TableCell>
                     <TableCell>
@@ -273,7 +283,12 @@ export default function ManageServicesPage({
                 {rows.length === 0 && !draft && (
                   <TableRow>
                     <TableCell colSpan={4} align="center">
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.secondary",
+                          py: 3
+                        }}>
                         No services yet. Click "Add service" to create the first one.
                       </Typography>
                     </TableCell>
@@ -289,9 +304,11 @@ export default function ManageServicesPage({
                           <TextField
                             size="small"
                             value={draft!.sort_order}
-                            inputProps={{ inputMode: 'numeric' }}
                             onChange={(e) => setDraft({ ...draft!, sort_order: e.target.value })}
                             sx={{ width: 70 }}
+                            slotProps={{
+                              htmlInput: { inputMode: 'numeric' }
+                            }}
                           />
                         ) : (
                           row.sort_order
@@ -306,8 +323,12 @@ export default function ManageServicesPage({
                             onChange={(e) => setDraft({ ...draft!, name: e.target.value })}
                           />
                         ) : (
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography variant="body2" fontWeight={600}>
+                          <Stack direction="row" spacing={1} sx={{
+                            alignItems: "center"
+                          }}>
+                            <Typography variant="body2" sx={{
+                              fontWeight: 600
+                            }}>
                               {row.name}
                             </Typography>
                             {!row.is_active && <Chip size="small" label={t('crm.common.inactive')} color="warning" />}

@@ -5,7 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
@@ -27,25 +27,35 @@ const getIdeaRowId = (it: IdeaRow) => it.id;
 
 const renderIdea = (it: IdeaRow) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={600} noWrap component="div">
+    <Typography variant="body2" noWrap component="div" sx={{
+      fontWeight: 600
+    }}>
       {it.title}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap component="div">
+    <Typography variant="caption" noWrap component="div" sx={{
+      color: "text.secondary"
+    }}>
       {it.description}
     </Typography>
   </Box>
 );
 
 const renderAuthor = (it: IdeaRow) => (
-  <Stack direction="row" spacing={1} alignItems="center" component="span">
+  <Stack direction="row" spacing={1} component="span" sx={{
+    alignItems: "center"
+  }}>
     <Avatar src={it.author?.profile_photo || undefined} sx={{ width: 28, height: 28 }}>
       {(it.author?.first_name?.[0] ?? 'U').toUpperCase()}
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" fontWeight={500} noWrap component="div">
+      <Typography variant="body2" noWrap component="div" sx={{
+        fontWeight: 500
+      }}>
         {it.author?.full_name ?? '—'}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap component="div">
+      <Typography variant="caption" noWrap component="div" sx={{
+        color: "text.secondary"
+      }}>
         {it.author?.email ?? ''}
       </Typography>
     </Box>
@@ -57,19 +67,25 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 const renderEngagement = (it: IdeaRow, t: Translate) => (
   <Stack direction="row" spacing={1} sx={{ color: 'text.secondary', fontSize: 12 }} component="span">
     <Tooltip title={t('admin.podIdeas.colLikes')}>
-      <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        alignItems: "center"
+      }}>
         <FavoriteIcon fontSize="inherit" />
         <span>{it.likes_count}</span>
       </Stack>
     </Tooltip>
     <Tooltip title={t('admin.podIdeas.colComments')}>
-      <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        alignItems: "center"
+      }}>
         <ChatBubbleOutlineIcon fontSize="inherit" />
         <span>{it.comments_count}</span>
       </Stack>
     </Tooltip>
     <Tooltip title={t('admin.podIdeas.colShares')}>
-      <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+      <Stack direction="row" spacing={0.5} component="span" sx={{
+        alignItems: "center"
+      }}>
         <ShareIcon fontSize="inherit" />
         <span>{it.shares_count}</span>
       </Stack>
@@ -85,7 +101,9 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<IdeaRow>[]>(() => {
     const renderActions = (it: IdeaRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
+      <Stack direction="row" component="span" sx={{
+        justifyContent: "flex-end"
+      }}>
         <Tooltip title={t('shell.common.view')}>
           <IconButton size="small" onClick={() => onView(it.id)}>
             <VisibilityIcon fontSize="small" />

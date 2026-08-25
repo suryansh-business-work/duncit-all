@@ -40,15 +40,30 @@ export default function ClubDetailsPage() {
     <Stack spacing={3}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        justifyContent="space-between"
         spacing={2}
-      >
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
+        sx={{
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: "space-between"
+        }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            minWidth: 0
+          }}>
           <BackButton onClick={() => navigate('/clubs')}>{t('admin.clubs.title')}</BackButton>
           <Box sx={{ minWidth: 0 }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
-              <Typography variant="h5" fontWeight={900} noWrap>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                flexWrap: 'wrap'
+              }}>
+              <Typography variant="h5" noWrap sx={{
+                fontWeight: 900
+              }}>
                 {club.club_name}
               </Typography>
               {club.is_verified && <VerifiedIcon color="primary" fontSize="small" titleAccess="Verified" />}
@@ -58,7 +73,9 @@ export default function ClubDetailsPage() {
                 color={club.is_active ? 'success' : 'default'}
               />
             </Stack>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               /{club.club_id}
             </Typography>
           </Box>

@@ -119,7 +119,11 @@ export default function ClubsPage({
 
   if (loading && !data)
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -153,7 +157,13 @@ export default function ClubsPage({
         <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
           Clubs
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5,
+            fontWeight: 700
+          }}>
           Find communities hosting pods near you
         </Typography>
       </Box>
@@ -171,20 +181,24 @@ export default function ClubsPage({
           </Link>
         </Alert>
       )}
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           size="small"
           placeholder={t('mweb.common.searchClubs')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
           sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
+          }}
         />
       </Stack>
       <ClubCategoryChips
@@ -193,8 +207,16 @@ export default function ClubsPage({
         onSelect={setCategoryId}
       />
       {locationHasNoClubs ? (
-        <Stack alignItems="center" spacing={1.5} sx={{ py: 6, textAlign: 'center' }}>
-          <Typography variant="h6" fontWeight={600}>
+        <Stack
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            py: 6,
+            textAlign: 'center'
+          }}>
+          <Typography variant="h6" sx={{
+            fontWeight: 600
+          }}>
             No Clubs operating at the selected location,
           </Typography>
           <Button

@@ -127,7 +127,9 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
       anchor="right"
       open={!!seedPod}
       onClose={onClose}
-      PaperProps={{ sx: { width: { xs: '100%', sm: 560, lg: 760 }, p: 2.5 } }}
+      slotProps={{
+        paper: { sx: { width: { xs: '100%', sm: 560, lg: 760 }, p: 2.5 } }
+      }}
     >
       {pod && podDocId && (
         <>

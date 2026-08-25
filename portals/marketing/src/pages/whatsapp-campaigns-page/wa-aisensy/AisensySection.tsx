@@ -39,7 +39,11 @@ export default function AisensySection({
   }
   if (loading && count === 0) {
     return (
-      <Stack alignItems="center" sx={{ py: 5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}>
         <CircularProgress />
       </Stack>
     );

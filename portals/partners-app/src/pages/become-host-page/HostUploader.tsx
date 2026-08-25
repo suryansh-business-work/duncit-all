@@ -11,7 +11,9 @@ interface Props {
 export default function HostUploader({ label, value, onPick }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <Typography variant="body2" sx={{ flex: 1 }}>{label}</Typography>
       {value ? (
         <Chip label={t('partners.common.uploaded')} color="success" size="small" onClick={() => window.open(value, '_blank')} />

@@ -18,10 +18,17 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
     <Stack spacing={2}>
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             Business identity
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 2
+            }}>
             Shown as the issuer on every invoice and ticket.
           </Typography>
           <Stack spacing={2}>
@@ -56,7 +63,9 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
 
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{
+            fontWeight: 700
+          }}>
             Invoice document
           </Typography>
           <Stack spacing={2} sx={{ mt: 1 }}>

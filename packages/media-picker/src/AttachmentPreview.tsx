@@ -66,15 +66,23 @@ export default function AttachmentPreview({
         <Stack
           direction="row"
           spacing={0.75}
-          alignItems="center"
-          sx={{ height: size, px: 1, maxWidth: 168, border: 1, borderColor: 'divider', borderRadius: 2 }}
-        >
+          sx={{
+            alignItems: "center",
+            height: size,
+            px: 1,
+            maxWidth: 168,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 2
+          }}>
           {info.kind === 'video' ? <MovieIcon color="action" /> : <InsertDriveFileIcon color="action" />}
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="caption" noWrap sx={{ display: 'block', fontWeight: 700 }}>
               {info.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {typeLabel(info.ext)}
             </Typography>
           </Box>

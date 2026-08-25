@@ -112,7 +112,13 @@ export default function PreviewVariablesPane({
         </Box>
       ) : (
         <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 1
+            }}>
             <Typography variant="subtitle2" sx={{ flex: 1 }}>
               Detected in template
             </Typography>
@@ -120,9 +126,18 @@ export default function PreviewVariablesPane({
               Sync to declared list
             </Button>
           </Stack>
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            useFlexGap
+            sx={{
+              flexWrap: "wrap",
+              mb: 2
+            }}>
             {detected.length === 0 ? (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 No <code>{'{{ var }}'}</code> placeholders found.
               </Typography>
             ) : (
@@ -150,7 +165,9 @@ export default function PreviewVariablesPane({
             Declared variables
           </Typography>
           {draft.variables.length === 0 ? (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Click <b>Sync</b> above to declare detected variables.
             </Typography>
           ) : (

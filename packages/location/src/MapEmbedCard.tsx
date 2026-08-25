@@ -64,7 +64,9 @@ const DEFAULT_FRAME_SX: Sx = {
 function MissingKeyNotice() {
   const { t } = useTranslation();
   return (
-    <Typography variant="body2" color="text.secondary">
+    <Typography variant="body2" sx={{
+      color: "text.secondary"
+    }}>
       {t('location.map.keyMissing')}
     </Typography>
   );
@@ -121,11 +123,11 @@ export function MapEmbedCard({
     <Box sx={sx ?? { mt: 1.5 }}>
       <Stack
         direction="row"
-        alignItems="center"
-        justifyContent="space-between"
         spacing={stackSpacing}
-        sx={stackSx ?? { mb: 0.75 }}
-      >
+        sx={[{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }, ...(Array.isArray(stackSx) ? stackSx : [stackSx ?? { mb: 0.75 }])]}>
         {typeof headingNode === 'string' ? (
           <Typography variant={headingVariant} color={headingColor} sx={headingSx}>
             {headingNode}

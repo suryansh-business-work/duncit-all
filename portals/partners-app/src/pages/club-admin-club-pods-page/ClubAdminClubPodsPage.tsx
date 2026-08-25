@@ -4,7 +4,7 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import CreatePodLauncher from './CreatePodLauncher';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -79,7 +79,9 @@ export default function ClubAdminClubPodsPage() {
   };
 
   const renderActions = (pod: PodRowBase) => (
-    <Stack direction="row" justifyContent="flex-end" component="span">
+    <Stack direction="row" component="span" sx={{
+      justifyContent: "flex-end"
+    }}>
       <Tooltip title={t('partners.clubAdminClubPodsPage.podDetails')}>
         <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
           <VisibilityIcon fontSize="small" />
@@ -106,11 +108,26 @@ export default function ClubAdminClubPodsPage() {
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1.5}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            sx={{
+              justifyContent: "space-between",
+              alignItems: { xs: 'flex-start', sm: 'center' }
+            }}>
             <Stack spacing={0.25}>
-              <Typography variant="overline" color="text.secondary" fontWeight={800}>{t('partners.clubAdminClubPodsPage.clubAdminPods')}</Typography>
-              <Typography variant="h6" fontWeight={950}>{club?.club_name ?? 'Club pods'}</Typography>
-              <Typography variant="body2" color="text.secondary">{t('partners.clubAdminClubPodsPage.createEditAndDeletePodsFor')}</Typography>
+              <Typography
+                variant="overline"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 800
+                }}>{t('partners.clubAdminClubPodsPage.clubAdminPods')}</Typography>
+              <Typography variant="h6" sx={{
+                fontWeight: 950
+              }}>{club?.club_name ?? 'Club pods'}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('partners.clubAdminClubPodsPage.createEditAndDeletePodsFor')}</Typography>
             </Stack>
             <Button
               variant="outlined"

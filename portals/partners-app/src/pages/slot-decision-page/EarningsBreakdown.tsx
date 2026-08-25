@@ -29,7 +29,9 @@ export default function EarningsBreakdown({ request, lost = false }: Readonly<Pr
         p: { xs: 2, sm: 2.5 },
       }}
     >
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" sx={{
+        color: "text.secondary"
+      }}>
         {lost ? 'Earning you passed on' : 'Your earning from this booking'}
       </Typography>
 
@@ -47,35 +49,62 @@ export default function EarningsBreakdown({ request, lost = false }: Readonly<Pr
       </Typography>
 
       <Stack spacing={1} sx={{ mt: 2 }}>
-        <Stack direction="row" justifyContent="space-between" spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+        <Stack direction="row" spacing={2} sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('partners.slotRequestsPage.slotPrice')}
           </Typography>
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {money(request.price)}
           </Typography>
         </Stack>
-        <Stack direction="row" justifyContent="space-between" spacing={2}>
-          <Typography variant="body2" color="text.secondary">
+        <Stack direction="row" spacing={2} sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Duncit commission ({request.venue_commission_pct}%)
           </Typography>
-          <Typography variant="body2" fontWeight={700} color="error.main">
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 700,
+              color: "error.main"
+            }}>
             − {money(request.venue_commission_amount)}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between" spacing={2}>
-          <Typography variant="body2" fontWeight={700}>
+        <Stack direction="row" spacing={2} sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {lost ? 'You would have received' : 'You receive'}
           </Typography>
-          <Typography variant="body2" fontWeight={700} color={accent}>
+          <Typography variant="body2" color={accent} sx={{
+            fontWeight: 700
+          }}>
             {money(request.venue_receives)}
           </Typography>
         </Stack>
       </Stack>
 
       {!lost && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            display: 'block',
+            mt: 2
+          }}>
           Credited to your Duncit wallet once the pod completes. The slot price is a
           ceiling — if the pod does not sell out, settlement pays what the pod actually
           collected.

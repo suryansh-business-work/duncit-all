@@ -15,7 +15,9 @@ export default function PodChipList({
 }: Readonly<Props>) {
   if (!items || items.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {emptyText}
       </Typography>
     );

@@ -40,7 +40,9 @@ export default function EcommLeadEditorPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" fontWeight={800}>{isEdit ? `Edit ${lead?.seller_name}` : 'New Ecomm Lead'}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 800
+        }}>{isEdit ? `Edit ${lead?.seller_name}` : 'New Ecomm Lead'}</Typography>
       </Box>
       <EcommLeadForm
         config={config}

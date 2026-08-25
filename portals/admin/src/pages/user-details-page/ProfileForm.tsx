@@ -41,7 +41,13 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
   return (
     <form noValidate onSubmit={submit}>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2
+          }}>
           <Typography variant="subtitle1">{t('admin.profile.tab')}</Typography>
           <Button
             type="submit"
@@ -54,16 +60,28 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
           </Button>
         </Stack>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} />
           </Grid>
-          <Grid item xs={4} sm={3}>
+          <Grid
+            size={{
+              xs: 4,
+              sm: 3
+            }}>
             <Controller
               control={control}
               name="phone_extension"
@@ -78,7 +96,11 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
               )}
             />
           </Grid>
-          <Grid item xs={8} sm={9}>
+          <Grid
+            size={{
+              xs: 8,
+              sm: 9
+            }}>
             <RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required />
           </Grid>
           <AddressFields
@@ -90,16 +112,28 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             pincodeError={addressError('pincode')}
             setFieldValue={setField}
           />
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField control={control} name="zone" label={t('admin.profile.zone')} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField control={control} name="assigned_city" label={t('admin.profile.assignedCityField')} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField control={control} name="assigned_zones" label={t('admin.profile.assignedZonesField')} />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               control={control}
               name="profile_photo"
@@ -115,10 +149,14 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
               )}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <RhfTextField control={control} name="bio" label={t('admin.profile.bio')} multiline minRows={3} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <RhfTextField control={control} name="status" label={t('shell.common.status')} select>
               <MenuItem value="ACTIVE">{t('admin.profile.active')}</MenuItem>
               <MenuItem value="INACTIVE">{t('admin.profile.inactive')}</MenuItem>
@@ -126,7 +164,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             </RhfTextField>
           </Grid>
           {opError && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Alert severity="error">{opError}</Alert>
             </Grid>
           )}

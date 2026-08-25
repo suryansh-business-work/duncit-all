@@ -186,19 +186,24 @@ export default function SignaturePad({
               border: 1,
               borderColor: 'divider',
               borderRadius: 1,
+
               // Fixed white "paper" backdrop: the ink drawn below is a fixed
               // dark color so the signature always renders the same way,
               // regardless of the portal's light/dark mode.
               bgcolor: 'common.white',
+
               touchAction: 'none',
-              cursor: 'crosshair',
-            }}
-          />
-          <Stack direction="row" spacing={1} alignItems="center">
+              cursor: 'crosshair'
+            }} />
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Button size="small" onClick={clearCanvas}>
               Clear
             </Button>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               Sign with a mouse, finger or stylus.
             </Typography>
           </Stack>
@@ -235,7 +240,9 @@ export default function SignaturePad({
       )}
 
       {tab === 'UPLOAD' && (
-        <Stack spacing={1} alignItems="flex-start">
+        <Stack spacing={1} sx={{
+          alignItems: "flex-start"
+        }}>
           <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
             Choose image{' '}
             <input
@@ -245,7 +252,9 @@ export default function SignaturePad({
               onChange={(e) => upload(e.target.files?.[0])}
             />
           </Button>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             PNG or JPG, under 5 MB.
           </Typography>
           {value && method === 'UPLOAD' && (

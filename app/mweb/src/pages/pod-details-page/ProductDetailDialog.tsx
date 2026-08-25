@@ -76,9 +76,16 @@ function BrandAttribution({
     );
   }
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
+    <Stack direction="row" spacing={0.5} sx={{
+      alignItems: "center"
+    }}>
       <StorefrontIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700
+        }}>
         by {brandName}
       </Typography>
     </Stack>
@@ -163,7 +170,11 @@ export default function ProductDetailDialog({
   let body: React.ReactNode = null;
   if (loading) {
     body = (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress size={26} />
       </Stack>
     );
@@ -194,18 +205,27 @@ export default function ProductDetailDialog({
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {product.product_name}
         </Typography>
-        <Stack direction="row" spacing={1} alignItems="baseline">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "baseline"
+        }}>
           <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
             {formatRupees(price)}
           </Typography>
           {mrp > price && (
-            <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                textDecoration: 'line-through'
+              }}>
               {formatRupees(mrp)}
             </Typography>
           )}
         </Stack>
         {variants.length > 0 && (
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             {variants.map((v) => (
               <Chip
                 key={v.id}
@@ -220,7 +240,12 @@ export default function ProductDetailDialog({
           </Stack>
         )}
         <BrandAttribution brandName={product.brand_name} brandId={brandId} onOpenBrand={setBrandOpen} />
-        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            whiteSpace: 'pre-wrap'
+          }}>
           {description || 'No description provided.'}
         </Typography>
         {specs.length > 0 && (
@@ -228,8 +253,19 @@ export default function ProductDetailDialog({
             {specs.map((spec, specIndex) => (
               <Box key={spec.label}>
                 {specIndex > 0 && <Divider />}
-                <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+                <Stack
+                  direction="row"
+                  sx={{
+                    justifyContent: "space-between",
+                    px: 1.5,
+                    py: 1
+                  }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: 700
+                    }}>
                     {spec.label}
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>

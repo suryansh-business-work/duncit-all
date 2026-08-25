@@ -30,8 +30,19 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
 
   return (
     <Box sx={{ mt: 0.5, mb: 1 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.5
+        }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700
+          }}>
           Map
         </Typography>
         <Button

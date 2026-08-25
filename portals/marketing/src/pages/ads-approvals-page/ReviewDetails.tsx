@@ -32,8 +32,14 @@ function MediaPreview({ request }: Readonly<{ request: AdRequestRow }>) {
 
 function DetailItem({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
   return (
-    <Grid item xs={12} sm={6}>
-      <Typography variant="caption" color="text.secondary" component="div">
+    <Grid
+      size={{
+        xs: 12,
+        sm: 6
+      }}>
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
       <Typography variant="body2" component="div">
@@ -48,18 +54,30 @@ function BudgetCard({ request }: Readonly<{ request: AdRequestRow }>) {
   const perDay = Math.round((request.estimated_cost / request.duration_days) * 100) / 100;
   return (
     <Paper variant="outlined" sx={{ p: 2, bgcolor: 'action.hover' }}>
-      <Typography variant="caption" color="text.secondary" component="div">
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         Estimated budget
       </Typography>
-      <Typography variant="h5" fontWeight={700} component="div">
+      <Typography variant="h5" component="div" sx={{
+        fontWeight: 700
+      }}>
         {formatAdMoney(request.currency_symbol, request.estimated_cost)}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="div">
+      <Typography variant="caption" component="div" sx={{
+        color: "text.secondary"
+      }}>
         {formatAdMoney(request.currency_symbol, perDay)} / day × {request.duration_days}{' '}
         {request.duration_days === 1 ? 'day' : 'days'} · {adPositionLabel(request.position)}
       </Typography>
       {request.approved_cost !== null && (
-        <Typography variant="body2" fontWeight={600} sx={{ mt: 1 }} component="div">
+        <Typography
+          variant="body2"
+          component="div"
+          sx={{
+            fontWeight: 600,
+            mt: 1
+          }}>
           Approved cost: {formatAdMoney(request.currency_symbol, request.approved_cost)} (frozen at
           approval)
         </Typography>
@@ -109,7 +127,9 @@ export default function ReviewDetails({
         )}
       </Grid>
       <Box>
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography variant="caption" component="div" sx={{
+          color: "text.secondary"
+        }}>
           Description
         </Typography>
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }} component="div">
@@ -118,7 +138,9 @@ export default function ReviewDetails({
       </Box>
       {request.marketing_remarks && (
         <Box>
-          <Typography variant="caption" color="text.secondary" component="div">
+          <Typography variant="caption" component="div" sx={{
+            color: "text.secondary"
+          }}>
             Marketing remarks
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }} component="div">

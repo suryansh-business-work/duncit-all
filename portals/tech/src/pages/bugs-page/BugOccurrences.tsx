@@ -18,7 +18,9 @@ import { formatDateTime, useTranslation } from '@duncit/app-settings';
 function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {label}
       </Typography>
       <Typography
@@ -60,16 +62,30 @@ function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
   return (
     <Accordion variant="outlined" disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            minWidth: 0,
+            flex: 1
+          }}>
           <Chip size="small" label={occ.environment} color={ENV_COLOR[occ.environment] ?? 'default'} />
           <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
             {formatDateTime(occ.created_at)}
           </Typography>
-          <Typography variant="body2" color="text.secondary" noWrap title={occ.component}>
+          <Typography variant="body2" noWrap title={occ.component} sx={{
+            color: "text.secondary"
+          }}>
             {occ.component}
           </Typography>
           <Box sx={{ flex: 1 }} />
-          <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              whiteSpace: 'nowrap'
+            }}>
             {[occ.platform, occ.os].filter(Boolean).join(' · ')}
           </Typography>
         </Stack>
@@ -81,11 +97,21 @@ function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
               <strong>{occ.error.name}:</strong> {occ.error.message}
             </Typography>
           ) : null}
-          <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              wordBreak: 'break-word'
+            }}>
             {occurrenceWho(occ)}
           </Typography>
           {occ.url ? (
-            <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                wordBreak: 'break-all'
+              }}>
               {occ.url}
               {occ.host ? ` · ${occ.host}` : ''}
             </Typography>
@@ -113,17 +139,28 @@ export default function BugOccurrences({ bugId }: Readonly<{ bugId: string }>) {
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Recent occurrences{rows.length > 0 ? ` (${rows.length})` : ''}
       </Typography>
       {loading && rows.length === 0 ? (
-        <Stack alignItems="center" sx={{ py: 2 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 2
+          }}>
           <CircularProgress size={22} />
         </Stack>
       ) : null}
       {error ? <Alert severity="error">{error.message}</Alert> : null}
       {!loading && !error && rows.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           No persisted occurrences inside the retention window — only the roll-up above remains.
         </Typography>
       ) : null}

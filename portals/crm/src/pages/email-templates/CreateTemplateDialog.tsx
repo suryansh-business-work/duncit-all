@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { JSX, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
@@ -76,29 +76,45 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
         {target ? (
           <Stack spacing={2} sx={{ mt: 0.5 }}>
             {error && <Alert severity="error">{error}</Alert>}
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="caption" color="text.secondary">Type:</Typography>
-              <Typography variant="body2" fontWeight={700}>{targets(t).find((t) => t.value === target)?.label}</Typography>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>Type:</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 700
+              }}>{targets(t).find((t) => t.value === target)?.label}</Typography>
               <Button size="small" onClick={() => setTarget(null)}>{t('crm.emailTemplates.change')}</Button>
             </Stack>
             <TextField size="small" label={t('shell.common.name')} required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
             <TextField size="small" label={t('crm.emailTemplates.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText={t('crm.emailTemplates.stableCodeKeyAutoDerivedFrom')} fullWidth />
             <TextField size="small" label={t('crm.common.subject')} required value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
               <MjmlAiButton currentMjml={mjml} onApply={setMjml} label={t('crm.emailTemplates.seedMjmlWithAi')} />
             </Stack>
           </Stack>
         ) : (
           <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">{t('crm.emailTemplates.whoIsThisTemplateFor')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('crm.emailTemplates.whoIsThisTemplateFor')}</Typography>
             {targets(t).map((t) => (
               <Card key={t.value} variant="outlined">
                 <CardActionArea onClick={() => setTarget(t.value)} sx={{ p: 1.5 }}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Stack direction="row" spacing={1.5} sx={{
+                    alignItems: "center"
+                  }}>
                     {t.icon}
                     <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>{t.label}</Typography>
-                      <Typography variant="caption" color="text.secondary">{t.hint}</Typography>
+                      <Typography variant="subtitle2" sx={{
+                        fontWeight: 700
+                      }}>{t.label}</Typography>
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>{t.hint}</Typography>
                     </Box>
                   </Stack>
                 </CardActionArea>

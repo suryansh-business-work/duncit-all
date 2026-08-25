@@ -103,11 +103,15 @@ export default function NotificationsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <NotificationsActiveIcon color="primary" />
           <Typography variant="h5">{t('shell.nav.notifications')}</Typography>
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Send push + in-app notifications to all users, a city, a zone, or specific users.
         </Typography>
       </Box>

@@ -66,7 +66,9 @@ export default function SuggestedPricesDialog({
     );
   } else if (prices.length === 0) {
     body = (
-      <Typography variant="body2" color="text.secondary" data-testid="suggested-prices-empty">
+      <Typography variant="body2" data-testid="suggested-prices-empty" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.createPod.suggestedPricesEmpty')}
       </Typography>
     );
@@ -104,7 +106,9 @@ export default function SuggestedPricesDialog({
             data-testid="suggested-prices-note"
             sx={{ p: 1.5, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.1) }}
           >
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="body2" sx={{
+              fontWeight: 700
+            }}>
               {t('mweb.createPod.suggestedPricesNote')}
             </Typography>
           </Box>

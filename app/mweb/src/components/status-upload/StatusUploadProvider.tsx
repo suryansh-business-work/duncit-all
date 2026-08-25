@@ -162,9 +162,19 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         <Box sx={{ position: 'fixed', left: 12, right: 12, bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 10px)', zIndex: 1400 }}>
           <Alert severity="info" variant="filled" sx={{ boxShadow: 6 }}>
             <Stack spacing={0.75}>
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-                <Typography variant="body2" fontWeight={600}>{upload.message}</Typography>
-                <Typography variant="caption" fontWeight={700}>{upload.progress}%</Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 600
+                }}>{upload.message}</Typography>
+                <Typography variant="caption" sx={{
+                  fontWeight: 700
+                }}>{upload.progress}%</Typography>
               </Stack>
               <LinearProgress variant="determinate" value={upload.progress} color="inherit" />
             </Stack>

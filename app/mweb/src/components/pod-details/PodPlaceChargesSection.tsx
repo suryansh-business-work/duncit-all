@@ -16,7 +16,9 @@ export default function PodPlaceChargesSection({ charges, currency = '\u20b9' }:
   const { t } = useTranslation();
   if (!charges || charges.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('mweb.podDetails.noVenueCharges')}
       </Typography>
     );
@@ -27,21 +29,28 @@ export default function PodPlaceChargesSection({ charges, currency = '\u20b9' }:
         <Stack
           key={`${c.label}-${i}`}
           direction="row"
-          alignItems="flex-start"
-          justifyContent="space-between"
-          sx={{ py: 1 }}
-        >
+          sx={{
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            py: 1
+          }}>
           <Box sx={{ flex: 1, pr: 1 }}>
-            <Typography variant="body2" fontWeight={500}>
+            <Typography variant="body2" sx={{
+              fontWeight: 500
+            }}>
               {c.label}
             </Typography>
             {c.note && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {c.note}
               </Typography>
             )}
           </Box>
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>
             {currency}
             {c.amount}
           </Typography>

@@ -1,6 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { Avatar, Box, Card, Chip, IconButton, Stack, Typography } from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -41,15 +41,25 @@ export default function FeedPostCard({
         boxShadow: '0 18px 42px rgba(9,7,18,0.14)',
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1.25 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          p: 1.25
+        }}>
         <Stack
           direction="row"
-          alignItems="center"
           spacing={1.25}
           component={RouterLink}
           to={header.to}
-          sx={{ minWidth: 0, flex: 1, textDecoration: 'none', color: 'inherit' }}
-        >
+          sx={{
+            alignItems: "center",
+            minWidth: 0,
+            flex: 1,
+            textDecoration: 'none',
+            color: 'inherit'
+          }}>
           <Avatar
             src={header.avatarUrl ?? undefined}
             sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}
@@ -60,7 +70,13 @@ export default function FeedPostCard({
             <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
               {header.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 700
+              }}>
               {timeAgo}
             </Typography>
           </Box>
@@ -95,7 +111,14 @@ export default function FeedPostCard({
         />
       )}
 
-      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ px: 0.75, py: 0.25 }}>
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          px: 0.75,
+          py: 0.25
+        }}>
         <IconButton
           aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
           onClick={() => onToggleLike(post)}

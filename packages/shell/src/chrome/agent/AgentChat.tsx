@@ -57,7 +57,9 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
         spacing={1.25}
         sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 1.5 }}
       >
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('shell.agent.greeting')}
         </Typography>
         {!isAvailable && <Alert severity="warning">{t('shell.agent.notConfigured')}</Alert>}
@@ -65,10 +67,19 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
 
         {messages.length === 0 && isAvailable && (
           <Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.agent.tryAsking')}
             </Typography>
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              useFlexGap
+              sx={{
+                flexWrap: "wrap",
+                mt: 0.5
+              }}>
               {suggestions.map((suggestion) => (
                 <Chip
                   key={suggestion}
@@ -79,7 +90,13 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
                 />
               ))}
             </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: 'block',
+                mt: 1
+              }}>
               {t('shell.agent.capNote')}
             </Typography>
           </Box>
@@ -90,9 +107,13 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
         ))}
 
         {loading && (
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <CircularProgress size={16} />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('shell.agent.thinking')}
             </Typography>
           </Stack>
@@ -117,20 +138,22 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
           disabled={!isAvailable}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t('shell.agent.placeholder')}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  type="submit"
-                  size="small"
-                  edge="end"
-                  disabled={loading || !draft.trim() || !isAvailable}
-                  aria-label={t('shell.agent.send')}
-                >
-                  <SendIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    type="submit"
+                    size="small"
+                    edge="end"
+                    disabled={loading || !draft.trim() || !isAvailable}
+                    aria-label={t('shell.agent.send')}
+                  >
+                    <SendIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }
           }}
         />
       </Box>

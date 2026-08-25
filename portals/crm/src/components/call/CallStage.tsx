@@ -28,10 +28,18 @@ const fmt = (raw: string): string => {
 function Leg({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Box sx={{ textAlign: 'center', minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 700,
+          letterSpacing: 0.4
+        }}>
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={700} noWrap>
+      <Typography variant="body2" noWrap sx={{
+        fontWeight: 700
+      }}>
         {value}
       </Typography>
     </Box>
@@ -46,10 +54,24 @@ function Leg({ label, value }: Readonly<{ label: string; value: string }>) {
 export default function CallStage({ fromNumber, toNumber, statusLabel, tone, active, ai }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={2} alignItems="center" sx={{ py: 1 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }} justifyContent="center">
+    <Stack
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        py: 1
+      }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          justifyContent: "center",
+          width: '100%'
+        }}>
         <Leg label={t('crm.components.callFrom')} value={fmt(fromNumber)} />
-        <Stack alignItems="center" spacing={0.25}>
+        <Stack spacing={0.25} sx={{
+          alignItems: "center"
+        }}>
           <EastIcon fontSize="small" color="disabled" />
           {ai && <Chip size="small" color="primary" icon={<SmartToyIcon />} label="AI" sx={{ height: 22 }} />}
         </Stack>
@@ -81,7 +103,13 @@ export default function CallStage({ fromNumber, toNumber, statusLabel, tone, act
       <Chip color={tone} label={statusLabel} />
 
       <Box sx={{ width: '100%' }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 700,
+            letterSpacing: 0.4
+          }}>
           {ai ? 'AI VOICE' : 'LIVE CALL'}
         </Typography>
         <CallWave active={active} color={ai ? '#10b981' : '#6366f1'} />

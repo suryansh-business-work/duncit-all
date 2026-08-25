@@ -70,7 +70,9 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
         <DialogContent dividers>
           <Stack spacing={1.5}>
             {def.docUrl && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Where to find these?{' '}
                 <Link href={def.docUrl} target="_blank" rel="noopener noreferrer" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
                   Open {def.label} dashboard
@@ -90,7 +92,9 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                   fullWidth
                   required
                   autoComplete="off"
-                  inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
+                  slotProps={{
+                    htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
+                  }}
                 />
               )}
             />
@@ -124,7 +128,12 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
               />
             </Stack>
 
-            <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>{def.label} config</Typography>
+            <Typography
+              variant="overline"
+              sx={{
+                color: "text.secondary",
+                pt: 1
+              }}>{def.label} config</Typography>
             {def.fields.map((field) => (
               <Controller
                 key={field.name}

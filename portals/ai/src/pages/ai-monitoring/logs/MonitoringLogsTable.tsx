@@ -45,7 +45,9 @@ const renderEntity = (row: MonitoringLogRow) => (
     <Typography variant="body2" noWrap>
       {row.entity ?? 'Signed-out upload'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap>
+    <Typography variant="caption" noWrap sx={{
+      color: "text.secondary"
+    }}>
       {row.user_id ?? 'no account attached'}
     </Typography>
   </Box>
@@ -81,7 +83,9 @@ const renderSource = (row: MonitoringLogRow) => (
     <Typography variant="body2" noWrap>
       {row.surface || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap title={row.folder}>
+    <Typography variant="caption" noWrap title={row.folder} sx={{
+      color: "text.secondary"
+    }}>
       {row.folder || '/'}
     </Typography>
   </Box>

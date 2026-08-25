@@ -4,9 +4,15 @@ import { useTranslation } from '@duncit/app-settings';
 
 function Line({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
-    <Stack direction="row" justifyContent="space-between">
-      <Typography variant="body2" fontWeight={bold ? 700 : 400}>{label}</Typography>
-      <Typography variant="body2" fontWeight={bold ? 700 : 400}>{value}</Typography>
+    <Stack direction="row" sx={{
+      justifyContent: "space-between"
+    }}>
+      <Typography variant="body2" sx={{
+        fontWeight: bold ? 700 : 400
+      }}>{label}</Typography>
+      <Typography variant="body2" sx={{
+        fontWeight: bold ? 700 : 400
+      }}>{value}</Typography>
     </Stack>
   );
 }
@@ -19,7 +25,12 @@ export default function HostEarningsCard({ breakdown }: Readonly<{ breakdown: Po
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           Host Earnings Summary
         </Typography>
         <Stack spacing={1}>
@@ -31,7 +42,13 @@ export default function HostEarningsCard({ breakdown }: Readonly<{ breakdown: Po
           <Divider />
           <Line label={t('finance.podFinance.hostReceives')} value={money(sym, w.host_receives)} bold />
         </Stack>
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            mt: 1.5,
+            display: 'block'
+          }}>
           The host earns {w.host_earn_pct.toFixed(2)}% of the customer payment.
         </Typography>
       </CardContent>

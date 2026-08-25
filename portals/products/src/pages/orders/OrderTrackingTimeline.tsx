@@ -10,9 +10,10 @@ export default function OrderTrackingTimeline({ events }: Readonly<Props>) {
 
   if (!events || events.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        No tracking updates yet.
-      </Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>No tracking updates yet.
+              </Typography>
     );
   }
 
@@ -31,15 +32,24 @@ export default function OrderTrackingTimeline({ events }: Readonly<Props>) {
             }}
           />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={600}>
+            <Typography variant="body2" sx={{
+              fontWeight: 600
+            }}>
               {event.status}
             </Typography>
             {event.note && (
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  display: "block"
+                }}>
                 {event.note}
               </Typography>
             )}
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {[event.location, formatDateTime(event.at)].filter(Boolean).join(' · ')}
             </Typography>
           </Box>

@@ -19,13 +19,13 @@ import { useTranslation } from '@duncit/app-settings';
  * placeholder. LOCATION carries no asset but still occupies the header. */
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const mediaHeaders = (t: Translate) => ({
+const mediaHeaders = (t: Translate) => (({
   IMAGE: { Icon: ImageIcon, label: t('marketing.whatsappCampaigns.imageHeader') },
   VIDEO: { Icon: VideocamIcon, label: t('marketing.whatsappCampaigns.videoHeader') },
   FILE: { Icon: DescriptionIcon, label: t('marketing.whatsappCampaigns.documentHeader') },
   DOCUMENT: { Icon: DescriptionIcon, label: t('marketing.whatsappCampaigns.documentHeader') },
-  LOCATION: { Icon: PlaceIcon, label: t('marketing.whatsappCampaigns.locationHeader') },
-}) as const;
+  LOCATION: { Icon: PlaceIcon, label: t('marketing.whatsappCampaigns.locationHeader') }
+}) as const);
 
 export type MediaFormat = keyof ReturnType<typeof mediaHeaders>;
 
@@ -92,14 +92,13 @@ export default function BubbleMedia({ format, media }: Readonly<Props>) {
 
   return (
     <Stack
-      alignItems="center"
-      justifyContent="center"
       spacing={0.5}
       sx={{
+        alignItems: "center",
+        justifyContent: "center",
         ...PLACEHOLDER_SX,
-        bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#111B21' : '#F0F2F5'),
-      }}
-    >
+        bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#111B21' : '#F0F2F5')
+      }}>
       <Icon fontSize="large" />
       <Typography variant="caption">{label}</Typography>
     </Stack>

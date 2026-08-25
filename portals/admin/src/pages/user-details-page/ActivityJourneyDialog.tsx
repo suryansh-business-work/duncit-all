@@ -84,22 +84,37 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
         const title = event.target_label || event.target_text || event.title || event.path;
         return (
           <Box key={event.id} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1.25 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap"
+              }}>
               <Chip size="small" color="success" label={event.event_type} />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {formatTime(event.occurred_at)}
               </Typography>
               {event.super_category_slug && <Chip size="small" variant="outlined" label={event.super_category_slug} />}
             </Stack>
             <Typography variant="subtitle2" sx={{ mt: 0.75 }}>{title}</Typography>
-            <Typography variant="body2" color="text.secondary">{event.path}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{event.path}</Typography>
             {event.target_href && (
               <Link href={event.target_href} target="_blank" rel="noreferrer" variant="caption">
                 {event.target_href}
               </Link>
             )}
             {metadataSummary(event.metadata_json) && (
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  display: "block"
+                }}>
                 {metadataSummary(event.metadata_json)}
               </Typography>
             )}
@@ -115,7 +130,11 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
       <DialogTitle>User Journey · {date}</DialogTitle>
       <DialogContent dividers>
         {loading ? (
-          <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress /></Stack>
+          <Stack
+            sx={{
+              alignItems: "center",
+              py: 5
+            }}><CircularProgress /></Stack>
         ) : (
           errorOrJourney
         )}

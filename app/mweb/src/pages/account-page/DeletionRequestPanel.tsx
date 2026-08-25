@@ -79,7 +79,13 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         <Alert severity="warning" data-testid="deletion-pending">
           <AlertTitle>{t('mweb.account.deletion.pendingTitle')}</AlertTitle>
           <Typography variant="body2">{t('mweb.account.deletion.pendingBody')}</Typography>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block",
+              mt: 0.5
+            }}>
             {t('mweb.account.deletion.pendingRef', { vars: { code: pending.request_id } })} ·{' '}
             {t('mweb.account.deletion.pendingOn', {
               vars: { date: formatDate(pending.requested_at) },

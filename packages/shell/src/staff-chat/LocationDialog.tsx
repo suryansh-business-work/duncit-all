@@ -119,12 +119,14 @@ export default function LocationDialog({ open, onClose, onSend }: Readonly<Props
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => event.key === 'Enter' && preview()}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
             <Button onClick={preview} disabled={!query.trim()}>
@@ -167,7 +169,9 @@ function LocationPreview({ mapsKey, shown }: Readonly<{ mapsKey: string; shown: 
 
   if (!shown) {
     return (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         {t('shell.chat.location.pickOne')}
       </Typography>
     );

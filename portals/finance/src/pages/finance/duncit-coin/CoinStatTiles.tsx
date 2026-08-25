@@ -33,7 +33,13 @@ export default function CoinStatTiles({ stats, loading }: Readonly<Props>) {
         // joins and shop orders got their own rates, and seven tiles at
         // six-per-row leave a single orphan on the second line.
         return (
-          <Grid item xs={6} sm={4} md={3} key={tile.key}>
+          <Grid
+            key={tile.key}
+            size={{
+              xs: 6,
+              sm: 4,
+              md: 3
+            }}>
             <StatCard
               layout="split"
               label={tile.label}

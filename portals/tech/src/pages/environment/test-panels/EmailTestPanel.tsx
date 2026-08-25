@@ -25,7 +25,9 @@ export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>)
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         Sends a real test email through this SMTP entry.
       </Typography>
       <TextField
@@ -36,7 +38,9 @@ export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>)
         placeholder="someone@example.com"
         fullWidth
         autoComplete="off"
-        inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
+        slotProps={{
+          htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
+        }}
       />
       <Button startIcon={<SendIcon />} variant="contained" onClick={send} disabled={loading || !to.trim()}>
         {loading ? 'Sending…' : 'Send test email'}

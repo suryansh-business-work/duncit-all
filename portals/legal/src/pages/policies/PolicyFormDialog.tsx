@@ -128,7 +128,9 @@ export default function PolicyFormDialog({
             value={form.policy_type}
             onChange={(policy_type) => onChange({ policy_type })}
           />
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={2} sx={{
+            alignItems: "center"
+          }}>
             <TextField
               label={t('legal.policies.sortOrder')}
               type="number"
@@ -143,7 +145,9 @@ export default function PolicyFormDialog({
             />
           </Stack>
           <Box>
-            <Typography variant="caption" color="text.secondary">{t('legal.policies.content')}</Typography>
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>{t('legal.policies.content')}</Typography>
             <DuncitRichTextInput
               value={form.content}
               onChange={(value) => onChange({ content: value })}

@@ -45,7 +45,9 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{
+        fontWeight: 700
+      }}>
         Friends Here
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -57,7 +59,9 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
           ))}
         </AvatarGroup>
         <Box>
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {friends.length === 1 ? friends[0].full_name : `${friends[0].full_name} and ${friends.length - 1} more`}
           </Typography>
           <Button size="small" sx={{ p: 0, minWidth: 0, fontWeight: 700 }} onClick={() => setOpen(true)}>

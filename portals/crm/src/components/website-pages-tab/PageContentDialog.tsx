@@ -23,7 +23,9 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
   return (
     <Dialog open={!!page} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pb: 0.5 }}>
-        <Typography variant="subtitle1" fontWeight={800} noWrap>
+        <Typography variant="subtitle1" noWrap sx={{
+          fontWeight: 800
+        }}>
           {page?.title || 'Page content'}
         </Typography>
         {page && (
@@ -35,7 +37,9 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
       <DialogContent dividers>
         {page?.content_text ? (
           <Stack spacing={1}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {page.content_chars.toLocaleString()} characters extracted
             </Typography>
             <Box
@@ -54,7 +58,9 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
             </Box>
           </Stack>
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No content fetched yet.
           </Typography>
         )}

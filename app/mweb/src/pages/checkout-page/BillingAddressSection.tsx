@@ -41,7 +41,9 @@ function BillingCheckbox({ control, name, label }: Readonly<CheckboxProps>) {
             <Checkbox
               checked={!!field.value}
               onChange={(event) => field.onChange(event.target.checked)}
-              inputProps={{ 'aria-label': label }}
+              slotProps={{
+                input: { 'aria-label': label }
+              }}
             />
           }
           label={label}

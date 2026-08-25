@@ -1,5 +1,5 @@
 import { IconButton, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
 import { toLocalDateTimeInput } from '@duncit/datetime';
 import LocalDateTimeField from '../../components/LocalDateTimeField';
@@ -37,7 +37,9 @@ export default function OccasionalIconRowFields({
 
   return (
     <Stack spacing={1.5} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+        alignItems: "flex-start"
+      }}>
         <TextField
           label={t('admin.policies.slug')}
           value={row.slug}
@@ -98,9 +100,19 @@ export default function OccasionalIconRowFields({
         ))}
       </TextField>
 
-      <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Stack direction="row" spacing={1} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "center"
+        }}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Switch
               checked={row.is_active}
               onChange={(_, v) => onChange(index, { is_active: v })}

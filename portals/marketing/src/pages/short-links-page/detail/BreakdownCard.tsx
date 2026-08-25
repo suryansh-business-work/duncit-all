@@ -15,12 +15,19 @@ export default function BreakdownCard({ title, rows, emptyText }: Readonly<Props
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           {title}
         </Typography>
 
         {rows.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {emptyText}
           </Typography>
         )}
@@ -28,11 +35,15 @@ export default function BreakdownCard({ title, rows, emptyText }: Readonly<Props
         <Stack spacing={1.25}>
           {rows.map((row) => (
             <Box key={row.label}>
-              <Stack direction="row" justifyContent="space-between" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{
+                justifyContent: "space-between"
+              }}>
                 <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                   {row.label}
                 </Typography>
-                <Typography variant="body2" fontWeight={700}>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>
                   {row.count.toLocaleString()}
                 </Typography>
               </Stack>

@@ -55,10 +55,20 @@ export default function PublicSurveyPage() {
   // Already submitted (either now, or on a previous visit) → don't show the form again.
   if (done || payload?.already_filled) {
     return shell(
-      <Stack spacing={1.5} alignItems="center" sx={{ py: 2, textAlign: 'center' }}>
+      <Stack
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          py: 2,
+          textAlign: 'center'
+        }}>
         <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
-        <Typography variant="h6" fontWeight={900}>{done ? 'Thank you!' : 'Already submitted'}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="h6" sx={{
+          fontWeight: 900
+        }}>{done ? 'Thank you!' : 'Already submitted'}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           This survey has already been submitted. You can close this page.
         </Typography>
       </Stack>
@@ -68,8 +78,12 @@ export default function PublicSurveyPage() {
   return shell(
     <>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography variant="h6" fontWeight={950}>{survey.title || 'Quick survey'}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="h6" sx={{
+          fontWeight: 950
+        }}>{survey.title || 'Quick survey'}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {payload?.lead_name ? `For ${payload.lead_name} — a` : 'A'} few quick questions.
           {payload?.already_filled ? ' You can update your earlier answers.' : ''}
         </Typography>

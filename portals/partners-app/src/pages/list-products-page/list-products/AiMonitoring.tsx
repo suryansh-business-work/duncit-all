@@ -34,19 +34,34 @@ export function AiMonitoringChip() {
           <AutoAwesomeIcon color="secondary" /> AI content check
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 1.5
+            }}>
             Every listing runs through an AI check before it is submitted, so only products that follow the
             community guidelines reach shoppers. The check reviews:
           </Typography>
           <Stack spacing={1.25}>
             {scannedItems(t).map((item) => (
               <Stack key={item.key} spacing={0.25} sx={{ p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}>
-                <Typography variant="body2" fontWeight={700}>{item.label}</Typography>
-                <Typography variant="caption" color="text.secondary">{item.detail}</Typography>
+                <Typography variant="body2" sx={{
+                  fontWeight: 700
+                }}>{item.label}</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{item.detail}</Typography>
               </Stack>
             ))}
           </Stack>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: 'block',
+              mt: 1.5
+            }}>
             If something is flagged you'll see exactly what to fix and where — nothing is submitted until the
             listing passes.
           </Typography>
@@ -66,19 +81,21 @@ export function AiCheckingIndicator({ visible }: Readonly<{ visible: boolean }>)
       <Stack
         direction="row"
         spacing={1.25}
-        alignItems="center"
         data-testid="ai-checking-indicator"
-        sx={{ p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
-      >
+        sx={{
+          alignItems: "center",
+          p: 1.25,
+          borderRadius: 2,
+          bgcolor: 'action.hover'
+        }}>
         <CircularProgress size={18} color="secondary" />
         <Typography
           variant="body2"
-          fontWeight={700}
           sx={{
+            fontWeight: 700,
             '@keyframes aiCheckPulse': { '0%': { opacity: 0.55 }, '50%': { opacity: 1 }, '100%': { opacity: 0.55 } },
-            animation: 'aiCheckPulse 1.4s ease-in-out infinite',
-          }}
-        >
+            animation: 'aiCheckPulse 1.4s ease-in-out infinite'
+          }}>
           AI is checking all your details…
         </Typography>
       </Stack>

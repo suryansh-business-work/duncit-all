@@ -57,7 +57,12 @@ export default function OrderFulfilmentPanel({
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            mb: 1.5
+          }}>
           Fulfilment
         </Typography>
 
@@ -115,7 +120,9 @@ export default function OrderFulfilmentPanel({
           <>
             <Divider sx={{ my: 2 }} />
             <Stack spacing={1.25}>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={1} useFlexGap sx={{
+                flexWrap: "wrap"
+              }}>
                 <Button
                   size="small"
                   variant="outlined"
@@ -131,13 +138,23 @@ export default function OrderFulfilmentPanel({
               </Stack>
               {shiprocket.awb ? (
                 <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                  }}>
                     <Chip size="small" label={`AWB ${shiprocket.awb}`} />
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       {shiprocket.courier_name || 'Courier pending'}
                     </Typography>
                   </Stack>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      display: "block",
+                      mt: 0.5
+                    }}>
                     {shiprocket.tracking_status || 'Awaiting first scan'}
                   </Typography>
                   {shiprocket.label_url && (
@@ -147,7 +164,9 @@ export default function OrderFulfilmentPanel({
                   )}
                 </Box>
               ) : (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   No shipment created yet.
                 </Typography>
               )}

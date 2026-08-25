@@ -22,7 +22,13 @@ export default function AttendanceSummary({
 
   return (
     <Stack spacing={0.75} data-testid="attendance-summary">
-      <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1
+        }}>
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
           {labels.summary(board.marked_count, board.total_count)}
         </Typography>

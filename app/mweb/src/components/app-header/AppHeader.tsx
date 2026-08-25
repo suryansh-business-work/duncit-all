@@ -134,7 +134,13 @@ export default function AppHeader({
         {!minimal && effectiveStudio !== 'USER' ? (
           // A studio header keeps the role badge AND the location switcher: a
           // host/venue/club account still browses a city, so the picker stays.
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             <Chip
               label={STUDIO_LABEL[effectiveStudio]}
               color="primary"

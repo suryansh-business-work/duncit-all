@@ -6,7 +6,13 @@ export default function HomeSkeleton() {
       <Skeleton variant="rectangular" height={220} sx={{ borderRadius: '16px' }} />
       {[0, 1].map((i) => (
         <Box key={i}>
-          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{
+              alignItems: "center",
+              mb: 1.5
+            }}>
             <Skeleton variant="rounded" width={44} height={44} />
             <Box sx={{ flex: 1 }}>
               <Skeleton width="40%" height={24} />

@@ -9,7 +9,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import FollowButton from '../../components/FollowButton';
 
 interface Host {
@@ -35,7 +35,9 @@ export default function HostList({ hosts, meId, statusFor, pendingUserId, onTogg
     return (
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No approved hosts yet — be the first to apply!
           </Typography>
         </CardContent>
@@ -46,23 +48,32 @@ export default function HostList({ hosts, meId, statusFor, pendingUserId, onTogg
   return (
     <Grid container spacing={2}>
       {hosts.map((h) => (
-        <Grid item xs={12} sm={6} key={h.id}>
+        <Grid
+          key={h.id}
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <Card variant="outlined" sx={{ height: '100%', borderRadius: '16px', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
             <CardContent>
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={2} sx={{
+                alignItems: "center"
+              }}>
                 <Avatar
                   src={h.passport_photo_url || undefined}
-                  imgProps={{
-                    referrerPolicy: 'no-referrer',
-                    onError: (e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    },
-                  }}
                   sx={{
                     width: 62,
                     height: 62,
                     bgcolor: 'primary.light',
                     '& img': { objectFit: 'cover' },
+                  }}
+                  slotProps={{
+                    img: {
+                      referrerPolicy: 'no-referrer',
+                      onError: (e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      },
+                    }
                   }}
                 >
                   <PersonOutlineIcon />
@@ -72,7 +83,9 @@ export default function HostList({ hosts, meId, statusFor, pendingUserId, onTogg
                     {h.full_name}
                   </Typography>
                   {h.full_address && (
-                    <Typography variant="body2" color="text.secondary" noWrap>
+                    <Typography variant="body2" noWrap sx={{
+                      color: "text.secondary"
+                    }}>
                       {h.full_address}
                     </Typography>
                   )}

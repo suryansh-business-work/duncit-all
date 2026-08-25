@@ -54,21 +54,29 @@ export default function EmojiFeedbackDialog({
               Your rating: {submitted.emoji} {submitted.label}
             </Typography>
             {existingComment && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 “{existingComment}”
               </Typography>
             )}
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {FEEDBACK_THANK_YOU}
             </Typography>
           </Stack>
         ) : (
           <Stack spacing={1.5} sx={{ pt: 1 }}>
-            <Typography variant="body2" color="text.secondary" align="center">
+            <Typography variant="body2" align="center" sx={{
+              color: "text.secondary"
+            }}>
               Rate your support experience.
             </Typography>
             {error && <Alert severity="error">{error}</Alert>}
-            <Stack direction="row" justifyContent="space-between">
+            <Stack direction="row" sx={{
+              justifyContent: "space-between"
+            }}>
               {FEEDBACK_OPTIONS.map((o) => {
                 const active = rating === o.value;
                 return (
@@ -110,7 +118,9 @@ export default function EmojiFeedbackDialog({
               onChange={(e) => setComment(e.target.value)}
               multiline
               minRows={2}
-              inputProps={{ maxLength: 1000 }}
+              slotProps={{
+                htmlInput: { maxLength: 1000 }
+              }}
             />
           </Stack>
         )}

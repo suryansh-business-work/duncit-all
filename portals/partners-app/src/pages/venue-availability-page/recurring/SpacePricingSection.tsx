@@ -21,25 +21,33 @@ export default function SpacePricingSection({ spaces, onChange }: Readonly<Props
       <Typography variant="body2" sx={{ fontWeight: 800, mb: 0.25 }}>
         Pricing by space
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         Each space is priced separately and creates its own slots (same times, own capacity).
       </Typography>
       <Stack spacing={1} sx={{ mt: 1 }}>
         {spaces.map((space) => (
-          <Stack key={space.label || 'whole-venue'} direction="row" spacing={1} alignItems="center">
+          <Stack key={space.label || 'whole-venue'} direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             {showToggle && (
               <Checkbox
                 size="small"
                 checked={space.enabled}
                 onChange={(e) => setRow(space.label, { enabled: e.target.checked })}
-                inputProps={{ 'aria-label': `Include ${space.label || 'whole venue'}` }}
+                slotProps={{
+                  input: { 'aria-label': `Include ${space.label || 'whole venue'}` }
+                }}
               />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
                 {space.label || 'Whole venue'}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 Capacity {space.capacity}
               </Typography>
             </Box>
@@ -50,8 +58,10 @@ export default function SpacePricingSection({ spaces, onChange }: Readonly<Props
               value={space.price}
               disabled={!space.enabled}
               onChange={(e) => setRow(space.label, { price: e.target.value })}
-              inputProps={{ min: 0, step: 50, 'aria-label': `${space.label || 'Whole venue'} price` }}
               sx={{ maxWidth: 150 }}
+              slotProps={{
+                htmlInput: { min: 0, step: 50, 'aria-label': `${space.label || 'Whole venue'} price` }
+              }}
             />
           </Stack>
         ))}

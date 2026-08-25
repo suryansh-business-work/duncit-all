@@ -31,11 +31,15 @@ export default function MailPreferenceSection({
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack spacing={0.5} sx={{ mb: 1 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {heading}
           </Typography>
           {hint && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {hint}
             </Typography>
           )}

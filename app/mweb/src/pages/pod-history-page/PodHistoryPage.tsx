@@ -54,7 +54,11 @@ export default function PodHistoryPage() {
 
   if (loading && items.length === 0) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -66,15 +70,30 @@ export default function PodHistoryPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto' }}>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "flex-start",
+          justifyContent: "space-between"
+        }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: "text.secondary",
+              letterSpacing: 0
+            }}>
             {t('mweb.podHistory.overline')}
           </Typography>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{
+            fontWeight: 700
+          }}>
             {t('mweb.podHistory.joinedPods')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('mweb.podHistory.subtitle')}
           </Typography>
         </Box>
@@ -92,19 +111,23 @@ export default function PodHistoryPage() {
         placeholder={t('mweb.podHistory.searchPlaceholder')}
         value={filters.search}
         onChange={(event) => setFilters({ ...filters, search: event.target.value })}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-        inputProps={{ 'aria-label': t('mweb.podHistory.searchAria') }}
-      />
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          },
+
+          htmlInput: { 'aria-label': t('mweb.podHistory.searchAria') }
+        }} />
 
       {visible.length === 0 ? (
         <Alert severity="info" icon={false}>
-          <Typography fontWeight={700}>{t('mweb.podHistory.noPodsFound')}</Typography>
+          <Typography sx={{
+            fontWeight: 700
+          }}>{t('mweb.podHistory.noPodsFound')}</Typography>
           <Typography variant="body2">{t('mweb.podHistory.noPodsFoundBody')}</Typography>
         </Alert>
       ) : (
@@ -113,15 +136,21 @@ export default function PodHistoryPage() {
             <Card key={item.id} variant="outlined">
               <CardActionArea component={RouterLink} to={`/pod-history/${item.id}`}>
                 <CardContent>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Stack direction="row" spacing={1.5} sx={{
+                    alignItems: "center"
+                  }}>
                     <Avatar src={item.pod?.pod_images_and_videos?.[0]?.url || undefined}>
                       <HistoryIcon />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography fontWeight={700} noWrap>
+                      <Typography noWrap sx={{
+                        fontWeight: 700
+                      }}>
                         {item.pod?.pod_title ?? t('mweb.podHistory.pod')}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {t('mweb.podHistory.joinedOn', {
                           vars: { date: formatDateTime(item.joined_at) },
                         })}

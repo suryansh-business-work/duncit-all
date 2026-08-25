@@ -74,10 +74,17 @@ export default function SignupWhatsappPage() {
         <CardContent>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="h5" fontWeight={700}>
+              <Typography variant="h5" sx={{
+                fontWeight: 700
+              }}>
                 Add your WhatsApp number
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  mt: 0.5
+                }}>
                 Add your WhatsApp number to receive pod notifications and join community
                 groups. You can always update this later from your profile settings.
               </Typography>

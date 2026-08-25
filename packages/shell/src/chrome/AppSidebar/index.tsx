@@ -72,7 +72,14 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
             sx={{ height: 26, width: 'auto', maxWidth: 130, objectFit: 'contain' }}
           />
         )}
-        <Typography variant="caption" color="primary" fontWeight={800} sx={{ letterSpacing: 0.3 }} noWrap>
+        <Typography
+          variant="caption"
+          color="primary"
+          noWrap
+          sx={{
+            fontWeight: 800,
+            letterSpacing: 0.3
+          }}>
           {name}
         </Typography>
       </Box>
@@ -83,12 +90,14 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
           placeholder={t('shell.chrome.searchMenu')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <Button
@@ -103,7 +112,12 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
       </Box>
       <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto' }}>
         {nav.length === 0 ? (
-          <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              px: 1.5
+            }}>
             No menu items match.
           </Typography>
         ) : (
@@ -121,7 +135,9 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
       </List>
       <SidebarUserCard user={user} fallbackName={name} />
       <Box sx={{ px: 2, py: 1.25, borderTop: 1, borderColor: 'divider' }}>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {footerCaption ?? '© Duncit'}
         </Typography>
       </Box>

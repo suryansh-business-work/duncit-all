@@ -44,7 +44,13 @@ export function ProfileLanguage() {
   return (
     <>
       <Divider sx={{ my: 2.5 }} />
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: 0.4 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 800,
+          letterSpacing: 0.4
+        }}>
         LANGUAGE
       </Typography>
       <Stack spacing={1.5} sx={{ mt: 1, maxWidth: 360 }}>

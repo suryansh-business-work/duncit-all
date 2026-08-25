@@ -33,7 +33,9 @@ const targetLabel = (s: CrmServiceOfferedRow, t: Translate) => {
 };
 
 const renderTitle = (s: CrmServiceOfferedRow) => (
-  <Typography variant="body2" fontWeight={700} component="span">
+  <Typography variant="body2" component="span" sx={{
+    fontWeight: 700
+  }}>
     {s.title}
   </Typography>
 );

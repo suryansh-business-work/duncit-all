@@ -4,18 +4,34 @@
 // four versions of the same two store listings.
 import AppDownload from '@duncit/brand/AppDownload.astro';
 import { fetchBranding } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
 
+const { t } = await getTranslator();
 const branding = await fetchBranding();
 const stores = [
-  { icon: 'fa-google-play', eyebrow: 'Get it on', name: 'Google Play', url: branding.android_app_url },
-  { icon: 'fa-apple', eyebrow: 'Download on the', name: 'App Store', url: branding.ios_app_url },
+  {
+    icon: 'fa-google-play',
+    eyebrow: t('website.main.download.googlePlayEyebrow'),
+    name: t('website.main.download.googlePlayName'),
+    url: branding.android_app_url,
+  },
+  {
+    icon: 'fa-apple',
+    eyebrow: t('website.main.download.appStoreEyebrow'),
+    name: t('website.main.download.appStoreName'),
+    url: branding.ios_app_url,
+  },
 ];
 ---
 
 <AppDownload
-  heading="One app,"
-  headingAccent="many communities"
-  text="Match with people by energy, then go and do the thing — real plans, real places, real people."
-  perks={['Match by energy, in seconds', 'Real chats, no pressure', 'Verified profiles']}
+  heading={t('website.main.download.headingLead')}
+  headingAccent={t('website.main.download.headingAccent')}
+  text={t('website.main.download.text')}
+  perks={[
+    t('website.main.download.perk1'),
+    t('website.main.download.perk2'),
+    t('website.main.download.perk3'),
+  ]}
   stores={stores}
 />

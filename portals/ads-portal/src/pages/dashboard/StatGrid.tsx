@@ -82,7 +82,9 @@ const STATS: ReadonlyArray<StatConfig> = [
 export default function StatGrid({ stats }: Readonly<{ stats: AdsDashboardStats }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2}>
+    <Stack direction="row" useFlexGap spacing={2} sx={{
+      flexWrap: "wrap"
+    }}>
       {STATS.map((card) => {
         const raw = stats[card.key];
         const value = card.money ? formatAdCost(raw, stats.currency_symbol) : raw;

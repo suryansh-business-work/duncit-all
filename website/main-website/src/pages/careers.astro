@@ -4,32 +4,35 @@
 import PageLayout from '../layouts/PageLayout.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
 import { fetchBranding } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
 
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
-  title="Careers"
-  eyebrow="We're hiring"
-  heading="Build Duncit with us"
-  intro="Join a small, mission-driven team building the friendship platform that matches people by energy."
+  title={t('website.main.careers.title')}
+  eyebrow={t('website.main.careers.eyebrow')}
+  heading={t('website.main.careers.heading')}
+  intro={t('website.main.careers.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop"
 >
-  <h2>Why Duncit?</h2>
+  <h2>{t('website.main.careers.whyHeading')}</h2>
   <ul>
-    <li><strong>Real impact.</strong> Everything you ship goes straight into how people meet, host and earn together.</li>
-    <li><strong>Small team, big ownership.</strong> You'll own whole surfaces — apps, portals, the platform itself.</li>
-    <li><strong>Energy over ego.</strong> The same vibe-first culture we build for our community, inside the team.</li>
+    <li><strong>{t('website.main.careers.why1Label')}</strong> {t('website.main.careers.why1Text')}</li>
+    <li><strong>{t('website.main.careers.why2Label')}</strong> {t('website.main.careers.why2Text')}</li>
+    <li><strong>{t('website.main.careers.why3Label')}</strong> {t('website.main.careers.why3Text')}</li>
   </ul>
 
-  <h2>Open roles</h2>
+  <h2>{t('website.main.careers.openHeading')}</h2>
   <WebsiteContentList type="CAREERS" variant="jobs" />
 
-  <h2>Don't see your role?</h2>
+  <h2>{t('website.main.careers.noRoleHeading')}</h2>
   <p>
-    We love hearing from talented people. Send us a note at
-    <a href={`mailto:${supportEmail}`}>{supportEmail}</a> and tell us what you'd build.
+    {t('website.main.careers.noRoleText')}
+    <a href={`mailto:${supportEmail}`}>{supportEmail}</a> {t('website.main.careers.noRoleTextAfter')}
   </p>
 </PageLayout>

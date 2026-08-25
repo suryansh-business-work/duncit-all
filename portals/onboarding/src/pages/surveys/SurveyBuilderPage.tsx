@@ -112,10 +112,21 @@ export default function SurveyBuilderPage() {
       <Box>
         <BackButton onClick={() => navigate(backTo)}>{backLabel}</BackButton>
       </Box>
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={800}>{heading}</Typography>
-          <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
+          <Typography variant="h5" sx={{
+            fontWeight: 800
+          }}>{heading}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{subtitle}</Typography>
         </Box>
         <Button variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save survey'}</Button>
       </Stack>
@@ -123,12 +134,18 @@ export default function SurveyBuilderPage() {
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
 
       {loading && !data ? (
-        <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}><CircularProgress /></Stack>
       ) : (
         <>
           <Card variant="outlined"><CardContent>
             <Stack spacing={1.75}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+                alignItems: { sm: 'center' }
+              }}>
                 {!isDefaultMode && (
                   <TextField select size="small" label={t('onboarding.surveys.kind')} value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
                     <MenuItem value="VENUE">{t('onboarding.common.venue')}</MenuItem>
@@ -162,7 +179,9 @@ export default function SurveyBuilderPage() {
               onDelete={() => setQuestions(questions.filter((_, idx) => idx !== i))}
             />
           ))}
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1.5} sx={{
+            alignItems: "center"
+          }}>
             <TextField select size="small" label={t('onboarding.surveys.add')} value={addType} onChange={(e) => setAddType(e.target.value as QuestionType)} sx={{ minWidth: 200 }}>
               <MenuItem value="SECTION">{t('onboarding.surveys.sectionHeading')}</MenuItem>
               <MenuItem value="MCQ">{t('onboarding.surveys.multipleChoice')}</MenuItem>

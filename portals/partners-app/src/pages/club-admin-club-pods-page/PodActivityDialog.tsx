@@ -49,13 +49,17 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
             {error && <Alert severity="error">{error.message}</Alert>}
             {!error && loading && entries.length === 0 && <CircularProgress size={22} />}
             {!error && !loading && entries.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No recorded activity for this pod yet.
               </Typography>
             )}
             <Stack spacing={1.75}>
               {entries.map((entry) => (
-                <Stack key={entry.id} direction="row" spacing={1.25} alignItems="flex-start">
+                <Stack key={entry.id} direction="row" spacing={1.25} sx={{
+                  alignItems: "flex-start"
+                }}>
                   <StatusChip
                     status={entry.action}
                     label={ACTION_LABELS[entry.action]}
@@ -63,29 +67,52 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
                     sx={{ mt: 0.25 }}
                   />
                   <Stack sx={{ minWidth: 0, flex: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                      <Typography variant="body2" fontWeight={700}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      useFlexGap
+                      sx={{
+                        alignItems: "center",
+                        flexWrap: "wrap"
+                      }}>
+                      <Typography variant="body2" sx={{
+                        fontWeight: 700
+                      }}>
                         {entry.actor_name || SOURCE_LABELS[entry.source]}
                       </Typography>
                       <Chip label={SOURCE_LABELS[entry.source]} size="small" variant="outlined" />
                       <StatusChip status={entry.ai_risk} colorMap={RISK_COLORS} />
                     </Stack>
                     {entry.changes.map((change) => (
-                      <Typography key={change.field} variant="caption" color="text.secondary">
+                      <Typography key={change.field} variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {change.field}: {change.from || '—'} → {change.to || '—'}
                       </Typography>
                     ))}
                     {entry.note && (
-                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.secondary",
+                          whiteSpace: 'pre-wrap'
+                        }}>
                         {entry.note}
                       </Typography>
                     )}
                     {entry.ai_summary && (
-                      <Typography variant="caption" color="text.secondary" fontStyle="italic">
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "text.secondary",
+                          fontStyle: "italic"
+                        }}>
                         AI: {entry.ai_summary}
                       </Typography>
                     )}
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {fmtWhen(entry.created_at)}
                     </Typography>
                   </Stack>

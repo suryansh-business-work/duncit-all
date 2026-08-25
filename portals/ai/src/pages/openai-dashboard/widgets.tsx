@@ -5,7 +5,7 @@ import type { useTranslation } from '@duncit/shell';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import TokenIcon from '@mui/icons-material/Token';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { usd, tokens } from '../../lib/usd';
 import SpendBars, { type SpendBarRow } from './SpendBars';
 import TaskSpendTable from './TaskSpendTable';

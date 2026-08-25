@@ -49,10 +49,14 @@ export default function AudienceListForm({
         noValidate
       >
         <Stack spacing={0.25}>
-          <Typography variant="subtitle1" fontWeight={800}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 800
+          }}>
             Name this list
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             The filters you chose in step 1 are saved with the list, so it keeps matching new
             signups after you save it.
           </Typography>

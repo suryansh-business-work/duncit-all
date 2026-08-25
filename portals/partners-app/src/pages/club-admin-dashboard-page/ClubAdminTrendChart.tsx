@@ -50,7 +50,9 @@ export default function ClubAdminTrendChart({ trend }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={900}>{t('partners.clubAdminDashboardPage.monthlyTrend')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 900
+        }}>{t('partners.clubAdminDashboardPage.monthlyTrend')}</Typography>
         {hasData ? (
           <>
             <Box sx={{ width: '100%', overflowX: 'auto' }}>
@@ -68,22 +70,38 @@ export default function ClubAdminTrendChart({ trend }: Readonly<Props>) {
                 ))}
               </svg>
             </Box>
-            <Stack direction="row" spacing={1.5} justifyContent="space-between" sx={{ px: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                justifyContent: "space-between",
+                px: 0.5
+              }}>
               {trend.map((point, index) => (
-                <Typography key={`${point.label}-${index}`} variant="caption" color="text.secondary">{point.label}</Typography>
+                <Typography key={`${point.label}-${index}`} variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{point.label}</Typography>
               ))}
             </Stack>
-            <Stack direction="row" spacing={2} flexWrap="wrap">
+            <Stack direction="row" spacing={2} sx={{
+              flexWrap: "wrap"
+            }}>
               {series(t).map((series) => (
-                <Stack key={series.key} direction="row" spacing={0.75} alignItems="center">
+                <Stack key={series.key} direction="row" spacing={0.75} sx={{
+                  alignItems: "center"
+                }}>
                   <Box sx={{ width: 12, height: 3, borderRadius: 1, bgcolor: theme.palette[series.palette].main }} />
-                  <Typography variant="caption" color="text.secondary">{series.label}</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{series.label}</Typography>
                 </Stack>
               ))}
             </Stack>
           </>
         ) : (
-          <Typography variant="body2" color="text.secondary">{t('partners.clubAdminDashboardPage.notEnoughDataToDrawA')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('partners.clubAdminDashboardPage.notEnoughDataToDrawA')}</Typography>
         )}
       </Stack>
     </Card>

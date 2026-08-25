@@ -39,12 +39,22 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1.5
+          }}>
           <EmojiEventsIcon color="primary" />
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{
+            fontWeight: 700
+          }}>
             Badges
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             ({badges.length})
           </Typography>
         </Stack>
@@ -78,7 +88,14 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
               >
                 {!ub.badge?.image_url && <EmojiEventsIcon fontSize="small" />}
               </Avatar>
-              <Typography variant="caption" fontWeight={600} noWrap sx={{ width: '100%', textAlign: 'center' }}>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  fontWeight: 600,
+                  width: '100%',
+                  textAlign: 'center'
+                }}>
                 {ub.badge?.title}
               </Typography>
             </ButtonBase>

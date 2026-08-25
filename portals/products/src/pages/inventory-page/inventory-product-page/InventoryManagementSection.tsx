@@ -15,15 +15,21 @@ export default function InventoryManagementSection() {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+      <Grid size={12}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+          alignItems: { sm: 'center' }
+        }}>
           <Box sx={{ flex: 1, color: 'text.secondary', fontSize: 13 }}>
             Live stock indicator updates as you adjust counts below.
           </Box>
           <StockColorChip inventory={inventoryCount} lowStockAlert={lowStockAlert} />
         </Stack>
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfNumberField
           control={control}
           name="inventory_count"
@@ -31,7 +37,11 @@ export default function InventoryManagementSection() {
           hint="Total units on hand"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfNumberField
           control={control}
           name="reserved_count"
@@ -39,7 +49,11 @@ export default function InventoryManagementSection() {
           hint="Held for confirmed pods"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfNumberField
           control={control}
           name="damaged_count"
@@ -47,7 +61,11 @@ export default function InventoryManagementSection() {
           hint="Counts that cannot be sold"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfNumberField
           control={control}
           name="low_stock_alert"
@@ -55,7 +73,11 @@ export default function InventoryManagementSection() {
           hint="Triggers warning when reached"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfNumberField
           control={control}
           name="min_order_qty"
@@ -63,7 +85,11 @@ export default function InventoryManagementSection() {
           hint="Smallest order allowed"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfNumberField
           control={control}
           name="max_order_qty"
@@ -71,7 +97,11 @@ export default function InventoryManagementSection() {
           hint="Largest single order"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <RhfTextField
           control={control}
           name="batch_number"
@@ -79,7 +109,11 @@ export default function InventoryManagementSection() {
           hint="Optional, useful for consumables"
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <Controller
           control={control}
           name="manufacturing_date"
@@ -92,7 +126,11 @@ export default function InventoryManagementSection() {
           )}
         />
       </Grid>
-      <Grid item xs={6} sm={3}>
+      <Grid
+        size={{
+          xs: 6,
+          sm: 3
+        }}>
         <Controller
           control={control}
           name="expiry_date"
@@ -106,7 +144,7 @@ export default function InventoryManagementSection() {
           )}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <RhfTextField
           control={control}
           multiline

@@ -27,8 +27,12 @@ function Facts({ log }: Readonly<{ log: OpenAiLogDetail }>) {
   return (
     <Stack spacing={0.75}>
       {rows.map(([label, value]) => (
-        <Stack key={label} direction="row" spacing={2} justifyContent="space-between">
-          <Typography variant="caption" color="text.secondary">
+        <Stack key={label} direction="row" spacing={2} sx={{
+          justifyContent: "space-between"
+        }}>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {label}
           </Typography>
           <Typography variant="body2" sx={{ textAlign: 'right', wordBreak: 'break-word' }}>
@@ -84,8 +88,17 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
   const log = data?.openAiUsageLog;
 
   return (
-    <Drawer anchor="right" open={!!logId} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 560 } } }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 2, pb: 1 }}>
+    <Drawer anchor="right" open={!!logId} onClose={onClose} slotProps={{
+      paper: { sx: { width: { xs: '100%', sm: 560 } } }
+    }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          p: 2,
+          pb: 1
+        }}>
         <Typography variant="h6" sx={{ flex: 1 }}>
           OpenAI call
         </Typography>
@@ -101,7 +114,9 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
           <Stack spacing={2.5}>
             <Facts log={log} />
             {log.error_message && (
-              <Typography variant="body2" color="error.main">
+              <Typography variant="body2" sx={{
+                color: "error.main"
+              }}>
                 {log.error_message}
               </Typography>
             )}

@@ -56,7 +56,9 @@ export default function HostDetailsPage() {
             titleSx={{ lineHeight: 1.1 }}
           />
 
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
             <Chip size="small" label={host.status} />
             <Chip size="small" variant="outlined" color={host.is_active === false ? 'default' : 'success'} label={host.is_active === false ? 'Inactive' : 'Active'} />
             {host.email && <Chip size="small" variant="outlined" label={host.email} />}
@@ -64,7 +66,9 @@ export default function HostDetailsPage() {
           </Stack>
 
           {(host.host_categories ?? []).length > 0 && (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={0.75} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               {host.host_categories.map((c: any) => (
                 <Chip key={c.request_no || catPath(c)} size="small" color="primary" variant="outlined" label={catPath(c) || '—'} />
               ))}
@@ -74,7 +78,9 @@ export default function HostDetailsPage() {
           <Divider />
 
           <Stack spacing={1}>
-            <Typography variant="subtitle1" fontWeight={800}>Pods</Typography>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 800
+            }}>Pods</Typography>
             <PodsTable
               tableId="onboarding-host-pods"
               fetchRows={fetchPods}

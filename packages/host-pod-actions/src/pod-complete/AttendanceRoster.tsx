@@ -19,17 +19,16 @@ function RosterRow({ row, symbol }: Readonly<RowProps>) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={1}
       sx={{
+        alignItems: "center",
         px: 1.25,
         py: 1,
         borderRadius: 2,
         border: 1,
         borderColor: 'divider',
-        opacity: row.attended ? 1 : 0.85,
-      }}
-    >
+        opacity: row.attended ? 1 : 0.85
+      }}>
       {row.attended ? (
         <CheckCircleIcon fontSize="small" color="success" />
       ) : (
@@ -39,7 +38,9 @@ function RosterRow({ row, symbol }: Readonly<RowProps>) {
         <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
           {row.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {seatsText} · {money(symbol, row.amount)}
         </Typography>
       </Box>
@@ -79,7 +80,13 @@ export default function AttendanceRoster({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1
+        }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           Attendance
         </Typography>
@@ -108,7 +115,9 @@ export default function AttendanceRoster({
       {pending.length > 0 && (
         <>
           <Divider />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             Not marked yet — their seats are not part of the payout below.
           </Typography>
           <Stack spacing={0.75}>
@@ -131,7 +140,9 @@ export default function AttendanceRoster({
       )}
 
       {attendees.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Nobody booked this pod.
         </Typography>
       )}

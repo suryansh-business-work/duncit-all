@@ -64,9 +64,19 @@ export default function SlotCalendar({
 
   if (loading && days.length === 0) {
     return (
-      <Stack alignItems="center" sx={{ py: 3 }} data-testid="slot-calendar-loading">
+      <Stack
+        data-testid="slot-calendar-loading"
+        sx={{
+          alignItems: "center",
+          py: 3
+        }}>
         <CircularProgress size={22} />
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            mt: 1
+          }}>
           {labels.loading}
         </Typography>
       </Stack>
@@ -76,7 +86,9 @@ export default function SlotCalendar({
   if (days.length === 0) {
     return (
       <Stack spacing={1}>
-        <Typography variant="body2" color="text.secondary" data-testid="slot-calendar-empty">
+        <Typography variant="body2" data-testid="slot-calendar-empty" sx={{
+          color: "text.secondary"
+        }}>
           {labels.empty}
         </Typography>
         {error && <FormHelperText error>{error}</FormHelperText>}
@@ -87,7 +99,9 @@ export default function SlotCalendar({
   return (
     <Stack spacing={1.25} data-testid="slot-calendar">
       <Box>
-        <Typography variant="subtitle2" fontWeight={800}>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 800
+        }}>
           {labels.date}
           {required && (
             <Box component="span" sx={{ color: 'error.main', ml: 0.25 }}>
@@ -95,7 +109,9 @@ export default function SlotCalendar({
             </Box>
           )}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {labels.hint}
         </Typography>
       </Box>
@@ -133,7 +149,12 @@ export default function SlotCalendar({
       />
 
       <Box>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.75 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            mb: 0.75
+          }}>
           {labels.availableSlots}
         </Typography>
         {daySlots.length > 0 ? (
@@ -147,7 +168,9 @@ export default function SlotCalendar({
             showPrice={showPrice}
           />
         ) : (
-          <Typography variant="body2" color="text.secondary" data-testid="slot-calendar-empty-day">
+          <Typography variant="body2" data-testid="slot-calendar-empty-day" sx={{
+            color: "text.secondary"
+          }}>
             {labels.emptyDay}
           </Typography>
         )}

@@ -68,12 +68,21 @@ export default function AudienceListDetailPage() {
           />
 
           {list!.description && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {list!.description}
             </Typography>
           )}
 
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
+          <Stack
+            direction="row"
+            spacing={0.75}
+            useFlexGap
+            sx={{
+              flexWrap: "wrap",
+              alignItems: "center"
+            }}>
             <Chip
               size="small"
               color="primary"
@@ -94,7 +103,9 @@ export default function AudienceListDetailPage() {
             ))}
           </Stack>
 
-          <Stack direction="row" justifyContent="flex-end">
+          <Stack direction="row" sx={{
+            justifyContent: "flex-end"
+          }}>
             <Button
               variant="contained"
               startIcon={<PersonAddAlt1Icon />}

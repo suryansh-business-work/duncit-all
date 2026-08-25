@@ -44,12 +44,16 @@ export default function HowToEarnCard({ config }: Readonly<Props>) {
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {t('mweb.leaderboard.howToTitle')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('mweb.leaderboard.howToSubtitle')}
             </Typography>
           </Stack>
           {active.map((category) => (
-            <Stack key={category} direction="row" alignItems="center" spacing={1.5}>
+            <Stack key={category} direction="row" spacing={1.5} sx={{
+              alignItems: "center"
+            }}>
               <Stack sx={{ color: 'primary.main' }}>{EARN_ICON[category]}</Stack>
               <Typography variant="body2" sx={{ flex: 1 }}>
                 {t(LEADERBOARD_EARN_KEY[category])}

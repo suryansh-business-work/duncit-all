@@ -34,7 +34,9 @@ export default function TemplatesWithoutCampaign({ templates, onCreate }: Readon
       <Typography variant="body2">{t('marketingWhatsapp.needsCampaignBody')}</Typography>
       <Stack component="ul" spacing={0.25} sx={{ m: 0, mt: 1, pl: 2.5 }}>
         {templates.map((template) => (
-          <Typography key={templateRowId(template)} component="li" variant="body2" fontWeight={700}>
+          <Typography key={templateRowId(template)} component="li" variant="body2" sx={{
+            fontWeight: 700
+          }}>
             {template.name}
           </Typography>
         ))}

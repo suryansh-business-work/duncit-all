@@ -98,16 +98,24 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
 
   return (
     <Stack id="email-verification" spacing={1.5}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <MarkEmailReadIcon color="primary" fontSize="small" />
-        <Typography variant="subtitle2" fontWeight={700}>{t('mweb.profile.verifyEmail')}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 700
+        }}>{t('mweb.profile.verifyEmail')}</Typography>
       </Stack>
-      <Typography variant="body2" color="text.secondary">{email || 'Add an email address to verify your account.'}</Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{email || 'Add an email address to verify your account.'}</Typography>
       {message && <Alert severity="success">{message}</Alert>}
       {devOtp && <Alert severity="info">Dev OTP: {devOtp}</Alert>}
       {error && <Alert severity="error">{error}</Alert>}
       <form noValidate onSubmit={submit}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'flex-start' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{
+          alignItems: { sm: 'flex-start' }
+        }}>
           <Button
             variant="outlined"
             onClick={sendOtp}
@@ -128,7 +136,9 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message ?? ' '}
                 size="small"
-                inputProps={{ inputMode: 'numeric', maxLength: 6 }}
+                slotProps={{
+                  htmlInput: { inputMode: 'numeric', maxLength: 6 }
+                }}
               />
             )}
           />

@@ -58,7 +58,11 @@ const TicketThread = forwardRef<TicketThreadHandle, Props>(function TicketThread
           {messages.map((m, i) => (
             <Box key={m.id}>
               {showDaySeparator(m.created_at, messages[i - 1]?.created_at, timeZone) && (
-                <Stack alignItems="center" sx={{ my: 0.5 }}>
+                <Stack
+                  sx={{
+                    alignItems: "center",
+                    my: 0.5
+                  }}>
                   <Typography variant="caption" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 99, fontWeight: 700 }}>
                     {dayLabel(m.created_at, timeZone)}
                   </Typography>

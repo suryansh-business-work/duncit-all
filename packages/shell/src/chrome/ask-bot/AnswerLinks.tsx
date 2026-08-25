@@ -59,10 +59,14 @@ function LinkRow({ link }: Readonly<RowProps>) {
       sx={{ justifyContent: 'space-between', textAlign: 'left', textTransform: 'none' }}
     >
       <Stack sx={{ minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={700} noWrap>
+        <Typography variant="body2" noWrap sx={{
+          fontWeight: 700
+        }}>
           {link.label}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {caption}
         </Typography>
       </Stack>

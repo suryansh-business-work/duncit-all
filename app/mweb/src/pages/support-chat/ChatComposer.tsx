@@ -80,7 +80,9 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
           ))}
         </Stack>
       )}
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={pickFile} />
         <IconButton
           aria-label={t('mweb.supportChat.attachFile')}

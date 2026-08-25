@@ -21,16 +21,27 @@ export default function HostCard({ host, onReview }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" mb={1}>
-          <Typography variant="subtitle1" fontWeight={700}>
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            mb: 1
+          }}>
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 700
+          }}>
             {host.full_name || '(Unnamed)'}
           </Typography>
           <StatusChip status={host.status} colorMap={STATUS_COLOR} />
         </Stack>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {host.email} · {host.phone}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           Step {host.step_completed}/4
         </Typography>
         {host.tags?.length > 0 && (
@@ -45,7 +56,9 @@ export default function HostCard({ host, onReview }: Readonly<Props>) {
             {host.reviewer_notes}
           </Alert>
         )}
-        <Stack direction="row" spacing={1} mt={2}>
+        <Stack direction="row" spacing={1} sx={{
+          mt: 2
+        }}>
           <Button size="small" variant="outlined" onClick={() => onReview(host)}>
             Review
           </Button>

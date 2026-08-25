@@ -96,7 +96,9 @@ export default function VenueOwnerAccordion({
             <VenueOwnerSection s3={s3} setS3={setS3} errors={errors} />
           ) : (
             <Box>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Owner details are managed by the admin and saved automatically.
               </Typography>
             </Box>

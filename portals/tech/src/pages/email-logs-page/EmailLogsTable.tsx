@@ -47,7 +47,9 @@ const renderTo = (row: EmailLogRow) => (
     <Typography variant="body2" noWrap title={row.to}>
       {row.to || '—'}
     </Typography>
-    <Typography variant="caption" color="text.secondary" noWrap title={row.subject}>
+    <Typography variant="caption" noWrap title={row.subject} sx={{
+      color: "text.secondary"
+    }}>
       {row.subject || '—'}
     </Typography>
   </Box>
@@ -59,7 +61,11 @@ const renderTo = (row: EmailLogRow) => (
  * full on hover rather than being cut to a chip.
  */
 const renderReason = (row: EmailLogRow) => {
-  if (!row.reason) return <Typography variant="body2" color="text.secondary">—</Typography>;
+  if (!row.reason) return (
+    <Typography variant="body2" sx={{
+      color: "text.secondary"
+    }}>—</Typography>
+  );
   return (
     <Tooltip title={row.reason}>
       <Typography variant="body2" sx={{ whiteSpace: 'normal', lineHeight: 1.35 }}>
@@ -75,7 +81,9 @@ const renderTemplate = (row: EmailLogRow) => (
       {row.template || '—'}
     </Typography>
     {row.fragment_key && (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
         + {row.fragment_key}
       </Typography>
     )}

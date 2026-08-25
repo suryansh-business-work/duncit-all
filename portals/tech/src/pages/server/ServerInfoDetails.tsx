@@ -8,7 +8,12 @@ function Panel({ title, children }: Readonly<{ title: string; children: React.Re
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            mb: 1
+          }}>
           {title}
         </Typography>
         {children}
@@ -81,7 +86,9 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
             ]}
           />
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {ssl?.error ?? 'No certificate information available.'}
           </Typography>
         )}
@@ -91,7 +98,9 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
         {external.length ? (
           <InfoList rows={external.map((n) => ({ label: n.name, value: n.address }))} />
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             No external network interfaces detected.
           </Typography>
         )}

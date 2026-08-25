@@ -20,7 +20,11 @@ export default function SmsPreferencePage() {
 
   if (state.loading) {
     return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          p: 6
+        }}>
         <CircularProgress />
       </Stack>
     );
@@ -43,10 +47,14 @@ export default function SmsPreferencePage() {
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" fontWeight={800}>
+        <Typography variant="h6" sx={{
+          fontWeight: 800
+        }}>
           {t('mweb.smsPreference.title')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {subtitle}
         </Typography>
       </Stack>

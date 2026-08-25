@@ -80,7 +80,9 @@ function RowUpdateDemo({ rows, update }: Readonly<{ rows: MeetingRowMock[]; upda
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "center"
+      }}>
         <Button
           variant="contained"
           size="small"
@@ -91,7 +93,9 @@ function RowUpdateDemo({ rows, update }: Readonly<{ rows: MeetingRowMock[]; upda
         >
           Apply the mutation result
         </Button>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {applied === 0
             ? 'Nothing applied yet.'
             : `Applied ${applied}× — ${update.request_no} is now ${update.status}, with no fetch.`}

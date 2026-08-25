@@ -63,7 +63,12 @@ export default function InterviewCalendar({
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
           <Typography variant="h6">{monthLabel}</Typography>
           <Stack direction="row" spacing={0.5}>
             <IconButton size="small" onClick={goPrevMonth}>
@@ -87,9 +92,10 @@ export default function InterviewCalendar({
               key={`${d}-${i}`}
               variant="caption"
               align="center"
-              color="text.secondary"
-              sx={{ py: 1 }}
-            >
+              sx={{
+                color: "text.secondary",
+                py: 1
+              }}>
               {d}
             </Typography>
           ))}
@@ -142,7 +148,13 @@ export default function InterviewCalendar({
                 );
               })}
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: 1,
+                display: 'block'
+              }}>
               Each slot is 1 hour. Choose up to 5 across any dates.
             </Typography>
           </Box>
@@ -150,7 +162,13 @@ export default function InterviewCalendar({
 
         {slotList.length > 0 && (
           <Box sx={{ mt: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 1
+              }}>
               <EventAvailableIcon color="primary" fontSize="small" />
               <Typography variant="subtitle2">
                 Your preferred slots ({slotList.length}/5)

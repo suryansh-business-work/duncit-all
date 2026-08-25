@@ -21,9 +21,11 @@ export function CrumbNode({ crumb, isFirst, isLast }: Readonly<CrumbNodeProps>) 
         component={RouterLink}
         to={crumb.to}
         underline="hover"
-        color="text.secondary"
-        sx={{ ...ROW_SX, fontWeight: 500 }}
-      >
+        sx={{
+          color: "text.secondary",
+          ...ROW_SX,
+          fontWeight: 500
+        }}>
         {home}
         {crumb.label}
       </Link>

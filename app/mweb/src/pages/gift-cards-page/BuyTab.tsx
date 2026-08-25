@@ -82,16 +82,27 @@ export default function BuyTab() {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Typography variant="subtitle1" fontWeight={700}>
+        <Typography variant="subtitle1" sx={{
+          fontWeight: 700
+        }}>
           {t('mweb.giftCards.buyTitle')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           {t('mweb.giftCards.buySubtitle')}
         </Typography>
       </Box>
       {(settingsError || categoriesError) && <Alert severity="error">{t('mweb.giftCards.loadError')}</Alert>}
       {settingsLoading && !settings && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
           <CircularProgress size={24} />
         </Stack>
       )}

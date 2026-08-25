@@ -51,12 +51,20 @@ export default function ClubRecommendationRow({
       onClick={() => navigate(clubUrl(club.club_id ?? club.id))}
       sx={{ p: 1.25, borderRadius: '18px', cursor: 'pointer' }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1.25} sx={{
+        alignItems: "center"
+      }}>
         <Avatar src={image} alt={club.club_name} sx={{ width: 46, height: 46 }}>
           {club.club_name?.[0]?.toUpperCase()}
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{
+              alignItems: "center",
+              minWidth: 0
+            }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
               {club.club_name}
             </Typography>
@@ -65,7 +73,13 @@ export default function ClubRecommendationRow({
             )}
           </Stack>
           {meta && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600
+              }}>
               {meta}
             </Typography>
           )}

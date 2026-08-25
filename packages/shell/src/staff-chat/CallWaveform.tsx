@@ -98,7 +98,13 @@ export default function CallWaveform({ stream, label }: Readonly<Props>) {
 
   return (
     <Box sx={{ px: 1.5, pb: 1 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          display: 'block',
+          mb: 0.25
+        }}>
         {label}
       </Typography>
       <Box

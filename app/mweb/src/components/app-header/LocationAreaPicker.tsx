@@ -75,7 +75,13 @@ export default function LocationAreaPicker({
 
   return (
     <>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600, lineHeight: 1.4 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600,
+          lineHeight: 1.4
+        }}>
         Locality / Area in {locationName}
       </Typography>
       {zones.length > 0 ? (
@@ -86,13 +92,6 @@ export default function LocationAreaPicker({
             placeholder={t('mweb.appHeader.searchLocalityOrPinCode')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 minHeight: 40,
@@ -100,6 +99,15 @@ export default function LocationAreaPicker({
                 bgcolor: 'action.hover',
               },
               '& input': { fontSize: 13 },
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }
             }}
           />
           <Paper elevation={0} sx={{ width: '100%', maxHeight: 258, overflow: 'auto', bgcolor: 'transparent' }}>
@@ -111,9 +119,10 @@ export default function LocationAreaPicker({
                 <ListItemText
                   primary={t('mweb.common.allAreas')}
                   secondary={`${zones.length} localities`}
-                  primaryTypographyProps={{ variant: 'body2', fontWeight: 600, noWrap: true }}
-                  secondaryTypographyProps={{ variant: 'caption' }}
-                />
+                  slotProps={{
+                    primary: { variant: 'body2', noWrap: true, sx: { fontWeight: 600 } },
+                    secondary: { variant: 'caption' }
+                  }} />
                 {!draftZone && <CheckRoundedIcon color="primary" fontSize="small" />}
               </ListItemButton>
               {filteredZones.map((zone) => (
@@ -131,22 +140,27 @@ export default function LocationAreaPicker({
                     secondary={[zoneClubLabel(zone.active_club_count), zone.pincode ? `PIN ${zone.pincode}` : null]
                       .filter(Boolean)
                       .join(' · ')}
-                    primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
-                  />
+                    slotProps={{
+                      primary: { variant: 'body2', noWrap: true, sx: { fontWeight: 700 } },
+                      secondary: { variant: 'caption' }
+                    }} />
                   {draftZone === zone.zone_name && <CheckRoundedIcon color="primary" fontSize="small" />}
                 </ListItemButton>
               ))}
             </List>
           </Paper>
           {filteredZones.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               No matching localities found.
             </Typography>
           )}
         </Stack>
       ) : (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           This city has no localities configured.
         </Typography>
       )}

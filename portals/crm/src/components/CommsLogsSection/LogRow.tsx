@@ -56,35 +56,66 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
     >
       <StatusVisual type={log.type} status={log.status} />
       <Stack sx={{ flex: 1, minWidth: 0 }} spacing={0.5}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0, flexWrap: 'wrap' }} useFlexGap>
-          <Typography variant="subtitle2" fontWeight={800} noWrap sx={{ minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            alignItems: "center",
+            minWidth: 0,
+            flexWrap: 'wrap'
+          }}>
+          <Typography
+            variant="subtitle2"
+            noWrap
+            sx={{
+              fontWeight: 800,
+              minWidth: 0
+            }}>
             {log.type === 'EMAIL' ? log.subject || '(no subject)' : `Call to ${log.contact_value}`}
           </Typography>
           <Chip size="small" label={log.status} color={STATUS_COLOUR[log.status] ?? 'default'} />
           {log.provider_name && <Chip size="small" variant="outlined" label={log.provider_name} />}
         </Stack>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" noWrap sx={{
+          color: "text.secondary"
+        }}>
           {log.contact_name ? `${log.contact_name} · ` : ''}{log.contact_value} · {fmt(log.created_at)}
         </Typography>
         {log.error_message && (
-          <Typography variant="caption" color="error.main">
+          <Typography variant="caption" sx={{
+            color: "error.main"
+          }}>
             {log.error_message}
           </Typography>
         )}
         {log.type === 'CALL' && (
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap"
+            }}>
             {transcriptReady ? (
               <Box sx={{ width: '100%' }}>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <TranscriptWave />
-                  <Typography variant="caption" color="text.secondary">{t('crm.components.transcript')}</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{t('crm.components.transcript')}</Typography>
                 </Stack>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
                   {log.transcript}
                 </Typography>
               </Box>
             ) : (
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Chip
                   size="small"
                   variant="outlined"

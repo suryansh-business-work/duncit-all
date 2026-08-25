@@ -122,17 +122,23 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Stack spacing={3}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "center"
+        }}>
           {isHost ? (
             <StorefrontIcon color="primary" sx={{ fontSize: 32 }} />
           ) : (
             <AddBusinessIcon color="primary" sx={{ fontSize: 32 }} />
           )}
           <Box>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" sx={{
+              fontWeight: 700
+            }}>
               {isHost ? 'Become a Host' : 'Register Your Venue'}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {isHost
                 ? 'Pick a few times that work for a quick onboarding interview.'
                 : 'Tell us about your venue and pick times for a quick verification call.'}
@@ -174,7 +180,9 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
           setAbout={setAbout}
         />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
+        <Stack direction="row" spacing={2} sx={{
+          justifyContent: "flex-end"
+        }}>
           <Button onClick={() => navigate(-1)}>{t('mweb.common.cancel')}</Button>
           <Button variant="contained" size="large" onClick={submit} disabled={busy}>
             {busy ? 'Submitting…' : 'Request Interview'}

@@ -69,7 +69,14 @@ export default function HostStatCards({ earnings, counts, loading }: Readonly<Pr
   return (
     <Grid container spacing={2}>
       {cards.map((card) => (
-        <Grid item xs={12} sm={6} md={4} lg={2} key={card.key}>
+        <Grid
+          key={card.key}
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 4,
+            lg: 2
+          }}>
           <StatCard
             label={card.label}
             labelWeight={800}

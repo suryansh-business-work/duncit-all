@@ -21,8 +21,12 @@ function TypeCard({ label, caption, icon, selected, disabled, onClick }: Readonl
       <CardActionArea onClick={onClick} disabled={disabled} aria-label={label} aria-pressed={selected} sx={{ p: 2, display: 'grid', placeItems: 'center', gap: 0.5, textAlign: 'center' }}>
         {selected && <CheckCircleIcon color="primary" fontSize="small" sx={{ position: 'absolute', top: 8, right: 8 }} />}
         <Box sx={{ color: selected ? 'primary.main' : 'text.secondary', display: 'grid', placeItems: 'center' }}>{icon}</Box>
-        <Typography variant="subtitle1" fontWeight={700} color={selected ? 'primary.main' : 'text.primary'}>{label}</Typography>
-        <Typography variant="caption" color="text.secondary">{caption}</Typography>
+        <Typography variant="subtitle1" color={selected ? 'primary.main' : 'text.primary'} sx={{
+          fontWeight: 700
+        }}>{label}</Typography>
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>{caption}</Typography>
       </CardActionArea>
     </Card>
   );

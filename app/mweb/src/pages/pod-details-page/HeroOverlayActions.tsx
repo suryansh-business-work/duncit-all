@@ -31,18 +31,17 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggl
   return (
     <Stack
       direction="row"
-      alignItems="center"
-      justifyContent="space-between"
       sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
         position: 'absolute',
         top: 'calc(env(safe-area-inset-top) + 12px)',
         left: 12,
         right: 12,
         zIndex: 3,
         pointerEvents: 'none',
-        '& > *': { pointerEvents: 'auto' },
-      }}
-    >
+        '& > *': { pointerEvents: 'auto' }
+      }}>
       <IconButton size="small" onClick={onBack} aria-label={t('mweb.podDetails.back')} sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>

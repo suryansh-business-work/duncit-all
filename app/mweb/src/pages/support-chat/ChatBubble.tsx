@@ -3,7 +3,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import AttachmentList from '../../components/AttachmentList';
 import { userMessageTick } from './chatHelpers';
 import type { SupportChatMessage } from './queries';
@@ -18,7 +18,9 @@ function Tick({
   const state = userMessageTick(msg, agentLastReadAt);
   if (state === 'failed') {
     return (
-      <Stack direction="row" spacing={0.25} alignItems="center">
+      <Stack direction="row" spacing={0.25} sx={{
+        alignItems: "center"
+      }}>
         <ErrorOutlineIcon sx={{ fontSize: 14, color: 'error.main' }} />
         {onRetry && (
           <Link component="button" type="button" onClick={onRetry} underline="always" sx={{ fontSize: 11, fontWeight: 700, color: 'error.main' }}>
@@ -45,7 +47,11 @@ interface Props {
 export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: Readonly<Props>) {
   if (msg.sender_role === 'SYSTEM') {
     return (
-      <Stack alignItems="center" sx={{ my: 0.5 }}>
+      <Stack
+        sx={{
+          alignItems: "center",
+          my: 0.5
+        }}>
         <Chip size="small" label={msg.text} sx={{ bgcolor: 'action.hover', fontWeight: 700, height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' } }} />
       </Stack>
     );
@@ -79,7 +85,14 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
         )}
         {msg.text && <Typography variant="body2">{msg.text}</Typography>}
         <AttachmentList urls={msg.attachments} />
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ justifyContent: 'flex-end', mt: 0.25 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            justifyContent: 'flex-end',
+            mt: 0.25
+          }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             {timeText}
           </Typography>

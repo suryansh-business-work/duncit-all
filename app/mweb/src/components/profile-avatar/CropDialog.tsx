@@ -95,7 +95,9 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
             step={0.05}
             onChange={(_e, v) => setZoom(v as number)}
           />
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <IconButton aria-label={t('mweb.common.rotate')} onClick={() => setRotation((r) => (r + 90) % 360)}>
               <RotateRightIcon />
             </IconButton>

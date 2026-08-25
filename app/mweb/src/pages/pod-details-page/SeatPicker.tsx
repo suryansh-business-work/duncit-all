@@ -42,18 +42,17 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
   return (
     <Stack
       direction="row"
-      alignItems="center"
       role="group"
       aria-label={t('mweb.podDetails.numberOfSeats')}
       sx={{
+        alignItems: "center",
         flex: '0 0 auto',
         height: 48,
         borderRadius: 999,
         border: 1,
         borderColor: 'divider',
-        opacity: disabled ? 0.6 : 1,
-      }}
-    >
+        opacity: disabled ? 0.6 : 1
+      }}>
       <IconButton
         aria-label={t('mweb.podDetails.oneSeatFewer')}
         onClick={() => step(seats - 1)}
@@ -63,7 +62,13 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
       >
         <RemoveIcon fontSize="small" />
       </IconButton>
-      <Typography variant="body2" fontWeight={700} sx={{ minWidth: 18, textAlign: 'center' }}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 700,
+          minWidth: 18,
+          textAlign: 'center'
+        }}>
         {seats}
       </Typography>
       <IconButton

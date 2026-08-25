@@ -15,7 +15,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import FileInfoPanel from './FileInfoPanel';
 import { RENAME_MEDIA_FILE, UPDATE_MEDIA_FILE, type MediaItem } from './queries';
@@ -135,10 +135,11 @@ export default function FileDetailsView({
       {stepping && (
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 0.5 }}
-        >
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 0.5
+          }}>
           <IconButton
             size="small"
             onClick={() => step(-1)}
@@ -147,7 +148,9 @@ export default function FileDetailsView({
           >
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {at + 1} of {list.length} selected
           </Typography>
           <IconButton
@@ -161,7 +164,13 @@ export default function FileDetailsView({
         </Stack>
       )}
 
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={0.5}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
         <Typography variant="subtitle2" noWrap sx={{ flex: 1, minWidth: 0 }} title={file.name}>
           {file.name}
         </Typography>
@@ -192,7 +201,9 @@ export default function FileDetailsView({
       {tab === 'info' && <FileInfoPanel file={file} />}
       {tab === 'edit' && canWrite && (
         <Stack spacing={2}>
-          <Stack spacing={1} alignItems="flex-start">
+          <Stack spacing={1} sx={{
+            alignItems: "flex-start"
+          }}>
             <TextField
               fullWidth
               size="small"
@@ -205,7 +216,9 @@ export default function FileDetailsView({
               Save
             </Button>
           </Stack>
-          <Stack spacing={1} alignItems="flex-start">
+          <Stack spacing={1} sx={{
+            alignItems: "flex-start"
+          }}>
             <Autocomplete
               multiple
               freeSolo
@@ -214,11 +227,11 @@ export default function FileDetailsView({
               options={[]}
               value={tags}
               onChange={(_event, next) => setTags(next.map((tag) => String(tag).trim()).filter(Boolean))}
-              renderTags={(value, getTagProps) =>
+              renderValue={(value, getItemProps) =>
                 value.map((tag, index) => {
                   // getTagProps supplies the key; spreading it after an explicit
                   // one would let React's own win and break deletion.
-                  const { key, ...rest } = getTagProps({ index });
+                  const { key, ...rest } = getItemProps({ index });
                   return <Chip key={key} size="small" label={tag} {...rest} />;
                 })
               }

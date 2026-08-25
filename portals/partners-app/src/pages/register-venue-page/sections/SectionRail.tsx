@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import {
   Box,
   List,
@@ -85,9 +86,10 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
               <ListItemText
                 primary={section.label}
                 secondary={section.hint}
-                primaryTypographyProps={{ fontWeight: 800, fontSize: 14 }}
-                secondaryTypographyProps={{ fontSize: 11.5 }}
-              />
+                slotProps={{
+                  primary: { sx: { fontWeight: 800, fontSize: 14 } },
+                  secondary: { sx: { fontSize: 11.5 } }
+                }} />
               <Box sx={{ mt: 0.6 }}>{stateIcon(section.key, sectionState)}</Box>
             </ListItemButton>
           ))}

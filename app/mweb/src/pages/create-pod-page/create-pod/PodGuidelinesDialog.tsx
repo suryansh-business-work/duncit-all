@@ -31,7 +31,12 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
         <AutoAwesomeIcon color="primary" /> {t('mweb.createPod.aiMonitors')}
       </DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           {t('mweb.createPod.guidelinesIntro')}
         </Typography>
         <List dense disablePadding>
@@ -40,7 +45,9 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
               <ListItemIcon sx={{ minWidth: 30, mt: 0.5, color: 'error.main' }}>
                 <BlockIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary={t(key)} primaryTypographyProps={{ variant: 'body2' }} />
+              <ListItemText primary={t(key)} slotProps={{
+                primary: { variant: 'body2' }
+              }} />
             </ListItem>
           ))}
         </List>

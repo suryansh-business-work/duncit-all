@@ -111,7 +111,12 @@ export function PromptForm({
           minRows={10}
           hint={copy.hints.content}
         />
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Chip
             size="small"
             color="primary"
@@ -138,7 +143,9 @@ export function PromptForm({
             />
           )}
         </Stack>
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} sx={{
+          justifyContent: "flex-end"
+        }}>
           {onCancel && (
             <Button onClick={onCancel} disabled={submitting}>
               {copy.cancel}

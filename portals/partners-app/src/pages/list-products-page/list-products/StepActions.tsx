@@ -28,7 +28,14 @@ export default function StepActions({
   return (
     <Stack spacing={1.25}>
       {isLast && <AiCheckingIndicator visible={moderating} />}
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap"
+        }}>
         <Button disabled={isFirst || loading} onClick={onBack}>
           {t('partners.venueAvailabilityPage.back')}
         </Button>

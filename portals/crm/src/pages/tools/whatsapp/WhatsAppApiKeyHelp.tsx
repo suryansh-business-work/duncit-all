@@ -8,14 +8,16 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import { useTranslation } from '@duncit/shell';
 
 const GATEWAY = 'https://open-wa-server.duncit.com';
 
 function Step({ n, children }: Readonly<{ n: number; children: React.ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1.25} alignItems="flex-start">
+    <Stack direction="row" spacing={1.25} sx={{
+      alignItems: "flex-start"
+    }}>
       <Box
         sx={{
           flex: '0 0 22px',
@@ -32,7 +34,9 @@ function Step({ n, children }: Readonly<{ n: number; children: React.ReactNode }
       >
         {n}
       </Box>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {children}
       </Typography>
     </Stack>
@@ -45,14 +49,20 @@ export default function WhatsAppApiKeyHelp() {
   return (
     <Accordion variant="outlined" disableGutters sx={{ borderRadius: 3, '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <HelpOutlineIcon fontSize="small" color="primary" />
-          <Typography fontWeight={800}>{t('crm.tools.howDoIGetTheApi')}</Typography>
+          <Typography sx={{
+            fontWeight: 800
+          }}>{t('crm.tools.howDoIGetTheApi')}</Typography>
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             The WhatsApp gateway runs at{' '}
             <Link href={GATEWAY} target="_blank" rel="noreferrer">
               {GATEWAY}
@@ -62,7 +72,9 @@ export default function WhatsAppApiKeyHelp() {
             WhatsApp password/token is ever needed.
           </Typography>
 
-          <Typography variant="subtitle2" fontWeight={800}>
+          <Typography variant="subtitle2" sx={{
+            fontWeight: 800
+          }}>
             Option A — use the master key (quickest)
           </Typography>
           <Step n={1}>
@@ -71,7 +83,12 @@ export default function WhatsAppApiKeyHelp() {
           </Step>
           <Step n={2}>{t('crm.tools.pasteItIntoTheApiKey')} <b>{t('crm.tools.saveAndAmpConnect')}</b>.</Step>
 
-          <Typography variant="subtitle2" fontWeight={800} sx={{ pt: 1 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              pt: 1
+            }}>
             Option B — create a dedicated key
           </Typography>
           <Step n={1}>

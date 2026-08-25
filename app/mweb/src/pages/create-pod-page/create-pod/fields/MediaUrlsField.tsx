@@ -36,6 +36,11 @@ interface Props {
    * because the cover is capped would take a feature away.
    */
   maxImages?: number;
+  /**
+   * Offer the device alone — no stock library. Set where the answer has to be
+   * a real photograph of something that happened (a pod's own media).
+   */
+  deviceOnly?: boolean;
 }
 
 /** Pod media — a dashed upload dropzone (empty state) that opens the shared
@@ -51,6 +56,7 @@ export default function MediaUrlsField({
   folder = '/pods',
   subCategoryName,
   maxImages,
+  deviceOnly = false,
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const { t } = useTranslation();
@@ -167,6 +173,7 @@ export default function MediaUrlsField({
         seedQuery={coverSearchTerm(subCategoryName)}
         orientation="landscape"
         max={slotsLeft}
+        deviceOnly={deviceOnly}
         onPicked={addUrl}
         onPickedMany={addUrls}
       />

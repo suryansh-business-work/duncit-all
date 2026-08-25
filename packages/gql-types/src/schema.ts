@@ -7973,6 +7973,8 @@ export type Mutation = {
   addMeetingHoliday: MeetingHoliday;
   addPodComment: PodComment;
   addPodIdeaComment: PodIdea;
+  /** Adds photos/videos from the pod. Host, or anyone marked present at it. */
+  addPodPartyMedia: PodMediaBoard;
   addPodStatus: Pod;
   addPostComment: Post;
   addUserRole: User;
@@ -8633,6 +8635,8 @@ export type Mutation = {
   removeExpenseRefund: Expense;
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
+  /** Takes one item down — your own, or any of them if you host the pod. */
+  removePodPartyMedia: PodMediaBoard;
   removeUserRole: User;
   /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
   renameMediaFile: MediaItem;
@@ -9294,6 +9298,12 @@ export type MutationAddPodCommentArgs = {
 export type MutationAddPodIdeaCommentArgs = {
   pod_idea_doc_id: Scalars['ID']['input'];
   text: Scalars['String']['input'];
+};
+
+
+export type MutationAddPodPartyMediaArgs = {
+  media: Array<PodMediaInput>;
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -11019,6 +11029,12 @@ export type MutationRemoveExpenseRefundArgs = {
 
 export type MutationRemoveMeetingHolidayArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemovePodPartyMediaArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  url: Scalars['String']['input'];
 };
 
 
@@ -14300,10 +14316,37 @@ export type PodMedia = {
   url: Scalars['String']['output'];
 };
 
+/**
+ * A pod's media, in one read: what is on it and what this viewer may do.
+ * A viewer of NONE gets an EMPTY list — the link is pasted into group chats,
+ * so the page explains itself instead of leaking the photos to whoever it
+ * reached.
+ */
+export type PodMediaBoard = {
+  __typename?: 'PodMediaBoard';
+  can_upload: Scalars['Boolean']['output'];
+  count: Scalars['Int']['output'];
+  is_cancelled: Scalars['Boolean']['output'];
+  items: Array<PodPartyMedia>;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  viewer: PodMediaViewer;
+};
+
 export type PodMediaInput = {
   type?: InputMaybe<CategoryMediaType>;
   url: Scalars['String']['input'];
 };
+
+/**
+ * In what capacity someone is looking at a pod's media: its host (admins read
+ * as hosts), someone whose attendance was marked, or neither.
+ */
+export type PodMediaViewer =
+  | 'GUEST'
+  | 'HOST'
+  | 'NONE';
 
 export type PodMember = {
   __typename?: 'PodMember';
@@ -14510,6 +14553,22 @@ export type PodParticipation = {
   pod_cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Set only when the pod itself was cancelled — then nothing else applies. */
   pod_cancelled_by?: Maybe<PodMemberCancelActor>;
+};
+
+/** One photo or video FROM the pod, with who put it there. */
+export type PodPartyMedia = {
+  __typename?: 'PodPartyMedia';
+  /** This viewer may take it down — their own, or anything at all if a host. */
+  can_remove: Scalars['Boolean']['output'];
+  /** This viewer uploaded it. */
+  mine: Scalars['Boolean']['output'];
+  /** HOST when a host uploaded it, GUEST when one of the people who came did. */
+  source: PodMediaViewer;
+  type: CategoryMediaType;
+  uploaded_at?: Maybe<Scalars['String']['output']>;
+  uploaded_by_id: Scalars['ID']['output'];
+  uploaded_by_name: Scalars['String']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type PodPlaceCharge = {
@@ -16315,6 +16374,12 @@ export type Query = {
   podIdea?: Maybe<PodIdea>;
   podIdeas: Array<PodIdea>;
   podIdeasTable: PodIdeaTablePage;
+  /**
+   * The photos and videos from one pod — the Upload Pod Media page, the link a
+   * host shares with the people who came, and the Complete Pod dialog all read
+   * this one board.
+   */
+  podMediaBoard: PodMediaBoard;
   podMembers: Array<PodMember>;
   podMembershipState: PodMembershipState;
   podMessages: Array<PodMessage>;
@@ -18229,6 +18294,11 @@ export type QueryPodIdeasTableArgs = {
 };
 
 
+export type QueryPodMediaBoardArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodMembersArgs = {
   pod_doc_id: Scalars['ID']['input'];
   status?: InputMaybe<MembershipStatus>;
@@ -19602,6 +19672,8 @@ export type ShareLinkTarget =
   | 'POD_IDEA'
   /** The venue map link a shared pod message carries. */
   | 'POD_LOCATION'
+  /** A pod's media upload page, sent by its host to the people who came. */
+  | 'POD_MEDIA'
   | 'POST'
   | 'PROFILE'
   | 'REFERRAL';

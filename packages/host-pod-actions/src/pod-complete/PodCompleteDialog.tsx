@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
 import {
@@ -16,29 +16,31 @@ import {
   Typography,
 } from '@mui/material';
 import SettlementPreview from './SettlementPreview';
+import PodMediaSummary from './PodMediaSummary';
 import TicketScanDialog from '../ticket-scan/TicketScanDialog';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { COMPLETE_POD } from '../queries';
-import { hasMediaLine, mediaTextToInput } from '../media-text';
 import type { HostPodActionLabels } from '../labels';
 import type { HostPodForComplete } from '../types';
 
 export interface PodCompleteValues {
   venue_bill_amount: string;
-  media_text: string;
 }
 
 export const blankPodCompleteValues: PodCompleteValues = {
   venue_bill_amount: '',
-  media_text: '',
 };
 
-/** Schema depends on whether the pod has a venue: only then is a bill amount required. */
+/**
+ * Schema depends on whether the pod has a venue: only then is a bill amount
+ * required. Media is NOT asked for here — it belongs to the pod, uploaded on
+ * its own page, and a pod that took money still owes its host that money
+ * whether or not anybody photographed the evening.
+ */
 export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionLabels) =>
   z
     .object({
       venue_bill_amount: z.string().trim(),
-      media_text: z.string().refine(hasMediaLine, labels.partyMediaRequired),
     })
     .superRefine((values, ctx) => {
       if (!hasVenue) return;
@@ -52,12 +54,16 @@ export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionL
       }
     });
 
-/** Maps the validated values onto the server's CompletePodInput. */
+/**
+ * Maps the validated values onto the server's CompletePodInput.
+ *
+ * No `evidence_media`: the release carries the pod's OWN media, which the
+ * server reads off the pod rather than taking from whoever completes it.
+ */
 export function buildCompleteInput(values: PodCompleteValues, podId: string) {
   return {
     pod_id: podId,
     venue_bill_amount: Number(values.venue_bill_amount) || 0,
-    evidence_media: mediaTextToInput(values.media_text),
   };
 }
 
@@ -70,11 +76,10 @@ interface Props {
 /** Host completes a pod: enter the venue bill amount + upload party media. The
  * split is previewed live; on submit the payout releases are created for Finance. */
 export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
-  const { labels, renderMediaField } = useHostPodActionsConfig();
+  const { labels } = useHostPodActionsConfig();
   const hasVenue = !!pod?.venue_id;
   const {
     register,
-    control,
     handleSubmit,
     reset,
     watch,
@@ -131,19 +136,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               }}
             />
           )}
-          <Controller
-            control={control}
-            name="media_text"
-            render={({ field, fieldState }) =>
-              renderMediaField({
-                value: field.value,
-                onChange: field.onChange,
-                error: fieldState.error?.message,
-                label: labels.podMedia,
-                folder: '/pod-completion',
-              })
-            }
-          />
+          {pod && <PodMediaSummary podId={pod.id} />}
           {pod && (
             <SettlementPreview
               podId={pod.id}

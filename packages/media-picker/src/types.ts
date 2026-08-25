@@ -71,6 +71,15 @@ export interface MediaPickerDialogProps {
   allowDocuments?: boolean;
   /** Upload Settings surface driving sizes/formats/crop presets. */
   surface?: UploadSurface;
+  /**
+   * Hide the Pexels tabs and offer the device alone.
+   *
+   * For a picker whose answer has to be a real photograph of something that
+   * happened — a pod's own media, which is what a host's payout is evidenced
+   * on. A stock library is the right answer for a cover image and the wrong
+   * one there, so the tabs are not merely discouraged, they are absent.
+   */
+  deviceOnly?: boolean;
 }
 
 export type Orientation = 'landscape' | 'portrait' | 'square' | '';

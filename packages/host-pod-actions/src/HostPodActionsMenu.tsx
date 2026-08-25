@@ -8,7 +8,9 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import FeedbackLinkItem from './FeedbackLinkItem';
+import StarRateIcon from '@mui/icons-material/StarRate';
+import PhotoCameraBackIcon from '@mui/icons-material/PhotoCameraBack';
+import PodLinkMenuItem from './PodLinkMenuItem';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props {
@@ -35,6 +37,14 @@ interface Props {
    */
   onSlotRequest?: () => void;
   onEdit: () => void;
+  /**
+   * The pod's media upload page and the link to it. A PAGE like
+   * `onSeeAttendance`, so the three appear together only where the surface has
+   * that route — a console that passes nothing keeps the menu it had.
+   */
+  onOpenPodMedia?: () => void;
+  onSharePodMedia?: () => void;
+  onCopyPodMedia?: () => void;
   onOpenFeedback: () => void;
   onShareFeedback: () => void;
   onCopyFeedback: () => void;
@@ -62,13 +72,16 @@ export default function HostPodActionsMenu({
   onSeeAttendance,
   onSlotRequest,
   onEdit,
+  onOpenPodMedia,
+  onSharePodMedia,
+  onCopyPodMedia,
   onOpenFeedback,
   onShareFeedback,
   onCopyFeedback,
   onCancel,
   onClubAdmin,
 }: Readonly<Props>) {
-  const { labels } = useHostPodActionsConfig();
+  const { labels, podMediaLabels } = useHostPodActionsConfig();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const pick = (action: () => void) => () => {
@@ -138,10 +151,22 @@ export default function HostPodActionsMenu({
           </ListItemIcon>
           <ListItemText primary={labels.editPod} />
         </MenuItem>
-        {/* The rating link: clicking the row opens the form, and the two icons
-            beside it hand the link to the people who came. */}
+        {/* The pod's two links, each one row: clicking it opens the page, and
+            the two icons beside it hand THE SAME link to the people who came —
+            Share and Copy resolve one address per pod, never two. */}
+        {showAttendeeActions && onOpenPodMedia && onSharePodMedia && onCopyPodMedia && (
+          <PodLinkMenuItem
+            icon={<PhotoCameraBackIcon fontSize="small" color="primary" />}
+            label={podMediaLabels.pageTitle}
+            onOpen={pick(onOpenPodMedia)}
+            onShare={pick(onSharePodMedia)}
+            onCopy={pick(onCopyPodMedia)}
+          />
+        )}
         {showAttendeeActions && (
-          <FeedbackLinkItem
+          <PodLinkMenuItem
+            icon={<StarRateIcon fontSize="small" sx={{ color: 'warning.main' }} />}
+            label={labels.feedbackLink}
             onOpen={pick(onOpenFeedback)}
             onShare={pick(onShareFeedback)}
             onCopy={pick(onCopyFeedback)}

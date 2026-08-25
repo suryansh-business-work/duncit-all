@@ -16,6 +16,8 @@ interface Props {
   helperText?: string;
   /** Defaults to the shared `Add image` copy in the reader's language. */
   buttonLabel?: string;
+  /** Offer the device alone — no stock library. See MediaPickerDialog. */
+  deviceOnly?: boolean;
 }
 
 export default function MediaListField({
@@ -25,6 +27,7 @@ export default function MediaListField({
   folder,
   helperText,
   buttonLabel,
+  deviceOnly = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const addLabel = buttonLabel ?? t('media.list.addImage');
@@ -118,6 +121,7 @@ export default function MediaListField({
         open={pickerOpen !== null}
         onClose={() => setPickerOpen(null)}
         folder={folder}
+        deviceOnly={deviceOnly}
         title={pickerOpen === 'new' ? `Add to ${label}` : `Replace image in ${label}`}
         onPicked={(url) => {
           if (pickerOpen === 'new') append(url);

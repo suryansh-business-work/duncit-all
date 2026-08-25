@@ -1,25 +1,29 @@
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { IconButton, ListItemIcon, ListItemText, MenuItem, Stack, Tooltip } from '@mui/material';
-import StarRateIcon from '@mui/icons-material/StarRate';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props {
+  /** The line's own icon — a star for the rating link, a camera for the media one. */
+  icon: ReactNode;
+  label: string;
   onOpen: () => void;
   onShare: () => void;
   onCopy: () => void;
 }
 
 /**
- * The pod's rating link, as one menu line with three ways to use it: click the
- * row to open the form yourself, or take the link with the two buttons beside
- * it — most hosts want to send it, not fill it in.
+ * One of the host's per-pod links, as a menu line with three ways to use it:
+ * click the row to open the page yourself, or take the link with the two
+ * buttons beside it — most hosts want to send it, not fill it in.
  *
- * The buttons stop the click reaching the row, or copying the link would also
- * navigate away from the list the host is working in.
+ * Both links render through this one row (rule 40), so Share and Copy behave
+ * identically wherever they appear. The buttons stop the click reaching the
+ * row, or copying the link would also navigate away from the list the host is
+ * working in.
  */
-export default function FeedbackLinkItem({ onOpen, onShare, onCopy }: Readonly<Props>) {
+export default function PodLinkMenuItem({ icon, label, onOpen, onShare, onCopy }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
 
   const act = (action: () => void) => (event: MouseEvent<HTMLElement>) => {
@@ -29,10 +33,8 @@ export default function FeedbackLinkItem({ onOpen, onShare, onCopy }: Readonly<P
 
   return (
     <MenuItem onClick={onOpen}>
-      <ListItemIcon>
-        <StarRateIcon fontSize="small" sx={{ color: 'warning.main' }} />
-      </ListItemIcon>
-      <ListItemText primary={labels.feedbackLink} />
+      <ListItemIcon>{icon}</ListItemIcon>
+      <ListItemText primary={label} />
       <Stack direction="row" spacing={0.5} sx={{ pl: 1 }}>
         <Tooltip title={labels.shareLink}>
           <IconButton size="small" edge="end" aria-label={labels.shareLink} onClick={act(onShare)}>

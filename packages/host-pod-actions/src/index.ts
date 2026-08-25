@@ -4,8 +4,8 @@ export type { HostPodActionsConfig } from './HostPodActionsProvider';
 export { default as HostPodActionsMenu } from './HostPodActionsMenu';
 export { useHostPodActions } from './useHostPodActions';
 export type { HostPodActions, HostPodMenuHandlers } from './useHostPodActions';
-export { useHostFeedbackLink } from './useHostFeedbackLink';
-export type { HostFeedbackLinkActions } from './useHostFeedbackLink';
+export { useHostFeedbackLink, useHostPodMediaLink } from './usePodLinkActions';
+export type { HostPodLinkActions, HostPodLinkKind } from './usePodLinkActions';
 
 export {
   buildHostPodActionLabels,
@@ -51,6 +51,17 @@ export {
   podResubmitSchema,
 } from './pod-resubmit/pod-resubmit.form';
 export type { PodResubmitValues } from './pod-resubmit/pod-resubmit.form';
+
+export { default as PodMediaView } from './pod-media/PodMediaView';
+export { default as PodMediaGrid } from './pod-media/PodMediaGrid';
+export { usePodMediaBoard } from './pod-media/usePodMediaBoard';
+export type { PodMediaBoardApi } from './pod-media/usePodMediaBoard';
+export {
+  ADD_POD_PARTY_MEDIA,
+  POD_MEDIA_BOARD,
+  REMOVE_POD_PARTY_MEDIA,
+} from './pod-media/queries';
+export type { PodMediaBoard, PodMediaBoardItem, PodMediaViewer } from './pod-media/queries';
 
 export { default as PodAttendanceView } from './attendance/PodAttendanceView';
 export { useAttendanceBoard } from './attendance/useAttendanceBoard';

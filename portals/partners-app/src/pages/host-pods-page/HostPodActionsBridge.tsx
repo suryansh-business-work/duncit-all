@@ -3,7 +3,7 @@ import { Alert, Snackbar } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
 import { MediaListField } from '@duncit/media-picker';
-import { podFeedbackPath } from '@duncit/utils';
+import { podFeedbackPath, podMediaPath, shellPodMediaLabels } from '@duncit/utils';
 import {
   HostPodActionsProvider,
   shellHostPodLabels,
@@ -29,15 +29,17 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
   const [toast, setToast] = useState<Toast | null>(null);
   const labels = useMemo(() => shellHostPodLabels(t), [t]);
   const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
+  const podMediaLabels = useMemo(() => shellPodMediaLabels(t), [t]);
 
   const renderMediaField = useCallback(
-    ({ value, onChange, error, label, folder }: Readonly<MediaFieldRenderProps>) => (
+    ({ value, onChange, error, label, folder, deviceOnly }: Readonly<MediaFieldRenderProps>) => (
       <MediaListField
         label={label}
         value={value}
         onChange={onChange}
         folder={folder}
         helperText={error}
+        deviceOnly={deviceOnly}
       />
     ),
     [],
@@ -57,10 +59,12 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
     <HostPodActionsProvider
       labels={labels}
       slotLabels={slotLabels}
+      podMediaLabels={podMediaLabels}
       renderMediaField={renderMediaField}
       onViewProfile={openExternally}
-      feedbackBaseUrl={urlConfigs.mwebUrl}
+      linkBaseUrl={urlConfigs.mwebUrl}
       onOpenFeedback={(podId) => openExternally(podFeedbackPath(podId))}
+      onOpenPodMedia={(podId) => openExternally(podMediaPath(podId))}
       notifySuccess={notifySuccess}
       notifyError={notifyError}
     >

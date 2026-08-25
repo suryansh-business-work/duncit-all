@@ -4,7 +4,8 @@ import PodCompleteDialog from './pod-complete/PodCompleteDialog';
 import PodEditDialog from './PodEditDialog';
 import PodResubmitDialog from './pod-resubmit/PodResubmitDialog';
 import TicketScanDialog from './ticket-scan/TicketScanDialog';
-import { useHostFeedbackLink } from './useHostFeedbackLink';
+import { useHostFeedbackLink, useHostPodMediaLink } from './usePodLinkActions';
+import { useHostPodActionsConfig } from './HostPodActionsProvider';
 import { isVenueRejected } from './venue-approval';
 import type { HostPodForComplete, HostPodTarget, ScanTarget } from './types';
 
@@ -16,6 +17,10 @@ export interface HostPodMenuHandlers {
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
+  /** Undefined on a surface with no media page — the menu then omits the row. */
+  onOpenPodMedia?: () => void;
+  onSharePodMedia?: () => void;
+  onCopyPodMedia?: () => void;
   onOpenFeedback: () => void;
   onShareFeedback: () => void;
   onCopyFeedback: () => void;
@@ -42,17 +47,19 @@ export interface HostPodActions {
  */
 export function useHostPodActions(onChanged: () => void): HostPodActions {
   const feedback = useHostFeedbackLink();
+  const media = useHostPodMediaLink();
+  const { onOpenPodMedia } = useHostPodActionsConfig();
   const [scanPod, setScanPod] = useState<ScanTarget | null>(null);
   const [editPod, setEditPod] = useState<HostPodTarget | null>(null);
   const [resubmitPod, setResubmitPod] = useState<HostPodTarget | null>(null);
   const [cancelPod, setCancelPod] = useState<{ id: string; title: string } | null>(null);
   const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
 
-  type FeedbackAction = (pod: HostPodTarget) => Promise<unknown> | void;
+  type LinkAction = (pod: HostPodTarget) => Promise<unknown> | void;
 
   // A dismissed share sheet rejects on iOS — that is the host closing it, not a
   // failure worth showing them.
-  const fireFeedback = (action: FeedbackAction, pod: HostPodTarget) => {
+  const fireLink = (action: LinkAction, pod: HostPodTarget) => {
     Promise.resolve(action(pod)).catch(() => undefined);
   };
 
@@ -65,9 +72,14 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
     // A venue-rejected pod opens the FULL edit + resubmission flow; every other
     // pod keeps the limited title/description/media edit.
     onEdit: () => (isVenueRejected(pod.venue_approval_status) ? setResubmitPod : setEditPod)(pod),
+    // The whole media triple appears or none of it does: sharing a link to a
+    // page this surface cannot open would send guests somewhere that 404s.
+    onOpenPodMedia: onOpenPodMedia ? () => media.open(pod) : undefined,
+    onSharePodMedia: onOpenPodMedia ? () => fireLink(media.share, pod) : undefined,
+    onCopyPodMedia: onOpenPodMedia ? () => fireLink(media.copy, pod) : undefined,
     onOpenFeedback: () => feedback.open(pod),
-    onShareFeedback: () => fireFeedback(feedback.share, pod),
-    onCopyFeedback: () => fireFeedback(feedback.copy, pod),
+    onShareFeedback: () => fireLink(feedback.share, pod),
+    onCopyFeedback: () => fireLink(feedback.copy, pod),
     onCancel: () => setCancelPod({ id: pod.id, title: pod.pod_title }),
   });
 

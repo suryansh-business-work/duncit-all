@@ -895,6 +895,38 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       copyFailed: 'Could not copy the link. Copy it from the feedback page instead.',
     },
     /**
+     * A pod's own photos and videos. Word-for-word identical to
+     * `mweb.podMedia` — the Partners console opens mWeb's page for the upload
+     * itself, but the menu line, the share card and the Complete dialog's Pod
+     * Media section are rendered by the portal and need the copy here.
+     */
+    podMedia: {
+      uploadPodMedia: 'Upload Pod Media',
+      back: 'Back',
+      hostIntro:
+        'Add the photos and videos from this pod. Whatever you and your guests add here is what the Complete Pod screen shows.',
+      guestIntro: 'Add your photos and videos from this pod so the host and everyone who came can see them.',
+      addMedia: 'Add photos or videos',
+      uploading: 'Saving to this pod…',
+      empty: 'Nothing has been added to this pod yet.',
+      itemsHeading: '{count} on this pod',
+      byHost: 'Host',
+      byGuest: 'Guest',
+      uploadedBy: 'Added by {name}',
+      remove: 'Remove',
+      removed: 'Removed',
+      added: '{count} added',
+      notInvited:
+        'Only the host and the people whose attendance was marked can add media to this pod. Ask the host to mark you present.',
+      cancelled: 'This pod was cancelled, so nothing more can be added to it.',
+      shareHeading: 'Ask your guests for their photos',
+      shareBody:
+        'Send this link to the people who came. It opens this same page for anyone you marked present.',
+      shareMessage: 'Add your photos from “{title}” here:',
+      retry: 'Try again',
+      loadFailed: 'That pod could not be opened. Check the link and try again.',
+    },
+    /**
      * Only the menu label lives here. The card behind it is an mWeb/native
      * surface (rule 40 — the pair shares logic, never UI), so the portals
      * resolve the label and never render the rest of `mweb.podClubAdmin`.

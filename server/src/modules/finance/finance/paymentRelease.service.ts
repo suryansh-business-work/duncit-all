@@ -759,15 +759,23 @@ export const paymentReleaseService = {
       });
     }
 
-    const evidence = (input.evidence_media ?? [])
+    // What a release carries as evidence is the pod's OWN media — what the
+    // host uploaded on the Upload Pod Media page and what the guests sent in
+    // from the link they were given. The Admin panel completes with a list of
+    // its own, and that is what it means there: a reviewer attaching what they
+    // were sent out of band. Neither is required — a pod with no photos still
+    // owes its host the money it took.
+    const passed = (input.evidence_media ?? [])
       .map((media: any) => clean(media?.url || media))
       .filter(Boolean)
       .map((url: string) => ({ url, type: mediaType(url) }));
-    if (evidence.length === 0) {
-      throw new GraphQLError('Upload party photos or videos to complete this pod', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
+    const evidence =
+      passed.length > 0
+        ? passed
+        : (pod.pod_party_media ?? []).map((media: any) => ({
+            url: media.url,
+            type: media.type ?? mediaType(media.url),
+          }));
 
     // The chosen beneficiary's commission override prices the settlement — a
     // co-host with a negotiated rate must not settle at the primary host's %.

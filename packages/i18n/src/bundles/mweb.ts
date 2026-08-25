@@ -1269,6 +1269,41 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       linkCopied: 'Feedback link copied',
       copyFailed: 'Could not copy the link. Copy it from the feedback page instead.',
     },
+    /**
+     * A pod’s own photos and videos — the Upload Pod Media page.
+     *
+     * The host opens it from Your Pods > ⋮, and the people who came open the
+     * same page from the link the host sends them — so the copy speaks to both
+     * and the page decides which half to show.
+     */
+    podMedia: {
+      uploadPodMedia: 'Upload Pod Media',
+      back: 'Back',
+      hostIntro:
+        'Add the photos and videos from this pod. Whatever you and your guests add here is what the Complete Pod screen shows.',
+      guestIntro: 'Add your photos and videos from this pod so the host and everyone who came can see them.',
+      addMedia: 'Add photos or videos',
+      uploading: 'Saving to this pod…',
+      empty: 'Nothing has been added to this pod yet.',
+      itemsHeading: '{count} on this pod',
+      byHost: 'Host',
+      byGuest: 'Guest',
+      uploadedBy: 'Added by {name}',
+      remove: 'Remove',
+      removed: 'Removed',
+      added: '{count} added',
+      // The link gets forwarded, so whoever opens it without having been marked
+      // present is told why rather than shown a picker that would be refused.
+      notInvited:
+        'Only the host and the people whose attendance was marked can add media to this pod. Ask the host to mark you present.',
+      cancelled: 'This pod was cancelled, so nothing more can be added to it.',
+      shareHeading: 'Ask your guests for their photos',
+      shareBody:
+        'Send this link to the people who came. It opens this same page for anyone you marked present.',
+      shareMessage: 'Add your photos from “{title}” here:',
+      retry: 'Try again',
+      loadFailed: 'That pod could not be opened. Check the link and try again.',
+    },
     // What to say when a payment does not complete. Three outcomes, three
     // answers — a buyer whose money may have left their account must not be
     // told their payment was "cancelled".

@@ -13,13 +13,24 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       cancelled: 'Cancelled',
       completed: 'Completed',
       created: 'Created',
+      // The club card and the club-admin card answer the same missing club, so
+      // the sentence is shared rather than written twice.
+      noClubLinked: 'No club linked to this pod.',
       status: 'Status',
     },
     podAttendeesSection: {
       attendees: 'Attendees',
     },
+    podClubAdminsCard: {
+      clubAdminDetails: 'Club Admin Details',
+      email: 'Email',
+      noClubAdmins: 'This club has no club admins.',
+      phone: 'Phone',
+      whatsapp: 'WhatsApp',
+    },
     podClubCard: {
-      clubAndClubAdmins: 'Club & club admins',
+      club: 'Club',
+      viewClub: 'View club',
     },
     podFeedbackSection: {
       ratings: 'Ratings',

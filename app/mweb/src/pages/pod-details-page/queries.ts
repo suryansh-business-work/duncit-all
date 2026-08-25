@@ -42,6 +42,18 @@ export const POD_DETAILS = gql`
       zone_name
       club_id
       club_slug
+      # Selected off the pod rather than off the clubs list beside it: the
+      # admins carry contact details, and only THIS pod's club needs them.
+      club {
+        club_admins {
+          id
+          name
+          avatar_url
+          email
+          phone
+          whatsapp
+        }
+      }
       location_id
       venue_id
       # The venue's own label + detail. Selected for the SHARE message: without

@@ -9,6 +9,7 @@ import { inclusiveGst } from '@/utils/checkout-math';
 import { isPodExpired } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
 import { PodClubCard } from '@/components/details/PodClubCard';
+import { PodClubAdminsSection } from '@/components/details/PodClubAdminsSection';
 import {
   AboutSection,
   AttendeesSection,
@@ -145,6 +146,12 @@ export function PodAccordions({
             </Text>
           </XStack>
         ),
+      },
+      {
+        id: 'clubAdmins',
+        title: t('mweb.podDetails.sectionClubAdmins'),
+        icon: 'admin-panel-settings',
+        content: <PodClubAdminsSection admins={pod.club?.club_admins ?? []} />,
       },
       {
         id: 'offers',

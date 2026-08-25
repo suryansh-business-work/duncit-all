@@ -7,6 +7,10 @@ const renderCouponsFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) =>
   <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
 );
 
+/** Admin is the one portal with user pages, so it is the one that links a club
+ * admin's name through to theirs. */
+const userTo = (userId: string) => `/users/${userId}`;
+
 /** Admin's pod detail — the shared view at ADMIN scope (its default).
  *
  * The view lives in @duncit/pod-details so Club Admin renders exactly the same
@@ -15,5 +19,5 @@ const renderCouponsFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) =>
  * of ONE pod belong on that pod, so the section is injected as the footer
  * rather than widening the shared view. */
 export default function AdminPodDetailsPage() {
-  return <SharedPodDetails footer={renderCouponsFooter} />;
+  return <SharedPodDetails userTo={userTo} footer={renderCouponsFooter} />;
 }

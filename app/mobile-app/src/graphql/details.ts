@@ -64,6 +64,14 @@ export const PodDetailsDocument = gql(`
         club_feature_images_and_videos {
           url
         }
+        club_admins {
+          id
+          name
+          avatar_url
+          email
+          phone
+          whatsapp
+        }
       }
       location_id
       venue_id

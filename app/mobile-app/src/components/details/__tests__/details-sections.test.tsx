@@ -389,6 +389,7 @@ describe('PodClubCard', () => {
           club_name: 'Jazz Club',
           club_description: 'Live jazz every weekend',
           club_feature_images_and_videos: [{ url: 'http://x/logo.jpg' }],
+          club_admins: [],
         }}
         onOpenClub={onOpenClub}
       />,
@@ -407,6 +408,7 @@ describe('PodClubCard', () => {
           club_name: 'beats',
           club_description: null,
           club_feature_images_and_videos: [],
+          club_admins: [],
         }}
         onOpenClub={jest.fn()}
       />,
@@ -423,6 +425,7 @@ describe('PodClubCard', () => {
           club_name: 'Vibe',
           club_description: null,
           club_feature_images_and_videos: [{ url: '' }],
+          club_admins: [],
         }}
         onOpenClub={jest.fn()}
       />,
@@ -438,6 +441,7 @@ describe('PodClubCard', () => {
           club_name: '',
           club_description: null,
           club_feature_images_and_videos: [],
+          club_admins: [],
         }}
         onOpenClub={jest.fn()}
       />,

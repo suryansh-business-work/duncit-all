@@ -14,6 +14,7 @@ import PodAttendeesSection from './PodAttendeesSection';
 import PodPaymentsSection from './PodPaymentsSection';
 import PodHostsCard from './PodHostsCard';
 import PodClubCard from './PodClubCard';
+import PodClubAdminsCard from './PodClubAdminsCard';
 import PodFinanceSection from './PodFinanceSection';
 import PodFeedbackSection from './PodFeedbackSection';
 
@@ -29,6 +30,10 @@ export interface PodDetailsViewProps {
   /** Where Edit goes. Omit to hide the action entirely — a reader whose portal
    * has no edit route should not be shown a button that goes nowhere. */
   editTo?: (podId: string) => string;
+  /** Where a club admin's name links to. Omit on a portal with no user pages —
+   * Club Admin's own console has none, and a name that navigates nowhere reads
+   * as a broken page rather than as a missing feature. */
+  userTo?: (userId: string) => string;
   /** Rendered under the tables. The admin portal puts its coupons section here;
    * it stays out of this package because coupon management is platform-wide
    * (ADMIN_RW create/delete) and reaches into the admin coupons page. */
@@ -49,6 +54,7 @@ function PodDetailsView({
   backTo = '/pods',
   backLabel = 'Pods',
   editTo = (podId: string) => `/pods/${podId}/edit`,
+  userTo,
   footer,
 }: Readonly<PodDetailsViewProps>) {
   const { id = '' } = useParams();
@@ -144,6 +150,7 @@ function PodDetailsView({
               <Stack spacing={GAP}>
                 <PodHostsCard pod={pod} attendees={attendeeRows} />
                 <PodClubCard clubId={pod.club_id ?? null} />
+                <PodClubAdminsCard clubId={pod.club_id ?? null} userTo={userTo} />
                 <PodFinanceSection podId={pod.id} />
                 <PodFeedbackSection podId={pod.id} />
               </Stack>

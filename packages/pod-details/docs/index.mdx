@@ -71,6 +71,26 @@ create/delete) and reaches into the admin coupons page. Admin injects it:
 <PodDetailsPage footer={(pod) => <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />} />
 ```
 
+## Club, and the people who run it
+
+Two cards, not one. **Club** answers *which club is this* — its name, its slug, and
+the way through to it. **Club Admin Details** answers *who do I call* — every assigned
+admin with their email, phone and WhatsApp as real `mailto:` / `tel:` / `wa.me` links.
+They were one card until the second question had no answer on it: a list of names with
+no number beside them is not a contact.
+
+Both read the same `AdminPodClubDetail` document, so the pair costs one round trip.
+
+A name links through to the user's page only where such a page exists:
+
+```tsx
+<PodDetailsPage userTo={(userId) => `/users/${userId}`} />   // admin portal
+<PodDetailsPage scope="CLUB_ADMIN" />                        // no user pages — plain text
+```
+
+Omitting `userTo` renders the name as text. Club Admin's console has no `/users` route,
+and a name that navigates nowhere reads as a broken page rather than a missing feature.
+
 ## Attendance
 
 This page's attendee table is **read-only about attendance** — it shows the status, and

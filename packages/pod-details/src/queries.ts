@@ -197,6 +197,9 @@ export const POD_CLUB_DETAIL = gql`
         id
         name
         avatar_url
+        email
+        phone
+        whatsapp
       }
     }
   }

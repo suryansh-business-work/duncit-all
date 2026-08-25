@@ -890,6 +890,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       collapseAllSections: 'Collapse all sections',
       sectionAbout: 'About this pod',
       sectionClub: 'Club details',
+      sectionClubAdmins: 'Club Admin Details',
       sectionOffers: 'What this pod offers',
       sectionHosts: 'Hosts',
       sectionAttendees: 'Attendees',
@@ -909,6 +910,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewClub: 'View club',
       // mWeb only — native falls back to the View club action instead.
       clubUnavailable: 'Club details unavailable.',
+      // Club admins. The rows themselves reuse `common.contactTheClubAdmin` and
+      // the podPending contact labels — the same card the club page and the
+      // host's waiting page already render, so only the empty state is new.
+      clubAdminsEmpty: 'No club admins listed for this club.',
       // Hosts.
       host: 'Host',
       hostsEmpty: 'No hosts assigned.',

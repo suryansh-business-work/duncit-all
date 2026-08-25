@@ -50,6 +50,10 @@ exports:
   - 'withSeconds'
   - 'supportedTimeZones'
   - 'deviceTimeZone'
+  - 'zoneChoices'
+  - 'describeZone'
+  - 'formatGmtOffset'
+  - 'ABOVE_TASKBAR_HEIGHT'
   - 'SHELL_FALLBACK'
 ---
 
@@ -284,6 +288,10 @@ console shut for all non-super users.
 | `withSeconds` | `(pattern: string) => string` | The admin's time pattern, counting seconds — `'hh:mm a'` → `'hh:mm:ss a'`. |
 | `supportedTimeZones` | `() => string[]` | Every IANA zone this browser knows; `[]` where it will not say. |
 | `deviceTimeZone` | `() => string` | The zone this machine is set to. |
+| `zoneChoices` | `() => ZoneChoice[]` | Every zone the browser knows, described and ordered by offset: `{ value, offset, gmt, name }`. Built once per session — describing 400 zones is three `Intl` formatters each, and the tray re-renders every second. |
+| `describeZone` | `(zone: string, at?: Date) => ZoneChoice` | One zone on its own — used for the device's zone, which some engines resolve to a name their own list does not contain. |
+| `formatGmtOffset` | `(minutes: number) => string` | `330` → `'GMT+05:30'`. Padded, so a list of them sorts and reads straight. |
+| `ABOVE_TASKBAR_HEIGHT` | `string` | `calc(100% - 40px)` — the height a viewport-fixed paper needs so the taskbar does not swallow its last row. |
 | `useColorMode` | `() => …` | Light/dark mode, re-exported from `@duncit/theme`. |
 
 ### Config types
@@ -478,8 +486,26 @@ date on the page — a console whose clock disagreed with its own tables would b
 Its tray sets the zone (follow the workspace, this device, or any IANA zone the browser knows),
 whether to count seconds, and the reader's language.
 
+Zones are offered the way every other zone picker offers them — `(GMT+05:30) Asia/Calcutta · IST`,
+ordered from the earliest offset to the latest — because "which of these is mine" is a question
+about the offset far more often than about the spelling of the nearest city. The abbreviation comes
+from the DEVICE's locale rather than the console's: ICU only knows `IST` for a reader whose locale
+is Indian and answers `GMT+5:30` for everyone else, and a zone whose abbreviation it has none for
+falls back to the long name (`British Summer Time`). The language row is the one place
+`LanguageSelect` is asked to render with a single language configured (`showSingle`) — a tray whose
+job is to say what the console is set to should not open to a divider with nothing under it.
+
+**Anything fixed to the viewport stops at the bar.** A Drawer's paper is `position: fixed`, so it
+measures against the viewport rather than the shell's column and runs the full height whatever the
+layout does — and the taskbar paints above it, swallowing the last row: the sidebar's caption, the
+apps list's final tool, the Agent's composer. `ABOVE_TASKBAR_HEIGHT` is that subtraction, and every
+drawer in the shell uses it. Bottom padding is not the same fix — it only moves the content up
+inside a paper that is still 40px too tall, leaving the scroll running under the bar.
+
 **The Agent tab** is stuck to the left or right edge and dragged along it. Crossing the middle of
-the screen switches edges; a press that never travels more than 4px is a click, not a drag.
+the screen switches edges; a press that never travels more than 4px is a click, not a drag. It
+unmounts while the panel is open: the tab sits above the drawer in the same z-band as the floating
+call window, so leaving it up printed it across the panel it had just opened.
 
 All of it is **per person and kept on the server** (`shellWorkspaceState`), for the same reason
 staff chat's state is: the shell renders in all seventeen consoles and each is its own origin, so

@@ -1,4 +1,4 @@
-export { Taskbar } from './Taskbar';
+export { ABOVE_TASKBAR_HEIGHT, Taskbar } from './Taskbar';
 export { WorkspaceProvider, type WorkspaceProviderProps } from './WorkspaceProvider';
 export {
   useWorkspace,
@@ -9,4 +9,12 @@ export {
   type WorkspaceWindow,
 } from './context';
 export { useWorkspaceWindow, type WorkspaceWindowHandle } from './useWorkspaceWindow';
-export { deviceTimeZone, supportedTimeZones, withSeconds } from './clock';
+export {
+  describeZone,
+  deviceTimeZone,
+  formatGmtOffset,
+  supportedTimeZones,
+  withSeconds,
+  zoneChoices,
+  type ZoneChoice,
+} from './clock';

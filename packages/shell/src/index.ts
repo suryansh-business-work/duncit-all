@@ -40,18 +40,23 @@ export { StaffChatButton } from './staff-chat/StaffChatButton';
 // these are exported so a portal that lays out its own chrome, and the tests,
 // can reach the same registry rather than starting a second one.
 export {
+  ABOVE_TASKBAR_HEIGHT,
   Taskbar,
   WorkspaceProvider,
+  describeZone,
   deviceTimeZone,
+  formatGmtOffset,
   supportedTimeZones,
   useWorkspace,
   useWorkspaceWindow,
   withSeconds,
+  zoneChoices,
   type AgentDock,
   type DockEdge,
   type WorkspaceProviderProps,
   type WorkspaceWindow,
   type WorkspaceWindowHandle,
+  type ZoneChoice,
 } from './workspace';
 export { ShellRuntimeProvider, useShellRuntime, type ShellRuntime } from './lib/runtime';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';

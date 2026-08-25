@@ -6,7 +6,7 @@ import DoNotDisturbOnIcon from '@mui/icons-material/DoNotDisturbOn';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import UndoIcon from '@mui/icons-material/Undo';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
-import { useTranslation, formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import KpiCard from '../dashboard-page/KpiCard';
 import CategoryBreakdown from './CategoryBreakdown';
@@ -59,7 +59,7 @@ export default function MailPreferenceAnalyticsPage() {
     [t, categories],
   );
 
-  const count = (value: number | undefined) => formatDateTime((value ?? 0));
+  const count = (value: number | undefined) => (value ?? 0).toLocaleString();
 
   const kpi = (id: string, x: number, content: DashboardWidget['content']): DashboardWidget => ({
     id,

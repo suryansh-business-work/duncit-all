@@ -6,7 +6,7 @@ import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import DoDisturbOnIcon from '@mui/icons-material/DoDisturbOn';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import type { EmailLogDashboardData } from './queries';
-import { formatDateTime, useTranslation } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const TILE_SX = { flex: 1, minWidth: 200 };
 
@@ -28,7 +28,7 @@ export default function HeadlineTiles({ data }: Readonly<{ data: EmailLogDashboa
         sx={TILE_SX}
         icon={<OutboxIcon fontSize="small" />}
         label={t('tech.emailsDashboard.attemptsLogRows')}
-        value={formatDateTime(data.attempts)}
+        value={data.attempts.toLocaleString()}
         hint="One row per send call, whatever it carried."
       />
       <StatCard

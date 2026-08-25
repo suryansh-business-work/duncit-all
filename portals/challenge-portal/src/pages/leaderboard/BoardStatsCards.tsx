@@ -1,6 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material';
-import { useTranslation, formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 import { QueryGuard } from '@duncit/ui';
 import { ADMIN_LEADERBOARD_STATS, type LeaderboardCategoryStats } from './queries';
 import { CATEGORY_LABEL_KEYS, type TranslateFn } from './labels';
@@ -38,7 +38,7 @@ function StatCard({ stat, t }: Readonly<StatCardProps>) {
             <Typography variant="body2" sx={{
               fontWeight: 700
             }}>
-              {formatDateTime(stat[line.field])}
+              {stat[line.field].toLocaleString()}
             </Typography>
           </Stack>
         ))}

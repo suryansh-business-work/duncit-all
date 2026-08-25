@@ -17,6 +17,7 @@ export interface WorkspaceState {
   clockZone: string;
   clockSeconds: boolean;
   minimised: string[];
+  sidebarCollapsed: boolean;
 }
 
 export const DEFAULT_WORKSPACE: WorkspaceState = {
@@ -25,6 +26,7 @@ export const DEFAULT_WORKSPACE: WorkspaceState = {
   clockZone: '',
   clockSeconds: false,
   minimised: [],
+  sidebarCollapsed: false,
 };
 
 /** Client key to the server's field name — one place, so they cannot drift. */
@@ -34,6 +36,7 @@ const FIELD: Record<keyof WorkspaceState, string> = {
   clockZone: 'clock_zone',
   clockSeconds: 'clock_seconds',
   minimised: 'minimised',
+  sidebarCollapsed: 'sidebar_collapsed',
 };
 
 const toState = (dto: ShellWorkspaceStateDto): WorkspaceState => ({
@@ -42,6 +45,7 @@ const toState = (dto: ShellWorkspaceStateDto): WorkspaceState => ({
   clockZone: dto.clock_zone,
   clockSeconds: dto.clock_seconds,
   minimised: dto.minimised,
+  sidebarCollapsed: dto.sidebar_collapsed,
 });
 
 /**

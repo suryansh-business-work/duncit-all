@@ -19698,6 +19698,8 @@ export type ShellWorkspaceState = {
   clock_zone: Scalars['String']['output'];
   /** Window ids currently rolled up to the taskbar. */
   minimised: Array<Scalars['String']['output']>;
+  /** Whether the sidebar is minimised to its icon rail. */
+  sidebar_collapsed: Scalars['Boolean']['output'];
 };
 
 /** Every field optional: the shell saves the one thing that changed. */
@@ -19707,6 +19709,7 @@ export type ShellWorkspaceStateInput = {
   clock_seconds?: InputMaybe<Scalars['Boolean']['input']>;
   clock_zone?: InputMaybe<Scalars['String']['input']>;
   minimised?: InputMaybe<Array<Scalars['String']['input']>>;
+  sidebar_collapsed?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type ShipRocketInfo = {

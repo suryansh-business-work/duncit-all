@@ -283,7 +283,7 @@ console shut for all non-super users.
 | `redirectPathFromLocation` | `(location: RedirectLocation) => string` | `pathname + search + hash`. |
 | `parseEnvRoles` | `(raw: unknown, fallback?: string[]) => string[]` | Parsed roles, or the fallback. |
 | `useBranding` | `() => BrandingSummary` | Server branding for the chrome. |
-| `useWorkspace` | `() => WorkspaceValue | null` | The console's desk — what is running, what is minimised, where the Agent tab sits. `null` outside the shell. |
+| `useWorkspace` | `() => WorkspaceValue | null` | The console's desk — what is running, what is minimised, where the Agent tab sits, whether the sidebar is down to its icon rail. `null` outside the shell. |
 | `useWorkspaceWindow` | `(window: WorkspaceWindow | null) => WorkspaceWindowHandle` | Put one window on the taskbar while it is open. `null` unregisters it. |
 | `withSeconds` | `(pattern: string) => string` | The admin's time pattern, counting seconds — `'hh:mm a'` → `'hh:mm:ss a'`. |
 | `supportedTimeZones` | `() => string[]` | Every IANA zone this browser knows; `[]` where it will not say. |
@@ -361,6 +361,23 @@ isn't portal-specific belongs here instead.
 `AppIcon` resolves branding icons through the shared fallback bundle; a remote branding icon that
 404s must reach it with the `failed` flag from an `onError` handler, because a URL that fails at
 request time is never empty (rule 39).
+
+### The sidebar minimises to an icon rail
+
+`AppSidebar` renders one of two menus. Full width it is the search box, expand-all and the nav
+tree (`NavTree`). Minimised it is `NavRail`: 72px of icons, where a **group opens its children in a
+popover beside the rail** rather than expanding down it. That is not decoration — at 72px there is
+no room for a label, and a nested tree of unlabelled icons gives no way to tell what any of them
+belongs to. Each icon's tooltip IS its label, and MUI puts a string `title` on the child as its
+accessible name, so the rail reads the same to a screen reader as the tree does.
+
+The control is the chevron in the sidebar's footer, and only the permanent drawer has one — below
+`md` the sidebar is a sheet you dismiss, and an icon-only menu you had to open first would be
+worse than the list. **The flag is workspace state, not local state**: it is saved per PERSON
+through `saveShellWorkspaceState` (`sidebar_collapsed`), for the reason the Agent tab's position
+is — seventeen consoles on seventeen origins, so a browser-local flag would mean minimising the
+menu in admin and finding it back in finance. `AppShellNav` is the piece that reads it, because
+`AppShell` renders the `WorkspaceProvider` and therefore cannot.
 
 ## Session, Apollo and redirects
 

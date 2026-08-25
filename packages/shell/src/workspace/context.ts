@@ -40,6 +40,9 @@ export interface WorkspaceValue {
   setClockZone: (zone: string) => void;
   clockSeconds: boolean;
   setClockSeconds: (on: boolean) => void;
+  /** The permanent sidebar is minimised to its icon rail. */
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceValue | null>(null);

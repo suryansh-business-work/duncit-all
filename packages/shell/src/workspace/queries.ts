@@ -13,6 +13,7 @@ export const SHELL_WORKSPACE_STATE = gql`
       clock_zone
       clock_seconds
       minimised
+      sidebar_collapsed
     }
   }
 `;
@@ -25,6 +26,7 @@ export const SAVE_SHELL_WORKSPACE_STATE = gql`
       clock_zone
       clock_seconds
       minimised
+      sidebar_collapsed
     }
   }
 `;
@@ -36,4 +38,5 @@ export interface ShellWorkspaceStateDto {
   clock_zone: string;
   clock_seconds: boolean;
   minimised: string[];
+  sidebar_collapsed: boolean;
 }

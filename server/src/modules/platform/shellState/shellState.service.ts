@@ -16,6 +16,7 @@ export interface ShellWorkspaceState {
   clock_zone: string;
   clock_seconds: boolean;
   minimised: string[];
+  sidebar_collapsed: boolean;
 }
 
 /** A window id is a shell constant; the cap is what stops an unbounded array. */
@@ -29,6 +30,7 @@ const toState = (doc: Partial<IShellState> | null): ShellWorkspaceState => ({
   clock_zone: doc?.clock_zone ?? '',
   clock_seconds: doc?.clock_seconds ?? false,
   minimised: doc?.minimised ?? [],
+  sidebar_collapsed: doc?.sidebar_collapsed ?? false,
 });
 
 /**
@@ -52,6 +54,9 @@ function sanitise(input: Readonly<Record<string, unknown>>): Partial<ShellWorksp
   }
   if (typeof input.clock_seconds === 'boolean') {
     patch.clock_seconds = input.clock_seconds;
+  }
+  if (typeof input.sidebar_collapsed === 'boolean') {
+    patch.sidebar_collapsed = input.sidebar_collapsed;
   }
   if (Array.isArray(input.minimised)) {
     patch.minimised = [

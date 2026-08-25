@@ -39,6 +39,23 @@ const renderPath = (row: PackageUpdate) => (
   </Typography>
 );
 
+/**
+ * The cell renderers, out here with the components they render.
+ *
+ * An arrow returning JSX is a component wherever it is written, so building
+ * these inside the table meant five fresh component types on every render —
+ * the same remount S6478 is about, one level up from the components
+ * themselves. `renderName` is a factory because the private-manifest chip is
+ * translated, and the copy is only known once the hook has run.
+ */
+const renderName = (privateLabel: string) => (row: PackageUpdate) => (
+  <NameCell row={row} privateLabel={privateLabel} />
+);
+const renderOutdated = (row: PackageUpdate) => <CountCell value={row.outdated} tone="text.primary" />;
+const renderMajor = (row: PackageUpdate) => <CountCell value={row.major} tone="error" />;
+const renderMinor = (row: PackageUpdate) => <CountCell value={row.minor} tone="warning" />;
+const renderPatch = (row: PackageUpdate) => <CountCell value={row.patch} tone="info" />;
+
 interface Props {
   packages: readonly PackageUpdate[];
   onOpen: (pkg: PackageUpdate) => void;
@@ -63,7 +80,7 @@ export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
         headerName: t('shell.common.name'),
         flex: 1,
         minWidth: 200,
-        cellRenderer: (row) => <NameCell row={row} privateLabel={privateLabel} />,
+        cellRenderer: renderName(privateLabel),
       },
       {
         field: 'path',
@@ -77,25 +94,25 @@ export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
         field: 'outdated',
         headerName: t('tech.packageUpdates.outdated'),
         width: 120,
-        cellRenderer: (row) => <CountCell value={row.outdated} tone="text.primary" />,
+        cellRenderer: renderOutdated,
       },
       {
         field: 'major',
         headerName: t('tech.packageUpdates.major'),
         width: 110,
-        cellRenderer: (row) => <CountCell value={row.major} tone="error" />,
+        cellRenderer: renderMajor,
       },
       {
         field: 'minor',
         headerName: t('tech.packageUpdates.minor'),
         width: 110,
-        cellRenderer: (row) => <CountCell value={row.minor} tone="warning" />,
+        cellRenderer: renderMinor,
       },
       {
         field: 'patch',
         headerName: t('tech.packageUpdates.patch'),
         width: 110,
-        cellRenderer: (row) => <CountCell value={row.patch} tone="info" />,
+        cellRenderer: renderPatch,
       },
     ],
     [t, privateLabel],

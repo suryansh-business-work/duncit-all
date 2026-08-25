@@ -17,11 +17,22 @@ const DEFAULT_Q = {
 
 export const tableControls: {
   rows: unknown[];
+  /**
+   * Rows per response key, for a screen that renders TWO tables at once.
+   *
+   * Pod Expenses is the case: the pods list and the drawer's entries list are
+   * both mounted, and one shared `rows` would feed pod rows through the entry
+   * columns — which reads as a crash in a cell renderer rather than as the
+   * setup mistake it is. A key with no entry falls back to `rows`, so every
+   * existing single-table suite is untouched.
+   */
+  rowsByKey: Record<string, unknown[]>;
   autoFetch: boolean;
   setRefetch: boolean;
   queries: Array<typeof DEFAULT_Q>;
 } = {
   rows: [],
+  rowsByKey: {},
   autoFetch: true,
   setRefetch: true,
   queries: [DEFAULT_Q],
@@ -29,6 +40,7 @@ export const tableControls: {
 
 export function resetTableControls(): void {
   tableControls.rows = [];
+  tableControls.rowsByKey = {};
   tableControls.autoFetch = true;
   tableControls.setRefetch = true;
   tableControls.queries = [DEFAULT_Q];
@@ -56,9 +68,11 @@ export {
 } from '../../../../../packages/table/src/cells';
 
 export const useApolloTableFetch =
-  <T,>(_client: unknown, _query: unknown, _key: string) =>
-  (_state: unknown): Promise<{ rows: T[]; total: number }> =>
-    Promise.resolve({ rows: tableControls.rows as T[], total: tableControls.rows.length });
+  <T,>(_client: unknown, _query: unknown, key: string) =>
+  (_state: unknown): Promise<{ rows: T[]; total: number }> => {
+    const rows = (tableControls.rowsByKey[key] ?? tableControls.rows) as T[];
+    return Promise.resolve({ rows, total: rows.length });
+  };
 
 function renderCell(col: any, row: any): ReactNode {
   // Always invoke valueGetter (for coverage), but only render its text when there

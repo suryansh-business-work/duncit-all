@@ -7,6 +7,8 @@ import {
   financeDashboardErrorMock,
   financeDashboardLoadingMock,
   financeDashboardStatsMock,
+  makeFinanceDashboardStats,
+  makeFinanceStat,
 } from '../mocks/dashboard.mock';
 
 describe('FinanceKpis', () => {
@@ -28,6 +30,37 @@ describe('FinanceKpis', () => {
     expect(await screen.findByText('+5.0% vs last month')).toBeInTheDocument();
     expect(screen.getByText('-3.0% vs last month')).toBeInTheDocument();
     expect(screen.getByText('Total Collected (GMV)')).toBeInTheDocument();
+  });
+
+  /**
+   * Every other tile is revenue, where up is the win. Pod spend is the one that
+   * reads the other way, so it gets the trend colour on the opposite rule —
+   * green when it falls, red when it climbs.
+   */
+  it('greens a FALL in pod spend and reds a rise', async () => {
+    const { unmount } = renderWithProviders(<FinanceKpis />, {
+      mocks: [financeDashboardStatsMock()],
+    });
+    expect(await screen.findByText('Pod Expenses')).toBeInTheDocument();
+    expect(screen.getByText('-8.0% vs last month')).toHaveAttribute(
+      'data-hint-color',
+      'success.main',
+    );
+    unmount();
+
+    renderWithProviders(<FinanceKpis />, {
+      mocks: [
+        financeDashboardStatsMock(
+          makeFinanceDashboardStats({
+            pod_expenses: makeFinanceStat({ total: 300, mom_change_pct: 12 }),
+          }),
+        ),
+      ],
+    });
+    expect(await screen.findByText('+12.0% vs last month')).toHaveAttribute(
+      'data-hint-color',
+      'error.main',
+    );
   });
 });
 

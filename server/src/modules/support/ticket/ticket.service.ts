@@ -21,6 +21,7 @@ import { paginateDocs, paginateDocsRanked, supportSearchRegex } from '@modules/s
 import { notifyEvent } from '@services/notify/notify.service';
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
+import { trimTrailingSlash } from '@utils/url';
 
 const TICKET_SORTABLE = new Set([
   'last_message_at',
@@ -144,7 +145,7 @@ async function mailTicketRaiser(template: string, doc: ITicket, subject: string)
     if (!to) return;
     const ticket_no = ticketNo('ST', doc._id as Types.ObjectId);
     const { appUrl } = await getUrlConfigs();
-    const base = appUrl.replace(/\/+$/, '');
+    const base = trimTrailingSlash(appUrl);
     await sendEmail({
       to,
       subject: `${subject} — ${ticket_no}`,
@@ -417,8 +418,8 @@ export const ticketService = {
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     // RESOLVED still invites a reply; CLOSED is the end, which is the moment to
     // ask how it went rather than while the person may still be waiting on us.
-    if (status === 'RESOLVED') await mailTicketRaiser('support-ticket-resolved', doc!, 'Resolved');
-    if (status === 'CLOSED') await mailTicketRaiser('support-feedback', doc!, 'How did we do');
+    if (status === 'RESOLVED') await mailTicketRaiser('support-ticket-resolved', doc, 'Resolved');
+    if (status === 'CLOSED') await mailTicketRaiser('support-feedback', doc, 'How did we do');
     return pub;
   },
 
@@ -465,7 +466,7 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
-    await mailTicketRaiser('support-ticket-reopened', doc!, 'Reopened');
+    await mailTicketRaiser('support-ticket-reopened', doc, 'Reopened');
     return pub;
   },
 
@@ -495,7 +496,7 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
-    await mailTicketRaiser('support-ticket-resolved', doc!, 'Resolved');
+    await mailTicketRaiser('support-ticket-resolved', doc, 'Resolved');
     return pub;
   },
 

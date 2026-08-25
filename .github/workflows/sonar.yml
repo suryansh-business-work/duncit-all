@@ -117,62 +117,15 @@ jobs:
       # challenge-portal's 100%-line target needs its Cypress e2e coverage merged
       # in, which does not happen here. The lcov is written either way, and the
       # quality gate — not a local threshold — is what judges us.
+      #
+      # The runner is SHARED with coverage.yml (rule 34): it exits 0 by contract,
+      # prints the failing suites per workspace, and writes each workspace's full
+      # output to test-logs/ for the artifact below. It used to be inlined here;
+      # coverage.yml needs the identical behaviour, and two copies of "how a
+      # workspace's coverage is produced" is exactly the drift rule 34 forbids.
       - name: Run coverage
         continue-on-error: true
-        run: |
-          set +e
-          # Resolve the group's filters to workspace names through pnpm itself,
-          # so a new package under ./packages is picked up with no edit here.
-          args=()
-          for f in ${{ matrix.group.filters }}; do args+=(--filter "$f"); done
-          mapfile -t WORKSPACES < <(pnpm list -r --depth -1 --json "${args[@]}" |
-            node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
-              for (const w of JSON.parse(s)) if (w.path && w.name) console.log(w.name);
-            })')
-          echo "group ${{ matrix.group.name }}: ${#WORKSPACES[@]} workspace(s): ${WORKSPACES[*]}"
-          failed=()
-          mkdir -p test-logs
-          for ws in "${WORKSPACES[@]}"; do
-            # Each workspace is time-boxed so one hang cannot eat the group.
-            slug=$(printf '%s' "$ws" | tr -c 'A-Za-z0-9._-' '_')
-            timeout 60m pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
-            code=$?
-            # Keep the FULL output for EVERY workspace, colour codes stripped.
-            # The summaries below are cut to 160 chars and de-duplicated, which
-            # shows THAT a suite died but never why — the stack frame naming the
-            # missing provider is exactly the part that gets cut off, so each
-            # repair cycle was costing a blind ~90-minute scan. Uploaded as an
-            # artifact so the whole trace can be read without rerunning anything.
-            sed 's/\x1b\[[0-9;]*m//g' "/tmp/cov-$$.log" > "test-logs/$slug.log"
-            plain="test-logs/$slug.log"
-            if [ $code -ne 0 ]; then
-              failed+=("$ws($code)")
-              echo "::group::coverage FAILED $ws (exit $code)"
-              # A suite that DIES contributes no coverage for everything it
-              # would have exercised, so the list of failing suites IS the
-              # coverage gap. `tail` alone showed only the last handful of
-              # stack traces and hid which files died — which made a workspace
-              # full of broken suites look identical to one that merely missed
-              # its own threshold. jest and vitest both print "FAIL <path>", so
-              # one grep serves every workspace.
-              # Colour codes come off first. vitest emits them even down a
-              # pipe, and an anchored grep can never match through them.
-              echo "--- failing suites ---"
-              grep -a 'FAIL' "$plain" | sed 's/^[[:space:]]*//' | cut -c1-160 | sort -u | head -200
-              echo "--- error headlines ---"
-              grep -aE 'Error:|Error :|Invariant|Unable to find|Cannot find|not a function|No QueryClient|not wrapped' "$plain" |
-                sed 's/^[[:space:]]*//' | cut -c1-160 | sort | uniq -c | sort -rn | head -40
-              echo "--- totals / thresholds ---"
-              grep -aE 'Test Suites:|Tests:|Test Files|does not meet|ERROR: Coverage' "$plain" | tail -20
-              echo "::endgroup::"
-            else
-              echo "ok   $ws"
-            fi
-          done
-          if [ ${#failed[@]} -gt 0 ]; then
-            echo "::warning::coverage run did not succeed for: ${failed[*]}"
-          fi
-          exit 0
+        run: bash scripts/ci-coverage-run.sh ${{ matrix.group.name }} ${{ matrix.group.filters }}
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v6

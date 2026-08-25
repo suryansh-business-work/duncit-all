@@ -1,16 +1,11 @@
 import { MarketingCampaignModel, type TrackedLinkKind } from './marketing.model';
+import { trimTrailingSlash } from '@utils/url';
 
 /** A 1×1 transparent GIF — the smallest thing a mail client will fetch. */
 export const TRACKING_PIXEL = Buffer.from(
   'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
   'base64',
 );
-
-const trimSlashes = (url: string) => {
-  let out = url;
-  while (out.endsWith('/')) out = out.slice(0, -1);
-  return out;
-};
 
 /**
  * What kind of thing a link is, from the markup around it.
@@ -53,7 +48,7 @@ export function instrumentCampaignHtml(
 ): Instrumented {
   const links: Instrumented['links'] = [];
   const images: Instrumented['images'] = [];
-  const base = trimSlashes(serverUrl);
+  const base = trimTrailingSlash(serverUrl);
 
   const withLinks = html.replaceAll(/<a\b[^>]*>/gi, (tag: string) => {
     const href = /href="(https?:\/\/[^"]+)"/i.exec(tag);

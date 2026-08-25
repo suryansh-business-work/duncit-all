@@ -169,8 +169,8 @@ function sameVariables(a: StoredVariable[], b: StoredVariable[]): boolean {
   if (a.length !== b.length) return false;
   return a.every((row, index) => {
     const other = b[index];
+    if (other === undefined) return false;
     return (
-      other !== undefined &&
       row.key === other.key &&
       (row.description ?? '') === (other.description ?? '') &&
       (row.sample ?? '') === (other.sample ?? '')
@@ -267,7 +267,7 @@ async function migrate(known: ReadonlySet<string>, fallback: string | null): Pro
   const docs = await EmailTemplateModel.find(filter).sort({ slug: 1 }).exec();
   const plans: Plan[] = [];
   for (const doc of docs) {
-    const plan = planTemplate(doc as unknown as StoredTemplate, known, fallback);
+    const plan = planTemplate(doc, known, fallback);
     plans.push(plan);
     if (!plan.changes || DRY) continue;
     // `$set` of exactly what changed. A whole-document save would also write
@@ -327,7 +327,10 @@ async function main(): Promise<void> {
     const unseeded = Object.keys(CATALOGUE_VARIABLES).filter((slug) => !stored.has(slug));
     if (unseeded.length > 0 && ONLY.size === 0) {
       console.log(`\n${unseeded.length} catalogued template(s) not in this database yet:`);
-      console.log(`  ${unseeded.sort((a, b) => a.localeCompare(b)).join(', ')}`);
+            // A statement, because `sort` reorders `unseeded` and hands the same
+      // array back — reading it as a copy is what S4043 is about.
+      unseeded.sort((a, b) => a.localeCompare(b));
+      console.log(`  ${unseeded.join(', ')}`);
       console.log('  Start the server once — `emailTemplateService.seedDefaults` creates them.');
     }
   } finally {

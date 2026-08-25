@@ -13,6 +13,7 @@ jest.mock("@services/email/email.service", () => ({
 }));
 
 import { userService } from "../../user.service";
+import { accountDeletionService } from "@modules/access/accountDeletion/accountDeletion.service";
 import { UserModel } from "../../user.model";
 import { UserRoleModel } from "../../relations";
 import { RoleModel } from "@modules/access/role/rbac.model";
@@ -323,7 +324,13 @@ describe("userService integration", () => {
     });
   });
 
-  describe("delete my account (self-serve, OTP)", () => {
+  /**
+   * Deleting an account is a REQUEST now, not an instant purge: the emailed
+   * code proves who is asking, and the Tech portal carries the erasure out.
+   * The proof required did not change — only what happens once it checks out,
+   * which is why these still start at `requestAccountDeletionOtp`.
+   */
+  describe("request account deletion (self-serve, OTP)", () => {
     const registerUser = async (email: string) => {
       const res = await userService.register({
         first_name: "Del",
@@ -334,42 +341,80 @@ describe("userService integration", () => {
       return res.user.user_id;
     };
 
-    it("soft-deletes the account via OTP and blocks subsequent login", async () => {
+    it("files a pending request and leaves the account able to sign in", async () => {
       const userId = await registerUser("delete-ok@duncit.com");
 
       const req = await userService.requestAccountDeletionOtp(userId);
       expect(req.ok).toBe(true);
       expect(req.dev_otp).toMatch(/^\d{6}$/);
 
-      const done = await userService.deleteMyAccount(userId, { otp: req.dev_otp as string } as any);
-      expect(done).toBe(true);
+      const filed = await accountDeletionService.submitRequest(userId, {
+        otp: req.dev_otp as string,
+        reason: "Not using it any more",
+      });
+      expect(filed).toMatchObject({ status: "PENDING", reason: "Not using it any more" });
+      expect(filed?.request_id).toBeTruthy();
 
+      // Nothing is erased yet — that is the whole point of the change. The
+      // account is untouched and the credentials still work, so somebody who
+      // changes their mind has something to come back to.
       const stored = await UserModel.findById(userId)
-        .select("metadata.status metadata.deleted_at metadata.role_keys auth.email")
+        .select("metadata.status metadata.deleted_at auth.email")
         .lean();
-      expect((stored as any).metadata.status).toBe("INACTIVE");
-      expect((stored as any).metadata.deleted_at).toBeTruthy();
-      expect((stored as any).metadata.role_keys).toEqual([]);
-      // Login identifier is scrubbed, so the credentials can never authenticate.
-      expect((stored as any).auth.email).toBeUndefined();
-
+      expect((stored as any).metadata.deleted_at).toBeFalsy();
+      expect((stored as any).auth.email).toBe("delete-ok@duncit.com");
       await expect(
         userService.login({ email: "delete-ok@duncit.com", password: "StrongPass123" } as any),
-      ).rejects.toThrow(/invalid credentials/i);
+      ).resolves.toBeTruthy();
+
+      // Their own open request is what the apps read to show the banner.
+      expect(await accountDeletionService.myRequest(userId)).toMatchObject({
+        request_id: filed?.request_id,
+      });
+    });
+
+    it("hands back the same request to somebody who asks twice", async () => {
+      const userId = await registerUser("delete-again@duncit.com");
+
+      const first = await accountDeletionService.submitRequest(userId, {
+        otp: (await userService.requestAccountDeletionOtp(userId)).dev_otp as string,
+      });
+      const second = await accountDeletionService.submitRequest(userId, {
+        otp: (await userService.requestAccountDeletionOtp(userId)).dev_otp as string,
+      });
+
+      // Asking twice is not an error — it is somebody who did not see the
+      // first one land.
+      expect(second?.request_id).toBe(first?.request_id);
+    });
+
+    it("withdraws an open request", async () => {
+      const userId = await registerUser("delete-cancel@duncit.com");
+      await accountDeletionService.submitRequest(userId, {
+        otp: (await userService.requestAccountDeletionOtp(userId)).dev_otp as string,
+      });
+
+      expect(await accountDeletionService.cancelMyRequest(userId)).toMatchObject({
+        status: "CANCELLED",
+      });
+      expect(await accountDeletionService.myRequest(userId)).toBeNull();
+      await expect(accountDeletionService.cancelMyRequest(userId)).rejects.toThrow(
+        /no open deletion request/i,
+      );
     });
 
     it("rejects a wrong OTP", async () => {
       const userId = await registerUser("delete-wrong@duncit.com");
       await userService.requestAccountDeletionOtp(userId);
       await expect(
-        userService.deleteMyAccount(userId, { otp: "000000" } as any),
+        accountDeletionService.submitRequest(userId, { otp: "000000" }),
       ).rejects.toThrow(/invalid otp/i);
     });
 
-    it("rejects deletion when no OTP was requested", async () => {
+    it("rejects a request when no OTP was asked for", async () => {
       const userId = await registerUser("delete-no-otp@duncit.com");
       await expect(
-        userService.deleteMyAccount(userId, { otp: "123456" } as any),
+        accountDeletionService.submitRequest(userId, { otp: "123456" }),
       ).rejects.toThrow(/otp expired/i);
     });
   });

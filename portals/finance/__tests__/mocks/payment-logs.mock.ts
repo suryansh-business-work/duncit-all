@@ -2,16 +2,23 @@ import type { MockedResponse } from '@apollo/client/testing';
 import type { Payment } from '@duncit/gql-types';
 import {
   INVOICE_PDF,
-  PAYMENTS,
+  PAYMENT_TOTALS,
   PAYMENTS_TABLE,
   REFUND_PAYMENT,
 } from '../../src/pages/finance/payment-logs-page/queries';
 
 /**
- * Payment-logs mocks. The KPI totals come from `useQuery(PAYMENTS)`; the table
- * rows are fetched imperatively via `client.query(PAYMENTS_TABLE)`; the invoice
- * download and refund flow through `client.query(INVOICE_PDF)` and
- * `useMutation(REFUND_PAYMENT)`. Rows are a schema-synced `Pick` of `Payment`.
+ * Payment-logs mocks. The KPI cards come from `useQuery(PAYMENT_TOTALS)`, which
+ * the server rolls up; the table rows are fetched imperatively via
+ * `client.query(PAYMENTS_TABLE)`; the invoice download and refund flow through
+ * `client.query(INVOICE_PDF)` and `useMutation(REFUND_PAYMENT)`. Rows are a
+ * schema-synced `Pick` of `Payment`.
+ *
+ * The totals query used to be called `PAYMENTS` and to answer with the list
+ * itself. When it became a server-side roll-up this file kept importing the old
+ * name, which is `undefined` — and a MockedResponse whose `request.query` is
+ * undefined throws Apollo's "Expecting a parsed GraphQL document" before a
+ * single assertion runs, so all six suites here died on it.
  */
 export type PaymentRowMock = { __typename?: 'Payment' } & Pick<
   Payment,
@@ -58,10 +65,28 @@ export const paymentSuccess = (): PaymentRowMock => makePayment();
 export const paymentFailed = (): PaymentRowMock =>
   makePayment({ id: 'p2', payment_id: 'pay_2', user_name: 'Ravi', invoice_no: null, status: 'FAILED', paid_at: null });
 
-export const paymentsListMock = (payments: PaymentRowMock[] | null): MockedResponse => ({
-  request: { query: PAYMENTS },
+/**
+ * The four KPI cards, rolled up from the rows they describe rather than from
+ * numbers typed by hand — a card that disagrees with the table under it is the
+ * one thing this screen must never do.
+ *
+ * `null` stands for the query having answered nothing at all, which is the
+ * page's empty-totals branch.
+ */
+export const paymentTotalsMock = (payments: PaymentRowMock[] | null): MockedResponse => ({
+  request: { query: PAYMENT_TOTALS },
   variableMatcher: () => true,
-  result: { data: { payments } },
+  result: {
+    data: {
+      paymentTotals: payments && {
+        __typename: 'PaymentTotals',
+        count: payments.length,
+        gross: payments.reduce((sum, p) => sum + p.total, 0),
+        fee: payments.reduce((sum, p) => sum + p.platform_fee_amount, 0),
+        gst: payments.reduce((sum, p) => sum + p.gst_amount, 0),
+      },
+    },
+  },
   maxUsageCount: 50,
 });
 

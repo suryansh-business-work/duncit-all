@@ -2,11 +2,20 @@ import { Box, Typography } from '@mui/material';
 
 const CELL_SX = { border: 1, borderColor: 'divider', px: 1.25, py: 0.75, verticalAlign: 'top' };
 
-/** Strings print as themselves; anything else prints as the JSON it is. */
+/**
+ * Strings print as themselves; anything else prints as the JSON it is.
+ *
+ * `JSON.stringify` answers `undefined` for a function or a symbol, and the old
+ * fallback was `String(value)` — which prints `[object Object]` for anything
+ * with a default `toString` and tells a reader nothing (S6551). A demo that
+ * returns a function is a demo naming what it returns, so say that instead.
+ */
 function show(value: unknown): string {
   if (typeof value === 'string') return value;
   if (value === undefined) return 'undefined';
-  return JSON.stringify(value, null, 2) ?? String(value);
+  if (typeof value === 'function') return `[function ${value.name || 'anonymous'}]`;
+  if (typeof value === 'symbol') return value.toString();
+  return JSON.stringify(value, null, 2) ?? '[not serialisable]';
 }
 
 interface Props {

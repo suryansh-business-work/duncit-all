@@ -30,7 +30,8 @@ type Store = Map<string, Map<string, unknown>>;
 
 function bucket(carrier: CacheCarrier, name: string): Map<string, unknown> {
   const bag = carrier as Record<string, unknown>;
-  const store = (bag[STORE_KEY] ??= new Map()) as Store;
+  bag[STORE_KEY] ??= new Map();
+  const store = bag[STORE_KEY] as Store;
   let found = store.get(name);
   if (!found) {
     found = new Map<string, unknown>();

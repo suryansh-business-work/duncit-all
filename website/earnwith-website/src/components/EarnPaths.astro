@@ -1,14 +1,16 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
 import SmartLink from './SmartLink.astro';
-const { paths } = siteConfig;
+
+const siteConfig = await siteContent();
+const { paths, pathsSection } = siteConfig;
 ---
 
 <section id="paths" class="scroll-mt-20 bg-surface/70 py-16">
   <div class="mx-auto max-w-6xl px-5">
-    <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">Earn with Duncit</p>
+    <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">{pathsSection.eyebrow}</p>
     <h2 class="mt-2 text-center text-3xl text-ink sm:text-4xl">
-      Four Ways To <span class="text-primary">Earn</span>
+      {pathsSection.headingLead} <span class="text-primary">{pathsSection.headingAccent}</span>
     </h2>
 
     <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

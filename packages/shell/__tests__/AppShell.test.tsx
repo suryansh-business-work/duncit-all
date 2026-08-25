@@ -5,7 +5,12 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
-vi.mock('@duncit/breadcrumb', () => ({
+// A factory mock REPLACES the module, so anything the shell imports and this
+// object omits arrives as undefined — which is how `useBreadcrumbOverride`
+// became "No export is defined on the mock" and took the suite down. Only the
+// two chrome components are worth stubbing; the rest is re-exported real.
+vi.mock('@duncit/breadcrumb', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/breadcrumb')>()),
   BreadcrumbProvider: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   AppBreadcrumbs: () => <nav data-testid="crumbs" />,
 }));

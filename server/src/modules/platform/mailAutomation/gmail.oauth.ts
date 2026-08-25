@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
 import { outboundFetch } from '@utils/outboundFetch';
+import { trimTrailingSlash } from '@utils/url';
 
 /**
  * Google's authorization-code flow for a Gmail mailbox.
@@ -40,13 +41,10 @@ export interface GoogleOAuthCredentials {
   redirectUri: string;
 }
 
-/** Trailing slashes off, without a regex — `/\/+$/` backtracks super-linearly
- * on a pathological input (S8786) and this runs on operator-supplied config. */
-export function trimTrailingSlash(url: string): string {
-  let end = url.length;
-  while (end > 0 && url[end - 1] === '/') end -= 1;
-  return url.slice(0, end);
-}
+/** Re-exported so the router beside it keeps importing one thing from here.
+ * The walk itself is shared now: `/\/+$/` backtracks super-linearly (S8786),
+ * and three files had each written their own way around it (rule 40). */
+export { trimTrailingSlash };
 
 /** Where Google sends the browser back. Derived from SERVER_URL rather than
  * configured separately, because a second place to write the host is a second

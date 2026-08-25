@@ -161,10 +161,16 @@ describe('BackoutRefundDetailPage', () => {
     expect(screen.getByText('priya@x.com')).toBeInTheDocument();
     expect(screen.getByText('u2')).toBeInTheDocument();
 
-    // Horizontal timeline: chronological, immutable events with count + time.
-    expect(screen.getByTestId('backout-event-0')).toHaveTextContent('Backout In Process');
-    expect(screen.getByTestId('backout-event-1')).toHaveTextContent('Spot Filled');
-    expect(screen.getByTestId('backout-event-0')).toHaveTextContent('Backout Count: 1');
+    // The timeline is the WHOLE booking, drawn by the shared component so a
+    // Finance reader and the member on Pod History see one story — not this
+    // request's own flat strip of events, which could not say what followed
+    // from what.
+    expect(screen.getByText('Pod Joined')).toBeInTheDocument();
+    expect(screen.getByText('Pod Backout Requested')).toBeInTheDocument();
+    expect(screen.getByText('Spot Filled')).toBeInTheDocument();
+    // The DUN-BKO id is what ties this branch to the row Finance opened it
+    // from, so it is marked on the request being looked at.
+    expect(screen.getAllByText('DUN-BKO-000001').length).toBeGreaterThan(1);
 
     fireEvent.click(screen.getByRole('button', { name: /back to backout refunds/i }));
     expect(screen.getByTestId('list-probe')).toBeInTheDocument();
@@ -182,11 +188,16 @@ describe('BackoutRefundDetailPage', () => {
           user_phone: null,
           refund_amount: null,
           events: [],
+          // The booking this refund came off is gone — a request whose pod row
+          // was purged still has to open, and say why there is no timeline.
+          participation: null,
         }),
       ),
     );
     expect(await screen.findByTestId('replacement-confirmed-metric')).toHaveTextContent('No');
-    expect(screen.getByText('No lifecycle events recorded for this request.')).toBeInTheDocument();
+    expect(
+      screen.getByText('The booking behind this request is no longer on file.'),
+    ).toBeInTheDocument();
     // An open request has no replacement yet, and this member has no phone.
     expect(screen.queryByText('Priya')).not.toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(4);

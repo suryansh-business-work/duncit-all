@@ -34,4 +34,4 @@ export const useTranslation = createBundleTranslation(UI_BUNDLE);
 export const fallbackT: Translate = createTranslator({
   locale: 'en-IN',
   fallback: UI_FALLBACK_FLAT,
-}).t as Translate;
+}).t;

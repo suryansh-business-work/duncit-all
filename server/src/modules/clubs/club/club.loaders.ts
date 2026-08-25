@@ -74,7 +74,7 @@ async function fetchStats(ids: string[]): Promise<Map<string, ClubStats>> {
 export function loadClub(
   carrier: CacheCarrier,
   id: string | null | undefined,
-): Promise<any | null> {
+): Promise<any> {
   return loadOne<any>(carrier, CLUB_BUCKET, id, fetchClubs);
 }
 

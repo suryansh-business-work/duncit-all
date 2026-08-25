@@ -4,9 +4,11 @@ interface Props {
   description?: string;
 }
 
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 import '../styles/global.css';
+
+const siteConfig = await siteContent();
 
 const { title, description = siteConfig.brand.description } = Astro.props;
 const branding = await fetchBranding();
@@ -55,11 +57,14 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
       captureShortLinkAttribution,
       installAttributionLinkDecorator,
     } from '@duncit/utils';
-    import { siteConfig } from '../config/site-config';
+    // siteUrls, not siteContent(): this runs in the BROWSER, where there is no
+    // build-time catalogue to await — and the attribution call wants a URL, not
+    // a word.
+    import { siteUrls } from '../config/site-config';
     captureShortLinkAttribution({
       search: window.location.search,
       referrer: document.referrer,
-      serverUrl: siteConfig.graphqlUrl.replace('/graphql', ''),
+      serverUrl: siteUrls.graphqlUrl.replace('/graphql', ''),
     });
     // Keep the tags on every hyperlink out to another duncit surface —
     // storage does not cross origins, the URL does.

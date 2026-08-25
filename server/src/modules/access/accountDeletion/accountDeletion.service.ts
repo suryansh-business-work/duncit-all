@@ -1,4 +1,4 @@
-import { Types, type Model } from 'mongoose';
+import { Types } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import crypto from 'node:crypto';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';

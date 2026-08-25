@@ -41,6 +41,7 @@ import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 // exactly the message that must not depend on a channel somebody may have
 // opted out of or changed phone on.
 import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
+import { trimTrailingSlash } from '@utils/url';
 
 const HOUR_MS = 60 * 60_000;
 const SWEEP_INTERVAL_MS = 30 * 60_000;
@@ -153,26 +154,18 @@ const timeLabel = (value: Date) => new Date(value).toLocaleString('en-IN', { tim
 const hoursUntil = (when: Date) =>
   String(Math.max(1, Math.round((new Date(when).getTime() - Date.now()) / HOUR_MS)));
 
-/** Trailing slashes off a configured base URL, walked rather than matched with
- * `/\/+$/` — that pattern backtracks super-linearly (Sonar S8786). */
-function trimSlash(url: string) {
-  let end = url.length;
-  while (end > 0 && url.charAt(end - 1) === '/') end -= 1;
-  return url.slice(0, end);
-}
-
 /** Both apps route a pod by club slug and pod slug, so a pod whose club cannot
  * be resolved carries no link — the funnel records the blank rather than
  * sending a broken `/club//pod/x`. */
 function podUrl(mwebUrl: string, pod: SweptPod, slugById: Map<string, string>) {
   const slug = pod.club_id ? slugById.get(String(pod.club_id)) : '';
-  return slug ? `${trimSlash(mwebUrl)}/club/${slug}/pod/${pod.pod_id}` : '';
+  return slug ? `${trimTrailingSlash(mwebUrl)}/club/${slug}/pod/${pod.pod_id}` : '';
 }
 
 /** The rating form both apps route as `/pod/:podId/feedback` — the link a host
  * already shares with their guests, keyed on the pod's document id. */
 const feedbackUrl = (mwebUrl: string, pod: SweptPod) =>
-  `${trimSlash(mwebUrl)}/pod/${String(pod._id)}/feedback`;
+  `${trimTrailingSlash(mwebUrl)}/pod/${String(pod._id)}/feedback`;
 
 const firstHostId = (pod: SweptPod) => String((pod.pod_hosts_id ?? [])[0] ?? '');
 

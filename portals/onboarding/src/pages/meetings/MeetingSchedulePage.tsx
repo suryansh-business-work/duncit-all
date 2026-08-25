@@ -101,7 +101,7 @@ export default function MeetingSchedulePage() {
       updateRowRef.current?.(updated);
       // Keep the open drawer honest: it is showing a snapshot taken when the
       // row was clicked, and this is the moment that snapshot went stale.
-      setSelected((current) => (current && current.id === updated.id ? updated : current));
+      setSelected((current) => (current?.id === updated.id ? updated : current));
     },
     [refresh, statusFilter],
   );

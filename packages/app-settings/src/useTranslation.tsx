@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import {
+  allFallbackEntries,
   createTranslator,
   flattenCatalogue,
   resolveLocale,
@@ -65,6 +66,26 @@ interface LocaleContextValue {
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
+
+/**
+ * The floor for a component rendered with NO LocaleProvider above it.
+ *
+ * Every shipped namespace, not just one surface's: in that situation a page's
+ * own keys have nowhere else to come from, because `mountPortal` is what layers
+ * a surface's bundle over the shell's and it has not run. Without it a screen
+ * mounted on its own — a test, an error boundary, a page rendered above the
+ * provider — shows `finance.podExpense.title` where it should say "Pod
+ * Expenses". `@duncit/shell`'s provider-free `fallbackT` has always had this
+ * floor; this is the same rule, in the hook the portals actually call (rule 40).
+ *
+ * Built once, lazily: it is every key in the product, and a surface that always
+ * has its provider never pays for it.
+ */
+let shippedFallback: FlatCatalogue | null = null;
+const everyShippedKey = (): FlatCatalogue => {
+  shippedFallback ??= allFallbackEntries();
+  return shippedFallback;
+};
 
 interface ProviderProps {
   /** The surface's bundled fallback catalogue — renders before/without the API. */
@@ -166,7 +187,7 @@ export function LocaleProvider({
 export function useTranslation(fallback?: FlatCatalogue): LocaleContextValue {
   const context = useContext(LocaleContext);
   const fallbackTranslator = useMemo(
-    () => createTranslator({ locale: 'en-IN', fallback }),
+    () => createTranslator({ locale: 'en-IN', fallback: fallback ?? everyShippedKey() }),
     [fallback],
   );
   if (context) return context;

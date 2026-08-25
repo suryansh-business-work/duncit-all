@@ -10,15 +10,27 @@ interface PickerProps {
   label?: string;
   value?: Date | null;
   onChange?: (next: Date | null) => void;
+  /**
+   * The real picker forwards these to the text field it renders, and the
+   * validation message is the whole point of the `helperText` one — a stub that
+   * dropped it made "clear the date, then read the error" untestable, because
+   * the error was never in the DOM to find.
+   */
+  slotProps?: { textField?: { helperText?: ReactNode; error?: boolean } };
 }
 
-function Picker({ label, value, onChange }: PickerProps) {
+function Picker({ label, value, onChange, slotProps }: PickerProps) {
+  const field = slotProps?.textField;
   return (
-    <input
-      aria-label={label}
-      value={value ? value.toISOString() : ''}
-      onChange={(e) => onChange?.(e.target.value === '' ? null : new Date(e.target.value))}
-    />
+    <>
+      <input
+        aria-label={label}
+        aria-invalid={field?.error ? 'true' : undefined}
+        value={value ? value.toISOString() : ''}
+        onChange={(e) => onChange?.(e.target.value === '' ? null : new Date(e.target.value))}
+      />
+      {field?.helperText ? <p>{field.helperText}</p> : null}
+    </>
   );
 }
 

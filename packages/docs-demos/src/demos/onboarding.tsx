@@ -35,10 +35,12 @@ export default defineDemos('onboarding', [
     compute: (mock) => {
       const rows = EARN_JOURNEYS.map((journey) => {
         const state = earnBoxState(journey, mock.roles, mock.meetings);
-        return [
-          journey.title,
-          `${state.disabled ? 'blocked' : 'open'}${state.approved ? ' · already yours' : ''}${state.disabledLabel ? ` — ${state.disabledLabel}` : ''}`,
-        ] as const;
+        // Three separate answers about one card, read left to right: can it be
+        // opened, is it already yours, and — when it cannot — why not.
+        const openness = state.disabled ? 'blocked' : 'open';
+        const owned = state.approved ? ' · already yours' : '';
+        const why = state.disabledLabel ? ` — ${state.disabledLabel}` : '';
+        return [journey.title, `${openness}${owned}${why}`] as const;
       });
       const blocked = mock.meetings.find((meeting) => meeting.status === 'SCHEDULED');
       return {

@@ -1,6 +1,8 @@
 ---
-import { siteConfig } from '../config/site-config';
+import { siteContent } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
+
+const siteConfig = await siteContent();
 
 const { calculator, graphqlUrl } = siteConfig;
 // The printed sheet carries the admin's own logo, like every other surface.
@@ -18,7 +20,7 @@ const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
     <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{calculator.heading}</h2>
     <p class="mt-3 max-w-2xl text-ink-soft">{calculator.text}</p>
 
-    <div class="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Whose earnings">
+    <div class="mt-6 flex flex-wrap gap-2" role="tablist" aria-label={calculator.rolesAriaLabel}>
       {
         calculator.roles.map((role, index) => (
           <button
@@ -395,8 +397,10 @@ const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
         // never parsed at build time, so that would only show in the browser.
         .replaceAll(/[^\u0020-\u00ff]/g, ' ');
 
-    /** The tab reads "As a host"; the sheet is about a host. */
-    const roleName = () => role.label.replace(/^As /, '');
+    /** The role named on its own, for the PDF. Its OWN key, not the tab label
+     * with an English prefix stripped — that strip is grammar, and grammar does
+     * not survive translation. */
+    const roleName = () => role.name;
 
     // A4 in millimetres, and the palette the site uses on screen.
     const PAGE = { width: 210, height: 297, margin: 16 };

@@ -34,4 +34,4 @@ export const useTranslation = createBundleTranslation(MEDIA_BUNDLE);
 export const fallbackT: Translate = createTranslator({
   locale: 'en-IN',
   fallback: MEDIA_FALLBACK_FLAT,
-}).t as Translate;
+}).t;

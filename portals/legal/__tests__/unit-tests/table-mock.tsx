@@ -11,6 +11,24 @@ import { useEffect, useState, type ReactNode } from 'react';
  */
 let ROWS: unknown[] = [];
 
+/**
+ * The column builders come from the REAL package rather than a copy.
+ *
+ * This module stands in for the whole of `@duncit/table`, so any export it
+ * omits reaches a page as `undefined` — which is exactly how `entityIdColumn`
+ * became "is not a function" and took seven suites down with it. They are pure
+ * builders over MUI and date-fns with no AG Grid behind them, so there is
+ * nothing to stub, and a re-export cannot drift behind the package.
+ */
+export {
+  EM_DASH,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  entityIdColumn,
+  formatDateCell,
+} from '../../../../packages/table/src/cells';
+
 export function __setTableRows(rows: unknown[]): void {
   ROWS = rows;
 }

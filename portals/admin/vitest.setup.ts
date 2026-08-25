@@ -1,3 +1,4 @@
+import '@duncit/table/test-setup';
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 

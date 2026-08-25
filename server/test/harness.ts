@@ -85,5 +85,13 @@ export function makeContext(user: TokenUser | null = null): GraphQLContext {
         }
       : null,
     device_id: null,
+    // The response cache reads this; a spec calls the resolver directly and
+    // never goes through the plugin, so it is only here to satisfy the shape.
+    noRedis: false,
+    // The real context derives this from the response socket. A spec calls the
+    // resolver directly, so there is no socket and the caller has not gone —
+    // and six resolvers now open with `throwIfClientGone(ctx)`, which without
+    // this is `ctx.isClientGone is not a function` and the end of the suite.
+    isClientGone: () => false,
   };
 }

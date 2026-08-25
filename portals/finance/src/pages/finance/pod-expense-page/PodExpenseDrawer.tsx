@@ -94,13 +94,15 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
   }, []);
   const askDelete = useCallback((row: PodExpenseRow) => setPendingDelete(row), []);
 
-  const submit = async (values: PodExpenseFormValues) => {
-    if (!podDocId) return;
+  // Both writes take the thing they act on as an argument rather than reading
+  // it back out of state: each is only ever rendered inside the branch that
+  // already proved it is there, so a re-check here could only ever be dead.
+  const submit = async (values: PodExpenseFormValues, podId: string) => {
     setError(null);
     const input = toPodExpenseInput(values);
     try {
       if (editing) await update({ variables: { expense_doc_id: editing.id, input } });
-      else await create({ variables: { pod_doc_id: podDocId, input } });
+      else await create({ variables: { pod_doc_id: podId, input } });
       setFormOpen(false);
       setEditing(null);
       afterWrite();
@@ -109,10 +111,9 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
     }
   };
 
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
+  const confirmDelete = async (row: PodExpenseRow) => {
     try {
-      await remove({ variables: { expense_doc_id: pendingDelete.id } });
+      await remove({ variables: { expense_doc_id: row.id } });
       setPendingDelete(null);
       afterWrite();
     } catch (e) {
@@ -143,7 +144,7 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
               currency={currency}
               busy={saving}
               onCancel={() => setFormOpen(false)}
-              onSubmit={submit}
+              onSubmit={(values) => submit(values, podDocId)}
             />
           ) : (
             <Box>
@@ -164,16 +165,18 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
         </>
       )}
 
-      <ConfirmDialog
-        open={!!pendingDelete}
-        destructive
-        busy={removeState.loading}
-        title={t('finance.podExpense.deleteExpense')}
-        message={t('finance.podExpense.deleteExpenseConfirm')}
-        confirmLabel={t('shell.common.delete')}
-        onConfirm={confirmDelete}
-        onClose={() => setPendingDelete(null)}
-      />
+      {pendingDelete && (
+        <ConfirmDialog
+          open
+          destructive
+          busy={removeState.loading}
+          title={t('finance.podExpense.deleteExpense')}
+          message={t('finance.podExpense.deleteExpenseConfirm')}
+          confirmLabel={t('shell.common.delete')}
+          onConfirm={() => confirmDelete(pendingDelete)}
+          onClose={() => setPendingDelete(null)}
+        />
+      )}
     </Drawer>
   );
 }

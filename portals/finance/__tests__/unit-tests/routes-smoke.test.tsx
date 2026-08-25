@@ -85,6 +85,7 @@ const ROUTES = [
   '/invoices/host',
   '/invoices/product',
   '/ledger',
+  '/pod-expenses',
   '/referrals',
   '/duncit-coin/dashboard',
   '/duncit-coin/transactions',

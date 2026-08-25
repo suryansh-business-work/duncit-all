@@ -1,3 +1,4 @@
+import '@duncit/table/test-setup';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { afterEach, expect, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';

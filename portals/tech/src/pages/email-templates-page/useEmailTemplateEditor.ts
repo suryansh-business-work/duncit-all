@@ -61,7 +61,7 @@ export function useEmailTemplateEditor() {
   useEffect(() => {
     const t = list.find((x) => x.template_id === selected);
     if (!t) return;
-    setDraft(JSON.parse(JSON.stringify(t)));
+    setDraft(structuredClone(t));
     setVarsJson(
       JSON.stringify(
         Object.fromEntries(t.variables.map((v) => [v.key, v.sample ?? `{{${v.key}}}`])),

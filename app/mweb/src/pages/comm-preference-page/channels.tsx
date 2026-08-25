@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import MarkEmailReadOutlinedIcon from '@mui/icons-material/MarkEmailReadOutlined';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import SmsOutlinedIcon from '@mui/icons-material/SmsOutlined';
-import { COMM_CHANNELS, type CommChannel } from '@duncit/utils';
+import { type CommChannel } from '@duncit/utils';
 
 /**
  * Channel → its icon and the screen that owns everything about it.
@@ -16,4 +16,4 @@ export const CHANNEL_UI: Record<CommChannel, { icon: ReactNode; to: string }> = 
   SMS: { icon: <SmsOutlinedIcon color="action" />, to: '/account/sms-preference' },
 };
 
-export { COMM_CHANNELS };
+export { COMM_CHANNELS } from '@duncit/utils';

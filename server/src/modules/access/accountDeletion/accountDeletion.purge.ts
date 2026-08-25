@@ -69,7 +69,7 @@ export function purgePlan(schema: Schema, fieldPath: string): PurgePlan {
 
 /** What the console labels the button, without re-deriving it on the client. */
 export function purgeKind(modelName: string, fieldPath: string): PurgeKind {
-  const model = mongoose.models[modelName] as Model<any> | undefined;
+  const model = mongoose.models[modelName];
   if (!model) return 'DELETE_DOCUMENTS';
   return purgePlan(model.schema, fieldPath).kind;
 }

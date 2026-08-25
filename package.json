@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Full Stack Monorepo (React + GraphQL + Node.js)",
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev:server": "pnpm --filter server dev",
     "dev:app": "pnpm --filter mweb-app dev",
@@ -112,10 +112,10 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.1",
-    "husky": "^9.1.6",
-    "jscpd": "4.0.5",
-    "lint-staged": "^15.2.10",
-    "typescript": "^5.4.5",
+    "husky": "^9.1.7",
+    "jscpd": "4.3.0",
+    "lint-staged": "^15.5.2",
+    "typescript": "^5.9.3",
     "vitest": "^1.6.1"
   },
   "lint-staged": {

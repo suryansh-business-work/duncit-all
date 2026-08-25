@@ -16,11 +16,11 @@
     "@duncit/brand": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/utils": "workspace:*",
-    "@fortawesome/fontawesome-free": "^7.2.0",
-    "@tailwindcss/vite": "^4.2.2",
-    "animejs": "^4.3.6",
-    "astro": "^5.7.10",
-    "tailwindcss": "^4.2.2"
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "animejs": "^4.5.0",
+    "astro": "^5.18.2",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.1",

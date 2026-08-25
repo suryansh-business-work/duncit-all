@@ -5,12 +5,7 @@ type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
 /** Param-less support destinations reachable from the "More ways" grid. */
 export type SupportRoute =
-  | 'Sos'
-  | 'Callback'
-  | 'SupportTickets'
-  | 'AllSupportTickets'
-  | 'Feedback'
-  | 'Grievance';
+  'Sos' | 'Callback' | 'SupportTickets' | 'AllSupportTickets' | 'Feedback' | 'Grievance';
 
 export interface SupportSection {
   key: string;

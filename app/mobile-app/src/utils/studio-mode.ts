@@ -56,8 +56,7 @@ export const AUTO_POD_ROUTE = {
 
 /** Any screen a role switch can land on. */
 export type StudioSwitchRoute =
-  | (typeof STUDIO_HOME_ROUTE)[StudioMode]
-  | (typeof AUTO_POD_ROUTE)[keyof typeof AUTO_POD_ROUTE];
+  (typeof STUDIO_HOME_ROUTE)[StudioMode] | (typeof AUTO_POD_ROUTE)[keyof typeof AUTO_POD_ROUTE];
 
 /**
  * Where switching into `mode` should land.

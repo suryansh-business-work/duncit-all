@@ -12,26 +12,26 @@
     "e2e": "node ../scripts/e2e-no-surface.mjs duncit-docs"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.0",
-    "@astrojs/react": "^4.4.0",
+    "@astrojs/mdx": "^4.3.14",
+    "@astrojs/react": "^4.4.2",
     "@duncit/dialogs": "workspace:*",
     "@duncit/docs-demos": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/utils": "workspace:*",
-    "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.5",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@monaco-editor/loader": "^1.7.0",
-    "@mui/icons-material": "^5.15.18",
-    "@mui/material": "^5.15.18",
-    "astro": "^5.18.1",
+    "@mui/icons-material": "^5.18.0",
+    "@mui/material": "^5.18.0",
+    "astro": "^5.18.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1"
+    "react-router-dom": "^6.30.6"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "monaco-editor": "^0.55.1"
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "monaco-editor": "^0.56.0"
   }
 }

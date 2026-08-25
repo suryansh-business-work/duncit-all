@@ -1,5 +1,4 @@
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -13,7 +12,9 @@ import SaveIcon from '@mui/icons-material/Save';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FragmentCodePane from './FragmentCodePane';
-import type { Fragment } from './queries';
+import FragmentUsageStrip from './FragmentUsageStrip';
+import EmailPreviewFrame from '../../components/EmailPreviewFrame';
+import type { Fragment, FragmentTemplateRef } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -21,6 +22,10 @@ interface Props {
   setDraft: (f: Fragment) => void;
   previewHtml: string;
   previewErrors: string[];
+  /** True from the keystroke that changed the MJML until the render lands. */
+  previewLoading: boolean;
+  /** Every template this header and footer is wrapped around. */
+  templates: FragmentTemplateRef[];
   dirty: boolean;
   busy: boolean;
   onSave: () => void;
@@ -30,10 +35,26 @@ interface Props {
 
 export default function FragmentEditorPanel(p: Readonly<Props>) {
   const { t } = useTranslation();
-  const { draft, setDraft, previewHtml, previewErrors, dirty, busy, onSave, onReset, onDelete } = p;
+  const {
+    draft,
+    setDraft,
+    previewHtml,
+    previewErrors,
+    previewLoading,
+    templates,
+    dirty,
+    busy,
+    onSave,
+    onReset,
+    onDelete,
+  } = p;
 
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+      {/* Above the fields, because how many emails this changes is what
+          decides whether editing it at all is a good idea. */}
+      <FragmentUsageStrip fragmentKey={draft.key} templates={templates} />
+
       <Stack
         direction="row"
         spacing={1.5}
@@ -101,18 +122,12 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
           <Typography variant="subtitle2" sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
             Preview
           </Typography>
-          {previewErrors.length > 0 && (
-            <Alert severity="error" sx={{ borderRadius: 0 }}>
-              {previewErrors.join('; ')}
-            </Alert>
-          )}
-          <Box sx={{ flex: 1, minHeight: 0, bgcolor: 'background.default' }}>
-            <iframe
-              title={t('tech.emailFragments.fragmentPreview')}
-              srcDoc={previewHtml}
-              style={{ width: '100%', height: '100%', border: 0 }}
-            />
-          </Box>
+          <EmailPreviewFrame
+            title={t('tech.emailFragments.fragmentPreview')}
+            html={previewHtml}
+            errors={previewErrors}
+            loading={previewLoading}
+          />
         </Box>
       </Stack>
 

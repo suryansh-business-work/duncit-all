@@ -62,6 +62,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       platform: 'Platform',
       portal: 'Portal',
       preview: 'Preview',
+      renderingPreview: 'Rendering preview…',
       range: 'Range',
       session: 'Session',
       source: 'Source',
@@ -187,6 +188,11 @@ export const TECH_BUNDLE: NestedCatalogue = {
       shipsWithDuncit: 'ships with Duncit',
       weekendBanner: 'Weekend banner',
       appliedToTemplates: 'Applied to templates',
+      noTemplateUsesThisYet: 'No template uses this header and footer yet.',
+      openTemplateInEmailTemplates: 'Open {name} in Email Templates',
+      showEveryTemplateUsingThis: 'Show every template using this header and footer',
+      templatesUseThis: '{count} templates use this header and footer',
+      usedByTemplates: 'Used by {count} templates',
     },
     emailLogs: {
       all: 'All',
@@ -201,6 +207,28 @@ export const TECH_BUNDLE: NestedCatalogue = {
       took: 'Took',
       noEmailsYet: 'No emails yet.',
     },
+    /**
+     * The picker down the left of Email Templates and Email Fragments.
+     *
+     * Its own namespace because both pages render the SAME component: a
+     * translator decides once what “Most used” means, rather than twice
+     * under two page names that could drift apart (rule 40).
+     */
+    emailSidebar: {
+      activeOnly: 'Active only',
+      anyStatus: 'Any status',
+      listOrder: 'List order',
+      mostUsed: 'Most used',
+      nameAZ: 'Name A–Z',
+      nameZA: 'Name Z–A',
+      nothingMatchesSearch: 'Nothing matches “{needle}”.',
+      nothingMatchesTheFilters: 'Nothing matches the filters above.',
+      recentlyUpdated: 'Recently updated',
+      showingOfTotal: '{shown} of {total}',
+      sort: 'Sort',
+      switchedOffOnly: 'Switched off only',
+      totalCount: '{count} total',
+    },
     emailsDashboard: {
       address: 'Address',
       deliveryAcrossEveryEmailTheProduct: 'Delivery across every email the product tried to send, including the attempts that never left.',
@@ -213,6 +241,10 @@ export const TECH_BUNDLE: NestedCatalogue = {
       recipientsAddressed: 'RECIPIENTS ADDRESSED',
     },
     emailTemplates: {
+      allChangesSaved: 'All changes saved',
+      anyHeaderFooter: 'Any header / footer',
+      autoSave: 'Auto-save',
+      autoSaveHint: 'Saves on its own a moment after you stop typing. Switch it off to save by hand.',
       aSwitchedOffTemplateSendsNothing: 'A switched-off template sends nothing, even when code asks for it. Every skipped send is recorded in Telemetry › Logs.',
       countedFromEmailLogs: 'Counted from Email Logs, including test sends. Emptying the log lowers these numbers.',
       failedCount: 'Failed {count}',
@@ -233,6 +265,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       slug: 'Slug',
       usedByCodeCannotBeEdited: 'Used by code; cannot be edited.',
       usedByCodeEGWelcome: 'Used by code, e.g. welcome, payment-receipt.',
+      unsavedChanges: 'Unsaved changes',
       usedForLivePreviewAndSend: 'Used for live preview and Send test email.',
       verifyMjml: 'Verify MJML',
     },

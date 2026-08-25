@@ -77,10 +77,14 @@ describe('TemplateEditorPanel', () => {
         setTab={vi.fn()}
         previewHtml=""
         previewErrors={[]}
+        previewLoading={false}
         detected={[]}
         fragmentOptions={[]}
         varsJson="{}"
         setVarsJson={vi.fn()}
+        autoSave
+        onAutoSaveChange={vi.fn()}
+        savedAt={null}
         onValidate={vi.fn()}
         onImportDetected={vi.fn()}
         onSave={onSave}

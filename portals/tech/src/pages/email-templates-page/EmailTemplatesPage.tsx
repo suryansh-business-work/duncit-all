@@ -1,12 +1,6 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
+import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TemplateEditorPanel from './TemplateEditorPanel';
 import EmailSidebarList from '../../components/EmailSidebarList';
@@ -14,6 +8,7 @@ import FillViewport from '../../components/FillViewport';
 import CreateTemplateDialog from './CreateTemplateDialog';
 import SendTestDialog from './SendTestDialog';
 import { useEmailTemplateEditor } from './useEmailTemplateEditor';
+import { fragmentFilterOptions, templateSidebarItems } from './sidebar-items';
 import { useTranslation } from '@duncit/app-settings';
 
 export default function EmailTemplatesPage() {
@@ -21,6 +16,21 @@ export default function EmailTemplatesPage() {
   const editor = useEmailTemplateEditor();
   const [createOpen, setCreateOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
+
+  // The header/footer filter lives in the URL, because that is how the
+  // Fragments page answers "where is this fragment consumed?" — it links to
+  // /emails/templates?fragment=<key> and the list opens already narrowed.
+  const [params, setParams] = useSearchParams();
+  const fragmentFilter = params.get('fragment') ?? '';
+  const setFragmentFilter = (value: string) => {
+    const next = new URLSearchParams(params);
+    if (value) {
+      next.set('fragment', value);
+    } else {
+      next.delete('fragment');
+    }
+    setParams(next, { replace: true });
+  };
 
   if (editor.loading && !editor.hasData)
     return (
@@ -58,26 +68,18 @@ export default function EmailTemplatesPage() {
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <EmailSidebarList
-          items={editor.list.map((tpl) => {
-            const sent = editor.usageBySlug.get(tpl.slug)?.sent ?? 0;
-            return {
-              key: tpl.template_id,
-              primary: tpl.name,
-              secondary: tpl.slug,
-              off: !tpl.is_active,
-              // Every row carries its count, including the zeroes — a template
-              // nothing has ever sent is the thing this list could not show.
-              badge: {
-                label: String(sent),
-                title: t('tech.emailTemplates.sendsRecorded', { vars: { count: sent } }),
-                muted: sent === 0,
-              },
-            };
-          })}
+          items={templateSidebarItems(t, editor.list, editor.usageBySlug)}
           selected={editor.selected}
           onSelect={editor.setSelected}
           searchPlaceholder="Search name or slug"
           emptyText={t('tech.emailTemplates.noTemplatesYet')}
+          filter={{
+            label: t('tech.emailTemplates.headerFooter'),
+            allLabel: t('tech.emailTemplates.anyHeaderFooter'),
+            value: fragmentFilter,
+            options: fragmentFilterOptions(editor.fragmentOptions),
+            onChange: setFragmentFilter,
+          }}
         />
 
         {editor.draft ? (
@@ -91,12 +93,16 @@ export default function EmailTemplatesPage() {
             setTab={editor.setTab}
             previewHtml={editor.previewHtml}
             previewErrors={editor.previewErrors}
+            previewLoading={editor.previewLoading}
             detected={editor.detected}
             fragmentOptions={editor.fragmentOptions}
             fragmentsLoading={editor.fragmentsLoading}
             fragmentsError={editor.fragmentsError}
             varsJson={editor.varsJson}
             setVarsJson={editor.setVarsJson}
+            autoSave={editor.autoSave}
+            onAutoSaveChange={editor.setAutoSave}
+            savedAt={editor.savedAt}
             onValidate={editor.validateMjml}
             onImportDetected={editor.importDetected}
             onSave={editor.save}

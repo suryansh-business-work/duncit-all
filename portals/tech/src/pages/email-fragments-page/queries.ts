@@ -17,6 +17,35 @@ export const FRAGMENTS = gql`
   }
 `;
 
+/**
+ * Which templates each fragment wraps.
+ *
+ * The same root field the Templates page reads, asked for without the MJML
+ * bodies: this page needs a name and a slug per template to say where a
+ * header and footer is consumed, and pulling thirty-five email bodies to
+ * count them would make opening Fragments as slow as opening Templates.
+ */
+export const FRAGMENT_TEMPLATE_USAGE = gql`
+  query FragmentTemplateUsage {
+    emailTemplates {
+      template_id
+      slug
+      name
+      fragment_key
+      is_active
+    }
+  }
+`;
+
+/** One template, as the fragment pages need to name and link to it. */
+export interface FragmentTemplateRef {
+  template_id: string;
+  slug: string;
+  name: string;
+  fragment_key?: string | null;
+  is_active: boolean;
+}
+
 export const UPDATE_FRAGMENT = gql`
   mutation UpdateFragment($key: String!, $input: UpdateEmailFragmentInput!) {
     updateEmailFragment(key: $key, input: $input) {

@@ -18,6 +18,8 @@ interface Props {
   setTab: (v: 'preview' | 'code') => void;
   previewHtml: string;
   previewErrors: string[];
+  /** True from the keystroke that changed the MJML until the render lands. */
+  previewLoading: boolean;
   detected: string[];
   /** The nine header/footer fragments, fetched once by the page's hook. */
   fragmentOptions: FragmentOption[];
@@ -30,6 +32,10 @@ interface Props {
   onSave: () => void;
   onDelete: () => void;
   onSendTest: () => void;
+  /** Whether edits save themselves once the typing stops. */
+  autoSave: boolean;
+  onAutoSaveChange: (next: boolean) => void;
+  savedAt: number | null;
 }
 
 export default function TemplateEditorPanel(p: Readonly<Props>) {
@@ -44,6 +50,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
     setTab,
     previewHtml,
     previewErrors,
+    previewLoading,
     detected,
     fragmentOptions,
     fragmentsLoading,
@@ -55,6 +62,9 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
     onSave,
     onDelete,
     onSendTest,
+    autoSave,
+    onAutoSaveChange,
+    savedAt,
   } = p;
 
   return (
@@ -134,6 +144,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
           setTab={setTab}
           previewHtml={previewHtml}
           previewErrors={previewErrors}
+          previewLoading={previewLoading}
           detected={detected}
           varsJson={varsJson}
           setVarsJson={setVarsJson}
@@ -144,6 +155,9 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
       <EditorActionsBar
         dirty={dirty}
         busy={busy}
+        autoSave={autoSave}
+        onAutoSaveChange={onAutoSaveChange}
+        savedAt={savedAt}
         onSave={onSave}
         onSendTest={onSendTest}
         onDelete={onDelete}

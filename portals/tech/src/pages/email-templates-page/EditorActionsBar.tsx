@@ -1,34 +1,59 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, FormControlLabel, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 interface Props {
   dirty: boolean;
   busy: boolean;
+  /** Whether edits save themselves once the typing stops. */
+  autoSave: boolean;
+  onAutoSaveChange: (next: boolean) => void;
+  /** When the last save landed, or null if none has this session. */
+  savedAt: number | null;
   onSave: () => void;
   onSendTest: () => void;
   onDelete: () => void;
 }
 
+/**
+ * Where the draft stands, in words.
+ *
+ * "Saving…" is deliberately absent: the button already says it, and the same
+ * word in two places reads as two things happening. What this line answers is
+ * the question the button cannot — whether anything is still unwritten.
+ */
+function statusLine(t: Translate, dirty: boolean, savedAt: number | null): string {
+  if (dirty) return t('tech.emailTemplates.unsavedChanges');
+  if (savedAt) return t('tech.emailTemplates.allChangesSaved');
+  return '';
+}
+
 export default function EditorActionsBar({
   dirty,
   busy,
+  autoSave,
+  onAutoSaveChange,
+  savedAt,
   onSave,
   onSendTest,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const status = statusLine(t, dirty, savedAt);
+
   return (
-    <Stack direction="row" spacing={1} sx={{
-      alignItems: "center"
-    }}>
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
       <Button
         variant="contained"
         startIcon={<SaveIcon />}
         onClick={onSave}
         disabled={!dirty || busy}
       >
-        {busy ? 'Saving…' : 'Save'}
+        {busy ? t('shell.common.saving') : t('shell.common.save')}
       </Button>
       <Button startIcon={<SendIcon />} onClick={onSendTest}>
         Send test
@@ -36,12 +61,24 @@ export default function EditorActionsBar({
       <Button color="error" startIcon={<DeleteIcon />} onClick={onDelete}>
         Delete
       </Button>
+      <Tooltip title={t('tech.emailTemplates.autoSaveHint')}>
+        <Box component="span" sx={{ display: 'inline-flex' }}>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={autoSave}
+                onChange={(e) => onAutoSaveChange(e.target.checked)}
+              />
+            }
+            label={t('tech.emailTemplates.autoSave')}
+          />
+        </Box>
+      </Tooltip>
       <Box sx={{ flex: 1 }} />
-      {dirty && (
-        <Typography variant="caption" sx={{
-          color: "warning.main"
-        }}>
-          Unsaved changes
+      {status && (
+        <Typography variant="caption" sx={{ color: dirty ? 'warning.main' : 'text.secondary' }}>
+          {status}
         </Typography>
       )}
     </Stack>

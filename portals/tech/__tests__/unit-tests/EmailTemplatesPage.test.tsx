@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+
+/** The page keeps its header/footer filter in the URL — see ?fragment=. */
+const render = (ui: React.ReactElement, url = '/emails/templates') =>
+  rtlRender(<MemoryRouter initialEntries={[url]}>{ui}</MemoryRouter>);
 import { makeTpl } from '../mocks/email-template.mock';
 
 type Editor = ReturnType<
@@ -14,8 +19,17 @@ vi.mock('../../src/components/FillViewport', () => ({
   default: (p: { children: React.ReactNode }) => <div>{p.children}</div>,
 }));
 vi.mock('../../src/components/EmailSidebarList', () => ({
-  default: (p: { onSelect: (id: string) => void }) => (
-    <button type="button" onClick={() => p.onSelect('picked')}>list-select</button>
+  default: (p: {
+    onSelect: (id: string) => void;
+    filter: { value: string; onChange: (v: string) => void; options: { value: string }[] };
+  }) => (
+    <div>
+      <button type="button" onClick={() => p.onSelect('picked')}>list-select</button>
+      <span data-testid="filter-value">{p.filter.value || 'none'}</span>
+      <span data-testid="filter-options">{p.filter.options.length}</span>
+      <button type="button" onClick={() => p.filter.onChange('billing')}>pick-fragment</button>
+      <button type="button" onClick={() => p.filter.onChange('')}>clear-fragment</button>
+    </div>
   ),
 }));
 vi.mock('../../src/pages/email-templates-page/TemplateEditorPanel', () => ({
@@ -64,11 +78,18 @@ const baseEditor = (over: Partial<Editor> = {}): Editor =>
     setTab: vi.fn(),
     previewHtml: '',
     previewErrors: [],
+    previewLoading: false,
     detected: [],
+    fragmentOptions: [],
+    fragmentsLoading: false,
+    fragmentsError: null,
     varsJson: '{}',
     setVarsJson: vi.fn(),
     busy: false,
     dirty: false,
+    autoSave: true,
+    setAutoSave: vi.fn(),
+    savedAt: null,
     snack: null,
     setSnack: vi.fn(),
     save: vi.fn(),
@@ -158,6 +179,31 @@ describe('EmailTemplatesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New template' }));
     fireEvent.click(screen.getByRole('button', { name: 'create-close' }));
     expect(screen.queryByTestId('create-dialog')).not.toBeInTheDocument();
+  });
+
+  /**
+   * ?fragment= is how the Fragments page answers "where is this consumed?"
+   * — it links here, and the list opens already narrowed to that header
+   * and footer.
+   */
+  it('opens narrowed to the header/footer named in the URL', () => {
+    m.editor = baseEditor({
+      fragmentOptions: [{ key: 'billing', name: 'Billing', is_active: true }],
+    });
+    render(<EmailTemplatesPage />, '/emails/templates?fragment=transactional');
+    expect(screen.getByTestId('filter-value')).toHaveTextContent('transactional');
+    expect(screen.getByTestId('filter-options')).toHaveTextContent('1');
+  });
+
+  it('puts a chosen header/footer in the URL, and takes it back out', () => {
+    render(<EmailTemplatesPage />);
+    expect(screen.getByTestId('filter-value')).toHaveTextContent('none');
+
+    fireEvent.click(screen.getByRole('button', { name: 'pick-fragment' }));
+    expect(screen.getByTestId('filter-value')).toHaveTextContent('billing');
+
+    fireEvent.click(screen.getByRole('button', { name: 'clear-fragment' }));
+    expect(screen.getByTestId('filter-value')).toHaveTextContent('none');
   });
 
   it('renders the snack alert and closes it', () => {

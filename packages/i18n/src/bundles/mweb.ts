@@ -326,10 +326,22 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     account: {
       preferences: 'Preferences',
-      // The @handle is minted by the server and never typed, so the only copy
-      // left is on the button that copies the link it produces — and that
-      // button lives on the PROFILE, beside the handle, not in settings.
+      // The @handle. It is minted by the server at signup and changed from Edit
+      // profile, where the field is debounce-checked against the server and the
+      // status line below is whichever of these the answer came back as.
       username: {
+        label: 'Username',
+        placeholder: 'your-handle',
+        hint: 'Lowercase letters, numbers and hyphens. Links you have already shared will stop working if you change it.',
+        linkLabel: 'Your profile link',
+        checking: 'Checking availability…',
+        available: '@{username} is available.',
+        current: 'This is your username.',
+        format: 'Use 3–30 lowercase letters, numbers and single hyphens.',
+        taken: 'That username is already taken.',
+        reserved: 'That username is reserved.',
+        saveFailed:
+          'That username could not be saved — somebody may have just taken it. Try another one.',
         copyLink: 'Copy profile link',
         linkCopied: 'Profile link copied',
       },

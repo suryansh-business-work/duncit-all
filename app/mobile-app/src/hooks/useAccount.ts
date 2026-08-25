@@ -7,6 +7,7 @@ import {
   MobileUpdateProfileDocument,
   MobileUpdateProfileVisibilityDocument,
 } from '@/graphql/account';
+import { MobileSetUsernameDocument } from '@/graphql/username';
 import { ProfileVisibility } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMeStore } from '@/stores/me.store';
@@ -59,6 +60,20 @@ export function useAccount() {
     [refresh],
   );
 
+  /**
+   * Rename the @handle. Its own mutation rather than a field on the profile
+   * input: it is the only thing the server can still refuse after the field
+   * said yes (somebody can take it in the 400ms between the check and the tap),
+   * and it publishes the session, because the handle is in every share link.
+   */
+  const setUsername = useCallback(
+    async (username: string) => {
+      await graphqlRequest(MobileSetUsernameDocument, { username }, { auth: true });
+      await refresh();
+    },
+    [refresh],
+  );
+
   const updateVisibility = useCallback(
     async (isPrivate: boolean) => {
       await graphqlRequest(
@@ -76,6 +91,7 @@ export function useAccount() {
     health,
     isLoading,
     error,
+    setUsername,
     updateProfile,
     updateVisibility,
     refresh,

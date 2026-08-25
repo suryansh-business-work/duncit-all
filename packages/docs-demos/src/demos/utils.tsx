@@ -7,15 +7,30 @@ import {
   commRowState,
   followBackLabelKey,
   followRequestRowState,
+  canSaveUsername,
   formatMoney,
+  isUsernameError,
+  normalizeUsername,
   participationInputFrom,
   payableSpots,
   podParticipationActions,
   podRefundState,
+  profileUrl,
+  usernameBlocksSave,
+  usernameStatus,
   type CommChannelState,
   type PodParticipationFields,
+  type UsernameRejection,
 } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+
+/** What the @handle field holds, plus the server's last answer about it. */
+interface HandleMock {
+  current: string;
+  typed: string;
+  available: boolean | null;
+  reason: UsernameRejection | null;
+}
 
 /** A real booking row as the API hands it to every surface. */
 interface BookingMock {
@@ -241,5 +256,34 @@ export default defineDemos('utils', [
           `${formatMoney(amount)}   ·   compact ${formatMoney(amount, { compact: true })}   ·   2dp ${formatMoney(amount, { decimals: 2 })}`,
         ])
       ),
+  }),
+  defineDemo<HandleMock>({
+    id: 'username',
+    title: 'The @handle field, and the Save button it gates',
+    note:
+      'Type into `typed` and watch the status and the link move together. `available` is the ' +
+      "server's debounced answer — set it false with reason TAKEN to see Save lock.",
+    mock: {
+      current: 'ravi-9x3m',
+      typed: 'ravi-plays',
+      available: true,
+      reason: null,
+    },
+    compute: (mock) => {
+      const status = usernameStatus({
+        value: normalizeUsername(mock.typed),
+        current: mock.current,
+        checking: false,
+        available: mock.available,
+        reason: mock.reason,
+      });
+      const preview = canSaveUsername(status) ? normalizeUsername(mock.typed) : mock.current;
+      return {
+        Status: status,
+        'Save disabled': String(usernameBlocksSave(status, !!mock.current)),
+        'Shows as an error': String(isUsernameError(status)),
+        'Profile link': profileUrl('https://mweb.duncit.com', preview),
+      };
+    },
   }),
 ]);

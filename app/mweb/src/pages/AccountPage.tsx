@@ -193,9 +193,9 @@ export default function AccountPage() {
 
       <LanguageSection />
       {/* One row, not three cards: the channels and every switch on them
-          live behind it, on /account/communication. The @handle is minted
-          by the server and is shown — with the link it produces — on the
-          profile itself, which is where somebody goes to share it. */}
+          live behind it, on /account/communication. The @handle is edited in
+          Edit profile, beside the name it belongs to, and shown — with the
+          link it produces — on the profile somebody goes to share. */}
       <CommPreferenceEntryCard />
       <ConnectedAccountsSection />
       <SecuritySection />
@@ -203,6 +203,7 @@ export default function AccountPage() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={{
+          username: me.username || '',
           first_name: me.first_name || '',
           last_name: me.last_name || '',
           bio: me.bio || '',

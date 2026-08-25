@@ -333,9 +333,18 @@ export {
   type CommTranslate,
 } from './comm-preference';
 export {
+  USERNAME_PATTERN,
   buildUsernameLabels,
+  canSaveUsername,
+  isUsernameError,
+  normalizeUsername,
   profileUrl,
+  usernameBlocksSave,
+  usernameStatus,
   type UsernameLabels,
+  type UsernameRejection,
+  type UsernameStatus,
+  type UsernameStatusInput,
   type UsernameTranslate,
 } from './username';
 export {

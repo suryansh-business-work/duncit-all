@@ -76,6 +76,14 @@ exports:
   - 'followRequestRowState'
   - 'followBackLabelKey'
   - 'canFollowBack'
+  - 'USERNAME_PATTERN'
+  - 'normalizeUsername'
+  - 'usernameStatus'
+  - 'canSaveUsername'
+  - 'isUsernameError'
+  - 'usernameBlocksSave'
+  - 'profileUrl'
+  - 'buildUsernameLabels'
 ---
 
 ## Why this exists
@@ -731,26 +739,53 @@ the person opened mWeb or the native web build (rule 27).
 Two things mWeb and the native app render identically (rule 27), so their LOGIC lives here
 and only the MUI card and the Tamagui card differ (rule 40).
 
-### The @handle is assigned, never typed
+### The @handle is minted, then owned
 
 A handle is minted ONCE by the server from the member’s name (`generateUsername` in
 `server/src/modules/access/user/username.ts`, backfilled on `me` for accounts that predate
-handles). There is no field for it, no availability check and no save — a handle is the
-account’s address, it is already baked into every share link in circulation, and a settings
-screen inviting somebody to change it invites them to break their own links.
+handles), and its owner may then change it from **Edit profile**. The field there is
+debounced against `usernameAvailability` and the Save button is the profile’s own — which is
+the whole reason `usernameBlocksSave` exists.
 
-What is left on the client is therefore the LINK, not the handle:
+`usernameStatus` is the one place the field’s state is decided. Order matters: your OWN
+handle reads as `CURRENT` rather than `TAKEN` (it IS taken — by you), and the shape is
+checked before anything is sent, so typing a space never costs a round trip.
+
+```ts
+const idle = { current: 'ravi-9x3m', checking: false, available: null, reason: null };
+
+usernameStatus({ ...idle, value: 'ravi-9x3m' });                        // 'CURRENT'
+usernameStatus({ ...idle, value: 'Ravi Sharma' });                      // 'INVALID' — never sent
+usernameStatus({ ...idle, value: 'ravi-plays' });                       // 'CHECKING'
+usernameStatus({ ...idle, value: 'ravi-plays', available: true });      // 'AVAILABLE'
+usernameStatus({ ...idle, value: 'admin', available: false, reason: 'RESERVED' }); // 'RESERVED'
+```
+
+`usernameBlocksSave(status, hasCurrent)` answers for the WHOLE form, because the handle
+shares its Save with the name and the address beside it. `CHECKING` blocks too: the check is
+400ms behind the last keystroke, so without it a fast typist reaches Save while the answer is
+still in flight and the button reports the previous handle. An account with no handle yet is
+the one case an empty field is fine — there is nothing to clear and nothing to break.
+
+```ts
+usernameBlocksSave('AVAILABLE', true); // false — the only handle that reaches the server
+usernameBlocksSave('CHECKING', true);  // true  — the answer is still in flight
+usernameBlocksSave('IDLE', true);      // true  — a profile cannot go back to no address
+usernameBlocksSave('IDLE', false);     // false — pre-handle account, save the rest anyway
+```
+
+Under the field both surfaces render the LINK the handle produces rather than describing it —
+seeing the new address before saving is what makes the warning about already-shared links
+land. The same pair is on the PROFILE, under the name and next to Share.
 
 ```ts
 profileUrl('https://mweb.duncit.com', 'ravi-9x3m'); // 'https://mweb.duncit.com/u/ravi-9x3m'
 
 const labels = buildUsernameLabels(t);
-labels.handle('ravi-9x3m'); // '@ravi-9x3m'
-labels.copyLink;            // the button beside it
+labels.handle('ravi-9x3m');                  // '@ravi-9x3m'
+labels.status('AVAILABLE', 'ravi-plays');    // '@ravi-plays is available.'
+labels.copyLink;                             // the button beside it
 ```
-
-Both surfaces render that pair on the PROFILE, under the name and next to Share — not in
-Profile Settings, which is where you change things.
 
 ### Communication preferences
 

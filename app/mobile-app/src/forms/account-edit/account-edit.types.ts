@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PERSON_NAME, PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   FALLBACK_DATE_FORMAT,
@@ -61,6 +62,17 @@ export const makeAccountEditSchema = (
   t: Translate = fallbackT,
 ) =>
   z.object({
+    /**
+     * The @handle, shaped by the pattern the server re-checks in `username.ts`,
+     * so the field cannot hold one `setMyUsername` would then refuse. No
+     * message: the status line under the field is localized copy from
+     * `buildUsernameLabels` (rule 38), and a second English sentence here is
+     * the one that would drift. Empty is allowed for an account minted before
+     * handles existed.
+     */
+    username: z
+      .string()
+      .refine((value) => value === '' || USERNAME_PATTERN.test(normalizeUsername(value))),
     // Both name boxes take the shared PERSON_NAME shape — letters, spaces,
     // apostrophes and periods. Digits, underscores, emoji and any other
     // punctuation are rejected here exactly as they are at signup and on mWeb.
@@ -110,6 +122,7 @@ export type AccountEditValues = z.infer<typeof accountEditSchema>;
 /** Build the form's initial values from the loaded user (empty-string safe). */
 export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
   return {
+    username: me?.username ?? '',
     first_name: me?.first_name ?? '',
     last_name: me?.last_name ?? '',
     bio: me?.bio ?? '',

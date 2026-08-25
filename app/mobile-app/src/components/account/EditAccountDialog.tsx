@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { buildUsernameLabels, normalizeUsername } from '@duncit/utils';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
@@ -22,6 +23,8 @@ export interface EditAccountDialogProps {
   me: AccountMe | null;
   onClose: () => void;
   onSave: (input: UpdateProfileInput) => Promise<void>;
+  /** Renames the @handle. Called first, and only when it actually changed. */
+  onSaveUsername: (username: string) => Promise<void>;
 }
 
 /* istanbul ignore next -- placeholder ref value, replaced once the form mounts */
@@ -29,7 +32,13 @@ const NOOP = () => undefined;
 
 /** Edit-profile bottom sheet hosting the RHF+Zod form — RN twin of mWeb's
  * <EditAccountDialog/>. */
-export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAccountDialogProps>) {
+export function EditAccountDialog({
+  open,
+  me,
+  onClose,
+  onSave,
+  onSaveUsername,
+}: Readonly<EditAccountDialogProps>) {
   const { t } = useTranslation();
   const { color } = useThemeColors();
   const [loading, setLoading] = useState(false);
@@ -55,7 +64,26 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
   const submit = async (values: AccountEditValues) => {
     setLoading(true);
     setErrorMessage(null);
+    // The handle goes FIRST and on its own mutation: it is the only field the
+    // server can still refuse after the field said yes (somebody can take it in
+    // the 400ms between the check and the tap), and a refusal there must leave
+    // the rest of the profile untouched rather than half-written.
+    const handle = normalizeUsername(values.username);
+    const renaming = handle && handle !== normalizeUsername(me?.username);
     try {
+      if (renaming) {
+        // Reported in the app's own words: the server's refusal is an
+        // English-only sentence, and the only thing the reader can act on is
+        // "pick another one".
+        const failed = await onSaveUsername(handle).then(
+          () => false,
+          () => true,
+        );
+        if (failed) {
+          setErrorMessage(buildUsernameLabels(t).saveFailed);
+          return;
+        }
+      }
       await onSave(toUpdateProfileInput(values));
       onClose();
     } catch (err) {

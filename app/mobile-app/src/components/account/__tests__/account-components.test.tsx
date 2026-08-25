@@ -166,7 +166,13 @@ describe('AccountHealthCard', () => {
 describe('EditAccountDialog', () => {
   it('is hidden when closed', () => {
     renderWithProviders(
-      <EditAccountDialog open={false} me={me} onClose={jest.fn()} onSave={jest.fn()} />,
+      <EditAccountDialog
+        open={false}
+        me={me}
+        onClose={jest.fn()}
+        onSave={jest.fn()}
+        onSaveUsername={jest.fn()}
+      />,
     );
     expect(screen.queryByTestId('account-edit-submit')).toBeNull();
   });
@@ -183,7 +189,15 @@ describe('EditAccountDialog', () => {
   it('saves mapped values then closes', async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
     const onClose = jest.fn();
-    renderWithProviders(<EditAccountDialog open me={me} onClose={onClose} onSave={onSave} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={onClose}
+        onSave={onSave}
+        onSaveUsername={jest.fn()}
+      />,
+    );
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await pressSaveWhenEnabled();
     await waitFor(() => expect(onSave).toHaveBeenCalled());
@@ -193,7 +207,15 @@ describe('EditAccountDialog', () => {
 
   it('shows an error when saving fails and can be dismissed', async () => {
     const onSave = jest.fn().mockRejectedValue(new Error('save failed'));
-    renderWithProviders(<EditAccountDialog open me={me} onClose={jest.fn()} onSave={onSave} />);
+    renderWithProviders(
+      <EditAccountDialog
+        open
+        me={me}
+        onClose={jest.fn()}
+        onSave={onSave}
+        onSaveUsername={jest.fn()}
+      />,
+    );
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await pressSaveWhenEnabled();
     await waitFor(() =>

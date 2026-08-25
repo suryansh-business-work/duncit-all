@@ -94,7 +94,6 @@ export interface HostPodActionLabels {
   venueBillRequired: string;
   podMedia: string;
   completing: string;
-  partyMediaRequired: string;
   cancelNoOthers: string;
   cancelEmailOnly: string;
   reason: string;
@@ -202,7 +201,6 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     venueBillRequired: t('mweb.hostPodActions.venueBillRequired'),
     podMedia: t('mweb.hostPodActions.podMedia'),
     completing: t('mweb.hostPodActions.completing'),
-    partyMediaRequired: t('mweb.hostPodActions.partyMediaRequired'),
     cancelNoOthers: t('mweb.hostPodActions.cancelNoOthers'),
     cancelEmailOnly: t('mweb.hostPodActions.cancelEmailOnly'),
     reason: t('mweb.hostPodActions.reason'),
@@ -287,7 +285,6 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     venueBillRequired: t('shell.hostPodActions.venueBillRequired'),
     podMedia: t('shell.hostPodActions.podMedia'),
     completing: t('shell.hostPodActions.completing'),
-    partyMediaRequired: t('shell.hostPodActions.partyMediaRequired'),
     cancelNoOthers: t('shell.hostPodActions.cancelNoOthers'),
     cancelEmailOnly: t('shell.hostPodActions.cancelEmailOnly'),
     reason: t('shell.hostPodActions.reason'),

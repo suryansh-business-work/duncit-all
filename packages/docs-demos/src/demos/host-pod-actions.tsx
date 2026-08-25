@@ -1,10 +1,14 @@
 import {
   POD_DELETE_REASON_SUBJECTS,
+  blankPodCompleteValues,
   blankPodEditValues,
+  buildCompleteInput,
   buildHostPodActionLabels as buildLabels,
   buildHostUpdateInput,
+  buildPodCompleteSchema,
   buildPodEditSchema,
 } from '@duncit/host-pod-actions';
+import { buildPodMediaLabels, podFeedbackPath, podMediaLink, podMediaPath } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
 
 type PodEditMock = typeof blankPodEditValues;
@@ -49,6 +53,32 @@ export default defineDemos('host-pod-actions', [
       // A surface passes its own `t`; echoing the key back makes it obvious
       // WHICH key each label reads, which is the thing that drifts.
       'Labels used': buildLabels((key: string) => key, mock.surface),
+      'Pod-media labels used': buildPodMediaLabels((key: string) => key, mock.surface),
     }),
+  }),
+
+  defineDemo<{ podId: string; origin: string; venueBill: string }>({
+    id: 'pod-links-and-completion',
+    title: 'A pod’s two links, and what completing it now sends',
+    note:
+      'Share and Copy resolve the SAME address per link — one media page per pod, never two. Completing sends no media at all: the release carries the pod’s own photos, which the server reads off the pod, so a pod nobody photographed still pays its host.',
+    mock: {
+      podId: '665f2c1ab3d4e5f60718293a',
+      origin: 'https://duncit.com',
+      venueBill: '1500',
+    },
+    compute: (mock) => {
+      const values = { ...blankPodCompleteValues, venue_bill_amount: mock.venueBill };
+      const parsed = buildPodCompleteSchema(true, buildLabels((key) => key, 'mweb')).safeParse(
+        values
+      );
+      return {
+        'Media upload page': podMediaPath(mock.podId),
+        'Link a host shares (before the short link)': podMediaLink(mock.podId, mock.origin),
+        'Rating form, for comparison': podFeedbackPath(mock.podId),
+        'Venue pod completes': parsed.success,
+        'What the server receives': buildCompleteInput(values, mock.podId),
+      };
+    },
   }),
 ]);

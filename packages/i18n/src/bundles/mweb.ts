@@ -202,6 +202,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         title: 'Rate {name}',
         description: 'Tell the host how this pod went.',
       },
+      podMedia: {
+        title: 'Photos from {name}',
+        description: 'Add your photos and videos from this pod.',
+      },
       club: { description: 'Follow this club to catch its next pods on Duncit.' },
       publicProfile: { description: 'See their posts and pods on Duncit.' },
       post: {
@@ -2214,7 +2218,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueBillRequired: 'Enter the venue bill amount',
       podMedia: 'Pod Media',
       completing: 'Completing…',
-      partyMediaRequired: 'Add at least one party photo or video',
       cancelIntro: 'You are cancelling {title}. This cannot be undone.',
       cancelNoOthers: 'No one else has joined this pod — it will be cancelled immediately.',
       // Count-driven copy: the translator picks .one or .other from `count`.

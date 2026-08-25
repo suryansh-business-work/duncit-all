@@ -111,23 +111,9 @@ export function redactionFor(
   return REDACTIONS[`${modelName}.${fieldPath}`] ?? null;
 }
 
-/**
- * The name to show for a record that points at an account, when the account
- * itself may be gone.
- *
- * A retained row keeps its `user_id` and most of them carry a frozen name
- * beside it — but the ones that do not (a coin grant, a gift card) resolve the
- * name by loading the account, and after a purge that load finds nothing. A
- * blank there reads as a bug in the table rather than as a person who left, so
- * a reference that resolves to no account says so.
- *
- * The blank is kept for a row that names NOBODY: an unattributed ledger entry
- * is not a deleted user.
- */
-export function userNameOrDeleted(
-  account: { name?: string | null } | null | undefined,
-  referenceId: unknown
-): string {
-  if (account) return account.name ?? '';
-  return referenceId ? DELETED_USER_NAME : '';
-}
+/*
+  The name a ledger row shows when the account behind it is gone lives with the
+  other admin-table helpers, in `@utils/admin-ledger` — `userNameOrDeleted`.
+  It reads DELETED_USER_NAME from here, which stays the one definition of what
+  a purged member is called.
+*/

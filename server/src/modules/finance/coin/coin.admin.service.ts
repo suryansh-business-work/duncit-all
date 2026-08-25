@@ -5,7 +5,12 @@ import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.m
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { userNameOrDeleted } from '@modules/access/accountDeletion/accountDeletion.retention';
+import {
+  loadUserMap,
+  monthKeys,
+  userNameOrDeleted,
+  type UserInfo,
+} from '@utils/admin-ledger';
 import { coinSettingsService } from './coin.settings.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -66,48 +71,6 @@ interface PodInfo {
   id: string;
   title: string;
   slug: string;
-}
-
-interface UserInfo {
-  name: string;
-  email: string;
-}
-
-/**
- * Names for ledger rows that have no payment to take them from — referral
- * credits and manual adjustments — plus the admins who typed the manual ones.
- * Without this a growing share of the ledger renders a blank where a person
- * should be, which is exactly the column an audit reads first.
- */
-async function loadUserMap(userIds: string[]): Promise<Map<string, UserInfo>> {
-  const unique = [...new Set(userIds.filter(Boolean))].filter((id) =>
-    Types.ObjectId.isValid(id)
-  );
-  if (unique.length === 0) return new Map();
-  const rows = await UserModel.find({ _id: { $in: unique } })
-    .select('email profile.first_name profile.last_name')
-    .lean();
-  return new Map(
-    rows.map((u: any) => [
-      String(u._id),
-      {
-        name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
-        email: u.email ?? '',
-      },
-    ])
-  );
-}
-
-/** UTC 'YYYY-MM' keys for the last `span` months, oldest first. */
-function monthKeys(span: number): string[] {
-  const now = new Date();
-  const keys: string[] = [];
-  for (let back = span - 1; back >= 0; back -= 1) {
-    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - back, 1));
-    const mm = String(month.getUTCMonth() + 1).padStart(2, '0');
-    keys.push(`${month.getUTCFullYear()}-${mm}`);
-  }
-  return keys;
 }
 
 /** Scope the ledger to one pod by way of that pod's payments — both the pod

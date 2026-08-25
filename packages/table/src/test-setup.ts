@@ -39,17 +39,17 @@ if (typeof URL.revokeObjectURL !== 'function') {
  */
 const NativeMouseEvent = globalThis.MouseEvent;
 
+/** jsdom's own criterion, asked before constructing rather than after it throws. */
+const usableView = (view: MouseEventInit['view']): MouseEventInit['view'] =>
+  typeof globalThis.Window === 'function' && view instanceof globalThis.Window ? view : undefined;
+
 class ViewSafeMouseEvent extends NativeMouseEvent {
   constructor(type: string, init: MouseEventInit = {}) {
-    try {
-      super(type, init);
-    } catch {
-      super(type, { ...init, view: undefined });
-    }
+    super(type, { ...init, view: usableView(init.view) });
   }
 }
 
-globalThis.MouseEvent = ViewSafeMouseEvent as typeof globalThis.MouseEvent;
+globalThis.MouseEvent = ViewSafeMouseEvent;
 
 /** The grid observes its container for resizes; jsdom has no layout to observe. */
 class NoopResizeObserver {

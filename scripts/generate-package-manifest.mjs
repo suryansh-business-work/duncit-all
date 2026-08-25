@@ -54,7 +54,7 @@ const SKIP_DIR = new Set([
  * reporting on it would put fifty rows nobody can action at the top of the
  * table.
  */
-const SKIP_PATH = ["portals/crm/open-wa-server"];
+const SKIP_PATH = new Set(["portals/crm/open-wa-server"]);
 
 /** The dependency blocks a manifest can declare, in the order they render. */
 const DEP_KINDS = [
@@ -77,7 +77,7 @@ function* manifestFiles(dir) {
   for (const entry of entries.sort((a, b) => a.localeCompare(b))) {
     if (SKIP_DIR.has(entry)) continue;
     const full = join(dir, entry);
-    if (SKIP_PATH.includes(repoPath(full))) continue;
+    if (SKIP_PATH.has(repoPath(full))) continue;
     let stat;
     try {
       stat = statSync(full);

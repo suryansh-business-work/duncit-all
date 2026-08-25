@@ -8,7 +8,6 @@ const post: FeedPost = {
   club_id: 'c-doc-1',
   image_url: 'https://cdn.example/p.jpg',
   media_type: 'IMAGE',
-  kind: 'POST',
   caption: 'hello',
   likes_count: 0,
   liked_by_me: false,

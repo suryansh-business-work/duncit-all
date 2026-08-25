@@ -4,7 +4,6 @@ import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table'
 import { useTranslation } from '@duncit/shell';
 import { usd, tokens } from '../../lib/usd';
 import type { TaskSpend } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
 
 const getRowId = (row: TaskSpend) => row.task;
 const searchOf = (row: TaskSpend) => `${row.label} ${row.module} ${row.task}`;
@@ -72,7 +71,7 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
         field: 'calls',
         headerName: t('ai.taskSpend.colCalls'),
         width: 100,
-        valueGetter: (row) => formatDateTime(row.calls),
+        valueGetter: (row) => row.calls.toLocaleString(),
       },
       {
         field: 'failures',

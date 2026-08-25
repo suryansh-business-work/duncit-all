@@ -9,10 +9,10 @@ import { FEED_CLUBS, FOLLOW_ME } from './follow-page/queries';
 import type { FeedClub, FollowingFeedSource } from './follow-page/queries';
 import type { Translate } from '../i18n/fallback';
 
-const EMPTY_TEXT: Record<FollowingFeedSource, string> = {
-  CLUBS: 'Follow clubs to see their posts here',
-  PEOPLE: 'Follow people to see their posts here',
-};
+const emptyText = (t: Translate): Record<FollowingFeedSource, string> => ({
+  CLUBS: t('mweb.followPage.followClubsToSeeTheirPosts'),
+  PEOPLE: t('mweb.followPage.followPeopleToSeeTheirPosts'),
+});
 
 const sourceTabs = (t: Translate): DuncitTabItem<FollowingFeedSource>[] => [
   { value: 'CLUBS', label: t('mweb.nav.clubs') },
@@ -74,7 +74,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
             mt: 0.4,
             fontWeight: 700
           }}>
-          Latest posts and stories from your clubs and people
+          {t('mweb.followPage.latestPostsFromYourClubsAnd')}
         </Typography>
       </Box>
 
@@ -86,7 +86,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
 
       <FollowFeedList
         source={tab}
-        emptyText={EMPTY_TEXT[tab]}
+        emptyText={emptyText(t)[tab]}
         clubsById={tab === 'CLUBS' ? clubsById : undefined}
         superCategoryId={tab === 'CLUBS' ? superCategoryId : null}
         onOpenComments={setOpenPostId}

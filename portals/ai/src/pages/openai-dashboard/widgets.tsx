@@ -11,7 +11,6 @@ import SpendBars, { type SpendBarRow } from './SpendBars';
 import TaskSpendTable from './TaskSpendTable';
 import RateCardList from './RateCardList';
 import type { ModelPrice, SpendBucket, UsageDashboardData } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
 
 /** The translate function the page hands down — these are plain builders, not
  *  components, so they cannot call the hook themselves. */
@@ -79,7 +78,7 @@ export function buildWidgets(
         sx={{ height: '100%' }}
         icon={<SmartToyIcon fontSize="small" />}
         label={t('ai.dashboard.kpiCalls')}
-        value={formatDateTime(d.total_calls)}
+        value={d.total_calls.toLocaleString()}
         hint={t('ai.dashboard.kpiCallsHint', { vars: { ms: d.avg_duration_ms } })}
       />
     ),

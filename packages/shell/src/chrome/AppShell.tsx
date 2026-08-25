@@ -15,18 +15,10 @@ import { AppSidebar } from './AppSidebar';
 import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
 import type { ShellUser } from './user-display';
-import { Taskbar, WorkspaceProvider } from '../workspace';
+import { ABOVE_TASKBAR_HEIGHT, Taskbar, WorkspaceProvider } from '../workspace';
 
 const MAIN_ID = 'app-main';
 const drawerWidth = tokens.size.drawerWidth;
-/**
- * The sidebar stops at the taskbar.
- *
- * A permanent Drawer's paper is fixed to the VIEWPORT, not to the flex column
- * beside it, so it runs the full height whatever the layout does — and its
- * footer caption ended up behind the bar.
- */
-const drawerPaperHeight = `calc(100% - ${tokens.size.taskbarHeight}px)`;
 
 /** The slice of a portal's `appConfig` the chrome needs — pass appConfig directly. */
 export interface AppShellPortalConfig {
@@ -165,7 +157,7 @@ export function AppShell({
               ModalProps={{ keepMounted: true }}
               sx={{
                 display: { xs: 'block', md: 'none' },
-                '& .MuiDrawer-paper': { width: drawerWidth, height: drawerPaperHeight },
+                '& .MuiDrawer-paper': { width: drawerWidth, height: ABOVE_TASKBAR_HEIGHT },
               }}
             >
               <AppSidebar
@@ -184,7 +176,7 @@ export function AppShell({
                 '& .MuiDrawer-paper': {
                   width: drawerWidth,
                   boxSizing: 'border-box',
-                  height: drawerPaperHeight,
+                  height: ABOVE_TASKBAR_HEIGHT,
                 },
               }}
             >

@@ -18,6 +18,9 @@ export interface LanguageSelectProps {
   disabled?: boolean;
   size?: 'small' | 'medium';
   fullWidth?: boolean;
+  /** Render even with one language configured — the taskbar's clock tray always
+   *  shows a Language row, the way a desktop's does. */
+  showSingle?: boolean;
 }
 
 /**
@@ -28,7 +31,8 @@ export interface LanguageSelectProps {
  * they cannot read can still find their way back.
  *
  * Renders nothing when the platform offers fewer than two languages — a
- * one-option switcher is noise.
+ * one-option switcher is noise. `showSingle` is for the one place that is not
+ * true: a tray whose whole purpose is to say what the console is set to.
  */
 export function LanguageSelect({
   value,
@@ -39,9 +43,10 @@ export function LanguageSelect({
   disabled = false,
   size = 'small',
   fullWidth = true,
+  showSingle = false,
 }: Readonly<LanguageSelectProps>) {
   const { t } = useTranslation();
-  if (options.length < 2) return null;
+  if (options.length < (showSingle ? 1 : 2)) return null;
 
   return (
     <TextField

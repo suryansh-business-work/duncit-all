@@ -5,6 +5,18 @@ import { TaskbarClock } from './TaskbarClock';
 import { TaskbarWindows } from './TaskbarWindows';
 
 /**
+ * The height a viewport-fixed overlay gets, so it ends where the taskbar starts.
+ *
+ * Every Drawer's paper is `position: fixed`, which measures against the
+ * VIEWPORT rather than against the shell's column, so it runs the full height
+ * whatever the layout does — and the taskbar, which paints above it, swallows
+ * its last row: the sidebar's caption, the apps list's final tool, the Agent's
+ * composer. Subtracting the bar is the fix; bottom padding only moves the
+ * content up inside a paper that is still 40px too tall.
+ */
+export const ABOVE_TASKBAR_HEIGHT = `calc(100% - ${tokens.size.taskbarHeight}px)`;
+
+/**
  * The strip along the bottom of every console.
  *
  * It is a row of the shell's own column rather than a `position: fixed` bar, so

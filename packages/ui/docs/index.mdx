@@ -207,11 +207,15 @@ STATUS_CHIP_COLORS;
 ```
 
 `LanguageSelect` with a single configured language renders **nothing** — the container comes
-back as an empty string, not a one-option dropdown:
+back as an empty string, not a one-option dropdown. `showSingle` opts out of that, for a surface
+whose job is to say which language is set rather than to offer a choice:
 
 ```tsx
 render(<LanguageSelect value="en" options={[{ code: 'en', label: 'English' }]} onChange={fn} />);
 // container.innerHTML === ''
+
+render(<LanguageSelect showSingle value="en" options={[{ code: 'en', label: 'English' }]} onChange={fn} />);
+// → the select, with English in it — what the taskbar's clock tray renders
 ```
 
 ## Props reference
@@ -337,7 +341,7 @@ been deleted or moved server-side is still reachable instead of rendering a blan
 
 | Export | Signature | Notes |
 | --- | --- | --- |
-| `LanguageSelect` | `({ value, options, onChange, label?, helperText?, disabled?, size?, fullWidth? })` | `options: readonly LanguageOption[]` where `LanguageOption = { code, label, english_label? }`. Renders `null` under two options. `label` defaults to `'Language'`, `size` to `'small'`, `fullWidth` to `true`. |
+| `LanguageSelect` | `({ value, options, onChange, label?, helperText?, disabled?, size?, fullWidth?, showSingle? })` | `options: readonly LanguageOption[]` where `LanguageOption = { code, label, english_label? }`. Renders `null` under two options — under ONE with `showSingle`, which only the shell's clock tray passes. `label` defaults to `'Language'`, `size` to `'small'`, `fullWidth` to `true`. |
 | `ModerationBlockedDialog` | `({ violations, onJump, onClose, title?, description? })` | `violations: BlockedViolation[]` = `{ id, message, type, stepIndex, stepTitle }`. Open state is derived — it renders when `violations.length > 0`. `onJump(stepIndex)` moves the wizard. |
 | `useDebouncedValue` | `<T>(value: T, delayMs = 300) => T` | Standalone filter inputs only — `DuncitTable` already debounces its own search. |
 | `usageColor` | `(percent: number) => 'success' \| 'warning' \| 'error'` | `error` ≥ 90, `warning` ≥ 75, else `success`. |
@@ -447,7 +451,7 @@ and "why was I not refunded" is a question only the shape answers.
 
 `LanguageSelect` renders each option as its own endonym plus the English name, so a user who has
 switched into a script they cannot read can still switch back — and it renders **nothing** when
-fewer than two languages are configured. Any user-facing string you add to this package must
+fewer than two languages are configured, unless `showSingle` says otherwise. Any user-facing string you add to this package must
 come from a Localization key with a fallback bundle entry first (rule 38); the defaults here
 (`'Not found.'`, `'Back'`, `'Language'`) are prop-overridable for exactly that reason.
 

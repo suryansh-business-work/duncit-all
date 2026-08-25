@@ -70,18 +70,6 @@ export function FeedPostCard({
             {formatDateTime(post.created_at)}
           </Text>
         </YStack>
-        {post.kind === 'STORY' ? (
-          <XStack
-            borderRadius={999}
-            paddingHorizontal={9}
-            paddingVertical={3}
-            backgroundColor="$primary"
-          >
-            <Text fontSize={10} fontWeight="700" color="$onPrimary">
-              STORY
-            </Text>
-          </XStack>
-        ) : null}
       </XStack>
 
       {post.image_url ? (

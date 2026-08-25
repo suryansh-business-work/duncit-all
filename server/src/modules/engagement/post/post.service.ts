@@ -145,28 +145,31 @@ export const postService = {
   },
 
   /**
-   * The Following feed: permanent posts + still-active stories from the people
-   * (PEOPLE) or clubs (CLUBS) the viewer follows, newest first. Following a
-   * private account implies approved access, so no extra privacy gate is needed.
+   * The Following feed: permanent POSTS from the people (PEOPLE) or clubs
+   * (CLUBS) the viewer follows, newest first. Stories are deliberately NOT in
+   * here — they are ephemeral and belong to the story rails (`stories`,
+   * `clubStories`); mixing them in put a 24h item beside permanent ones and
+   * then silently dropped it. Following a private account implies approved
+   * access, so no extra privacy gate is needed.
    */
   async followingFeed(viewerId: string, source: 'PEOPLE' | 'CLUBS', limit = 60) {
     const oid = new Types.ObjectId(viewerId);
-    // Permanent posts always qualify; stories only while their 24h window is open.
-    const liveContent = { $or: [{ kind: { $ne: 'STORY' } }, { expires_at: { $gt: new Date() } }] };
+    // $ne also matches legacy docs written before `kind` existed — those are posts.
+    const postsOnly = { kind: { $ne: 'STORY' } };
     let q: Record<string, unknown>;
     if (source === 'CLUBS') {
       const follows = await ClubFollowerModel.find({ user_id: oid }).select('club_id').lean();
       const clubIds = follows.map((f: any) => f.club_id);
       if (clubIds.length === 0) return [];
-      q = { club_id: { $in: clubIds }, ...liveContent };
+      q = { club_id: { $in: clubIds }, ...postsOnly };
     } else {
       const follows = await UserRelationshipModel.find({ follower_id: oid })
         .select('following_id')
         .lean();
       const userIds = follows.map((f: any) => f.following_id);
       if (userIds.length === 0) return [];
-      // Club-scoped stories belong to the Clubs feed, not the People feed.
-      q = { author_id: { $in: userIds }, club_id: null, ...liveContent };
+      // Club-scoped content belongs to the Clubs feed, not the People feed.
+      q = { author_id: { $in: userIds }, club_id: null, ...postsOnly };
     }
     const docs = await PostModel.find(q)
       .sort({ created_at: -1 })

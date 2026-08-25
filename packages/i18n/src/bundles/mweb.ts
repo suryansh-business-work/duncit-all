@@ -2834,6 +2834,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       followers: 'Followers',
     },
     followPage: {
+      followClubsToSeeTheirPosts: 'Follow clubs to see their posts here',
+      followPeopleToSeeTheirPosts: 'Follow people to see their posts here',
+      latestPostsFromYourClubsAnd: 'Latest posts from your clubs and people',
       people: 'People',
     },
     forceUpdateGate: {

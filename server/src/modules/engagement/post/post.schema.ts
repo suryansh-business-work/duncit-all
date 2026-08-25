@@ -68,7 +68,7 @@ export const postTypeDefs = /* GraphQL */ `
     myStories: [Post!]!
     "Active (non-expired) stories attached to a club, newest first (Bug 6)."
     clubStories(club_id: ID!): [Post!]!
-    "Posts + active stories from the people/clubs the viewer follows, newest first."
+    "Posts from the people/clubs the viewer follows, newest first. Stories are excluded — they live on the story rails."
     followingFeed(source: FollowingFeedSource!, limit: Int): [Post!]!
     "Owner-only list of who viewed a story, newest first (Bug 4)."
     storyViewers(post_doc_id: ID!): [StoryView!]!

@@ -4,6 +4,7 @@ import { Box, Drawer, IconButton, Stack, Tooltip, Typography } from '@mui/materi
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { ABOVE_TASKBAR_HEIGHT } from '../../workspace';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AgentChat } from './AgentChat';
 import { AgentDockTab } from './AgentDockTab';
@@ -40,14 +41,26 @@ export function AgentLauncher() {
 
   return (
     <>
-      <AgentDockTab onOpen={() => setOpen(true)} />
+      {/* Hidden while the panel is up: the tab is fixed to the edge and sits
+          ABOVE the drawer, so an open Agent had its own tab printed across it.
+          There is nothing to launch from while it is already open. */}
+      {!open && <AgentDockTab onOpen={() => setOpen(true)} />}
 
       <Drawer
         anchor="right"
         open={open}
         onClose={close}
         slotProps={{
-          paper: { sx: { width: { xs: '100%', sm: 420 }, display: 'flex', flexDirection: 'column' } }
+          paper: {
+            sx: {
+              width: { xs: '100%', sm: 420 },
+              // Or the composer — the last row of the column — is behind the
+              // taskbar, which paints above the drawer.
+              height: ABOVE_TASKBAR_HEIGHT,
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }
         }}
       >
         <Stack

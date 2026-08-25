@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import { ABOVE_TASKBAR_HEIGHT } from '../../workspace';
 import { useTranslation } from '../../i18n/useTranslation';
 import { FileManagerDialog } from '../../file-manager';
 import { JumpToPortalDialog } from '../jump-to-portal';
@@ -74,7 +75,7 @@ export function AppsDrawer({
         open={open}
         onClose={close}
         slotProps={{
-          paper: { sx: { width: { xs: '100%', sm: 380 } } }
+          paper: { sx: { width: { xs: '100%', sm: 380 }, height: ABOVE_TASKBAR_HEIGHT } }
         }}
       >
         <Stack

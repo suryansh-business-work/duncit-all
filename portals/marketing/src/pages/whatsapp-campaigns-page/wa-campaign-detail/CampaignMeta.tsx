@@ -62,19 +62,6 @@ export default function CampaignMeta({ campaign, audienceText, currency }: Reado
           {costHint(campaign, currency)}
         </Typography>
       </MetaRow>
-      <MetaRow label={t('marketing.whatsappCampaigns.templateParams')}>
-        {campaign.template_params.length > 0 ? (
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-            {campaign.template_params.map((param, index) => (
-              // Params are ordered and may repeat, so the position is the only
-              // stable identity a row has (S6479).
-              <Chip key={`${index}-${param}`} size="small" label={`{{${index + 1}}} ${param}`} />
-            ))}
-          </Stack>
-        ) : (
-          <Typography variant="body2">None</Typography>
-        )}
-      </MetaRow>
       {campaign.scheduled_at && (
         <MetaRow label={t('marketing.whatsappCampaigns.scheduledFor')}>
           <Typography variant="body2">{formatDateTime(campaign.scheduled_at)}</Typography>

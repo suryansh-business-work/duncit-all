@@ -20,6 +20,7 @@ import {
   type WaAudienceList,
   type WaCampaignRow,
 } from '../queries';
+import SentMessage from '../wa-message';
 import CampaignMeta from './CampaignMeta';
 import DetailActions from './DetailActions';
 import RecipientTable from './RecipientTable';
@@ -117,6 +118,12 @@ export default function WaCampaignDetailDialog({
 
             <CampaignMeta campaign={campaign} audienceText={audienceText} currency={currency} />
 
+            <SentMessage
+              campaignName={campaign.wa_campaign_name}
+              params={campaign.template_params}
+              note={t('marketingWhatsapp.logs.messagePerRecipient')}
+            />
+
             <Stack spacing={0.5}>
               <Typography variant="subtitle2" fontWeight={900}>
                 Recipients
@@ -126,7 +133,10 @@ export default function WaCampaignDetailDialog({
                 delivered/read status is not part of that answer.
               </Typography>
             </Stack>
-            <RecipientTable campaignId={campaign.campaign_id} />
+            <RecipientTable
+              campaignId={campaign.campaign_id}
+              campaignName={campaign.wa_campaign_name}
+            />
           </Stack>
         )}
       </DialogContent>

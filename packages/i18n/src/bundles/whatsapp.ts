@@ -300,6 +300,22 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
       building: 'Building…',
       duplicate: 'Duplicate',
       messageId: 'AiSensy message id',
+      // What a row is opened FOR: the message itself. It is drawn from the
+      // template AiSensy holds now plus the values the send froze, because
+      // nothing stores the rendered text — and Meta does not allow an approved
+      // template to be edited, so the two agree unless it was resubmitted.
+      messageTitle: 'The message that went out',
+      messageHint:
+        'The template this campaign sends, filled with the values this send froze. Meta does not allow an approved template to be edited, so this is the wording that arrived — unless the template was deleted and resubmitted since.',
+      messageUnknown:
+        'AiSensy could not say which template this campaign sends, so the wording cannot be drawn. The values it went out with are below.',
+      messagePerRecipient:
+        'A value written as {{first_name}} is filled per person while the send runs. Open a row in the Recipients table below for the message one person actually got.',
+      messageNotDelivered:
+        'Nothing arrived for this person, so there is no message to draw. These are the values the send was carrying for them.',
+      variablesTitle: 'Values it was sent with',
+      variablesNone: 'This message carries no values.',
+      variableBlank: 'Empty',
     },
   },
 };

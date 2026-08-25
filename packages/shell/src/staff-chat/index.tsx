@@ -93,7 +93,13 @@ export function StaffChatPanel({
   const call = useCall(
     data.socket,
     meId,
-    { micId: panel.micId, camId: panel.camId, onChoose: chat.setDevice },
+    {
+      micId: panel.micId,
+      camId: panel.camId,
+      micLabel: panel.micLabel,
+      camLabel: panel.camLabel,
+      onChoose: chat.setDevice,
+    },
     data.iceServers
   );
   const recorder = useCallRecorder({

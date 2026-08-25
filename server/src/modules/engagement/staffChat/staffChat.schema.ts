@@ -124,6 +124,9 @@ export const staffChatTypeDefs = /* GraphQL */ `
     "The microphone and camera chosen in Audio & video settings."
     mic_id: String!
     cam_id: String!
+    "Their names — a deviceId is per origin, a label is what matches elsewhere."
+    mic_label: String!
+    cam_label: String!
   }
 
   "Every field optional: the panel saves the one thing that changed."
@@ -138,6 +141,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     enter_to_send: Boolean
     mic_id: String
     cam_id: String
+    mic_label: String
+    cam_label: String
   }
 
   "One earlier wording of a message, kept when its author changed it."

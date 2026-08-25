@@ -12,6 +12,9 @@ export interface PanelState {
   /** The microphone and camera picked in Audio & video settings. */
   micId: string;
   camId: string;
+  /** What those devices were CALLED — the half of the choice that travels. */
+  micLabel: string;
+  camLabel: string;
 }
 
 const DEFAULT_PANEL: PanelState = {
@@ -20,6 +23,8 @@ const DEFAULT_PANEL: PanelState = {
   openPeerId: null,
   micId: '',
   camId: '',
+  micLabel: '',
+  camLabel: '',
 };
 
 const toSettings = (state?: StaffChatState | null): ChatSettings =>
@@ -41,6 +46,8 @@ const toPanel = (state?: StaffChatState | null): PanelState =>
         openPeerId: state.open_peer_id,
         micId: state.mic_id,
         camId: state.cam_id,
+        micLabel: state.mic_label,
+        camLabel: state.cam_label,
       }
     : DEFAULT_PANEL;
 
@@ -127,11 +134,22 @@ export function useChatState() {
    * These were only ever in useCall state, so the dialog appeared to save and
    * forgot on the next refresh — the one setting somebody changes precisely
    * because the default was wrong for them.
+   *
+   * The NAME is saved with the id. A deviceId is salted per origin, so the id
+   * chosen in admin matches nothing in finance and this same state is read by
+   * all seventeen consoles — which is how a saved microphone came to be
+   * ignored everywhere except the console it was picked in. The label is what
+   * survives that, and useCall matches on it when the id draws a blank.
    */
   const setDevice = useCallback(
-    (kind: 'mic' | 'cam', id: string) => {
-      setPanel((current) => ({ ...current, [kind === 'mic' ? 'micId' : 'camId']: id }));
-      push({ [kind === 'mic' ? 'mic_id' : 'cam_id']: id });
+    (kind: 'mic' | 'cam', id: string, label: string) => {
+      const mic = kind === 'mic';
+      setPanel((current) => ({
+        ...current,
+        [mic ? 'micId' : 'camId']: id,
+        [mic ? 'micLabel' : 'camLabel']: label,
+      }));
+      push(mic ? { mic_id: id, mic_label: label } : { cam_id: id, cam_label: label });
     },
     [push]
   );

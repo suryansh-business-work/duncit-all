@@ -33,12 +33,16 @@ export interface IStaffChatState extends Document {
   /**
    * The microphone and camera chosen in Audio & video settings.
    *
-   * A deviceId is stable per browser profile, so this is remembered per person
-   * and simply does not match on a different machine — where the empty string
-   * means "whatever the OS prefers", which is the right answer there anyway.
+   * A deviceId is salted PER ORIGIN, so the id saved in the admin console names
+   * nothing in finance — and this one state is shared by all seventeen. The
+   * label is kept beside it because that is the part that travels: the same
+   * microphone reads the same name wherever the browser will name it at all, so
+   * the choice survives moving console or machine. '' is still "the OS default".
    */
   mic_id: string;
   cam_id: string;
+  mic_label: string;
+  cam_label: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -59,6 +63,8 @@ const staffChatStateSchema = new Schema<IStaffChatState>(
     enter_to_send: { type: Boolean, default: true },
     mic_id: { type: String, default: '' },
     cam_id: { type: String, default: '' },
+    mic_label: { type: String, default: '' },
+    cam_label: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

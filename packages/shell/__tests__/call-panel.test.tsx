@@ -86,6 +86,7 @@ const spies = () => ({
   onToggleRecord: vi.fn(),
   onSendRecording: vi.fn(),
   onDismissRecording: vi.fn(),
+  onDismissError: vi.fn(),
 });
 
 const panel = (over: Partial<PanelProps> = {}) => {

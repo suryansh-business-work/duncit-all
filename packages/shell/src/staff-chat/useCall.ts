@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { traceCall, traceCallFailure } from './callTrace';
+import { labelOf, useResolvedDevices } from './devices/useResolvedDevices';
 import { describeFailure, failureFromKey, type Failure } from './failure';
 import { playCallEnded, startRinging } from './sounds';
 
@@ -32,6 +33,9 @@ interface Signal {
 /** An exact deviceId, or "whatever the OS prefers" when none is chosen. */
 const pickDevice = (deviceId: string): MediaTrackConstraints | true =>
   deviceId ? { deviceId: { exact: deviceId } } : true;
+
+/** Did they ever pick one? Either half of the saved pair is a choice. */
+const hasChoice = (id: string, label: string): boolean => Boolean(id || label);
 
 /**
  * The browser's media APIs, or a sentence explaining why there are none.
@@ -70,7 +74,10 @@ async function openTrack(
 export interface DevicePrefs {
   micId: string;
   camId: string;
-  onChoose: (kind: 'mic' | 'cam', deviceId: string) => void;
+  /** The names they were saved under — see useResolvedDevices for why. */
+  micLabel: string;
+  camLabel: string;
+  onChoose: (kind: 'mic' | 'cam', deviceId: string, label: string) => void;
 }
 
 export function useCall(
@@ -93,12 +100,39 @@ export function useCall(
    * Read from the caller, not held here: this hook is remade on every mount and
    * would forget the choice each time, which is exactly how the settings dialog
    * came to look like it saved and did not.
+   *
+   * What is SAVED is not what can be opened, though — a deviceId belongs to the
+   * origin that issued it — so the pair is resolved against the devices this
+   * browser actually has, and everything below works from the resolved ids.
    */
-  const { micId, camId } = devices;
+  const { micId: savedMicId, camId: savedCamId, micLabel, camLabel } = devices;
+  const resolved = useResolvedDevices(savedMicId, micLabel, savedCamId, camLabel);
+  const { micId, camId } = resolved;
+  /** Written once, where the id still resolves — see the effect below. */
+  const named = useRef(false);
   const [sharing, setSharing] = useState(false);
   /** Local mute / camera state — the tracks are the truth, this mirrors them. */
   const [muted, setMuted] = useState(false);
   const [cameraOff, setCameraOff] = useState(false);
+
+  /*
+    Write down the NAME of a choice that was saved before names were saved.
+
+    Only in the console the device was picked in, because that is the only one
+    where the id still finds it — and that is enough, since the name is what the
+    other sixteen match on. Without this, a preference saved by an older build
+    would stay unmatched everywhere else until somebody picked the microphone a
+    second time, which is the very thing that looked broken.
+  */
+  useEffect(() => {
+    if (named.current) return;
+    const mic = micId && !micLabel ? labelOf(resolved.mics, micId) : '';
+    const cam = camId && !camLabel ? labelOf(resolved.cams, camId) : '';
+    if (!mic && !cam) return;
+    named.current = true;
+    if (mic) devices.onChoose('mic', micId, mic);
+    if (cam) devices.onChoose('cam', camId, cam);
+  }, [micId, camId, micLabel, camLabel, resolved.mics, resolved.cams, devices]);
 
   const pc = useRef<RTCPeerConnection | null>(null);
   /** The camera track set aside while the screen is being shared. */
@@ -183,26 +217,40 @@ export function useCall(
   const openMedia = useCallback(
     async (callKind: CallKind) => {
       const wantsVideo = callKind === 'VIDEO';
+      /*
+        A choice was made, and nothing here answers to it.
+
+        Said before the call rather than after it fails, because a saved id that
+        belongs to another origin does not throw — it simply is not in the list,
+        and opening the default silently is how "it never uses the microphone I
+        picked" goes unexplained for months.
+      */
+      const lost =
+        (hasChoice(savedMicId, micLabel) && !micId) ||
+        (wantsVideo && hasChoice(savedCamId, camLabel) && !camId);
       try {
         const stream = await mediaDevices().getUserMedia({
           audio: pickDevice(micId),
           video: wantsVideo ? pickDevice(camId) : false,
         });
         localStream.current = stream;
+        if (lost) setError(failureFromKey('shell.chat.call.deviceGone'));
         return stream;
       } catch (err) {
         // Anything else is a real failure and belongs to the caller.
         if ((err as Error)?.name !== 'OverconstrainedError') throw err;
 
         /*
-          The remembered microphone or camera is not here any more.
+          It was in the list a moment ago and is gone now — unplugged between
+          the two calls, or listed without an id because this origin has never
+          been granted a permission. Refusing to place the call at all is the
+          wrong answer to a choice made by a PAST session: nobody asked for that
+          device today. Fall back to the system default and say what happened.
 
-          Device ids are per browser and per machine, and they change when
-          permissions are reset — so a preference saved on one laptop names
-          nothing on the next one. Refusing to place the call at all is the
-          wrong answer to a choice made by a PAST session: nobody asked for
-          that device today. Fall back to the system default, forget the
-          stale id so it cannot bite twice, and say what happened.
+          The preference is KEPT. Clearing it used to lose it for all seventeen
+          consoles at once, on the say-so of the one console that could not find
+          it — and the next call from the machine that HAS the device would then
+          quietly use the default too.
 
           A mid-call switch (switchDevice) still fails loudly, because there the
           person just picked that device and silently using another one is how
@@ -210,13 +258,11 @@ export function useCall(
         */
         const stream = await mediaDevices().getUserMedia({ audio: true, video: wantsVideo });
         localStream.current = stream;
-        if (micId) devices.onChoose('mic', '');
-        if (camId) devices.onChoose('cam', '');
         setError(failureFromKey('shell.chat.call.deviceGone'));
         return stream;
       }
     },
-    [camId, micId, devices]
+    [camId, micId, savedMicId, savedCamId, micLabel, camLabel]
   );
 
   /**
@@ -293,21 +339,26 @@ export function useCall(
     setCameraOff(next);
   }, [cameraOff]);
 
-  /** Remember the choice AND apply it to a call already running. */
+  /**
+   * Remember the choice AND apply it to a call already running.
+   *
+   * The NAME is saved with the id, because the id alone is worth nothing in the
+   * next console along — see useResolvedDevices.
+   */
   const chooseMic = useCallback(
     (deviceId: string) => {
-      devices.onChoose('mic', deviceId);
+      devices.onChoose('mic', deviceId, labelOf(resolved.mics, deviceId));
       switchDevice('audio', deviceId).catch(() => undefined);
     },
-    [switchDevice, devices]
+    [switchDevice, devices, resolved.mics]
   );
 
   const chooseCam = useCallback(
     (deviceId: string) => {
-      devices.onChoose('cam', deviceId);
+      devices.onChoose('cam', deviceId, labelOf(resolved.cams, deviceId));
       switchDevice('video', deviceId).catch(() => undefined);
     },
-    [switchDevice, devices]
+    [switchDevice, devices, resolved.cams]
   );
 
   /**
@@ -428,7 +479,19 @@ export function useCall(
     teardown();
   }, [kind, peerId, record, socket, teardown]);
 
-  /** Hang up, whether it was answered or not. */
+  /**
+   * Hang up, whether it was answered or not.
+   *
+   * Clears whatever the call had to say about itself, and that is the whole
+   * reason the window can be closed. The window stays up for as long as there
+   * is a phase OR an error, so a notice left behind by a finished call — "the
+   * microphone you chose is not here" — held an empty window open that neither
+   * hanging up nor the close button could shift: both end here, and this used
+   * to put the phase back to idle while leaving the error exactly where it was.
+   *
+   * Only on the way OUT, by hand. A failure that ends a call on its own still
+   * sets the error AFTER its teardown, so the window remains to explain itself.
+   */
   const hangUp = useCallback(() => {
     if (peerId) {
       socket?.emit('call_end', { to: peerId });
@@ -438,7 +501,11 @@ export function useCall(
       if (answered.current) playCallEnded();
     }
     teardown();
+    setError(null);
   }, [kind, peerId, record, socket, teardown]);
+
+  /** Put the banner away without ending the call it is sitting over. */
+  const dismissError = useCallback(() => setError(null), []);
 
   useEffect(() => {
     if (!socket) return undefined;
@@ -563,6 +630,7 @@ export function useCall(
     answer,
     decline,
     hangUp,
+    dismissError,
     localStream: localStream.current,
     remoteStream: remoteStream.current,
     micId,

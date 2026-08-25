@@ -103,6 +103,8 @@ const toChatState = (doc: any) => ({
   enter_to_send: doc?.enter_to_send ?? true,
   mic_id: doc?.mic_id ?? '',
   cam_id: doc?.cam_id ?? '',
+  mic_label: doc?.mic_label ?? '',
+  cam_label: doc?.cam_label ?? '',
 });
 
 const SELECT =
@@ -204,6 +206,8 @@ export const staffChatService = {
     if (typeof input.enter_to_send === 'boolean') set.enter_to_send = input.enter_to_send;
     if (typeof input.mic_id === 'string') set.mic_id = input.mic_id;
     if (typeof input.cam_id === 'string') set.cam_id = input.cam_id;
+    if (typeof input.mic_label === 'string') set.mic_label = input.mic_label;
+    if (typeof input.cam_label === 'string') set.cam_label = input.cam_label;
 
     const doc = await StaffChatStateModel.findOneAndUpdate(
       { user_id: meId },

@@ -49,8 +49,8 @@ interface Props {
  *   ACCEPTED  "Accepted", plus Follow Back when the viewer does not already
  *             follow the requester back. Following a private profile only opens
  *             a request, which is why the button can land on "Requested".
- *   DENIED    "Denied", and nothing to act on — a no is not followed by an
- *             offer to follow them.
+ *   DENIED    "Denied", and Follow Back on the same terms. Denying their ask
+ *             says nothing about whether you want to follow them.
  *
  * On a NEW_FOLLOWER there is no request and so no outcome to state: the row
  * carries Follow Back alone, and nothing once the viewer follows them back. It
@@ -93,9 +93,12 @@ export function FollowRequestActions({
   const accentInk = unreadRow ? onPrimary : primary;
   const quietInk = unreadRow ? onPrimary : muted;
 
-  // Answered elsewhere (another device), denied, or already followed back —
-  // state the outcome instead of offering buttons that would now fail.
-  if (state === 'SETTLED') {
+  const followBackOffered = offersFollowBack(row);
+
+  // Answered elsewhere (another device) and nothing left to do — state the
+  // outcome instead of offering buttons that would now fail. A settled row that
+  // can still be followed back keeps its outcome line AND the button beside it.
+  if (state === 'SETTLED' && !followBackOffered) {
     return (
       <Text testID="follow-request-settled" fontSize={12.5} fontWeight="700" color="$muted">
         {settledLabel}
@@ -154,7 +157,7 @@ export function FollowRequestActions({
           {settledLabel}
         </Text>
       ) : null}
-      {offersFollowBack(row) ? (
+      {followBackOffered ? (
         <FollowBackAction
           label={t(followBackLabelKey(followBackStatus))}
           pending={askPending}

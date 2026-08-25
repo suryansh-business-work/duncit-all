@@ -89,9 +89,9 @@ export const FOLLOW_LABEL_KEY: Record<FollowStatus, string> = {
  *                the two follow directions are independent edges.
  *  - FOLLOW_BACK either an accepted request or a new follower, where the
  *                viewer does NOT follow them back yet.
- *  - SETTLED     nothing left to do — the request was denied, or it was
- *                accepted and the viewer already follows them, which is
- *                precisely when Follow Back must be hidden rather than offered.
+ *  - SETTLED     the request is answered, so there is an outcome to state
+ *                instead of Accept / Deny. Follow Back can still ride on it —
+ *                again `offersFollowBack`, not this enum, decides that.
  *  - HIDDEN      not an actionable follow row at all.
  */
 export type FollowRequestRowState = 'HIDDEN' | 'ANSWER' | 'FOLLOW_BACK' | 'SETTLED';
@@ -139,14 +139,18 @@ export function followRequestRowState(row: FollowNotificationRow): FollowRequest
  * them, and making that wait until you have accepted is why people reported
  * having no way to do it from the inbox.
  *
- * SETTLED is terminal on purpose: a DENIED request is a "no", so it does not
- * then ask whether you would like to follow them, and an accepted row the
- * viewer already follows is precisely the case Follow Back must stay hidden
- * for. `actorId` is required because it is who the button would follow.
+ * The rule is deliberately the simplest one that can be stated in a sentence:
+ * EVERY follow row offers Follow Back unless the viewer already follows that
+ * person. A DENIED request included — denying someone's ask says nothing about
+ * whether you want to follow them, and the button is theirs to ignore.
+ *
+ * The two things that suppress it: FOLLOWING (there is nothing to do), and a
+ * missing `actorId`, which is who the button would follow — rows written before
+ * that column existed have nobody to act on. HIDDEN covers both the not-a-follow
+ * row case and the already-following NEW_FOLLOWER row.
  */
 export function offersFollowBack(row: FollowNotificationRow): boolean {
-  const state = followRequestRowState(row);
-  if (state === 'HIDDEN' || state === 'SETTLED') return false;
+  if (followRequestRowState(row) === 'HIDDEN') return false;
   return Boolean(row.actorId) && row.followBackStatus !== 'FOLLOWING';
 }
 

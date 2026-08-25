@@ -960,15 +960,16 @@ followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-meera', followBa
 the viewer does not follow yet? A→B and B→A are separate edges, so a request that is still
 PENDING renders Accept / Deny **and** Follow Back — somebody asking to follow you is exactly
 the moment you may want to follow them, and making that wait for an Accept is why people
-reported having no way to do it. A SETTLED row is terminal: a denied request is a "no", so it
-does not then offer to follow them.
+reported having no way to do it. The rule is the simplest one that fits in a sentence: every
+follow row offers it unless the viewer already follows that person.
 
 ```ts
 const asking = { actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'PENDING', actorId: 'u-riya', followBackStatus: 'NONE' };
 followRequestRowState(asking);  // 'ANSWER'  — Accept / Deny
 offersFollowBack(asking);       // true      — ...and Follow Back beside them
+offersFollowBack({ ...asking, status: 'DENIED' });               // true  — 'Denied', and the button
 offersFollowBack({ ...asking, followBackStatus: 'FOLLOWING' });  // false — already followed
-offersFollowBack({ ...asking, status: 'DENIED' });               // false — SETTLED is terminal
+offersFollowBack({ ...asking, actorId: null });                  // false — nobody to act on
 ```
 
 `NEW_FOLLOWER` matters more than it looks: a PUBLIC profile never receives a follow request,

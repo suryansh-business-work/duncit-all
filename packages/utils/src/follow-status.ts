@@ -84,7 +84,9 @@ export const FOLLOW_LABEL_KEY: Record<FollowStatus, string> = {
  * mWeb and native both own a Tamagui/MUI view of this row, so the DECISION
  * lives here and only the pixels differ (rule 40). The ordering matters:
  *
- *  - ANSWER      the request is still open — Accept / Deny.
+ *  - ANSWER      the request is still open — Accept / Deny. Follow Back can
+ *                ride alongside these; `offersFollowBack` decides that, since
+ *                the two follow directions are independent edges.
  *  - FOLLOW_BACK either an accepted request or a new follower, where the
  *                viewer does NOT follow them back yet.
  *  - SETTLED     nothing left to do — the request was denied, or it was
@@ -94,15 +96,20 @@ export const FOLLOW_LABEL_KEY: Record<FollowStatus, string> = {
  */
 export type FollowRequestRowState = 'HIDDEN' | 'ANSWER' | 'FOLLOW_BACK' | 'SETTLED';
 
-export function followRequestRowState(row: {
+/** A follow row exactly as `myNotifications` returns it. Named because both
+ * decisions below read the same five fields (rule 34). */
+export interface FollowNotificationRow {
   actionType?: string | null;
   requestId?: string | null;
   status?: string | null;
   followBackStatus?: string | null;
-  /** Who the row is about. A new-follower row has nothing else identifying
-   * them, so without it there is no one to follow back. */
+  /** Who the row is about, i.e. who a Follow Back would follow. A new-follower
+   * row has nothing else identifying them, so without it there is no one to
+   * follow back. */
   actorId?: string | null;
-}): FollowRequestRowState {
+}
+
+export function followRequestRowState(row: FollowNotificationRow): FollowRequestRowState {
   // "X started following you" — no request to answer, so the whole row is the
   // offer to follow them back. This is the ONLY follow row a public profile
   // ever receives, and rows written before the actor column existed carry no
@@ -120,6 +127,27 @@ export function followRequestRowState(row: {
   // Accepted. FOLLOWING is the one state with nothing to offer — REQUESTED
   // still renders the button so the viewer can see their ask is pending.
   return row.followBackStatus === 'FOLLOWING' ? 'SETTLED' : 'FOLLOW_BACK';
+}
+
+/**
+ * Whether the row also offers Follow Back, on top of whatever
+ * `followRequestRowState` says it offers.
+ *
+ * This is deliberately NOT a fifth state: A→B and B→A are independent edges,
+ * so a request that is still PENDING carries Accept / Deny AND Follow Back.
+ * Somebody asking to follow you is exactly the moment you may want to follow
+ * them, and making that wait until you have accepted is why people reported
+ * having no way to do it from the inbox.
+ *
+ * SETTLED is terminal on purpose: a DENIED request is a "no", so it does not
+ * then ask whether you would like to follow them, and an accepted row the
+ * viewer already follows is precisely the case Follow Back must stay hidden
+ * for. `actorId` is required because it is who the button would follow.
+ */
+export function offersFollowBack(row: FollowNotificationRow): boolean {
+  const state = followRequestRowState(row);
+  if (state === 'HIDDEN' || state === 'SETTLED') return false;
+  return Boolean(row.actorId) && row.followBackStatus !== 'FOLLOWING';
 }
 
 /** The i18n key for the Follow Back button in each of its two live states.

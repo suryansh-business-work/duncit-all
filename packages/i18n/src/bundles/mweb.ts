@@ -2018,8 +2018,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       reject: 'Deny',
       accepted: 'Accepted',
       rejected: 'Denied',
-      // Offered on an accepted request: they follow the viewer now, and the
-      // viewer does not follow them back yet.
+      // Offered on any follow row where the viewer does not follow the other
+      // person yet — beside Accept/Deny while a request is still open, on an
+      // accepted one, and alone on "X started following you". The two follow
+      // directions are separate edges, so this never answers their request.
       followBack: 'Follow Back',
     },
     // The attendance page (Host Studio > Your Pods > three dots > See Marked

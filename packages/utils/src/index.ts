@@ -262,8 +262,10 @@ export {
   followRequestRowState,
   followStatusFrom,
   nextFollowStatus,
+  offersFollowBack,
   readFollowStatus,
   type FollowAction,
+  type FollowNotificationRow,
   type FollowRequestRowState,
   type FollowStatus,
 } from './follow-status';

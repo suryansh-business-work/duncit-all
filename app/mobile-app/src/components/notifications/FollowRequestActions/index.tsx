@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack } from 'tamagui';
-import { canFollowBack, followBackLabelKey, followRequestRowState } from '@duncit/utils';
+import {
+  canFollowBack,
+  followBackLabelKey,
+  followRequestRowState,
+  offersFollowBack,
+} from '@duncit/utils';
 
 import {
   MobileAcceptFollowRequestDocument,
@@ -11,6 +15,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { AnswerActions, FollowBackAction } from './FollowActionRows';
 
 interface Props {
   /** The notification's action kind — FOLLOW_REQUEST or NEW_FOLLOWER; anything
@@ -32,80 +37,29 @@ interface Props {
   onAnswered: () => void;
 }
 
-interface FollowBackRowProps {
-  /** Follow Back, or the flat "Requested" when the ask is already open. */
-  label: string;
-  /** The outcome line above the button; absent on a NEW_FOLLOWER row. */
-  settledLabel: string | null;
-  pending: boolean;
-  /** Both inks are decided by the parent — see the note where they are built. */
-  accentInk: string;
-  quietInk: string;
-  /** Absent when there is nothing left to send, which is what greys the row. */
-  onPress?: () => void;
-}
-
-/**
- * The Follow Back row.
- *
- * Hoisted rather than written inline (rule 26g): it is the one branch of this
- * component with a layout of its own, and leaving it in place put the whole
- * file over the complexity ceiling. Every colour and label arrives as a prop,
- * so no decision moved down here with it.
- */
-function FollowBackRow({
-  label,
-  settledLabel,
-  pending,
-  accentInk,
-  quietInk,
-  onPress,
-}: Readonly<FollowBackRowProps>) {
-  return (
-    <XStack gap={10} paddingTop={10} alignItems="center">
-      {settledLabel ? (
-        <Text fontSize={12.5} fontWeight="700" color={quietInk}>
-          {settledLabel}
-        </Text>
-      ) : null}
-      <XStack
-        testID="follow-request-follow-back"
-        role="button"
-        aria-label={label}
-        gap={5}
-        alignItems="center"
-        opacity={pending ? 0.6 : 1}
-        onPress={onPress}
-        pressStyle={{ opacity: 0.6 }}
-      >
-        <MaterialIcons name="person-add-alt-1" size={15} color={accentInk} />
-        <Text fontSize={13.5} fontWeight="800" color={accentInk}>
-          {label}
-        </Text>
-      </XStack>
-    </XStack>
-  );
-}
-
 /**
  * The inline actions on an actionable follow notification.
  *
  * On a FOLLOW_REQUEST, across the whole life of the request:
  *
- *   PENDING   Accept / Deny — accepting is what creates the follow, so these
- *             buttons are the private profile's whole gate.
+ *   PENDING   Accept / Deny, AND Follow Back. The two follow directions are
+ *             independent edges, so following them back does not answer their
+ *             ask and does not wait on it — somebody asking to follow you is
+ *             exactly the moment you may want to follow them.
  *   ACCEPTED  "Accepted", plus Follow Back when the viewer does not already
  *             follow the requester back. Following a private profile only opens
  *             a request, which is why the button can land on "Requested".
- *   DENIED    "Denied", and nothing to act on.
+ *   DENIED    "Denied", and nothing to act on — a no is not followed by an
+ *             offer to follow them.
  *
  * On a NEW_FOLLOWER there is no request and so no outcome to state: the row
  * carries Follow Back alone, and nothing once the viewer follows them back. It
  * is the only follow row a PUBLIC profile ever gets, so it is the only way
  * most people can follow back from the inbox at all.
  *
- * Which of those to render is decided by `followRequestRowState` in
- * @duncit/utils so the mWeb twin cannot disagree with it (rules 27, 40).
+ * Which of those to render is decided by `followRequestRowState` and
+ * `offersFollowBack` in @duncit/utils so the mWeb twin cannot disagree with it
+ * (rules 27, 40).
  */
 export function FollowRequestActions({
   actionType,
@@ -123,13 +77,14 @@ export function FollowRequestActions({
   // Self-gating: every notification row renders this, and an ordinary one gets
   // nothing back. That keeps the decision here instead of adding a branch to
   // the row's already-dense render.
-  const state = followRequestRowState({ actionType, requestId, status, followBackStatus, actorId });
+  const row = { actionType, requestId, status, followBackStatus, actorId };
+  const state = followRequestRowState(row);
   if (state === 'HIDDEN') return null;
 
   const answeredLabel =
     status === 'ACCEPTED' ? t('mweb.follow.accepted') : t('mweb.follow.rejected');
   // A new-follower row has no request behind it, so there is no outcome to
-  // state above the button — only a FOLLOW_REQUEST row carries this line.
+  // state beside the button — only a FOLLOW_REQUEST row carries this line.
   const settledLabel = status ? answeredLabel : null;
   // Hoisted to nesting 0 (rule 26g): both inks are the same decision in every
   // branch below, and computing them once keeps them all on one value — and
@@ -169,58 +124,44 @@ export function FollowRequestActions({
       ),
     );
 
+  const sendFollowBack = () =>
+    run(() =>
+      graphqlRequest(MobileFollowUserDocument, { user_id: actorId as string }, { auth: true }),
+    );
+
   if (busy) return <Spinner testID="follow-request-busy" size="small" color={primary} />;
 
-  if (state === 'FOLLOW_BACK') {
-    // REQUESTED renders as a flat "Requested": the ask is already open, so a
-    // second tap has nothing to send.
-    const pending = !canFollowBack(followBackStatus);
-    const sendFollowBack = () =>
-      run(() =>
-        graphqlRequest(MobileFollowUserDocument, { user_id: actorId as string }, { auth: true }),
-      );
-    return (
-      <FollowBackRow
-        label={t(followBackLabelKey(followBackStatus))}
-        settledLabel={settledLabel}
-        pending={pending}
-        accentInk={accentInk}
-        quietInk={quietInk}
-        onPress={pending || !actorId ? undefined : sendFollowBack}
-      />
-    );
-  }
+  const open = state === 'ANSWER';
+  // REQUESTED renders flat and untappable: the ask is already open, so a second
+  // tap has nothing to send.
+  const askPending = !canFollowBack(followBackStatus);
 
-  // Text buttons, not filled ones: the row is already a large tappable card, so
-  // a solid button fights it. Accept leads in the primary colour, Deny sits back
-  // in grey. mWeb twin (rule 27).
   return (
-    <XStack gap={18} paddingTop={10}>
-      <Text
-        testID="follow-request-accept"
-        role="button"
-        aria-label={t('mweb.follow.accept')}
-        onPress={() => void answer(true)}
-        fontSize={13.5}
-        fontWeight="800"
-        color={accentInk}
-        pressStyle={{ opacity: 0.6 }}
-      >
-        {t('mweb.follow.accept')}
-      </Text>
-      <Text
-        testID="follow-request-reject"
-        role="button"
-        aria-label={t('mweb.follow.reject')}
-        onPress={() => void answer(false)}
-        fontSize={13.5}
-        fontWeight="800"
-        color={quietInk}
-        opacity={unreadRow ? 0.75 : 1}
-        pressStyle={{ opacity: 0.6 }}
-      >
-        {t('mweb.follow.reject')}
-      </Text>
+    <XStack gap={16} paddingTop={10} alignItems="center" flexWrap="wrap">
+      {open ? (
+        <AnswerActions
+          acceptLabel={t('mweb.follow.accept')}
+          denyLabel={t('mweb.follow.reject')}
+          accentInk={accentInk}
+          quietInk={quietInk}
+          dimQuiet={Boolean(unreadRow)}
+          onAccept={() => void answer(true)}
+          onDeny={() => void answer(false)}
+        />
+      ) : null}
+      {!open && settledLabel ? (
+        <Text fontSize={12.5} fontWeight="700" color={quietInk}>
+          {settledLabel}
+        </Text>
+      ) : null}
+      {offersFollowBack(row) ? (
+        <FollowBackAction
+          label={t(followBackLabelKey(followBackStatus))}
+          pending={askPending}
+          accentInk={accentInk}
+          onPress={askPending ? undefined : sendFollowBack}
+        />
+      ) : null}
     </XStack>
   );
 }

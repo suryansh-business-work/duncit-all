@@ -158,6 +158,8 @@ export default function HostPodActionsMenu({
           <PodLinkMenuItem
             icon={<PhotoCameraBackIcon fontSize="small" color="primary" />}
             label={podMediaLabels.pageTitle}
+            shareLabel={podMediaLabels.shareLink}
+            copyLabel={podMediaLabels.copyLink}
             onOpen={pick(onOpenPodMedia)}
             onShare={pick(onSharePodMedia)}
             onCopy={pick(onCopyPodMedia)}
@@ -167,6 +169,8 @@ export default function HostPodActionsMenu({
           <PodLinkMenuItem
             icon={<StarRateIcon fontSize="small" sx={{ color: 'warning.main' }} />}
             label={labels.feedbackLink}
+            shareLabel={labels.shareLink}
+            copyLabel={labels.copyLink}
             onOpen={pick(onOpenFeedback)}
             onShare={pick(onShareFeedback)}
             onCopy={pick(onCopyFeedback)}

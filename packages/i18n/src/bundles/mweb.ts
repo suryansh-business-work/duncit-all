@@ -1297,6 +1297,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       notInvited:
         'Only the host and the people whose attendance was marked can add media to this pod. Ask the host to mark you present.',
       cancelled: 'This pod was cancelled, so nothing more can be added to it.',
+      shareLink: 'Share upload link',
+      copyLink: 'Copy upload link',
+      linkCopied: 'Upload link copied',
       shareHeading: 'Ask your guests for their photos',
       shareBody:
         'Send this link to the people who came. It opens this same page for anyone you marked present.',

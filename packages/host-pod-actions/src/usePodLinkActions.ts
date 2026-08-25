@@ -54,7 +54,7 @@ function usePodLinkActions(kind: HostPodLinkKind): HostPodLinkActions {
     const copied = await copyToClipboard(text);
     // A clipboard that refused (insecure origin, unfocused document) must not
     // toast "copied" for something the host will paste and find missing.
-    if (copied) notifySuccess(labels.linkCopied);
+    if (copied) notifySuccess(feedback ? labels.linkCopied : podMediaLabels.linkCopied);
     else notifyError(labels.copyFailed);
   };
 

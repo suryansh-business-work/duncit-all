@@ -38,7 +38,10 @@ export interface PodMediaLabels {
   /** Why this viewer cannot add anything. */
   notInvited: string;
   cancelled: string;
-  /** The link the host hands out. */
+  /** The link the host hands out — its own wording, not the rating link's. */
+  shareLink: string;
+  copyLink: string;
+  linkCopied: string;
   shareHeading: string;
   shareBody: string;
   /** What a host sends with the link. */
@@ -66,6 +69,9 @@ export function mwebPodMediaLabels(t: PodMediaTranslate): PodMediaLabels {
     added: (count) => t('mweb.podMedia.added', { vars: { count } }),
     notInvited: t('mweb.podMedia.notInvited'),
     cancelled: t('mweb.podMedia.cancelled'),
+    shareLink: t('mweb.podMedia.shareLink'),
+    copyLink: t('mweb.podMedia.copyLink'),
+    linkCopied: t('mweb.podMedia.linkCopied'),
     shareHeading: t('mweb.podMedia.shareHeading'),
     shareBody: t('mweb.podMedia.shareBody'),
     shareMessage: (title) => t('mweb.podMedia.shareMessage', { vars: { title } }),
@@ -93,6 +99,9 @@ export function shellPodMediaLabels(t: PodMediaTranslate): PodMediaLabels {
     added: (count) => t('shell.podMedia.added', { vars: { count } }),
     notInvited: t('shell.podMedia.notInvited'),
     cancelled: t('shell.podMedia.cancelled'),
+    shareLink: t('shell.podMedia.shareLink'),
+    copyLink: t('shell.podMedia.copyLink'),
+    linkCopied: t('shell.podMedia.linkCopied'),
     shareHeading: t('shell.podMedia.shareHeading'),
     shareBody: t('shell.podMedia.shareBody'),
     shareMessage: (title) => t('shell.podMedia.shareMessage', { vars: { title } }),

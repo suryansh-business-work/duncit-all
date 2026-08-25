@@ -18,7 +18,7 @@ interface Props {
  * sends one address, and the short link behind it is minted once per pod.
  */
 export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) {
-  const { labels, podMediaLabels } = useHostPodActionsConfig();
+  const { podMediaLabels } = useHostPodActionsConfig();
   const media = useHostPodMediaLink();
   const pod = { id: podId, pod_title: podTitle };
 
@@ -44,7 +44,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
             onClick={fire(() => media.share(pod))}
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
-            {labels.shareLink}
+            {podMediaLabels.shareLink}
           </Button>
           <Button
             size="small"
@@ -53,7 +53,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
             onClick={fire(() => media.copy(pod))}
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
-            {labels.copyLink}
+            {podMediaLabels.copyLink}
           </Button>
         </Stack>
       </Stack>

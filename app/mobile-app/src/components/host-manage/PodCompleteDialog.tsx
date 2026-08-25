@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
-import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
+import { PodMediaSummary } from '@/components/pod-media/PodMediaSummary';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { CompletePodSettlementDocument } from '@/graphql/settlement';
@@ -31,7 +31,8 @@ interface Props {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: enter the venue bill amount + upload party media. The
+/** Host completes a pod: enter the venue bill amount. The pod's own media is
+ * shown, not asked for — it is uploaded on the Upload Pod Media screen. The
  * split is previewed live; on submit two payout releases are created for Finance. */
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -115,19 +116,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                         required
                       />
                     ) : null}
-                    <Controller
-                      control={control}
-                      name="media_text"
-                      render={({ field, fieldState }) => (
-                        <MediaUploadField
-                          value={field.value}
-                          onChange={field.onChange}
-                          error={fieldState.error?.message}
-                          label={t('mweb.hostManage.podMedia')}
-                          folder="/pod-completion"
-                        />
-                      )}
-                    />
+                    {pod ? <PodMediaSummary podId={pod.id} onLeave={onClose} /> : null}
                     <SettlementSummary settlement={settlement} isLoading={isLoading} />
                     {previewError && !settlement && !isLoading ? (
                       <Text testID="pod-complete-preview-error" fontSize={12.5} color="$danger">

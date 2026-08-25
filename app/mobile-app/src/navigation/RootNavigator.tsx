@@ -40,6 +40,7 @@ import { BadgesScreen } from '@/screens/BadgesScreen';
 import { TourGuideScreen } from '@/screens/TourGuideScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { PodAttendanceScreen } from '@/screens/PodAttendanceScreen';
+import { PodMediaScreen } from '@/screens/PodMediaScreen';
 import { HostApplyScreen } from '@/screens/HostApplyScreen';
 import { HostDashboardScreen } from '@/screens/HostDashboardScreen';
 import { VerificationScreen } from '@/screens/VerificationScreen';
@@ -159,6 +160,7 @@ export function RootNavigator() {
       <Stack.Screen name="BecomeHost" component={BecomeHostScreen} />
       <Stack.Screen name="HostManage" component={HostManageScreen} />
       <Stack.Screen name="PodAttendance" component={PodAttendanceScreen} />
+      <Stack.Screen name="PodMedia" component={PodMediaScreen} />
       <Stack.Screen name="HostApply" component={HostApplyScreen} />
       <Stack.Screen name="HostDashboard" component={HostDashboardScreen} />
       <Stack.Screen name="Verification" component={VerificationScreen} />

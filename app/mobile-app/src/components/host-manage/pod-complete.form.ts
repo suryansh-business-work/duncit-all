@@ -1,11 +1,10 @@
 import { z } from 'zod';
 
-import { CategoryMediaType, type CompletePodInput } from '@/generated/graphql/graphql';
+import { type CompletePodInput } from '@/generated/graphql/graphql';
 
-/** Shapes for the host's "Complete Pod" flow (venue bill amount + party media). */
+/** Shapes for the host's "Complete Pod" flow (the venue bill amount). */
 export interface PodCompleteValues {
   venue_bill_amount: string;
-  media_text: string;
 }
 
 export interface HostPodForComplete {
@@ -16,26 +15,19 @@ export interface HostPodForComplete {
 
 export const blankPodCompleteValues: PodCompleteValues = {
   venue_bill_amount: '',
-  media_text: '',
 };
 
-const splitLines = (text: string) =>
-  text
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
-
-/** True when at least one party photo/video URL has been entered. */
-export const hasMediaLine = (mediaText: string) => splitLines(mediaText).length > 0;
-
-/** Schema depends on whether the pod has a venue: only then is the bill amount required. */
+/**
+ * Schema depends on whether the pod has a venue: only then is the bill amount
+ * required. Media is NOT asked for here — it belongs to the pod, uploaded on
+ * its own screen by the host and by the guests who came, and a pod that took
+ * money still owes its host that money whether or not anybody photographed the
+ * evening.
+ */
 export const buildPodCompleteSchema = (hasVenue: boolean) =>
   z
     .object({
       venue_bill_amount: z.string().trim(),
-      media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video'),
     })
     .superRefine((values, ctx) => {
       if (!hasVenue) return;
@@ -49,14 +41,15 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
       }
     });
 
-/** Maps the validated values onto the server's CompletePodInput. */
+/**
+ * Maps the validated values onto the server's CompletePodInput.
+ *
+ * No `evidence_media`: the release carries the pod's OWN media, which the
+ * server reads off the pod rather than taking from whoever completes it.
+ */
 export function buildCompleteInput(values: PodCompleteValues, podId: string): CompletePodInput {
   return {
     pod_id: podId,
     venue_bill_amount: Number(values.venue_bill_amount) || 0,
-    evidence_media: splitLines(values.media_text).map((url) => ({
-      url,
-      type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
-    })),
   };
 }

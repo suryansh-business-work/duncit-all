@@ -1,14 +1,12 @@
-import type { ReactNode } from 'react';
 import { XStack } from 'tamagui';
 
-import { ActionRow, RowIconButton } from '@/components/host-manage/ActionRow';
+import { ActionRow, RowIconButton, type ActionIconName } from '@/components/host-manage/ActionRow';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   testID: string;
   /** MaterialIcons name — a star for the rating link, a camera for the media one. */
-  icon: ComponentProps<typeof ActionRow>['icon'];
+  icon: ActionIconName;
   label: string;
   tint: string;
   shareLabel: string;

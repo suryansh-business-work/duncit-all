@@ -2,12 +2,14 @@ import type { MouseEvent, ReactNode } from 'react';
 import { IconButton, ListItemIcon, ListItemText, MenuItem, Stack, Tooltip } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props {
   /** The line's own icon — a star for the rating link, a camera for the media one. */
   icon: ReactNode;
   label: string;
+  /** Each link words its own buttons — "Share feedback link" is not "Share upload link". */
+  shareLabel: string;
+  copyLabel: string;
   onOpen: () => void;
   onShare: () => void;
   onCopy: () => void;
@@ -23,9 +25,15 @@ interface Props {
  * row, or copying the link would also navigate away from the list the host is
  * working in.
  */
-export default function PodLinkMenuItem({ icon, label, onOpen, onShare, onCopy }: Readonly<Props>) {
-  const { labels } = useHostPodActionsConfig();
-
+export default function PodLinkMenuItem({
+  icon,
+  label,
+  shareLabel,
+  copyLabel,
+  onOpen,
+  onShare,
+  onCopy,
+}: Readonly<Props>) {
   const act = (action: () => void) => (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     action();
@@ -36,13 +44,13 @@ export default function PodLinkMenuItem({ icon, label, onOpen, onShare, onCopy }
       <ListItemIcon>{icon}</ListItemIcon>
       <ListItemText primary={label} />
       <Stack direction="row" spacing={0.5} sx={{ pl: 1 }}>
-        <Tooltip title={labels.shareLink}>
-          <IconButton size="small" edge="end" aria-label={labels.shareLink} onClick={act(onShare)}>
+        <Tooltip title={shareLabel}>
+          <IconButton size="small" edge="end" aria-label={shareLabel} onClick={act(onShare)}>
             <IosShareIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={labels.copyLink}>
-          <IconButton size="small" edge="end" aria-label={labels.copyLink} onClick={act(onCopy)}>
+        <Tooltip title={copyLabel}>
+          <IconButton size="small" edge="end" aria-label={copyLabel} onClick={act(onCopy)}>
             <ContentCopyIcon fontSize="small" />
           </IconButton>
         </Tooltip>

@@ -30,6 +30,12 @@ interface Props {
   onRemove: (url: string) => void;
   onDone: () => void;
   onClose: () => void;
+  /**
+   * Offer the phone alone — no stock library. For a picker whose answer has to
+   * be a real photograph of something that happened (a pod's own media), where
+   * a stock tab is not merely discouraged but wrong.
+   */
+  deviceOnly?: boolean;
 }
 
 /**
@@ -54,6 +60,7 @@ export function CoverPickerDialog({
   onRemove,
   onDone,
   onClose,
+  deviceOnly = false,
 }: Readonly<Props>) {
   const { color, muted, primary, onPrimary } = useThemeColors();
   const { t } = useTranslation();
@@ -109,7 +116,7 @@ export function CoverPickerDialog({
                   </XStack>
                 </XStack>
 
-                <XStack gap={8} paddingBottom={12}>
+                <XStack gap={8} paddingBottom={12} display={deviceOnly ? 'none' : 'flex'}>
                   {TAB_KEYS.map((key, index) => (
                     <XStack
                       key={key}

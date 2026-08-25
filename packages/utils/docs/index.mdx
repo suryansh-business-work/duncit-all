@@ -51,6 +51,11 @@ exports:
   - 'grievanceFieldLabelKey'
   - 'SUBMIT_GRIEVANCE_SDL'
   - 'GRIEVANCE_OFFICER_SDL'
+  - 'podMediaPath'
+  - 'podMediaLink'
+  - 'mwebPodMediaLabels'
+  - 'shellPodMediaLabels'
+  - 'buildPodMediaLabels'
   - 'REFERRAL_PARAM'
   - 'referralLink'
   - 'readReferralCode'
@@ -676,10 +681,27 @@ falls back to the plain `podMapLink` search when it has none.
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `SHARE_LINK_MUTATION` | `string` | The `shareLink(target, ref)` document, parsed by each surface's own client. |
-| `ShareLinkTarget` | `'POD' \| 'POD_LOCATION' \| 'POD_FEEDBACK' \| 'CLUB' \| 'PROFILE' \| 'POST' \| 'POD_IDEA' \| 'GIFT_CARD' \| 'REFERRAL'` | Mirrors the server enum. Each one has its own campaign. |
+| `ShareLinkTarget` | `'POD' \| 'POD_LOCATION' \| 'POD_FEEDBACK' \| 'POD_MEDIA' \| 'CLUB' \| 'PROFILE' \| 'POST' \| 'POD_IDEA' \| 'GIFT_CARD' \| 'REFERRAL'` | Mirrors the server enum. Each one has its own campaign. |
 | `trackedShareUrl` | `(fetcher, target, ref, plainUrl) => Promise<string>` | The link to hand out; `plainUrl` when it cannot be minted. |
 | `trackedPodShareLinks` | `(resolve, podId, plainUrl, plainMapUrl) => Promise<PodShareLinks>` | The pod link and its venue map link together. |
 | `clearShareLinkCache` | `() => void` | Drops the session cache — sign-out and tests. |
+
+## A pod's two links live here, not in the surfaces
+
+A host hands out two addresses per pod — the rating form and the Upload Pod Media page — and
+four things have to agree on each: the mWeb route, the native deep link, the short link the
+server mints, and the message the host sends. So the path is written once.
+
+```ts
+podFeedbackPath('665f…')                    // '/pod/665f…/feedback'
+podMediaPath('665f…')                       // '/pod/665f…/media'
+podMediaLink('665f…', 'https://duncit.com') // the same, absolute, for a message that leaves the app
+```
+
+The copy follows the same rule as attendance's: `mwebPodMediaLabels(t)` for mWeb and native,
+`shellPodMediaLabels(t)` for the portals, word-for-word identical values in two namespaces
+because the server stores one Localization row per key path. Every key is a literal `t('…')`
+call, because the key-verification gate greps source for the literal.
 
 ## Metro, Docker and the `dist/` build
 
@@ -960,15 +982,16 @@ followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-meera', followBa
 the viewer does not follow yet? A→B and B→A are separate edges, so a request that is still
 PENDING renders Accept / Deny **and** Follow Back — somebody asking to follow you is exactly
 the moment you may want to follow them, and making that wait for an Accept is why people
-reported having no way to do it. A SETTLED row is terminal: a denied request is a "no", so it
-does not then offer to follow them.
+reported having no way to do it. The rule is the simplest one that fits in a sentence: every
+follow row offers it unless the viewer already follows that person.
 
 ```ts
 const asking = { actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'PENDING', actorId: 'u-riya', followBackStatus: 'NONE' };
 followRequestRowState(asking);  // 'ANSWER'  — Accept / Deny
 offersFollowBack(asking);       // true      — ...and Follow Back beside them
+offersFollowBack({ ...asking, status: 'DENIED' });               // true  — 'Denied', and the button
 offersFollowBack({ ...asking, followBackStatus: 'FOLLOWING' });  // false — already followed
-offersFollowBack({ ...asking, status: 'DENIED' });               // false — SETTLED is terminal
+offersFollowBack({ ...asking, actorId: null });                  // false — nobody to act on
 ```
 
 `NEW_FOLLOWER` matters more than it looks: a PUBLIC profile never receives a follow request,

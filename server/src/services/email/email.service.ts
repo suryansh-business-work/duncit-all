@@ -1039,6 +1039,26 @@ export function sendPodRefundEmail(opts: {
   });
 }
 
+/** The auto-cancel sweep cancelled the host's pod: it could not cover its venue
+ * cost. Attendees are told separately, via the cancelled-by-Duncit fan-out. */
+export function sendHostPodAutoCancelledEmail(opts: {
+  to: string;
+  name: string;
+  pod_title: string;
+  date: string;
+  time: string;
+  venue: string;
+  spots: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Pod cancelled — ${opts.pod_title}`,
+    template: 'host-pod-auto-cancelled',
+    category: 'billing',
+    vars: opts,
+  });
+}
+
 /** A replacement booked the seat a member released via Backout. */
 export function sendBackoutSpotFilledEmail(opts: {
   to: string;

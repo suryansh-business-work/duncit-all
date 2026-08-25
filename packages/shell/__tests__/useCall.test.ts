@@ -88,7 +88,13 @@ let peer: {
 
 let media: { getUserMedia: ReturnType<typeof vi.fn>; getDisplayMedia: ReturnType<typeof vi.fn> };
 
-const devices: DevicePrefs = { micId: '', camId: '', onChoose: vi.fn() };
+const devices: DevicePrefs = {
+  micId: '',
+  camId: '',
+  micLabel: '',
+  camLabel: '',
+  onChoose: vi.fn(),
+};
 
 beforeEach(() => {
   peer = null;
@@ -196,8 +202,14 @@ describe('useCall', () => {
     expect(result.current.phase).toBe('idle');
   });
 
-  it('falls back to the default device when a remembered one is gone, and forgets it', async () => {
-    const remembered: DevicePrefs = { micId: 'old-mic', camId: '', onChoose: vi.fn() };
+  it('falls back to the default device when a remembered one is gone, and keeps it', async () => {
+    const remembered: DevicePrefs = {
+      micId: 'old-mic',
+      camId: '',
+      micLabel: 'Headset',
+      camLabel: '',
+      onChoose: vi.fn(),
+    };
     media.getUserMedia
       .mockRejectedValueOnce(Object.assign(new Error('gone'), { name: 'OverconstrainedError' }))
       .mockResolvedValueOnce(stream(['audio']));
@@ -207,9 +219,10 @@ describe('useCall', () => {
       await result.current.call(PEER, 'AUDIO');
     });
 
-    // Forgotten, so a stale id cannot bite twice — and said out loud, because
-    // the call is now on a device nobody picked today.
-    expect(remembered.onChoose).toHaveBeenCalledWith('mic', '');
+    // KEPT: one console failing to find the device is not a reason to throw the
+    // choice away for the other sixteen. Said out loud, though, because this
+    // call is now on a device nobody picked today.
+    expect(remembered.onChoose).not.toHaveBeenCalled();
     expect(result.current.error).not.toBeNull();
     expect(result.current.phase).toBe('ringing');
   });

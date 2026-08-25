@@ -121,15 +121,11 @@ export function buildManageItems(
       route: 'PodPlans',
     });
   }
-  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'help-outline', route: 'Faqs' });
   // Badges sits directly under FAQs, and is the last row of the section.
-  items.push({
-    key: 'badges',
-    label: badgesLabel,
-    caption: '',
-    icon: 'military-tech',
-    route: 'Badges',
-  });
+  items.push(
+    { key: 'faqs', label: 'FAQs', caption: '', icon: 'help-outline', route: 'Faqs' },
+    { key: 'badges', label: badgesLabel, caption: '', icon: 'military-tech', route: 'Badges' },
+  );
   return items;
 }
 

@@ -13,6 +13,8 @@ const POD_SETTINGS = gql`
       max_backout_attempts
       venue_cancel_health_penalty
       attendance_otp_required
+      pod_auto_cancel_enabled
+      pod_auto_cancel_lead_hours
       updated_at
     }
   }
@@ -25,6 +27,8 @@ const UPDATE_POD_SETTINGS = gql`
       max_backout_attempts
       venue_cancel_health_penalty
       attendance_otp_required
+      pod_auto_cancel_enabled
+      pod_auto_cancel_lead_hours
       updated_at
     }
   }
@@ -103,6 +107,26 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.attendance_otp_required ?? null}
         onSave={(next) => saveField({ attendance_otp_required: next })}
+      />
+      <ToggleSettingCard
+        title={t('admin.podSettings.autoCancelTitle')}
+        description={t('admin.podSettings.autoCancelDesc')}
+        onHint={t('admin.podSettings.autoCancelOn')}
+        offHint={t('admin.podSettings.autoCancelOff')}
+        loading={loading}
+        value={settings?.pod_auto_cancel_enabled ?? null}
+        onSave={(next) => saveField({ pod_auto_cancel_enabled: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.autoCancelLeadTitle')}
+        description={t('admin.podSettings.autoCancelLeadDesc')}
+        label={t('admin.podSettings.autoCancelLeadLabel')}
+        helperText={t('admin.podSettings.autoCancelLeadMin')}
+        invalidText={t('admin.podSettings.autoCancelLeadInvalid')}
+        min={1}
+        loading={loading}
+        value={settings?.pod_auto_cancel_lead_hours ?? null}
+        onSave={(next) => saveField({ pod_auto_cancel_lead_hours: next })}
       />
       <Snackbar
         open={!!toast}

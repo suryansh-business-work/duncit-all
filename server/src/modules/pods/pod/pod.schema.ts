@@ -52,6 +52,48 @@ export const podTypeDefs = /* GraphQL */ `
     type: CategoryMediaType
   }
 
+  """
+  In what capacity someone is looking at a pod's media: its host (admins read
+  as hosts), someone whose attendance was marked, or neither.
+  """
+  enum PodMediaViewer {
+    HOST
+    GUEST
+    NONE
+  }
+
+  "One photo or video FROM the pod, with who put it there."
+  type PodPartyMedia {
+    url: String!
+    type: CategoryMediaType!
+    "HOST when a host uploaded it, GUEST when one of the people who came did."
+    source: PodMediaViewer!
+    uploaded_by_id: ID!
+    uploaded_by_name: String!
+    uploaded_at: String
+    "This viewer uploaded it."
+    mine: Boolean!
+    "This viewer may take it down — their own, or anything at all if a host."
+    can_remove: Boolean!
+  }
+
+  """
+  A pod's media, in one read: what is on it and what this viewer may do.
+  A viewer of NONE gets an EMPTY list — the link is pasted into group chats,
+  so the page explains itself instead of leaking the photos to whoever it
+  reached.
+  """
+  type PodMediaBoard {
+    pod_id: ID!
+    pod_title: String!
+    pod_date_time: String
+    viewer: PodMediaViewer!
+    can_upload: Boolean!
+    is_cancelled: Boolean!
+    items: [PodPartyMedia!]!
+    count: Int!
+  }
+
   type PodPlaceCharge {
     label: String!
     amount: Int!
@@ -378,6 +420,12 @@ export const podTypeDefs = /* GraphQL */ `
     myCoHostedPods(status: CoHostStatus): [Pod!]!
     "My own pods that carry at least one co-host."
     myPodsWithCoHosts: [Pod!]!
+    """
+    The photos and videos from one pod — the Upload Pod Media page, the link a
+    host shares with the people who came, and the Complete Pod dialog all read
+    this one board.
+    """
+    podMediaBoard(pod_doc_id: ID!): PodMediaBoard!
   }
 
   extend type Mutation {
@@ -389,6 +437,10 @@ export const podTypeDefs = /* GraphQL */ `
     hostResubmitPod(pod_doc_id: ID!, input: HostResubmitPodInput!): Pod!
     hostDeletePod(pod_doc_id: ID!, reason_subject: String!, reason_note: String): Boolean!
     addPodStatus(pod_doc_id: ID!, media: PodMediaInput!): Pod!
+    "Adds photos/videos from the pod. Host, or anyone marked present at it."
+    addPodPartyMedia(pod_doc_id: ID!, media: [PodMediaInput!]!): PodMediaBoard!
+    "Takes one item down — your own, or any of them if you host the pod."
+    removePodPartyMedia(pod_doc_id: ID!, url: String!): PodMediaBoard!
     deletePod(pod_doc_id: ID!): Boolean!
     incrementPodHits(pod_doc_id: ID!): Pod!
     togglePodLike(pod_doc_id: ID!): Pod!

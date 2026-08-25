@@ -17,6 +17,7 @@ export type ShareLinkTarget =
   | 'POD'
   | 'POD_LOCATION'
   | 'POD_FEEDBACK'
+  | 'POD_MEDIA'
   | 'CLUB'
   | 'PROFILE'
   | 'POST'

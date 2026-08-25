@@ -2,13 +2,11 @@ import {
   blankPodCompleteValues,
   buildCompleteInput,
   buildPodCompleteSchema,
-  hasMediaLine,
   type PodCompleteValues,
 } from '../pod-complete.form';
 
 const valid = (over: Partial<PodCompleteValues> = {}): PodCompleteValues => ({
   venue_bill_amount: '1500',
-  media_text: 'https://cdn/party.jpg',
   ...over,
 });
 
@@ -17,21 +15,16 @@ const issuesOf = (hasVenue: boolean, values: PodCompleteValues) => {
   return result.success ? [] : result.error.issues.map((issue) => issue.path.join('.'));
 };
 
-describe('hasMediaLine', () => {
-  it('is true only when a non-empty URL line exists', () => {
-    expect(hasMediaLine('https://cdn/a.jpg')).toBe(true);
-    expect(hasMediaLine('   \n  ')).toBe(false);
-  });
-});
-
 describe('buildPodCompleteSchema', () => {
   it('accepts a complete venue submission', () => {
     expect(buildPodCompleteSchema(true).safeParse(valid()).success).toBe(true);
   });
 
-  it('requires party media regardless of venue', () => {
-    expect(issuesOf(true, valid({ media_text: '' }))).toContain('media_text');
-    expect(issuesOf(false, valid({ media_text: '   ' }))).toContain('media_text');
+  // Media is not asked for here any more: it belongs to the pod, uploaded on
+  // the Upload Pod Media screen by the host and by the guests who came.
+  it('never asks for media', () => {
+    expect(issuesOf(true, valid())).toEqual([]);
+    expect(issuesOf(false, valid({ venue_bill_amount: '' }))).toEqual([]);
   });
 
   it('requires the bill amount only for venue pods, never a bill document', () => {
@@ -47,24 +40,15 @@ describe('buildPodCompleteSchema', () => {
 });
 
 describe('buildCompleteInput', () => {
-  it('maps amounts and typed media', () => {
-    const input = buildCompleteInput(
-      valid({ venue_bill_amount: '1500', media_text: 'https://cdn/a.jpg\nhttps://cdn/b.mp4\n' }),
-      'pod1',
-    );
+  it('maps the amount and leaves the media to the pod', () => {
+    const input = buildCompleteInput(valid({ venue_bill_amount: '1500' }), 'pod1');
     expect(input.pod_id).toBe('pod1');
     expect(input.venue_bill_amount).toBe(1500);
-    expect(input.evidence_media).toEqual([
-      { url: 'https://cdn/a.jpg', type: 'IMAGE' },
-      { url: 'https://cdn/b.mp4', type: 'VIDEO' },
-    ]);
+    expect(input.evidence_media).toBeUndefined();
   });
 
   it('zeroes the amount for a blank submission', () => {
-    const input = buildCompleteInput(
-      { ...blankPodCompleteValues, media_text: 'https://cdn/a.jpg' },
-      'pod2',
-    );
+    const input = buildCompleteInput({ ...blankPodCompleteValues }, 'pod2');
     expect(input.venue_bill_amount).toBe(0);
   });
 });

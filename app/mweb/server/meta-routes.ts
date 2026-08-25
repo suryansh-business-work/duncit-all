@@ -44,6 +44,15 @@ export const DYNAMIC_ROUTES: DynamicRoute[] = [
     descriptionKey: 'mweb.meta.podFeedback.description',
   },
   {
+    // The link a host pastes into a group chat, so the card has to name the
+    // pod rather than say "Duncit" — that is what makes anyone open it.
+    pattern: '/pod/:podId/media',
+    kind: 'POD',
+    idParams: ['podId'],
+    titleTemplateKey: 'mweb.meta.podMedia.title',
+    descriptionKey: 'mweb.meta.podMedia.description',
+  },
+  {
     pattern: '/club/:clubSlug',
     kind: 'CLUB',
     idParams: ['clubSlug'],

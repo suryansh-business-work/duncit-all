@@ -253,6 +253,40 @@ export const HOST_EMAILS: readonly EmailDef[] = [
   }),
 
   defineEmail({
+    slug: 'host-pod-auto-cancelled',
+    name: 'Host: Pod Auto-Cancelled',
+    description:
+      'The host, when the auto-cancel sweep cancels their pod because it could not cover its venue cost. Attendees are refunded under the venue’s cancellation policy.',
+    audience: 'HOST',
+    category: 'billing',
+    fires: 'The auto-cancel sweep cancels a finance-negative pod',
+    subject: 'Pod cancelled — {{pod_title}}',
+    footerNote: FOOTER.podHosted,
+    vars: [
+      v('name', 'The host’s first name.', 'Meera'),
+      v('pod_title', 'The pod’s title, as the heading names it.', 'Sunday Badminton Doubles'),
+      v('date', 'The pod’s date, already formatted.', '24 Aug 2026'),
+      v('time', 'The start time, already formatted.', '7:00 AM'),
+      v('venue', 'The venue the pod was booked at.', 'Sector 62 Sports Arena'),
+      v('spots', 'How many spots were already booked.', '6'),
+    ],
+    body: {
+      copyKey: 'email.hostPodAutoCancelled',
+      nameVar: 'name',
+      tone: STOPPED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod_title',
+      rows: [
+        ...POD_ROWS,
+        { labelKey: FIELD.venue, valueVar: 'venue' },
+        { labelKey: FIELD.spots, valueVar: 'spots' },
+      ],
+      ctaKey: CTA.openPartners,
+      ctaVar: 'app_url',
+    },
+  }),
+
+  defineEmail({
     slug: 'host-complete-pod-reminder',
     name: 'Host: Complete Pod Reminder',
     description: 'The host, when a pod that has finished is still not marked complete — nobody is paid until it is.',

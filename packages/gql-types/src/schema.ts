@@ -1186,6 +1186,10 @@ export type AppSettings = {
   max_backout_attempts: Scalars['Int']['output'];
   /** Minimum age (whole years) required to sign up or save a date of birth. */
   min_signup_age: Scalars['Int']['output'];
+  /** Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy. */
+  pod_auto_cancel_enabled: Scalars['Boolean']['output'];
+  /** How many hours before a pod's start the auto-cancel finance check runs. */
+  pod_auto_cancel_lead_hours: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
   time_source: TimeSource;
@@ -7969,6 +7973,8 @@ export type Mutation = {
   addMeetingHoliday: MeetingHoliday;
   addPodComment: PodComment;
   addPodIdeaComment: PodIdea;
+  /** Adds photos/videos from the pod. Host, or anyone marked present at it. */
+  addPodPartyMedia: PodMediaBoard;
   addPodStatus: Pod;
   addPostComment: Post;
   addUserRole: User;
@@ -8629,6 +8635,8 @@ export type Mutation = {
   removeExpenseRefund: Expense;
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
+  /** Takes one item down — your own, or any of them if you host the pod. */
+  removePodPartyMedia: PodMediaBoard;
   removeUserRole: User;
   /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
   renameMediaFile: MediaItem;
@@ -8787,6 +8795,12 @@ export type Mutation = {
   saveMyBrandPickupLocation: BrandPickupLocation;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
+  /**
+   * Store the caller's chrome arrangement. Only the fields present in the input
+   * are written, so two consoles open at once cannot overwrite each other's
+   * unrelated preferences.
+   */
+  saveShellWorkspaceState: ShellWorkspaceState;
   /** Save part of your chat setup. Anything omitted is left as it was. */
   saveStaffChatState: StaffChatState;
   seedSuperAdmin: SeedAdminResult;
@@ -9284,6 +9298,12 @@ export type MutationAddPodCommentArgs = {
 export type MutationAddPodIdeaCommentArgs = {
   pod_idea_doc_id: Scalars['ID']['input'];
   text: Scalars['String']['input'];
+};
+
+
+export type MutationAddPodPartyMediaArgs = {
+  media: Array<PodMediaInput>;
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -11012,6 +11032,12 @@ export type MutationRemoveMeetingHolidayArgs = {
 };
 
 
+export type MutationRemovePodPartyMediaArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  url: Scalars['String']['input'];
+};
+
+
 export type MutationRemoveUserRoleArgs = {
   role_key: Scalars['String']['input'];
   user_id: Scalars['ID']['input'];
@@ -11324,6 +11350,11 @@ export type MutationSavePodDraftArgs = {
 
 export type MutationSavePushSubscriptionArgs = {
   input: PushSubscriptionInput;
+};
+
+
+export type MutationSaveShellWorkspaceStateArgs = {
+  input: ShellWorkspaceStateInput;
 };
 
 
@@ -14285,10 +14316,37 @@ export type PodMedia = {
   url: Scalars['String']['output'];
 };
 
+/**
+ * A pod's media, in one read: what is on it and what this viewer may do.
+ * A viewer of NONE gets an EMPTY list — the link is pasted into group chats,
+ * so the page explains itself instead of leaking the photos to whoever it
+ * reached.
+ */
+export type PodMediaBoard = {
+  __typename?: 'PodMediaBoard';
+  can_upload: Scalars['Boolean']['output'];
+  count: Scalars['Int']['output'];
+  is_cancelled: Scalars['Boolean']['output'];
+  items: Array<PodPartyMedia>;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  viewer: PodMediaViewer;
+};
+
 export type PodMediaInput = {
   type?: InputMaybe<CategoryMediaType>;
   url: Scalars['String']['input'];
 };
+
+/**
+ * In what capacity someone is looking at a pod's media: its host (admins read
+ * as hosts), someone whose attendance was marked, or neither.
+ */
+export type PodMediaViewer =
+  | 'GUEST'
+  | 'HOST'
+  | 'NONE';
 
 export type PodMember = {
   __typename?: 'PodMember';
@@ -14495,6 +14553,22 @@ export type PodParticipation = {
   pod_cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Set only when the pod itself was cancelled — then nothing else applies. */
   pod_cancelled_by?: Maybe<PodMemberCancelActor>;
+};
+
+/** One photo or video FROM the pod, with who put it there. */
+export type PodPartyMedia = {
+  __typename?: 'PodPartyMedia';
+  /** This viewer may take it down — their own, or anything at all if a host. */
+  can_remove: Scalars['Boolean']['output'];
+  /** This viewer uploaded it. */
+  mine: Scalars['Boolean']['output'];
+  /** HOST when a host uploaded it, GUEST when one of the people who came did. */
+  source: PodMediaViewer;
+  type: CategoryMediaType;
+  uploaded_at?: Maybe<Scalars['String']['output']>;
+  uploaded_by_id: Scalars['ID']['output'];
+  uploaded_by_name: Scalars['String']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type PodPlaceCharge = {
@@ -15915,7 +15989,7 @@ export type Query = {
   financeSettings: FinanceSettings;
   /** People who follow the given user (their public profiles). */
   followersOf: Array<PublicProfile>;
-  /** Posts + active stories from the people/clubs the viewer follows, newest first. */
+  /** Posts from the people/clubs the viewer follows, newest first. Stories are excluded — they live on the story rails. */
   followingFeed: Array<Post>;
   /** People the given user follows (their public profiles). */
   followingOf: Array<PublicProfile>;
@@ -16300,6 +16374,12 @@ export type Query = {
   podIdea?: Maybe<PodIdea>;
   podIdeas: Array<PodIdea>;
   podIdeasTable: PodIdeaTablePage;
+  /**
+   * The photos and videos from one pod — the Upload Pod Media page, the link a
+   * host shares with the people who came, and the Complete Pod dialog all read
+   * this one board.
+   */
+  podMediaBoard: PodMediaBoard;
   podMembers: Array<PodMember>;
   podMembershipState: PodMembershipState;
   podMessages: Array<PodMessage>;
@@ -16457,6 +16537,12 @@ export type Query = {
    * bundles when seeding Translations, so email copy is translatable too.
    */
   serverTranslationSeed: Array<TranslationEntry>;
+  /**
+   * The caller's own chrome arrangement, with every default filled in when they
+   * have never changed anything. Always scoped to the caller — this is a
+   * personal preference and is never readable for anybody else.
+   */
+  shellWorkspaceState: ShellWorkspaceState;
   shortLink: ShortLink;
   /** Every campaign a link can be filed under — the share campaigns and the email ones. */
   shortLinkCampaigns: Array<ShortLinkCampaign>;
@@ -18208,6 +18294,11 @@ export type QueryPodIdeasTableArgs = {
 };
 
 
+export type QueryPodMediaBoardArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodMembersArgs = {
   pod_doc_id: Scalars['ID']['input'];
   status?: InputMaybe<MembershipStatus>;
@@ -19581,9 +19672,45 @@ export type ShareLinkTarget =
   | 'POD_IDEA'
   /** The venue map link a shared pod message carries. */
   | 'POD_LOCATION'
+  /** A pod's media upload page, sent by its host to the people who came. */
+  | 'POD_MEDIA'
   | 'POST'
   | 'PROFILE'
   | 'REFERRAL';
+
+/**
+ * How one person has their console chrome arranged: the taskbar along the
+ * bottom of every portal and the Agent tab stuck to its edge.
+ *
+ * Kept on the server rather than in the browser because the shell renders in
+ * all seventeen consoles and each is its own origin — "per browser" would mean
+ * "per portal you happen to have open".
+ */
+export type ShellWorkspaceState = {
+  __typename?: 'ShellWorkspaceState';
+  /** LEFT or RIGHT — which side the Agent tab is stuck to. */
+  agent_edge: Scalars['String']['output'];
+  /** How far down that edge the Agent tab sits, 0 (top) to 1 (bottom). */
+  agent_offset: Scalars['Float']['output'];
+  /** Whether the taskbar clock counts seconds. */
+  clock_seconds: Scalars['Boolean']['output'];
+  /** IANA zone for the taskbar clock, or '' to follow the admin's setting. */
+  clock_zone: Scalars['String']['output'];
+  /** Window ids currently rolled up to the taskbar. */
+  minimised: Array<Scalars['String']['output']>;
+  /** Whether the sidebar is minimised to its icon rail. */
+  sidebar_collapsed: Scalars['Boolean']['output'];
+};
+
+/** Every field optional: the shell saves the one thing that changed. */
+export type ShellWorkspaceStateInput = {
+  agent_edge?: InputMaybe<Scalars['String']['input']>;
+  agent_offset?: InputMaybe<Scalars['Float']['input']>;
+  clock_seconds?: InputMaybe<Scalars['Boolean']['input']>;
+  clock_zone?: InputMaybe<Scalars['String']['input']>;
+  minimised?: InputMaybe<Array<Scalars['String']['input']>>;
+  sidebar_collapsed?: InputMaybe<Scalars['Boolean']['input']>;
+};
 
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
@@ -21392,6 +21519,10 @@ export type UpdateAppSettingsInput = {
   max_backout_attempts?: InputMaybe<Scalars['Int']['input']>;
   /** Minimum age to use the app, in whole years (1-120). */
   min_signup_age?: InputMaybe<Scalars['Int']['input']>;
+  /** Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy. */
+  pod_auto_cancel_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How many hours before a pod's start the auto-cancel finance check runs (1-8760). */
+  pod_auto_cancel_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;

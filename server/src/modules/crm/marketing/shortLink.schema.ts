@@ -61,6 +61,8 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     POD_LOCATION
     "A pod's rating form, sent by its host."
     POD_FEEDBACK
+    "A pod's media upload page, sent by its host to the people who came."
+    POD_MEDIA
     CLUB
     PROFILE
     POST

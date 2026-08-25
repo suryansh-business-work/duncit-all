@@ -195,7 +195,7 @@ export default function PodAttendeesDialog({
                     primary={fill.old_name}
                     secondary={fill.filled_by_label}
                     slotProps={{
-                      primary: { sx: { fontSize: 14, ...{ textDecoration: 'line-through', color: 'text.disabled' } } },
+                      primary: { sx: { fontSize: 14, textDecoration: 'line-through', color: 'text.disabled' } },
 
                       secondary: { sx: { fontSize: 12 } }
                     }} />

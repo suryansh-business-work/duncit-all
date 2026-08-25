@@ -48,6 +48,7 @@ export default function MediaPickerDialog({
   onPickedMany,
   seedQuery,
   orientation,
+  deviceOnly = false,
 }: Readonly<MediaPickerDialogProps>) {
   const { t } = useTranslation();
   const onPhone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
@@ -82,11 +83,13 @@ export default function MediaPickerDialog({
   // Below the allow* flags on purpose — a Pexels tab the caller's `accept` rules
   // out is rendered disabled, and the strip is built from that same data.
   const tabs = useTabParam<PickerTab>({
-    items: [
-      { value: 'device', label: t('media.picker.fromDevice') },
-      { value: 'photos', label: t('media.picker.pexelsPhotos'), disabled: !allowImage },
-      { value: 'videos', label: t('media.picker.pexelsVideos'), disabled: !allowVideo },
-    ],
+    items: deviceOnly
+      ? [{ value: 'device', label: t('media.picker.fromDevice') }]
+      : [
+          { value: 'device', label: t('media.picker.fromDevice') },
+          { value: 'photos', label: t('media.picker.pexelsPhotos'), disabled: !allowImage },
+          { value: 'videos', label: t('media.picker.pexelsVideos'), disabled: !allowVideo },
+        ],
     fallback: 'device',
     param: 'selectedtab_media',
   });

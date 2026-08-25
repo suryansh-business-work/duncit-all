@@ -291,6 +291,8 @@ export interface StaffChatState {
   enter_to_send: boolean;
   mic_id: string;
   cam_id: string;
+  mic_label: string;
+  cam_label: string;
 }
 
 const CHAT_STATE = `
@@ -304,6 +306,8 @@ const CHAT_STATE = `
   enter_to_send
   mic_id
   cam_id
+  mic_label
+  cam_label
 `;
 
 export const STAFF_CHAT_STATE = gql`

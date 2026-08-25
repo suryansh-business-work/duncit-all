@@ -45,6 +45,11 @@ export interface MediaFieldRenderProps {
   label: string;
   /** Upload destination for the surface's picker. */
   folder?: string;
+  /**
+   * The device alone — no stock library. Set where the answer has to be a real
+   * photograph of something that happened, i.e. a pod's own media.
+   */
+  deviceOnly?: boolean;
 }
 
 export type RenderMediaField = (props: Readonly<MediaFieldRenderProps>) => ReactElement;

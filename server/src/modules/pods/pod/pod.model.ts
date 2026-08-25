@@ -14,6 +14,27 @@ export interface IPodMedia {
   type: 'IMAGE' | 'VIDEO';
 }
 
+/** Who put a piece of party media on the pod. */
+export type PodPartyMediaSource = 'HOST' | 'GUEST';
+
+/**
+ * A photo or video FROM the pod, as opposed to the pictures that advertised it.
+ *
+ * Kept apart from `pod_images_and_videos` on purpose: that list is the pod's
+ * shop window and a host curates it, while this one is what the evening
+ * actually looked like — the host's own upload plus whatever the people who
+ * came sent in from the link. It also carries who added each item, because a
+ * guest may take their own photo back down and a host may take any of them
+ * down, and neither can be decided from a bare URL.
+ */
+export interface IPodPartyMedia {
+  url: string;
+  type: 'IMAGE' | 'VIDEO';
+  uploaded_by: Types.ObjectId;
+  source: PodPartyMediaSource;
+  uploaded_at: Date;
+}
+
 export interface IPodPlaceCharge {
   label: string;
   amount: number;
@@ -77,6 +98,8 @@ export interface IPod extends Document {
   meeting_notes?: string | null;
   pod_hashtag: string[];
   pod_images_and_videos: IPodMedia[];
+  /** Photos and videos FROM the pod — the host's and the guests'. See IPodPartyMedia. */
+  pod_party_media: IPodPartyMedia[];
   /** Explore reel video URL (direct ImageKit upload, ≤100MB). Presence = reel enabled. */
   reel_url?: string | null;
   pod_hits: number;
@@ -127,6 +150,17 @@ const mediaSchema = new Schema<IPodMedia>(
   {
     url: { type: String, required: true },
     type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },
+  },
+  { _id: false }
+);
+
+const partyMediaSchema = new Schema<IPodPartyMedia>(
+  {
+    url: { type: String, required: true },
+    type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },
+    uploaded_by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    source: { type: String, enum: ['HOST', 'GUEST'], default: 'GUEST' },
+    uploaded_at: { type: Date, default: Date.now },
   },
   { _id: false }
 );
@@ -196,6 +230,7 @@ const podSchema = new Schema<IPod>(
     meeting_notes: { type: String, default: null, trim: true, maxlength: 1000 },
     pod_hashtag: { type: [String], default: [] },
     pod_images_and_videos: { type: [mediaSchema], default: [] },
+    pod_party_media: { type: [partyMediaSchema], default: [] },
     reel_url: { type: String, default: null, trim: true, maxlength: 1000 },
     pod_hits: { type: Number, default: 0 },
     pod_attendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],

@@ -41,6 +41,11 @@ interface Props {
   required?: boolean;
   folder?: string;
   /**
+   * Offer the device alone — no stock library. Set where the answer has to be
+   * a real photograph of something that happened (a pod's own media).
+   */
+  deviceOnly?: boolean;
+  /**
    * The sub-category the host already picked. The picker opens on a Pexels
    * search for it instead of a blank box — the form knows the answer, so making
    * the user type it is work for nothing.
@@ -65,6 +70,7 @@ export function MediaUploadField({
   folder = '/pods',
   subCategoryName,
   maxImages,
+  deviceOnly = false,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
@@ -205,6 +211,7 @@ export function MediaUploadField({
         watch.
       */}
       <CoverPickerDialog
+        deviceOnly={deviceOnly}
         open={pickerOpen && !upload.pending}
         seed={coverSearchTerm(subCategoryName)}
         max={slotsLeft}

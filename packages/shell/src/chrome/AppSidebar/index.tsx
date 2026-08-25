@@ -1,16 +1,12 @@
-import { useMemo, useState } from 'react';
-import { Box, Button, InputAdornment, List, Skeleton, Stack, TextField, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from '../../i18n/useTranslation';
-import SearchIcon from '@mui/icons-material/Search';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { NavLink, useLocation } from 'react-router-dom';
-import { tokens } from '@duncit/theme';
 import type { AppNavItem } from '../../types';
-import { useBranding } from '../../hooks/useBranding';
 import type { ShellUser } from '../user-display';
-import { filterNav } from './helpers';
-import { NavNode, type ExpandSignal } from './nav-items';
+import { NavRail } from './NavRail';
+import { NavTree } from './NavTree';
+import { SidebarBrand } from './SidebarBrand';
 import { SidebarUserCard } from './SidebarUserCard';
 
 export interface AppSidebarProps {
@@ -22,124 +18,60 @@ export interface AppSidebarProps {
   footerCaption?: string;
   /** Called after a nav item is picked (closes the temporary drawer). */
   onNavigate?: () => void;
+  /** Minimised to the icon rail: labels drop, and groups open in a popover. */
+  collapsed?: boolean;
+  /** Shows the minimise / expand control. Omitted on the temporary drawer,
+   * which is already dismissed rather than minimised. */
+  onToggleCollapse?: () => void;
 }
 
-/** The unified console sidebar: branding, menu search, nav tree, signed-in user. */
-export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigate }: Readonly<AppSidebarProps>) {
+/** The unified console sidebar: branding, menu, signed-in user, minimise control. */
+export function AppSidebar({
+  name,
+  nav,
+  user,
+  footerCaption,
+  onNavigate,
+  collapsed = false,
+  onToggleCollapse,
+}: Readonly<AppSidebarProps>) {
   const { t } = useTranslation();
-  const location = useLocation();
-  const { logoUrl, appName, loading, onLogoError } = useBranding();
-  const [query, setQuery] = useState('');
-  const nav = useMemo(() => filterNav(navItems, query.trim()), [navItems, query]);
-  // Expand-all / Collapse-all toggle: `allOpen` flips the label; `expandAll`
-  // carries a nonce so every group re-syncs even after manual toggling.
-  const [allOpen, setAllOpen] = useState(false);
-  const [expandAll, setExpandAll] = useState<ExpandSignal>(null);
-  const toggleAll = () => {
-    const open = !allOpen;
-    setAllOpen(open);
-    setExpandAll({ open, nonce: Date.now() });
-  };
+  const toggleLabel = collapsed ? t('shell.chrome.expandNav') : t('shell.chrome.collapseNav');
   return (
     <Stack sx={{ height: '100%' }}>
+      <SidebarBrand name={name} collapsed={collapsed} onNavigate={onNavigate} />
+      {collapsed ? (
+        <NavRail nav={nav} onNavigate={onNavigate} />
+      ) : (
+        <NavTree nav={nav} onNavigate={onNavigate} />
+      )}
+      <SidebarUserCard user={user} fallbackName={name} collapsed={collapsed} />
       <Box
-        component={NavLink}
-        to="/"
-        onClick={onNavigate}
-        aria-label={t('shell.chrome.goHome')}
         sx={{
-          minHeight: tokens.size.headerHeight,
-          px: 2,
+          px: collapsed ? 1 : 2,
+          py: 1,
+          borderTop: 1,
+          borderColor: 'divider',
           display: 'flex',
           alignItems: 'center',
-          gap: 1.25,
-          borderBottom: 1,
-          borderColor: 'divider',
-          textDecoration: 'none',
-          color: 'inherit',
-          cursor: 'pointer',
-          '&:hover': { bgcolor: 'action.hover' },
+          gap: 1,
+          justifyContent: collapsed ? 'center' : 'space-between',
         }}
       >
-        {loading ? (
-          <Skeleton variant="rounded" width={96} height={24} />
-        ) : (
-          <Box
-            component="img"
-            src={logoUrl}
-            alt={appName}
-            onError={onLogoError}
-            sx={{ height: 26, width: 'auto', maxWidth: 130, objectFit: 'contain' }}
-          />
-        )}
-        <Typography
-          variant="caption"
-          color="primary"
-          noWrap
-          sx={{
-            fontWeight: 800,
-            letterSpacing: 0.3
+        {!collapsed && (
+          <Typography variant="caption" noWrap sx={{
+            color: "text.secondary"
           }}>
-          {name}
-        </Typography>
-      </Box>
-      <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
-        <TextField
-          size="small"
-          fullWidth
-          placeholder={t('shell.chrome.searchMenu')}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }
-          }}
-        />
-        <Button
-          size="small"
-          fullWidth
-          onClick={toggleAll}
-          startIcon={allOpen ? <UnfoldLessIcon fontSize="small" /> : <UnfoldMoreIcon fontSize="small" />}
-          sx={{ mt: 0.75, justifyContent: 'flex-start', color: 'text.secondary', fontWeight: 700 }}
-        >
-          {allOpen ? 'Collapse all' : 'Expand all'}
-        </Button>
-      </Box>
-      <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto' }}>
-        {nav.length === 0 ? (
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              px: 1.5
-            }}>
-            No menu items match.
+            {footerCaption ?? '© Duncit'}
           </Typography>
-        ) : (
-          nav.map((item) => (
-            <NavNode
-              key={item.label}
-              item={item}
-              pathname={location.pathname}
-              onNavigate={onNavigate}
-              searching={!!query.trim()}
-              expandAll={expandAll}
-            />
-          ))
         )}
-      </List>
-      <SidebarUserCard user={user} fallbackName={name} />
-      <Box sx={{ px: 2, py: 1.25, borderTop: 1, borderColor: 'divider' }}>
-        <Typography variant="caption" noWrap sx={{
-          color: "text.secondary"
-        }}>
-          {footerCaption ?? '© Duncit'}
-        </Typography>
+        {onToggleCollapse && (
+          <Tooltip title={toggleLabel} placement="right">
+            <IconButton size="small" onClick={onToggleCollapse}>
+              {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
     </Stack>
   );

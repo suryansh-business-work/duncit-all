@@ -98,9 +98,11 @@ export function buildManageItems(
     // Pod Plans always slots in just before FAQs.
     items.push({ key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
   }
-  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' });
   // Badges sits directly under FAQs, and is the last row of the section.
-  items.push({ key: 'badges', label: badgesLabel, caption: '', icon: 'badges', to: '/badges' });
+  items.push(
+    { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
+    { key: 'badges', label: badgesLabel, caption: '', icon: 'badges', to: '/badges' }
+  );
   return items;
 }
 

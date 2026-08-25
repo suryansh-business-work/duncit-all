@@ -202,6 +202,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         title: 'Rate {name}',
         description: 'Tell the host how this pod went.',
       },
+      podMedia: {
+        title: 'Photos from {name}',
+        description: 'Add your photos and videos from this pod.',
+      },
       club: { description: 'Follow this club to catch its next pods on Duncit.' },
       publicProfile: { description: 'See their posts and pods on Duncit.' },
       post: {
@@ -1269,6 +1273,44 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       linkCopied: 'Feedback link copied',
       copyFailed: 'Could not copy the link. Copy it from the feedback page instead.',
     },
+    /**
+     * A pod’s own photos and videos — the Upload Pod Media page.
+     *
+     * The host opens it from Your Pods > ⋮, and the people who came open the
+     * same page from the link the host sends them — so the copy speaks to both
+     * and the page decides which half to show.
+     */
+    podMedia: {
+      uploadPodMedia: 'Upload Pod Media',
+      back: 'Back',
+      hostIntro:
+        'Add the photos and videos from this pod. Whatever you and your guests add here is what the Complete Pod screen shows.',
+      guestIntro: 'Add your photos and videos from this pod so the host and everyone who came can see them.',
+      addMedia: 'Add photos or videos',
+      uploading: 'Saving to this pod…',
+      empty: 'Nothing has been added to this pod yet.',
+      itemsHeading: '{count} on this pod',
+      byHost: 'Host',
+      byGuest: 'Guest',
+      uploadedBy: 'Added by {name}',
+      remove: 'Remove',
+      removed: 'Removed',
+      added: '{count} added',
+      // The link gets forwarded, so whoever opens it without having been marked
+      // present is told why rather than shown a picker that would be refused.
+      notInvited:
+        'Only the host and the people whose attendance was marked can add media to this pod. Ask the host to mark you present.',
+      cancelled: 'This pod was cancelled, so nothing more can be added to it.',
+      shareLink: 'Share upload link',
+      copyLink: 'Copy upload link',
+      linkCopied: 'Upload link copied',
+      shareHeading: 'Ask your guests for their photos',
+      shareBody:
+        'Send this link to the people who came. It opens this same page for anyone you marked present.',
+      shareMessage: 'Add your photos from “{title}” here:',
+      retry: 'Try again',
+      loadFailed: 'That pod could not be opened. Check the link and try again.',
+    },
     // What to say when a payment does not complete. Three outcomes, three
     // answers — a buyer whose money may have left their account must not be
     // told their payment was "cancelled".
@@ -2171,12 +2213,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venue: 'Venue',
       venueHint: 'Pick the venue to request',
       completeHint:
-        'Upload your party photos/videos (with the Duncit banner). Your payout is credited to your wallet as soon as the pod is completed.',
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. Your payout is credited to your wallet as soon as the pod is completed.',
       venueBillAmount: 'Venue Bill Amount',
       venueBillRequired: 'Enter the venue bill amount',
       podMedia: 'Pod Media',
       completing: 'Completing…',
-      partyMediaRequired: 'Add at least one party photo or video',
       cancelIntro: 'You are cancelling {title}. This cannot be undone.',
       cancelNoOthers: 'No one else has joined this pod — it will be cancelled immediately.',
       // Count-driven copy: the translator picks .one or .other from `count`.

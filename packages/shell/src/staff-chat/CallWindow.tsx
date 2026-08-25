@@ -87,6 +87,7 @@ export default function CallWindow({
         peerName={name}
         peerPhoto={photo}
         error={call.error}
+        onDismissError={call.dismissError}
         localStream={call.localStream}
         remoteStream={call.remoteStream}
         onAnswer={() => call.answer().catch(() => undefined)}

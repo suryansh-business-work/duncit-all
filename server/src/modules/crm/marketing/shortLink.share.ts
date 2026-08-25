@@ -30,6 +30,7 @@ export const SHARE_LINK_TARGETS = [
   'POD',
   'POD_LOCATION',
   'POD_FEEDBACK',
+  'POD_MEDIA',
   'CLUB',
   'PROFILE',
   'POST',
@@ -50,6 +51,7 @@ const CAMPAIGN_NAMES: Record<ShareLinkTarget, string> = {
   POD: 'Pod Shares',
   POD_LOCATION: 'External Links',
   POD_FEEDBACK: 'Pod Rating Shares',
+  POD_MEDIA: 'Pod Media Shares',
   CLUB: 'Club Shares',
   PROFILE: 'Profile Shares',
   POST: 'Post Shares',
@@ -160,6 +162,20 @@ const podFeedbackResolver: TargetResolver = async (ref, base) => {
   };
 };
 
+/**
+ * The pod's media upload page — the ONE link behind both "Share link" and
+ * "Copy link" on the host's menu, so the address a guest is sent is the
+ * address the host copied.
+ */
+const podMediaResolver: TargetResolver = async (ref, base) => {
+  const pod = await findPod(ref);
+  if (!pod) return null;
+  return {
+    url: `${base}/pod/${String(pod._id)}/media`,
+    label: label('Pod media', pod.pod_title),
+  };
+};
+
 const clubResolver: TargetResolver = async (ref, base) => {
   const club: any = await findClub(ref);
   if (!club) return null;
@@ -211,6 +227,7 @@ const RESOLVERS: Record<ShareLinkTarget, TargetResolver> = {
   POD: podResolver,
   POD_LOCATION: podLocationResolver,
   POD_FEEDBACK: podFeedbackResolver,
+  POD_MEDIA: podMediaResolver,
   CLUB: clubResolver,
   PROFILE: profileResolver,
   POST: postResolver,

@@ -18,6 +18,8 @@ export const shellStateTypeDefs = /* GraphQL */ `
     clock_seconds: Boolean!
     "Window ids currently rolled up to the taskbar."
     minimised: [String!]!
+    "Whether the sidebar is minimised to its icon rail."
+    sidebar_collapsed: Boolean!
   }
 
   "Every field optional: the shell saves the one thing that changed."
@@ -27,6 +29,7 @@ export const shellStateTypeDefs = /* GraphQL */ `
     clock_zone: String
     clock_seconds: Boolean
     minimised: [String!]
+    sidebar_collapsed: Boolean
   }
 
   extend type Query {

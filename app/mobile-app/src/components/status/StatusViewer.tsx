@@ -131,6 +131,26 @@ function StatusRoundButton({
   );
 }
 
+/** The header's speaker. Only a video slide has sound to turn off, so every
+ * other slide renders nothing here. */
+function StatusMuteButton({
+  visible,
+  muted,
+  onToggle,
+}: Readonly<{ visible: boolean; muted: boolean; onToggle: () => void }>) {
+  const { t } = useTranslation();
+  if (!visible) return null;
+  return (
+    <StatusRoundButton
+      testID="status-mute"
+      label={muted ? t('mweb.status.unmuteVideo') : t('mweb.status.muteVideo')}
+      icon={muted ? 'volume-off' : 'volume-up'}
+      onPress={onToggle}
+      spaced
+    />
+  );
+}
+
 /** The slide media — a video plays to its end (or the 15s cap), an image just
  * fills the frame. Renders nothing while a slide carries no media. */
 function StatusMedia({
@@ -332,15 +352,11 @@ export function StatusViewer({
                 subLabel={status?.subLabel}
                 remaining={remaining}
               />
-              {isVideo ? (
-                <StatusRoundButton
-                  testID="status-mute"
-                  label={muted ? t('mweb.status.unmuteVideo') : t('mweb.status.muteVideo')}
-                  icon={muted ? 'volume-off' : 'volume-up'}
-                  onPress={() => setMuted((value) => !value)}
-                  spaced
-                />
-              ) : null}
+              <StatusMuteButton
+                visible={isVideo}
+                muted={muted}
+                onToggle={() => setMuted((value) => !value)}
+              />
               {hasMenu && current ? (
                 <StatusRoundButton
                   testID="status-viewer-kebab"

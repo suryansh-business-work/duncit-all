@@ -1,6 +1,6 @@
 ---
 name: '@duncit/host-pod-actions'
-summary: 'Every action a host takes on their own pod — scan tickets, complete, edit, resubmit, cancel, share the rating link — as one set of MUI dialogs shared by mWeb and the Partners console.'
+summary: 'Every action a host takes on their own pod — scan tickets, complete, edit, resubmit, cancel, collect the pod media, share the rating link — as one set of MUI dialogs shared by mWeb and the Partners console.'
 category: 'domain'
 zeroDeps: false
 frameworkFree: false
@@ -17,6 +17,9 @@ exports:
   - 'PodEditDialog'
   - 'PodResubmitDialog'
   - 'TicketScanDialog'
+  - 'PodMediaView'
+  - 'usePodMediaBoard'
+  - 'useHostPodMediaLink'
   - 'buildHostPodActionLabels'
 ---
 
@@ -39,8 +42,12 @@ The two **MUI** surfaces share the whole dialog.
 ## Mount the provider once
 
 Three things genuinely differ per surface, so they are supplied rather than guessed: the media
-picker (mWeb's is Pexels-backed, the portals use ImageKit), where a profile or a rating link goes,
-and which namespace the copy is read from.
+picker (mWeb's is Pexels-backed, the portals use ImageKit), where a profile or one of the pod's
+two links goes, and which namespace the copy is read from.
+
+`onOpenPodMedia` is optional and gates a whole row: the menu shows Upload Pod Media — with its
+Share and Copy buttons — only where the surface actually has that route, because handing a guest a
+link to a page this console cannot open would send them somewhere that 404s.
 
 ```tsx
 import {
@@ -53,12 +60,21 @@ import { buildSlotLabels } from '@duncit/slots';
 <HostPodActionsProvider
   labels={shellHostPodLabels(t)}            // mwebHostPodLabels(t) in mWeb
   slotLabels={buildSlotLabels(t, 'shell.slots')}
-  renderMediaField={({ value, onChange, error, label, folder }) => (
-    <MediaListField label={label} value={value} onChange={onChange} folder={folder} helperText={error} />
+  podMediaLabels={shellPodMediaLabels(t)}   // mwebPodMediaLabels(t) in mWeb
+  renderMediaField={({ value, onChange, error, label, folder, deviceOnly }) => (
+    <MediaListField
+      label={label}
+      value={value}
+      onChange={onChange}
+      folder={folder}
+      helperText={error}
+      deviceOnly={deviceOnly}
+    />
   )}
   onViewProfile={openExternally}
-  feedbackBaseUrl={urlConfigs.mwebUrl}
+  linkBaseUrl={urlConfigs.mwebUrl}
   onOpenFeedback={(podId) => openExternally(podFeedbackPath(podId))}
+  onOpenPodMedia={(podId) => openExternally(podMediaPath(podId))}
   notifySuccess={notifySuccess}
   notifyError={notifyError}
 >
@@ -84,10 +100,29 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 `PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the limited
 title/description/media `PodEditDialog`.
 
+## The pod's media
+
+A pod's photos and videos belong to the POD, not to the dialog that completes it. `PodMediaView`
+is the page behind Upload Pod Media, rendered identically for the host and for a guest who
+followed the shared link — the server decides in what capacity each arrived and answers
+`viewer: HOST | GUEST | NONE` with an empty list for the third, so a forwarded link explains
+itself instead of leaking the photos.
+
+```tsx
+// The whole page: labels, notifications and the picker come from the provider.
+<PodMediaView podId={podId} />
+```
+
+Both the ⋮ menu's row and the page's own card hand out the SAME link through
+`useHostPodMediaLink` — one address per pod, minted once as a tracked short link
+(`POD_MEDIA`). `PodCompleteDialog` then SHOWS that media rather than asking for it again: the
+old inline picker was a second place to upload the same photos, whose answer only ever reached
+the payment release.
+
 ## Copy lives in two namespaces
 
-`mweb.podFeedback.*` / `mweb.hostScan.*` for mWeb and native, `shell.podFeedback.*` /
-`shell.hostScan.*` for the portals — word-for-word identical values. They cannot collapse into one
+`mweb.podFeedback.*` / `mweb.hostScan.*` / `mweb.podMedia.*` for mWeb and native,
+`shell.podFeedback.*` / `shell.hostScan.*` / `shell.podMedia.*` for the portals — word-for-word identical values. They cannot collapse into one
 namespace because the server stores one Localization row per key path, and they are written out as
 literal `t('…')` calls because `scripts/verify-translation-keys.mjs` greps for the literal key. Same
 shape, and same reasons, as `@duncit/slots`' `buildSlotLabels`.

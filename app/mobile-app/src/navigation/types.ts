@@ -42,6 +42,8 @@ export type RootStackParamList = {
   HostManage: undefined;
   /** Host Studio > Your Pods > actions > See Marked Attendance. */
   PodAttendance: { podId: string };
+  /** A pod's own photos and videos — the host's, and the guests' from the link. */
+  PodMedia: { podId: string };
   HostApply: undefined;
   HostDashboard: undefined;
   Wallet: undefined;
@@ -133,6 +135,7 @@ export type MenuRoute = Exclude<
   | 'CreatePod'
   | 'PodPending'
   | 'PodAttendance'
+  | 'PodMedia'
   | 'Policy'
   | 'TicketDetails'
   | 'Login'

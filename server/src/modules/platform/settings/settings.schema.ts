@@ -34,6 +34,10 @@ export const settingsTypeDefs = gql`
     venue_cancel_health_penalty: Int!
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."
     attendance_otp_required: Boolean!
+    "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
+    pod_auto_cancel_enabled: Boolean!
+    "How many hours before a pod's start the auto-cancel finance check runs."
+    pod_auto_cancel_lead_hours: Int!
     updated_at: String
   }
 
@@ -86,6 +90,10 @@ export const settingsTypeDefs = gql`
     venue_cancel_health_penalty: Int
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."
     attendance_otp_required: Boolean
+    "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
+    pod_auto_cancel_enabled: Boolean
+    "How many hours before a pod's start the auto-cancel finance check runs (1-8760)."
+    pod_auto_cancel_lead_hours: Int
   }
 
   type FeatureFlag {

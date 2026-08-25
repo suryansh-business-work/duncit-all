@@ -85,6 +85,10 @@ export function WorkspaceProvider({ enabled, children }: Readonly<WorkspaceProvi
   );
   const setClockZone = useCallback((zone: string) => update({ clockZone: zone }), [update]);
   const setClockSeconds = useCallback((on: boolean) => update({ clockSeconds: on }), [update]);
+  const setSidebarCollapsed = useCallback(
+    (collapsed: boolean) => update({ sidebarCollapsed: collapsed }),
+    [update]
+  );
 
   const value = useMemo<WorkspaceValue>(
     () => ({
@@ -99,8 +103,20 @@ export function WorkspaceProvider({ enabled, children }: Readonly<WorkspaceProvi
       setClockZone,
       clockSeconds: state.clockSeconds,
       setClockSeconds,
+      sidebarCollapsed: state.sidebarCollapsed,
+      setSidebarCollapsed,
     }),
-    [windows, state, setMinimised, register, unregister, moveAgent, setClockZone, setClockSeconds]
+    [
+      windows,
+      state,
+      setMinimised,
+      register,
+      unregister,
+      moveAgent,
+      setClockZone,
+      setClockSeconds,
+      setSidebarCollapsed,
+    ]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

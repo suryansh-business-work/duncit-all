@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { SlotLabels } from '@duncit/slots';
+import type { PodMediaLabels } from '@duncit/utils';
 import type { HostPodActionLabels } from './labels';
 import type { RenderMediaField } from './types';
 
@@ -17,20 +18,31 @@ export interface HostPodActionsConfig {
   renderMediaField: RenderMediaField;
   /** Opens a scanned attendee's public profile — an in-app route on mWeb, a new tab in a portal. */
   onViewProfile: (profilePath: string) => void;
-  /** Origin the pod's rating link is built against. */
-  feedbackBaseUrl: string;
+  /** Origin the pod's per-pod links (rating form, media page) are built against. */
+  linkBaseUrl: string;
   /** Opens the rating form for a pod. */
   onOpenFeedback: (podId: string) => void;
   /**
-   * Turns a pod's rating link into its tracked short link before the host
-   * sends it. Optional: a surface without a client for it hands out the plain
-   * link, which still works — it is simply not counted.
+   * Opens the pod's Upload Pod Media page — a PAGE, so the surface owns the
+   * navigation and a console without that route omits the menu item entirely.
    */
-  resolveShareUrl?: (podId: string, plainUrl: string) => Promise<string>;
+  onOpenPodMedia?: (podId: string) => void;
+  /**
+   * Turns one of those links into its tracked short link before the host sends
+   * it. Optional: a surface without a client for it hands out the plain link,
+   * which still works — it is simply not counted.
+   */
+  resolveShareUrl?: (
+    kind: 'POD_FEEDBACK' | 'POD_MEDIA',
+    podId: string,
+    plainUrl: string,
+  ) => Promise<string>;
   notifySuccess: (message: string) => void;
   notifyError: (message: string) => void;
   /** Slot-picker copy for the resubmit dialog — `buildSlotLabels(t, <ns>.slots)`. */
   slotLabels: SlotLabels;
+  /** Pod-media copy — `buildPodMediaLabels(t, 'mweb' | 'shell')`, shared with native. */
+  podMediaLabels: PodMediaLabels;
 }
 
 const HostPodActionsContext = createContext<HostPodActionsConfig | null>(null);
@@ -45,35 +57,41 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
     labels,
     renderMediaField,
     onViewProfile,
-    feedbackBaseUrl,
+    linkBaseUrl,
     onOpenFeedback,
+    onOpenPodMedia,
     resolveShareUrl,
     notifySuccess,
     notifyError,
     slotLabels,
+    podMediaLabels,
   } = config;
   const value = useMemo(
     () => ({
       labels,
       renderMediaField,
       onViewProfile,
-      feedbackBaseUrl,
+      linkBaseUrl,
       onOpenFeedback,
+      onOpenPodMedia,
       resolveShareUrl,
       notifySuccess,
       notifyError,
       slotLabels,
+      podMediaLabels,
     }),
     [
       labels,
       renderMediaField,
       onViewProfile,
-      feedbackBaseUrl,
+      linkBaseUrl,
       onOpenFeedback,
+      onOpenPodMedia,
       resolveShareUrl,
       notifySuccess,
       notifyError,
       slotLabels,
+      podMediaLabels,
     ],
   );
   return (

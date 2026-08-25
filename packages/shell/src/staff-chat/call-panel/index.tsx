@@ -20,6 +20,8 @@ interface Props {
   peerName: string;
   peerPhoto: string;
   error: Failure | null;
+  /** Put the banner away. It can outlive the call that raised it. */
+  onDismissError: () => void;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   onAnswer: () => void;
@@ -63,6 +65,7 @@ export default function CallPanel({
   peerName,
   peerPhoto,
   error,
+  onDismissError,
   localStream,
   remoteStream,
   onAnswer,
@@ -118,7 +121,7 @@ export default function CallPanel({
         gap: 1,
       }}
     >
-      {error && <FailureAlert failure={error} />}
+      {error && <FailureAlert failure={error} onDismiss={onDismissError} />}
 
       {phase !== 'idle' && (
         <CallHeader phase={phase} kind={kind} peerName={peerName} peerPhoto={peerPhoto} sharing={sharing} />

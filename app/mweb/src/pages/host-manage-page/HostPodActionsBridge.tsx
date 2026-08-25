@@ -1,7 +1,7 @@
 import { useCallback, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildSlotLabels } from '@duncit/slots';
-import { podFeedbackPath } from '@duncit/utils';
+import { mwebPodMediaLabels, podFeedbackPath, podMediaPath } from '@duncit/utils';
 import {
   HostPodActionsProvider,
   mwebHostPodLabels,
@@ -25,43 +25,50 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
   const { t } = useTranslation();
   const labels = useMemo(() => mwebHostPodLabels(t), [t]);
   const slotLabels = useMemo(() => buildSlotLabels(t, 'mweb.slots'), [t]);
+  const podMediaLabels = useMemo(() => mwebPodMediaLabels(t), [t]);
 
   const renderMediaField = useCallback(
-    ({ value, onChange, error, label, folder }: Readonly<MediaFieldRenderProps>) => (
+    ({ value, onChange, error, label, folder, deviceOnly }: Readonly<MediaFieldRenderProps>) => (
       <MediaUrlsField
         value={value}
         onChange={onChange}
         error={error}
         label={label}
         folder={folder}
+        deviceOnly={deviceOnly}
       />
     ),
     [],
   );
 
   const onViewProfile = useCallback((path: string) => navigate(path), [navigate]);
-  // Every rating link a host sends goes out as a tracked short link, like the
-  // rest of mWeb's shares.
-  const resolveFeedbackShareUrl = useCallback(
-    (podId: string, plainUrl: string) => shareUrl('POD_FEEDBACK', podId, plainUrl),
+  // Every per-pod link a host sends goes out as a tracked short link, like the
+  // rest of mWeb's shares — and Share and Copy both resolve THIS one, so a pod
+  // has one media address rather than two.
+  const resolvePodShareUrl = useCallback(
+    (kind: 'POD_FEEDBACK' | 'POD_MEDIA', podId: string, plainUrl: string) =>
+      shareUrl(kind, podId, plainUrl),
     [],
   );
   const onOpenFeedback = useCallback(
     (podId: string) => navigate(podFeedbackPath(podId)),
     [navigate],
   );
+  const onOpenPodMedia = useCallback((podId: string) => navigate(podMediaPath(podId)), [navigate]);
 
   return (
     <HostPodActionsProvider
       labels={labels}
       slotLabels={slotLabels}
+      podMediaLabels={podMediaLabels}
       renderMediaField={renderMediaField}
       onViewProfile={onViewProfile}
       // Built from THIS origin, so a link opened on a local build stays local
       // instead of pointing at production.
-      feedbackBaseUrl={globalThis.window.location.origin}
+      linkBaseUrl={globalThis.window.location.origin}
       onOpenFeedback={onOpenFeedback}
-      resolveShareUrl={resolveFeedbackShareUrl}
+      onOpenPodMedia={onOpenPodMedia}
+      resolveShareUrl={resolvePodShareUrl}
       notifySuccess={notifySuccess}
       notifyError={notifyError}
     >

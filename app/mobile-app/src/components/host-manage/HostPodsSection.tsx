@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { RootStackParamList } from '@/navigation/types';
-import { useFeedbackLinkActions } from '@/hooks/useFeedbackLinkActions';
+import { useFeedbackLinkActions, usePodMediaLinkActions } from '@/hooks/usePodLinkActions';
 import { useHostPods, type HostPod } from '@/hooks/useHostPods';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
@@ -43,6 +43,7 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
   const feedbackLink = useFeedbackLinkActions();
+  const mediaLink = usePodMediaLinkActions();
   const { color: ink, onPrimary } = useThemeColors();
   const { pods, isLoading, refetch } = useHostPods();
   // The whole row, not the narrower edit shape — the sheet routes to complete,
@@ -96,9 +97,9 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           </Text>
         </XStack>
       </XStack>
-      {feedbackLink.notice ? (
+      {feedbackLink.notice || mediaLink.notice ? (
         <Text testID="host-pods-notice" fontSize={12.5} color="$success">
-          {feedbackLink.notice}
+          {feedbackLink.notice ?? mediaLink.notice}
         </Text>
       ) : null}
       <HostPodsList
@@ -155,6 +156,9 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           }
           setActionsPod(null);
         }}
+        onOpenPodMedia={withActionsPod(mediaLink.open)}
+        onSharePodMedia={withActionsPod(mediaLink.share)}
+        onCopyPodMedia={withActionsPod(mediaLink.copy)}
         onOpenFeedback={withActionsPod(feedbackLink.open)}
         onShareFeedback={withActionsPod(feedbackLink.share)}
         onCopyFeedback={withActionsPod(feedbackLink.copy)}

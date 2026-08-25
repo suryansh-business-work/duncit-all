@@ -39,6 +39,14 @@ export interface IShellState extends Document {
    * panel over the page — the same reason a taskbar remembers it in a desktop OS.
    */
   minimised: string[];
+  /**
+   * The permanent sidebar is minimised to its icon rail.
+   *
+   * A reading preference and not a viewport one: somebody who works from the
+   * icons wants them in every console they open, which is exactly what a
+   * per-browser flag cannot give them.
+   */
+  sidebar_collapsed: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -53,6 +61,7 @@ const shellStateSchema = new Schema<IShellState>(
     clock_zone: { type: String, default: '' },
     clock_seconds: { type: Boolean, default: false },
     minimised: { type: [String], default: [] },
+    sidebar_collapsed: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

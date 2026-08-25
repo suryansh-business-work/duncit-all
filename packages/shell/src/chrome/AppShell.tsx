@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, CircularProgress, Drawer } from '@mui/material';
-import { tokens } from '@duncit/theme';
+import { Box, CircularProgress } from '@mui/material';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import { useTranslation } from '../i18n/useTranslation';
 import { localizeNav, localizeSearchItems } from '../i18n/localize-nav';
@@ -11,14 +10,13 @@ import { AppHeader } from './AppHeader';
 import type { ShellTool } from './AppsDrawer/tools';
 import { StaffChatPanel } from '../staff-chat';
 import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
-import { AppSidebar } from './AppSidebar';
+import { AppShellNav } from './AppShellNav';
 import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
 import type { ShellUser } from './user-display';
-import { ABOVE_TASKBAR_HEIGHT, Taskbar, WorkspaceProvider } from '../workspace';
+import { Taskbar, WorkspaceProvider } from '../workspace';
 
 const MAIN_ID = 'app-main';
-const drawerWidth = tokens.size.drawerWidth;
 
 /** The slice of a portal's `appConfig` the chrome needs — pass appConfig directly. */
 export interface AppShellPortalConfig {
@@ -73,6 +71,7 @@ export function AppShell({
   const localizedNav = useMemo(() => localizeNav(nav, t), [nav, t]);
   const localizedSearch = useMemo(() => localizeSearchItems(searchItems, t), [searchItems, t]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileOpen(false), []);
   // The chat is DOCKED, so its open state belongs to the layout rather than to
   // the button: the panel is a sibling of the main content, and opening it
   // narrows that content instead of covering it.
@@ -149,40 +148,14 @@ export function AppShell({
           >
             {t('shell.chrome.skipToContent')}
           </Box>
-          <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label={t('shell.chrome.primaryNav')}>
-            <Drawer
-              variant="temporary"
-              open={mobileOpen}
-              onClose={() => setMobileOpen(false)}
-              ModalProps={{ keepMounted: true }}
-              sx={{
-                display: { xs: 'block', md: 'none' },
-                '& .MuiDrawer-paper': { width: drawerWidth, height: ABOVE_TASKBAR_HEIGHT },
-              }}
-            >
-              <AppSidebar
-                name={config.name}
-                nav={localizedNav}
-                user={user}
-                footerCaption={config.footerCaption}
-                onNavigate={() => setMobileOpen(false)}
-              />
-            </Drawer>
-            <Drawer
-              variant="permanent"
-              open
-              sx={{
-                display: { xs: 'none', md: 'block' },
-                '& .MuiDrawer-paper': {
-                  width: drawerWidth,
-                  boxSizing: 'border-box',
-                  height: ABOVE_TASKBAR_HEIGHT,
-                },
-              }}
-            >
-              <AppSidebar name={config.name} nav={localizedNav} user={user} footerCaption={config.footerCaption} />
-            </Drawer>
-          </Box>
+          <AppShellNav
+            name={config.name}
+            footerCaption={config.footerCaption}
+            nav={localizedNav}
+            user={user}
+            mobileOpen={mobileOpen}
+            onCloseMobile={closeMobileNav}
+          />
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <AppHeader
               title={config.fullName ?? config.name}

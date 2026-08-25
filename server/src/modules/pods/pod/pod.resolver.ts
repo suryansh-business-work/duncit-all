@@ -3,6 +3,7 @@ import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
 import type { PodLifecycle } from './pod.lifecycle';
 import { podDashboardService } from './pod.dashboard';
 import { coHostService } from './coHost.service';
+import { podMediaService } from './podMedia.service';
 import { loadClub } from '@modules/clubs/club/club.loaders';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
@@ -238,6 +239,10 @@ export const podResolvers = {
       const slugMap = await loadPodClubSlugMap(docs);
       return docs.map((d) => mapPodToPublic(d, slugMap));
     },
+    podMediaBoard: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podMediaService.board(args.pod_doc_id, { id: user.id, isAdmin: isAdminCtx(ctx) });
+    },
     hostPodDeleteImpact: async (
       _p: unknown,
       args: { pod_doc_id: string },
@@ -323,6 +328,22 @@ export const podResolvers = {
     ) => {
       const user = requireAuth(ctx);
       return podService.hostRemove(args.pod_doc_id, user.id, args.reason_subject, args.reason_note);
+    },
+    addPodPartyMedia: async (
+      _p: unknown,
+      args: { pod_doc_id: string; media: any[] },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podMediaService.add(args.pod_doc_id, { id: user.id, isAdmin: isAdminCtx(ctx) }, args.media);
+    },
+    removePodPartyMedia: async (
+      _p: unknown,
+      args: { pod_doc_id: string; url: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podMediaService.remove(args.pod_doc_id, { id: user.id, isAdmin: isAdminCtx(ctx) }, args.url);
     },
     addPodStatus: async (
       _p: unknown,

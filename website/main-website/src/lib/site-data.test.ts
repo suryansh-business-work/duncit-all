@@ -152,3 +152,36 @@ describe('fetchGrievanceOfficer', () => {
     await expect(siteData.fetchGrievanceOfficer()).resolves.toBeNull();
   });
 });
+
+describe('the build-time request cache', () => {
+  /**
+   * A static build renders many pages and every one of them asks for the same
+   * branding. Without this they would each POST again — more chances to hit
+   * the fetch timeout, and none of them able to return anything new, because a
+   * build is a single moment in time.
+   */
+  it('asks once per distinct query however many pages want the answer', async () => {
+    fetchMock.mockResolvedValue(ok({ branding: { app_name: 'Duncit' } }));
+
+    const [first, second] = await Promise.all([
+      siteData.fetchBranding(),
+      siteData.fetchBranding(),
+    ]);
+    const third = await siteData.fetchBranding();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(second).toEqual(first);
+    expect(third).toEqual(first);
+  });
+
+  it('asks again for the same query with different variables', async () => {
+    const fallback: SiteNavGroup[] = [{ label: 'Fallback', links: [] }];
+    fetchMock.mockResolvedValue(ok({ publicWebsiteNav: [] }));
+
+    await siteData.fetchNavGroups('MAIN', 'HEADER', fallback);
+    await siteData.fetchNavGroups('ADS', 'HEADER', fallback);
+
+    // Keyed on the variables too, or every site would render the first one's nav.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});

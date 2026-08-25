@@ -23,10 +23,12 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import {
+  sendHostPodAutoCancelledEmail,
   sendPodRefundEmail,
   sendPodUpdatedEmail,
   sendVenueSlotRequestEmail,
 } from '@services/email/email.service';
+import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.model';
 import { getUrlConfigs } from '@config/url-configs';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { assertInvitable } from './coHost.service';
@@ -554,8 +556,9 @@ async function podAudience(doc: any, excludeUserId: string) {
   // template instead, which is the answer to "why didn't they hear from us?".
 }
 
-/** Who cancelled a pod — doubles as the refund metadata tag and the audit source. */
-type PodCancelInitiator = 'HOST' | 'VENUE_OWNER' | 'ADMIN' | 'CLUB_ADMIN';
+/** Who cancelled a pod — doubles as the refund metadata tag and the audit source.
+ * SYSTEM is the auto-cancel sweep: no human pressed anything. */
+type PodCancelInitiator = 'HOST' | 'VENUE_OWNER' | 'ADMIN' | 'CLUB_ADMIN' | 'SYSTEM';
 
 /** Duncit's own side of a cancellation. A type guard rather than a comparison at
  * the call site so `remove` can hand the source straight to the shared path. */
@@ -573,6 +576,8 @@ const WA_CANCEL_EVENT: Record<PodCancelInitiator, string> = {
   VENUE_OWNER: 'USER_POD_CANCELLED_BY_VENUE',
   ADMIN: 'USER_POD_CANCELLED_BY_DUNCIT',
   CLUB_ADMIN: 'USER_POD_CANCELLED_BY_DUNCIT',
+  // The sweep speaks as the platform: the attendee is told Duncit cancelled it.
+  SYSTEM: 'USER_POD_CANCELLED_BY_DUNCIT',
 };
 
 /** The service method a cancellation's failures are filed under. */
@@ -581,7 +586,11 @@ const CANCEL_LOG_COMPONENT: Record<PodCancelInitiator, string> = {
   VENUE_OWNER: 'venueCancelPod',
   ADMIN: 'remove',
   CLUB_ADMIN: 'remove',
+  SYSTEM: 'systemCancelPod',
 };
+
+/** Round to whole paise — refund figures are printed to people. */
+const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
 /**
  * Soft-deletes a pod exactly once. The `deleted_at` flip is a CONDITIONAL write,
@@ -624,41 +633,72 @@ async function softDeletePod(
  * to each attendee and a refund note to each payer. Returns the refunded count,
  * or null when a concurrent cancel had already committed the delete — the
  * caller must then skip every follow-up effect rather than double-apply it.
+ *
+ * `refundPct` exists for the SYSTEM sweep, whose refund follows the venue's
+ * cancellation policy: each payment returns that share of its refundable
+ * remainder, the withheld rest staying with the platform to cover the venue's
+ * cancellation charge. Every human-initiated path keeps the full-refund default.
  */
 async function refundAndNotifyCancellation(
   doc: any,
   actorUserId: string,
   reason: string,
-  initiatedBy: PodCancelInitiator
+  initiatedBy: PodCancelInitiator,
+  refundPct = 100,
+  // Left out of the attendee fan-out because they are told separately. Defaults
+  // to the actor; the SYSTEM sweep has no actor but still mails the host itself.
+  excludeUserId = actorUserId
 ): Promise<number | null> {
   const podTitle = doc.pod_title;
   const logComponent = CANCEL_LOG_COMPONENT[initiatedBy];
+  const pct = Math.min(100, Math.max(0, Number(refundPct) || 0));
 
   const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
   // Keyed by payer and SUMMED: one person can hold several payments for a pod
   // (a second seat, a re-try), every one of them is flipped to REFUNDED here,
   // and keeping only the last document quoted them a fraction of their refund.
   const refundedByUser = new Map<string, { total: number; currency_symbol: string }>();
+  const paymentRefunds = new Map<string, number>();
   for (const payment of payments) {
-    payment.status = 'REFUNDED';
-    (payment as any).metadata = {
-      ...(payment as any).metadata,
-      refund_reason: reason,
-      refunded_at: new Date().toISOString(),
-      refund_initiated_by: initiatedBy,
-      refund_initiator_id: actorUserId,
-    };
-    payment.markModified('metadata');
-    await payment.save();
+    const meta = (payment as any).metadata ?? {};
+    // A partial Backout refund may already sit in refunded_amount — ticket
+    // money, so it nets against the ticket share, never against the products.
+    const alreadyRefunded = Number(meta.refunded_amount ?? 0);
+    // The venue's charge is a claim on TICKET money only: product add-ons ride
+    // on the same payment but never enter the pod waterfall (settlement's
+    // ticketMoneyOf), so the policy share applies to the ticket remainder and
+    // product money returns in full. At pct 100 this is total − alreadyRefunded.
+    const products = Number(meta.product_cost_total) || 0;
+    const ticketRefundable = Math.max(0, (payment.total ?? 0) - products - alreadyRefunded);
+    const refund = round2(products + (ticketRefundable * pct) / 100);
+    // CONDITIONAL flip, keyed on the payment still being SUCCESS: a human cancel
+    // racing the sweep may already have refunded this payment at ITS figure, and
+    // a plain save() from this stale snapshot would overwrite it. null means the
+    // other cancel owns this payment — it quotes and emails it, not this one.
+    const flipped = await PaymentModel.findOneAndUpdate(
+      { _id: payment._id, status: 'SUCCESS' },
+      {
+        $set: {
+          status: 'REFUNDED',
+          'metadata.refunded_amount': round2(alreadyRefunded + refund),
+          'metadata.refund_reason': reason,
+          'metadata.refunded_at': new Date().toISOString(),
+          'metadata.refund_initiated_by': initiatedBy,
+          'metadata.refund_initiator_id': actorUserId,
+        },
+      }
+    );
+    if (!flipped) continue;
+    paymentRefunds.set(String(payment._id), refund);
     const payerId = String(payment.user_id);
     const soFar = refundedByUser.get(payerId);
     refundedByUser.set(payerId, {
-      total: (soFar?.total ?? 0) + (payment.total ?? 0),
+      total: round2((soFar?.total ?? 0) + refund),
       currency_symbol: payment.currency_symbol,
     });
   }
 
-  const audience = await podAudience(doc, actorUserId);
+  const audience = await podAudience(doc, excludeUserId);
   const won = await softDeletePod(String(doc._id), {
     actorUserId,
     source: initiatedBy,
@@ -667,6 +707,31 @@ async function refundAndNotifyCancellation(
   // Another cancel committed first: it already emailed this audience, so
   // sending again would double-notify every attendee and payer.
   if (!won) return null;
+
+  // A cancelled pod can never fill a released seat, and the payments behind any
+  // open Backout were just flipped to REFUNDED above — left IN_PROCESS, the
+  // Finance refund flow would CONFLICT on them forever. Close them the way a
+  // rejoin does: CANCELLED, with the transition on the immutable timeline.
+  try {
+    const openBackouts = await BackoutRequestModel.find({
+      pod_id: doc._id,
+      status: 'IN_PROCESS',
+    });
+    for (const request of openBackouts) {
+      request.status = 'CANCELLED';
+      request.events.push({
+        status: 'CANCELLED',
+        backout_count: request.attempt_no,
+        at: new Date(),
+      });
+      await request.save();
+    }
+  } catch (err) {
+    logs.server.error('pod', logComponent, {
+      error: err,
+      msg: 'closing open backouts failed',
+    });
+  }
 
   // Best-effort after the delete commits: the payers' refund records.
   //
@@ -678,15 +743,19 @@ async function refundAndNotifyCancellation(
   // put two cancellation emails in front of every attendee.
   try {
     await Promise.allSettled(
-      payments.map((payment) =>
-        sendPodRefundEmail({
-          to: payment.user_email,
-          name: payment.user_name,
-          pod_title: podTitle,
-          amount: `${payment.currency_symbol}${payment.total}`,
-          reason,
-        })
-      )
+      payments
+        // A payer whose policy share came to nothing gets no "refund initiated"
+        // note — the cancellation email still reaches them, quoting a dash.
+        .filter((payment) => (paymentRefunds.get(String(payment._id)) ?? 0) > 0)
+        .map((payment) =>
+          sendPodRefundEmail({
+            to: payment.user_email,
+            name: payment.user_name,
+            pod_title: podTitle,
+            amount: `${payment.currency_symbol}${paymentRefunds.get(String(payment._id)) ?? 0}`,
+            reason,
+          })
+        )
     );
   } catch (err) {
     logs.server.error('pod', logComponent, {
@@ -697,7 +766,7 @@ async function refundAndNotifyCancellation(
 
   await whatsappPodCancellation(doc, initiatedBy, audience, refundedByUser);
 
-  return payments.length;
+  return paymentRefunds.size;
 }
 
 /** The refund as an email prints it: with its currency, or as a dash. */
@@ -783,6 +852,38 @@ async function whatsappHostCancellationRequested(doc: any, hostUserId: string) {
       String(podSeatsTaken(doc)),
     ],
   });
+}
+
+/** Tell the host the platform cancelled their pod for them — the auto-cancel is
+ * the one cancellation the host did not see coming, so silence here would read
+ * as the pod simply vanishing. Email only: there is no WhatsApp scenario for it. */
+async function emailHostAutoCancelled(doc: any) {
+  try {
+    const host: any = await UserModel.findById(podOwnerId(doc))
+      .select('profile.first_name profile.last_name auth.email')
+      .lean();
+    const email = host?.auth?.email;
+    if (!email) return;
+    const venue: any = doc.venue_id
+      ? await VenueModel.findById(doc.venue_id).select('venue_name').lean()
+      : null;
+    const hostName =
+      `${host?.profile?.first_name ?? ''} ${host?.profile?.last_name ?? ''}`.trim() || 'there';
+    await sendHostPodAutoCancelledEmail({
+      to: email,
+      name: hostName,
+      pod_title: doc.pod_title,
+      date: podDateLabel(doc),
+      time: podTimeLabel(doc),
+      venue: venue?.venue_name ?? '',
+      spots: String(podSeatsTaken(doc)),
+    });
+  } catch (err) {
+    logs.server.error('pod', 'systemCancelPod', {
+      error: err,
+      msg: 'host auto-cancel email failed',
+    });
+  }
 }
 
 /**
@@ -2287,6 +2388,35 @@ export const podService = {
     await doc.save();
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
+  },
+
+  /**
+   * Platform-initiated cancellation (the auto-cancel sweep): the same
+   * money-and-mail path as every other cancel, except the refund follows the
+   * venue's cancellation policy — `refundPct` of each payment's refundable
+   * remainder — and the host is emailed that their pod was cancelled for them.
+   * Returns the refunded payment count, or null when the pod was already
+   * cancelled (or never existed) — the caller must then treat it as done.
+   */
+  async systemCancelPod(podDocId: string, reason: string, refundPct: number) {
+    if (!Types.ObjectId.isValid(podDocId)) return null;
+    // The soft-delete pre-find hook hides already-cancelled pods, which is
+    // exactly the answer wanted here: null, nothing left to do.
+    const doc = await PodModel.findById(podDocId);
+    if (!doc) return null;
+    // The host is an attendee by default and is told by `emailHostAutoCancelled`
+    // below, so they stay out of the member fan-out — the same rule the host
+    // path applies. The audit actor and refund_initiator_id stay '' (nobody).
+    const refunded = await refundAndNotifyCancellation(
+      doc,
+      '',
+      reason,
+      'SYSTEM',
+      refundPct,
+      podOwnerId(doc)
+    );
+    if (refunded !== null) await emailHostAutoCancelled(doc);
+    return refunded;
   },
 
   async remove(id: string, audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null }) {

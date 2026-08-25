@@ -1186,6 +1186,10 @@ export type AppSettings = {
   max_backout_attempts: Scalars['Int']['output'];
   /** Minimum age (whole years) required to sign up or save a date of birth. */
   min_signup_age: Scalars['Int']['output'];
+  /** Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy. */
+  pod_auto_cancel_enabled: Scalars['Boolean']['output'];
+  /** How many hours before a pod's start the auto-cancel finance check runs. */
+  pod_auto_cancel_lead_hours: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
   time_source: TimeSource;
@@ -8787,6 +8791,12 @@ export type Mutation = {
   saveMyBrandPickupLocation: BrandPickupLocation;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
+  /**
+   * Store the caller's chrome arrangement. Only the fields present in the input
+   * are written, so two consoles open at once cannot overwrite each other's
+   * unrelated preferences.
+   */
+  saveShellWorkspaceState: ShellWorkspaceState;
   /** Save part of your chat setup. Anything omitted is left as it was. */
   saveStaffChatState: StaffChatState;
   seedSuperAdmin: SeedAdminResult;
@@ -11324,6 +11334,11 @@ export type MutationSavePodDraftArgs = {
 
 export type MutationSavePushSubscriptionArgs = {
   input: PushSubscriptionInput;
+};
+
+
+export type MutationSaveShellWorkspaceStateArgs = {
+  input: ShellWorkspaceStateInput;
 };
 
 
@@ -15915,7 +15930,7 @@ export type Query = {
   financeSettings: FinanceSettings;
   /** People who follow the given user (their public profiles). */
   followersOf: Array<PublicProfile>;
-  /** Posts + active stories from the people/clubs the viewer follows, newest first. */
+  /** Posts from the people/clubs the viewer follows, newest first. Stories are excluded — they live on the story rails. */
   followingFeed: Array<Post>;
   /** People the given user follows (their public profiles). */
   followingOf: Array<PublicProfile>;
@@ -16457,6 +16472,12 @@ export type Query = {
    * bundles when seeding Translations, so email copy is translatable too.
    */
   serverTranslationSeed: Array<TranslationEntry>;
+  /**
+   * The caller's own chrome arrangement, with every default filled in when they
+   * have never changed anything. Always scoped to the caller — this is a
+   * personal preference and is never readable for anybody else.
+   */
+  shellWorkspaceState: ShellWorkspaceState;
   shortLink: ShortLink;
   /** Every campaign a link can be filed under — the share campaigns and the email ones. */
   shortLinkCampaigns: Array<ShortLinkCampaign>;
@@ -19585,6 +19606,37 @@ export type ShareLinkTarget =
   | 'PROFILE'
   | 'REFERRAL';
 
+/**
+ * How one person has their console chrome arranged: the taskbar along the
+ * bottom of every portal and the Agent tab stuck to its edge.
+ *
+ * Kept on the server rather than in the browser because the shell renders in
+ * all seventeen consoles and each is its own origin — "per browser" would mean
+ * "per portal you happen to have open".
+ */
+export type ShellWorkspaceState = {
+  __typename?: 'ShellWorkspaceState';
+  /** LEFT or RIGHT — which side the Agent tab is stuck to. */
+  agent_edge: Scalars['String']['output'];
+  /** How far down that edge the Agent tab sits, 0 (top) to 1 (bottom). */
+  agent_offset: Scalars['Float']['output'];
+  /** Whether the taskbar clock counts seconds. */
+  clock_seconds: Scalars['Boolean']['output'];
+  /** IANA zone for the taskbar clock, or '' to follow the admin's setting. */
+  clock_zone: Scalars['String']['output'];
+  /** Window ids currently rolled up to the taskbar. */
+  minimised: Array<Scalars['String']['output']>;
+};
+
+/** Every field optional: the shell saves the one thing that changed. */
+export type ShellWorkspaceStateInput = {
+  agent_edge?: InputMaybe<Scalars['String']['input']>;
+  agent_offset?: InputMaybe<Scalars['Float']['input']>;
+  clock_seconds?: InputMaybe<Scalars['Boolean']['input']>;
+  clock_zone?: InputMaybe<Scalars['String']['input']>;
+  minimised?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
   awb: Scalars['String']['output'];
@@ -21392,6 +21444,10 @@ export type UpdateAppSettingsInput = {
   max_backout_attempts?: InputMaybe<Scalars['Int']['input']>;
   /** Minimum age to use the app, in whole years (1-120). */
   min_signup_age?: InputMaybe<Scalars['Int']['input']>;
+  /** Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy. */
+  pod_auto_cancel_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How many hours before a pod's start the auto-cancel finance check runs (1-8760). */
+  pod_auto_cancel_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;

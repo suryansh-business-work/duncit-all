@@ -131,8 +131,10 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.userPodCancelledVenue.body':
     'The venue has withdrawn the room for the pod below, so it cannot go ahead and your payment is being refunded. Your host is looking for another slot.',
   'email.userPodCancelledDuncit.title': 'This pod has been cancelled',
+  // No "in full": the auto-cancel sweep sends this too, and its refund follows
+  // the venue's cancellation policy — the figure in the rows is the promise.
   'email.userPodCancelledDuncit.body':
-    'We have had to cancel the pod below. Your payment is being refunded in full, and you do not need to do anything to claim it.',
+    'We have had to cancel the pod below. The refund due to you is shown here, and you do not need to do anything to claim it.',
 
   // --- Member: the rest ----------------------------------------------------
   'email.userPodReminder.title': 'Your pod is coming up',
@@ -232,6 +234,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.hostPodCancellationRequested.title': 'Your cancellation is in',
   'email.hostPodCancellationRequested.body':
     'We have your request to cancel the pod below. Everyone who had booked is being told and refunded, and the venue slot is released.',
+  'email.hostPodAutoCancelled.title': 'Your pod has been cancelled',
+  'email.hostPodAutoCancelled.body':
+    'The pod below could not cover its venue cost, so it has been cancelled automatically. Everyone who had booked is being told and refunded under the venue’s cancellation policy, and the venue slot is released.',
   'email.hostCompletePodReminder.title': 'This pod still needs completing',
   'email.hostCompletePodReminder.body':
     'The pod below has finished but is not marked complete, and nobody is paid until it is. Completing it also locks the attendance, so check the roster first.',

@@ -10,6 +10,7 @@ import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
+import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
@@ -321,6 +322,11 @@ async function bootstrap() {
 
   // Auto Pods: expire offers whose slot date passed, recover stuck materializations.
   startAutoPodSweepScheduler();
+
+  // Pod auto-cancel: inside the admin-configured lead window, cancel pods whose
+  // settlement would leave the host side negative, refunding attendees under
+  // each venue's cancellation policy. Off until an admin enables it.
+  startPodAutoCancelScheduler();
 
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();

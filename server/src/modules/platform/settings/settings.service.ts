@@ -26,6 +26,11 @@ const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
 const DEFAULT_VENUE_CANCEL_HEALTH_PENALTY = 5;
 /** OTP verification before a by-hand attendance mark is on unless switched off. */
 const DEFAULT_ATTENDANCE_OTP_REQUIRED = true;
+/** Auto-cancel of finance-negative pods is opt-in — cancelling pods is the one
+ * action here that cannot be undone, so it never turns itself on. */
+const DEFAULT_POD_AUTO_CANCEL_ENABLED = false;
+/** Hours before a pod's start when the auto-cancel finance check runs. */
+const DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS = 24;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -48,6 +53,10 @@ const cleanVenueCancelHealthPenalty = (value: unknown) => {
   return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_VENUE_CANCEL_HEALTH_PENALTY;
 };
 
+/** Auto-cancel lead window, clamped to 1 hour – 1 year. */
+const cleanPodAutoCancelLeadHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS));
+
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
   jwt_no_expiry: true,
@@ -66,6 +75,9 @@ const toAppPub = (d: any) => ({
   // path with no scan behind it, so it starts verified until an admin says
   // otherwise.
   attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
+  pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
+  pod_auto_cancel_lead_hours:
+    d?.pod_auto_cancel_lead_hours ?? DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -364,6 +376,8 @@ type AppSettingsUpdateInput = {
   max_backout_attempts?: number;
   venue_cancel_health_penalty?: number;
   attendance_otp_required?: boolean;
+  pod_auto_cancel_enabled?: boolean;
+  pod_auto_cancel_lead_hours?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -375,6 +389,7 @@ const APP_SETTING_PASSTHROUGH_FIELDS = [
   "time_zone",
   "time_source",
   "attendance_otp_required",
+  "pod_auto_cancel_enabled",
 ] as const;
 
 /** Saving an anchor stamps the server clock beside it, so every device can
@@ -401,6 +416,10 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   if (input.venue_cancel_health_penalty !== undefined)
     update.venue_cancel_health_penalty = cleanVenueCancelHealthPenalty(
       input.venue_cancel_health_penalty,
+    );
+  if (input.pod_auto_cancel_lead_hours !== undefined)
+    update.pod_auto_cancel_lead_hours = cleanPodAutoCancelLeadHours(
+      input.pod_auto_cancel_lead_hours,
     );
   return update;
 };
@@ -452,6 +471,16 @@ export const settingsService = {
   async getVenueCancelHealthPenalty(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return cleanVenueCancelHealthPenalty(doc?.venue_cancel_health_penalty);
+  },
+
+  /** The auto-cancel sweep's knobs: whether it acts at all (default off) and
+   * how many hours before a pod's start the finance check runs (default 24). */
+  async getPodAutoCancelSettings(): Promise<{ enabled: boolean; lead_hours: number }> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return {
+      enabled: doc?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
+      lead_hours: cleanPodAutoCancelLeadHours(doc?.pod_auto_cancel_lead_hours),
+    };
   },
 
   // The Duncit Coin earn rate used to be read here. It is a coin payout rule

@@ -32,6 +32,15 @@ export interface IAppSettings extends Document {
    * the host vouches for the identity themselves and the mark is recorded as
    * unverified. The door scan is proof on its own and is unaffected either way. */
   attendance_otp_required: boolean;
+  /** Whether the auto-cancel sweep cancels upcoming pods whose live settlement
+   * would leave the host side negative — the pool after GST, platform fee and
+   * the club-admin cut cannot cover the venue's booked slot price (Admin >
+   * Pods > Pod Settings). Refunds follow each venue's cancellation policy. */
+  pod_auto_cancel_enabled: boolean;
+  /** How many hours before a pod's start the auto-cancel finance check runs
+   * (Admin > Pods > Pod Settings). Pods starting inside this window are the
+   * ones the sweep evaluates. */
+  pod_auto_cancel_lead_hours: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -57,6 +66,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     max_backout_attempts: { type: Number, default: 3, min: 1 },
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
     attendance_otp_required: { type: Boolean, default: true },
+    pod_auto_cancel_enabled: { type: Boolean, default: false },
+    pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

@@ -79,6 +79,11 @@ const EMPTY_TALLY: PaymentTally = {
   unrefunded_total: 0,
 };
 
+/** What a REFUNDED payment actually returned: the stamped figure when a policy
+ * refund (the auto-cancel sweep) kept part of `total`, the whole payment for
+ * rows flipped before the stamp existed. */
+const REFUNDED_MONEY_EXPR = { $ifNull: ['$metadata.refunded_amount', '$total'] };
+
 /** REFUNDED + still-SUCCESS payment money per pod, in one aggregation. */
 async function paymentTallies(podIds: string[]): Promise<Map<string, PaymentTally>> {
   const rows = await PaymentModel.aggregate([
@@ -92,7 +97,9 @@ async function paymentTallies(podIds: string[]): Promise<Map<string, PaymentTall
       $group: {
         _id: { pod: '$pod_id', status: '$status' },
         count: { $sum: 1 },
-        total: { $sum: '$total' },
+        total: {
+          $sum: { $cond: [{ $eq: ['$status', 'REFUNDED'] }, REFUNDED_MONEY_EXPR, '$total'] },
+        },
       },
     },
   ]);
@@ -236,7 +243,7 @@ export const podCancellationService = {
       ]),
       PaymentModel.aggregate([
         { $match: { pod_id: { $in: cancelledIds }, status: 'REFUNDED' } },
-        { $group: { _id: null, count: { $sum: 1 }, total: { $sum: '$total' } } },
+        { $group: { _id: null, count: { $sum: 1 }, total: { $sum: REFUNDED_MONEY_EXPR } } },
       ]),
     ]);
     const bySource = new Map<string, number>(kindRows.map((r: any) => [r._id, r.count]));

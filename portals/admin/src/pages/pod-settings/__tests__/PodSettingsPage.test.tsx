@@ -18,6 +18,8 @@ const POD_SETTINGS = gql`
       max_backout_attempts
       venue_cancel_health_penalty
       attendance_otp_required
+      pod_auto_cancel_enabled
+      pod_auto_cancel_lead_hours
       updated_at
     }
   }
@@ -30,6 +32,8 @@ const UPDATE_POD_SETTINGS = gql`
       max_backout_attempts
       venue_cancel_health_penalty
       attendance_otp_required
+      pod_auto_cancel_enabled
+      pod_auto_cancel_lead_hours
       updated_at
     }
   }
@@ -40,6 +44,8 @@ interface SavedPodSettings {
   max_backout_attempts: number;
   venue_cancel_health_penalty: number;
   attendance_otp_required: boolean;
+  pod_auto_cancel_enabled: boolean;
+  pod_auto_cancel_lead_hours: number;
 }
 
 const SAVED: SavedPodSettings = {
@@ -47,6 +53,8 @@ const SAVED: SavedPodSettings = {
   max_backout_attempts: 3,
   venue_cancel_health_penalty: 5,
   attendance_otp_required: true,
+  pod_auto_cancel_enabled: false,
+  pod_auto_cancel_lead_hours: 24,
 };
 
 /** The page refetches after every save, so this mock must be reusable. */

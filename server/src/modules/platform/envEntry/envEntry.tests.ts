@@ -1,4 +1,8 @@
 import nodemailer from 'nodemailer';
+import {
+  recordManualSend,
+  WA_CONNECTION_TEST_EVENT_KEY,
+} from '@modules/platform/whatsapp/whatsapp.manualLog';
 import { GraphQLError } from 'graphql';
 import { emailLogService } from '@modules/content/emailLog/emailLog.service';
 import { uploadToImagekit } from '@modules/platform/upload/upload.service';
@@ -111,9 +115,25 @@ const impl = {
         };
       }
     }
+    const startedAt = Date.now();
     const result = await runEnvConnectionCheck(category, (key) => str(config, key), {
       to: destination,
     });
+    // The AiSensy check SENDS — it is the only call its key can make — so the
+    // message it puts out is real and billed, and it belongs in the WhatsApp
+    // log for the same reason the SMTP test below reaches Emails > Logs: an
+    // empty table is the wrong answer to "did anything actually go out?". The
+    // id AiSensy returned stays in the entry's own test history; what this row
+    // is for is that the attempt happened at all.
+    if (destination) {
+      await recordManualSend({
+        key: WA_CONNECTION_TEST_EVENT_KEY,
+        campaign: str(config, 'campaign_name'),
+        destination,
+        reason: result.ok ? '' : result.message,
+        duration_ms: Date.now() - startedAt,
+      });
+    }
     if (result.ok) await touch(id);
     return result;
   },

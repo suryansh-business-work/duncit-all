@@ -166,18 +166,36 @@ export async function waPreferenceAllows(destination: string, category: string):
   }
 }
 
-/** A log row for an outcome that never reached AiSensy. */
+/** The number this send was addressed to, without ever throwing — it is read
+ * on the path that files a row for a send that already went wrong. */
+function addressedTo(input: WaSendInput): string {
+  try {
+    return input.destination ? digits(input.destination) : destinationFor(input.user ?? {});
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * A log row for an outcome that never reached AiSensy.
+ *
+ * `event` is nullable because the two outcomes that need a row MOST are the
+ * two that cannot supply one: a key that is not in the registry, and a throw
+ * before the registry was ever read. Both used to return an outcome and write
+ * nothing at all, so the Logs console showed no trace of a message the caller
+ * was told had been handled.
+ */
 async function record(
-  event: WaEvent,
+  event: WaEvent | null,
   input: WaSendInput,
   destination: string,
   outcome: WaSendOutcome
 ): Promise<WaSendOutcome> {
   await WaMessageLogModel.create({
-    event_key: event.key,
-    campaign: event.campaign,
-    category: event.category,
-    audience: event.audience,
+    event_key: event?.key ?? input.event,
+    campaign: event?.campaign ?? '',
+    category: event?.category ?? '',
+    audience: event?.audience ?? '',
     entity_id: text(input.entityId),
     recipient_user_id: input.user?._id ?? null,
     destination,
@@ -187,7 +205,9 @@ async function record(
     // A row that did not send holds no slot, so the same event can be tried
     // again once the number is added or the switch is turned back on.
     holds_slot: false,
-  }).catch((error) => logs.server.warn('whatsapp', 'record', { error, event: event.key }));
+  }).catch((error) =>
+    logs.server.warn('whatsapp', 'record', { error, event: event?.key ?? input.event })
+  );
   return outcome;
 }
 
@@ -205,16 +225,18 @@ function paramError(params: string[], event: WaEvent): string {
 const isDuplicate = (error: unknown) => (error as { code?: number })?.code === 11000;
 
 async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
+  const destination = addressedTo(input);
   const event = WA_EVENT_BY_KEY.get(input.event);
   if (!event) {
-    // A key that is not in the registry is a wiring mistake, not a runtime
-    // condition — there is no row to file it against, so it goes to the log.
+    // A key that is not in the registry is a wiring mistake rather than a
+    // runtime condition, so it goes to the app log AS WELL — but it still files
+    // a row under the key that was asked for, because a scenario that silently
+    // logs nothing is the hardest kind of missing message to find.
     logs.server.error('whatsapp', 'send', { error: new Error(`Unknown event ${input.event}`) });
-    return skip('Unknown event');
+    return record(null, input, destination, skip('Unknown event'));
   }
 
   const switches = await switchesFor(event.key);
-  const destination = input.destination ? digits(input.destination) : destinationFor(input.user ?? {});
   if (!switches.on) return record(event, input, destination, skip(switches.reason));
   if (!destination) return record(event, input, '', skip('No WhatsApp number'));
 
@@ -285,10 +307,13 @@ async function dispatch(
       template_params: params,
       media,
     });
+    // Caught here, not left to the outer guard: an update that throws would
+    // reach `send`'s catch and file a SECOND row for a message that already has
+    // one.
     await WaMessageLogModel.updateOne(
       { _id: row._id },
       { $set: { status: 'SENT', submitted_message_id: messageId, duration_ms: Date.now() - startedAt } }
-    );
+    ).catch((error) => logs.server.warn('whatsapp', 'record', { error, event: event.key }));
     return sent(messageId);
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'AiSensy rejected the message';
@@ -297,7 +322,7 @@ async function dispatch(
     await WaMessageLogModel.updateOne(
       { _id: row._id },
       { $set: { status: 'FAILED', reason, holds_slot: false, duration_ms: Date.now() - startedAt } }
-    );
+    ).catch((e) => logs.server.warn('whatsapp', 'record', { error: e, event: event.key }));
     logs.server.warn('whatsapp', 'send', { error, event: event.key });
     return failed(reason);
   }
@@ -310,7 +335,19 @@ export const whatsappService = {
       return await deliver(input);
     } catch (error) {
       logs.server.error('whatsapp', 'send', { error, event: input.event });
-      return failed('Unexpected error');
+      // Everything that reaches here threw BEFORE the claim was written —
+      // `dispatch` catches its own bookkeeping — so this row is the only record
+      // this attempt will ever have. Without it the console shows nothing for a
+      // message the caller was told was handled.
+      const reason = error instanceof Error ? error.message : 'Unexpected error';
+      // Caught, because the contract at the top of this file is that send
+      // NEVER throws, and filing the row is the last thing that could break it.
+      return await record(
+        WA_EVENT_BY_KEY.get(input.event) ?? null,
+        input,
+        addressedTo(input),
+        failed(reason)
+      ).catch(() => failed(reason));
     }
   },
 

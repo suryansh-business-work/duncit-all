@@ -41,16 +41,14 @@ function blockerFor(
   if (template.param_count !== declaredParams) {
     return `Template takes ${template.param_count} value(s), the code sends ${declaredParams}`;
   }
-  // The send path reads the asset off the SETTING row — so a campaign that
-  // carries media while the row holds neither the cache nor an admin override
-  // is a send that will come back "Media URL Missing" until somebody presses
-  // Reconcile.
-  if (campaign.media_url && !cachedMediaUrl && !overrideMediaUrl) {
-    return 'Campaign needs its media — press Reconcile';
-  }
+  // A campaign that carries media needs no blocker: an unsynced row binds the
+  // asset off AiSensy on its first send (`bindCampaignMedia`), so Reconcile is
+  // an optimisation rather than something an operator has to remember.
+  //
   // A media-header template with NO asset anywhere — not on the campaign (the
-  // API cannot attach one), not cached, not set by an admin — fails the same
-  // way, and Reconcile has nothing to fetch. Only an operator can fix this one.
+  // API cannot attach one), not cached, not set by an admin — is the one case
+  // nothing can bind, because there is nothing to bind. Only an operator can
+  // fix it.
   if (template.needs_media && !campaign.media_url && !cachedMediaUrl && !overrideMediaUrl) {
     return 'Template needs a header asset — set media on this row, or attach it to the campaign in the AiSensy console';
   }
@@ -210,6 +208,9 @@ export const whatsappAdminService = {
               // blank over it is how a custom asset would silently vanish.
               media_url: campaign?.media_url ?? '',
               media_filename: campaign?.media_filename ?? '',
+              // Stamped so the send path knows a blank asset means "this
+              // campaign has none" rather than "nobody has looked yet".
+              media_synced_at: new Date(),
               updated_by: actorId(actor),
             },
           },
@@ -244,6 +245,8 @@ export const whatsappAdminService = {
       status: doc.status,
       reason: doc.reason ?? '',
       params: doc.params ?? [],
+      media_url: doc.media_url ?? '',
+      media_filename: doc.media_filename ?? '',
       submitted_message_id: doc.submitted_message_id ?? '',
       template_category: doc.template_category ?? '',
       msg_rate: doc.msg_rate ?? 0,

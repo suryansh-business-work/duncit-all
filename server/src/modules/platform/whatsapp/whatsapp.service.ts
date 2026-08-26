@@ -2,6 +2,7 @@ import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
 import { sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
+import { listCampaigns } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
 import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
 import { WaMessageLogModel, type WaMessageStatus } from './waMessageLog.model';
@@ -62,16 +63,28 @@ interface Switches {
   /** The header asset this scenario sends: the admin's override when one is
    * set, else the asset cached off the campaign by the console's reconcile. */
   media: { url: string; filename: string } | null;
+  /** Whether that cache has ever been filled. A blank asset on a row nobody has
+   * synced is not "no asset" — it is "nobody looked", and `bindCampaignMedia`
+   * is what looks. */
+  media_synced: boolean;
 }
 
 /** Both switches in one read: the collection holds a handful of rows. */
 async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
-    .select('event_key enabled template_category media_url media_filename override_media_url override_media_filename')
+    .select(
+      'event_key enabled template_category media_url media_filename media_synced_at override_media_url override_media_filename'
+    )
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
   const own = rows.find((row) => row.event_key === eventKey);
-  const off = (reason: string): Switches => ({ on: false, reason, category: '', media: null });
+  const off = (reason: string): Switches => ({
+    on: false,
+    reason,
+    category: '',
+    media: null,
+    media_synced: true,
+  });
   // An absent global row means nobody has turned automatic WhatsApp on yet.
   if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) return off('Automatic WhatsApp is switched off');
   // An absent scenario row means ON — a newly wired scenario works without
@@ -88,7 +101,51 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     reason: '',
     category: own?.template_category ?? '',
     media: mediaUrl ? { url: mediaUrl, filename: mediaFilename || 'attachment' } : null,
+    media_synced: Boolean(own?.media_synced_at),
   };
+}
+
+/**
+ * The campaign's own header asset, read off AiSensy and cached onto the row.
+ *
+ * The cache is normally filled by the console's Reconcile — but a scenario
+ * nobody has reconciled sends with nothing attached, and a media campaign
+ * answers that with `Media URL Missing (HTTP 400)`. Binding it here is what
+ * makes Reconcile an optimisation rather than a prerequisite for a message the
+ * platform sends by itself.
+ *
+ * It costs ONE catalogue read per scenario, ever: the stamp is written whatever
+ * the answer was, so a text template never pays for a second one. The admin
+ * override is untouched — this fills the reconcile-owned pair, and only when
+ * that pair has never been filled.
+ *
+ * Best effort. The Project API is a second credential the send itself does not
+ * need, so a console that cannot read it sends exactly as before — the rule
+ * `resolveCampaign` already follows for a marketing send.
+ */
+async function bindCampaignMedia(event: WaEvent, switches: Switches) {
+  if (switches.media_synced) return null;
+  try {
+    const campaign = (await listCampaigns()).find((row) => row.name === event.campaign);
+    await WaEventSettingModel.updateOne(
+      { event_key: event.key },
+      {
+        $set: {
+          media_url: campaign?.media_url ?? '',
+          media_filename: campaign?.media_filename ?? '',
+          media_synced_at: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+    if (!campaign?.media_url) return null;
+    return { url: campaign.media_url, filename: campaign.media_filename || 'attachment' };
+  } catch (error) {
+    // An unconfigured or unreachable Project API is not a send failure. No
+    // stamp is written, so the next send on this scenario tries again.
+    logs.server.debug('whatsapp', 'bindMedia', { error, event: event.key });
+    return null;
+  }
 }
 
 /**
@@ -109,18 +166,36 @@ export async function waPreferenceAllows(destination: string, category: string):
   }
 }
 
-/** A log row for an outcome that never reached AiSensy. */
+/** The number this send was addressed to, without ever throwing — it is read
+ * on the path that files a row for a send that already went wrong. */
+function addressedTo(input: WaSendInput): string {
+  try {
+    return input.destination ? digits(input.destination) : destinationFor(input.user ?? {});
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * A log row for an outcome that never reached AiSensy.
+ *
+ * `event` is nullable because the two outcomes that need a row MOST are the
+ * two that cannot supply one: a key that is not in the registry, and a throw
+ * before the registry was ever read. Both used to return an outcome and write
+ * nothing at all, so the Logs console showed no trace of a message the caller
+ * was told had been handled.
+ */
 async function record(
-  event: WaEvent,
+  event: WaEvent | null,
   input: WaSendInput,
   destination: string,
   outcome: WaSendOutcome
 ): Promise<WaSendOutcome> {
   await WaMessageLogModel.create({
-    event_key: event.key,
-    campaign: event.campaign,
-    category: event.category,
-    audience: event.audience,
+    event_key: event?.key ?? input.event,
+    campaign: event?.campaign ?? '',
+    category: event?.category ?? '',
+    audience: event?.audience ?? '',
     entity_id: text(input.entityId),
     recipient_user_id: input.user?._id ?? null,
     destination,
@@ -130,7 +205,9 @@ async function record(
     // A row that did not send holds no slot, so the same event can be tried
     // again once the number is added or the switch is turned back on.
     holds_slot: false,
-  }).catch((error) => logs.server.warn('whatsapp', 'record', { error, event: event.key }));
+  }).catch((error) =>
+    logs.server.warn('whatsapp', 'record', { error, event: event?.key ?? input.event })
+  );
   return outcome;
 }
 
@@ -148,16 +225,18 @@ function paramError(params: string[], event: WaEvent): string {
 const isDuplicate = (error: unknown) => (error as { code?: number })?.code === 11000;
 
 async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
+  const destination = addressedTo(input);
   const event = WA_EVENT_BY_KEY.get(input.event);
   if (!event) {
-    // A key that is not in the registry is a wiring mistake, not a runtime
-    // condition — there is no row to file it against, so it goes to the log.
+    // A key that is not in the registry is a wiring mistake rather than a
+    // runtime condition, so it goes to the app log AS WELL — but it still files
+    // a row under the key that was asked for, because a scenario that silently
+    // logs nothing is the hardest kind of missing message to find.
     logs.server.error('whatsapp', 'send', { error: new Error(`Unknown event ${input.event}`) });
-    return skip('Unknown event');
+    return record(null, input, destination, skip('Unknown event'));
   }
 
   const switches = await switchesFor(event.key);
-  const destination = input.destination ? digits(input.destination) : destinationFor(input.user ?? {});
   if (!switches.on) return record(event, input, destination, skip(switches.reason));
   if (!destination) return record(event, input, '', skip('No WhatsApp number'));
 
@@ -181,6 +260,14 @@ async function dispatch(
   switches: Switches
 ): Promise<WaSendOutcome> {
   const pricing = await getWaPricing();
+
+  // A caller with a better asset — this pod's own image — wins over the row's,
+  // and the row's over the campaign's own (caller > admin override > cache >
+  // AiSensy). A media campaign rejects a send that carries none, and the
+  // requirement is invisible on the template.
+  const media =
+    input.media ?? switches.media ?? (await bindCampaignMedia(event, switches)) ?? undefined;
+
   const claim = {
     event_key: event.key,
     campaign: event.campaign,
@@ -193,13 +280,12 @@ async function dispatch(
     params,
     template_category: switches.category,
     msg_rate: ratePerMessage(pricing, switches.category || 'UTILITY'),
+    // Frozen alongside the params: a header that went out empty is the whole
+    // story behind a `Media URL Missing` row, and nothing else records it.
+    media_url: media?.url ?? '',
+    media_filename: media?.filename ?? '',
     holds_slot: true,
   };
-
-  // A caller with a better asset — this pod's own image — wins over the row's
-  // (caller > admin override > campaign cache). A media campaign rejects a send
-  // that carries none, and the requirement is invisible on the template.
-  const media = input.media ?? switches.media ?? undefined;
 
   let row;
   try {
@@ -221,10 +307,13 @@ async function dispatch(
       template_params: params,
       media,
     });
+    // Caught here, not left to the outer guard: an update that throws would
+    // reach `send`'s catch and file a SECOND row for a message that already has
+    // one.
     await WaMessageLogModel.updateOne(
       { _id: row._id },
       { $set: { status: 'SENT', submitted_message_id: messageId, duration_ms: Date.now() - startedAt } }
-    );
+    ).catch((error) => logs.server.warn('whatsapp', 'record', { error, event: event.key }));
     return sent(messageId);
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'AiSensy rejected the message';
@@ -233,7 +322,7 @@ async function dispatch(
     await WaMessageLogModel.updateOne(
       { _id: row._id },
       { $set: { status: 'FAILED', reason, holds_slot: false, duration_ms: Date.now() - startedAt } }
-    );
+    ).catch((e) => logs.server.warn('whatsapp', 'record', { error: e, event: event.key }));
     logs.server.warn('whatsapp', 'send', { error, event: event.key });
     return failed(reason);
   }
@@ -246,7 +335,19 @@ export const whatsappService = {
       return await deliver(input);
     } catch (error) {
       logs.server.error('whatsapp', 'send', { error, event: input.event });
-      return failed('Unexpected error');
+      // Everything that reaches here threw BEFORE the claim was written —
+      // `dispatch` catches its own bookkeeping — so this row is the only record
+      // this attempt will ever have. Without it the console shows nothing for a
+      // message the caller was told was handled.
+      const reason = error instanceof Error ? error.message : 'Unexpected error';
+      // Caught, because the contract at the top of this file is that send
+      // NEVER throws, and filing the row is the last thing that could break it.
+      return await record(
+        WA_EVENT_BY_KEY.get(input.event) ?? null,
+        input,
+        addressedTo(input),
+        failed(reason)
+      ).catch(() => failed(reason));
     }
   },
 

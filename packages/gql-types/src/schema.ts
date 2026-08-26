@@ -23570,6 +23570,13 @@ export type WaMessageLogRow = {
   entity_id: Scalars['String']['output'];
   event_key: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  media_filename: Scalars['String']['output'];
+  /**
+   * The header asset this message carried, as it went out. Blank on a text
+   * template — and blank on the send that came back "Media URL Missing", which
+   * is the failure it is here to make visible.
+   */
+  media_url: Scalars['String']['output'];
   msg_rate: Scalars['Float']['output'];
   params: Array<Scalars['String']['output']>;
   /** Why it was skipped, or how it failed. */

@@ -5,6 +5,10 @@ import { logs } from '@observability/log';
 import { aisensyService } from '@modules/platform/aisensy/aisensy.service';
 import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
 import {
+  recordManualSend,
+  WA_MANUAL_EVENT_KEY,
+} from '@modules/platform/whatsapp/whatsapp.manualLog';
+import {
   isProjectApiConfigured,
   listCampaigns,
   listTemplates,
@@ -731,17 +735,45 @@ export const waCampaignService = {
   async testSend(input: any) {
     const templateParams = (input.template_params ?? []).map(str);
     const resolved = await resolveCampaign(str(input.wa_campaign_name));
-    return aisensyService.send({
-      campaign_name: input.wa_campaign_name,
-      destination: input.destination,
-      user_name: input.user_name,
+    const extras = sendExtras(resolved, {
       template_params: templateParams,
-      ...sendExtras(resolved, {
-        template_params: templateParams,
-        media: input.media,
-        buttons: input.buttons,
-      }),
+      media: input.media,
+      buttons: input.buttons,
     });
+    // A test is a REAL WhatsApp message and is billed like any other, so it is
+    // filed in the same log — sent or rejected. It used to go out through
+    // `aisensyService.send` and leave no trace, which is why "I sent a test and
+    // nothing arrived" had no answer anywhere in the console.
+    const startedAt = Date.now();
+    const log = (reason: string, submitted_message_id: string) =>
+      recordManualSend({
+        key: WA_MANUAL_EVENT_KEY,
+        campaign: str(input.wa_campaign_name),
+        destination: str(input.destination),
+        template_category: resolved.template_category,
+        msg_rate: resolved.msg_rate,
+        params: templateParams,
+        media: extras.media,
+        submitted_message_id,
+        reason,
+        duration_ms: Date.now() - startedAt,
+      });
+    try {
+      const result = await aisensyService.send({
+        campaign_name: input.wa_campaign_name,
+        destination: input.destination,
+        user_name: input.user_name,
+        template_params: templateParams,
+        ...extras,
+      });
+      await log('', result.submitted_message_id);
+      return result;
+    } catch (error) {
+      // Filed, then re-thrown: the dialog still shows AiSensy's own sentence,
+      // and the row is what says the attempt happened at all.
+      await log(error instanceof Error ? error.message : 'AiSensy rejected the message', '');
+      throw error;
+    }
   },
 
   /** Call off a send that has not started. Only SCHEDULED can be cancelled —

@@ -34,6 +34,17 @@ export interface IWaMessageLog {
   /** Why it was skipped or how it failed. Empty on a clean send. */
   reason: string;
   params: string[];
+  /**
+   * The header asset this message actually carried, frozen the same way
+   * `params` is.
+   *
+   * Blank on a text template, and blank on the failure this pair was added for:
+   * a media campaign sent with nothing attached comes back `Media URL Missing
+   * (HTTP 400)`, and without the record the log could only repeat AiSensy's
+   * sentence rather than show that the header went out empty.
+   */
+  media_url: string;
+  media_filename: string;
   submitted_message_id: string;
   /** Meta's category at send time, which is what the rate was read from. */
   template_category: string;
@@ -65,6 +76,8 @@ const waMessageLogSchema = new Schema<IWaMessageLog>(
     status: { type: String, enum: WA_MESSAGE_STATUSES, required: true, index: true },
     reason: { type: String, default: '' },
     params: { type: [String], default: [] },
+    media_url: { type: String, default: '' },
+    media_filename: { type: String, default: '' },
     submitted_message_id: { type: String, default: '' },
     template_category: { type: String, default: '' },
     msg_rate: { type: Number, default: 0 },

@@ -39,6 +39,16 @@ export interface IWaEventSetting {
   media_url: string;
   media_filename: string;
   /**
+   * When the pair above was last read off AiSensy — by the console's reconcile,
+   * or by the send path binding it for itself.
+   *
+   * It exists because a blank `media_url` says two different things: "this
+   * campaign carries no asset" and "nobody has ever looked". Only the second is
+   * worth a Project API call, and without the stamp every send on a text
+   * template would pay for one.
+   */
+  media_synced_at: Date | null;
+  /**
    * The header asset an ADMIN set for this scenario in the console.
    *
    * ADMIN-OWNED: written only by `setMedia`, NEVER touched by reconcile — the
@@ -67,6 +77,7 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
     template_category: { type: String, default: '' },
     media_url: { type: String, default: '' },
     media_filename: { type: String, default: '' },
+    media_synced_at: { type: Date, default: null },
     override_media_url: { type: String, default: '' },
     override_media_filename: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },

@@ -150,6 +150,16 @@ jobs:
       # those, leaving the bot answering confidently with no link at all. This
       # checks every page resolves, every surface has pages, and each surface's
       # local / staging / production address is built the way it should be.
+      # Every automatic WhatsApp message is a template at AiSensy and a row in
+      # a registry the server keeps TWICE — once for itself, once in
+      # @duncit/communication, because server/src imports no @duncit package.
+      # Neither copy is reachable from the other, so a campaign renamed on one
+      # side type-checks, ships, and sends to a campaign AiSensy does not have.
+      # The same check catches a send site filling the wrong number of values,
+      # which AiSensy refuses per message and bills for where it does not.
+      - name: WhatsApp scenarios match the code that sends them
+        run: pnpm --filter server check:whatsapp
+
       - name: Ask Bot navigation map is consistent
         run: pnpm --filter server check:askbot
 

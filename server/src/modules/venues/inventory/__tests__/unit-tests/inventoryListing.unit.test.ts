@@ -673,8 +673,8 @@ describe('inventoryService.updateMyProductListingQuantity', () => {
     ).resolves.toMatchObject({ inventory_count: 2 });
     expect(logs.server.error).toHaveBeenCalledWith(
       'inventory',
-      'notifyLowStockIfCrossed',
-      expect.objectContaining({ msg: 'low-stock notify failed' })
+      'pushStockAlert',
+      expect.objectContaining({ msg: 'stock notify failed' })
     );
   });
 });

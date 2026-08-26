@@ -734,7 +734,9 @@ async function assertDuncitWarehouse(pickupLocationId: IdLike) {
   }
 }
 
-const availableOf = (doc: { inventory_count?: number; requested_count?: number; reserved_count?: number }) =>
+/** How many units of a listing can still be sold. Exported because the crossing
+ * a caller measures has to be measured the same way this module does. */
+export const availableOf = (doc: { inventory_count?: number; requested_count?: number; reserved_count?: number }) =>
   Math.max(0, (doc.inventory_count ?? 0) - (doc.requested_count ?? 0) - (doc.reserved_count ?? 0));
 
 /** The slice of a product a WhatsApp to its owner reads. */
@@ -791,29 +793,62 @@ export async function notifyProductOwner(
   });
 }
 
-/** Notify the listing owner once available stock crosses from above to at/below
- * the low-stock threshold (opt-in per product). Best-effort — a notify hiccup
- * never fails the stock update. */
-async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: number) {
-  if (!doc.notify_low_stock || !doc.listing_submitted_by_id) return;
-  const afterAvailable = availableOf(doc);
-  const threshold = doc.low_stock_alert ?? 0;
-  if (!(beforeAvailable > threshold && afterAvailable <= threshold)) return;
+/** The in-app half of a stock alert. Best-effort on its own so a notification
+ * failure never costs the owner the email that follows it. */
+async function pushStockAlert(doc: IInventoryProduct, title: string, body: string) {
   await notificationService
     .create({
       scope: 'USER',
       target_user_ids: [String(doc.listing_submitted_by_id)],
-      title: 'Low stock alert',
-      body: `${doc.product_name} is low on stock — ${afterAvailable} left (alert at ${threshold}).`,
+      title,
+      body,
       silent: false,
     })
     .catch((error) => {
-      logs.server.error('inventory', 'notifyLowStockIfCrossed', {
+      logs.server.error('inventory', 'pushStockAlert', {
         error,
-        msg: 'low-stock notify failed',
+        msg: 'stock notify failed',
         product_id: String(doc._id),
       });
     });
+}
+
+/**
+ * The two stock crossings the listing owner is told about.
+ *
+ * Checked together because every write that can cause one can cause the other,
+ * and because a crossing is a TRANSITION, not a state: `beforeAvailable` is
+ * read by the caller before its write, so a product that was already empty
+ * never mails its owner a second time. Available — not `inventory_count` — is
+ * the number, because units committed to a pod cannot be sold either.
+ *
+ * Low stock is opt-in per listing (`notify_low_stock`). Running out is not: a
+ * product that can no longer be sold is the owner's problem whether or not they
+ * asked to hear about it, and it is the one they can still fix. Hitting zero
+ * also crosses the low mark, so it returns rather than sending both.
+ *
+ * Exported because the counters move from four other modules — a shop order, a
+ * pod reserving units, the partner's own quantity edit, an admin stock
+ * movement — and this used to fire from exactly one of them.
+ *
+ * Best-effort: a notify hiccup never fails the stock write that caused it.
+ */
+export async function notifyStockCrossings(doc: IInventoryProduct, beforeAvailable: number) {
+  if (!doc.listing_submitted_by_id) return;
+  const afterAvailable = availableOf(doc);
+  if (beforeAvailable > 0 && afterAvailable <= 0) {
+    await pushStockAlert(doc, 'Out of stock', `${doc.product_name} is out of stock — it can no longer be sold.`);
+    await notifyProductOwner(doc, 'ECOMM_STOCK_OUT', afterAvailable);
+    return;
+  }
+  if (!doc.notify_low_stock) return;
+  const threshold = doc.low_stock_alert ?? 0;
+  if (!(beforeAvailable > threshold && afterAvailable <= threshold)) return;
+  await pushStockAlert(
+    doc,
+    'Low stock alert',
+    `${doc.product_name} is low on stock — ${afterAvailable} left (alert at ${threshold}).`
+  );
   await notifyProductOwner(doc, 'ECOMM_STOCK_LOW', afterAvailable);
 }
 
@@ -1234,6 +1269,7 @@ export const inventoryService = {
       reserved_count: doc.reserved_count,
       damaged_count: doc.damaged_count,
     };
+    const beforeAvailable = availableOf(doc);
     applyListingFields(doc, input, user);
     doc.listing_review_status = 'PENDING';
     doc.listing_review_notes = '';
@@ -1245,6 +1281,7 @@ export const inventoryService = {
     await doc.save();
     await logActivity(doc._id, user, 'UPDATE', changedFields(before, doc.toObject()), 'Partner listing updated for review');
     await recordStockChanges(doc, beforeStock, user);
+    await notifyStockCrossings(doc, beforeAvailable);
     return inventoryProductToPub(doc);
   },
 
@@ -1270,7 +1307,7 @@ export const inventoryService = {
     await doc.save();
     await logActivity(doc._id, user, 'UPDATE', ['inventory_count'], 'Partner quantity updated');
     await recordStockChanges(doc, beforeStock, user);
-    await notifyLowStockIfCrossed(doc, beforeAvailable);
+    await notifyStockCrossings(doc, beforeAvailable);
     return inventoryProductToPub(doc);
   },
 
@@ -1434,6 +1471,7 @@ export const inventoryService = {
       reserved_count: doc.reserved_count,
       damaged_count: doc.damaged_count,
     };
+    const beforeAvailable = availableOf(doc);
     applyInput(doc, input);
     // Duncit-owned products must keep a valid Duncit warehouse after any edit.
     if (doc.ownership === 'DUNCIT') await assertDuncitWarehouse(doc.pickup_location_id);
@@ -1444,6 +1482,7 @@ export const inventoryService = {
     const changes = changedFields(before, doc.toObject()).filter((f) => !STOCK_FIELDS.has(f));
     if (changes.length > 0) await logActivity(doc._id, user, 'UPDATE', changes);
     await recordStockChanges(doc, beforeStock, user);
+    await notifyStockCrossings(doc, beforeAvailable);
 
     return inventoryProductToPub(doc);
   },
@@ -1634,6 +1673,7 @@ export const inventoryService = {
     const qty = Math.abs(Number(input.quantity) || 0);
     if (qty === 0) throw new GraphQLError('Quantity is required', { extensions: { code: 'BAD_USER_INPUT' } });
     const info = userInfo(user);
+    const beforeAvailable = availableOf(doc);
 
     switch (input.type) {
       case 'IN':
@@ -1670,6 +1710,7 @@ export const inventoryService = {
       reason: input.reason ?? '',
       balance_after: doc.inventory_count,
     });
+    await notifyStockCrossings(doc, beforeAvailable);
     return inventoryProductToPub(doc);
   },
 

@@ -389,6 +389,9 @@ export async function signToken(payload: AuthUser): Promise<string> {
 // must downgrade the corresponding entity so the onboarding status reflects it.
 const ONBOARDING_REVOKE_ROLES = new Set(['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN']);
 
+// The role that opens every Duncit console. Its own mail on the way in and out.
+const SUPER_ADMIN_ROLE = 'SUPER_ADMIN';
+
 // Partner-portal roles: granting one (from ANY path — admin grant or an
 // onboarding approval) emails the user their Partners-account link + login
 // guidance and sends a push notification.
@@ -430,6 +433,40 @@ async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) 
     }
   } catch (err) {
     logs.server.error('user.roles', 'notifyPartnerAccessGranted', { error: err, msg: 'partner access notify failed', userId });
+  }
+}
+
+/**
+ * Admin access, granted or removed, told to the person it happened to.
+ *
+ * This used to live in `grantAdmin`/`revokeAdmin`, which is only ONE of the two
+ * doors: the Roles page's Super Admins card goes through those, but the user
+ * detail page's Roles dialog has an Admin Panel switch that writes SUPER_ADMIN
+ * through `assignUserRoles` — and that path sent nothing at all. Hooked onto
+ * the role write itself, so no third door can miss it either.
+ *
+ * Best-effort — the roles are already committed and a mail must not undo them.
+ */
+async function notifyAdminAccessChange(userId: string, added: string[], removed: string[]) {
+  const granted = added.includes(SUPER_ADMIN_ROLE);
+  if (!granted && !removed.includes(SUPER_ADMIN_ROLE)) return;
+  try {
+    const target = await UserModel.findById(userId).select('auth.email profile.first_name');
+    if (!target) return;
+    const send = granted ? sendAdminAccessGrantedEmail : sendAdminAccessRevokedEmail;
+    // No `if (email)`: the send records a FAILED row for a missing address, and
+    // "we made them an admin and never told them" is exactly the kind of
+    // silence the email log exists to break.
+    await send({
+      to: target.auth?.email ?? '',
+      name: target.profile?.first_name || 'there',
+    });
+  } catch (err) {
+    logs.server.error('user.roles', 'notifyAdminAccessChange', {
+      error: err,
+      msg: 'admin access email failed',
+      userId,
+    });
   }
 }
 
@@ -636,6 +673,8 @@ async function replaceUserRoles(
   // …and welcome freshly granted partner roles (mail + push, best-effort).
   const added = normalized.filter((r) => !oldRoles.includes(r));
   if (added.length) await notifyPartnerAccessGranted(userId, added);
+  // Admin access is a role too, and it changes from more than one screen.
+  await notifyAdminAccessChange(userId, added, removed);
 }
 
 // Soft-delete writes for a user: flag the doc (deleted_at + INACTIVE) and hard
@@ -3096,8 +3135,9 @@ export const userService = {
     return toPublic(fresh);
   },
 
-  // Grant SUPER_ADMIN ("admin") access to a user + email them a security
-  // warning. Idempotent: re-granting an existing admin only re-sends nothing.
+  // Grant SUPER_ADMIN ("admin") access to a user. The welcome mail rides the
+  // role write itself (notifyAdminAccessChange) so the Roles dialog's Admin
+  // Panel switch sends the same one. Idempotent: re-granting sends nothing.
   async grantAdmin(user_id: string) {
     const target = await UserModel.findById(user_id);
     if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
@@ -3108,11 +3148,6 @@ export const userService = {
         assignedZones: target.metadata?.assigned_zones ?? [],
         assignedCity: target.profile?.assigned_city ?? null,
       });
-      // Unconditional — see the welcome sends above. A missing address is a
-      // FAILED log row, not silence.
-      sendAdminAccessGrantedEmail({ to: target.auth?.email ?? '', name: target.profile?.first_name || 'there' }).catch(
-        (e) => logs.server.error('user.service', 'grantAdmin', { error: e, msg: 'Admin granted email failed', userId: user_id })
-      );
     }
     const fresh = await UserModel.findById(user_id);
     await userAuditService.record({ userId: user_id, before: target, after: fresh });
@@ -3137,11 +3172,6 @@ export const userService = {
         assignedZones: target.metadata?.assigned_zones ?? [],
         assignedCity: target.profile?.assigned_city ?? null,
       });
-      // Unconditional — see the welcome sends above. A missing address is a
-      // FAILED log row, not silence.
-      sendAdminAccessRevokedEmail({ to: target.auth?.email ?? '', name: target.profile?.first_name || 'there' }).catch(
-        (e) => logs.server.error('user.service', 'revokeAdmin', { error: e, msg: 'Admin revoked email failed', userId: user_id })
-      );
     }
     const fresh = await UserModel.findById(user_id);
     await userAuditService.record({ userId: user_id, before: target, after: fresh });

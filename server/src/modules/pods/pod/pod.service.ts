@@ -11,6 +11,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { availableOf, notifyStockCrossings } from '@modules/venues/inventory/inventory.service';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueService } from '@modules/venues/venue/venue.service';
@@ -1259,8 +1260,13 @@ async function applyProductDeltas(oldItems: any[], nextItems: any[]) {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    // Reserving units for a pod takes them out of the sellable pool, so it is a
+    // stock crossing like any other — this is where a brand's last units go
+    // when the shop never sold one of them.
+    const beforeAvailable = availableOf(product);
     product.requested_count = Math.max(0, product.requested_count + delta);
     await product.save();
+    await notifyStockCrossings(product, beforeAvailable);
   }
 }
 

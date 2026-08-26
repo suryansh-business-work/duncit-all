@@ -35,6 +35,7 @@ import {
   splitPodsByPhase,
   usernameBlocksSave,
   usernameFieldState,
+  videoSourceUrl,
   type AutoPodRow,
   type BadgeCondition,
   type CommChannelState,
@@ -582,5 +583,22 @@ export default defineDemos('utils', [
         'Profile link': view.link,
       };
     },
+  }),
+  defineDemo<{ urls: string[] }>({
+    id: 'video-source-url',
+    title: 'The URL a video player is actually handed',
+    note:
+      'Add a `?tr=w-400` to the first url: an explicit transformation is somebody else\'s ' +
+      'choice and survives untouched. A Pexels clip is left alone too — only our own ' +
+      'ImageKit addresses ask for the stored file, because ImageKit re-encodes a video on ' +
+      'delivery and answers 403 once that metered allowance is spent.',
+    mock: {
+      urls: [
+        'https://ik.imagekit.io/esdata1/posts/duncit-story_rVMB846f9.mp4',
+        'https://ik.imagekit.io/esdata1/posts/duncit-story_rVMB846f9.mp4?tr=orig-true',
+        'https://videos.pexels.com/video-files/3195394/3195394-uhd.mp4',
+      ],
+    },
+    compute: (mock) => Object.fromEntries(mock.urls.map((url) => [url, videoSourceUrl(url)])),
   }),
 ]);

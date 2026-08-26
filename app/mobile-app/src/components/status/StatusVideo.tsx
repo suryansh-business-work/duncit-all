@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { videoSourceUrl } from '@duncit/utils';
 
 interface StatusVideoProps {
   uri: string;
@@ -18,9 +19,13 @@ interface StatusVideoProps {
  * string. That document has no origin of its own, so the remote clip was never
  * fetched and the slide sat black and silent; the tag was also hardcoded
  * `muted`, so a story's sound could not play even once the picture did.
+ *
+ * The uri goes through `videoSourceUrl` so the clip is fetched as the stored
+ * file: ImageKit's metered re-encode answers 403 once its allowance is spent,
+ * and a 403 leaves the slide black in exactly the same way.
  */
 export function StatusVideo({ uri, muted, onEnded }: Readonly<StatusVideoProps>) {
-  const player = useVideoPlayer(uri, (p) => {
+  const player = useVideoPlayer(videoSourceUrl(uri), (p) => {
     p.loop = false;
     p.muted = muted;
     p.play();

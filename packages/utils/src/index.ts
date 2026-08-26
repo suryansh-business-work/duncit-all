@@ -472,3 +472,4 @@ export {
   type AppPopupSize,
   type AppPopupStorage,
 } from './app-popup';
+export { videoSourceUrl } from './media-url';

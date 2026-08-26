@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
+import { videoSourceUrl } from '@duncit/utils';
 
 interface Props {
   src: string;
@@ -27,6 +28,10 @@ interface Props {
  * muted so the story still runs; the viewer's speaker button then says so.
  *
  * play() is wrapped in Promise.resolve because jsdom's returns undefined.
+ *
+ * The src goes through `videoSourceUrl` so the clip is fetched as the stored
+ * file: ImageKit's metered re-encode answers 403 once its allowance is spent,
+ * and a 403 is the other way this slide goes black.
  */
 export default function StatusSlideVideo({
   src,
@@ -38,6 +43,7 @@ export default function StatusSlideVideo({
   onError,
 }: Readonly<Props>) {
   const ref = useRef<HTMLVideoElement | null>(null);
+  const source = videoSourceUrl(src);
 
   useEffect(() => {
     const video = ref.current;
@@ -50,7 +56,7 @@ export default function StatusSlideVideo({
       onBlocked();
       Promise.resolve(video.play()).catch(() => undefined);
     });
-  }, [src, muted, onBlocked]);
+  }, [source, muted, onBlocked]);
 
   useEffect(() => {
     const video = ref.current;
@@ -63,7 +69,7 @@ export default function StatusSlideVideo({
     <Box
       component="video"
       ref={ref}
-      src={src}
+      src={source}
       data-testid="status-slide-video"
       autoPlay
       playsInline

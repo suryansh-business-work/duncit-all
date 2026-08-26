@@ -8,6 +8,7 @@ import { GraphQLError } from 'graphql';
 import type { IUploadSetting } from '@modules/platform/uploadSetting/uploadSetting.model';
 import { getUploadSettingsSafe } from './mediaProcessing';
 import { uploadToImagekit } from './upload.service';
+import { videoSourceUrl } from '@utils/url';
 
 // Docker (alpine musl) supplies the encoder via `apk add ffmpeg` + FFMPEG_PATH;
 // the ffmpeg-static binary covers local dev; a bare `ffmpeg` on PATH is last.
@@ -127,7 +128,10 @@ async function runJob(
   const inPath = path.join(os.tmpdir(), `duncit-vc-in-${stamp}.mp4`);
   const outPath = path.join(os.tmpdir(), `duncit-vc-out-${stamp}.mp4`);
   try {
-    const res = await fetch(remoteUrl);
+    // The ORIGINAL file, not ImageKit's metered re-encode of it: once that
+    // allowance is spent the plain URL answers 403 and nothing downloads, so a
+    // trimmed story could not publish at all.
+    const res = await fetch(videoSourceUrl(remoteUrl));
     if (!res.ok) throw new Error(`Could not download video (${res.status})`);
     await fs.promises.writeFile(inPath, Buffer.from(await res.arrayBuffer()));
 

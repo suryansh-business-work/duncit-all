@@ -98,7 +98,9 @@ function refineMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
   }
 }
 
-/** The pod window: a future start and (when set) an end after it. */
+/** The pod window: a future start and (when set) an end after it. A virtual pod
+ * has no venue slot to close it, so its end is required — the server refuses
+ * one without it, and the meeting-link mark needs the window. */
 function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   const start = parseDateTimeText(values.pod_date_time_text);
   if (start && start.getTime() <= Date.now()) {
@@ -106,6 +108,13 @@ function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
       code: 'custom',
       path: ['pod_date_time_text'],
       message: t('mweb.createPod.validation.startFuture'),
+    });
+  }
+  if (values.pod_mode === 'VIRTUAL' && !values.pod_end_date_time_text.trim()) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_end_date_time_text'],
+      message: t('mweb.createPod.validation.endRequiredVirtual'),
     });
   }
   const end = parseDateTimeText(values.pod_end_date_time_text);

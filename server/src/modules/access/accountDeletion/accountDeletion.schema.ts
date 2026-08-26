@@ -153,7 +153,7 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
 
     No longer reachable from the apps: filing a request signs the member out
     and closes the account, so nobody holding an open request can be signed in
-    to call this. `rejectAccountDeletionRequest` is the way back now.
+    to call this. \`rejectAccountDeletionRequest\` is the way back now.
     """
     cancelMyAccountDeletionRequest: AccountDeletionRequest!
     "Clear this member's rows behind ONE reference. Permanent."

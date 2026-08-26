@@ -35,7 +35,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
-import { JoinFreePodDocument } from '@/graphql/details';
+import { JoinFreePodDocument, JoinPodMeetingDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { podShareLinks } from '@/services/share-link';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
@@ -89,6 +89,18 @@ function usePodDetailActions(pod: PodDetail | null, refetch: () => Promise<void>
     } finally {
       setJoiningFree(false);
     }
+  };
+
+  /**
+   * A virtual pod's meeting link, asked for through `joinPodMeeting` rather
+   * than read off `pod.meeting_url`: inside the pod window that call marks the
+   * booking present as VIRTUAL_JOIN, which is what a virtual host is paid on.
+   * A host opening their own link is handed it and marks nothing. mWeb twin.
+   */
+  const onJoinMeeting = async (podId: string) => {
+    const res = await graphqlRequest(JoinPodMeetingDocument, { podId }, { auth: true });
+    await refetch();
+    return res.joinPodMeeting.meeting_url;
   };
 
   const onConfirmBackout = async (seats?: number) => {
@@ -145,6 +157,7 @@ function usePodDetailActions(pod: PodDetail | null, refetch: () => Promise<void>
     setSeats,
     joinError,
     onJoinFree,
+    onJoinMeeting,
     backoutOpen,
     setBackoutOpen,
     backingOut,
@@ -359,6 +372,7 @@ export function PodDetailsScreen() {
             venue={venue}
             location={location}
             onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
+            onJoinMeeting={() => actions.onJoinMeeting(pod.id)}
           />
         </Reveal>
         <YStack height={14} />

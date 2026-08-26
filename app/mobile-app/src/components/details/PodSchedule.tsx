@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { JoinMeetingButton } from '@/components/details/JoinMeetingButton';
 import { MapEmbed } from '@/components/MapEmbed';
 import type { PodDetail, PodLocation, PodVenue } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -14,6 +14,9 @@ interface Props {
   venue: PodVenue | null;
   location: PodLocation | null;
   onOpenVenue?: (venueId: string) => void;
+  /** Fetches the meeting link through `joinPodMeeting` — the call that marks
+   * the booking present — and resolves with the URL to open. */
+  onJoinMeeting: () => Promise<string>;
 }
 
 function Field({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
@@ -42,8 +45,14 @@ function venueParts(v: PodVenue): string[] {
 
 /** When · Meeting (virtual) or Where + map (physical). RN port of mWeb's
  * PodMapSection — handles both pod modes and degrades gracefully. */
-export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Props>) {
-  const { primary, onPrimary } = useThemeColors();
+export function PodSchedule({
+  pod,
+  venue,
+  location,
+  onOpenVenue,
+  onJoinMeeting,
+}: Readonly<Props>) {
+  const { primary } = useThemeColors();
   const { t } = useTranslation();
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const zone = location?.location_zones.find((z) => z.zone_name === pod.zone_name);
@@ -93,26 +102,10 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
               {formatMeetingPlatform(pod.meeting_platform, t)}
             </Text>
           </Field>
+          {/* The link is only on the pod for joined members; opening it goes
+              through the mutation so the member is marked present. */}
           {pod.meeting_url ? (
-            <XStack
-              testID="pod-join-meeting"
-              role="button"
-              aria-label={t('mweb.podDetails.joinMeeting')}
-              onPress={() => Linking.openURL(pod.meeting_url as string)}
-              alignSelf="flex-start"
-              alignItems="center"
-              gap={8}
-              paddingHorizontal={18}
-              height={44}
-              borderRadius={999}
-              backgroundColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
-            >
-              <MaterialIcons name="videocam" size={18} color={onPrimary} />
-              <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                {t('mweb.podDetails.joinMeeting')}
-              </Text>
-            </XStack>
+            <JoinMeetingButton onJoinMeeting={onJoinMeeting} />
           ) : (
             <Text fontSize={13} color="$muted">
               {t('mweb.podDetails.meetingLinkAfterJoin')}

@@ -87,6 +87,7 @@ export function VirtualMeetingFields({
         render={({ field, fieldState }) => (
           <DateTimeField
             label={t('mweb.createPod.endDateTime')}
+            required
             value={field.value}
             onChange={field.onChange}
             minDateTime={minEndDateTime}

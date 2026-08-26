@@ -80,8 +80,13 @@ function NoticeBlock({
   );
 }
 
-/** Why marking matters: unmarked attendee, unpaid seat. */
-export function EarningsNotice({ labels }: Readonly<{ labels: PodAttendanceLabels }>) {
+/** Why marking matters: unmarked attendee, unpaid seat. The body is the
+ * sentence for the pod's kind — a door scan or a meeting link — so the caller
+ * picks it with `earningsBodyFor(board, labels)`. */
+export function EarningsNotice({
+  labels,
+  body,
+}: Readonly<{ labels: PodAttendanceLabels; body: string }>) {
   const { primary } = useThemeColors();
   return (
     <NoticeBlock
@@ -89,7 +94,7 @@ export function EarningsNotice({ labels }: Readonly<{ labels: PodAttendanceLabel
       tint={primary}
       icon="info"
       title={labels.earningsTitle}
-      body={labels.earningsBody}
+      body={body}
     />
   );
 }

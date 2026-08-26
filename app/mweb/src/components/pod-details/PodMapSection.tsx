@@ -1,10 +1,10 @@
 import { Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import VideocamIcon from '@mui/icons-material/Videocam';
 import EventIcon from '@mui/icons-material/Event';
 import { Link as RouterLink } from 'react-router-dom';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
+import JoinMeetingButton from './JoinMeetingButton';
 import { venueUrl } from '../../utils/seoUrls';
 import { formatMeetingPlatform } from '../../utils/meetingPlatform';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -14,6 +14,9 @@ interface Props {
   pod: any;
   location?: any;
   venue?: any;
+  /** Fetches the meeting link through `joinPodMeeting` — the call itself is
+   * the attendance mark, so the button must never link to the pod field. */
+  onJoinMeeting: () => Promise<string>;
 }
 
 const formatStart = (iso?: string | null) => formatDateTime(iso) || '\u2014';
@@ -31,7 +34,7 @@ const venueParts = (venue: any) => [
   venue.country,
 ];
 
-export default function PodMapSection({ pod, location, venue }: Readonly<Props>) {
+export default function PodMapSection({ pod, location, venue, onJoinMeeting }: Readonly<Props>) {
   const { t } = useTranslation();
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const locationName = venue?.venue_name ?? location?.location_name ?? null;
@@ -81,16 +84,7 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
             </Typography>
           </Stack>
           {pod.meeting_url ? (
-            <Button
-              variant="contained"
-              startIcon={<VideocamIcon />}
-              href={pod.meeting_url}
-              target="_blank"
-              rel="noreferrer"
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              {t('mweb.podDetails.joinMeeting')}
-            </Button>
+            <JoinMeetingButton onJoin={onJoinMeeting} />
           ) : (
             <Typography variant="body2" sx={{
               color: "text.secondary"

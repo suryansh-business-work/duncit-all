@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Button, CircularProgress, InputAdornment, MenuItem, Stack, TextField, Tooltip } from '@mui/material';
+import {
+  Button,
+  CircularProgress,
+  FormHelperText,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  TextField,
+  Tooltip,
+} from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import DateTimeField from '../components/DateTimeField';
@@ -47,7 +56,15 @@ export default function MeetingSection() {
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <DateTimeField control={control} name="pod_date_time" label={t('podForm.common.startDateAndTime')} minDateTime={now} required />
-        <DateTimeField control={control} name="pod_end_date_time" label={t('podForm.common.endDateAndTime')} minDateTime={endMin} />
+        {/* Required for a virtual pod: the meeting window is what marks a joining
+            member present, and a window needs an end. The hint yields to the
+            field's own error so the two never stack. */}
+        <Stack sx={{ width: '100%' }}>
+          <DateTimeField control={control} name="pod_end_date_time" label={t('podForm.common.endDateAndTime')} minDateTime={endMin} required />
+          {!errors.pod_end_date_time && (
+            <FormHelperText sx={{ mx: 1.75 }}>{t('podForm.meetingSection.endRequired')}</FormHelperText>
+          )}
+        </Stack>
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         {meetingPlatforms ? (

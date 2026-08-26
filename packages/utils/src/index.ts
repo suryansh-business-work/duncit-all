@@ -344,6 +344,7 @@ export {
   OTP_MEDIUMS,
   attendanceProgress,
   attendanceRowState,
+  canScanTickets,
   hasUnmarked,
   isOtpCodeShape,
   isOtpExtensionShape,
@@ -358,11 +359,13 @@ export {
   type PodAttendanceClubAdmin,
   type PodAttendanceCompanion,
   type PodAttendanceLock,
+  type PodAttendanceMode,
   type PodAttendanceRow,
   type PodAttendanceViewer,
 } from './pod-attendance';
 export {
   buildAttendanceLabels,
+  earningsBodyFor,
   mwebAttendanceLabels,
   shellAttendanceLabels,
   type AttendanceTranslate,

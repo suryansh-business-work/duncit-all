@@ -306,6 +306,19 @@ export const JOIN_FREE = gql`
   }
 `;
 
+/** The meeting link is handed back by a WRITE: inside the pod window a joined
+ * member asking for it is marked present (VIRTUAL_JOIN), which is how a
+ * virtual host gets paid. A host gets the link back without a mark. */
+export const JOIN_POD_MEETING = gql`
+  mutation JoinPodMeeting($id: ID!) {
+    joinPodMeeting(pod_doc_id: $id) {
+      meeting_url
+      meeting_notes
+      attendance_marked
+    }
+  }
+`;
+
 export const BACKOUT = gql`
   mutation BackoutPod($id: ID!, $seats: Int) {
     backoutPod(pod_doc_id: $id, seats: $seats) { id status seats referral_token refund_status }

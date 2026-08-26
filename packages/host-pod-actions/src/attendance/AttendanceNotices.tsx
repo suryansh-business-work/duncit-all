@@ -15,11 +15,14 @@ import type {
  * host is not being warned about a risk, they are being told the rule they are
  * paid by, and it has to be read before the roster rather than after it.
  */
-export function EarningsNotice({ labels }: Readonly<{ labels: PodAttendanceLabels }>) {
+export function EarningsNotice({
+  labels,
+  body,
+}: Readonly<{ labels: PodAttendanceLabels; body: string }>) {
   return (
     <Alert severity="info" data-testid="attendance-earnings-note">
       <AlertTitle sx={{ fontWeight: 800 }}>{labels.earningsTitle}</AlertTitle>
-      {labels.earningsBody}
+      {body}
     </Alert>
   );
 }

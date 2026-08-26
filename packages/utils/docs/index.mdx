@@ -139,6 +139,15 @@ exports:
   - 'draftHoursLeft'
   - 'isDraftExpiringSoon'
   - 'splitDraftsByExpiry'
+  - 'PodAttendanceMode'
+  - 'attendanceRowState'
+  - 'splitAttendance'
+  - 'needsOtp'
+  - 'canScanTickets'
+  - 'earningsBodyFor'
+  - 'mwebAttendanceLabels'
+  - 'shellAttendanceLabels'
+  - 'buildAttendanceLabels'
 ---
 
 ## Why this exists
@@ -664,6 +673,52 @@ it. Neither touches the other pods the guest was marked present at.
 
 The category is deliberately NOT sent — the server derives it from the weakest score,
 so a guest is never asked to triage their own feedback.
+
+### Pod attendance — `pod-attendance` + `pod-attendance-copy`
+
+Attendance is what a host is paid on, so every rule the roster renders by lives here and
+the MUI page (`@duncit/host-pod-actions`) and the native Tamagui screen both read it
+(rule 27). The board is `podAttendanceBoard(pod_doc_id)` — the ONLY read of a roster — and
+it carries `pod_mode`, because a virtual pod has no door: nobody scans a ticket there. A
+joined member is marked present the moment they open the meeting link from the pod page
+inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `PodAttendanceMode` | `'PHYSICAL' \| 'VIRTUAL'` | Mirrors the server's `PodMode`; the board's `pod_mode`. |
+| `attendanceRowState` | `(row, canMark) => AttendanceRowState` | `MARKED`, `READY`, `NEEDS_COMPANIONS` or `LOCKED` — one value, never three booleans. |
+| `splitAttendance` | `(rows) => { marked, unmarked }` | The two lists, in the order the page shows them. |
+| `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin's override never asks — it exists for the attendee who cannot be reached. |
+| `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |
+| `earningsBodyFor` | `(board, labels) => string` | `labels.earningsBodyVirtual` for a virtual pod, `labels.earningsBody` otherwise — the sentence above the roster. |
+| `mwebAttendanceLabels` / `shellAttendanceLabels` / `buildAttendanceLabels` | `(t) => PodAttendanceLabels` | Every word the surfaces render — `mweb.attendance.*` for mWeb + native, `shell.attendance.*` for the portals, word-for-word identical. |
+
+```ts
+const labels = mwebAttendanceLabels(t);
+
+// The head of a podAttendanceBoard answer; rows and counts trimmed.
+const board = {
+  pod_id: 'DUN-POD-4821',
+  viewer: 'HOST',
+  can_mark: true,
+  otp_required: true,
+  pod_mode: 'PHYSICAL',
+} as const;
+
+needsOtp(board)                   // true  — prove the number before a by-hand mark
+canScanTickets(board)             // true  — there is a door to scan at
+earningsBodyFor(board, labels)    // 'Your earnings are calculated only from the attendees you mark. …'
+
+const online = { ...board, pod_id: 'DUN-POD-5502', pod_mode: 'VIRTUAL' } as const;
+canScanTickets(online)            // false — the scan CTA is hidden
+earningsBodyFor(online, labels)   // 'This pod is online, so there is no door to scan at. …'
+labels.methodLabel('VIRTUAL_JOIN')  // 'Joined the meeting' — what the row reads after joinPodMeeting
+
+needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — the override never asks
+```
+
+A virtual host can still mark someone by hand (`HOST_MANUAL`, with a code when the
+setting says so) for the member who joined some other way; only the scanner is gone.
 
 ### Auto Pods — `auto-pod` + `auto-pod-copy`
 

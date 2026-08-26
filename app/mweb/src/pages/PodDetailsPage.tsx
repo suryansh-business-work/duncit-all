@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -31,6 +31,7 @@ import { STUDIO_HOME_PATH } from '../studio-mode';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import { useStatusUpload } from '../components/status-upload/StatusUploadProvider';
 import {
+  JOIN_POD_MEETING,
   POD_DETAILS,
   POD_ID_BY_SLUGS,
   POD_PEOPLE,
@@ -85,6 +86,7 @@ export default function PodDetailsPage() {
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
+  const [joinMeeting] = useMutation(JOIN_POD_MEETING);
   // One face per person; the seats they hold become a label beside their name.
   const seatsByUser = useMemo(
     () =>
@@ -149,6 +151,14 @@ export default function PodDetailsPage() {
   const supportSubject = `Support - ${pod.pod_title}`;
   const membershipState = data?.podMembershipState;
   const backoutAttemptsLeft = attemptsLeftFor(membershipState);
+  // The link comes back from a write that may have just marked this member
+  // present, so the pod is re-read behind it — not awaited, so the tab opens
+  // while the click's activation is still fresh.
+  const onJoinMeeting = async (): Promise<string> => {
+    const result = await joinMeeting({ variables: { id: pod.id } });
+    refetch().catch(() => undefined);
+    return result.data.joinPodMeeting.meeting_url;
+  };
   return (
     <Stack
       spacing={3}
@@ -172,7 +182,7 @@ export default function PodDetailsPage() {
 
       <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} categoryCrumbs={clubCategoryCrumbs} />
 
-      <PodMapSection pod={pod} location={location} venue={venue} />
+      <PodMapSection pod={pod} location={location} venue={venue} onJoinMeeting={onJoinMeeting} />
 
       <PodSocialBar
         podId={pod.id}

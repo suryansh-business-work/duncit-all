@@ -16,6 +16,7 @@ import {
   buildPodFeedbackInput,
   canCompletePod,
   canFollowBack,
+  canScanTickets,
   canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
@@ -24,6 +25,7 @@ import {
   contactDraftValue,
   currentContactValue,
   draftHoursLeft,
+  earningsBodyFor,
   followBackLabelKey,
   isDraftExpiringSoon,
   followButtonLabelKey,
@@ -31,6 +33,8 @@ import {
   followRequestRowState,
   formatMoney,
   hostPodSection,
+  mwebAttendanceLabels,
+  needsOtp,
   normalizeUsername,
   offersFollowBack,
   orderedAspects,
@@ -51,6 +55,8 @@ import {
   type CommChannelState,
   type ContactChannel,
   type ContactSnapshot,
+  type PodAttendanceMode,
+  type PodAttendanceViewer,
   type PodFeedbackReminderChoice,
   type PodFeedbackScores,
   type PodParticipationFields,
@@ -103,6 +109,15 @@ interface HandleMock {
   typed: string;
   available: boolean | null;
   reason: UsernameRejection | null;
+}
+
+/** The head of a `podAttendanceBoard` answer — the four fields every attendance rule reads. */
+interface AttendanceBoardMock {
+  pod_id: string;
+  viewer: PodAttendanceViewer;
+  can_mark: boolean;
+  otp_required: boolean;
+  pod_mode: PodAttendanceMode;
 }
 
 /** A slice of the Home feed, plus the instant the rails are drawn at. */
@@ -736,6 +751,34 @@ export default defineDemos('utils', [
         ),
         'Close offers': POD_FEEDBACK_REMINDER_OPTIONS.map((o) => o.labelKey).join(', '),
         'Close writes': chosen ? chosen.choice : '(not one of the two options)',
+      };
+    },
+  }),
+  defineDemo<AttendanceBoardMock>({
+    id: 'pod-attendance',
+    title: 'What the attendance board offers its host',
+    note:
+      'Flip pod_mode to VIRTUAL: the scanner disappears and the earnings sentence changes. ' +
+      'Set viewer to CLUB_ADMIN and needsOtp answers false whatever otp_required says — the ' +
+      'override exists for the attendee who cannot be reached.',
+    mock: {
+      pod_id: 'DUN-POD-4821',
+      viewer: 'HOST',
+      can_mark: true,
+      otp_required: true,
+      pod_mode: 'PHYSICAL',
+    },
+    compute: (mock) => {
+      // Keys rather than copy, so the demo names WHICH sentence each surface renders.
+      const labels = mwebAttendanceLabels((key) => key);
+      const door = mock.pod_mode === 'VIRTUAL' ? 'VIRTUAL_JOIN' : 'HOST_SCAN';
+      const scanCta = canScanTickets(mock) ? labels.scanCta : '(hidden)';
+      return {
+        'needsOtp(board)': needsOtp(mock),
+        'canScanTickets(board)': canScanTickets(mock),
+        'earningsBodyFor(board, labels)': earningsBodyFor(mock, labels),
+        'Scan CTA': scanCta,
+        'How a member gets marked': labels.methodLabel(door),
       };
     },
   }),

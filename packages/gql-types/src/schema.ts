@@ -1438,7 +1438,9 @@ export type AttendanceMarkMethod =
   /** The host marked them by hand, after verifying their name and number. */
   | 'HOST_MANUAL'
   /** Their ticket QR was scanned at the door — proof they were there. */
-  | 'HOST_SCAN';
+  | 'HOST_SCAN'
+  /** They opened a virtual pod's meeting link as a joined member, inside the pod window — the online equivalent of the door scan. */
+  | 'VIRTUAL_JOIN';
 
 /** Dropdown values for the audience filters whose options are data, not a fixed list. */
 export type AudienceFilterOptions = {
@@ -8231,7 +8233,13 @@ export type Mutation = {
   cancelFollowRequest: User;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
-  /** Withdraw an open request. The member's own, and only while it is open. */
+  /**
+   * Withdraw an open request. The member's own, and only while it is open.
+   *
+   * No longer reachable from the apps: filing a request signs the member out
+   * and closes the account, so nobody holding an open request can be signed in
+   * to call this. `rejectAccountDeletionRequest` is the way back now.
+   */
   cancelMyAccountDeletionRequest: AccountDeletionRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
@@ -8655,6 +8663,16 @@ export type Mutation = {
   issueAppBuildCiToken: AppBuildCiToken;
   /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
   joinFreePod: PodMember;
+  /**
+   * Open a virtual pod's meeting as a joined member.
+   *
+   * Returns the link, and — inside the pod window (from an hour before the
+   * start to an hour after the end) — marks the booking present through the
+   * same write every other attendance path uses, as VIRTUAL_JOIN. A host
+   * opening their own pod's link is handed the link and marks nothing: hosts
+   * are never attendees of their own pod.
+   */
+  joinPodMeeting: PodMeetingAccess;
   /**
    * Add the bot to a PUBLIC channel, which is the fix for not_in_channel.
    *
@@ -9121,9 +9139,14 @@ export type Mutation = {
   /**
    * Ask for the account to be removed.
    *
-   * This does NOT delete anything. It files a request for the Tech portal and
-   * leaves the account fully usable, so a mis-tap costs nothing and the member
-   * can withdraw it. Asking twice returns the request already open.
+   * This does NOT delete anything yet — the request is queued, and the account
+   * survives until the grace period is up. What it DOES do immediately is end
+   * the account: every token it has handed out stops being accepted, the live
+   * surfaces are told to sign out, and no door will mint it another one. The
+   * window is time for the decision to be reversed from the console, not time
+   * to keep using the account.
+   *
+   * Asking twice returns the request already open.
    */
   submitAccountDeletionRequest: AccountDeletionRequest;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
@@ -10956,6 +10979,11 @@ export type MutationJoinFreePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
   referral_token?: InputMaybe<Scalars['String']['input']>;
   seats?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationJoinPodMeetingArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -13864,6 +13892,7 @@ export type Pod = {
   pod_attendees: Array<Scalars['ID']['output']>;
   pod_date_time: Scalars['String']['output'];
   pod_description: Scalars['String']['output'];
+  /** Required for a VIRTUAL pod — its window is the only thing that says when the meeting is over. A physical pod takes its end from the booked slot. */
   pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_hashtag: Array<Scalars['String']['output']>;
   pod_hits: Scalars['Int']['output'];
@@ -13919,6 +13948,8 @@ export type PodAttendanceBoard = {
   pod_date_time?: Maybe<Scalars['String']['output']>;
   pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_id: Scalars['ID']['output'];
+  /** PHYSICAL or VIRTUAL. A virtual pod has no door to scan at: a member is marked when they open the meeting link. */
+  pod_mode: PodMode;
   pod_title: Scalars['String']['output'];
   rows: Array<PodAttendanceRow>;
   total_count: Scalars['Int']['output'];
@@ -14592,6 +14623,21 @@ export type PodMediaViewer =
   | 'GUEST'
   | 'HOST'
   | 'NONE';
+
+/**
+ * What a joined member gets back when they open a virtual pod's meeting.
+ *
+ * The link itself is also readable on the Pod (gated to joined members), so
+ * this is not the only way to see it — it is the way that COUNTS: opening it
+ * through here, inside the pod window, marks the booking present.
+ */
+export type PodMeetingAccess = {
+  __typename?: 'PodMeetingAccess';
+  /** True when this open marked the booking present (or it already was). */
+  attendance_marked: Scalars['Boolean']['output'];
+  meeting_notes?: Maybe<Scalars['String']['output']>;
+  meeting_url: Scalars['String']['output'];
+};
 
 export type PodMember = {
   __typename?: 'PodMember';

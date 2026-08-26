@@ -85,6 +85,9 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
   // message can label its values rather than number them. It is the same
   // catalogue the server sends from (rule 40), mirrored in @duncit/communication.
   const paramLabels = log ? WA_EVENT_BY_KEY.get(log.event_key)?.params : undefined;
+  // Read off the row rather than the template: what the header CARRIED is the
+  // record, and a media template whose row has none is the send that failed.
+  const media = log?.media_url ? { url: log.media_url, filename: log.media_filename } : undefined;
 
   return (
     <Dialog open={Boolean(logId)} onClose={onClose} fullWidth maxWidth="sm">
@@ -125,7 +128,12 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
               {t('marketingWhatsapp.logs.detailHint')}
             </Typography>
 
-            <SentMessage campaignName={log.campaign} params={log.params} labels={paramLabels} />
+            <SentMessage
+              campaignName={log.campaign}
+              params={log.params}
+              labels={paramLabels}
+              media={media}
+            />
 
             <Divider />
 

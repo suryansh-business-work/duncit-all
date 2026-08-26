@@ -1,9 +1,11 @@
 import { gql } from '@apollo/client';
+import type { WaMediaRef } from '@duncit/communication';
 
 const WA_CAMPAIGN_FIELDS = `
   campaign_id name wa_campaign_name audience audience_list_id template_params
   user_ids contacts { name extension number }
   template_name template_category msg_rate cost
+  media { url filename }
   status scheduled_at recipient_count sent_count failed_count skipped_count
   error sent_at created_at updated_at
 `;
@@ -206,6 +208,8 @@ export const WHATSAPP_MESSAGE_LOG = gql`
       status
       reason
       params
+      media_url
+      media_filename
       submitted_message_id
       template_category
       msg_rate
@@ -540,6 +544,10 @@ export interface WaMessageLogRow {
   status: string;
   reason: string;
   params: string[];
+  /** The header asset this message carried; blank on a text template, and blank
+   * on the send that came back "Media URL Missing". */
+  media_url: string;
+  media_filename: string;
   submitted_message_id: string;
   template_category: string;
   msg_rate: number;
@@ -558,6 +566,8 @@ export interface WaCampaignRow {
   /** The template behind the campaign, frozen at send time. */
   template_name: string;
   template_category: string;
+  /** The header asset every message in this send carried, frozen with it. */
+  media: WaMediaRef | null;
   /** The per-message rate this send froze, and what it has cost so far. */
   msg_rate: number;
   cost: number;

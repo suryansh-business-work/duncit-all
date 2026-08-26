@@ -2,6 +2,7 @@ import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
 import { sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
+import { listCampaigns } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
 import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
 import { WaMessageLogModel, type WaMessageStatus } from './waMessageLog.model';
@@ -62,16 +63,28 @@ interface Switches {
   /** The header asset this scenario sends: the admin's override when one is
    * set, else the asset cached off the campaign by the console's reconcile. */
   media: { url: string; filename: string } | null;
+  /** Whether that cache has ever been filled. A blank asset on a row nobody has
+   * synced is not "no asset" — it is "nobody looked", and `bindCampaignMedia`
+   * is what looks. */
+  media_synced: boolean;
 }
 
 /** Both switches in one read: the collection holds a handful of rows. */
 async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
-    .select('event_key enabled template_category media_url media_filename override_media_url override_media_filename')
+    .select(
+      'event_key enabled template_category media_url media_filename media_synced_at override_media_url override_media_filename'
+    )
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
   const own = rows.find((row) => row.event_key === eventKey);
-  const off = (reason: string): Switches => ({ on: false, reason, category: '', media: null });
+  const off = (reason: string): Switches => ({
+    on: false,
+    reason,
+    category: '',
+    media: null,
+    media_synced: true,
+  });
   // An absent global row means nobody has turned automatic WhatsApp on yet.
   if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) return off('Automatic WhatsApp is switched off');
   // An absent scenario row means ON — a newly wired scenario works without
@@ -88,7 +101,51 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     reason: '',
     category: own?.template_category ?? '',
     media: mediaUrl ? { url: mediaUrl, filename: mediaFilename || 'attachment' } : null,
+    media_synced: Boolean(own?.media_synced_at),
   };
+}
+
+/**
+ * The campaign's own header asset, read off AiSensy and cached onto the row.
+ *
+ * The cache is normally filled by the console's Reconcile — but a scenario
+ * nobody has reconciled sends with nothing attached, and a media campaign
+ * answers that with `Media URL Missing (HTTP 400)`. Binding it here is what
+ * makes Reconcile an optimisation rather than a prerequisite for a message the
+ * platform sends by itself.
+ *
+ * It costs ONE catalogue read per scenario, ever: the stamp is written whatever
+ * the answer was, so a text template never pays for a second one. The admin
+ * override is untouched — this fills the reconcile-owned pair, and only when
+ * that pair has never been filled.
+ *
+ * Best effort. The Project API is a second credential the send itself does not
+ * need, so a console that cannot read it sends exactly as before — the rule
+ * `resolveCampaign` already follows for a marketing send.
+ */
+async function bindCampaignMedia(event: WaEvent, switches: Switches) {
+  if (switches.media_synced) return null;
+  try {
+    const campaign = (await listCampaigns()).find((row) => row.name === event.campaign);
+    await WaEventSettingModel.updateOne(
+      { event_key: event.key },
+      {
+        $set: {
+          media_url: campaign?.media_url ?? '',
+          media_filename: campaign?.media_filename ?? '',
+          media_synced_at: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+    if (!campaign?.media_url) return null;
+    return { url: campaign.media_url, filename: campaign.media_filename || 'attachment' };
+  } catch (error) {
+    // An unconfigured or unreachable Project API is not a send failure. No
+    // stamp is written, so the next send on this scenario tries again.
+    logs.server.debug('whatsapp', 'bindMedia', { error, event: event.key });
+    return null;
+  }
 }
 
 /**
@@ -181,6 +238,14 @@ async function dispatch(
   switches: Switches
 ): Promise<WaSendOutcome> {
   const pricing = await getWaPricing();
+
+  // A caller with a better asset — this pod's own image — wins over the row's,
+  // and the row's over the campaign's own (caller > admin override > cache >
+  // AiSensy). A media campaign rejects a send that carries none, and the
+  // requirement is invisible on the template.
+  const media =
+    input.media ?? switches.media ?? (await bindCampaignMedia(event, switches)) ?? undefined;
+
   const claim = {
     event_key: event.key,
     campaign: event.campaign,
@@ -193,13 +258,12 @@ async function dispatch(
     params,
     template_category: switches.category,
     msg_rate: ratePerMessage(pricing, switches.category || 'UTILITY'),
+    // Frozen alongside the params: a header that went out empty is the whole
+    // story behind a `Media URL Missing` row, and nothing else records it.
+    media_url: media?.url ?? '',
+    media_filename: media?.filename ?? '',
     holds_slot: true,
   };
-
-  // A caller with a better asset — this pod's own image — wins over the row's
-  // (caller > admin override > campaign cache). A media campaign rejects a send
-  // that carries none, and the requirement is invisible on the template.
-  const media = input.media ?? switches.media ?? undefined;
 
   let row;
   try {

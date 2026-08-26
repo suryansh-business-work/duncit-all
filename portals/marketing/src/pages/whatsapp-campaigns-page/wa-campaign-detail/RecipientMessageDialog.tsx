@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import type { WaMediaRef } from '@duncit/communication';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 import SentMessage from '../wa-message';
@@ -20,6 +21,8 @@ interface Props {
   recipient: WaCampaignRecipientRow | null;
   /** The AiSensy campaign the send was addressed to. */
   campaignName: string;
+  /** The header asset the send froze — the same one for every recipient. */
+  media?: WaMediaRef;
   onClose: () => void;
 }
 
@@ -38,6 +41,7 @@ interface Props {
 export default function RecipientMessageDialog({
   recipient,
   campaignName,
+  media,
   onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -69,7 +73,11 @@ export default function RecipientMessageDialog({
             <Stack spacing={2}>
               {recipient.reason && <Alert severity="info">{recipient.reason}</Alert>}
               {delivered ? (
-                <SentMessage campaignName={campaignName} params={recipient.template_params} />
+                <SentMessage
+                  campaignName={campaignName}
+                  params={recipient.template_params}
+                  media={media}
+                />
               ) : (
                 <Stack spacing={1}>
                   <Alert severity="warning">

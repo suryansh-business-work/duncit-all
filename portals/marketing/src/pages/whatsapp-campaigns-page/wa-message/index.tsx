@@ -1,4 +1,5 @@
 import { Alert, Skeleton, Stack, Typography } from '@mui/material';
+import type { WaMediaRef } from '@duncit/communication';
 import { useTranslation } from '@duncit/app-settings';
 import TemplateSample from '../wa-aisensy/TemplateSample';
 import { templateFor, useAisensyCatalogue } from '../wa-aisensy/useAisensyCatalogue';
@@ -11,6 +12,11 @@ interface Props {
   params: string[];
   /** What each placeholder is for, when the scenario registry names them. */
   labels?: readonly string[];
+  /** The header asset this send actually carried, frozen on the record behind
+   * it. Absent leaves the kind of header as a placeholder — which on a media
+   * template is itself the answer: nothing was attached, and AiSensy refused
+   * the send with `Media URL Missing`. */
+  media?: WaMediaRef;
   /** An extra line for a campaign send, whose per-person tokens are not
    * resolved at this level. */
   note?: string;
@@ -35,7 +41,13 @@ interface Props {
  * message differ in where their values came from, never in how the message was
  * assembled from them.
  */
-export default function SentMessage({ campaignName, params, labels, note }: Readonly<Props>) {
+export default function SentMessage({
+  campaignName,
+  params,
+  labels,
+  media,
+  note,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   // The Project API is a live round trip; a send with no campaign name on it
   // has nothing to look up, so it never pays for one.
@@ -62,7 +74,7 @@ export default function SentMessage({ campaignName, params, labels, note }: Read
         </Typography>
       )}
 
-      {template && <TemplateSample template={template} params={params} />}
+      {template && <TemplateSample template={template} params={params} media={media} />}
       {!template && loading && <Skeleton variant="rounded" height={180} />}
       {!template && !loading && (
         <Alert severity="info">{t('marketingWhatsapp.logs.messageUnknown')}</Alert>

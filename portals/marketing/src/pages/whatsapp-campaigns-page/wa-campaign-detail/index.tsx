@@ -151,6 +151,7 @@ export default function WaCampaignDetailDialog({
             <RecipientTable
               campaignId={campaign.campaign_id}
               campaignName={campaign.wa_campaign_name}
+              media={campaign.media ?? undefined}
             />
           </Stack>
         )}

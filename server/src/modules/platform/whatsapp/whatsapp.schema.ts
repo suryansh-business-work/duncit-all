@@ -69,6 +69,13 @@ export const waAutomationTypeDefs = gql`
     "Why it was skipped, or how it failed."
     reason: String!
     params: [String!]!
+    """
+    The header asset this message carried, as it went out. Blank on a text
+    template — and blank on the send that came back "Media URL Missing", which
+    is the failure it is here to make visible.
+    """
+    media_url: String!
+    media_filename: String!
     submitted_message_id: String!
     template_category: String!
     msg_rate: Float!

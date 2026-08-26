@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Box, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import type { WaMediaRef } from '@duncit/communication';
 import { StatusChip } from '@duncit/ui';
 import { WA_RECIPIENT_STATUS_COLORS, WA_RECIPIENT_STATUS_OPTIONS } from '../helpers';
 import { WA_CAMPAIGN_RECIPIENTS, type WaCampaignRecipientRow } from '../queries';
@@ -37,6 +38,8 @@ interface Props {
   campaignId: string;
   /** The AiSensy campaign, so an opened row can draw that person's message. */
   campaignName: string;
+  /** The header asset the send froze — the same one for every row here. */
+  media?: WaMediaRef;
 }
 
 /**
@@ -46,7 +49,7 @@ interface Props {
  * A row opens the message that person got — the values are resolved per person,
  * so the campaign's own preview cannot answer "what did it say to ME".
  */
-export default function RecipientTable({ campaignId, campaignName }: Readonly<Props>) {
+export default function RecipientTable({ campaignId, campaignName, media }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const [opened, setOpened] = useState<WaCampaignRecipientRow | null>(null);
@@ -134,6 +137,7 @@ export default function RecipientTable({ campaignId, campaignName }: Readonly<Pr
       <RecipientMessageDialog
         recipient={opened}
         campaignName={campaignName}
+        media={media}
         onClose={() => setOpened(null)}
       />
     </>

@@ -54,7 +54,9 @@ describe('PodSchedule venue without coordinates', () => {
       lng: null,
     } as never;
     const pod = { pod_mode: 'PHYSICAL', pod_date_time: null, zone_name: 'Z' } as never;
-    renderWithProviders(<PodSchedule pod={pod} venue={venue} location={null} onJoinMeeting={neverJoined} />);
+    renderWithProviders(
+      <PodSchedule pod={pod} venue={venue} location={null} onJoinMeeting={neverJoined} />,
+    );
     expect(screen.getByTestId('pod-map')).toBeOnTheScreen();
   });
 });

@@ -112,7 +112,9 @@ describe('PodSchedule', () => {
       meeting_notes: null,
       zone_name: null,
     } as never;
-    renderWithProviders(<PodSchedule pod={pod} venue={null} location={null} onJoinMeeting={neverJoined} />);
+    renderWithProviders(
+      <PodSchedule pod={pod} venue={null} location={null} onJoinMeeting={neverJoined} />,
+    );
     expect(screen.getByText('Online')).toBeOnTheScreen();
     expect(
       screen.getByText('Meeting link will be visible after joining this pod.'),
@@ -141,7 +143,13 @@ describe('PodSchedule', () => {
       zone_name: 'Z',
     } as never;
     renderWithProviders(
-      <PodSchedule pod={pod} venue={venue} location={null} onOpenVenue={onOpenVenue} onJoinMeeting={neverJoined} />,
+      <PodSchedule
+        pod={pod}
+        venue={venue}
+        location={null}
+        onOpenVenue={onOpenVenue}
+        onJoinMeeting={neverJoined}
+      />,
     );
     expect(screen.getByText('Where')).toBeOnTheScreen();
     expect(screen.getByText(/Hall/)).toBeOnTheScreen();

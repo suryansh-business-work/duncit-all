@@ -1581,12 +1581,6 @@ async function applyPodEditCore(doc: any, input: any) {
       input.no_of_spots ?? doc.no_of_spots ?? 0
     );
   }
-  // A portal may shrink a pod as well as grow it, but never past the space it
-  // booked or below the seats already sold. New pods have no bookings and no
-  // slot yet, so this only ever bites on an edit.
-  if (input.no_of_spots !== undefined && !doc.isNew) {
-    await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: true });
-  }
 
   await applyProductsForUpdate(doc, input);
 
@@ -2142,6 +2136,16 @@ export const podService = {
     // contradict its cancellation by flipping it live again.
     if (doc.deleted_at) delete input.is_active;
     const reroute = await prepareSlotReroute(doc, input);
+    // A portal may shrink a pod as well as grow it, but never past the space it
+    // booked or below the seats already sold — the same range the host's slider
+    // is drawn from, so the two cannot disagree.
+    //
+    // Skipped while the booking is being RE-ROUTED: the ceiling then belongs to
+    // the slot being moved to, and `doc` still holds the one being left. That
+    // path is unguarded exactly as it was before this rule existed.
+    if (input.no_of_spots !== undefined && !reroute) {
+      await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: true });
+    }
     const booking = reroute ? snapshotBooking(doc) : null;
     const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);

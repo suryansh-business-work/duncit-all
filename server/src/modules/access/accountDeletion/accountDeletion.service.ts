@@ -5,13 +5,19 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { withTransaction } from '@utils/mongoTransaction';
 import { UserModel } from '@modules/access/user/user.model';
 import { userService } from '@modules/access/user/user.service';
+import { nextRunAt, parseTimeOfDay, type CronSchedule } from '@utils/cron-schedule';
+import { emitSessionRevoked } from '../../../realtime/user.events';
 import {
   AccountDeletionRequestModel,
   AccountDeletionSettingsModel,
   DEFAULT_DELETION_RETENTION_DAYS,
+  DELETION_CRON_FREQUENCIES,
+  type DeletionCronFrequency,
   type DeletionRequestSurface,
   type IAccountDeletionRequest,
+  type IAccountDeletionSettings,
 } from './accountDeletion.model';
+import { lockAccount, unlockAccount } from './accountDeletion.lock';
 import { userTrace } from './accountDeletion.trace';
 import { purgeKind, purgeReference } from './accountDeletion.purge';
 import { retentionReason } from './accountDeletion.retention';
@@ -129,7 +135,7 @@ function assertActionable(doc: IAccountDeletionRequest) {
  * a fresh install must not be the thing that discovers there is no setting to
  * stamp a date from.
  */
-async function readSettings(session?: ClientSession) {
+export async function readSettings(session?: ClientSession) {
   const doc = await AccountDeletionSettingsModel.findOneAndUpdate(
     {},
     { $setOnInsert: { retention_days: DEFAULT_DELETION_RETENTION_DAYS } },
@@ -143,11 +149,127 @@ function scheduledDeleteAt(requestedAt: Date, retentionDays: number): Date {
   return new Date(requestedAt.getTime() + retentionDays * MS_PER_DAY);
 }
 
+export interface CronSettingsInput {
+  cron_enabled?: boolean | null;
+  cron_frequency?: string | null;
+  cron_time_of_day?: string | null;
+  cron_weekday?: number | null;
+  cron_batch_size?: number | null;
+}
+
+interface CronFieldRule {
+  valid: (value: unknown) => boolean;
+  message: string;
+  clean?: (value: unknown) => unknown;
+}
+
+const isWholeInRange = (value: unknown, min: number, max: number): boolean =>
+  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+
+/**
+ * What each schedule field will accept, as data rather than a wall of ifs.
+ *
+ * Every one of these is REJECTED rather than defaulted when it does not fit,
+ * and that is the point of validating at all: a time the scheduler cannot
+ * parse makes `isDue` answer false forever, so a bad save would produce a
+ * sweep that silently never runs — the exact failure nobody notices until a
+ * member who was promised deletion is still in the database months later.
+ */
+const CRON_FIELD_RULES: ReadonlyArray<[keyof CronSettingsInput, CronFieldRule]> = [
+  [
+    'cron_enabled',
+    { valid: (value) => typeof value === 'boolean', message: 'Enabled must be true or false' },
+  ],
+  [
+    'cron_frequency',
+    {
+      valid: (value) => DELETION_CRON_FREQUENCIES.includes(value as DeletionCronFrequency),
+      message: 'Frequency must be DAILY or WEEKLY',
+    },
+  ],
+  [
+    'cron_time_of_day',
+    {
+      valid: (value) => typeof value === 'string' && !!parseTimeOfDay(value),
+      message: 'Time must be HH:mm, e.g. 03:00',
+      clean: (value) => String(value).trim(),
+    },
+  ],
+  [
+    'cron_weekday',
+    {
+      valid: (value) => isWholeInRange(value, 0, 6),
+      message: 'Weekday must be 0 (Sunday) to 6 (Saturday)',
+    },
+  ],
+  [
+    'cron_batch_size',
+    {
+      valid: (value) => isWholeInRange(value, 1, 500),
+      message: 'Batch size must be a whole number between 1 and 500',
+    },
+  ],
+];
+
+/** The settings document as the shared scheduler reads a schedule. */
+export function cronScheduleOf(doc: IAccountDeletionSettings): CronSchedule {
+  return {
+    enabled: doc.cron_enabled,
+    frequency: doc.cron_frequency,
+    time_of_day: doc.cron_time_of_day,
+    weekday: doc.cron_weekday,
+  };
+}
+
+/** The whole settings card, in one shape both the query and the mutation answer. */
+function toSettings(doc: IAccountDeletionSettings) {
+  const next = nextRunAt(cronScheduleOf(doc), new Date());
+  return {
+    retention_days: doc.retention_days,
+    cron_enabled: doc.cron_enabled,
+    cron_frequency: doc.cron_frequency,
+    cron_time_of_day: doc.cron_time_of_day,
+    cron_weekday: doc.cron_weekday,
+    cron_batch_size: doc.cron_batch_size,
+    last_run_at: doc.last_run_at ? doc.last_run_at.toISOString() : null,
+    // Null while the sweep is off, which is what the console renders as "Off"
+    // rather than inventing a date nothing will fire on.
+    next_run_at: next ? next.toISOString() : null,
+  };
+}
+
+/**
+ * Close an account: refuse its tokens, then tell its live surfaces to leave.
+ *
+ * The order is not cosmetic. Sealing first means the socket frame lands on
+ * clients whose next request would already have been refused, so a device that
+ * misses the frame is no worse off than one that never had a socket — it signs
+ * out on its next call. Emitting first would leave a window where a client
+ * reacted, retried, and was let back in.
+ */
+function sealAccount(userId: string, at: Date): void {
+  lockAccount(userId, at);
+  emitSessionRevoked(userId, 'ACCOUNT_DELETION_REQUESTED');
+}
+
+/**
+ * Reopen an account: its tokens are accepted again and it can sign in.
+ *
+ * Called when the request is withdrawn or turned down — and after a purge,
+ * where it is only housekeeping, since the account it names no longer exists.
+ * The tokens minted before the seal start working again, which is the honest
+ * behaviour for a decision that was reversed: nothing about the credentials
+ * changed, only whether the account was leaving.
+ */
+function releaseAccount(userId: string): void {
+  unlockAccount(userId);
+}
+
 /** One line of the purge log: what was cleared, how much of it, by whom. */
 function logEntry(
   group: { model_name: string; collection_name: string; field_path: string },
   removed: number,
-  actor: Types.ObjectId
+  actor: Types.ObjectId | null
 ) {
   return {
     model_name: group.model_name,
@@ -167,6 +289,18 @@ export const accountDeletionService = {
     return { retention_days: doc.retention_days };
   },
 
+  /**
+   * The window AND the schedule, for the Admin Panel's settings card.
+   *
+   * Kept apart from `settings()` above deliberately: that one answers any
+   * signed-in member, because both apps quote the number before anybody
+   * confirms. When the job runs, how big a batch it takes and when it last
+   * fired are operational facts a member has no business reading.
+   */
+  async adminSettings() {
+    return toSettings(await readSettings());
+  },
+
   /** Change the window. Applies to requests filed AFTER it — a member already
    * waiting keeps the date they were promised. */
   async updateSettings(retention_days: number, actor_id: string) {
@@ -181,6 +315,36 @@ export const accountDeletionService = {
       { new: true, upsert: true }
     );
     return { retention_days: doc.retention_days };
+  },
+
+  /**
+   * Change WHEN the sweep runs — and whether it runs at all.
+   *
+   * Separate from the window above because the two are different promises. The
+   * window is what a member was told and cannot be moved under them; the
+   * schedule is an operational knob, and turning it off simply hands the queue
+   * back to the humans who cleared it before this existed.
+   *
+   * `last_run_at` is deliberately NOT reset here. Editing the time must not
+   * make a sweep that already ran today look owed again — that is the one way
+   * a settings save could turn into an unplanned purge.
+   */
+  async updateCronSettings(input: CronSettingsInput, actor_id: string) {
+    const set: Record<string, unknown> = { updated_by: requireObjectId(actor_id, 'actor') };
+    for (const [field, rule] of CRON_FIELD_RULES) {
+      const value = input[field];
+      if (value === undefined || value === null) continue;
+      if (!rule.valid(value)) {
+        throw new GraphQLError(rule.message, { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      set[field] = rule.clean ? rule.clean(value) : value;
+    }
+    const doc = await AccountDeletionSettingsModel.findOneAndUpdate(
+      {},
+      { $set: set },
+      { new: true, upsert: true }
+    );
+    return toSettings(doc);
   },
 
   /**
@@ -206,6 +370,12 @@ export const accountDeletionService = {
    * File a request. Confirmed with the same emailed code the instant deletion
    * used to consume: the proof required has not changed, only what happens
    * once it checks out.
+   *
+   * The code checking out ENDS the session, everywhere, and closes the account
+   * to further sign-ins for as long as the request stands. That is the whole
+   * difference between this and a preference: from here on the account is
+   * leaving, and the grace period is time for the decision to be reversed by
+   * somebody with the console — not time to go on using it.
    */
   async submitRequest(
     user_id: string,
@@ -213,12 +383,16 @@ export const accountDeletionService = {
   ) {
     const user = await userService.consumeAccountDeletionOtp(user_id, input.otp);
     // Asking twice is not an error — it is somebody who did not see the first
-    // one land. Hand back the request they already have.
+    // one land. Hand back the request they already have (and re-seal, in case
+    // this process came up after the request was filed).
     const existing = await AccountDeletionRequestModel.findOne({
       user_id: user._id,
       status: 'PENDING',
     });
-    if (existing) return toPublic(existing);
+    if (existing) {
+      sealAccount(String(user._id), existing.requested_at);
+      return toPublic(existing);
+    }
 
     const phone = user.auth?.phone;
     const { retention_days } = await accountDeletionService.settings();
@@ -238,6 +412,10 @@ export const accountDeletionService = {
       requested_at: requestedAt,
       scheduled_delete_at: scheduledDeleteAt(requestedAt, retention_days),
     });
+    // AFTER the row exists, never before: a seal without a request behind it
+    // would survive a failed create as an account nobody can sign in to and
+    // no queue entry explains.
+    sealAccount(String(user._id), requestedAt);
     return toPublic(doc);
   },
 
@@ -251,7 +429,15 @@ export const accountDeletionService = {
     return toPublic(doc);
   },
 
-  /** Withdraw it. Only their own, and only while it is still open. */
+  /**
+   * Withdraw it. Only their own, and only while it is still open.
+   *
+   * NOT reachable from the apps any more: filing a request seals the account,
+   * so nobody holding an open request can be signed in to call this. It is kept
+   * because the account IS reopened by the same code path when an admin turns a
+   * request down, and because a request filed before the seal existed may still
+   * be in the queue with a live session behind it.
+   */
   async cancelMyRequest(user_id: string) {
     const doc = await AccountDeletionRequestModel.findOne({
       user_id: requireObjectId(user_id, 'user'),
@@ -265,6 +451,7 @@ export const accountDeletionService = {
     doc.status = 'CANCELLED';
     doc.reviewed_at = new Date();
     await doc.save();
+    releaseAccount(String(doc.user_id));
     return toPublic(doc);
   },
 
@@ -356,12 +543,16 @@ export const accountDeletionService = {
    * single transaction, which a member with tens of thousands of telemetry rows
    * can hit — that is what the per-reference door is for. Clear the big
    * collections one at a time first and this runs on the remainder.
+   *
+   * `actor_id` is null when the scheduled sweep is the caller. The purge log
+   * then records the act with no name against it, which is the truth: nobody
+   * pressed anything, and the run that did it is its own audit row.
    */
-  async purgeAll(request_doc_id: string, actor_id: string) {
+  async purgeAll(request_doc_id: string, actor_id: string | null) {
     const doc = await findRequest(request_doc_id);
     assertActionable(doc);
     const userId = String(doc.user_id);
-    const actor = requireObjectId(actor_id, 'actor');
+    const actor = actor_id === null ? null : requireObjectId(actor_id, 'actor');
     const trace = await userTrace(userId);
 
     await withTransaction(async (session) => {
@@ -383,10 +574,21 @@ export const accountDeletionService = {
         { session }
       );
     });
+    // Housekeeping, not enforcement: the account document is gone, so every
+    // token naming it is already answered by nothing. Dropping the id keeps the
+    // seal map from growing by one row per deleted member forever.
+    releaseAccount(userId);
     return accountDeletionService.detail(request_doc_id);
   },
 
-  /** Turn it down, with a reason the member can be told. */
+  /**
+   * Turn it down, with a reason the member can be told.
+   *
+   * This is now the ONLY way back for somebody who changed their mind: filing
+   * the request signed them out and closed the door behind them, so the console
+   * is where the decision gets reversed. Rejecting reopens the account and its
+   * existing sessions along with it.
+   */
   async reject(request_doc_id: string, note: string, actor_id: string) {
     const doc = await findRequest(request_doc_id);
     assertActionable(doc);
@@ -395,6 +597,7 @@ export const accountDeletionService = {
     doc.reviewed_by = requireObjectId(actor_id, 'actor');
     doc.reviewed_at = new Date();
     await doc.save();
+    releaseAccount(String(doc.user_id));
     return accountDeletionService.detail(request_doc_id);
   },
 };

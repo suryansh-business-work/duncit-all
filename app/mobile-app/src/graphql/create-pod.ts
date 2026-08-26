@@ -195,7 +195,8 @@ export const MyPodDraftDocument = gql(`
   }
 `);
 
-/** Drafts list shown under Host Management. */
+/** Drafts list shown under Host Studio. `expires_at` is the server-owned
+ * deletion date the list sorts and highlights on. */
 export const MyPodDraftsDocument = gql(`
   query MobileMyPodDrafts {
     myPodDrafts {
@@ -203,6 +204,7 @@ export const MyPodDraftsDocument = gql(`
       pod_title
       step
       updated_at
+      expires_at
     }
   }
 `);

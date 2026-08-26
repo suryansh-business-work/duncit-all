@@ -536,8 +536,18 @@ export const TECH_BUNDLE: NestedCatalogue = {
     */
     accountDeletions: {
       title: 'Account Deletions',
-      intro:
-        'Members who have asked to be removed. Nothing has been deleted yet — their account keeps working until you carry the request out here, and they can withdraw it until then.',
+      /*
+        Replaces `intro` under a new name rather than rewording it — the seeder
+        never overwrites a translation that already exists, so the old sentence
+        would go on rendering in production. See the mWeb bundle's
+        `confirmSealed` for the full reasoning.
+
+        What changed: filing a request now signs the member out and closes the
+        account, so turning one down here is the ONLY way back for somebody who
+        changed their mind.
+      */
+      introSealed:
+        'Members who have asked to be removed. Nothing has been deleted yet, but each of these accounts is already signed out and cannot sign in — so turning a request down here is the only way back for somebody who changed their mind. Requests past their date are carried out by the scheduled sweep, configured in the Admin Panel.',
       searchHint: 'Search reference, name, email or phone',
       empty: 'Nobody has asked to be deleted.',
       // Table columns.

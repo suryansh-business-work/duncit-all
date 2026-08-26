@@ -94,3 +94,44 @@ export function subscribeUserChanged(
     socket.off(USER_CHANGED_EVENT, handler);
   };
 }
+
+/** The frame the server emits when an account's sessions are revoked. */
+export const SESSION_REVOKED_EVENT = 'session:revoked';
+
+export interface SessionRevokedFrame {
+  user_id: string;
+  /** Why, for the log line. `ACCOUNT_DELETION_REQUESTED` is the only one today. */
+  reason: string;
+}
+
+/**
+ * Sign out the moment the server says this account's sessions have ended.
+ *
+ * The token is ALREADY refused by then — the server stopped accepting it
+ * before it emitted this — so nothing here decides anything. What it does is
+ * make the ending visible on a surface that is not currently talking to the
+ * server: a phone left on a screen, a tab open in the background. Without it
+ * they sit looking signed in until something makes them ask, and "you have
+ * been signed out everywhere" is only true of the device somebody is holding.
+ *
+ * The frame must name THIS user, for the same reason `parseUserChangedFrame`
+ * checks: one socket per surface is shared by whatever the app does next, and
+ * a misrouted frame that signed the wrong person out would be a far worse bug
+ * than a display glitch.
+ */
+export function subscribeSessionRevoked(
+  socket: SocketLike,
+  selfUserId: string,
+  onRevoked: (reason: string) => void,
+): () => void {
+  const handler = (raw: unknown) => {
+    if (!raw || typeof raw !== 'object') return;
+    const frame = raw as Partial<SessionRevokedFrame>;
+    if (!selfUserId || String(frame.user_id ?? '') !== selfUserId) return;
+    onRevoked(String(frame.reason ?? ''));
+  };
+  socket.on(SESSION_REVOKED_EVENT, handler);
+  return () => {
+    socket.off(SESSION_REVOKED_EVENT, handler);
+  };
+}

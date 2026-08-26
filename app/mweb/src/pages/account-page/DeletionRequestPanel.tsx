@@ -141,8 +141,8 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         title={t('mweb.account.deletion.confirmTitle')}
         message={
           retentionDays === null
-            ? t('mweb.account.deletion.confirmMessage')
-            : t('mweb.account.deletion.confirmMessageDays', { vars: { days: retentionDays } })
+            ? t('mweb.account.deletion.confirmSealed')
+            : t('mweb.account.deletion.confirmSealedDays', { vars: { days: retentionDays } })
         }
         confirmLabel={t('mweb.account.deletion.confirmCta')}
         destructive

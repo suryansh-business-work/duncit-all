@@ -20,3 +20,26 @@ export function emitUserChanged(userId: string, patch: Record<string, unknown>):
     /* socket server not initialised — nothing to notify */
   }
 }
+
+/**
+ * Tell every surface this account has open to sign out, now.
+ *
+ * The token is already refused by then — `isAccountLocked` sees to that — so
+ * this is not what ends the session; it is what makes the ending VISIBLE. A
+ * phone left on a screen would otherwise sit there looking signed in until
+ * something made it talk to the server, and "you have been signed out
+ * everywhere" has to be true of the device that is not being touched.
+ *
+ * Fire-and-forget for the same reason as the patch above: filing a deletion
+ * request must not fail because the socket server is not up. A surface that
+ * misses the frame still signs out on its next request, which is the floor
+ * this only raises.
+ */
+export function emitSessionRevoked(userId: string, reason: string): void {
+  if (!userId) return;
+  try {
+    getIo().to(userRoom(userId)).emit('session:revoked', { user_id: userId, reason });
+  } catch {
+    /* socket server not initialised — the next request signs them out */
+  }
+}

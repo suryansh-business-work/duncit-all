@@ -491,6 +491,73 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       adminsOnly: 'Shown to admins only.',
     },
 
+    /*
+      Account deletion: the grace period, and the job that acts on it.
+
+      Most of this copy exists to say what is about to happen rather than to
+      label a field. The card configures something irreversible that runs with
+      nobody watching, so "carried out", "permanently" and "cannot be undone"
+      are load-bearing — a schedule that reads like a preference is one somebody
+      switches on without reading.
+    */
+    accountDeletion: {
+      title: 'Account deletion',
+      intro:
+        'How long an account stays after its owner asks for it to go, and when the job that carries the request out runs. Filing a request signs the member out everywhere and closes the account to further sign-ins straight away — the window is time for the decision to be reversed, not time to keep using it.',
+      save: 'Save',
+      saving: 'Saving…',
+      saved: 'Account deletion settings saved',
+      close: 'Close',
+      // The window.
+      retentionDays: 'Grace period (days)',
+      retentionHint: 'Whole days, 1–365. Both apps show this number before anyone confirms.',
+      retentionRange: 'Enter a whole number of days between 1 and 365.',
+      retentionAppliesNext:
+        'Applies to requests filed after you save. Somebody already waiting keeps the date they were promised — moving a deletion date under them is what a grace period exists to prevent.',
+      // The schedule.
+      cronEnabled: 'Carry out due requests automatically',
+      cronOnWarning:
+        'While this is on, accounts past their date are deleted permanently with nobody watching. The deletion reaches every collection the member appears in and cannot be undone.',
+      frequency: 'Runs',
+      daily: 'Every day',
+      weekly: 'Once a week',
+      timeOfDay: 'At',
+      timeHint: 'Server time, in the platform timezone set above.',
+      timeInvalid: 'Enter a time as HH:mm, e.g. 03:00.',
+      weekday: 'On',
+      batchSize: 'Accounts per run',
+      batchHint:
+        'A ceiling, not a target. A backlog drains over several runs rather than in one, so the database stays answerable while it does.',
+      batchRange: 'Enter a whole number between 1 and 500.',
+      timezoneHint:
+        'The job checks every minute. A server that was switched off through its window runs as soon as it comes back rather than skipping the day.',
+      // What it will actually do next.
+      nextRun: 'Next run {when}',
+      nextRunOff: 'No next run — the job is off',
+      lastRun: 'Last run {when}',
+      lastRunNever: 'Never run',
+      dueNow: '{count} account(s) are past their date and waiting.',
+      dueNone: 'Nothing is past its date right now.',
+      // Running it by hand.
+      runNowTitle: 'Carry out due requests now?',
+      runNowConfirm:
+        'This permanently deletes {count} account(s) that are past their date, along with the records belonging to them. Financial and audit records are kept with the personal details erased. This cannot be undone.',
+      runNowCta: 'Run now',
+      running: 'Running…',
+      runFinished: '{count} account(s) deleted',
+      // The audit log.
+      runsTitle: 'Deletion runs',
+      runsIntro:
+        'Every sweep, newest first — including the ones that found nobody. A night with no row at all is the thing worth noticing: it means the job did not fire.',
+      runsEmpty: 'The sweep has not run yet.',
+      runReference: 'Reference',
+      runStarted: 'Started',
+      runTrigger: 'Trigger',
+      runStatus: 'Status',
+      runEligible: 'Due',
+      runPurged: 'Deleted',
+    },
+
     somethingForYou: {
       showOnHome: 'Show on Home',
       empty: 'No cards yet, so the section is hidden on Home.',

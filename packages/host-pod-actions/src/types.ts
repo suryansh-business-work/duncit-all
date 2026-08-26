@@ -17,6 +17,9 @@ export interface HostPodMedia {
 export interface HostPodTarget {
   id: string;
   pod_title: string;
+  /** When the pod runs — the Complete action is offered only once it is over. */
+  pod_date_time?: string | null;
+  pod_end_date_time?: string | null;
   pod_description?: string | null;
   pod_images_and_videos?: HostPodMedia[] | null;
   venue_id?: string | null;

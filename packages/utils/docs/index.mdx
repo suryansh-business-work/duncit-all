@@ -32,6 +32,7 @@ exports:
   - 'isStoryLive'
   - 'videoSourceUrl'
   - 'podPhase'
+  - 'canCompletePod'
   - 'splitPodsByPhase'
   - 'hostPodSection'
   - 'splitHostPods'
@@ -133,6 +134,11 @@ exports:
   - 'mwebAutoPodLabels'
   - 'shellAutoPodLabels'
   - 'shellPodKindLabels'
+  - 'DRAFT_EXPIRY_WARNING_MS'
+  - 'draftMsLeft'
+  - 'draftHoursLeft'
+  - 'isDraftExpiringSoon'
+  - 'splitDraftsByExpiry'
 ---
 
 ## Why this exists
@@ -544,6 +550,27 @@ rails can never place the same pod differently.
 | `POD_LIVE_TAIL_MS` | `number` | 4h — how long a pod with no set end stays live. |
 | `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
+| `canCompletePod` | `(pod, now = Date.now()) => boolean` | True only on a PREVIOUS pod. Completion settles the payout off the seats scanned in, so Host Studio offers it once the door has shut — never on an upcoming or ongoing pod. |
+
+### Draft-pod expiry
+
+A Create-Pod draft is deleted `draft_retention_days` (Admin > Pods > Pod Settings,
+default 3) after it was **created** — not after its last save, so an autosave cannot
+keep an abandoned draft alive forever. The server stamps the date on
+`PodDraft.expires_at` from the same setting its retention sweep deletes on, so the
+countdown a host reads can never promise a day the sweep disagrees with.
+
+Host Studio lifts every draft inside the last 24 hours out of the list into an
+info-badge panel at the top, highlighted, soonest-deleted first. mWeb and the native
+app share these derivations and keep their own MUI / Tamagui rows (rules 27 + 40).
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `DRAFT_EXPIRY_WARNING_MS` | `number` | 24h — the window that promotes and highlights a draft. |
+| `draftMsLeft` | `(draft, now = Date.now()) => number | null` | Milliseconds to deletion. `null` with no usable `expires_at`; negative once past due (the sweep runs daily). |
+| `isDraftExpiringSoon` | `(draft, now = Date.now()) => boolean` | Inside the warning window — the one rule behind both the promotion and the highlight. |
+| `draftHoursLeft` | `(draft, now = Date.now()) => number` | Whole hours left, floored at 0. `0` means the last hour, not "already gone". |
+| `splitDraftsByExpiry` | `(drafts, now = Date.now()) => { expiring, rest }` | `expiring` soonest-first; `rest` keeps the server order. |
 
 ### Host Studio sections
 

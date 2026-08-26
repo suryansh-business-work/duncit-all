@@ -14,6 +14,36 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AccountDeletionCronFrequency =
+  | 'DAILY'
+  | 'WEEKLY';
+
+/**
+ * The retention window AND the job that acts on it, as the Admin Panel sees it.
+ *
+ * Separate from `AccountDeletionSettings`, which any signed-in member may read
+ * because both apps quote the window before anybody confirms. When the sweep
+ * runs, how large a batch it takes and when it last fired are operational
+ * facts, not a promise made to a member.
+ */
+export type AccountDeletionCronSettings = {
+  __typename?: 'AccountDeletionCronSettings';
+  /** How many accounts one sweep will carry out. A ceiling, not a target. */
+  cron_batch_size: Scalars['Int']['output'];
+  /** False means the queue is cleared by hand, exactly as it was before. */
+  cron_enabled: Scalars['Boolean']['output'];
+  cron_frequency: AccountDeletionCronFrequency;
+  /** Wall-clock `HH:mm` in the platform timezone, not the container's UTC. */
+  cron_time_of_day: Scalars['String']['output'];
+  /** 0 = Sunday. Only read when the frequency is WEEKLY. */
+  cron_weekday: Scalars['Int']['output'];
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  /** Null while the sweep is off — there is no next run to name. */
+  next_run_at?: Maybe<Scalars['String']['output']>;
+  /** The grace period, in whole days. 30 is today's default, not a fixed rule. */
+  retention_days: Scalars['Int']['output'];
+};
+
 export type AccountDeletionDetail = {
   __typename?: 'AccountDeletionDetail';
   /** False once the account document itself has been removed. */
@@ -69,6 +99,63 @@ export type AccountDeletionRequestPage = {
   rows: Array<AccountDeletionRequest>;
   total: Scalars['Int']['output'];
 };
+
+/**
+ * One sweep of the deletion queue.
+ *
+ * Written whether or not anything was found: a run that deleted nobody is the
+ * evidence that the job is alive, and a night with no row at all is the thing
+ * worth noticing.
+ */
+export type AccountDeletionRun = {
+  __typename?: 'AccountDeletionRun';
+  /** The moment eligibility was judged against. */
+  cutoff_at: Scalars['String']['output'];
+  /** Due requests found. `purged + failed` may be fewer — the batch has a ceiling. */
+  eligible: Scalars['Int']['output'];
+  error: Scalars['String']['output'];
+  failed: Scalars['Int']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  purged: Scalars['Int']['output'];
+  results: Array<AccountDeletionRunResult>;
+  retention_days: Scalars['Int']['output'];
+  run_id: Scalars['String']['output'];
+  started_at: Scalars['String']['output'];
+  status: AccountDeletionRunStatus;
+  trigger: AccountDeletionRunTrigger;
+};
+
+export type AccountDeletionRunPage = {
+  __typename?: 'AccountDeletionRunPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AccountDeletionRun>;
+  total: Scalars['Int']['output'];
+};
+
+/** One account a sweep acted on, and what became of it. */
+export type AccountDeletionRunResult = {
+  __typename?: 'AccountDeletionRunResult';
+  /** The address as the request recorded it. The account itself is gone. */
+  email: Scalars['String']['output'];
+  error: Scalars['String']['output'];
+  /** PURGED, or FAILED with the reason beside it. */
+  outcome: Scalars['String']['output'];
+  /** Rows removed or redacted across every collection, for scale not detail. */
+  records: Scalars['Int']['output'];
+  request_id: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type AccountDeletionRunStatus =
+  | 'FAILED'
+  | 'RUNNING'
+  | 'SUCCEEDED';
+
+export type AccountDeletionRunTrigger =
+  | 'MANUAL'
+  | 'SCHEDULED';
 
 /** How long an account stays after its owner asks for it to go. */
 export type AccountDeletionSettings = {
@@ -8842,6 +8929,14 @@ export type Mutation = {
    */
   rotateTelemetryApiKey: TelemetrySettings;
   /**
+   * Run the sweep now.
+   *
+   * Not gated on `cron_enabled` and does not move `last_run_at`: this is a
+   * human clearing the queue, and it must neither require switching the
+   * schedule on nor make tonight's run look like it already happened.
+   */
+  runAccountDeletionPurgeNow: AccountDeletionRun;
+  /**
    * Take a backup now and return the row immediately. The archive is written on
    * the server, so closing the browser cannot interrupt it. SUPER_ADMIN only.
    */
@@ -9147,6 +9242,8 @@ export type Mutation = {
   unfollowUser: User;
   unsubscribeAllByToken: MailPreference;
   unsubscribeNewsletter: Scalars['Boolean']['output'];
+  /** Change when the sweep runs, and whether it runs at all. */
+  updateAccountDeletionCron: AccountDeletionCronSettings;
   /**
    * Change the retention window, in whole days (1–365).
    *
@@ -12146,6 +12243,11 @@ export type MutationUnsubscribeNewsletterArgs = {
 };
 
 
+export type MutationUpdateAccountDeletionCronArgs = {
+  input: UpdateAccountDeletionCronInput;
+};
+
+
 export type MutationUpdateAccountDeletionSettingsArgs = {
   retention_days: Scalars['Int']['input'];
 };
@@ -14151,6 +14253,12 @@ export type PodDashboardTotals = {
 export type PodDraft = {
   __typename?: 'PodDraft';
   created_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * When the retention sweep deletes this draft: created_at plus the
+   * admin-configured draft_retention_days. Null when the draft carries no
+   * usable creation date.
+   */
+  expires_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   payload: Scalars['String']['output'];
   pod_mode: Scalars['String']['output'];
@@ -15773,10 +15881,16 @@ export type PushSubscriptionInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Admin Panel: the window, the schedule, and when it last ran. */
+  accountDeletionCronSettings: AccountDeletionCronSettings;
+  /** How many requests are past their date right now — the console's preview. */
+  accountDeletionDueCount: Scalars['Int']['output'];
   /** One request plus a live count of where that member still appears. */
   accountDeletionRequest: AccountDeletionDetail;
   /** Tech console queue. */
   accountDeletionRequestsTable: AccountDeletionRequestPage;
+  /** The audit log: every sweep, newest first. */
+  accountDeletionRuns: AccountDeletionRunPage;
   /**
    * The retention window. Readable by any signed-in member, because both apps
    * warn with the number BEFORE anyone confirms — a promise the product makes
@@ -16985,6 +17099,11 @@ export type QueryAccountDeletionRequestArgs = {
 
 
 export type QueryAccountDeletionRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAccountDeletionRunsArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -21692,6 +21811,19 @@ export type UnitType =
   | 'OTHER'
   | 'PACKET'
   | 'PIECE';
+
+/**
+ * Every field is optional: the console saves the one card the operator touched
+ * rather than rewriting the whole schedule from a form it may have half-loaded.
+ */
+export type UpdateAccountDeletionCronInput = {
+  cron_batch_size?: InputMaybe<Scalars['Int']['input']>;
+  cron_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  cron_frequency?: InputMaybe<AccountDeletionCronFrequency>;
+  /** `HH:mm`. Refused if it cannot be parsed — a schedule nothing can read never fires. */
+  cron_time_of_day?: InputMaybe<Scalars['String']['input']>;
+  cron_weekday?: InputMaybe<Scalars['Int']['input']>;
+};
 
 export type UpdateAdPricingInput = {
   auto_per_day?: InputMaybe<Scalars['Float']['input']>;

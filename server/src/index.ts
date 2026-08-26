@@ -16,6 +16,8 @@ import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/m
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
+import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
+import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
@@ -249,6 +251,20 @@ async function bootstrap() {
     );
     await accountDeletionService.backfillScheduledDates();
   });
+  /*
+    Which accounts are sealed because their owner asked to be deleted.
+
+    Held in memory and read on EVERY authenticated request, so it must be
+    populated before the server accepts one — Duncit JWTs never expire, and an
+    empty map is a map that lets every revoked token back in. This runs here,
+    before `app.listen`, for exactly that reason.
+  */
+  await safeSeed('accountDeletionLocks', async () => {
+    const { loadAccountLocks } = await import(
+      '@modules/access/accountDeletion/accountDeletion.lock'
+    );
+    await loadAccountLocks();
+  });
   // Builds the gift card unique indexes (code, payment_id, the once-only
   // redeem guard) — new unique indexes only land through syncIndexes at boot.
   await safeSeed('giftCardIndexes', async () => {
@@ -343,6 +359,12 @@ async function bootstrap() {
   // admin-configured window has passed (Tech > Database > Backups; off until
   // an operator turns it on) and prunes past the keep-last count.
   startDbBackupScheduler();
+
+  // Account deletions: a one-minute tick that carries out requests whose grace
+  // period has run out (Admin Panel > Settings > Account deletion; off until an
+  // operator turns it on), plus the safety-net refresh of the seal map above.
+  startAccountDeletionScheduler();
+  startAccountLockRefresh();
 
   // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
   // nudge to complete a finished pod, an unanswered slot request, a released

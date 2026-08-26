@@ -14,6 +14,7 @@ const MY_POD_DRAFTS = gql`
       pod_title
       step
       updated_at
+      expires_at
     }
   }
 `;
@@ -45,8 +46,14 @@ const draftsMock = (drafts: unknown[]) => ({
 });
 
 const sampleDrafts = [
-  { id: 'd1', pod_title: 'Sunday Football', step: 1, updated_at: '2026-07-01T10:00:00.000Z' },
-  { id: 'd2', pod_title: '', step: 0, updated_at: null },
+  {
+    id: 'd1',
+    pod_title: 'Sunday Football',
+    step: 1,
+    updated_at: '2026-07-01T10:00:00.000Z',
+    expires_at: '2099-01-01T00:00:00.000Z',
+  },
+  { id: 'd2', pod_title: '', step: 0, updated_at: null, expires_at: null },
 ];
 
 function renderCard(mocks: unknown[]) {

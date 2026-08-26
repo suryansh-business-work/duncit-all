@@ -117,8 +117,8 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
 
   const confirmMessage =
     retentionDays === null
-      ? t('mweb.account.deletion.confirmMessage')
-      : t('mweb.account.deletion.confirmMessageDays', { vars: { days: retentionDays } });
+      ? t('mweb.account.deletion.confirmSealed')
+      : t('mweb.account.deletion.confirmSealedDays', { vars: { days: retentionDays } });
 
   const errorLine = error ? (
     <Text fontSize={12.5} color="$danger" testID="deletion-panel-error">

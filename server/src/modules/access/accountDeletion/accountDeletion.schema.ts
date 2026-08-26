@@ -136,14 +136,25 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
     """
     Ask for the account to be removed.
 
-    This does NOT delete anything. It files a request for the Tech portal and
-    leaves the account fully usable, so a mis-tap costs nothing and the member
-    can withdraw it. Asking twice returns the request already open.
+    This does NOT delete anything yet — the request is queued, and the account
+    survives until the grace period is up. What it DOES do immediately is end
+    the account: every token it has handed out stops being accepted, the live
+    surfaces are told to sign out, and no door will mint it another one. The
+    window is time for the decision to be reversed from the console, not time
+    to keep using the account.
+
+    Asking twice returns the request already open.
     """
     submitAccountDeletionRequest(
       input: SubmitAccountDeletionRequestInput!
     ): AccountDeletionRequest!
-    "Withdraw an open request. The member's own, and only while it is open."
+    """
+    Withdraw an open request. The member's own, and only while it is open.
+
+    No longer reachable from the apps: filing a request signs the member out
+    and closes the account, so nobody holding an open request can be signed in
+    to call this. `rejectAccountDeletionRequest` is the way back now.
+    """
     cancelMyAccountDeletionRequest: AccountDeletionRequest!
     "Clear this member's rows behind ONE reference. Permanent."
     purgeAccountTrace(input: PurgeAccountTraceInput!): AccountDeletionDetail!
@@ -164,5 +175,128 @@ export const accountDeletionTypeDefs = /* GraphQL */ `
     what a grace period is supposed to prevent.
     """
     updateAccountDeletionSettings(retention_days: Int!): AccountDeletionSettings!
+  }
+`;
+
+export const accountDeletionCronTypeDefs = /* GraphQL */ `
+  enum AccountDeletionCronFrequency {
+    DAILY
+    WEEKLY
+  }
+
+  enum AccountDeletionRunStatus {
+    RUNNING
+    SUCCEEDED
+    FAILED
+  }
+
+  enum AccountDeletionRunTrigger {
+    SCHEDULED
+    MANUAL
+  }
+
+  """
+  The retention window AND the job that acts on it, as the Admin Panel sees it.
+
+  Separate from \`AccountDeletionSettings\`, which any signed-in member may read
+  because both apps quote the window before anybody confirms. When the sweep
+  runs, how large a batch it takes and when it last fired are operational
+  facts, not a promise made to a member.
+  """
+  type AccountDeletionCronSettings {
+    "The grace period, in whole days. 30 is today's default, not a fixed rule."
+    retention_days: Int!
+    "False means the queue is cleared by hand, exactly as it was before."
+    cron_enabled: Boolean!
+    cron_frequency: AccountDeletionCronFrequency!
+    "Wall-clock \`HH:mm\` in the platform timezone, not the container's UTC."
+    cron_time_of_day: String!
+    "0 = Sunday. Only read when the frequency is WEEKLY."
+    cron_weekday: Int!
+    "How many accounts one sweep will carry out. A ceiling, not a target."
+    cron_batch_size: Int!
+    last_run_at: String
+    "Null while the sweep is off — there is no next run to name."
+    next_run_at: String
+  }
+
+  "One account a sweep acted on, and what became of it."
+  type AccountDeletionRunResult {
+    request_id: String!
+    user_id: ID!
+    "The address as the request recorded it. The account itself is gone."
+    email: String!
+    "PURGED, or FAILED with the reason beside it."
+    outcome: String!
+    "Rows removed or redacted across every collection, for scale not detail."
+    records: Int!
+    error: String!
+  }
+
+  """
+  One sweep of the deletion queue.
+
+  Written whether or not anything was found: a run that deleted nobody is the
+  evidence that the job is alive, and a night with no row at all is the thing
+  worth noticing.
+  """
+  type AccountDeletionRun {
+    id: ID!
+    run_id: String!
+    trigger: AccountDeletionRunTrigger!
+    status: AccountDeletionRunStatus!
+    "The moment eligibility was judged against."
+    cutoff_at: String!
+    retention_days: Int!
+    "Due requests found. \`purged + failed\` may be fewer — the batch has a ceiling."
+    eligible: Int!
+    purged: Int!
+    failed: Int!
+    error: String!
+    started_at: String!
+    finished_at: String
+    results: [AccountDeletionRunResult!]!
+  }
+
+  type AccountDeletionRunPage {
+    rows: [AccountDeletionRun!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  """
+  Every field is optional: the console saves the one card the operator touched
+  rather than rewriting the whole schedule from a form it may have half-loaded.
+  """
+  input UpdateAccountDeletionCronInput {
+    cron_enabled: Boolean
+    cron_frequency: AccountDeletionCronFrequency
+    "\`HH:mm\`. Refused if it cannot be parsed — a schedule nothing can read never fires."
+    cron_time_of_day: String
+    cron_weekday: Int
+    cron_batch_size: Int
+  }
+
+  extend type Query {
+    "Admin Panel: the window, the schedule, and when it last ran."
+    accountDeletionCronSettings: AccountDeletionCronSettings!
+    "How many requests are past their date right now — the console's preview."
+    accountDeletionDueCount: Int!
+    "The audit log: every sweep, newest first."
+    accountDeletionRuns(query: TableQueryInput): AccountDeletionRunPage!
+  }
+
+  extend type Mutation {
+    "Change when the sweep runs, and whether it runs at all."
+    updateAccountDeletionCron(input: UpdateAccountDeletionCronInput!): AccountDeletionCronSettings!
+    """
+    Run the sweep now.
+
+    Not gated on \`cron_enabled\` and does not move \`last_run_at\`: this is a
+    human clearing the queue, and it must neither require switching the
+    schedule on nor make tonight's run look like it already happened.
+    """
+    runAccountDeletionPurgeNow: AccountDeletionRun!
   }
 `;

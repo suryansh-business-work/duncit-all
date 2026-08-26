@@ -67,7 +67,7 @@ export function DeletionSubmittedDialog({
           {t('mweb.account.deletion.submittedOn', { vars: { date: formatDate(deletesOn) } })}
         </Text>
         <Text fontSize={12.5} color="$muted">
-          {t('mweb.account.deletion.submittedBody')}
+          {t('mweb.account.deletion.submittedSealed')}
         </Text>
         <Text fontSize={12} color="$muted">
           {t('mweb.account.deletion.pendingRef', { vars: { code } })}

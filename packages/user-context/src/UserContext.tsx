@@ -204,7 +204,13 @@ export function UserProvider({
   // Real-time: a profile change made on any of this account's other surfaces
   // (the phone, another portal tab) lands here without a refetch. `update`
   // already persists to the cache, so a reload keeps what the socket delivered.
-  useUserRealtime(userState?.user_id, update);
+  //
+  // The same connection also carries the account's ending — its owner asked
+  // for it to be deleted from another device, and the server has already
+  // stopped accepting this tab's token. `logout` clears the cached user too,
+  // which matters here: without it the shell would keep rendering a signed-in
+  // header off storage for a session the server has finished with.
+  useUserRealtime(userState?.user_id, update, logout);
 
   const hasLoadFailure = useMemo(
     // Fire only when authed, the first load attempt has finished, and we have

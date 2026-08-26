@@ -16,6 +16,7 @@ import {
 } from './relations';
 import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { emitUserChanged } from '../../../realtime/user.events';
+import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { syncUserMirrors } from './user.mirrors';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
@@ -1320,6 +1321,33 @@ async function usernameOwner(handle: string): Promise<string | null> {
   return owner ? String(owner._id) : null;
 }
 
+/**
+ * The ONE refusal every failed email sign-in gets.
+ *
+ * Wrong address, wrong password, or an account sealed because its owner asked
+ * to be deleted — all three answer with this exact error. That is the whole
+ * point: a caller who can tell "no such account" from "that account is on its
+ * way out" has been handed a way to test whether somebody is leaving Duncit,
+ * off nothing but their email address.
+ */
+function invalidCredentials(): GraphQLError {
+  return new GraphQLError('Invalid email or password', {
+    extensions: { code: 'UNAUTHENTICATED' },
+  });
+}
+
+/**
+ * Refuse a sign-in for an account whose owner asked for it to be deleted.
+ *
+ * Called at every door that mints a token, and always AFTER the credential
+ * itself has been checked. Ordering matters: checked first, a sealed account
+ * would answer before bcrypt had run and the difference in timing would be the
+ * leak the shared message exists to close.
+ */
+function assertNotSealed(userId: unknown): void {
+  if (isAccountLocked(String(userId ?? ''))) throw invalidCredentials();
+}
+
 export const userService = {
   // Backward-compat helper used by other modules. Returns the materialized
   // flat shape (toPublic) for a given doc.
@@ -1370,9 +1398,7 @@ export const userService = {
 
   async login(input: LoginDTO, signIn?: SignInContext) {
     const user = await UserModel.findOne({ 'auth.email': input.email }).select('+auth.password');
-    if (!user) {
-      throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
-    }
+    if (!user) throw invalidCredentials();
     const stored = (user as any).auth?.password as string | undefined;
     if (!stored) {
       throw new GraphQLError('This account uses Google sign-in. Continue with Google.', {
@@ -1380,9 +1406,11 @@ export const userService = {
       });
     }
     const ok = await bcrypt.compare(input.password, stored);
-    if (!ok) {
-      throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
-    }
+    if (!ok) throw invalidCredentials();
+    // Right credentials are not enough once the owner has asked to be removed:
+    // the account is on its way out and hands out no more sessions. The refusal
+    // is the same one a wrong password gets, on purpose.
+    assertNotSealed(user._id);
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
@@ -1413,7 +1441,10 @@ export const userService = {
     const user = await UserModel.findOne({ 'auth.google_id': info.sub });
     if (!user) {
       const emailUser = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
-      if (emailUser && (emailUser as any).auth?.password) {
+      // A sealed account is not offered the link either — "you registered with
+      // email" would confirm it exists, which is the one thing the refusal
+      // below is careful not to say.
+      if (emailUser && (emailUser as any).auth?.password && !isAccountLocked(String(emailUser._id))) {
         // Not a dead end any more: the caller has proved control of a Google
         // account whose email Google verified and which matches this account,
         // so linking is offered. The client shows the consent step and, on
@@ -1425,6 +1456,18 @@ export const userService = {
           extensions: { code: 'EMAIL_LOGIN_REQUIRED', email },
         });
       }
+      throw new GraphQLError('User is not in our system. Please sign up first.', {
+        extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
+      });
+    }
+    /*
+      A sealed account answers as if it had never existed here.
+
+      Not `invalidCredentials()`: there is no password in this flow, so "invalid
+      email or password" would itself be a tell. The refusal a Google account
+      Duncit does not know gets is the one that reveals nothing.
+    */
+    if (isAccountLocked(String(user._id))) {
       throw new GraphQLError('User is not in our system. Please sign up first.', {
         extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
       });
@@ -1471,7 +1514,10 @@ export const userService = {
     }
 
     const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
-    if (!user) {
+    // A sealed account is answered as an unknown one, for the same reason as in
+    // loginWithGoogle — and because linking would otherwise mint a session for
+    // an account that is on its way out.
+    if (!user || isAccountLocked(String(user._id))) {
       throw new GraphQLError('User is not in our system. Please sign up first.', {
         extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
       });
@@ -1792,7 +1838,11 @@ export const userService = {
     const portalKey = String(input.portal_key || '').trim();
     const user = await UserModel.findOne({ 'auth.email': email });
     const silent = { ok: true, dev_otp: null as string | null };
-    if (!user || (user as any).metadata?.status !== 'ACTIVE') return silent;
+    // A sealed account gets the same silent answer an unknown address does —
+    // no code is minted and no mail goes out, because the code could only ever
+    // open a door that is now closed.
+    if (!user || isAccountLocked(String(user._id))) return silent;
+    if ((user as any).metadata?.status !== 'ACTIVE') return silent;
 
     const pub = await toPublic(user);
     try {
@@ -1892,6 +1942,9 @@ export const userService = {
     }
     await clearOtp();
 
+    // Checked after the code is spent, so a sealed account cannot be told apart
+    // from a wrong code by how quickly it answers.
+    if (isAccountLocked(String(user._id))) throw invalid();
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
@@ -1917,7 +1970,13 @@ export const userService = {
     // Only a registered account with a password can receive a reset OTP. An
     // unregistered email gets no OTP and is reported back so the UI can prompt
     // the visitor to create an account instead.
-    if (!user?.auth?.password) return { ok: false, registered: false, dev_otp: null };
+    // A sealed account reads as unregistered here. Resetting the password of an
+    // account that is being deleted opens nothing — every door already refuses
+    // it — so the only thing a code would do is arrive in the mailbox of
+    // somebody who has just been told their account is closing.
+    if (!user?.auth?.password || isAccountLocked(String(user._id))) {
+      return { ok: false, registered: false, dev_otp: null };
+    }
     const otp = String(crypto.randomInt(100000, 1000000));
     await UserModel.updateOne(
       { _id: user._id },
@@ -1945,7 +2004,10 @@ export const userService = {
     const user = await UserModel.findOne({ 'auth.email': email }).select(
       '+auth.password_reset_otp_hash +auth.password_reset_otp_expires_at'
     );
-    if (!user) {
+    // A sealed account was never sent a code, but one issued before it was
+    // sealed could still be in a mailbox — so the redeem side refuses too, with
+    // the same words a wrong code gets.
+    if (!user || isAccountLocked(String(user._id))) {
       throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const expiresAt = (user as any).auth?.password_reset_otp_expires_at as Date | undefined;

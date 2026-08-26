@@ -74,3 +74,17 @@ export function splitPodsByPhase<T extends PodPhaseFields>(
   }
   return out;
 }
+
+/**
+ * Whether a host may complete this pod — TRUE only once it is over.
+ *
+ * Completing a pod is the settlement: it prices the payout off the seats
+ * scanned in and hands Finance the releases to approve. Running it on a pod
+ * that has not started, or is running right now, freezes that answer while the
+ * door is still open — guests who arrive after it are seats the host is never
+ * paid for. So Host Studio offers the action on PAST pods only; an upcoming or
+ * ongoing pod carries no Complete row at all.
+ */
+export function canCompletePod(pod: PodPhaseFields, now: number = Date.now()): boolean {
+  return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) === 'PREVIOUS';
+}

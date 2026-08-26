@@ -1,5 +1,9 @@
 import { useEffect } from 'react';
-import { subscribeUserChanged, type SocketLike } from '@duncit/user-core';
+import {
+  subscribeSessionRevoked,
+  subscribeUserChanged,
+  type SocketLike,
+} from '@duncit/user-core';
 
 /**
  * Builds the socket for this surface, reading whatever token that app stores.
@@ -34,24 +38,35 @@ export function configureSessionSocket(next: SessionSocketFactory | null): void 
  * The patch is applied locally rather than triggering a refetch: the frame
  * already carries the new values, and a refetch per keystroke on the profile
  * form would be a request storm for data the client was just handed.
+ *
+ * The same connection also carries the account's ending. `onRevoked` fires when
+ * the server has stopped accepting this account's tokens — today, because its
+ * owner asked for it to be deleted from another device. The token is already
+ * dead by then, so this only decides HOW SOON the tab notices: with it, at
+ * once; without it, on whatever request it happens to make next.
  */
 export function useUserRealtime(
   userId: string | null | undefined,
   apply: (patch: Record<string, unknown>) => void,
+  onRevoked?: () => void,
 ): void {
   useEffect(() => {
     if (!userId || !factory) return undefined;
     const socket = factory();
     if (!socket) return undefined;
     const unsubscribe = subscribeUserChanged(socket, userId, apply);
+    const unsubscribeRevoked = subscribeSessionRevoked(socket, userId, () => onRevoked?.());
     return () => {
       unsubscribe();
+      unsubscribeRevoked();
       // This effect OWNS the connection it opened. Without the disconnect a
       // token refresh or a sign-out would leave the old socket attached and the
       // account would accumulate one connection per re-auth.
       socket.disconnect?.();
     };
-    // `apply` comes from a useCallback in the provider and is stable.
+    // `apply` and `onRevoked` both come from useCallbacks in the provider and
+    // are stable. Listing them would tear the socket down and rebuild it on
+    // every render that happened to change their identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 }

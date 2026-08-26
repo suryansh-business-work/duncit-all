@@ -23,11 +23,13 @@ export {
 export { SURFACE_HEADER } from './surface';
 export type { ClientSurface } from './surface';
 export {
+  SESSION_REVOKED_EVENT,
   USER_CHANGED_EVENT,
   parseUserChangedFrame,
+  subscribeSessionRevoked,
   subscribeUserChanged,
 } from './realtime';
-export type { SocketLike, UserChangedFrame } from './realtime';
+export type { SessionRevokedFrame, SocketLike, UserChangedFrame } from './realtime';
 export type {
   FeatureFlags,
   SessionDevice,

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { watchClientPresence } from '@utils/clientPresence';
+import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
 
 export interface AuthUser {
   id: string;
@@ -43,7 +44,23 @@ export function decodeAuthUser(authorization?: string | null): AuthUser | null {
     // Fallback MUST match `signToken` (user.service.ts). If they diverge, a
     // server started without JWT_SECRET signs with one secret and verifies
     // with another — silently rejecting every token (me -> null for all).
-    return jwt.verify(authorization.slice(7), process.env.JWT_SECRET || 'dev-secret') as AuthUser;
+    const user = jwt.verify(
+      authorization.slice(7),
+      process.env.JWT_SECRET || 'dev-secret'
+    ) as AuthUser;
+    /*
+      A valid signature is no longer the whole answer.
+
+      Duncit JWTs never expire, so an account whose owner has asked for it to be
+      deleted would otherwise go on being usable from every device it was ever
+      signed in on for the length of the grace period. Refusing it HERE — rather
+      than in each of the several hundred resolvers — is what makes "your
+      sessions have ended" true of the phone left on a table as well as of the
+      browser the request was filed from. The caller reads as signed out, which
+      is exactly what they are.
+    */
+    if (isAccountLocked(user?.id)) return null;
+    return user;
   } catch {
     return null;
   }

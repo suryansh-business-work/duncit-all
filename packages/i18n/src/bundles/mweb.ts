@@ -421,13 +421,27 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         action: 'Request account deletion',
         subtitle: 'Ask us to remove your account and everything on it.',
         confirmTitle: 'Request account deletion?',
-        confirmMessage:
-          'We will email you a 6-digit code to confirm it is you. Your account keeps working until our team removes it, and you can withdraw the request any time before then.',
-        // The same warning, with the window the admin has actually configured
-        // in it. Quoting the real number matters: it is the date the server
-        // stamps on the request and the one the member will be held to.
-        confirmMessageDays:
-          'Your account and everything on it will be deleted {days} days from now. We will email you a 6-digit code to confirm it is you, and you will be signed out once the request is filed. You can withdraw it any time before the {days} days are up by signing back in.',
+        /*
+          `confirmSealed` REPLACES the old `confirmMessage` / `confirmMessageDays`
+          rather than rewording them, and the rename is the whole point.
+
+          Confirming now ENDS the session and closes the account to further
+          sign-ins; the old copy promised the opposite ("you can withdraw it any
+          time"). Editing those strings in place would not have fixed anything
+          in production: the client prefers the server's Localization data over
+          this fallback, "Import app keys" never overwrites a translation that
+          already exists, and the old English is already sitting in that table.
+          The correction only reaches a screen under a key the seeder has never
+          seen before.
+
+          The second variant quotes the window the admin actually configured.
+          Quoting the real number matters: it is the date the server stamps on
+          the request, and the one the member will be held to.
+        */
+        confirmSealed:
+          'This cannot be undone from the app. We will email you a 6-digit code to confirm it is you, and once you enter it you will be signed out of every device and will not be able to sign in again. To stop the deletion after that you will need to contact support.',
+        confirmSealedDays:
+          'Your account and everything on it will be deleted {days} days from now. We will email you a 6-digit code to confirm it is you — once you enter it you are signed out of every device and cannot sign in again, so contact support if you change your mind during those {days} days.',
         confirmCta: 'Send code',
         otpSent: 'Code sent to your email.',
         otpIntro: 'Enter the code to send your deletion request.',
@@ -456,8 +470,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         // thing they see — it has to carry the date and the reference with it.
         submittedTitle: 'Deletion request received',
         submittedOn: 'Your account and everything on it will be deleted on {date}.',
-        submittedBody:
-          'You are being signed out now. Sign back in any time before that date and we will ask whether you would like to withdraw the request.',
+        // Replaces `submittedBody` under a new name, same reason as
+        // confirmSealed above: it used to tell people to sign back in to change
+        // their mind, and signing back in is exactly what no longer works.
+        // Quote the reference — it is the only handle they have left once the
+        // session is gone.
+        submittedSealed:
+          'You have been signed out of every device and this account can no longer sign in. Keep the reference below: it is what support will ask for if you change your mind before that date.',
         signOutNow: 'Sign out',
         // ...and this is that question, asked on the next sign-in.
         noticeTitle: 'Your account is scheduled for deletion',
@@ -2957,6 +2976,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       couldNotResubmitThePod: 'Could not resubmit the pod',
       createAPod: 'Create a Pod',
       customerPaid: 'Customer Paid',
+      draftExpiresInHours: 'Deleted in {hours}h',
+      draftExpiresWithinHour: 'Deleted within the hour',
+      draftPods: 'Draft pods',
+      draftRetentionNote:
+        'Draft Pods are automatically deleted {days} days after they are created. Publish your Pod before it expires.',
+      draftsExpiringSoon: 'Deleted in the next 24 hours',
+      draftsExpiringSoonNote:
+        'Publish these drafts now. The next cleanup removes them for good.',
       duncitRevenue: 'Duncit revenue',
       duncitTakenPct: 'Duncit Taken ({pct}%)',
       editPod: 'Edit pod',
@@ -2970,10 +2997,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       keepPod: 'Keep pod',
       markAttendance: 'Mark attendance',
       media: 'Media',
+      noDraftsYet: 'No drafts yet. Pods you start saving will show up here.',
       noPodsMatchTheseFiltersTry: 'No pods match these filters. Try adjusting or resetting them.',
       noRequestedPods: 'No Requested Pods',
       noteForAttendees: 'Note for attendees',
       noteSharedWithAttendees: 'Note (shared with attendees)',
+      otherDrafts: 'Other drafts',
       payout: 'Payout',
       podActions: 'Pod actions',
       podMedia: 'Pod Media',
@@ -2992,6 +3021,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       scanNext: 'Scan next',
       time: 'Time',
       type: 'Type',
+      untitledPod: 'Untitled pod',
       venueBill: 'Venue bill',
       venueBillAmount: 'Venue Bill Amount',
       venuePrice: 'Venue price',

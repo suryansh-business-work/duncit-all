@@ -114,6 +114,11 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
  * Notification.action_status is a separate field resolver that reads a live,
  * independently-mutable FollowRequest document — whole-response caching
  * freezes it, showing Accept/Reject controls on an already-answered request).
+ *
+ * ONE audited exception to (d): PodDraft.expires_at is a field resolver over
+ * the app-wide draft_retention_days setting. It is not identity-scoped, but it
+ * is a date days out that the client renders as an hour countdown, so a 60s
+ * stale copy cannot change what a host is told.
  */
 const PERSONAL_CACHEABLE_FIELDS = new Set([
   'myPodDrafts',

@@ -42,7 +42,7 @@ export default function DeletionSubmittedDialog({
             })}
           </Alert>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t('mweb.account.deletion.submittedBody')}
+            {t('mweb.account.deletion.submittedSealed')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {t('mweb.account.deletion.pendingRef', { vars: { code } })}

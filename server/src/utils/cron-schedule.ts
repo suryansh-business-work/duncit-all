@@ -1,22 +1,28 @@
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 /**
- * When the schedule is owed a run. Pure, so the awkward cases — a server that
- * was down through the window, a clock that crossed a DST boundary, a weekly
- * run configured for today — are testable without a database or a timer.
+ * When an admin-configured job is owed a run. Pure, so the awkward cases — a
+ * server that was down through the window, a clock that crossed a DST
+ * boundary, a weekly run configured for today — are testable without a
+ * database or a timer.
  *
  * The configured time is wall-clock time in the platform's own zone (Admin >
  * Settings, default Asia/Kolkata), not the container's UTC. An operator picking
  * 03:00 means the quiet hour their users are asleep through; read as UTC that
  * would land at 08:30 IST, the busiest part of the morning, which is precisely
- * the window a backup must not run in.
+ * the window a background job must not run in.
+ *
+ * This lives in utils rather than beside one caller because more than one job
+ * now asks the same question — the nightly database backup and the account
+ * deletion sweep — and two copies of "is it due" would be two places for the
+ * catch-up rule to disagree.
  */
-export const DEFAULT_BACKUP_ZONE = 'Asia/Kolkata';
+export const DEFAULT_SCHEDULE_ZONE = 'Asia/Kolkata';
 
 const DAY_MS = 86_400_000;
 const TIME_PATTERN = /^(\d{1,2}):(\d{2})$/;
 
-export interface BackupSchedule {
+export interface CronSchedule {
   enabled: boolean;
   frequency: string;
   time_of_day: string;
@@ -70,9 +76,9 @@ function daysSinceWeekday(zonedNow: Date, weekday: number): number {
  * or null when it is off or misconfigured.
  */
 export function lastDueAt(
-  schedule: BackupSchedule,
+  schedule: CronSchedule,
   now: Date,
-  zone: string = DEFAULT_BACKUP_ZONE,
+  zone: string = DEFAULT_SCHEDULE_ZONE,
 ): Date | null {
   if (!schedule.enabled) return null;
   const time = parseTimeOfDay(schedule.time_of_day);
@@ -89,9 +95,9 @@ export function lastDueAt(
 
 /** The next moment this schedule will fire, or null when it is off. */
 export function nextRunAt(
-  schedule: BackupSchedule,
+  schedule: CronSchedule,
   now: Date,
-  zone: string = DEFAULT_BACKUP_ZONE,
+  zone: string = DEFAULT_SCHEDULE_ZONE,
 ): Date | null {
   const time = parseTimeOfDay(schedule.time_of_day);
   const previous = lastDueAt(schedule, now, zone);
@@ -110,10 +116,10 @@ export function nextRunAt(
  * one you find out about the day you need it, and a late one is still a backup.
  */
 export function isDue(
-  schedule: BackupSchedule,
+  schedule: CronSchedule,
   lastRunAt: Date | null | undefined,
   now: Date,
-  zone: string = DEFAULT_BACKUP_ZONE,
+  zone: string = DEFAULT_SCHEDULE_ZONE,
 ): boolean {
   const due = lastDueAt(schedule, now, zone);
   if (!due) return false;

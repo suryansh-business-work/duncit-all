@@ -100,6 +100,21 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 `PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the narrow
 `PodEditDialog` — title, description, media and the pod's capacity.
 
+### Complete Pod is a PAST-pod action
+
+`menuHandlers` reads `canCompletePod` from `@duncit/utils` off the pod's own
+`pod_date_time` / `pod_end_date_time` and hands it to the menu as `canComplete`. An **upcoming**
+or **ongoing** pod carries no Complete row at all — not a disabled one.
+
+Completing a pod IS the settlement: it prices the host, venue and club-admin payouts off the
+seats scanned in and hands Finance the releases to approve. Run on a pod whose door is still
+open, it freezes that answer early — every guest who walks in afterwards is a seat the host is
+never paid for. Host Studio therefore offers it only once the pod is over, which is the same
+instant `podPhase` calls `PREVIOUS`, so the Past filter and the menu can never disagree.
+
+The native `PodActionsSheet` takes the identical `canComplete` prop from the same helper
+(rule 27).
+
 ### Capacity, after the pod is live
 
 A host who published 12 spots at a space that holds 30 used to be stuck at 12 forever: the only

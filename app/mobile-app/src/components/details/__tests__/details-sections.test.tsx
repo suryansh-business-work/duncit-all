@@ -1,5 +1,5 @@
 import { Linking } from 'react-native';
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { MapEmbed } from '@/components/MapEmbed';
 import { PodClubCard } from '@/components/details/PodClubCard';
@@ -12,6 +12,15 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/constants/config', () => ({ config: { googleMapApiKey: 'KEY' } }));
 
 const future = (ms: number) => new Date(Date.now() + ms).toISOString();
+
+/**
+ * The join handler for pods that have no Join button to press.
+ *
+ * A physical pod never renders one, so a stub that RESOLVES would quietly pass
+ * even if the button started appearing on the wrong pod mode. This rejects, so
+ * that regression surfaces as a failure rather than as a green test.
+ */
+const neverJoined = () => Promise.reject(new Error('not a virtual pod'));
 
 const overviewPod = {
   pod_title: 'Jam',
@@ -63,7 +72,7 @@ describe('PodInfo', () => {
 });
 
 describe('PodSchedule', () => {
-  it('shows the meeting + join button for virtual pods', () => {
+  it('shows the meeting + join button for virtual pods', async () => {
     const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
     const pod = {
       pod_mode: 'VIRTUAL',
@@ -74,12 +83,22 @@ describe('PodSchedule', () => {
       meeting_notes: 'Bring a mic',
       zone_name: null,
     } as never;
-    renderWithProviders(<PodSchedule pod={pod} venue={null} location={null} />);
+    // The button never opens `pod.meeting_url` itself — it asks the server,
+    // because that call is what marks the booking present (VIRTUAL_JOIN). The
+    // stub stands in for that round trip and answers with the link.
+    renderWithProviders(
+      <PodSchedule
+        pod={pod}
+        venue={null}
+        location={null}
+        onJoinMeeting={() => Promise.resolve('https://meet.example')}
+      />,
+    );
     expect(screen.getByText('Meeting')).toBeOnTheScreen();
     expect(screen.getByText('Google Meet')).toBeOnTheScreen();
     expect(screen.getByText('Bring a mic')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-join-meeting'));
-    expect(spy).toHaveBeenCalledWith('https://meet.example');
+    await waitFor(() => expect(spy).toHaveBeenCalledWith('https://meet.example'));
     spy.mockRestore();
   });
 
@@ -93,7 +112,7 @@ describe('PodSchedule', () => {
       meeting_notes: null,
       zone_name: null,
     } as never;
-    renderWithProviders(<PodSchedule pod={pod} venue={null} location={null} />);
+    renderWithProviders(<PodSchedule pod={pod} venue={null} location={null} onJoinMeeting={neverJoined} />);
     expect(screen.getByText('Online')).toBeOnTheScreen();
     expect(
       screen.getByText('Meeting link will be visible after joining this pod.'),
@@ -122,7 +141,7 @@ describe('PodSchedule', () => {
       zone_name: 'Z',
     } as never;
     renderWithProviders(
-      <PodSchedule pod={pod} venue={venue} location={null} onOpenVenue={onOpenVenue} />,
+      <PodSchedule pod={pod} venue={venue} location={null} onOpenVenue={onOpenVenue} onJoinMeeting={neverJoined} />,
     );
     expect(screen.getByText('Where')).toBeOnTheScreen();
     expect(screen.getByText(/Hall/)).toBeOnTheScreen();
@@ -140,12 +159,12 @@ describe('PodSchedule', () => {
     } as never;
     const withLoc = { pod_mode: 'PHYSICAL', pod_date_time: null, zone_name: 'Z' } as never;
     const { rerender } = renderWithProviders(
-      <PodSchedule pod={withLoc} venue={null} location={location} />,
+      <PodSchedule pod={withLoc} venue={null} location={location} onJoinMeeting={neverJoined} />,
     );
     expect(screen.getByText('Town')).toBeOnTheScreen();
 
     const bare = { pod_mode: 'PHYSICAL', pod_date_time: null, zone_name: null } as never;
-    rerender(<PodSchedule pod={bare} venue={null} location={null} />);
+    rerender(<PodSchedule pod={bare} venue={null} location={null} onJoinMeeting={neverJoined} />);
     expect(screen.getByText('—')).toBeOnTheScreen();
   });
 });

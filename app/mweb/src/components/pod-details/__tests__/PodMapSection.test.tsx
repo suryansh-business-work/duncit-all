@@ -61,11 +61,28 @@ const LOCATION = {
   ],
 };
 
+/**
+ * Standing in for `joinPodMeeting`.
+ *
+ * The Join button never hrefs `pod.meeting_url` — asking the server for the
+ * link is the call that marks the member present, so the URL only ever arrives
+ * from this promise. A case that wants to assert on the opened link overrides
+ * it through `section({ onJoinMeeting })`.
+ */
+const JOIN_URL = 'https://meet.google.com/abc-defg-hij';
+const joinsWithLink = () => Promise.resolve(JOIN_URL);
+
 const section = (over: Record<string, unknown> = {}) =>
   render(
     <ThemeProvider theme={testTheme}>
       <MemoryRouter>
-        <PodMapSection pod={pod()} location={LOCATION} venue={VENUE} {...over} />
+        <PodMapSection
+          pod={pod()}
+          location={LOCATION}
+          venue={VENUE}
+          onJoinMeeting={joinsWithLink}
+          {...over}
+        />
       </MemoryRouter>
     </ThemeProvider>
   );

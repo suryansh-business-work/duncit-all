@@ -45,13 +45,7 @@ function venueParts(v: PodVenue): string[] {
 
 /** When · Meeting (virtual) or Where + map (physical). RN port of mWeb's
  * PodMapSection — handles both pod modes and degrades gracefully. */
-export function PodSchedule({
-  pod,
-  venue,
-  location,
-  onOpenVenue,
-  onJoinMeeting,
-}: Readonly<Props>) {
+export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }: Readonly<Props>) {
   const { primary } = useThemeColors();
   const { t } = useTranslation();
   const isVirtual = pod.pod_mode === 'VIRTUAL';

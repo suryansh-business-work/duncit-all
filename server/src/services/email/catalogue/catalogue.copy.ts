@@ -33,6 +33,9 @@ export const FIELD = {
   quantity: 'email.field.quantity',
   available: 'email.field.available',
   paymentId: 'email.field.paymentId',
+  invoiceNo: 'email.field.invoiceNo',
+  items: 'email.field.items',
+  recipient: 'email.field.recipient',
   category: 'email.field.category',
   subject: 'email.field.subject',
   ticketNo: 'email.field.ticketNo',
@@ -63,6 +66,7 @@ export const LABEL = {
   ad: 'email.label.ad',
   refund: 'email.label.refund',
   order: 'email.label.order',
+  giftCard: 'email.label.giftCard',
   signIn: 'email.label.signIn',
 } as const;
 
@@ -78,6 +82,7 @@ export const CTA = {
   viewPayout: 'email.cta.viewPayout',
   manageStock: 'email.cta.manageStock',
   viewOrder: 'email.cta.viewOrder',
+  viewGiftCard: 'email.cta.viewGiftCard',
   retryPayment: 'email.cta.retryPayment',
   viewAd: 'email.cta.viewAd',
   completePod: 'email.cta.completePod',
@@ -96,6 +101,7 @@ export const CTA = {
 export const FOOTER = {
   account: '{{t:email.footer.account}}',
   podJoined: '{{t:email.footer.podJoined}}',
+  purchase: '{{t:email.footer.purchase}}',
   podHosted: '{{t:email.footer.podHosted}}',
   podVenue: '{{t:email.footer.podVenue}}',
   podClub: '{{t:email.footer.podClub}}',
@@ -113,6 +119,7 @@ export const FOOTER = {
 /** Closing sentences reused across several templates. */
 export const HELP = {
   refundTiming: 'email.help.refundTiming',
+  invoiceAttached: 'email.help.invoiceAttached',
   noAction: 'email.help.noAction',
   onboardingNext: 'email.help.onboardingNext',
   accountPaused: 'email.help.accountPaused',

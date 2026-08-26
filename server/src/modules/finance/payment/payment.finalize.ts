@@ -35,6 +35,7 @@ import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
+import type { GiftCardPurchaseFacts } from '@modules/finance/giftcard/giftcard.service';
 
 /**
  * What checkout does once the money is in — as one transaction, then the rest.
@@ -583,32 +584,149 @@ async function emailTicket(ctx: DeferredContext): Promise<StepOutcome> {
 const membershipRef = (steps: IPaymentStep[]) =>
   steps.find((s) => s.key === 'MEMBERSHIP')?.refs?.[0] ?? null;
 
-async function sendReceipt(ctx: DeferredContext, pdf: Buffer): Promise<void> {
-  const p = ctx.payment;
-  const [fs, urlConfigs] = await Promise.all([getFinanceSettings(), getUrlConfigs()]);
+/**
+ * One receipt, chosen by what the payment bought.
+ *
+ * A single `payment-receipt` used to answer for all of them, with a one-line
+ * `summary` standing in for a pod's date, an order's contents and a gift card's
+ * recipient alike. `target_type` already knows which of the four it is, so it
+ * picks the template and the values only that kind has; the name, the money and
+ * the invoice PDF are identical for all four and are added once by
+ * `sendReceipt`.
+ *
+ * `subject` is the FALLBACK — the stored template's own subject wins, so an
+ * admin editing it in Tech > Emails keeps control — which is why it is written
+ * here beside the catalogue row it mirrors.
+ */
+interface ReceiptMail {
+  template: string;
+  subject: string;
+  vars: Record<string, string>;
+}
+
+/**
+ * A pod: which pod, and when its members have to turn up.
+ *
+ * The venue and the ticket code are deliberately absent — the ticket email
+ * carries both, and this is the money's record, not a second ticket.
+ */
+async function podReceiptMail(p: IPayment, bookingUrl: string): Promise<ReceiptMail> {
   const pod = p.pod_id ? await PodModel.findById(p.pod_id) : null;
-  const bookingId = membershipRef(ctx.steps);
-  const bookingUrl = bookingId ? bookingLinkUrl(urlConfigs.appUrl, bookingId) : urlConfigs.appUrl;
-  const summary = pod?.pod_date_time
-    ? `${pod.pod_title} — ${new Date(pod.pod_date_time).toLocaleString('en-IN')}`
-    : p.description;
-  await sendEmail({
-    to: p.user_email,
-    subject: `Payment Receipt — ${p.invoice_no}`,
-    template: 'payment-receipt',
-    category: 'billing',
+  return {
+    template: 'payment-receipt-pod',
+    subject: `Pod booking receipt — ${p.invoice_no}`,
     vars: {
-      name: p.user_name,
-      summary,
-      invoice_no: p.invoice_no ?? '',
-      payment_id: p.payment_id,
-      amount: `${fs.currency_symbol}${p.total.toFixed(2)}`,
+      // A pod cancelled and deleted between the charge and this run must not
+      // cost the buyer their receipt: the checkout's own description is what
+      // the pod was sold to them as.
+      pod_title: pod?.pod_title ?? p.description,
+      date_label: pod?.pod_date_time
+        ? new Date(pod.pod_date_time).toLocaleString('en-IN')
+        : p.description,
+      booking_url: bookingUrl,
+    },
+  };
+}
+
+/**
+ * A shop order: the order number and what was in it.
+ *
+ * Plural on purpose — one checkout splits into a shipped order and a pickup one
+ * when the basket mixes the two, and both hang off this single payment.
+ */
+async function productReceiptMail(p: IPayment, appUrl: string): Promise<ReceiptMail> {
+  const orders = await ProductOrderModel.find({ payment_id: p._id });
+  return {
+    template: 'payment-receipt-product',
+    subject: `Order receipt — ${p.invoice_no}`,
+    vars: {
+      order_no: orders.map((o) => o.order_no).join(', '),
+      items: orders.flatMap((o) => o.line_items.map((i) => `${i.name} × ${i.qty}`)).join(', '),
+      orders_url: `${appUrl}/orders`,
+    },
+  };
+}
+
+/**
+ * A gift card: what it is worth and who it is for — never the CODE.
+ *
+ * The code is a bearer instrument, and it travels exactly once, in the card's
+ * own email, to the person the card is for. Repeating it in the purchaser's
+ * receipt would put the money in a second inbox for no reason.
+ */
+function giftCardReceiptMail(p: IPayment, appUrl: string, currencySymbol: string): ReceiptMail {
+  const facts = p.metadata?.gift_card as GiftCardPurchaseFacts | undefined;
+  return {
+    template: 'payment-receipt-gift-card',
+    subject: `Gift card receipt — ${p.invoice_no}`,
+    vars: {
+      // The card's face value — what the holder can redeem. Not always the
+      // charge: coins spent at checkout come off what was actually paid.
+      card_amount: `${currencySymbol}${(facts?.amount ?? p.total).toFixed(2)}`,
+      // Bought for somebody else: their name, or just the address it was sent
+      // to when the buyer gave no name. Bought for yourself: neither is set,
+      // and the buyer IS the recipient.
+      recipient: facts?.recipient_name || facts?.recipient_email || p.user_name,
+      gift_cards_url: `${appUrl}/gift-cards`,
+    },
+  };
+}
+
+/**
+ * Everything else money is taken for.
+ *
+ * It has a description and nothing else — which is precisely what the one
+ * receipt for all four could ever say, and why the other three now exist.
+ */
+function otherReceiptMail(p: IPayment, bookingUrl: string): ReceiptMail {
+  return {
+    template: 'payment-receipt',
+    subject: `Payment Receipt — ${p.invoice_no}`,
+    vars: {
+      summary: p.description,
       booking_url: bookingUrl,
       // Templates already cached in the DB still carry the old `{{app_url}}`
       // CTA, so it has to resolve to the same deep link (the disk template is
       // only imported once, never re-synced).
       app_url: bookingUrl,
     },
+  };
+}
+
+/** Which of the four this payment gets. `target_type` is the whole decision. */
+async function receiptMailFor(
+  p: IPayment,
+  appUrl: string,
+  bookingUrl: string,
+  currencySymbol: string
+): Promise<ReceiptMail> {
+  if (p.target_type === 'POD') return podReceiptMail(p, bookingUrl);
+  if (p.target_type === 'PRODUCT') return productReceiptMail(p, appUrl);
+  if (p.target_type === 'GIFT_CARD') return giftCardReceiptMail(p, appUrl, currencySymbol);
+  return otherReceiptMail(p, bookingUrl);
+}
+
+async function sendReceipt(ctx: DeferredContext, pdf: Buffer): Promise<void> {
+  const p = ctx.payment;
+  const [fs, urlConfigs] = await Promise.all([getFinanceSettings(), getUrlConfigs()]);
+  const bookingId = membershipRef(ctx.steps);
+  const bookingUrl = bookingId ? bookingLinkUrl(urlConfigs.appUrl, bookingId) : urlConfigs.appUrl;
+  const mail = await receiptMailFor(p, urlConfigs.appUrl, bookingUrl, fs.currency_symbol);
+  await sendEmail({
+    to: p.user_email,
+    subject: mail.subject,
+    template: mail.template,
+    category: 'billing',
+    vars: {
+      // The three every receipt carries, whatever it is a receipt for.
+      name: p.user_name,
+      invoice_no: p.invoice_no ?? '',
+      payment_id: p.payment_id,
+      amount: `${fs.currency_symbol}${p.total.toFixed(2)}`,
+      ...mail.vars,
+    },
+    // The invoice does NOT fork with the receipt: it is the tax document, built
+    // the same way whatever was bought, and every one of the four attaches it.
     attachments: [
       {
         filename: `invoice-${String(p.invoice_no).replaceAll(/[^\w-]+/g, '-')}.pdf`,

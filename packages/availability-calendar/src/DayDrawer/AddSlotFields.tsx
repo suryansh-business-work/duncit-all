@@ -10,26 +10,12 @@ import {
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { startOfDay } from 'date-fns';
+import { addDays, startOfDay } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
+import { minEndTime, minTimeOn, type SlotDraft } from '../slot-draft';
 import type { VenueSpace } from '../types';
 
-/**
- * Everything the partner fills in before a slot is sent — one object rather
- * than nine pieces of state, so the form and these fields share exactly one
- * shape and a reset is a single assignment.
- */
-export interface SlotDraft {
-  wholeDay: boolean;
-  startDate: Date | null;
-  endDate: Date | null;
-  startTime: Date | null;
-  endTime: Date | null;
-  price: string;
-  notes: string;
-  /** '' is a real value here (whole venue), so "not picked yet" is NO_SPACE. */
-  spaceLabel: string;
-}
+export type { SlotDraft };
 
 interface Props {
   draft: SlotDraft;
@@ -38,23 +24,30 @@ interface Props {
   spaces: VenueSpace[];
   /** The space this slot lands in: the picked one, or the first as the default. */
   activeSpace?: VenueSpace;
-  /** The furthest date availability may be published to. */
-  maxDate: Date;
+  /** The current time, re-read by the form as it ticks. It bounds the pickers,
+   *  so a time that has already passed today cannot even be selected. */
+  now: Date;
+  /** How far ahead availability may be published, in days. */
+  maxFutureDays: number;
 }
 
 /** The inputs of the add-slot form. Purely presentational: it owns no state,
- *  no validation and no submit — those stay with AddSlotForm. */
+ *  no validation and no submit — those stay with AddSlotForm. The picker
+ *  bounds below are not validation; they are what stops an invalid value from
+ *  being offered at all. */
 export default function AddSlotFields({
   draft,
   patch,
   spaces,
   activeSpace,
-  maxDate,
+  now,
+  maxFutureDays,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { wholeDay, startDate, endDate, startTime, endTime, price, notes } = draft;
   const isMultiDay =
     !!startDate && !!endDate && startOfDay(endDate).getTime() > startOfDay(startDate).getTime();
+  const maxDate = addDays(now, maxFutureDays);
 
   /** "Court 1 · holds 4" — the capacity is what tells the two courts apart. */
   const spaceOption = (space: VenueSpace) => {
@@ -105,7 +98,7 @@ export default function AddSlotFields({
           label={t('shell.availability.startDate')}
           value={startDate}
           onChange={(next) => patch({ startDate: next })}
-          minDate={new Date()}
+          minDate={now}
           maxDate={maxDate}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
@@ -114,6 +107,7 @@ export default function AddSlotFields({
             label={t('shell.availability.startTime')}
             value={startTime}
             onChange={(next) => patch({ startTime: next })}
+            minTime={minTimeOn(startDate, now)}
             slotProps={{ textField: { size: 'small', fullWidth: true } }}
           />
         )}
@@ -123,7 +117,7 @@ export default function AddSlotFields({
           label={t('shell.availability.endDate')}
           value={endDate}
           onChange={(next) => patch({ endDate: next })}
-          minDate={startDate ?? new Date()}
+          minDate={startDate ?? now}
           maxDate={maxDate}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
@@ -132,6 +126,7 @@ export default function AddSlotFields({
             label={t('shell.availability.endTime')}
             value={endTime}
             onChange={(next) => patch({ endTime: next })}
+            minTime={minEndTime(draft, now)}
             slotProps={{ textField: { size: 'small', fullWidth: true } }}
           />
         )}

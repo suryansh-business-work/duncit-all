@@ -1,38 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
-import { addDays, isAfter, isBefore, set as setTimeOnDate, startOfDay } from 'date-fns';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
-import AddSlotFields, { type SlotDraft } from './AddSlotFields';
+import AddSlotFields from './AddSlotFields';
 import { isSlotConflictError } from '../conflict';
-import { wholeDayWindow } from '../slot-window';
+import {
+  checkSlotDraft,
+  emptyDraft,
+  isDraftIncomplete,
+  slotIssueMessage,
+  MAX_FUTURE_DAYS,
+  type SlotDraft,
+} from '../slot-draft';
 import type { NewSlotInput, VenueSpace } from '../types';
 
-/** '' is a real value here (whole venue), so the "nothing picked yet" sentinel
- * has to be something a label can never be. */
-const NO_SPACE = ' ';
+// How often the form re-reads the clock. The whole point of the add form
+// validating against "now" is that a window which passes while the drawer sits
+// open stops being addable on its own, so the clock cannot be read once at
+// mount — a minute is fine, because the pickers only offer whole minutes.
+const CLOCK_TICK_MS = 30_000;
 
-// Mirror the server cap: availability can be published at most this far ahead.
-const MAX_FUTURE_DAYS = 60;
-
-const emptyDraft = (date: Date): SlotDraft => ({
-  wholeDay: false,
-  startDate: date,
-  endDate: date,
-  startTime: null,
-  endTime: null,
-  price: '',
-  notes: '',
-  spaceLabel: NO_SPACE,
-});
-
-function combineDateAndTime(date: Date, time: Date): Date {
-  return setTimeOnDate(date, {
-    hours: time.getHours(),
-    minutes: time.getMinutes(),
-    seconds: 0,
-    milliseconds: 0,
-  });
+/** The current time, re-read while the form is mounted. */
+function useNow(): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), CLOCK_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
 interface Props {
@@ -54,12 +49,19 @@ interface Props {
  * multi-day (activity) booking. Whole-day hides the clocks and books the
  * entire date range.
  *
+ * Validation runs on every keystroke against a live clock, not only on submit:
+ * an already-passed time, an end equal to or before the start, or a date beyond
+ * the publishing window shows the reason inline and keeps Add disabled. The
+ * pickers refuse those values too (`minTime`), so the message is a second line
+ * of defence rather than the first.
+ *
  * A clash with an already-published slot is the one failure the partner can act
  * on, so it is not merely reported: the rejected payload is kept and offered
  * back as an overwrite, behind a confirmation naming what that deletes.
  */
 export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Readonly<Props>) {
   const { t } = useTranslation();
+  const now = useNow();
   const [draft, setDraft] = useState<SlotDraft>(() => emptyDraft(date));
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -72,27 +74,18 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
   // Default to the first space so the common case is one tap, not two.
   const activeSpace =
     spaces.length > 0 ? (spaces.find((s) => s.label === draft.spaceLabel) ?? spaces[0]) : undefined;
-  const maxDate = addDays(new Date(), MAX_FUTURE_DAYS);
+
+  const checked = checkSlotDraft(draft, now);
+  // A half-filled form is not yet wrong, so only a real rejection shows live.
+  const liveIssue =
+    typeof checked === 'string' && !isDraftIncomplete(checked)
+      ? slotIssueMessage(checked, t)
+      : null;
 
   const reset = () => {
     setDraft(emptyDraft(date));
     setError(null);
     setClashing(null);
-  };
-
-  /** The concrete window, or an error message when the form is incomplete. */
-  const resolveWindow = (): { start: Date; end: Date } | string => {
-    const { startDate, endDate, startTime, endTime, wholeDay } = draft;
-    if (!startDate || !endDate) return 'Pick the start and end date.';
-    if (isBefore(startOfDay(endDate), startOfDay(startDate))) {
-      return 'End date must be on or after the start date.';
-    }
-    if (wholeDay) return wholeDayWindow(startDate, endDate);
-    if (!startTime || !endTime) return 'Pick the start and end time.';
-    return {
-      start: combineDateAndTime(startDate, startTime),
-      end: combineDateAndTime(endDate, endTime),
-    };
   };
 
   /** One send for both attempts — the first try and the confirmed overwrite —
@@ -113,28 +106,17 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
   const handleAdd = async () => {
     setError(null);
     setClashing(null);
-    const window = resolveWindow();
+    // Re-checked against the clock at this instant, not the last tick: a slot
+    // must never be created on the strength of a 30-second-old "now".
+    const window = checkSlotDraft(draft, new Date());
     if (typeof window === 'string') {
-      setError(window);
-      return;
-    }
-    const { start, end } = window;
-    if (!isAfter(end, start)) {
-      setError(t('shell.availability.endAfterStart'));
-      return;
-    }
-    if (!draft.wholeDay && isAfter(new Date(), start)) {
-      setError(t('shell.availability.startInFuture'));
-      return;
-    }
-    if (isAfter(start, maxDate)) {
-      setError(`Slots can only be scheduled up to ${MAX_FUTURE_DAYS} days ahead.`);
+      setError(slotIssueMessage(window, t));
       return;
     }
     await send(
       {
-        start_at: start.toISOString(),
-        end_at: end.toISOString(),
+        start_at: window.start.toISOString(),
+        end_at: window.end.toISOString(),
         whole_day: draft.wholeDay,
         price: Math.max(0, Math.round(Number(draft.price) || 0)),
         notes: draft.notes,
@@ -150,12 +132,16 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
     if (clashing) await send(clashing, true);
   };
 
-  // Hoisted out of the Alert's props so the conditional sits at nesting 0.
+  // Hoisted out of the Alert's props so the conditionals sit at nesting 0.
   const overwriteAction = clashing ? (
     <Button color="inherit" size="small" onClick={() => setConfirmOverwrite(true)}>
       {t('shell.availability.overwriteAction')}
     </Button>
   ) : undefined;
+  // A submit/server failure outranks the live hint, and only it is dismissable
+  // — a live issue would simply come straight back.
+  const message = error ?? liveIssue;
+  const dismiss = error ? () => setError(null) : undefined;
 
   return (
     <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
@@ -178,14 +164,15 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
           patch={patch}
           spaces={spaces}
           activeSpace={activeSpace}
-          maxDate={maxDate}
+          now={now}
+          maxFutureDays={MAX_FUTURE_DAYS}
         />
-        {error && (
-          <Alert severity="error" onClose={() => setError(null)} action={overwriteAction}>
-            {error}
+        {message && (
+          <Alert severity={error ? 'error' : 'warning'} onClose={dismiss} action={overwriteAction}>
+            {message}
           </Alert>
         )}
-        <Button variant="contained" disabled={creating} onClick={handleAdd}>
+        <Button variant="contained" disabled={creating || !!liveIssue} onClick={handleAdd}>
           {creating ? 'Adding…' : 'Add slot'}
         </Button>
       </Stack>

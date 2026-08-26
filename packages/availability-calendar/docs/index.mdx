@@ -16,6 +16,14 @@ exports:
   - 'slotCoversDay'
   - 'slotCoveredDays'
   - 'wholeDayWindow'
+  - 'checkSlotDraft'
+  - 'isDraftIncomplete'
+  - 'minEndTime'
+  - 'minTimeOn'
+  - 'slotIssueMessage'
+  - 'MAX_FUTURE_DAYS'
+  - 'SlotDraft'
+  - 'SlotIssueCode'
   - 'CalendarView'
   - 'VenueSlotRow'
   - 'VenueSlotStatus'
@@ -261,6 +269,21 @@ is not in the calendar's DOM subtree.
 | `onClose` | `() => void` | yes | — | Close handler. |
 | `onAdd` | `(slots: NewSlotInput[]) => Promise<void>` | yes | — | Receives the whole generated batch: one slot per day across the range, past windows and anything beyond `MAX_FUTURE_DAYS` (60) skipped rather than failing the batch. |
 
+### Draft validation
+
+The add-slot form judges its draft with one pure function, exported so the rule can be read
+(and demoed) without mounting a drawer.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `checkSlotDraft` | `(draft: SlotDraft, now: Date) => { start: Date; end: Date } \| SlotIssueCode` | The window the draft asks for, or the ONE thing wrong with it. `now` is a parameter, not a `new Date()` taken inside, so the same draft can be re-judged against a moving clock. |
+| `isDraftIncomplete` | `(code: SlotIssueCode) => boolean` | True for `pickDates` / `pickSlotTimes` — the draft is unfinished, not wrong. Say it on submit; never shout it while someone is still typing. |
+| `minTimeOn` | `(date: Date \| null, now: Date) => Date \| undefined` | The TimePicker's `minTime`: "now" when that date is today, otherwise unbounded. |
+| `minEndTime` | `(draft: SlotDraft, now: Date) => Date \| undefined` | The end TimePicker's `minTime`: a minute past the start while the slot sits on one day. |
+| `slotIssueMessage` | `(code: SlotIssueCode, t) => string` | The single place a code becomes a sentence, as literal `shell.availability.*` keys (rule 38). |
+| `SlotIssueCode` | `'pickDates' \| 'pickSlotTimes' \| 'endDateAfterStart' \| 'sameTime' \| 'endAfterStart' \| 'startInFuture' \| 'maxAhead'` | — |
+| `MAX_FUTURE_DAYS` | `60` | Mirrors the server cap in `validateSlotWindow`. |
+
 ### Types
 
 | Type | Shape | Notes |
@@ -349,6 +372,31 @@ want; before deleting it, check the Onboarding portal has not adopted it since.
 it assignable to this package's type. If you add a **required** field to either shape, the two
 stop being compatible and the Partner page stops compiling — widen the package type instead of
 duplicating a third row shape.
+
+## A slot the venue could never have offered
+
+A venue owner opening today's cell at 2:30pm could, until this was fixed, type 9:00–10:00 and
+press Add. The server refused it (`validateSlotWindow`: "Cannot create slots in the past") and
+so did the form — but only after the click, and only as a red alert under a form that had
+happily accepted every value along the way. Availability that has already elapsed is not a
+formatting mistake to report; it is a value that should never have been offered.
+
+So the rule is enforced three times over, at three different distances from the mistake:
+
+1. **The pickers refuse it.** On today, the start `TimePicker` is floored at `now`
+   (`minTimeOn`), and the end at a minute past the start while the slot sits on one day
+   (`minEndTime`). An already-passed hour, an end equal to the start, and an end before the
+   start are all unselectable rather than merely rejected.
+2. **The form re-judges on every render, against a live clock.** `AddSlotForm` re-reads the
+   time every 30 seconds and runs `checkSlotDraft` on each pass, so a 6pm window typed at
+   5:59 stops being addable at 6:01 with nobody touching the form. The reason shows inline
+   and **Add** goes disabled; the draft is re-checked one last time against `new Date()` at
+   submit, so a slot is never created on the strength of a 30-second-old "now".
+3. **The server still decides.** `validateSlotWindow` keeps its own past / ordering / 60-day
+   checks with a 60-second grace. The client bounds are courtesy; they are not the boundary.
+
+Whole-day is deliberately exempt from the past check: `wholeDayWindow` has already clamped
+its start off a midnight that has gone by, so "whole day, today" means the rest of today.
 
 ## Constraints
 

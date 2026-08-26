@@ -868,6 +868,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       deleteFailed: 'Could not delete slot',
       endAfterStart: 'End must be after start.',
       startInFuture: 'Start time must be in the future.',
+      // The add-slot form judges the draft against a live clock, so these three
+      // read as reasons a slot cannot be added rather than as submit failures.
+      sameTime: 'Start and end time cannot be the same.',
+      pickSlotTimes: 'Pick the start and end time.',
+      maxAhead: 'Slots can only be scheduled up to {days} days ahead.',
       deleteTitle: 'Delete this slot?',
       deleteBody:
         'This permanently removes the time slot. Booked slots cannot be deleted.',

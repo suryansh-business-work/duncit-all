@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from './user.model';
+import { EMAIL_OTP_MINUTES, hashOtp } from './email-otp';
 import {
   UserRoleModel,
   UserRelationshipModel,
@@ -76,7 +77,6 @@ const idStrings = (values: unknown[] | undefined | null) =>
 // Escape user-supplied search terms before building a RegExp so special chars
 // (., *, (, etc.) are matched literally and cannot break the query.
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-const EMAIL_OTP_MINUTES = 10;
 /**
  * How long a sign-in code has to run before another will be sent.
  *
@@ -101,8 +101,6 @@ const PRIVILEGED_ROLE_KEYS = [
 // Spec: reject placeholder/dummy phone numbers in non-seeded paths.
 const isPlaceholderPhone = (n: string) => /^0+$/.test(String(n || '').trim());
 
-const hashOtp = (otp: string) =>
-  crypto.createHash('sha256').update(`${otp}:${process.env.JWT_SECRET || 'dev-secret'}`).digest('hex');
 
 const cleanProfileLinks = (links: UpdateMyProfileDTO['profile_links'] = []) =>
   (links ?? [])
@@ -959,8 +957,6 @@ const ADMIN_UPDATE_PATHS: Record<string, string> = {
   state: 'profile.state',
   pincode: 'profile.pincode',
   zone: 'profile.zone',
-  email: 'auth.email',
-  phone_extension: 'auth.phone.extension',
   dob: 'profile.dob',
   status: 'metadata.status',
   assigned_city: 'profile.assigned_city',
@@ -969,20 +965,141 @@ const ADMIN_UPDATE_PATHS: Record<string, string> = {
   host_commission_pct: 'finance.host_commission_pct',
 };
 
-/** Build the `$set` document for an admin user update. Throws on a placeholder phone. */
-function buildAdminUserSet(input: UpdateUserDTO): Record<string, any> {
-  const set: Record<string, any> = {};
-  for (const [field, path] of Object.entries(ADMIN_UPDATE_PATHS)) {
-    if ((input as any)[field] !== undefined) set[path] = (input as any)[field];
+/** The write an admin edit turns into: fields to set, and fields to remove. */
+interface AdminUserWrite {
+  set: Record<string, any>;
+  unset: Record<string, ''>;
+}
+
+/**
+ * Clear a contact field by REMOVING it, never by writing a blank.
+ *
+ * `auth.email` and the `auth.phone` pair each carry a unique index whose
+ * partialFilterExpression is `$type: 'string'`. An empty string is a string,
+ * so blanking a contact enrols the account in that index under the value '' —
+ * and the SECOND account cleared the same way collides with E11000 on a field
+ * neither of them has. An absent path is outside the index entirely, which is
+ * what the model's own comment says it relies on.
+ */
+function assignAdminContact(
+  write: AdminUserWrite,
+  value: string | undefined,
+  path: string,
+) {
+  if (value === undefined) return;
+  if (value === '') write.unset[path] = '';
+  else write.set[path] = value;
+}
+
+/** The phone is one fact in two fields, so it is written — and cleared — whole. */
+function assignAdminPhone(write: AdminUserWrite, input: UpdateUserDTO) {
+  const number = (input as any).phone_number as string | undefined;
+  const extension = (input as any).phone_extension as string | undefined;
+  if (number === undefined && extension === undefined) return;
+  if (number && isPlaceholderPhone(number)) {
+    throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  if ((input as any).phone_number !== undefined) {
-    const v = (input as any).phone_number;
-    if (v && isPlaceholderPhone(v)) {
-      throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+  // Clearing the number retires the whole subdocument: `auth.phone` requires
+  // both halves when it is present, so a lone extension is not a valid phone.
+  if (number === '') {
+    write.unset['auth.phone'] = '';
+    return;
+  }
+  assignAdminContact(write, number, 'auth.phone.number');
+  assignAdminContact(write, extension, 'auth.phone.extension');
+}
+
+/**
+ * The WhatsApp number, which carries no unique index and defaults to ''.
+ *
+ * Blanked rather than unset on purpose: `toPublic` reads it as
+ * `wa.number ?? legacy.whatsapp_number ?? ''`, so removing the path would let
+ * a stale legacy value answer in its place.
+ *
+ * `verified_at` is cleared only when the number ACTUALLY moves. The admin form
+ * posts all three contact fields on every save, so clearing it unconditionally
+ * would quietly un-verify a proved number every time an admin edited the bio.
+ */
+function assignAdminWhatsApp(set: Record<string, any>, input: UpdateUserDTO, before: any) {
+  const number = (input as any).whatsapp_number as string | undefined;
+  const extension = (input as any).whatsapp_extension as string | undefined;
+  if (extension !== undefined) set['communication.whatsapp.extension'] = extension;
+  if (number === undefined) return;
+  set['communication.whatsapp.number'] = number;
+  const stored = String(before?.communication?.whatsapp?.number ?? '');
+  if (number !== stored) set['communication.whatsapp.verified_at'] = null;
+}
+
+/**
+ * The contact number, whose `is_verified` flag follows the same rule.
+ *
+ * A number an admin typed has been proved by nobody, so a number that moved is
+ * no longer verified — but a form re-posting the SAME number must not strip a
+ * flag the person earned by answering a one-time code.
+ */
+function assignAdminPhoneVerification(
+  set: Record<string, any>,
+  input: UpdateUserDTO,
+  before: any
+) {
+  const number = (input as any).phone_number as string | undefined;
+  if (!number) return;
+  const stored = String(before?.auth?.phone?.number ?? '');
+  if (number !== stored) set['auth.phone.is_verified'] = false;
+}
+
+/**
+ * Refuse an admin edit that would move a contact onto an account that has it.
+ *
+ * Checked before the write so the admin reads "Email already in use" instead
+ * of a raw E11000, and scoped with `_id: { $ne }` so re-saving a form without
+ * touching the address is never a conflict with the account's own value.
+ */
+async function assertAdminContactsFree(user_id: string, input: UpdateUserDTO) {
+  const others = { _id: { $ne: new Types.ObjectId(user_id) } };
+  const email = (input as any).email as string | undefined;
+  if (email) {
+    const taken = await UserModel.exists({ ...others, 'auth.email': email.trim().toLowerCase() });
+    if (taken) throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
+  }
+  const number = (input as any).phone_number as string | undefined;
+  const extension = (input as any).phone_extension as string | undefined;
+  if (number && extension) {
+    const taken = await UserModel.exists({
+      ...others,
+      'auth.phone.number': number,
+      'auth.phone.extension': extension,
+    });
+    if (taken) {
+      throw new GraphQLError('This phone number is already registered to another account', {
+        extensions: { code: 'CONFLICT' },
+      });
     }
-    set['auth.phone.number'] = v;
   }
-  return set;
+}
+
+/** Map an error raised by the admin user write onto the error to rethrow. */
+function adminUpdateError(e: any): any {
+  if (e instanceof GraphQLError) return e;
+  return e?.code === 11000 ? registerDuplicateError(e) : e;
+}
+
+/**
+ * Build the write for an admin user update. Throws on a placeholder phone.
+ *
+ * `before` is the stored document, needed because two of these fields carry a
+ * "this was proved" flag beside them and only a real change may reset it.
+ */
+function buildAdminUserWrite(input: UpdateUserDTO, before: any): AdminUserWrite {
+  const write: AdminUserWrite = { set: {}, unset: {} };
+  for (const [field, path] of Object.entries(ADMIN_UPDATE_PATHS)) {
+    if ((input as any)[field] !== undefined) write.set[path] = (input as any)[field];
+  }
+  assignAdminContact(write, (input as any).email, 'auth.email');
+  assignAdminPhone(write, input);
+  assignAdminPhoneVerification(write.set, input, before);
+  assignAdminWhatsApp(write.set, input, before);
+  return write;
 }
 
 /** Map the self-service UpdateMyProfileDTO field names onto their document dot-paths. */
@@ -996,14 +1113,10 @@ const MY_PROFILE_PATHS: Record<string, string> = {
   zone: 'profile.zone',
   country: 'profile.country',
 };
-const MY_PHONE_PATHS: Record<string, string> = {
-  phone_number: 'auth.phone.number',
-  phone_extension: 'auth.phone.extension',
-};
-const MY_WHATSAPP_PATHS: Record<string, string> = {
-  whatsapp_number: 'communication.whatsapp.number',
-  whatsapp_extension: 'communication.whatsapp.extension',
-};
+// The phone and WhatsApp paths that used to sit here are gone with the write
+// that used them: those two numbers now move only through
+// contactChangeService, which owns their dot-paths alongside the code that
+// proves them.
 
 /** Copy every supplied field of `paths` onto the `$set` doc, blanking empties to null. */
 function assignMappedFields(
@@ -1016,13 +1129,45 @@ function assignMappedFields(
   }
 }
 
-/** Phone fields map like any other, but a placeholder number is rejected. */
-function assignMyPhoneFields(set: Record<string, any>, input: UpdateMyProfileDTO) {
-  const v = (input as any).phone_number;
-  if (v && isPlaceholderPhone(v)) {
-    throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+/**
+ * Refuse a self-service profile save that would move a contact detail.
+ *
+ * Phone and WhatsApp change from mWeb and the native app ONLY through
+ * `contactChangeService`, behind a one-time code sent to the new number. This
+ * guard is what makes that true rather than merely customary: the edit-profile
+ * screen's own save mutation would otherwise be a way straight past the code,
+ * and a gate with a door beside it is not a gate.
+ *
+ * An unchanged value passes silently, because a client sends the whole form on
+ * every save — including the app versions already on people's phones, which
+ * have no change flow to use instead. Only a value that actually moved is
+ * refused, and it is refused with the sentence that says what to do instead.
+ *
+ * Extensions are not compared and never written: a country code without its
+ * number means nothing, and one that moved on its own would silently redirect
+ * a number somebody already proved.
+ */
+async function assertContactsUnchanged(user_id: string, input: UpdateMyProfileDTO) {
+  const incomingPhone = (input as any).phone_number as string | undefined;
+  const incomingWhatsApp = (input as any).whatsapp_number as string | undefined;
+  if (incomingPhone === undefined && incomingWhatsApp === undefined) return;
+
+  const current = await UserModel.findById(user_id)
+    .select('auth.phone.number communication.whatsapp.number')
+    .lean();
+  const moved = (incoming: string | undefined, stored: unknown) =>
+    incoming !== undefined && incoming.trim() !== String(stored ?? '').trim();
+
+  if (moved(incomingPhone, (current as any)?.auth?.phone?.number)) {
+    throw new GraphQLError('Verify your new phone number to change it.', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
   }
-  assignMappedFields(set, input, MY_PHONE_PATHS);
+  if (moved(incomingWhatsApp, (current as any)?.communication?.whatsapp?.number)) {
+    throw new GraphQLError('Verify your new WhatsApp number to change it.', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
 }
 
 /** Parse the optional date of birth onto the `$set` doc. Throws on an unparsable value. */
@@ -1503,8 +1648,9 @@ export const userService = {
   async updateMyProfile(user_id: string, input: UpdateMyProfileDTO) {
     const set: Record<string, any> = {};
     assignMappedFields(set, input, MY_PROFILE_PATHS);
-    assignMyPhoneFields(set, input);
-    assignMappedFields(set, input, MY_WHATSAPP_PATHS);
+    // Email, phone and WhatsApp are NOT written here. They move only through
+    // contactChangeService, behind a one-time code sent to the new value.
+    await assertContactsUnchanged(user_id, input);
     if (input.profile_links !== undefined) set.profile_links = cleanProfileLinks(input.profile_links);
     assignMyDob(set, input);
     // Save the whole main address as a normalized object (partial inputs fill in).
@@ -1848,7 +1994,7 @@ export const userService = {
   async changePasswordWithOtp(user_id: string, input: ChangePasswordDTO) {
     const code = String(input.otp || '').trim();
     const user = await UserModel.findById(user_id).select(
-      '+auth.password_change_otp_hash +auth.password_change_otp_expires_at'
+      '+auth.password +auth.password_change_otp_hash +auth.password_change_otp_expires_at'
     );
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     const expiresAt = (user as any).auth?.password_change_otp_expires_at as Date | undefined;
@@ -1860,6 +2006,14 @@ export const userService = {
     }
     if (hashOtp(code) !== storedHash) {
       throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    // Re-setting the same password is not a change: the OTP is already proven
+    // here, so this is the last gate before the hash is written.
+    const currentHash = (user as any).auth?.password as string | undefined;
+    if (currentHash && (await bcrypt.compare(input.new_password, currentHash))) {
+      throw new GraphQLError('New password must be different from your current password', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
     }
     const hashed = await bcrypt.hash(input.new_password, 10);
     await UserModel.updateOne(
@@ -2625,6 +2779,18 @@ export const userService = {
     return toPublic(await ensureUsername(u));
   },
 
+  /**
+   * `me`, announced to the account's other open surfaces.
+   *
+   * For a mutation that changed something on the SESSION — the name, the email,
+   * the phone — rather than one that only read it back. Email and phone are in
+   * SESSION_FIELDS, so a change proved in one tab has to reach the header in
+   * the others; without this they show the old address until a reload.
+   */
+  async publishMe(id: string) {
+    return publishSession(await this.me(id));
+  },
+
   async getById(id: string) {
     const u = await UserModel.findById(id);
     return toPublic(u);
@@ -2807,15 +2973,34 @@ export const userService = {
   },
 
   async update(user_id: string, input: UpdateUserDTO) {
-    const set = buildAdminUserSet(input);
+    // Every admin edit is addressed by the id of the record being edited and
+    // nothing else. A malformed one is refused here rather than reaching
+    // Mongo, which answers a bad id with a CastError the admin cannot act on.
+    if (!Types.ObjectId.isValid(user_id)) {
+      throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    // A contact moving onto an account that already holds it is a conflict the
+    // admin can fix, so it is named before the write. The unique indexes are
+    // still the authority — `adminUpdateError` below catches the race where two
+    // admins claim the same address between this check and the write.
+    await assertAdminContactsFree(user_id, input);
     // `{ new: true }` below hands back the AFTER value, so the status this write
     // moves away from has to be read while it still exists — without it every
     // re-save of an already-suspended account looks like a fresh suspension.
     // The same before-image is what the change log is diffed against, and it is
     // taken here rather than inside applyUserUpdate because the role write
-    // below moves fields too: one diff has to span the whole admin save.
+    // below moves fields too: one diff has to span the whole admin save. It is
+    // also what tells the write which contact fields ACTUALLY moved.
     const before = await UserModel.findById(user_id).lean();
-    const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
+    const { set, unset } = buildAdminUserWrite(input, before);
+    const write: Record<string, any> = {};
+    if (Object.keys(set).length > 0) write.$set = set;
+    if (Object.keys(unset).length > 0) write.$unset = unset;
+    const updated = await UserModel.findByIdAndUpdate(user_id, write, { new: true }).catch(
+      (e: any) => {
+        throw adminUpdateError(e);
+      }
+    );
     if (!updated) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     }

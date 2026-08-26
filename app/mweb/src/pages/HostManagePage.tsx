@@ -6,14 +6,17 @@ import AddIcon from '@mui/icons-material/Add';
 import InsightsIcon from '@mui/icons-material/Insights';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
-import HostPodsCard from './host-manage-page/HostPodsCard';
+import HostPodSections from './host-manage-page/HostPodSections';
 import HostShareCard from './host-manage-page/HostShareCard';
 import HostApplyBanner from './host-apply-page/HostApplyBanner';
 import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
 
 // Host-scoped list: unlike the public \`pods\` query this ALSO returns pods that
-// are offline while awaiting/refused venue approval, so a "Venue Rejected" pod
-// stays visible and fully editable in Your Pods (it never silently vanishes).
+// are offline while awaiting/refused venue approval, which is what lets the
+// page split them into Requested Pods / Your Pods / Rejected Pods — a pod the
+// venue has not answered, or has refused, never silently vanishes.
+// place_label is the venue name and created_at is when the slot was asked
+// for; both are read only by the two request sections.
 const HOST_PODS = gql`
   query MyHostedPods {
     myHostPods {
@@ -36,8 +39,10 @@ const HOST_PODS = gql`
       location_id
       venue_id
       zone_name
+      place_label
       venue_approval_status
       is_active
+      created_at
     }
   }
 `;
@@ -100,7 +105,7 @@ export default function HostManagePage() {
       <HostDraftsCard />
 
       <HostPodActionsBridge>
-        <HostPodsCard
+        <HostPodSections
           pods={pods}
           loading={bootLoading}
           errorMessage={error?.message}

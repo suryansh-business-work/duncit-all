@@ -2,9 +2,10 @@ import gql from 'graphql-tag';
 
 export const autoPodTypeDefs = gql`
   """
-  Where an Auto Pod sits in its enrolment cycle. OPEN is visible to every
-  approved venue; CLAIMING means a venue enrolled and the host + club admin
-  steps are open in parallel; LIVE means it materialized into an ordinary pod.
+  Where an Auto Pod sits in its enrolment cycle. OPEN means nobody has enrolled
+  yet and all three roles are offered it; CLAIMING means at least one partner
+  enrolled and the rest may still enrol, in any order; LIVE means it
+  materialized into an ordinary pod.
   """
   enum AutoPodStage {
     OPEN
@@ -13,6 +14,28 @@ export const autoPodTypeDefs = gql`
     LIVE
     CANCELLED
     EXPIRED
+  }
+
+  "Which enrolment pinned the Auto Pod to its city."
+  enum AutoPodLocationBinder {
+    VENUE
+    HOST
+    CLUB
+  }
+
+  """
+  The city (Country → State → City, one admin Location row) the offer is pinned
+  to. Null until the first partner enrols; from then on only partners in that
+  city are offered it.
+  """
+  type AutoPodLocation {
+    location_id: ID!
+    location_name: String!
+    country: String!
+    state: String!
+    city: String!
+    bound_by: AutoPodLocationBinder!
+    bound_at: String!
   }
 
   type AutoPodVenueClaim {
@@ -75,6 +98,8 @@ export const autoPodTypeDefs = gql`
     host_claim: AutoPodHostClaim
     "Club Admin enrolment — null until a club admin claims it for their club."
     club_claim: AutoPodClubClaim
+    "The city the first enrolment pinned it to — null while nobody has enrolled."
+    location: AutoPodLocation
     "True when the calling user (or one of their clubs) already enrolled."
     viewer_claimed: Boolean!
     pod_id: ID
@@ -145,12 +170,20 @@ export const autoPodTypeDefs = gql`
     adminAutoPodsTable(query: TableQueryInput): AutoPodTablePage!
     "One Auto Pod. Admins, and any partner who can act on or has enrolled in it."
     autoPod(auto_pod_doc_id: ID!): AutoPod!
-    "Open offers this venue owner may accept, plus the ones they accepted."
-    venueAutoPods: [AutoPod!]!
-    "Venue-accepted offers this host may take, plus the ones they took."
-    hostAutoPods: [AutoPod!]!
-    "Venue-accepted offers one of the caller's clubs may claim, plus their claims."
-    clubAdminAutoPods: [AutoPod!]!
+    """
+    Offers this venue owner may still accept, plus the ones they accepted.
+    location_id narrows to offers pinned to that city — offers nobody has
+    enrolled in yet have no city and are always included.
+    """
+    venueAutoPods(location_id: ID): [AutoPod!]!
+    """
+    Offers this host may still take (in a sub-category they are approved in),
+    plus the ones they took. sub_category_id narrows to one of their categories;
+    location_id as for venueAutoPods.
+    """
+    hostAutoPods(location_id: ID, sub_category_id: ID): [AutoPod!]!
+    "Offers one of the caller's clubs may still claim, plus their claims."
+    clubAdminAutoPods(location_id: ID): [AutoPod!]!
     "Per-role counts of Auto Pods waiting on the caller — drives role-switch landing."
     myAutoPodActionCounts: AutoPodActionCounts!
   }
@@ -160,16 +193,33 @@ export const autoPodTypeDefs = gql`
     Opens an Auto Pod for the marketplace. A Duncit admin opens one for every
     club to compete for; a Club Admin passes club_id to open one FOR their own
     club, which enrols that club at creation (so only a venue and a host are
-    still needed) and fixes the category to the club's own.
+    still needed), fixes the category to the club's own and pins the offer to
+    the club's city.
     """
     createAutoPod(input: CreateAutoPodInput!, club_id: ID): AutoPod!
+    """
+    Rewrites the template while the offer is not yet live. The economics are
+    re-checked against whoever has already enrolled, and the category is locked
+    once a host or a club is on it.
+    """
     updateAutoPod(auto_pod_doc_id: ID!, input: UpdateAutoPodInput!): AutoPod!
+    "Pulls a pre-live offer: everyone enrolled is told and the venue's slot is released."
     cancelAutoPod(auto_pod_doc_id: ID!, reason: String): AutoPod!
+    """
+    Removes the record for good. Refused once the pod is live (delete the pod
+    itself); a pre-live offer is cancelled first so its slot is released and
+    everyone enrolled is told.
+    """
+    deleteAutoPod(auto_pod_doc_id: ID!): Boolean!
     "Venue enrols: accepts the offer and commits one of its own slots."
     venueAcceptAutoPod(auto_pod_doc_id: ID!, venue_id: ID!, slot_id: ID!): AutoPod!
-    "Host enrols: assigns themselves to a venue-accepted Auto Pod."
-    hostAssignAutoPod(auto_pod_doc_id: ID!): AutoPod!
-    "Club Admin enrols: claims a venue-accepted Auto Pod for one of their clubs."
+    """
+    Host enrols: assigns themselves. location_id is the city the host had
+    selected — required when nobody has enrolled yet (it pins the offer), and
+    must match the pinned city otherwise.
+    """
+    hostAssignAutoPod(auto_pod_doc_id: ID!, location_id: ID): AutoPod!
+    "Club Admin enrols: claims the offer for one of their clubs."
     clubClaimAutoPod(auto_pod_doc_id: ID!, club_id: ID!): AutoPod!
   }
 `;

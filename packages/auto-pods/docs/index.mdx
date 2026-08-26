@@ -1,6 +1,6 @@
 ---
 name: '@duncit/auto-pods'
-summary: 'The MUI Auto Pod queue every role-facing surface renders — the three-enrolment card (Venue / Host / Club Admin) plus the accept, assign and claim dialogs.'
+summary: 'The MUI Auto Pod queue every role-facing surface renders — the three-enrolment card (Venue / Host / Club Admin), the city and category filters, and the accept, assign and claim dialogs.'
 category: 'ui'
 zeroDeps: false
 frameworkFree: false
@@ -13,9 +13,11 @@ exports:
   - 'AutoPodTicks'
   - 'AutoPodCard'
   - 'AutoPodQueue'
+  - 'AutoPodCategoryFilter'
   - 'VenueAcceptDialog'
   - 'HostClaimDialog'
   - 'ClubClaimDialog'
+  - 'PodKindChooser'
   - 'VENUE_AUTO_PODS'
   - 'HOST_AUTO_PODS'
   - 'CLUB_ADMIN_AUTO_PODS'
@@ -26,36 +28,41 @@ exports:
   - 'MY_VENUES_FOR_AUTO_POD'
   - 'VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD'
   - 'MY_ADMIN_CLUBS_FOR_AUTO_POD'
-  - 'PodKindChooser'
-  - 'AutoPodForm'
-  - 'buildAutoPodSchema'
-  - 'toAutoPodInput'
-  - 'toAutoPodForm'
-  - 'emptyAutoPodForm'
-  - 'parseMediaLines'
-  - 'parseHashtags'
-  - 'EMPTY_AUTO_POD_CATEGORY'
+  - 'MY_HOST_CATEGORIES_FOR_AUTO_POD'
+  - 'AUTO_POD_LOCATIONS'
+  - 'AutoPodQueueVariables'
 ---
 
 An **Auto Pod** is a pod an admin writes without picking a venue, a host or a
 club — the marketplace completes it. A venue accepts the offer and commits one
-of its slots, then a host assigns themselves and a club admin claims it for
-their club. The moment all three have enrolled it becomes an ordinary pod.
+of its slots, a host assigns themselves, and a club admin claims it for their
+club — **in any order**. The moment all three have enrolled it becomes an
+ordinary pod.
 
 This package is the MUI half of that: mWeb, the Partners portal and the Admin
 console all render these components. The native app deliberately does **not**
 import it — it keeps Tamagui twins over the same `@duncit/utils` logic (rule 40:
 share the logic, never the UI).
 
-## The three enrolments
+## The three enrolments, in any order
+
+A fresh Auto Pod is visible to all three roles at once: venue owners, hosts
+approved in its sub-category, and club admins whose club carries it. Whoever
+acts first, acts first. `OPEN` means nobody has enrolled yet; `CLAIMING` means
+at least one partner has; the third enrolment tips it into `MATERIALIZING` and
+then `LIVE`.
 
 Every card carries `AutoPodTicks`: **Venue Enroll**, **Host Enroll**, **Club
 Admin Enroll**, always in that order and always all three. Each is amber and
 outlined while that partner has yet to enrol, and turns green and filled the
-moment they do — so the state of an offer reads at a glance.
+moment they do — so the state of an offer reads at a glance. The order is
+presentation only: it is the same three chips whichever partner went first, so
+a card never changes width as they enrol.
 
 The derivation itself is `autoPodTicks()` in `@duncit/utils`, so the Tamagui
-twin draws exactly the same three ticks from exactly the same rule.
+twin draws exactly the same three ticks from exactly the same rule. Below the
+ticks the card says who is still missing — `labels.waitingFor(autoPodMissingRoles(row))`
+— and which city the offer belongs to.
 
 ```tsx
 import { AutoPodTicks } from '@duncit/auto-pods';
@@ -64,17 +71,45 @@ import { mwebAutoPodLabels } from '@duncit/utils';
 <AutoPodTicks row={row} labels={mwebAutoPodLabels(t)} />;
 ```
 
+## The first enrolment pins a city
+
+An Auto Pod starts with no city (`row.location` is `null`, and the card reads
+`labels.unpinned`). The **first** partner to enrol pins it to one admin Location
+row (Country › State › City):
+
+| Who enrols first | Where the city comes from |
+| --- | --- |
+| A venue | `venue.location_id` — the venue's own city |
+| A club admin | `club.location_id` — the club's own city |
+| A host | The city selected at the top of the Auto Pods page |
+
+From then on only partners in that city are offered it, the card reads
+`labels.pinnedTo(autoPodCityLabel(row.location))` ("In Bengaluru, Karnataka"),
+and the server refuses a venue or club from anywhere else. A host has no venue
+or club to bring a city with, which is why the host page's location filter is
+load-bearing rather than cosmetic — see `HostClaimDialog` below.
+
 ## A role's queue
 
 `AutoPodQueue` renders a whole role page: what still needs this partner, then
 what they already enrolled in, using `splitAutoPods()` to divide them. The
 caller supplies the button, because only the action differs per role.
 
+The three queue queries take the **same** variables (`AutoPodQueueVariables`):
+`location_id` narrows to offers pinned to that city **plus every unpinned
+offer** (an offer with no city yet is everyone's to take), and `sub_category_id`
+narrows a host's queue to one of their approved categories. `null` means no
+narrowing, so one hook can drive all three pages.
+
 ```tsx
-import { AutoPodQueue, HOST_AUTO_PODS } from '@duncit/auto-pods';
+import { AutoPodQueue, HOST_AUTO_PODS, type AutoPodQueueVariables } from '@duncit/auto-pods';
 import { mwebAutoPodLabels } from '@duncit/utils';
 
-const { data, loading, error, refetch } = useQuery(HOST_AUTO_PODS);
+const variables: AutoPodQueueVariables = {
+  location_id: locationId || null,
+  sub_category_id: subCategoryId || null,
+};
+const { data, loading, error, refetch } = useQuery(HOST_AUTO_PODS, { variables });
 
 <AutoPodQueue
   role="host"
@@ -93,6 +128,32 @@ const { data, loading, error, refetch } = useQuery(HOST_AUTO_PODS);
 />;
 ```
 
+## The filters at the top of every queue
+
+Every queue page — venue, host and club — shows a **Location** filter at the
+top; the host page additionally shows a **Category** filter.
+
+- The location filter is the surface's own picker: mWeb opens the header's
+  location picker, the portals render `AdminLocationSelect` from
+  `@duncit/location`, native opens its `LocationDialog`. `AUTO_POD_LOCATIONS`
+  is the active-locations query those pickers read when they need the list.
+- `AutoPodCategoryFilter` is the host's category filter: an MUI select of the
+  sub-categories **this host is approved in** (read through
+  `MY_HOST_CATEGORIES_FOR_AUTO_POD`) with an "All my categories" option
+  (`''`). A host approved in nothing sees the select disabled with
+  `labels.noHostCategories`.
+
+```tsx
+import { AutoPodCategoryFilter } from '@duncit/auto-pods';
+
+<AutoPodCategoryFilter
+  value={subCategoryId}
+  onChange={setSubCategoryId}
+  labels={labels}
+  size="small"
+/>;
+```
+
 ## The three dialogs
 
 | Dialog | Role | What it collects |
@@ -102,9 +163,38 @@ const { data, loading, error, refetch } = useQuery(HOST_AUTO_PODS);
 | `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
 
 Accepting and picking a slot are **one** action: an acceptance with no date
-would leave hosts and club admins nothing to enrol against. The slot is booked
-the instant the accept succeeds and stays booked until the pod exists, so no
-ordinary pod can take it in between.
+would leave the pod nothing to run on. The slot is booked the instant the
+accept succeeds and stays booked until the pod exists, so no ordinary pod can
+take it in between.
+
+`VenueAcceptDialog` and `ClubClaimDialog` narrow the owner's venues / clubs to
+the pinned city when there is one, and say so (`labels.noVenueInCity(city)` /
+`labels.noClubInCity(city)`) when none qualifies — the server would refuse the
+enrolment anyway, so the dialog does not offer it.
+
+`HostClaimDialog` **requires** `locationId` — the city selected at the top of
+the host's page (`''` when none) — and takes an optional `locationLabel` for
+the copy. On an unpinned offer it is the city the pod will be set to: the
+button stays disabled and the dialog shows `labels.pickLocationFirst` until one
+is selected, then `labels.willPinTo(locationLabel)` once it is. On a pinned
+offer the selection is not sent at all; `autoPodHostNeedsLocation(row,
+locationId)` in `@duncit/utils` is the one rule behind both.
+
+```tsx
+import { HostClaimDialog } from '@duncit/auto-pods';
+
+<HostClaimDialog
+  row={claiming}
+  open={!!claiming}
+  labels={labels}
+  locationId={locationId}
+  locationLabel={cityLabel}
+  onClose={() => setClaiming(null)}
+  onAssigned={() => refetch()}
+  formatWhen={formatDateTime}
+  formatMoney={money}
+/>;
+```
 
 ## Races
 
@@ -122,15 +212,19 @@ cannot collapse into one because the server stores a row per key path.
 
 ## Opening one
 
-Two consoles can open an Auto Pod, so both the question and the form live here
-rather than in either of them.
+Two consoles can open an Auto Pod, so the question of which kind lives here
+rather than in either of them — but the **form is not here any more**. It is
+`@duncit/pod-form` in `autoPod` mode: the same accordion form an ordinary pod
+uses, with no club, venue, host, mode or date, and a required category field
+in the club picker's place. See "Auto Pod mode" in that package's docs for
+`useAutoPodEditorState`, `buildAutoPodInput` and the config to pass.
 
 `PodKindChooser` is what a **New Pod** button asks first: two boxes, Normal Pod
 or Auto Pod, each with its own icon and a sentence on who fills in the venue,
 the host and the club. It only reports the choice — the caller opens the
-matching form, because Admin and the Partners console submit through different
-mutations. A surface with the `auto_pods` flag off skips it entirely and opens
-its ordinary editor, rather than showing a one-sided question.
+matching editor route, because Admin and the Partners console submit through
+different mutations. A surface with the `auto_pods` flag off skips it entirely
+and opens its ordinary editor, rather than showing a one-sided question.
 
 ```tsx
 import { PodKindChooser } from '@duncit/auto-pods';
@@ -140,45 +234,11 @@ import { shellPodKindLabels } from '@duncit/utils';
   open={choosing}
   labels={shellPodKindLabels(t)}
   onClose={() => setChoosing(false)}
-  onPick={(kind) => (kind === 'AUTO' ? autoEditor.openCreate() : openNormalEditor())}
+  onPick={(kind) => navigate(kind === 'AUTO' ? '/auto-pods/new' : '/pods/new')}
 />;
 ```
-
-`AutoPodForm` is the template itself — title, category, description, images,
-price, spots, occurrence, hashtags and payment terms, validated by
-`buildAutoPodSchema(t)` against the same rules the server applies — it takes
-the console's translator, because a validation message is copy the author reads
-(rule 38). It is deliberately
-**not** `@duncit/pod-form`: that schema hard-requires a club, a venue, a host
-and a slot, and an Auto Pod has none of them yet.
-
-Two things are injected rather than imported, so this package does not take on
-the picker's whole dependency tree:
-
-| Prop | Admin passes | Club Admin passes |
-| --- | --- | --- |
-| `occurrences` | `OCCURRENCES` from `@duncit/pod-form` | the same list |
-| `renderCategory` | the full `RhfAdminCategory` Super → Sub cascade | a disabled read-out of the club's own category |
 
 A Club Admin's Auto Pod is opened **for their club**: `createAutoPod(input,
-club_id)` enrols that club at creation, so the offer only ever waits on a venue
-and a host, and the server fixes the category to the club's — which is why that
-surface shows a read-out instead of a picker.
-
-```tsx
-import { AutoPodForm, toAutoPodInput } from '@duncit/auto-pods';
-
-<AutoPodForm
-  open={editor.open}
-  initialValues={editor.initialValues}
-  saving={editor.saving}
-  error={editor.error}
-  t={t}
-  dismissLabel={shellAutoPodLabels(t).dismiss}
-  occurrences={OCCURRENCES}
-  renderCategory={(control) => <RhfAdminCategory control={control} name="category" />}
-  hint={t('admin.autoPods.noVenueHostHint')}
-  onClose={editor.close}
-  onSubmit={(values) => save(toAutoPodInput(values))}
-/>;
-```
+club_id)` enrols that club at creation — pinning the offer to the club's city
+— so it only ever waits on a venue and a host, and the category is fixed to the
+club's (`lockCategory: true` in the form config shows it read-only).

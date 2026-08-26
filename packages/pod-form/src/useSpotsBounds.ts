@@ -19,19 +19,22 @@ import type { PodFormValues } from './types';
  * disagree about the range (rules 27 + 40).
  */
 export function useSpotsBounds(): SpotsBounds {
-  const { clubs } = usePodFormData();
+  const { clubs, config } = usePodFormData();
   const { control } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
   const slotId = useWatch({ control, name: 'venue_slot_id' });
   const podMode = useWatch({ control, name: 'pod_mode' });
+  const autoPodSubId = useWatch({ control, name: 'sub_category_id' });
 
   const { categories } = useAdminCategories();
   const { slots } = useVenueSlots(venueId, podMode === 'VIRTUAL');
 
   const club = clubs.find((item: any) => String(item?.id) === String(clubId));
-  // A club stores its SUB-category in `category_id`.
-  const subId = club ? String(club.category_id ?? '') : '';
+  // A club stores its SUB-category in `category_id`; an Auto Pod, having no
+  // club yet, carries the sub-category itself.
+  const clubSubId = club ? String(club.category_id ?? '') : '';
+  const subId = config.autoPod ? autoPodSubId : clubSubId;
   const minPax = categories.find((category) => category.id === subId)?.min_pax ?? 0;
 
   const capacity = slots.find((slot) => slot.id === slotId)?.capacity ?? null;

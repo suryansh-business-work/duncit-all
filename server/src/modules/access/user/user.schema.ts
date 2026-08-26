@@ -207,9 +207,21 @@ export const userTypeDefs = gql`
   input UpdateUserInput {
     first_name: String
     last_name: String
+    """
+    The account's email address, changed directly.
+
+    An admin needs no one-time code here: the OTP that gates this same change
+    on mWeb and the native app exists to prove the person owns the address they
+    are typing, and an admin editing somebody else's record has already been
+    authorised by their role. Blank clears the address.
+    """
     email: String
+    "Blank clears the number — it is cleared as a pair with phone_extension."
     phone_number: String
     phone_extension: String
+    "Blank clears the number — it is cleared as a pair with whatsapp_extension."
+    whatsapp_number: String
+    whatsapp_extension: String
     dob: String
     city: String
     state: String

@@ -48,7 +48,12 @@ export default function PaymentSection() {
       setValue('no_of_spots', spots.min, { shouldValidate: true });
     }
   }, [spots.min]); // eslint-disable-line react-hooks/exhaustive-deps
-  const amountHint = isFree ? 'Free pod — amount must be 0' : 'GROSS price (incl. fee + GST). 0 – 1999.';
+  // An Auto Pod is never free, so its floor is 1 rather than 0.
+  const amountFloor = config.autoPod ? 1 : 0;
+  const paidHint = config.autoPod
+    ? t('podForm.autoPod.priceHint')
+    : 'GROSS price (incl. fee + GST). 0 – 1999.';
+  const amountHint = isFree ? 'Free pod — amount must be 0' : paidHint;
   // The host takes one spot for free, so only (total - 1) spots are ever billed.
   const billableSpots = payableSpots(Number(noOfSpots) || 0);
   const spotsHint = isFree
@@ -58,20 +63,23 @@ export default function PaymentSection() {
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
-          select
-          label={t('podForm.paymentSection.podType')}
-          value={podType}
-          onChange={(event) => {
-            setValue('pod_type', event.target.value, { shouldValidate: true });
-            if (event.target.value.includes('FREE')) setValue('pod_amount', 0);
-          }}
-          fullWidth
-        >
-          {POD_TYPES.map((t) => (
-            <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
-          ))}
-        </TextField>
+        {/* An Auto Pod is physical and never free — its type is fixed, not chosen. */}
+        {!config.autoPod && (
+          <TextField
+            select
+            label={t('podForm.paymentSection.podType')}
+            value={podType}
+            onChange={(event) => {
+              setValue('pod_type', event.target.value, { shouldValidate: true });
+              if (event.target.value.includes('FREE')) setValue('pod_amount', 0);
+            }}
+            fullWidth
+          >
+            {POD_TYPES.map((t) => (
+              <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
+            ))}
+          </TextField>
+        )}
         <TextField
           select
           label={t('podForm.paymentSection.occurrence')}
@@ -97,7 +105,7 @@ export default function PaymentSection() {
           error={!!errors.pod_amount}
           fullWidth
           slotProps={{
-            htmlInput: { min: 0, max: 1999 }
+            htmlInput: { min: amountFloor, max: 1999 }
           }}
         />
         {spots.slidable ? (

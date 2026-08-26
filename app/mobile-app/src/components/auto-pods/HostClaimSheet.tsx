@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import type { AutoPodLabels, AutoPodRow } from '@duncit/utils';
+import {
+  autoPodCityLabel,
+  autoPodHostNeedsLocation,
+  type AutoPodLabels,
+  type AutoPodRow,
+} from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
@@ -16,12 +21,21 @@ interface Props {
   onAssigned: () => void;
   formatWhen: (iso: string) => string;
   formatMoney: (amount: number) => string;
+  /**
+   * The city selected in the header ('' when none). An offer nobody has
+   * enrolled in yet takes its city from the host, so without one the button
+   * stays off and the sheet says why; a pinned offer already has its city and
+   * this is only checked against it.
+   */
+  locationId: string;
+  /** Display name of that city, for the "will be set to" line. */
+  locationLabel?: string;
 }
 
 /**
- * "Assign Myself" — the host takes the pod. The venue, date and price are
- * already fixed by the venue's enrolment, so this confirms rather than collects,
- * and shows what the host would earn under their own rates before they commit.
+ * "Assign Myself" — the host takes the pod. Whatever a venue has already fixed
+ * (date, price) is shown, and the host sees what they would earn under their
+ * own rates once a venue has priced it.
  *
  * The Tamagui twin of `@duncit/auto-pods`' `HostClaimDialog` (rule 27).
  */
@@ -32,11 +46,16 @@ export function HostClaimSheet({
   onAssigned,
   formatWhen,
   formatMoney,
+  locationId,
+  locationLabel,
 }: Readonly<Props>) {
-  const { success } = useThemeColors();
+  const { success, warning } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState('');
   const autoPodId = row?.id ?? null;
+  const pinned = row?.location ?? null;
+  const needsLocation = row ? autoPodHostNeedsLocation(row, locationId) : false;
+  const pinsCity = !!row && !pinned && !!locationId;
 
   // A stale failure from the last offer must not greet the next one.
   useEffect(() => {
@@ -44,13 +63,14 @@ export function HostClaimSheet({
   }, [autoPodId]);
 
   const assign = useCallback(async () => {
-    if (!autoPodId) return;
+    if (!autoPodId || needsLocation) return;
     setBusy(true);
     setFailure('');
     try {
+      // An unpinned offer takes the host's city; a pinned one already has its own.
       await graphqlRequest(
         HostAssignAutoPodDocument,
-        { auto_pod_doc_id: autoPodId },
+        { auto_pod_doc_id: autoPodId, location_id: pinned ? null : locationId },
         { auth: true },
       );
       onAssigned();
@@ -61,7 +81,7 @@ export function HostClaimSheet({
     } finally {
       setBusy(false);
     }
-  }, [autoPodId, labels.claimedElsewhere, onAssigned]);
+  }, [autoPodId, needsLocation, pinned, locationId, labels.claimedElsewhere, onAssigned]);
 
   const footer = (
     <XStack gap={10}>
@@ -82,7 +102,7 @@ export function HostClaimSheet({
             assign().catch(() => undefined);
           }}
           variant="solid"
-          disabled={busy}
+          disabled={busy || needsLocation}
         />
       </YStack>
     </XStack>
@@ -107,6 +127,12 @@ export function HostClaimSheet({
           </Text>
         ) : null}
 
+        {pinned ? (
+          <Text testID="auto-pod-assign-city" fontSize={12.5} color="$color">
+            {labels.pinnedTo(autoPodCityLabel(pinned))}
+          </Text>
+        ) : null}
+
         {venue ? (
           <Text fontSize={12.5} color="$color">
             {`${venue.venue_name} · ${formatWhen(venue.pod_date_time)}`}
@@ -116,6 +142,18 @@ export function HostClaimSheet({
         {typeof row?.expected_host_earnings === 'number' ? (
           <Text testID="auto-pod-assign-earnings" fontSize={12.5} fontWeight="700" color={success}>
             {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
+          </Text>
+        ) : null}
+
+        {needsLocation ? (
+          <Text testID="auto-pod-assign-needs-location" fontSize={12} color={warning}>
+            {labels.pickLocationFirst}
+          </Text>
+        ) : null}
+
+        {pinsCity ? (
+          <Text testID="auto-pod-assign-will-pin" fontSize={12} color="$muted">
+            {labels.willPinTo(locationLabel || locationId)}
           </Text>
         ) : null}
 

@@ -78,6 +78,10 @@ export function ChangePasswordDialog({
   };
 
   const handleChange = async (values: NewPasswordValues) => {
+    if (values.new_password === currentPassword) {
+      setError(t('mweb.changePassword.mustDifferFromCurrent'));
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

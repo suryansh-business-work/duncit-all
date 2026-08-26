@@ -53,6 +53,7 @@ const row = (over: Partial<AutoPodRow> = {}): AutoPodRow => (({
   venue_claim: null,
   host_claim: null,
   club_claim: null,
+  location: null,
   viewer_claimed: false,
   pod_id: null,
   expected_host_earnings: 1400,

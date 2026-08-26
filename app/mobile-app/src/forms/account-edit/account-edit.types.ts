@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PERSON_NAME, PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { PERSON_NAME, PINCODE } from '@duncit/regex';
 import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
@@ -15,20 +15,13 @@ import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 
 /**
  * Edit-profile contract — mirrors mWeb's account-edit schema so both apps
- * validate identical rules (name required, optional contact/location fields,
- * a proper 10-digit phone number). Regex patterns are the shared @duncit/regex.
+ * validate identical rules (name required, optional location fields). Regex
+ * patterns are the shared @duncit/regex.
+ *
+ * Email, phone and WhatsApp are NOT here. Each is changed on its own, behind a
+ * one-time code sent to the new value, and its rules live in
+ * `contact-change.types.ts` beside the dialog that asks for it.
  */
-const phone = z
-  .string()
-  .trim()
-  .refine((value) => value === '' || PHONE_NUMBER.test(value), 'Enter a 10-digit phone number');
-
-const extension = z
-  .string()
-  .trim()
-  .regex(/^\+?\d*$/, 'Use a code like +91')
-  .max(5, 'Too long');
-
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Optional birth date — empty (no change) or a YYYY-MM-DD that clears the
@@ -98,10 +91,6 @@ export const makeAccountEditSchema = (
     country: z.string().trim().max(80, 'Too long'),
     state: z.string().trim().max(80, 'Too long'),
     city: z.string().trim().max(80, 'Too long'),
-    phone_extension: extension,
-    phone_number: phone,
-    whatsapp_extension: extension,
-    whatsapp_number: phone,
     address_line1: z.string().trim().max(200, 'Too long'),
     address_line2: z.string().trim().max(200, 'Too long'),
     address_landmark: z.string().trim().max(160, 'Too long'),
@@ -130,10 +119,6 @@ export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
     country: me?.country ?? '',
     state: me?.state ?? '',
     city: me?.city ?? '',
-    phone_extension: me?.phone_extension ?? '+91',
-    phone_number: me?.phone_number ?? '',
-    whatsapp_extension: me?.whatsapp_extension ?? '+91',
-    whatsapp_number: me?.whatsapp_number ?? '',
     address_line1: me?.address?.line1 ?? '',
     address_line2: me?.address?.line2 ?? '',
     address_landmark: me?.address?.landmark ?? '',
@@ -144,7 +129,14 @@ export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
   };
 }
 
-/** Map validated form values to the GraphQL UpdateMyProfileInput. */
+/**
+ * Map validated form values to the GraphQL UpdateMyProfileInput.
+ *
+ * Email, phone and WhatsApp are deliberately absent. They move only through
+ * the contact-change flow, behind a one-time code sent to the new value, and
+ * `updateMyProfile` refuses any of them that actually moved — so sending them
+ * here would turn every unrelated profile save into a refusal.
+ */
 export function toUpdateProfileInput(values: AccountEditValues): UpdateProfileInput {
   return {
     first_name: values.first_name,
@@ -154,10 +146,6 @@ export function toUpdateProfileInput(values: AccountEditValues): UpdateProfileIn
     country: values.country,
     state: values.state,
     city: values.city,
-    phone_extension: values.phone_extension,
-    phone_number: values.phone_number,
-    whatsapp_extension: values.whatsapp_extension,
-    whatsapp_number: values.whatsapp_number,
     address: {
       line1: values.address_line1,
       line2: values.address_line2,

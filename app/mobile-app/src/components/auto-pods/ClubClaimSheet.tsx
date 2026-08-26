@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import type { AutoPodLabels, AutoPodRow } from '@duncit/utils';
+import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { ClubClaimAutoPodDocument, MyAdminClubsForAutoPodDocument } from '@/graphql/auto-pods';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -25,8 +26,8 @@ type ClubOption = readonly [string, string];
 /**
  * "Claim for my club" — the club admin attaches the offer to one of their
  * clubs, which is what gives the resulting pod its club and its category. Only
- * clubs in the Auto Pod's own category are offered; the server asserts the same
- * rule, so a stale list cannot slip one through.
+ * clubs in the Auto Pod's own category AND (once pinned) its city are offered;
+ * the server asserts the same rules, so a stale list cannot slip one through.
  *
  * The Tamagui twin of `@duncit/auto-pods`' `ClubClaimDialog` (rule 27).
  */
@@ -38,15 +39,19 @@ export function ClubClaimSheet({
   onClaimed,
   formatWhen,
 }: Readonly<Props>) {
+  const { warning } = useThemeColors();
   const [clubs, setClubs] = useState<ClubOption[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [clubId, setClubId] = useState('');
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState('');
   const autoPodId = row?.id ?? null;
+  const pinnedLocationId = row?.location?.location_id ?? null;
 
   useEffect(() => {
     setClubId('');
     setFailure('');
+    setLoaded(false);
   }, [autoPodId]);
 
   useEffect(() => {
@@ -56,9 +61,14 @@ export function ClubClaimSheet({
       .then((res) => {
         if (!active) return;
         const eligible = res.myAdminClubs
-          .filter((club) => !subCategoryId || String(club.category_id ?? '') === subCategoryId)
+          .filter(
+            (club) =>
+              (!subCategoryId || String(club.category_id ?? '') === subCategoryId) &&
+              (!pinnedLocationId || club.location_id === pinnedLocationId),
+          )
           .map((club) => [club.id, club.club_name] as ClubOption);
         setClubs(eligible);
+        setLoaded(true);
         // One eligible club is not a choice — preselect it.
         const only = eligible.length === 1 ? eligible[0] : undefined;
         if (only) setClubId(only[0]);
@@ -67,7 +77,7 @@ export function ClubClaimSheet({
     return () => {
       active = false;
     };
-  }, [autoPodId, subCategoryId, labels.loadFailed]);
+  }, [autoPodId, subCategoryId, pinnedLocationId, labels.loadFailed]);
 
   const claim = useCallback(async () => {
     if (!autoPodId || !clubId) return;
@@ -113,6 +123,7 @@ export function ClubClaimSheet({
   );
 
   const venue = row?.venue_claim;
+  const noClubInCity = !!pinnedLocationId && loaded && clubs.length === 0;
 
   return (
     <DuncitDialog
@@ -131,9 +142,21 @@ export function ClubClaimSheet({
           </Text>
         ) : null}
 
+        {row?.location ? (
+          <Text testID="auto-pod-claim-city" fontSize={12.5} color="$color">
+            {labels.pinnedTo(autoPodCityLabel(row.location))}
+          </Text>
+        ) : null}
+
         {venue ? (
           <Text fontSize={12.5} color="$color">
             {`${venue.venue_name} · ${formatWhen(venue.pod_date_time)}`}
+          </Text>
+        ) : null}
+
+        {noClubInCity ? (
+          <Text testID="auto-pod-no-club-in-city" fontSize={12} color={warning}>
+            {labels.noClubInCity(autoPodCityLabel(row?.location))}
           </Text>
         ) : null}
 

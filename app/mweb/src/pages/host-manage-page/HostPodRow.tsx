@@ -6,8 +6,8 @@ import {
   VENUE_REJECTED_NOTE,
   isVenueRejected,
   venueApprovalChip,
-  type HostPodMenuHandlers,
 } from '@duncit/host-pod-actions';
+import type { HostPodRowActions } from './hostPodRowActions';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -15,16 +15,8 @@ function formatDate(value?: string | null) {
   return formatDateTime(value) || '—';
 }
 
-interface Props {
+interface Props extends HostPodRowActions {
   pod: any;
-  /** This row's wiring into the shared action dialogs. */
-  actions: HostPodMenuHandlers;
-  /** Opens the club-admin card — mWeb's own dialog, not one the package owns. */
-  onClubAdmin: () => void;
-  /** Opens the pod's attendance PAGE — a route, so mWeb owns the navigation. */
-  onSeeAttendance: () => void;
-  /** Opens the pod's "Slot Request Sent" PAGE — a route, same as above. */
-  onSlotRequest: () => void;
 }
 
 /** One hosted pod row — link to the pod + the host's actions behind a single

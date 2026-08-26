@@ -75,6 +75,8 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
         email: user.email ?? '',
         phone_extension: user.phone_extension ?? '',
         phone_number: user.phone_number ?? '',
+        whatsapp_extension: user.whatsapp_extension ?? '',
+        whatsapp_number: user.whatsapp_number ?? '',
         city: user.city ?? '',
         state: user.state ?? '',
         pincode: user.pincode ?? '',
@@ -102,6 +104,8 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
       form.email !== (user.email ?? '') ||
       form.phone_extension !== (user.phone_extension ?? '') ||
       form.phone_number !== (user.phone_number ?? '') ||
+      form.whatsapp_extension !== (user.whatsapp_extension ?? '') ||
+      form.whatsapp_number !== (user.whatsapp_number ?? '') ||
       form.city !== (user.city ?? '') ||
       form.state !== (user.state ?? '') ||
       form.pincode !== (user.pincode ?? '') ||

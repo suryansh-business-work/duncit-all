@@ -23,13 +23,26 @@ const BUNDLE_KEYS = [
   'tickVenue', 'tickHost', 'tickClubAdmin', 'tickPending', 'tickDone',
   'needsAction', 'claimedByYou', 'acceptCta', 'assignMyselfCta', 'claimForClubCta',
   'pickVenue', 'pickSlot', 'pickClub',
-  'confirmAccept', 'confirmAcceptBody', 'confirmAssign', 'confirmAssignBody', 'confirmClaim', 'confirmClaimBody',
+  'confirmAccept', 'confirmAcceptAnyOrder', 'confirmAssign', 'confirmAssignAnyOrder', 'confirmClaim', 'confirmClaimBody',
   'priceLabel', 'spotsLabel', 'expectedEarnings',
-  'waitingVenue', 'waitingHost', 'waitingClub',
+  'waitingVenue', 'waitingHost', 'waitingClub', 'waitingFor', 'roleVenue', 'roleHost', 'roleClub',
+  'locationLabel', 'allLocations', 'changeLocation', 'categoryLabel', 'allCategories', 'noHostCategories',
+  'pinnedTo', 'unpinned', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
   'liveNow', 'viewPod', 'cancelled', 'expired', 'claimedElsewhere', 'dismiss',
   'emptyVenue', 'emptyHost', 'emptyClub',
   'noSlots', 'addAvailability', 'loadFailed', 'retry',
 ].toSorted((a, b) => a.localeCompare(b));
+
+/**
+ * The two confirm bodies were reworded when enrolment stopped being
+ * venue-first; the label field kept its name, the bundle row did not.
+ */
+const BUNDLE_KEY_OF: Record<string, string> = {
+  confirmAcceptBody: 'confirmAcceptAnyOrder',
+  confirmAssignBody: 'confirmAssignAnyOrder',
+};
+
+const CITY = 'Bengaluru, Karnataka';
 
 interface Call {
   key: string;
@@ -73,6 +86,11 @@ const exercise = (labels: AutoPodLabels): Record<string, string> => {
     out[`empty:${role}`] = labels.empty(role);
   }
   out.expectedEarnings = labels.expectedEarnings('₹1,200');
+  out.waitingFor = labels.waitingFor(ROLES);
+  out.pinnedTo = labels.pinnedTo(CITY);
+  out.willPinTo = labels.willPinTo(CITY);
+  out.noVenueInCity = labels.noVenueInCity(CITY);
+  out.noClubInCity = labels.noClubInCity(CITY);
   return out;
 };
 
@@ -89,7 +107,7 @@ describe.each([
     );
     expect(statics.length).toBeGreaterThan(0);
     for (const [name, value] of statics) {
-      expect(value).toBe(`t:${ns}.${name}`);
+      expect(value).toBe(`t:${ns}.${BUNDLE_KEY_OF[name] ?? name}`);
     }
   });
 
@@ -132,14 +150,23 @@ describe.each([
     expect(build(t).expectedEarnings('₹1,200')).toBe('You could earn ₹1,200');
   });
 
-  // `amount` is the placeholder name the bundle copy uses; passing it under
-  // any other name (or passing vars on a label that has none) would leave a
-  // raw `{amount}` on screen.
-  it('passes vars only on the earnings line, and only as `amount`', () => {
+  // `amount`, `roles` and `city` are the placeholder names the bundle copy
+  // uses; passing one under any other name (or passing vars on a label that
+  // has none) would leave a raw `{amount}` on screen.
+  it('passes vars only on the lines that have a placeholder, under the bundle name', () => {
     const { t, calls } = recorder();
     exercise(build(t));
-    const withVars = calls.filter((c) => c.vars !== undefined);
-    expect(withVars).toEqual([{ key: `${ns}.expectedEarnings`, vars: { amount: '₹1,200' } }]);
+    const withVars = calls
+      .filter((c) => c.vars !== undefined)
+      .toSorted((a, b) => a.key.localeCompare(b.key));
+    expect(withVars).toEqual([
+      { key: `${ns}.expectedEarnings`, vars: { amount: '₹1,200' } },
+      { key: `${ns}.noClubInCity`, vars: { city: CITY } },
+      { key: `${ns}.noVenueInCity`, vars: { city: CITY } },
+      { key: `${ns}.pinnedTo`, vars: { city: CITY } },
+      { key: `${ns}.waitingFor`, vars: { roles: `t:${ns}.roleVenue, t:${ns}.roleHost, t:${ns}.roleClub` } },
+      { key: `${ns}.willPinTo`, vars: { city: CITY } },
+    ]);
   });
 
   // The server stores one row per key path and "Import app keys" seeds exactly

@@ -211,10 +211,6 @@ export default function AccountPage() {
           city: me.city || '',
           state: me.state || '',
           country: me.country || '',
-          phone_extension: me.phone_extension || '+91',
-          phone_number: me.phone_number || '',
-          whatsapp_extension: me.whatsapp_extension || '+91',
-          whatsapp_number: me.whatsapp_number || '',
           address_line1: me.address?.line1 || '',
           address_line2: me.address?.line2 || '',
           address_landmark: me.address?.landmark || '',
@@ -222,6 +218,13 @@ export default function AccountPage() {
           address_state: me.address?.state || '',
           address_pincode: me.address?.pincode || '',
           address_country: me.address?.country || '',
+        }}
+        contacts={{
+          email: me.email,
+          phone_extension: me.phone_extension,
+          phone_number: me.phone_number,
+          whatsapp_extension: me.whatsapp_extension,
+          whatsapp_number: me.whatsapp_number,
         }}
         onSaved={() => {
           refetch();

@@ -192,9 +192,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/clubs/manage" element={withAuth(<ClubStudioPage />)} />
         {/* Auto Pods — one queue per enrolment. Reached through the flag-gated
             drawer row, and `/clubs/...` for the same reason Club Studio is. */}
-        <Route path="/venues/auto-pods" element={withAuth(<VenueAutoPodsPage />)} />
-        <Route path="/host/auto-pods" element={withAuth(<HostAutoPodsPage />)} />
-        <Route path="/clubs/auto-pods" element={withAuth(<ClubAutoPodsPage />)} />
+        <Route path="/venues/auto-pods" element={withAuth(<VenueAutoPodsPage locationId={locationId} />)} />
+        <Route path="/host/auto-pods" element={withAuth(<HostAutoPodsPage locationId={locationId} />)} />
+        <Route path="/clubs/auto-pods" element={withAuth(<ClubAutoPodsPage locationId={locationId} />)} />
         <Route path="/faqs" element={withAuth(<FaqsPage />)} />
         <Route path="/badges" element={withAuth(<BadgesPage />)} />
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />

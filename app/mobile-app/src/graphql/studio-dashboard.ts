@@ -74,6 +74,7 @@ export const VenueDashboardDocument = gql(`
       id
       venue_name
       city
+      location_id
       capacity
       status
       is_active

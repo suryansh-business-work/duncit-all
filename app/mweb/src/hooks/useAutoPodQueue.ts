@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery, type DocumentNode } from '@apollo/client';
+import type { AutoPodQueueVariables } from '@duncit/auto-pods';
 import { formatMoney, mwebAutoPodLabels, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 import { useTranslation } from '../i18n/useTranslation';
 import { usePricing } from './usePricing';
@@ -20,16 +21,23 @@ export interface AutoPodQueueState {
  * Everything the three Auto Pod pages share: the role's queue, the copy, and
  * the two formatters the cards render through.
  *
- * Dates go through the admin-configured formatter and money through the
- * admin-configured currency symbol, so a venue, a host and a club admin all
- * read the same slot at the same wall-clock time (rule 11).
+ * `variables` narrows the queue — a city keeps offers pinned there plus every
+ * unpinned one, and the host's sub-category narrows further. Dates go through
+ * the admin-configured formatter and money through the admin-configured
+ * currency symbol, so a venue, a host and a club admin all read the same slot
+ * at the same wall-clock time (rule 11).
  */
-export function useAutoPodQueue(document: DocumentNode, field: string): AutoPodQueueState {
+export function useAutoPodQueue(
+  document: DocumentNode,
+  field: string,
+  variables?: AutoPodQueueVariables,
+): AutoPodQueueState {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { currency } = usePricing();
 
   const { data, loading, error, refetch } = useQuery<Record<string, AutoPodRow[]>>(document, {
+    variables,
     fetchPolicy: 'cache-and-network',
   });
   const rows = data?.[field] ?? [];

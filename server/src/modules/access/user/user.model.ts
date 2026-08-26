@@ -43,6 +43,16 @@ const authSchema = new Schema(
     is_email_verified: { type: Boolean, default: false },
     email_verification_otp_hash: { type: String, select: false },
     email_verification_otp_expires_at: { type: Date, select: false },
+    email_change_otp_hash: { type: String, select: false },
+    email_change_otp_expires_at: { type: Date, select: false },
+    /**
+     * The address the live change code was sent to.
+     *
+     * Pinned alongside the hash so the code can only move the account to the
+     * address it actually reached. Without it a code could be typed in beside
+     * a different address and land the account somewhere nothing was sent.
+     */
+    email_change_pending: { type: String, select: false, lowercase: true, trim: true },
     password_reset_otp_hash: { type: String, select: false },
     password_reset_otp_expires_at: { type: Date, select: false },
     password_change_otp_hash: { type: String, select: false },

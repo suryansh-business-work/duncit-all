@@ -31,6 +31,8 @@ const EDIT_FORM_FIELDS = Object.keys({
   email: 0,
   phone_extension: 0,
   phone_number: 0,
+  whatsapp_extension: 0,
+  whatsapp_number: 0,
   city: 0,
   state: 0,
   pincode: 0,

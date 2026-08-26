@@ -8,7 +8,12 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import type { AutoPodRow, AutoPodLabels } from '@duncit/utils';
+import {
+  autoPodCityLabel,
+  autoPodHostNeedsLocation,
+  type AutoPodRow,
+  type AutoPodLabels,
+} from '@duncit/utils';
 import { HOST_ASSIGN_AUTO_POD } from '../queries';
 
 export interface HostClaimDialogProps {
@@ -19,12 +24,21 @@ export interface HostClaimDialogProps {
   onAssigned: () => void;
   formatWhen: (iso: string) => string;
   formatMoney: (amount: number) => string;
+  /**
+   * The city selected at the top of the host's page ('' when none). An offer
+   * nobody has enrolled in yet takes its city from the host, so without one
+   * the button stays off and the dialog says why; a pinned offer already has
+   * its city and this is only checked against it.
+   */
+  locationId: string;
+  /** Display name of that city, for the "will be set to" line. */
+  locationLabel?: string;
 }
 
 /**
- * "Assign Myself" — the host takes the pod. The venue, date and price are
- * already fixed by the venue's enrolment, so this confirms rather than collects,
- * and shows what the host would earn under their own rates before they commit.
+ * "Assign Myself" — the host takes the pod. Whatever a venue has already fixed
+ * (date, price) is shown, and the host sees what they would earn under their
+ * own rates once a venue has priced it.
  */
 export function HostClaimDialog({
   row,
@@ -34,9 +48,14 @@ export function HostClaimDialog({
   onAssigned,
   formatWhen,
   formatMoney,
+  locationId,
+  locationLabel,
 }: Readonly<HostClaimDialogProps>) {
   const [failure, setFailure] = useState<string | null>(null);
   const [assign, assignState] = useMutation(HOST_ASSIGN_AUTO_POD);
+
+  const needsLocation = row ? autoPodHostNeedsLocation(row, locationId) : false;
+  const pinsCity = !!row && !row.location && !!locationId;
 
   const handleClose = () => {
     setFailure(null);
@@ -44,10 +63,12 @@ export function HostClaimDialog({
   };
 
   const handleAssign = async () => {
-    if (!row) return;
+    if (!row || needsLocation) return;
     setFailure(null);
     try {
-      await assign({ variables: { auto_pod_doc_id: row.id } });
+      await assign({
+        variables: { auto_pod_doc_id: row.id, location_id: row.location ? null : locationId },
+      });
       onAssigned();
       handleClose();
     } catch (err) {
@@ -68,6 +89,11 @@ export function HostClaimDialog({
           {row ? (
             <>
               <Typography variant="subtitle2">{row.pod_title}</Typography>
+              {row.location ? (
+                <Typography variant="body2">
+                  {labels.pinnedTo(autoPodCityLabel(row.location))}
+                </Typography>
+              ) : null}
               {row.venue_claim ? (
                 <Typography variant="body2">
                   {row.venue_claim.venue_name} · {formatWhen(row.venue_claim.pod_date_time)}
@@ -82,12 +108,20 @@ export function HostClaimDialog({
               ) : null}
             </>
           ) : null}
+          {needsLocation ? <Alert severity="warning">{labels.pickLocationFirst}</Alert> : null}
+          {pinsCity ? (
+            <Alert severity="info">{labels.willPinTo(locationLabel || locationId)}</Alert>
+          ) : null}
           {failure ? <Alert severity="error">{failure}</Alert> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>{labels.dismiss}</Button>
-        <Button variant="contained" onClick={handleAssign} disabled={assignState.loading}>
+        <Button
+          variant="contained"
+          onClick={handleAssign}
+          disabled={assignState.loading || needsLocation}
+        >
           {labels.assignMyselfCta}
         </Button>
       </DialogActions>

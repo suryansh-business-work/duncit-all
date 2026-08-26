@@ -68,6 +68,9 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       address: 'Address',
       noChanges: 'No profile changes recorded yet.',
       changeLogs: 'User Change Logs',
+      whatsappNumber: 'WhatsApp number',
+      contactDirectHint:
+        'Email, phone and WhatsApp save straight away here. On the app they need a one-time code.',
     },
 
     tabs: {

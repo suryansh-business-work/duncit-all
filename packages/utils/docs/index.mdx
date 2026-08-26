@@ -32,6 +32,8 @@ exports:
   - 'isStoryLive'
   - 'podPhase'
   - 'splitPodsByPhase'
+  - 'hostPodSection'
+  - 'splitHostPods'
   - 'POD_LIVE_TAIL_MS'
   - 'clubCategoryKey'
   - 'productMatchesClub'
@@ -85,6 +87,15 @@ exports:
   - 'offersFollowBack'
   - 'followBackLabelKey'
   - 'canFollowBack'
+  - 'CONTACT_CHANNELS'
+  - 'isPhoneChannel'
+  - 'formatPhoneLine'
+  - 'currentContactValue'
+  - 'contactDraftFrom'
+  - 'contactDraftValue'
+  - 'contactDraftIsUnchanged'
+  - 'emptyContactDraft'
+  - 'buildContactChangeLabels'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -104,6 +115,20 @@ exports:
   - 'BADGE_WINDOW_KEY'
   - 'badgeProgressPercent'
   - 'sortBadgeProgress'
+  - 'AUTO_POD_ROLES'
+  - 'autoPodTicks'
+  - 'autoPodEnrolledCount'
+  - 'autoPodPreLive'
+  - 'autoPodActionable'
+  - 'splitAutoPods'
+  - 'autoPodMissingRoles'
+  - 'autoPodWaitingOn'
+  - 'autoPodHostNeedsLocation'
+  - 'autoPodCityLabel'
+  - 'autoPodModeCount'
+  - 'mwebAutoPodLabels'
+  - 'shellAutoPodLabels'
+  - 'shellPodKindLabels'
 ---
 
 ## Why this exists
@@ -497,6 +522,21 @@ rails can never place the same pod differently.
 | `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
 
+### Host Studio sections
+
+A hosted pod's VENUE-APPROVAL state, not its clock, decides which of Host
+Studio’s three lists it belongs to — Requested Pods above Your Pods, Rejected
+Pods below it — and a pod is only ever in one of them. The split is recomputed
+from `venue_approval_status` on every read, so the venue’s decision landing is
+the whole mechanism: nothing has to remember to take a pod out of one list when
+it puts it in another. mWeb and the native app both render from this; only the
+MUI and Tamagui views differ (rules 27 + 40).
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `hostPodSection` | `(status?) => HostPodSection` | `PENDING` ⇒ `REQUESTED`, `DECLINED` ⇒ `REJECTED`. `NONE`, `APPROVED` and anything unrecognised answer `YOURS` — a pod whose state cannot be read is still a pod the host runs. |
+| `splitHostPods` | `(pods) => { requested, yours, rejected }` | One pass, order preserved within each list. `rejected` empty is what hides the Rejected Pods section entirely. |
+
 ### Notifications
 
 The server stores no notification "type", so the category is derived from the title.
@@ -559,6 +599,56 @@ buildPodFeedbackInput({
 
 The category is deliberately NOT sent — the server derives it from the weakest score,
 so a guest is never asked to triage their own feedback.
+
+### Auto Pods — `auto-pod` + `auto-pod-copy`
+
+An Auto Pod is a pod written without a venue, a host or a club; a venue, a host and a club
+admin each enrol later, in ANY order, and it becomes a real pod once all three have. The row
+shape, the three-enrolment derivation every card draws, the "can this role act" predicate and
+the city-pin rule all live here, so the MUI card (`@duncit/auto-pods`) and the native Tamagui
+twin cannot disagree on what an offer is waiting for.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `AUTO_POD_ROLES` | `readonly AutoPodRole[]` | `['venue', 'host', 'club']` — the order every tick row and "waiting for" line lists them. Presentation only. |
+| `autoPodTicks` | `(row) => AutoPodTick[]` | Always three, in that order, `done` when that partner has enrolled. |
+| `autoPodEnrolledCount` | `(row) => number` | How many of the three have enrolled. |
+| `autoPodPreLive` | `(stage) => boolean` | `OPEN` (nobody yet) or `CLAIMING` (at least one) — still enrolling. |
+| `autoPodActionable` | `(row, role) => boolean` | Pre-live, this viewer has not enrolled, and this role's tick is empty. Any order. |
+| `splitAutoPods` | `(rows, role) => { actionable, mine }` | A role's queue: what needs them, then what they already took. |
+| `autoPodMissingRoles` | `(row) => AutoPodRole[]` | Every role still missing, in tick order; `[]` once live or gone. |
+| `autoPodWaitingOn` | `(row) => AutoPodRole \| null` | The first missing role. |
+| `autoPodHostNeedsLocation` | `(row, locationId) => boolean` | True when the offer is unpinned AND the host has no city selected — their "Assign Myself" must wait. |
+| `autoPodCityLabel` | `(location) => string` | `"Bengaluru, Karnataka"`; `''` for an unpinned offer. |
+| `autoPodModeCount` | `(counts, mode) => number` | How many offers wait on a studio mode (`HOST` / `VENUE` / `CLUB`); 0 for any other. |
+| `mwebAutoPodLabels` / `shellAutoPodLabels` | `(t) => AutoPodLabels` | Every word the queue renders — `mweb.autoPods.*` for mWeb + native, `shell.autoPods.*` for the portals, word-for-word identical. |
+| `shellPodKindLabels` | `(t) => PodKindLabels` | The "Normal Pod or Auto Pod?" question a portal's New Pod button asks. |
+
+```ts
+// A club admin enrolled first: the offer is CLAIMING, pinned to their club's city.
+const row: AutoPodRow = {
+  id: 'apod-000123',
+  auto_pod_no: 'APOD-000123',
+  stage: 'CLAIMING',
+  pod_title: 'Sunday Badminton Doubles',
+  pod_amount: 499,
+  no_of_spots: 8,
+  venue_claim: null,
+  host_claim: null,
+  club_claim: { club_id: 'c-41', club_name: 'Koramangala Smashers', user_id: 'u-9', claimed_at: '…' },
+  location: { location_id: 'loc-blr', location_name: 'Bengaluru', country: 'India', state: 'Karnataka', city: 'Bengaluru', bound_by: 'CLUB', bound_at: '…' },
+  viewer_claimed: false,
+  // …
+};
+
+autoPodMissingRoles(row)                 // ['venue', 'host']
+autoPodActionable(row, 'venue')          // true  — a venue in Bengaluru may accept
+autoPodActionable(row, 'club')           // false — that tick is taken
+autoPodHostNeedsLocation(row, '')        // false — pinned; the host's selection is not consulted
+autoPodHostNeedsLocation({ location: null }, '')        // true  — unpinned and no city selected
+autoPodCityLabel(row.location)           // 'Bengaluru, Karnataka'
+mwebAutoPodLabels(t).waitingFor(autoPodMissingRoles(row))  // 'Waiting for a venue, a host'
+```
 
 ## The grievance form is one spec, four validators
 
@@ -951,6 +1041,49 @@ at once — an account with nowhere to receive a code cannot sign in.
 `findCommChannel(channels, channel)` is the one lookup both apps use, so a screen that wants
 one channel out of the sheet never writes its own `.find`.
 
+### Changing a contact detail
+
+Email, phone and WhatsApp are the three profile fields whose change has to be PROVED, so
+they are not fields of the edit-profile form at all. Each is a read-only row with its own
+two-step dialog: type the new value, then type the code sent **to that new value**. mWeb
+renders it in MUI and the native app in Tamagui; everything below is what they share.
+
+`currentContactValue` is what the row displays, and it never shows a lone country code —
+an account with an extension but no number has no number.
+
+```ts
+const account = {
+  email: 'ravi@duncit.com',
+  phone_extension: '+91',
+  phone_number: '9845012345',
+  whatsapp_extension: '+91',
+  whatsapp_number: '',
+};
+
+currentContactValue(account, 'PHONE');    // '+91 9845012345'
+currentContactValue(account, 'WHATSAPP'); // '' — the row falls back to "No WhatsApp number yet"
+contactDraftFrom(account, 'PHONE');       // { email: '', extension: '+91', number: '9845012345' }
+```
+
+`contactDraftIsUnchanged` is the refusal that runs BEFORE a code is sent. A code costs the
+person an SMS and a wait, so a draft matching what the account already holds is turned back
+rather than delivered. For a phone the country code counts — `+1 9845012345` is a different
+number from `+91 9845012345`, however alike the digits look:
+
+```ts
+contactDraftIsUnchanged(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' });
+// true — same number, no code sent
+contactDraftIsUnchanged(account, 'PHONE', { email: '', extension: '+1', number: '9845012345' });
+// false — same digits, different country
+
+contactDraftValue({ email: 'Ravi@Duncit.com', extension: '', number: '' }, 'EMAIL');
+// 'ravi@duncit.com' — what the server is asked to store
+```
+
+Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the
+patterns it checks live in `@duncit/regex`, which this zero-dependency package cannot
+import.
+
 ### The follow button, and the follow rows in the inbox
 
 Following a PRIVATE profile is a REQUEST, not a follow. The server is the only thing that
@@ -1001,6 +1134,32 @@ carry no `actorId` and stay inert rather than rendering a button with nobody to 
 
 `followBackLabelKey` and `canFollowBack` split the button's two live states: an open ask
 reads "Requested" and stops accepting taps, because a pending request has nothing to re-send.
+
+## An Auto Pod enrols in any order, and the first partner pins its city
+
+Auto Pods used to be venue-first: only venues saw an `OPEN` offer, and a host or club admin was
+offered it only after a venue had accepted. That is gone. A fresh offer is visible to all three
+roles at once, and `autoPodActionable(row, role)` is true for any role whose own tick is still
+empty while the offer is pre-live and the viewer has not enrolled. The venue › host › club order
+in `AUTO_POD_ROLES` is how the chips are drawn, not a dependency — a card never changes width or
+reorders as partners join, whichever went first.
+
+What the first enrolment DOES fix is the city. An offer starts with `location: null`; the first
+partner to enrol pins it to one admin Location row — a venue brings `venue.location_id`, a club
+`club.location_id`, and a host the city selected at the top of their Auto Pods page. From then on
+only partners in that city are offered it, and the server refuses a venue or club from anywhere
+else. Two consequences a surface must render, and both come from here:
+
+- `autoPodHostNeedsLocation(row, locationId)` — a host has no venue or club to bring a city with,
+  so on an unpinned offer their "Assign Myself" is locked until they have selected one
+  (`labels.pickLocationFirst`), and enrolling then pins it (`labels.willPinTo(city)`). On a
+  pinned offer the selection is not consulted.
+- `autoPodCityLabel(row.location)` — the card's city line, `labels.pinnedTo(city)` once pinned
+  and `labels.unpinned` before, in exactly the same words on mWeb, native and every portal.
+
+`autoPodMissingRoles(row)` feeds `labels.waitingFor(roles)` — "Waiting for a venue, a host" —
+which replaced the single "waiting on" line, because with any-order enrolment there is no
+single next partner to name.
 
 ## Adding a helper
 

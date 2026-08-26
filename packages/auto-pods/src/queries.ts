@@ -43,27 +43,47 @@ const AUTO_POD_FIELDS = `
     user_id
     claimed_at
   }
+  location {
+    location_id
+    location_name
+    country
+    state
+    city
+    bound_by
+    bound_at
+  }
 `;
 
+/**
+ * The three queue queries take the SAME variables — `location_id` narrows to
+ * one city (an offer nobody has enrolled in yet has no city and always shows),
+ * and `sub_category_id` narrows a host's queue to one of their categories. A
+ * page passes `null` for "all", so one hook can drive all three.
+ */
+export interface AutoPodQueueVariables {
+  location_id?: string | null;
+  sub_category_id?: string | null;
+}
+
 export const VENUE_AUTO_PODS = gql`
-  query VenueAutoPods {
-    venueAutoPods {
+  query VenueAutoPods($location_id: ID) {
+    venueAutoPods(location_id: $location_id) {
       ${AUTO_POD_FIELDS}
     }
   }
 `;
 
 export const HOST_AUTO_PODS = gql`
-  query HostAutoPods {
-    hostAutoPods {
+  query HostAutoPods($location_id: ID, $sub_category_id: ID) {
+    hostAutoPods(location_id: $location_id, sub_category_id: $sub_category_id) {
       ${AUTO_POD_FIELDS}
     }
   }
 `;
 
 export const CLUB_ADMIN_AUTO_PODS = gql`
-  query ClubAdminAutoPods {
-    clubAdminAutoPods {
+  query ClubAdminAutoPods($location_id: ID) {
+    clubAdminAutoPods(location_id: $location_id) {
       ${AUTO_POD_FIELDS}
     }
   }
@@ -87,9 +107,11 @@ export const VENUE_ACCEPT_AUTO_POD = gql`
   }
 `;
 
+/** `location_id` is the city the host had selected: it pins an offer nobody has
+ * enrolled in yet, and must match the city of one that is already pinned. */
 export const HOST_ASSIGN_AUTO_POD = gql`
-  mutation HostAssignAutoPod($auto_pod_doc_id: ID!) {
-    hostAssignAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+  mutation HostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID) {
+    hostAssignAutoPod(auto_pod_doc_id: $auto_pod_doc_id, location_id: $location_id) {
       ${AUTO_POD_FIELDS}
     }
   }
@@ -111,6 +133,8 @@ export const MY_VENUES_FOR_AUTO_POD = gql`
       venue_name
       status
       is_active
+      location_id
+      city
     }
   }
 `;
@@ -137,6 +161,41 @@ export const MY_ADMIN_CLUBS_FOR_AUTO_POD = gql`
       id
       club_name
       category_id
+      location_id
+    }
+  }
+`;
+
+/** The sub-categories this host is approved in — the host queue's category
+ * filter offers exactly these. */
+export const MY_HOST_CATEGORIES_FOR_AUTO_POD = gql`
+  query MyHostCategoriesForAutoPod {
+    myHost {
+      id
+      status
+      is_active
+      host_categories {
+        sub_category_id
+        sub_category_name
+        category_name
+        super_category_name
+      }
+    }
+  }
+`;
+
+/** Active admin locations — the Country → State → City filter every queue page
+ * shows at the top reads from these. */
+export const AUTO_POD_LOCATIONS = gql`
+  query AutoPodLocations {
+    locations(filter: { is_active: true }) {
+      id
+      location_name
+      country
+      country_code
+      state
+      state_code
+      city
     }
   }
 `;

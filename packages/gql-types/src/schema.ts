@@ -1515,6 +1515,8 @@ export type AutoPod = {
   /** Host enrolment — null until a host assigns themselves. */
   host_claim?: Maybe<AutoPodHostClaim>;
   id: Scalars['ID']['output'];
+  /** The city the first enrolment pinned it to — null while nobody has enrolled. */
+  location?: Maybe<AutoPodLocation>;
   materialized_at?: Maybe<Scalars['String']['output']>;
   no_of_spots: Scalars['Int']['output'];
   payment_terms?: Maybe<Scalars['String']['output']>;
@@ -1574,9 +1576,32 @@ export type AutoPodHostClaim = {
 };
 
 /**
- * Where an Auto Pod sits in its enrolment cycle. OPEN is visible to every
- * approved venue; CLAIMING means a venue enrolled and the host + club admin
- * steps are open in parallel; LIVE means it materialized into an ordinary pod.
+ * The city (Country → State → City, one admin Location row) the offer is pinned
+ * to. Null until the first partner enrols; from then on only partners in that
+ * city are offered it.
+ */
+export type AutoPodLocation = {
+  __typename?: 'AutoPodLocation';
+  bound_at: Scalars['String']['output'];
+  bound_by: AutoPodLocationBinder;
+  city: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  location_id: Scalars['ID']['output'];
+  location_name: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+/** Which enrolment pinned the Auto Pod to its city. */
+export type AutoPodLocationBinder =
+  | 'CLUB'
+  | 'HOST'
+  | 'VENUE';
+
+/**
+ * Where an Auto Pod sits in its enrolment cycle. OPEN means nobody has enrolled
+ * yet and all three roles are offered it; CLAIMING means at least one partner
+ * enrolled and the rest may still enrol, in any order; LIVE means it
+ * materialized into an ordinary pod.
  */
 export type AutoPodStage =
   | 'CANCELLED'
@@ -3215,6 +3240,13 @@ export type ConnectedGoogleAccount = {
   /** ISO timestamp of when the link was granted. Null for Google-signup accounts linked before this was recorded. */
   linked_at?: Maybe<Scalars['String']['output']>;
 };
+
+/** Which number on the account a one-time code is being asked to move. */
+export type ContactPhoneField =
+  /** The contact number — auth.phone. */
+  | 'PHONE'
+  /** The WhatsApp number — communication.whatsapp. */
+  | 'WHATSAPP';
 
 export type ContactStatus =
   | 'ARCHIVED'
@@ -8099,6 +8131,7 @@ export type Mutation = {
   callEcommLeadContact: LeadContactActionResult;
   callHostLeadContact: LeadContactActionResult;
   callVenueLeadContact: LeadContactActionResult;
+  /** Pulls a pre-live offer: everyone enrolled is told and the venue's slot is released. */
   cancelAutoPod: AutoPod;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
   cancelBackoutPod: PodMember;
@@ -8145,7 +8178,7 @@ export type Mutation = {
   clubAdminUpdateClub: Club;
   /** Edit any field of a pod in one of the signed-in user's clubs. */
   clubAdminUpdatePod: Pod;
-  /** Club Admin enrols: claims a venue-accepted Auto Pod for one of their clubs. */
+  /** Club Admin enrols: claims the offer for one of their clubs. */
   clubClaimAutoPod: AutoPod;
   /**
    * The upload finished: read the archive end to end and, if it is whole, turn
@@ -8156,6 +8189,15 @@ export type Mutation = {
    */
   completeDbBackupUpload: DbBackup;
   completePodSettlement: PodSettlementResult;
+  /** Spend the code from requestContactPhoneChangeOtp and store the number. */
+  confirmContactPhoneChange: User;
+  /**
+   * Spend the emailed code and store the address.
+   *
+   * The new address arrives already verified: the code proved it, which is the
+   * whole reason it was sent there rather than to the address being replaced.
+   */
+  confirmEmailChange: User;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
@@ -8171,7 +8213,8 @@ export type Mutation = {
    * Opens an Auto Pod for the marketplace. A Duncit admin opens one for every
    * club to compete for; a Club Admin passes club_id to open one FOR their own
    * club, which enrols that club at creation (so only a venue and a host are
-   * still needed) and fixes the category to the club's own.
+   * still needed), fixes the category to the club's own and pins the offer to
+   * the club's city.
    */
   createAutoPod: AutoPod;
   createBadge: Badge;
@@ -8284,6 +8327,12 @@ export type Mutation = {
   deleteAppBuild: Scalars['Boolean']['output'];
   deleteAppPopup: Scalars['Boolean']['output'];
   deleteAudienceList: Scalars['Boolean']['output'];
+  /**
+   * Removes the record for good. Refused once the pod is live (delete the pod
+   * itself); a pre-live offer is cancelled first so its slot is released and
+   * everyone enrolled is told.
+   */
+  deleteAutoPod: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
   /** Delete the given bugs. Returns how many actually went. */
@@ -8439,7 +8488,11 @@ export type Mutation = {
    */
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
-  /** Host enrols: assigns themselves to a venue-accepted Auto Pod. */
+  /**
+   * Host enrols: assigns themselves. location_id is the city the host had
+   * selected — required when nobody has enrolled yet (it pins the offer), and
+   * must match the pinned city otherwise.
+   */
   hostAssignAutoPod: AutoPod;
   hostDeletePod: Scalars['Boolean']['output'];
   /**
@@ -8682,6 +8735,15 @@ export type Mutation = {
    */
   requestCommunicationTranscript: CommunicationLog;
   /**
+   * Send a one-time code to a number this account wants to start using.
+   *
+   * The code goes to the NEW number over the mediums that number's owner
+   * accepts, and it is refused if the number already belongs to another
+   * account — a number is how somebody signs in, so two accounts may not share
+   * one.
+   */
+  requestContactPhoneChangeOtp: PhoneOtpRequestResult;
+  /**
    * Mint a short-lived signed download link for one archive.
    *
    * A backup is the entire database in a file, so it is not served statically
@@ -8689,6 +8751,13 @@ export type Mutation = {
    * header. The link names one backup and stops working within minutes.
    */
   requestDbBackupDownload: DbBackupDownload;
+  /**
+   * Email a one-time code to an address this account wants to start using.
+   *
+   * Refused when the address already belongs to another account, and when it is
+   * the address already on this one — there is nothing to prove in that case.
+   */
+  requestEmailChangeOtp: OtpRequestResult;
   requestEmailVerificationOtp: OtpRequestResult;
   requestMeeting: OnboardingMeeting;
   /** Auth-required: verify the current password and email a change-confirmation OTP. */
@@ -9087,6 +9156,11 @@ export type Mutation = {
   updateAppSettings: AppSettings;
   /** Owner edits the editable subset of an APPROVED venue (documents append-only). */
   updateApprovedVenue: Venue;
+  /**
+   * Rewrites the template while the offer is not yet live. The economics are
+   * re-checked against whoever has already enrolled, and the category is locked
+   * once a host or a club is on it.
+   */
   updateAutoPod: AutoPod;
   updateBadge: Badge;
   updateBranding: Branding;
@@ -9712,6 +9786,20 @@ export type MutationCompletePodSettlementArgs = {
 };
 
 
+export type MutationConfirmContactPhoneChangeArgs = {
+  field: ContactPhoneField;
+  otp: Scalars['String']['input'];
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+
+export type MutationConfirmEmailChangeArgs = {
+  email: Scalars['String']['input'];
+  otp: Scalars['String']['input'];
+};
+
+
 export type MutationConnectGoogleAccountArgs = {
   input: GoogleAuthInput;
 };
@@ -10111,6 +10199,11 @@ export type MutationDeleteAppPopupArgs = {
 
 export type MutationDeleteAudienceListArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAutoPodArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -10664,6 +10757,7 @@ export type MutationGrantAdminAccessArgs = {
 
 export type MutationHostAssignAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
+  location_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -11104,8 +11198,20 @@ export type MutationRequestCommunicationTranscriptArgs = {
 };
 
 
+export type MutationRequestContactPhoneChangeOtpArgs = {
+  field: ContactPhoneField;
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+
 export type MutationRequestDbBackupDownloadArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRequestEmailChangeOtpArgs = {
+  email: Scalars['String']['input'];
 };
 
 
@@ -15738,7 +15844,7 @@ export type Query = {
   chatParticipants: ChatParticipants;
   checkoutQuote: CheckoutQuote;
   club?: Maybe<Club>;
-  /** Venue-accepted offers one of the caller's clubs may claim, plus their claims. */
+  /** Offers one of the caller's clubs may still claim, plus their claims. */
   clubAdminAutoPods: Array<AutoPod>;
   /**
    * Club Admins whose onboarding taxonomy matches a club's — the picker on the
@@ -16009,7 +16115,11 @@ export type Query = {
   grievanceTicket?: Maybe<GrievanceTicket>;
   grievanceTicketsTable: GrievanceTicketTablePage;
   host?: Maybe<Host>;
-  /** Venue-accepted offers this host may take, plus the ones they took. */
+  /**
+   * Offers this host may still take (in a sub-category they are approved in),
+   * plus the ones they took. sub_category_id narrows to one of their categories;
+   * location_id as for venueAutoPods.
+   */
   hostAutoPods: Array<AutoPod>;
   /** The host profile behind a user, or null when they have never onboarded. */
   hostByUser?: Maybe<Host>;
@@ -16693,7 +16803,11 @@ export type Query = {
   users: Array<User>;
   usersTable: UserTablePage;
   venue?: Maybe<Venue>;
-  /** Open offers this venue owner may accept, plus the ones they accepted. */
+  /**
+   * Offers this venue owner may still accept, plus the ones they accepted.
+   * location_id narrows to offers pinned to that city — offers nobody has
+   * enrolled in yet have no city and are always included.
+   */
   venueAutoPods: Array<AutoPod>;
   venueAvailableSlots: Array<VenueSlot>;
   /**  Admin-only: health for a specific venue.  */
@@ -17044,6 +17158,11 @@ export type QueryCheckoutQuoteArgs = {
 
 export type QueryClubArgs = {
   club_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubAdminAutoPodsArgs = {
+  location_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -17603,6 +17722,12 @@ export type QueryGrievanceTicketsTableArgs = {
 
 export type QueryHostArgs = {
   host_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryHostAutoPodsArgs = {
+  location_id?: InputMaybe<Scalars['ID']['input']>;
+  sub_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -18908,6 +19033,11 @@ export type QueryVenueArgs = {
 };
 
 
+export type QueryVenueAutoPodsArgs = {
+  location_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryVenueAvailableSlotsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   venue_id: Scalars['ID']['input'];
@@ -20199,12 +20329,15 @@ export type StaffChatState = {
   __typename?: 'StaffChatState';
   bubble_color: Scalars['String']['output'];
   cam_id: Scalars['String']['output'];
+  cam_label: Scalars['String']['output'];
   /** COMPACT or COMFORTABLE. */
   density: Scalars['String']['output'];
   enter_to_send: Scalars['Boolean']['output'];
   font_size: Scalars['Int']['output'];
   /** The microphone and camera chosen in Audio & video settings. */
   mic_id: Scalars['String']['output'];
+  /** Their names — a deviceId is per origin, a label is what matches elsewhere. */
+  mic_label: Scalars['String']['output'];
   /** The conversation that was open, so a refresh returns to it. */
   open_peer_id?: Maybe<Scalars['ID']['output']>;
   panel_open: Scalars['Boolean']['output'];
@@ -20218,10 +20351,12 @@ export type StaffChatState = {
 export type StaffChatStateInput = {
   bubble_color?: InputMaybe<Scalars['String']['input']>;
   cam_id?: InputMaybe<Scalars['String']['input']>;
+  cam_label?: InputMaybe<Scalars['String']['input']>;
   density?: InputMaybe<Scalars['String']['input']>;
   enter_to_send?: InputMaybe<Scalars['Boolean']['input']>;
   font_size?: InputMaybe<Scalars['Int']['input']>;
   mic_id?: InputMaybe<Scalars['String']['input']>;
+  mic_label?: InputMaybe<Scalars['String']['input']>;
   open_peer_id?: InputMaybe<Scalars['ID']['input']>;
   panel_open?: InputMaybe<Scalars['Boolean']['input']>;
   role_filter?: InputMaybe<Scalars['String']['input']>;
@@ -22066,18 +22201,30 @@ export type UpdateUserInput = {
   bio?: InputMaybe<Scalars['String']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   dob?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The account's email address, changed directly.
+   *
+   * An admin needs no one-time code here: the OTP that gates this same change
+   * on mWeb and the native app exists to prove the person owns the address they
+   * are typing, and an admin editing somebody else's record has already been
+   * authorised by their role. Blank clears the address.
+   */
   email?: InputMaybe<Scalars['String']['input']>;
   first_name?: InputMaybe<Scalars['String']['input']>;
   host_commission_pct?: InputMaybe<Scalars['Float']['input']>;
   host_share_pct?: InputMaybe<Scalars['Float']['input']>;
   last_name?: InputMaybe<Scalars['String']['input']>;
   phone_extension?: InputMaybe<Scalars['String']['input']>;
+  /** Blank clears the number — it is cleared as a pair with phone_extension. */
   phone_number?: InputMaybe<Scalars['String']['input']>;
   pincode?: InputMaybe<Scalars['String']['input']>;
   profile_photo?: InputMaybe<Scalars['String']['input']>;
   roles?: InputMaybe<Array<Scalars['String']['input']>>;
   state?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<UserStatus>;
+  whatsapp_extension?: InputMaybe<Scalars['String']['input']>;
+  /** Blank clears the number — it is cleared as a pair with whatsapp_extension. */
+  whatsapp_number?: InputMaybe<Scalars['String']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 

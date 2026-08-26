@@ -27,12 +27,20 @@ interface Props {
 
 const empty = '—';
 
+/** `+91 9876543210`, or the em dash when there is no number to show. */
+const phoneLine = (extension?: string | null, number?: string | null) =>
+  `${extension || ''} ${number || ''}`.trim() || empty;
+
 export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const statusMeta = STATUS_META[form.status];
   const rows = [
     { label: t('shell.common.email'), value: user.email ?? empty },
-    { label: t('shell.common.phone'), value: `${user.phone_extension || ''} ${user.phone_number || ''}`.trim() || empty },
+    { label: t('shell.common.phone'), value: phoneLine(user.phone_extension, user.phone_number) },
+    {
+      label: t('admin.profile.whatsappNumber'),
+      value: phoneLine(user.whatsapp_extension, user.whatsapp_number),
+    },
     { label: t('admin.profile.city'), value: user.city || empty },
     { label: t('admin.profile.zone'), value: user.zone || empty },
     { label: t('admin.profile.assignedCity'), value: user.assigned_city || empty },

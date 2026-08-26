@@ -109,6 +109,35 @@ const phoneNumber = (label = 'Phone number') =>
 const phoneExtension = (label = 'Phone code') =>
   z.string().trim().regex(PHONE_EXTENSION_PATTERN, `${label} is invalid`);
 
+/**
+ * A phone number a form may legitimately be left without.
+ *
+ * Duncit stopped collecting a phone at signup, so "no number" is an ordinary
+ * state of a real account rather than an unfilled field. A form that requires
+ * one can never be saved for those accounts — the Save button stays disabled
+ * over a value nobody was ever asked for.
+ */
+const optionalPhoneNumber = (label = 'Phone number') =>
+  z
+    .string()
+    .trim()
+    .default('')
+    .refine(
+      (value) => value === '' || PHONE_NUMBER_PATTERN.test(value),
+      `${label} must contain only digits (6-15 digits)`,
+    );
+
+/** The country code beside an `optionalPhoneNumber` — blank when it has none. */
+const optionalPhoneExtension = (label = 'Phone code') =>
+  z
+    .string()
+    .trim()
+    .default('')
+    .refine(
+      (value) => value === '' || PHONE_EXTENSION_PATTERN.test(value),
+      `${label} is invalid`,
+    );
+
 /** Optional URL: blank passes; otherwise must be http/https/mailto/tel (or a relative path when allowed). */
 export const optionalUrl = (
   label: string,
@@ -133,6 +162,8 @@ export const zodRules = {
   optionalEmail,
   phoneNumber,
   phoneExtension,
+  optionalPhoneNumber,
+  optionalPhoneExtension,
   optionalUrl,
 };
 

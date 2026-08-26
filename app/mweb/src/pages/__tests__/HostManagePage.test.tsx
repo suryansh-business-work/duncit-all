@@ -20,7 +20,7 @@ vi.mock('../host-apply-page/HostApplyBanner', () => ({
 vi.mock('../host-apply-page/HostCategoriesCard', () => ({
   default: () => <div data-testid="categories-card" />,
 }));
-vi.mock('../host-manage-page/HostPodsCard', () => ({
+vi.mock('../host-manage-page/HostPodSections', () => ({
   default: (props: {
     pods: unknown[];
     loading: boolean;
@@ -56,6 +56,7 @@ const HOST_PODS = gql`
       id
       pod_title
       pod_id
+      club_id
       club_slug
       pod_date_time
       pod_end_date_time
@@ -71,8 +72,10 @@ const HOST_PODS = gql`
       location_id
       venue_id
       zone_name
+      place_label
       venue_approval_status
       is_active
+      created_at
     }
   }
 `;
@@ -144,7 +147,7 @@ describe('HostManagePage', () => {
     expect(screen.queryByTestId('apply-banner')).not.toBeInTheDocument();
   });
 
-  it('passes the pods query error message down to HostPodsCard', async () => {
+  it('passes the pods query error message down to HostPodSections', async () => {
     setup(
       [
         meMock(['HOST']),

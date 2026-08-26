@@ -1,17 +1,28 @@
 import {
+  AUTO_POD_ROLES,
   BADGE_GOAL_KEY,
   BADGE_WINDOW,
   BADGE_WINDOW_KEY,
   HOST_FREE_SPOT_NOTE,
   authMessageCardState,
+  autoPodActionable,
+  autoPodCityLabel,
+  autoPodEnrolledCount,
+  autoPodHostNeedsLocation,
+  autoPodMissingRoles,
   badgeProgressPercent,
   buildCommPreferenceLabels,
   canFollowBack,
   commChannelSummary,
   commRowState,
+  contactDraftFrom,
+  contactDraftIsUnchanged,
+  contactDraftValue,
+  currentContactValue,
   followBackLabelKey,
   followRequestRowState,
   formatMoney,
+  hostPodSection,
   normalizeUsername,
   offersFollowBack,
   participationInputFrom,
@@ -20,11 +31,15 @@ import {
   podPhase,
   podRefundState,
   sortBadgeProgress,
+  splitHostPods,
   splitPodsByPhase,
   usernameBlocksSave,
   usernameFieldState,
+  type AutoPodRow,
   type BadgeCondition,
   type CommChannelState,
+  type ContactChannel,
+  type ContactSnapshot,
   type PodParticipationFields,
   type PodPhaseFields,
   type UsernameRejection,
@@ -49,6 +64,17 @@ interface BookingMock {
 }
 
 /** What the @handle field holds, plus the server's last answer about it. */
+interface ContactChangeMock {
+  email: string;
+  phone_extension: string;
+  phone_number: string;
+  whatsapp_extension: string;
+  whatsapp_number: string;
+  channel: ContactChannel;
+  draftExtension: string;
+  draftNumber: string;
+}
+
 interface HandleMock {
   current: string;
   typed: string;
@@ -62,10 +88,22 @@ interface PhaseMock {
   pods: Array<PodPhaseFields & { pod_id: string }>;
 }
 
+/** The host's own pods, as `myHostPods` hands them over. */
+interface HostSectionsMock {
+  pods: Array<{ pod_id: string; pod_title: string; venue_approval_status: string }>;
+}
+
 /** A pod's money, as the host sizing it sees it. */
 interface SpotsMock {
   total_spots: number;
   price_per_spot: number;
+}
+
+/** One Auto Pod offer as a queue query returns it, plus the city the viewing host has selected. */
+interface AutoPodAnyOrderMock {
+  row: AutoPodRow;
+  /** The Location id picked at the top of the host's page; '' when none. */
+  selected_location_id: string;
 }
 
 /** Notification rows exactly as `myNotifications` hands them over. */
@@ -137,6 +175,62 @@ export default defineDemos('utils', [
         'Joined label': actions.joinedLabelKind,
       };
     },
+  }),
+
+  defineDemo<AutoPodAnyOrderMock>({
+    id: 'auto-pod-any-order',
+    title: 'An Auto Pod enrols in any order, and the first partner pins its city',
+    note:
+      'A club admin enrolled first here, so the offer is CLAIMING, pinned to Bengaluru by CLUB, and a venue or a host may take it next. Set location to null: it is unpinned again, and with selected_location_id empty the host cannot assign themselves — the city would come from them.',
+    mock: {
+      row: {
+        id: '66f1a2b3c4d5e6f708192d23',
+        auto_pod_no: 'APOD-000123',
+        stage: 'CLAIMING',
+        pod_title: 'Sunday Badminton Doubles',
+        pod_description: 'Friendly doubles for intermediate players. Rackets available on site.',
+        pod_images_and_videos: [
+          { url: 'https://ik.imagekit.io/duncit/pods/badminton-hero.jpg', type: 'IMAGE' },
+        ],
+        sub_category_id: '66f1a2b3c4d5e6f708192c11',
+        category_name: 'Badminton',
+        pod_amount: 499,
+        no_of_spots: 8,
+        venue_claim: null,
+        host_claim: null,
+        club_claim: {
+          club_id: 'club-41',
+          club_name: 'Koramangala Smashers',
+          user_id: 'u-9',
+          claimed_at: '2026-08-26T08:05:00.000Z',
+        },
+        location: {
+          location_id: '66f1a2b3c4d5e6f708192e01',
+          location_name: 'Bengaluru',
+          country: 'India',
+          state: 'Karnataka',
+          city: 'Bengaluru',
+          bound_by: 'CLUB',
+          bound_at: '2026-08-26T08:05:00.000Z',
+        },
+        viewer_claimed: false,
+        pod_id: null,
+        expected_host_earnings: 2793,
+      },
+      selected_location_id: '',
+    },
+    compute: (mock) => ({
+      'autoPodEnrolledCount(row)': autoPodEnrolledCount(mock.row),
+      'autoPodMissingRoles(row)': autoPodMissingRoles(mock.row),
+      'autoPodActionable(row, role)': Object.fromEntries(
+        AUTO_POD_ROLES.map((role) => [role, autoPodActionable(mock.row, role)])
+      ),
+      'autoPodHostNeedsLocation(row, selected_location_id)': autoPodHostNeedsLocation(
+        mock.row,
+        mock.selected_location_id
+      ),
+      'autoPodCityLabel(row.location)': autoPodCityLabel(mock.row.location) || '(unpinned)',
+    }),
   }),
 
   defineDemo<{ channels: CommChannelState[] }>({
@@ -346,6 +440,36 @@ export default defineDemos('utils', [
       };
     },
   }),
+  defineDemo<HostSectionsMock>({
+    id: 'host-pod-sections',
+    title: 'Which Host Studio section a pod sits in',
+    note:
+      "Change DUN-POD-4977's status from PENDING to APPROVED: it leaves Requested Pods for " +
+      'Your Pods, with nothing to remove it from the first list. DECLINED sends it to ' +
+      'Rejected Pods, and NONE (a pod no venue has to approve) stays in Your Pods.',
+    mock: {
+      pods: [
+        { pod_id: 'DUN-POD-4821', pod_title: 'Sunday Pottery Jam', venue_approval_status: 'APPROVED' },
+        { pod_id: 'DUN-POD-4977', pod_title: 'Terrace Chess Club', venue_approval_status: 'PENDING' },
+        { pod_id: 'DUN-POD-5502', pod_title: 'Indiranagar Run Club', venue_approval_status: 'DECLINED' },
+        { pod_id: 'DUN-POD-4310', pod_title: 'Late Night Standup', venue_approval_status: 'NONE' },
+      ],
+    },
+    compute: (mock) => {
+      const sections = splitHostPods(mock.pods);
+      const counts = [
+        `Requested ${sections.requested.length}`,
+        `Your Pods ${sections.yours.length}`,
+        `Rejected ${sections.rejected.length}`,
+      ].join('   ·   ');
+      return {
+        ...Object.fromEntries(
+          mock.pods.map((pod) => [pod.pod_id, hostPodSection(pod.venue_approval_status)])
+        ),
+        'Host Studio': counts,
+      };
+    },
+  }),
   defineDemo<BadgeMock>({
     id: 'badges',
     title: 'What a badge asks for, and how far along you are',
@@ -388,6 +512,49 @@ export default defineDemos('utils', [
           ].join(' · '),
         ])
       ),
+  }),
+  defineDemo<ContactChangeMock>({
+    id: 'contact-change',
+    title: 'Changing a contact detail, and the code it costs',
+    note:
+      'Edit `draftNumber` to a number the account does not have and `Sends a code` flips to ' +
+      'true. Change only `draftExtension` — same digits, different country — and it still ' +
+      'sends, because +1 9845012345 is not the same number as +91 9845012345. Blank the ' +
+      "account's whatsapp_number and its row falls back to the empty line rather than " +
+      'showing a lone +91.',
+    mock: {
+      email: 'ravi@duncit.com',
+      phone_extension: '+91',
+      phone_number: '9845012345',
+      whatsapp_extension: '+91',
+      whatsapp_number: '',
+      channel: 'PHONE',
+      draftExtension: '+91',
+      draftNumber: '9845099999',
+    },
+    compute: (mock) => {
+      const account: ContactSnapshot = {
+        email: mock.email,
+        phone_extension: mock.phone_extension,
+        phone_number: mock.phone_number,
+        whatsapp_extension: mock.whatsapp_extension,
+        whatsapp_number: mock.whatsapp_number,
+      };
+      const draft = {
+        email: mock.email,
+        extension: mock.draftExtension,
+        number: mock.draftNumber,
+      };
+      const nothingYet = '(nothing yet)';
+      return {
+        'Email row': currentContactValue(account, 'EMAIL') || nothingYet,
+        'Phone row': currentContactValue(account, 'PHONE') || nothingYet,
+        'WhatsApp row': currentContactValue(account, 'WHATSAPP') || nothingYet,
+        'Dialog opens on': JSON.stringify(contactDraftFrom(account, mock.channel)),
+        'Value stored': contactDraftValue(draft, mock.channel),
+        'Sends a code': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
+      };
+    },
   }),
   defineDemo<HandleMock>({
     id: 'username',

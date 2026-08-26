@@ -1,6 +1,7 @@
-import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { AutoPodModel, type IAutoPod } from './autoPod.model';
+import { autoPodEvent, autoPodFail, PRE_LIVE_FILTER, PRE_LIVE_STAGES } from './autoPod.common';
+import { autoPodCityLabel, locationScope, snapshotAutoPodLocation } from './autoPod.location';
 import { autoPodNotify } from './autoPod.notify';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -13,18 +14,27 @@ import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
-export function autoPodFail(code: string, msg: string): never {
-  throw new GraphQLError(msg, { extensions: { code } });
+export { autoPodEvent, autoPodFail, PRE_LIVE_STAGES };
+
+/** What a role's queue may be narrowed to. */
+export interface AutoPodQueueScope {
+  location_id?: string | null;
+  sub_category_id?: string | null;
 }
 
-/** Stages an Auto Pod can still be acted on or pulled from. */
-export const PRE_LIVE_STAGES = ['OPEN', 'CLAIMING'] as const;
+/** A club the caller administers, with what it can claim on. */
+export interface AdminClub {
+  id: Types.ObjectId;
+  categoryId: Types.ObjectId | null;
+  locationId: Types.ObjectId | null;
+}
 
 export const autoPodToPub = (d: IAutoPod | null) => {
   if (!d) return null;
   const venue = d.venue_claim;
   const host = d.host_claim;
   const club = d.club_claim;
+  const location = d.location;
   return {
     id: String(d._id),
     auto_pod_no: d.auto_pod_no,
@@ -79,6 +89,17 @@ export const autoPodToPub = (d: IAutoPod | null) => {
           claimed_at: club.claimed_at?.toISOString?.() ?? '',
         }
       : null,
+    location: location
+      ? {
+          location_id: String(location.location_id),
+          location_name: location.location_name ?? '',
+          country: location.country ?? '',
+          state: location.state ?? '',
+          city: location.city ?? '',
+          bound_by: location.bound_by,
+          bound_at: location.bound_at?.toISOString?.() ?? '',
+        }
+      : null,
     pod_id: d.pod_id ? String(d.pod_id) : null,
     materialized_at: d.materialized_at?.toISOString?.() ?? null,
     cancel_reason: d.cancel_reason || null,
@@ -97,7 +118,7 @@ export const autoPodToPub = (d: IAutoPod | null) => {
 
 /** DUNCIT TABLE CONTRACT v1 allowlist for adminAutoPodsTable. */
 const AUTO_POD_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['pod_title', 'auto_pod_no'],
+  searchFields: ['pod_title', 'auto_pod_no', 'location.city'],
   sortFields: {
     pod_title: 'pod_title',
     auto_pod_no: 'auto_pod_no',
@@ -116,22 +137,6 @@ const AUTO_POD_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { created_at: -1 },
 };
-
-/** An event row for the Auto Pod's own trail (PodAuditLog needs a real pod). */
-export function autoPodEvent(
-  action: string,
-  actorUserId?: string | null,
-  actorName = '',
-  note = ''
-) {
-  return {
-    action,
-    actor_user_id: actorUserId ? new Types.ObjectId(actorUserId) : null,
-    actor_name: actorName,
-    note,
-    at: new Date(),
-  };
-}
 
 /**
  * A pod's category is its club's Super + Sub, and an Auto Pod has no club until
@@ -159,8 +164,22 @@ export async function resolveCategoryPair(subCategoryId: string) {
   return { superCategoryId: superId, subName: sub.name as string, minPax: (sub.min_pax ?? 0) as number };
 }
 
-/** The admin's template must be viable BEFORE any partner commits to it. */
-async function validateTemplate(input: any, minPax: number) {
+/**
+ * The economics picture the template is checked against: whoever has enrolled
+ * so far. On a fresh template both are null and the check is a sanity run on
+ * default rates; once a venue has priced a slot or a host is on it, their real
+ * figures are what the price and spot count must still cover.
+ */
+function enrolledEconomics(doc: IAutoPod | null) {
+  return {
+    hostUserId: doc?.host_claim ? String(doc.host_claim.user_id) : null,
+    venueId: doc?.venue_claim ? String(doc.venue_claim.venue_id) : null,
+    venueAmount: doc?.venue_claim?.slot_price ?? 0,
+  };
+}
+
+/** The template must be viable BEFORE anyone else commits to it. */
+async function validateTemplate(input: any, minPax: number, doc: IAutoPod | null) {
   const title = String(input.pod_title ?? '').trim();
   if (title.length < 3) autoPodFail('BAD_USER_INPUT', 'Title is too short');
   if (!String(input.pod_description ?? '').trim()) {
@@ -183,14 +202,10 @@ async function validateTemplate(input: any, minPax: number) {
       `This activity needs at least ${minPax} people — increase the number of spots`
     );
   }
-  // Sanity only: no host and no venue exist yet, so this runs on default rates
-  // and catches a price that could never pay anyone.
   await breakdownService.assertViablePodEconomics({
-    hostUserId: null,
+    ...enrolledEconomics(doc),
     podAmount: amount,
     noOfSpots: spots,
-    venueId: null,
-    venueAmount: 0,
   });
 }
 
@@ -212,13 +227,14 @@ const TEMPLATE_FIELDS = [
 
 /**
  * The club a Club Admin is opening an Auto Pod FOR. A pod inherits its Super +
- * Sub from its club, so a club without a category could never materialize — it
- * is refused here rather than at the last enrolment.
+ * Sub from its club and is pinned to the club's city, so a club missing either
+ * could never materialize — it is refused here rather than at the last
+ * enrolment.
  */
 async function loadOpeningClub(clubId: string) {
   if (!Types.ObjectId.isValid(clubId)) autoPodFail('BAD_USER_INPUT', 'Invalid club_id');
   const club: any = await ClubModel.findById(clubId)
-    .select('club_name category_id is_active')
+    .select('club_name category_id location_id is_active')
     .lean();
   if (!club || club.is_active === false) {
     autoPodFail('BAD_USER_INPUT', 'That club is not active');
@@ -226,21 +242,31 @@ async function loadOpeningClub(clubId: string) {
   if (!club.category_id) {
     autoPodFail('BAD_USER_INPUT', 'Set a category on this club before opening an Auto Pod');
   }
+  if (!club.location_id) {
+    autoPodFail('BAD_USER_INPUT', 'Set a location on this club before opening an Auto Pod');
+  }
   return club;
 }
+
+/** Only non-empty clauses go into an `$and` — an empty object there is noise. */
+const andOf = (...clauses: Record<string, unknown>[]) => {
+  const real = clauses.filter((clause) => Object.keys(clause).length > 0);
+  return real.length > 0 ? { $and: real } : {};
+};
 
 export const autoPodService = {
   /**
    * `clubId` set means a Club Admin opened this for their own club: that club is
-   * enrolled at creation, so only a venue and a host are still needed, and the
-   * category is taken from the club rather than from the input — the marketplace
-   * can no longer hand the pod to a different club.
+   * enrolled at creation (so only a venue and a host are still needed), the
+   * category is taken from the club rather than from the input, and the offer
+   * is pinned to the club's city — the marketplace can no longer hand the pod
+   * to a different club or a different city.
    */
   async create(actorUserId: string, input: any, clubId?: string | null) {
     const club = clubId ? await loadOpeningClub(clubId) : null;
     const subCategoryId = club ? String(club.category_id) : input.sub_category_id;
     const { superCategoryId, minPax } = await resolveCategoryPair(subCategoryId);
-    await validateTemplate(input, minPax);
+    await validateTemplate(input, minPax, null);
 
     const clubClaim = club
       ? {
@@ -250,12 +276,19 @@ export const autoPodService = {
           claimed_at: new Date(),
         }
       : null;
+    const location = club
+      ? await snapshotAutoPodLocation(
+          club.location_id,
+          'CLUB',
+          'Set a location on this club before opening an Auto Pod'
+        )
+      : null;
     const openedNote = club
-      ? 'Auto Pod opened for venues — already claimed by its club'
-      : 'Auto Pod opened for venues';
+      ? `Auto Pod opened — already claimed by its club, pinned to ${autoPodCityLabel(location)}`
+      : 'Auto Pod opened for venues, hosts and club admins';
 
     const doc = await AutoPodModel.create({
-      stage: 'OPEN',
+      stage: club ? 'CLAIMING' : 'OPEN',
       created_by: new Types.ObjectId(actorUserId),
       pod_title: String(input.pod_title).trim(),
       pod_description: input.pod_description,
@@ -274,6 +307,7 @@ export const autoPodService = {
       payment_terms: input.payment_terms ?? null,
       place_charges: input.place_charges ?? [],
       club_claim: clubClaim,
+      location,
       events: [
         autoPodEvent('CREATE', actorUserId, '', openedNote),
         ...(club
@@ -289,35 +323,70 @@ export const autoPodService = {
   },
 
   /**
-   * Edits are OPEN-only. Once a venue has accepted, it committed a priced slot
-   * against this exact economics picture — moving the price or the spot count
-   * underneath it would invalidate the coverage check it passed. The admin
-   * cancels and re-creates instead.
+   * Edits are allowed until the pod is live. Whoever has already enrolled did so
+   * on this template, so the economics are re-checked against THEIR figures
+   * (the venue's slot price, the host's rates) and a price or spot count that
+   * no longer covers them is refused. The category is locked once a host or a
+   * club is on it: both enrolled on the strength of that category.
+   *
+   * The write is CONDITIONAL on what was checked: still pre-live, and — when
+   * the category moves — still without a host or a club. A claim that lands
+   * between the read and the write makes the write miss, rather than letting
+   * a host end up on a category they were never approved for.
+   *
+   * A template fixed after a failed materialization (the usual cause is
+   * pricing) is taken live here, because no claim is left to trigger it.
    */
   async update(actorUserId: string, autoPodId: string, input: any) {
     const doc = await this.loadById(autoPodId);
-    if (doc.stage !== 'OPEN') {
+    if (!PRE_LIVE_STAGES.includes(doc.stage as any)) {
+      autoPodFail('BAD_REQUEST', 'This Auto Pod is no longer editable');
+    }
+    const locked = doc.host_claim || doc.club_claim ? String(doc.sub_category_id) : null;
+    const subCategoryId = locked ?? input.sub_category_id ?? String(doc.sub_category_id);
+    if (locked && input.sub_category_id && input.sub_category_id !== locked) {
       autoPodFail(
         'BAD_REQUEST',
-        'A venue has already accepted this Auto Pod — cancel it instead of editing it'
+        'A host or club has already enrolled on this category — it cannot be changed now'
       );
     }
-    // A club that already enrolled did so on this category — the live pod would
-    // otherwise be created under a club whose own category no longer matches.
-    const locked = doc.club_claim ? String(doc.sub_category_id) : null;
-    const subCategoryId = locked ?? input.sub_category_id ?? String(doc.sub_category_id);
     const { superCategoryId, minPax } = await resolveCategoryPair(subCategoryId);
     const merged: any = { ...autoPodToPub(doc), ...input };
-    await validateTemplate(merged, minPax);
+    await validateTemplate(merged, minPax, doc);
 
+    const set: Record<string, unknown> = {
+      super_category_id: new Types.ObjectId(superCategoryId),
+      sub_category_id: new Types.ObjectId(subCategoryId),
+    };
     for (const field of TEMPLATE_FIELDS) {
-      if (input[field] !== undefined) (doc as any)[field] = input[field];
+      if (input[field] !== undefined) set[field] = input[field];
     }
-    doc.super_category_id = new Types.ObjectId(superCategoryId);
-    doc.sub_category_id = new Types.ObjectId(subCategoryId);
-    doc.events.push(autoPodEvent('UPDATE', actorUserId) as any);
-    await doc.save();
-    return autoPodToPub(doc);
+    const categoryChanged = subCategoryId !== String(doc.sub_category_id);
+    const updated = await AutoPodModel.findOneAndUpdate(
+      {
+        _id: doc._id,
+        ...PRE_LIVE_FILTER,
+        ...(categoryChanged ? { host_claim: null, club_claim: null } : {}),
+      },
+      { $set: set, $push: { events: autoPodEvent('UPDATE', actorUserId) } },
+      { new: true }
+    );
+    if (!updated) {
+      autoPodFail(
+        'CONFLICT',
+        'This Auto Pod changed while you were editing it — refresh and try again'
+      );
+    }
+    if (!updated.venue_claim || !updated.host_claim || !updated.club_claim) {
+      return autoPodToPub(updated);
+    }
+    const { materializeAutoPod } = await import('./autoPod.claims');
+    try {
+      return autoPodToPub(await materializeAutoPod(String(updated._id), actorUserId));
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : 'the pod could not be created';
+      autoPodFail('BAD_REQUEST', `Saved, but the pod could not go live yet: ${reason}`);
+    }
   },
 
   /**
@@ -329,7 +398,7 @@ export const autoPodService = {
   async cancel(actorUserId: string, autoPodId: string, reason?: string | null) {
     const doc = await this.loadById(autoPodId);
     const cancelled = await AutoPodModel.findOneAndUpdate(
-      { _id: doc._id, stage: { $in: PRE_LIVE_STAGES } },
+      { _id: doc._id, ...PRE_LIVE_FILTER },
       {
         $set: {
           stage: 'CANCELLED',
@@ -342,6 +411,10 @@ export const autoPodService = {
       { new: true }
     );
     if (!cancelled) {
+      const now = await this.loadById(autoPodId);
+      if (now.stage === 'CANCELLED' || now.stage === 'EXPIRED') {
+        autoPodFail('CONFLICT', `This Auto Pod is already ${now.stage.toLowerCase()}`);
+      }
       autoPodFail(
         'CONFLICT',
         'This Auto Pod is already live — cancel the pod itself instead'
@@ -352,6 +425,43 @@ export const autoPodService = {
       logs.server.error('autoPod', 'notifyCancelled', { error, auto_pod_id: autoPodId })
     );
     return autoPodToPub(cancelled);
+  },
+
+  /**
+   * Removes the record for good. A live Auto Pod is refused — its pod exists
+   * and is deleted from the Pods page, where the bookings are. A pre-live offer
+   * is cancelled FIRST, so everyone enrolled is told, before the row itself
+   * goes; the delete is conditional on that cancel having landed, so a claim
+   * racing to materialization cannot be deleted out from under a pod it just
+   * created. The venue's slot is released again right before the row goes,
+   * because a slot still held by a row that no longer exists could never be
+   * freed by anything else.
+   */
+  async delete(actorUserId: string, autoPodId: string): Promise<boolean> {
+    const doc = await this.loadById(autoPodId);
+    if (doc.stage === 'LIVE') {
+      autoPodFail('CONFLICT', 'This Auto Pod is live — delete the pod itself instead');
+    }
+    if (doc.stage === 'MATERIALIZING') {
+      autoPodFail('CONFLICT', 'This Auto Pod is being turned into a pod — try again in a moment');
+    }
+    if (PRE_LIVE_STAGES.includes(doc.stage as any)) {
+      await this.cancel(actorUserId, autoPodId, 'Deleted by admin');
+    }
+    await venueSlotService.releaseForAutoPod(String(doc._id));
+    const result = await AutoPodModel.deleteOne({
+      _id: doc._id,
+      stage: { $in: ['CANCELLED', 'EXPIRED'] },
+    });
+    if (result.deletedCount !== 1) {
+      autoPodFail('CONFLICT', 'This Auto Pod changed while it was being deleted — refresh and retry');
+    }
+    logs.server.info('autoPod', 'delete', {
+      auto_pod_id: autoPodId,
+      auto_pod_no: doc.auto_pod_no,
+      actor_user_id: actorUserId,
+    });
+    return true;
   },
 
   async loadById(autoPodId: string): Promise<IAutoPod> {
@@ -377,14 +487,24 @@ export const autoPodService = {
     return { rows: docs.map(autoPodToPub), total, page, page_size };
   },
 
-  /** True when this user owns at least one approved, active venue. */
-  async ownsApprovedVenue(userId: string): Promise<boolean> {
-    if (!Types.ObjectId.isValid(userId)) return false;
-    return !!(await VenueModel.exists({
+  /**
+   * The approved, active venues this user owns: whether there are any, and the
+   * cities they sit in. A pinned offer is only ever offered to a venue in its
+   * own city, so the cities are what the queue and the count are scoped by.
+   */
+  async ownerVenues(userId: string): Promise<{ owns: boolean; locationIds: Types.ObjectId[] }> {
+    if (!Types.ObjectId.isValid(userId)) return { owns: false, locationIds: [] };
+    const venues = await VenueModel.find({
       owner_user_id: new Types.ObjectId(userId),
       status: 'APPROVED',
       is_active: true,
-    }));
+    })
+      .select('location_id')
+      .lean();
+    const locationIds = (venues as any[])
+      .map((v) => v.location_id)
+      .filter(Boolean) as Types.ObjectId[];
+    return { owns: venues.length > 0, locationIds };
   },
 
   /** Sub-categories this user is an approved, active host in. */
@@ -406,32 +526,91 @@ export const autoPodService = {
     return [...ids.values()];
   },
 
-  /** The caller's clubs, with the sub-category each one carries. */
-  async adminClubs(userId: string): Promise<{ id: Types.ObjectId; categoryId: Types.ObjectId | null }[]> {
+  /** The caller's clubs, with the sub-category and city each one carries. */
+  async adminClubs(userId: string): Promise<AdminClub[]> {
     if (!Types.ObjectId.isValid(userId)) return [];
     const clubs = await ClubModel.find({
       admin_user_ids: new Types.ObjectId(userId),
       is_active: true,
     })
-      .select('category_id')
+      .select('category_id location_id')
       .lean();
-    return (clubs as any[]).map((c) => ({ id: c._id, categoryId: c.category_id ?? null }));
+    return (clubs as any[]).map((c) => ({
+      id: c._id,
+      categoryId: c.category_id ?? null,
+      locationId: c.location_id ?? null,
+    }));
   },
 
   /**
-   * Open offers any approved venue may accept, plus the ones this owner already
-   * accepted and is still waiting on. Scope is computed from ownership here, so
+   * Pre-live offers with no venue yet that one of these venues could take: any
+   * unpinned offer, or one pinned to a city one of the venues is in.
+   */
+  venueOpenFilter(venueLocationIds: Types.ObjectId[], scope?: AutoPodQueueScope) {
+    const inOwnCity = {
+      $or: [{ location: null }, { 'location.location_id': { $in: venueLocationIds } }],
+    };
+    return {
+      ...PRE_LIVE_FILTER,
+      venue_claim: null,
+      ...andOf(inOwnCity, locationScope(scope?.location_id)),
+    };
+  },
+
+  /**
+   * Pre-live offers with no host yet in the sub-categories this host works in,
+   * optionally narrowed to ONE of those. A sub-category the host is not approved
+   * in narrows to nothing rather than to someone else's offers. A host has no
+   * city of their own, so only the page's selection narrows the city.
+   */
+  hostOpenFilter(subIds: Types.ObjectId[], scope?: AutoPodQueueScope) {
+    const wanted = scope?.sub_category_id
+      ? subIds.filter((id) => String(id) === String(scope.sub_category_id))
+      : subIds;
+    if (wanted.length === 0) return null;
+    return {
+      ...PRE_LIVE_FILTER,
+      host_claim: null,
+      sub_category_id: { $in: wanted },
+      ...locationScope(scope?.location_id),
+    };
+  },
+
+  /**
+   * Pre-live offers with no club yet that one of these clubs could claim: the
+   * offer's category must be THAT club's, and its city (once pinned) that club's
+   * too — a pair per club, never the union of everyone's categories against
+   * everyone's cities.
+   */
+  clubOpenFilter(clubs: AdminClub[], scope?: AutoPodQueueScope) {
+    const perClub = clubs
+      .filter((club) => club.categoryId)
+      .map((club) => ({
+        sub_category_id: club.categoryId,
+        $or: club.locationId
+          ? [{ location: null }, { 'location.location_id': club.locationId }]
+          : [{ location: null }],
+      }));
+    if (perClub.length === 0) return null;
+    return {
+      ...PRE_LIVE_FILTER,
+      club_claim: null,
+      ...andOf({ $or: perClub }, locationScope(scope?.location_id)),
+    };
+  },
+
+  /**
+   * Offers one of this owner's venues may still accept, plus every offer they
+   * accepted (whatever became of it). Scope is computed from ownership here, so
    * a caller who owns no venue sees nothing at all.
    */
-  async listForVenue(userId: string) {
-    if (!(await this.ownsApprovedVenue(userId))) return [];
+  async listForVenue(userId: string, scope?: AutoPodQueueScope) {
+    const { owns, locationIds } = await this.ownerVenues(userId);
+    if (!owns) return [];
     const docs = await AutoPodModel.find({
       $or: [
-        { stage: 'OPEN' },
-        {
-          'venue_claim.owner_user_id': new Types.ObjectId(userId),
-          stage: { $in: ['CLAIMING', 'MATERIALIZING', 'LIVE'] },
-        },
+        this.venueOpenFilter(locationIds, scope),
+        { 'venue_claim.owner_user_id': new Types.ObjectId(userId) },
       ],
     })
       .sort({ created_at: -1 })
@@ -439,60 +618,82 @@ export const autoPodService = {
     return docs.map(autoPodToPub);
   },
 
-  /** Venue-accepted offers still needing a host in a sub-category this host
-   * works in, plus the ones they already assigned themselves to. */
-  async listForHost(userId: string) {
+  /** Offers still needing a host in a sub-category this host works in, plus the
+   * ones they already assigned themselves to. */
+  async listForHost(userId: string, scope?: AutoPodQueueScope) {
     const subIds = await this.hostSubCategoryIds(userId);
     const or: any[] = [{ 'host_claim.user_id': new Types.ObjectId(userId) }];
-    if (subIds.length > 0) {
-      or.push({ stage: 'CLAIMING', host_claim: null, sub_category_id: { $in: subIds } });
-    }
+    const open = this.hostOpenFilter(subIds, scope);
+    if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
     return docs.map(autoPodToPub);
   },
 
-  /** Venue-accepted offers a club of theirs could claim (category must match,
-   * because the pod inherits its category from the club), plus their claims. */
-  async listForClubAdmin(userId: string) {
+  /** Offers a club of theirs could still claim, plus their clubs' claims. */
+  async listForClubAdmin(userId: string, scope?: AutoPodQueueScope) {
     const clubs = await this.adminClubs(userId);
     if (clubs.length === 0) return [];
-    const categoryIds = clubs.map((c) => c.categoryId).filter(Boolean) as Types.ObjectId[];
     const or: any[] = [{ 'club_claim.club_id': { $in: clubs.map((c) => c.id) } }];
-    if (categoryIds.length > 0) {
-      or.push({ stage: 'CLAIMING', club_claim: null, sub_category_id: { $in: categoryIds } });
-    }
+    const open = this.clubOpenFilter(clubs, scope);
+    if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
     return docs.map(autoPodToPub);
   },
 
   /**
-   * How many Auto Pods are waiting on this user in each role — ONE round trip,
-   * because the studio-mode switch reads all three at once to decide where to
-   * land and must never wait on three requests.
+   * May this partner read this one Auto Pod? Yes when they (or a club of
+   * theirs) enrolled in it, or when it is still open to them — checked against
+   * the same filters the queues use, on this single row, so it never depends on
+   * how long their queue is.
    */
-  async actionCounts(userId: string) {
-    const [venueOwner, subIds, clubs] = await Promise.all([
-      this.ownsApprovedVenue(userId),
+  async canRead(userId: string, autoPodId: string): Promise<boolean> {
+    if (!Types.ObjectId.isValid(autoPodId) || !Types.ObjectId.isValid(userId)) return false;
+    const doc = await AutoPodModel.findById(autoPodId);
+    if (!doc) return false;
+    if (doc.venue_claim && String(doc.venue_claim.owner_user_id) === userId) return true;
+    if (doc.host_claim && String(doc.host_claim.user_id) === userId) return true;
+    if (doc.club_claim) {
+      if (String(doc.club_claim.user_id) === userId) return true;
+      const admin = await ClubModel.exists({
+        _id: doc.club_claim.club_id,
+        admin_user_ids: new Types.ObjectId(userId),
+      });
+      if (admin) return true;
+    }
+    const [venues, subIds, clubs] = await Promise.all([
+      this.ownerVenues(userId),
       this.hostSubCategoryIds(userId),
       this.adminClubs(userId),
     ]);
-    const clubCategoryIds = clubs.map((c) => c.categoryId).filter(Boolean) as Types.ObjectId[];
+    const open = [
+      venues.owns ? this.venueOpenFilter(venues.locationIds) : null,
+      this.hostOpenFilter(subIds),
+      this.clubOpenFilter(clubs),
+    ].filter(Boolean) as Record<string, unknown>[];
+    for (const filter of open) {
+      if (await AutoPodModel.exists({ _id: doc._id, ...filter })) return true;
+    }
+    return false;
+  },
+
+  /**
+   * How many Auto Pods are waiting on this user in each role — ONE round trip,
+   * because the studio-mode switch reads all three at once to decide where to
+   * land and must never wait on three requests. Scoped exactly as the queues
+   * are, so the switch never lands someone on offers they cannot take.
+   */
+  async actionCounts(userId: string) {
+    const [venues, subIds, clubs] = await Promise.all([
+      this.ownerVenues(userId),
+      this.hostSubCategoryIds(userId),
+      this.adminClubs(userId),
+    ]);
+    const hostOpen = this.hostOpenFilter(subIds);
+    const clubOpen = this.clubOpenFilter(clubs);
     const [venue, host, club] = await Promise.all([
-      venueOwner ? AutoPodModel.countDocuments({ stage: 'OPEN' }) : 0,
-      subIds.length > 0
-        ? AutoPodModel.countDocuments({
-            stage: 'CLAIMING',
-            host_claim: null,
-            sub_category_id: { $in: subIds },
-          })
-        : 0,
-      clubCategoryIds.length > 0
-        ? AutoPodModel.countDocuments({
-            stage: 'CLAIMING',
-            club_claim: null,
-            sub_category_id: { $in: clubCategoryIds },
-          })
-        : 0,
+      venues.owns ? AutoPodModel.countDocuments(this.venueOpenFilter(venues.locationIds)) : 0,
+      hostOpen ? AutoPodModel.countDocuments(hostOpen) : 0,
+      clubOpen ? AutoPodModel.countDocuments(clubOpen) : 0,
     ]);
     return { venue, host, club };
   },

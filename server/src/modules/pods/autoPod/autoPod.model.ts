@@ -4,8 +4,14 @@ import { nextEntityNo } from '@modules/venues/entityIdCounter';
 /**
  * An Auto Pod is an admin-authored pod OFFER that the marketplace completes
  * itself: a venue accepts it (and picks the slot), a host assigns themselves,
- * and a club admin claims it for their club. Only when all three have enrolled
- * does it materialize into a real Pod.
+ * and a club admin claims it for their club — in ANY order, each in parallel.
+ * Only when all three have enrolled does it materialize into a real Pod.
+ *
+ * The FIRST enrolment pins the offer to a location (Country → State → City, one
+ * admin Location row): a venue brings its own city, a club its own, and a host
+ * the city they had selected when they assigned themselves. From then on only
+ * partners in that city are offered it, and a venue or club elsewhere is
+ * refused — a pod cannot be hosted in one city and booked in another.
  *
  * It deliberately lives in its OWN collection rather than as a half-built Pod:
  * `pod(id)` and `podBySlugs` apply no stage filter, so an incomplete pod row
@@ -13,8 +19,8 @@ import { nextEntityNo } from '@modules/venues/entityIdCounter';
  * venue and a future date that simply do not exist yet. Same reasoning as
  * PodDraft — a pre-pod record can never leak into a public feed.
  *
- * OPEN          — awaiting a venue (visible to every approved venue owner)
- * CLAIMING      — venue enrolled; host and club admin enroll in parallel
+ * OPEN          — nobody has enrolled yet (visible to all three roles)
+ * CLAIMING      — at least one partner enrolled; the rest enrol in parallel
  * MATERIALIZING — transient lock while the Pod is being created
  * LIVE          — materialized; `pod_id` points at an ordinary pod
  * CANCELLED     — admin pulled it before it went live
@@ -68,6 +74,23 @@ export interface IAutoPodClubClaim {
   claimed_at: Date;
 }
 
+/** Which enrolment pinned the location. */
+export type AutoPodLocationBinder = 'VENUE' | 'HOST' | 'CLUB';
+
+/**
+ * The city the offer is pinned to, snapshotted from the admin Location row so
+ * the cards never re-read a location that could since have been renamed.
+ */
+export interface IAutoPodLocation {
+  location_id: Types.ObjectId;
+  location_name: string;
+  country: string;
+  state: string;
+  city: string;
+  bound_by: AutoPodLocationBinder;
+  bound_at: Date;
+}
+
 export interface IAutoPodEvent {
   action: string;
   actor_user_id: Types.ObjectId | null;
@@ -99,6 +122,8 @@ export interface IAutoPod extends Document {
   venue_claim: IAutoPodVenueClaim | null;
   host_claim: IAutoPodHostClaim | null;
   club_claim: IAutoPodClubClaim | null;
+  /** Null until the first enrolment pins it. */
+  location: IAutoPodLocation | null;
   pod_id: Types.ObjectId | null;
   materialized_at: Date | null;
   cancelled_at: Date | null;
@@ -162,6 +187,19 @@ const clubClaimSchema = new Schema<IAutoPodClubClaim>(
   { _id: false }
 );
 
+const locationSchema = new Schema<IAutoPodLocation>(
+  {
+    location_id: { type: Schema.Types.ObjectId, ref: 'Location', required: true },
+    location_name: { type: String, default: '', trim: true },
+    country: { type: String, default: '', trim: true },
+    state: { type: String, default: '', trim: true },
+    city: { type: String, default: '', trim: true },
+    bound_by: { type: String, enum: ['VENUE', 'HOST', 'CLUB'], required: true },
+    bound_at: { type: Date, default: () => new Date() },
+  },
+  { _id: false }
+);
+
 const eventSchema = new Schema<IAutoPodEvent>(
   {
     action: { type: String, required: true, trim: true, maxlength: 40 },
@@ -207,6 +245,7 @@ const autoPodSchema = new Schema<IAutoPod>(
     venue_claim: { type: venueClaimSchema, default: null },
     host_claim: { type: hostClaimSchema, default: null },
     club_claim: { type: clubClaimSchema, default: null },
+    location: { type: locationSchema, default: null },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
     materialized_at: { type: Date, default: null },
     cancelled_at: { type: Date, default: null },
@@ -222,6 +261,7 @@ autoPodSchema.index({ 'venue_claim.owner_user_id': 1, stage: 1 });
 autoPodSchema.index({ 'host_claim.user_id': 1 });
 autoPodSchema.index({ 'club_claim.club_id': 1 });
 autoPodSchema.index({ sub_category_id: 1, stage: 1 });
+autoPodSchema.index({ 'location.location_id': 1, stage: 1 });
 
 autoPodSchema.pre('save', async function assignAutoPodNo(next) {
   if (!this.auto_pod_no) {

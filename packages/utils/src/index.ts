@@ -233,6 +233,13 @@ export {
   type PodsByPhase,
 } from './pod-phase';
 export {
+  hostPodSection,
+  splitHostPods,
+  type HostPodSection,
+  type HostPodSectionFields,
+  type HostPodSections,
+} from './host-pod-sections';
+export {
   CART_BADGE_MAX,
   cartBadgeLabel,
   deriveCartEntry,
@@ -363,6 +370,25 @@ export {
   type CommTranslate,
 } from './comm-preference';
 export {
+  CONTACT_CHANNELS,
+  buildContactChangeLabels,
+  contactDraftFrom,
+  contactDraftIsUnchanged,
+  contactDraftValue,
+  currentContactValue,
+  emptyContactDraft,
+  formatPhoneLine,
+  isPhoneChannel,
+  type ContactChangeLabels,
+  type ContactChangeStep,
+  type ContactChannel,
+  type ContactChannelLabels,
+  type ContactDraft,
+  type ContactPhoneField,
+  type ContactSnapshot,
+  type ContactTranslate,
+} from './contact-change';
+export {
   IDLE_USERNAME_CHECK,
   USERNAME_CHECK_DEBOUNCE_MS,
   USERNAME_PATTERN,
@@ -387,15 +413,21 @@ export {
   type UsernameTranslate,
 } from './username';
 export {
+  AUTO_POD_ROLES,
   autoPodActionable,
+  autoPodCityLabel,
   autoPodEnrolledCount,
+  autoPodHostNeedsLocation,
+  autoPodMissingRoles,
   autoPodModeCount,
+  autoPodPreLive,
   autoPodTicks,
   autoPodWaitingOn,
   splitAutoPods,
   type AutoPodActionCounts,
   type AutoPodClubClaim,
   type AutoPodHostClaim,
+  type AutoPodLocation,
   type AutoPodRole,
   type AutoPodRow,
   type AutoPodStage,

@@ -151,7 +151,6 @@ export default function ClubAdminClubPodsPage() {
                 <PodStatusFilter value={status} onChange={setStatus} />
                 <CreatePodLauncher
                   clubId={clubId}
-                  club={club ?? null}
                   onNormal={() => navigate(`${podsPath}/new`)}
                 />
               </>

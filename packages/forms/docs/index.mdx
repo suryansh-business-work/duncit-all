@@ -199,12 +199,25 @@ POSTAL_CODE_PATTERN.test('400 001');        // true
 | `personName` | `(label: string) => ZodString` | Trimmed, required, `PERSON_NAME_PATTERN`. |
 | `phoneNumber` | `(label = 'Phone number') => ZodString` | Trimmed, `PHONE_NUMBER_PATTERN` (6–15 digits). |
 | `phoneExtension` | `(label = 'Phone code') => ZodString` | Trimmed, `PHONE_EXTENSION_PATTERN` (optional `+`, 1–5 digits). |
+| `optionalPhoneNumber` | `(label = 'Phone number') => ZodString` | `''` passes; a filled value must match `PHONE_NUMBER_PATTERN`. `.default('')`. |
+| `optionalPhoneExtension` | `(label = 'Phone code') => ZodString` | `''` passes; a filled value must match `PHONE_EXTENSION_PATTERN`. `.default('')`. |
 | `optionalText` | `(label, max: number, { defaultEmpty? }) => ZodString` | Trimmed, capped. `defaultEmpty` appends `.default('')`. Also a top-level export. |
 | `requiredText` | `(label, min: number, max: number) => ZodString` | Trimmed with both bounds. Also a top-level export. |
 | `optionalUrl` | `(label, allowRelative = false, { defaultEmpty? }) => ZodEffects` | `''` passes; otherwise parsed with `URL` and restricted to `http:`, `https:`, `mailto:`, `tel:` (plus a leading-slash path when `allowRelative`). Also a top-level export. |
 
 Every rule takes the **label the user sees** as its first argument and builds its message from
 it, so pass `'First name'`, not `'first_name'`.
+
+Reach for the `optional…` phone pair whenever the form edits an EXISTING account rather than
+creating one. Duncit stopped collecting a phone at signup, so "no number" is an ordinary
+state of a real record — and a required rule over it keeps Save switched off forever, which
+looks to the person using it like a page that cannot save at all:
+
+```ts
+zodRules.optionalPhoneNumber('Phone number').safeParse('');           // { success: true, data: '' }
+zodRules.optionalPhoneNumber('Phone number').safeParse('9845012345'); // { success: true }
+zodRules.optionalPhoneNumber('Phone number').safeParse('98450');      // fails — too short
+```
 
 ### Patterns
 

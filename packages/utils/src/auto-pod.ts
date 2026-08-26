@@ -19,6 +19,9 @@ export type AutoPodStage =
 /** Which partner an enrolment belongs to. */
 export type AutoPodRole = 'venue' | 'host' | 'club';
 
+/** The three roles, in the order every tick row and "waiting for" line lists them. */
+export const AUTO_POD_ROLES: readonly AutoPodRole[] = ['venue', 'host', 'club'];
+
 export interface AutoPodVenueClaim {
   venue_id: string;
   venue_slot_id: string;
@@ -43,6 +46,21 @@ export interface AutoPodClubClaim {
   claimed_at: string;
 }
 
+/**
+ * The city (one admin Location row — Country → State → City) the FIRST
+ * enrolment pinned the offer to. Null until somebody enrols; from then on only
+ * partners in that city are offered it.
+ */
+export interface AutoPodLocation {
+  location_id: string;
+  location_name: string;
+  country: string;
+  state: string;
+  city: string;
+  bound_by: 'VENUE' | 'HOST' | 'CLUB';
+  bound_at: string;
+}
+
 /** The selection every Auto Pod list query returns. */
 export interface AutoPodRow {
   id: string;
@@ -61,6 +79,7 @@ export interface AutoPodRow {
   venue_claim: AutoPodVenueClaim | null;
   host_claim: AutoPodHostClaim | null;
   club_claim: AutoPodClubClaim | null;
+  location: AutoPodLocation | null;
   viewer_claimed: boolean;
   pod_id?: string | null;
   expected_host_earnings?: number | null;
@@ -72,34 +91,42 @@ export interface AutoPodTick {
   done: boolean;
 }
 
+type Claims = Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>;
+
+const claimOf = (row: Claims, role: AutoPodRole) => {
+  if (role === 'venue') return row.venue_claim;
+  if (role === 'host') return row.host_claim;
+  return row.club_claim;
+};
+
 /**
- * The three ticks, always in enrolment order — Venue first because nothing can
- * happen until a venue commits a date, then Host and Club Admin, which run in
- * parallel. Always three entries, so a card's tick row never changes width as
- * partners enrol.
+ * The three ticks, always in the same order — Venue, Host, Club Admin — so a
+ * card's tick row never changes width or order as partners enrol. Enrolments
+ * happen in ANY order; the order here is presentation only.
  */
-export function autoPodTicks(row: Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>): AutoPodTick[] {
-  return [
-    { role: 'venue', done: !!row.venue_claim },
-    { role: 'host', done: !!row.host_claim },
-    { role: 'club', done: !!row.club_claim },
-  ];
+export function autoPodTicks(row: Claims): AutoPodTick[] {
+  return AUTO_POD_ROLES.map((role) => ({ role, done: !!claimOf(row, role) }));
 }
 
 /** How many of the three have enrolled. */
-export function autoPodEnrolledCount(row: Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>): number {
+export function autoPodEnrolledCount(row: Claims): number {
   return autoPodTicks(row).filter((tick) => tick.done).length;
 }
 
+/** Still enrolling — not yet live, cancelled or expired. */
+export function autoPodPreLive(stage: AutoPodStage): boolean {
+  return stage === 'OPEN' || stage === 'CLAIMING';
+}
+
 /**
- * Can this role still act on this row? The server enforces the same rule on
- * every mutation — this only decides whether to draw the button.
+ * Can this role still act on this row? Any role may enrol at any point before
+ * the pod is live, as long as its own tick is still empty. The server enforces
+ * the same rule on every mutation — this only decides whether to draw the
+ * button.
  */
 export function autoPodActionable(row: AutoPodRow, role: AutoPodRole): boolean {
   if (row.viewer_claimed) return false;
-  if (role === 'venue') return row.stage === 'OPEN' && !row.venue_claim;
-  if (role === 'host') return row.stage === 'CLAIMING' && !row.host_claim;
-  return row.stage === 'CLAIMING' && !row.club_claim;
+  return autoPodPreLive(row.stage) && !claimOf(row, role);
 }
 
 /** Split a role's queue into what needs them and what they already took. */
@@ -116,13 +143,31 @@ export function splitAutoPods(
   return { actionable, mine };
 }
 
-/** Who the row is still waiting on, or null once it is live (or gone). */
-export function autoPodWaitingOn(row: AutoPodRow): AutoPodRole | null {
-  if (row.stage !== 'OPEN' && row.stage !== 'CLAIMING') return null;
-  if (!row.venue_claim) return 'venue';
-  if (!row.host_claim) return 'host';
-  if (!row.club_claim) return 'club';
-  return null;
+/** Every role the row is still waiting on, in tick order; empty once it is
+ * live (or gone). */
+export function autoPodMissingRoles(row: Pick<AutoPodRow, 'stage'> & Claims): AutoPodRole[] {
+  if (!autoPodPreLive(row.stage)) return [];
+  return AUTO_POD_ROLES.filter((role) => !claimOf(row, role));
+}
+
+/** The first role the row is still waiting on, or null once it is live (or gone). */
+export function autoPodWaitingOn(row: Pick<AutoPodRow, 'stage'> & Claims): AutoPodRole | null {
+  return autoPodMissingRoles(row)[0] ?? null;
+}
+
+/**
+ * Can a HOST's "Assign Myself" go ahead with this city selection? An unpinned
+ * offer takes its city from the host, so the host must have one selected; a
+ * pinned offer already has its city and the selection is not consulted.
+ */
+export function autoPodHostNeedsLocation(row: Pick<AutoPodRow, 'location'>, locationId: string): boolean {
+  return !row.location && !locationId;
+}
+
+/** "Bengaluru, Karnataka" — how every card names a pinned city. */
+export function autoPodCityLabel(location: AutoPodLocation | null | undefined): string {
+  if (!location) return '';
+  return [location.city || location.location_name, location.state].filter(Boolean).join(', ');
 }
 
 /** Per-role counts of Auto Pods waiting on the signed-in user. */

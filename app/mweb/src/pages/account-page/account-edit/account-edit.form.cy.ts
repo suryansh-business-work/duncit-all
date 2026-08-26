@@ -10,7 +10,6 @@ import { COMPLETION_FIELDS, profileCompletion } from './completion';
 const valid = accountEditDefaults({
   first_name: 'Jane',
   last_name: 'Doe',
-  phone_number: '9876543210',
   city: 'Bengaluru',
   state: 'Karnataka',
   country: 'India',
@@ -32,21 +31,9 @@ describe('accountEditSchema', () => {
     expect(firstError(accountEditSchema.safeParse({ ...valid, first_name: 'Jane!' }))).toMatch(/first name/i);
   });
 
-  it('rejects a phone number with letters', () => {
-    expect(firstError(accountEditSchema.safeParse({ ...valid, phone_number: 'abc' }))).toMatch(/10-digit/i);
-  });
-
-  it('allows an empty whatsapp number', () => {
-    expect(accountEditSchema.safeParse({ ...valid, whatsapp_number: '' }).success).toBe(true);
-  });
-
-  it('rejects a whatsapp number with non-digits', () => {
-    expect(firstError(accountEditSchema.safeParse({ ...valid, whatsapp_number: 'abc' }))).toMatch(/10-digit/i);
-  });
-
-  it('rejects a bad country code', () => {
-    expect(firstError(accountEditSchema.safeParse({ ...valid, phone_extension: 'IN' }))).toMatch(/code/i);
-  });
+  // Email, phone and WhatsApp are no longer fields of this form: each is
+  // changed on its own behind a one-time code, and its rules are checked by
+  // contact-change.types.ts instead.
 
   it('allows an empty dob (no change) and a valid past date (bug 1)', () => {
     expect(accountEditSchema.safeParse({ ...valid, dob: '' }).success).toBe(true);

@@ -3,28 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Stack, Typography } from '@mui/material';
 import { AutoPodQueue, VENUE_AUTO_PODS, VenueAcceptDialog } from '@duncit/auto-pods';
 import type { AutoPodRow } from '@duncit/utils';
+import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
+import { useAutoPodCityLabel } from '../../hooks/useAutoPodCityLabel';
 import { useAutoPodQueue } from '../../hooks/useAutoPodQueue';
+
+interface Props {
+  /** The header's selected location — '' shows every city's offers. */
+  locationId: string;
+}
 
 /**
  * Venue Studio > Auto Pods.
  *
- * The first of the three enrolments: nothing else can happen until a venue
- * commits a date, so this queue is where an Auto Pod stops being an idea. The
- * first venue to accept wins, and the card's three ticks say how far the offer
- * has got — which is why accepting also picks the slot, in one step.
+ * Enrolments happen in any order, so a venue may be the first in — its own
+ * city then pins the offer — or the last. The card's three ticks say how far
+ * the offer has got, which is why accepting also picks the slot, in one step.
  */
-export default function VenueAutoPodsPage() {
+export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
   const navigate = useNavigate();
-  const queue = useAutoPodQueue(VENUE_AUTO_PODS, 'venueAutoPods');
+  const queue = useAutoPodQueue(VENUE_AUTO_PODS, 'venueAutoPods', {
+    location_id: locationId || null,
+  });
+  const cityLabel = useAutoPodCityLabel(locationId);
   const [target, setTarget] = useState<AutoPodRow | null>(null);
 
   return (
     <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
-      <Typography variant="h6" sx={{
-        fontWeight: 800
-      }}>
+      <Typography variant="h6" sx={{ fontWeight: 800 }}>
         {queue.labels.venueTitle}
       </Typography>
+
+      <AutoPodLocationBar locationId={locationId} cityLabel={cityLabel} labels={queue.labels} />
 
       <AutoPodQueue
         role="venue"

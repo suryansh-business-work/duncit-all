@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Stack, Typography } from '@mui/material';
-import { usernameBlocksSave, type UsernameStatus } from '@duncit/utils';
+import { usernameBlocksSave, type ContactSnapshot, type UsernameStatus } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
 import { UsernameField } from '../username-field';
 import DobDateField from './DobDateField';
 import LocationSelect from './LocationSelect';
-import ContactFields from './ContactFields';
+import { ContactSection } from '../contact-change';
 import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';
 import { useDateFormat, useMinSignupAge } from '../../../utils/dateFormat';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -25,6 +25,14 @@ const ADDRESS_NAMES: AddressFieldNames<AccountEditValues> = {
 
 interface Props {
   defaultValues: AccountEditValues;
+  /**
+   * Email, phone and WhatsApp as the account holds them.
+   *
+   * Separate from `defaultValues` because they are not fields of this form:
+   * they are rendered read-only and changed on their own, each behind a
+   * one-time code, so nothing about them rides this form's Save.
+   */
+  contacts: ContactSnapshot;
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: AccountEditValues) => Promise<void> | void;
@@ -32,6 +40,13 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
   /** Lets the parent revert the form to its loaded values (discard-on-close). */
   onRegisterReset?: (reset: () => void) => void;
+  /**
+   * Told when a contact detail is proved and stored.
+   *
+   * Contacts do NOT ride this form's Save: each is its own verified write, so
+   * it has already landed by the time this fires. The parent refetches on it.
+   */
+  onContactChanged?: () => void;
 }
 
 /**
@@ -41,14 +56,19 @@ interface Props {
  */
 export default function AccountEditForm({
   defaultValues,
+  contacts,
   loading,
   errorMessage,
   onSubmit,
   onDirtyChange,
   onRegisterReset,
+  onContactChanged,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Mirrored into state so a proved change shows on the row immediately,
+  // rather than only once the parent's refetch comes back.
+  const [contactSnapshot, setContactSnapshot] = useState<ContactSnapshot>(contacts);
   // The handle is checked against the server, which no Zod rule can wait for,
   // so its verdict is held here and ANDed into the one Save button below.
   const [handleStatus, setHandleStatus] = useState<UsernameStatus>('IDLE');
@@ -130,7 +150,13 @@ export default function AccountEditForm({
         />
         <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
-        <ContactFields control={control} setValue={setValue} />
+        <ContactSection
+          snapshot={contactSnapshot}
+          onChanged={(_channel, next) => {
+            setContactSnapshot(next);
+            onContactChanged?.();
+          }}
+        />
         <Typography
           variant="overline"
           sx={{

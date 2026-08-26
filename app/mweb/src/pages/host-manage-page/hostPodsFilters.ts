@@ -18,10 +18,10 @@ export interface FilterablePod {
   pod_end_date_time?: string | null;
 }
 
-/** Default view = Upcoming pods, all types + prices. */
+/** Default view = every hosted pod: no type, time or price narrowed. */
 export const DEFAULT_HOST_PODS_FILTERS: HostPodsFilters = {
   type: 'ALL',
-  time: 'UPCOMING',
+  time: 'ALL',
   price: 'ALL',
 };
 

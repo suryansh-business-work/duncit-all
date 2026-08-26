@@ -22,6 +22,13 @@ export interface PodFormValues {
   pod_id?: string;
   pod_title: string;
   club_id: string;
+  /**
+   * Auto Pod mode only: the category chosen INSTEAD of a club (a pod inherits
+   * its category from its club, and an Auto Pod has no club until one claims
+   * it). Empty and ignored for an ordinary pod.
+   */
+  super_category_id: string;
+  sub_category_id: string;
   pod_mode: PodMode;
   venue_id: string;
   venue_slot_id: string;
@@ -88,6 +95,20 @@ export interface PodFormConfig {
    * Club Admin keeps assigning several.
    */
   singleHost?: boolean;
+  /**
+   * Auto Pod mode: the author writes the pod ONLY. No club, venue, host, date
+   * or mode — a venue, a host and a club admin each enrol later, in any order.
+   * A required category field replaces the club picker, the When/Where and
+   * Products sections are dropped, the pod type is fixed to PAID (an Auto Pod
+   * is physical and never free) and "Save as Draft" is gone. Off when omitted.
+   */
+  autoPod?: boolean;
+  /**
+   * Auto Pod mode only: the category is fixed (a Club Admin opening one for
+   * their club, or a template a host or club has already enrolled on) and is
+   * shown read-only.
+   */
+  lockCategory?: boolean;
 }
 
 /** A host option in the assign-host pickers. */
@@ -178,10 +199,15 @@ export const POD_MODES: PodOption[] = [
   { value: 'VIRTUAL', label: 'Virtual' },
 ];
 
+/** The AutoPod's own pod_type — physical, and never free. */
+export const AUTO_POD_TYPE = 'PAID';
+
 export const blankPodFormValues: PodFormValues = {
   pod_id: '',
   pod_title: '',
   club_id: '',
+  super_category_id: '',
+  sub_category_id: '',
   pod_mode: 'PHYSICAL',
   venue_id: '',
   venue_slot_id: '',
@@ -209,4 +235,16 @@ export const blankPodFormValues: PodFormValues = {
   products_enabled: false,
   product_requests: [],
   is_active: true,
+};
+
+/**
+ * Where an Auto Pod template starts: PAID (the only type it can be), one
+ * ticket-price floor above free, and the two spots a physical pod needs before
+ * anyone but the host is billed.
+ */
+export const blankAutoPodFormValues: PodFormValues = {
+  ...blankPodFormValues,
+  pod_type: AUTO_POD_TYPE,
+  pod_amount: 1,
+  no_of_spots: 2,
 };

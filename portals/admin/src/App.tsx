@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProfilePage, RequireAuth } from '@duncit/shell';
 import { useFeatureFlag } from '@duncit/app-settings';
@@ -20,6 +21,7 @@ import ClubEditorPage from './pages/clubs-page/club-editor-page';
 import PodsPage from './pages/PodsPage';
 import PodEditorPage from './pages/pods-page/pod-editor-page';
 import AutoPodsPage from './pages/auto-pods-page';
+import AutoPodEditorPage from './pages/auto-pods-page/editor';
 import PodDetailsPage from './pages/PodDetailsPage';
 import PodSettingsPage from './pages/PodSettingsPage';
 import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
@@ -45,10 +47,10 @@ import { getToken } from './lib/session';
  * to All Pods rather than 404-ing, which is what a stale bookmark or a link in
  * an older email hits.
  */
-function AutoPodsRoute() {
+function AutoPodsRoute({ page }: Readonly<{ page: ReactNode }>) {
   const enabled = useFeatureFlag('auto_pods');
   if (!enabled) return <Navigate to="/pods" replace />;
-  return <AutoPodsPage />;
+  return <>{page}</>;
 }
 
 export default function App() {
@@ -84,7 +86,12 @@ export default function App() {
                 <Route path="/pods/new" element={<PodEditorPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
                 <Route path="/pods/:id/edit" element={<PodEditorPage />} />
-                <Route path="/auto-pods" element={<AutoPodsRoute />} />
+                <Route path="/auto-pods" element={<AutoPodsRoute page={<AutoPodsPage />} />} />
+                <Route path="/auto-pods/new" element={<AutoPodsRoute page={<AutoPodEditorPage />} />} />
+                <Route
+                  path="/auto-pods/:id/edit"
+                  element={<AutoPodsRoute page={<AutoPodEditorPage />} />}
+                />
                 <Route path="/pod-settings" element={<PodSettingsPage />} />
                 <Route path="/pod-monitoring" element={<PodMonitoringPage />} />
                 <Route path="/event-tickets" element={<EventTicketsPage />} />

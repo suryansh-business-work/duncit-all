@@ -1,7 +1,4 @@
-import { ButtonBase, Stack, Typography } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import PlaceIcon from '@mui/icons-material/Place';
-import { OPEN_LOCATION_PICKER_EVENT } from '../../components/app-header/queries';
+import LocationChangeBar from '../../components/LocationChangeBar';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -19,51 +16,11 @@ export default function VenuesLocationBar({ cityLabel }: Readonly<Props>) {
     : t('mweb.venues.locationAll');
 
   return (
-    <ButtonBase
-      data-testid="venues-location-bar"
-      aria-label={t('mweb.venues.changeAria')}
-      onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
-      sx={{
-        width: '100%',
-        justifyContent: 'space-between',
-        gap: 1,
-        px: 1.5,
-        py: 1,
-        borderRadius: '16px',
-        border: '1px solid',
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-      }}
-    >
-      <Stack
-        direction="row"
-        spacing={0.5}
-        sx={{
-          alignItems: "center",
-          minWidth: 0
-        }}>
-        <PlaceIcon sx={{ fontSize: 16, color: 'primary.main', flex: '0 0 auto' }} />
-        <Typography variant="caption" noWrap sx={{
-          fontWeight: 700
-        }}>
-          {label}
-        </Typography>
-      </Stack>
-      <Stack
-        direction="row"
-        spacing={0.25}
-        sx={{
-          alignItems: "center",
-          color: 'primary.main',
-          flex: '0 0 auto'
-        }}>
-        <Typography variant="caption" sx={{
-          fontWeight: 700
-        }}>
-          {t('mweb.venues.change')}
-        </Typography>
-        <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
-      </Stack>
-    </ButtonBase>
+    <LocationChangeBar
+      testId="venues-location-bar"
+      ariaLabel={t('mweb.venues.changeAria')}
+      label={label}
+      changeLabel={t('mweb.venues.change')}
+    />
   );
 }

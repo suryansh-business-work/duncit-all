@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PERSON_NAME, PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { PERSON_NAME, PINCODE } from '@duncit/regex';
 import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
@@ -11,7 +11,6 @@ import {
 import { fallbackT, type Translate } from '../../../i18n/fallback';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const EXT_PATTERN = /^\+?\d{1,5}$/;
 
 const addressText = (label: string, max: number) =>
   z.string().trim().max(max, `${label} must be ${max} characters or fewer`);
@@ -51,16 +50,6 @@ const makeDob = (minAge: number, initialDob: string, datePlaceholder: string) =>
       return isEligibleDob(v, minAge);
     }, dobMinAgeMessage(minAge));
 
-const phone = z
-  .string()
-  .trim()
-  .refine((v) => v === '' || PHONE_NUMBER.test(v), 'Enter a 10-digit phone number');
-
-const extension = z
-  .string()
-  .trim()
-  .refine((v) => v === '' || EXT_PATTERN.test(v), 'Use a code like +91');
-
 /**
  * Edit-profile contract — RHF + Zod (migrated from Formik + Yup, rule 10).
  * Mirrored field-for-field by the mobile app so both validate identical rules.
@@ -98,10 +87,6 @@ export const makeAccountEditSchema = (
   country: optionalLocation('Country'),
   state: optionalLocation('State'),
   city: optionalLocation('City'),
-  phone_extension: extension,
-  phone_number: phone,
-  whatsapp_extension: extension,
-  whatsapp_number: phone,
   address_line1: addressText('Address line 1', 200),
   address_line2: addressText('Address line 2', 200),
   address_landmark: addressText('Landmark', 160),
@@ -133,10 +118,6 @@ export function accountEditDefaults(initial: Partial<AccountEditValues>): Accoun
     country: '',
     state: '',
     city: '',
-    phone_extension: '+91',
-    phone_number: '',
-    whatsapp_extension: '+91',
-    whatsapp_number: '',
     address_line1: '',
     address_line2: '',
     address_landmark: '',
@@ -148,7 +129,14 @@ export function accountEditDefaults(initial: Partial<AccountEditValues>): Accoun
   };
 }
 
-/** Map validated form values to the GraphQL UpdateMyProfileInput. */
+/**
+ * Map validated form values to the GraphQL UpdateMyProfileInput.
+ *
+ * Email, phone and WhatsApp are deliberately absent. They move only through
+ * the contact-change flow, behind a one-time code sent to the new value, and
+ * `updateMyProfile` refuses any of them that actually moved — so sending them
+ * here would turn every unrelated profile save into a refusal.
+ */
 export function toUpdateProfileInput(values: AccountEditValues) {
   const input = {
     first_name: values.first_name,
@@ -157,10 +145,6 @@ export function toUpdateProfileInput(values: AccountEditValues) {
     country: values.country,
     state: values.state,
     city: values.city,
-    phone_extension: values.phone_extension,
-    phone_number: values.phone_number,
-    whatsapp_extension: values.whatsapp_extension,
-    whatsapp_number: values.whatsapp_number,
     dob: values.dob,
     address: {
       line1: values.address_line1,

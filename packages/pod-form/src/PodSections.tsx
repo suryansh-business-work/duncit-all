@@ -33,17 +33,27 @@ interface SectionDef {
   render: () => JSX.Element;
 }
 
-function buildSections(isVirtual: boolean, showProducts: boolean, t: Translate): SectionDef[] {
+/** Where and when the pod happens — absent in Auto Pod mode, where the venue
+ * that enrols brings the slot (and so the date) with it. */
+function whereSection(isVirtual: boolean, t: Translate): SectionDef {
+  if (isVirtual) {
+    return { id: 'meeting', label: t('podForm.podSections.meetingDetails'), render: () => <MeetingSection /> };
+  }
+  return { id: 'when', label: t('podForm.podSections.whenWhereAndMap'), render: () => <WhenWhereSection /> };
+}
+
+function buildSections(isVirtual: boolean, showProducts: boolean, autoPod: boolean, t: Translate): SectionDef[] {
   const list: SectionDef[] = [
     { id: 'basic', label: t('podForm.podSections.basicInformation'), render: () => <BasicSection /> },
-    isVirtual
-      ? { id: 'meeting', label: t('podForm.podSections.meetingDetails'), render: () => <MeetingSection /> }
-      : { id: 'when', label: t('podForm.podSections.whenWhereAndMap'), render: () => <WhenWhereSection /> },
+  ];
+  if (!autoPod) list.push(whereSection(isVirtual, t));
+  list.push(
     { id: 'about', label: t('podForm.podSections.aboutThisPod'), render: () => <AboutSection /> },
     { id: 'offers', label: t('podForm.podSections.whatThisPodOffers'), render: () => <OffersSection /> },
     { id: 'perks', label: t('podForm.podSections.availablePerks'), render: () => <PerksSection /> },
-  ];
-  if (showProducts && !isVirtual) {
+  );
+  // Products ride on a club's catalogue, and an Auto Pod has no club yet.
+  if (showProducts && !isVirtual && !autoPod) {
     list.push({ id: 'products', label: t('podForm.podSections.approvedProducts'), render: () => <ProductsSection /> });
   }
   list.push({ id: 'payment', label: t('podForm.podSections.paymentAndCharges'), render: () => <PaymentSection /> });
@@ -56,7 +66,7 @@ export default function PodSections() {
   const { control, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const isVirtual = podMode === 'VIRTUAL';
-  const sections = buildSections(isVirtual, config.showProducts, t).map((section, index) => ({
+  const sections = buildSections(isVirtual, config.showProducts, !!config.autoPod, t).map((section, index) => ({
     ...section,
     title: `${index + 1}. ${section.label}`,
   }));

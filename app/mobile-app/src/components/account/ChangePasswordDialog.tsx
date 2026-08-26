@@ -114,7 +114,12 @@ export function ChangePasswordDialog({
           <Text fontSize={13.5} color="$primary" testID="change-password-info">
             {info}
           </Text>
-          <NewPasswordForm loading={loading} errorMessage={error} onSubmit={handleChange} />
+          <NewPasswordForm
+            loading={loading}
+            errorMessage={error}
+            currentPassword={currentPassword}
+            onSubmit={handleChange}
+          />
           <Text
             testID="change-password-resend"
             role="button"

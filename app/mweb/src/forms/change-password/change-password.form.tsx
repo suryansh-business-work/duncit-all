@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, IconButton, InputAdornment, Stack } from '@mui/material';
@@ -10,8 +10,8 @@ import RhfTextField from '../components/RhfTextField';
 import {
   currentPasswordDefaults,
   currentPasswordSchema,
+  makeNewPasswordSchema,
   newPasswordDefaults,
-  newPasswordSchema,
   type CurrentPasswordValues,
   type NewPasswordValues,
 } from './change-password.types';
@@ -22,6 +22,9 @@ interface StepProps<T> {
   errorMessage?: string | null;
   onSubmit: (values: T) => Promise<void> | void;
 }
+
+/** Step 2 also takes the password step 1 verified, to reject reusing it. */
+type NewPasswordProps = StepProps<NewPasswordValues> & { currentPassword?: string };
 
 const passwordAdornments = (visible: boolean, onToggle: () => void) => ({
   startAdornment: (
@@ -107,15 +110,17 @@ export function CurrentPasswordForm({
 export function NewPasswordForm({
   loading,
   errorMessage,
+  currentPassword,
   onSubmit,
-}: Readonly<StepProps<NewPasswordValues>>) {
+}: Readonly<NewPasswordProps>) {
   const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const schema = useMemo(() => makeNewPasswordSchema(currentPassword), [currentPassword]);
   const { control, handleSubmit } = useForm<NewPasswordValues>({
     defaultValues: newPasswordDefaults,
-    resolver: zodResolver(newPasswordSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
 

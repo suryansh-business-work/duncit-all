@@ -1994,7 +1994,7 @@ export const userService = {
   async changePasswordWithOtp(user_id: string, input: ChangePasswordDTO) {
     const code = String(input.otp || '').trim();
     const user = await UserModel.findById(user_id).select(
-      '+auth.password_change_otp_hash +auth.password_change_otp_expires_at'
+      '+auth.password +auth.password_change_otp_hash +auth.password_change_otp_expires_at'
     );
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     const expiresAt = (user as any).auth?.password_change_otp_expires_at as Date | undefined;
@@ -2006,6 +2006,14 @@ export const userService = {
     }
     if (hashOtp(code) !== storedHash) {
       throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    // Re-setting the same password is not a change: the OTP is already proven
+    // here, so this is the last gate before the hash is written.
+    const currentHash = (user as any).auth?.password as string | undefined;
+    if (currentHash && (await bcrypt.compare(input.new_password, currentHash))) {
+      throw new GraphQLError('New password must be different from your current password', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
     }
     const hashed = await bcrypt.hash(input.new_password, 10);
     await UserModel.updateOne(

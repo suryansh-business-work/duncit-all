@@ -88,7 +88,11 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
         ) : (
           <Stack spacing={1.5}>
             {info && <Alert severity="success">{info}</Alert>}
-            <NewPasswordForm loading={changing} onSubmit={handleChange} />
+            <NewPasswordForm
+              loading={changing}
+              currentPassword={currentPassword}
+              onSubmit={handleChange}
+            />
             <Typography
               variant="body2"
               sx={{

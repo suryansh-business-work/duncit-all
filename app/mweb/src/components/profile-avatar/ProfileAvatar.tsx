@@ -7,7 +7,7 @@ import AvatarButton from './AvatarButton';
 import CropDialog from './CropDialog';
 import PhotoActionMenu from './PhotoActionMenu';
 import PhotoViewerDialog from './PhotoViewerDialog';
-import { buildOwnStoryItem } from './storyViewerItem';
+import { buildStoryViewerItem } from '../../pages/home-page/storyViewerItem';
 import { useProfileAvatar } from './useProfileAvatar';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -32,7 +32,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
   const a = useProfileAvatar(onChanged, !!photo);
   const initial = (name?.[0] ?? 'U').toUpperCase();
   const storyItem = useMemo(
-    () => buildOwnStoryItem(name, photo ?? null, a.stories),
+    () => buildStoryViewerItem(name, photo ?? null, a.stories),
     [name, photo, a.stories],
   );
   const deleteId = a.deleteId;

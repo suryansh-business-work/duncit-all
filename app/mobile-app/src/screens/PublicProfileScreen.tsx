@@ -96,7 +96,14 @@ export function PublicProfileScreen() {
         )}
         {isOwner ? <EditProfileButton onPress={() => navigation.navigate('Account')} /> : null}
         <PublicProfileBadges badges={badges} />
-        <PublicProfilePosts posts={posts} stories={stories} canView={canView} />
+        <PublicProfilePosts
+          posts={posts}
+          stories={stories}
+          canView={canView}
+          authorId={user.user_id}
+          authorName={user.full_name || user.username || ''}
+          authorPhoto={user.profile_photo}
+        />
       </ScrollView>
     );
   } else {

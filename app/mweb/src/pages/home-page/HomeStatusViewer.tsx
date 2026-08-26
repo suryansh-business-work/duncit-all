@@ -74,6 +74,9 @@ interface HomeStatusViewerProps {
   onToggleLike?: (slideId: string) => void;
   /** Record that a slide was shown so its ring greys (Bug 2). */
   onRecordView?: (slideId: string) => void;
+  /** Slide to open on. A per-story rail (a member's profile) opens the tapped
+   * story; author rails open at the start. */
+  startIndex?: number;
 }
 
 // A horizontal pointer drag longer than this (px) counts as a story swipe.
@@ -94,12 +97,13 @@ export default function HomeStatusViewer({
   onViewers,
   onToggleLike,
   onRecordView,
+  startIndex = 0,
 }: Readonly<HomeStatusViewerProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(startIndex);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -128,11 +132,11 @@ export default function HomeStatusViewer({
   useEffect(() => {
     setProgress(0);
     setPaused(false);
-    setIndex(0);
+    setIndex(startIndex);
     elapsedRef.current = 0;
     startedAtRef.current = null;
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
-  }, [itemKey]);
+  }, [itemKey, startIndex]);
 
   useEffect(() => {
     setProgress(0);

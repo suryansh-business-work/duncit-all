@@ -1,4 +1,4 @@
-import type { HomeStatusViewerItem } from '../../pages/home-page/HomeStatusViewer';
+import type { HomeStatusViewerItem } from './HomeStatusViewer';
 
 interface Story {
   id: string;
@@ -9,9 +9,10 @@ interface Story {
   expires_at?: string | null;
 }
 
-/** Build the own-story viewer item from my active stories, oldest → newest, so
- * the viewer walks them as slides with their ids (for delete, item 12). */
-export function buildOwnStoryItem(
+/** Build a viewer item from an author's active stories, oldest → newest, so the
+ * viewer walks them as timed slides carrying their ids (for delete, item 12).
+ * Used for my own story ring and for a member's stories on their profile. */
+export function buildStoryViewerItem(
   name: string,
   avatarUrl: string | null,
   stories: Story[],

@@ -3,11 +3,12 @@ import { useWindowDimensions } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { PublicProfileStories } from '@/components/public-profile/PublicProfileStories';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { PublicProfilePost } from '@/hooks/usePublicProfile';
+import type { PublicProfilePost, PublicProfileStory } from '@/hooks/usePublicProfile';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** Posts grid + active stories on a member's public profile. Shows a lock card
@@ -16,12 +17,22 @@ export function PublicProfilePosts({
   posts,
   stories,
   canView,
-}: Readonly<{ posts: PublicProfilePost[]; stories: string[]; canView: boolean }>) {
+  authorId,
+  authorName,
+  authorPhoto,
+}: Readonly<{
+  posts: PublicProfilePost[];
+  stories: PublicProfileStory[];
+  canView: boolean;
+  /** Author of the stories — names the story viewer's header. */
+  authorId: string;
+  authorName: string;
+  authorPhoto?: string | null;
+}>) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const { muted } = useThemeColors();
   const [postIndex, setPostIndex] = useState<number | null>(null);
-  const [storyIndex, setStoryIndex] = useState<number | null>(null);
 
   if (!canView) {
     return (
@@ -48,29 +59,12 @@ export function PublicProfilePosts({
 
   return (
     <YStack gap={12}>
-      {stories.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
-        >
-          {stories.map((url, index) => (
-            <XStack
-              key={`${index}-${url}`}
-              testID={`public-profile-story-${index}`}
-              role="button"
-              aria-label={`Open status ${index + 1}`}
-              onPress={() => setStoryIndex(index)}
-              borderRadius={36}
-              borderWidth={3}
-              borderColor="$primary"
-              padding={2}
-            >
-              <AppImage source={{ uri: url }} style={{ width: 60, height: 60, borderRadius: 30 }} />
-            </XStack>
-          ))}
-        </ScrollView>
-      ) : null}
+      <PublicProfileStories
+        authorId={authorId}
+        name={authorName}
+        photo={authorPhoto}
+        stories={stories}
+      />
 
       <XStack alignItems="center" justifyContent="center" gap={6} paddingTop={4}>
         <MaterialIcons name="grid-on" size={16} color={muted} />
@@ -110,7 +104,6 @@ export function PublicProfilePosts({
       )}
 
       <ImageViewerModal images={postImages} index={postIndex} onClose={() => setPostIndex(null)} />
-      <ImageViewerModal images={stories} index={storyIndex} onClose={() => setStoryIndex(null)} />
     </YStack>
   );
 }

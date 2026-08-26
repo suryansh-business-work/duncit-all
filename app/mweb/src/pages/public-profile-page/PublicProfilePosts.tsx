@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import {
-  Avatar,
   Box,
   ImageList,
   ImageListItem,
@@ -12,7 +11,7 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import PostDialog from '../profile-page/post-dialog/PostDialog';
-import MomentLightbox from '../../components/moments/MomentLightbox';
+import PublicProfileStories, { type ProfileStory } from './PublicProfileStories';
 
 const PUBLIC_USER_POSTS = gql`
   query PublicUserPosts($id: ID!) {
@@ -27,6 +26,9 @@ const PUBLIC_USER_POSTS = gql`
       id
       image_url
       media_type
+      caption
+      created_at
+      expires_at
     }
   }
 `;
@@ -35,18 +37,26 @@ interface Props {
   userId: string;
   canView: boolean;
   meId: string;
+  /** Author of the stories — names the story viewer's header. */
+  name: string;
+  photo?: string | null;
 }
 
 /** Posts grid + active stories on a member's public profile. When the account
  * is private and the viewer is not a follower, a lock card is shown instead. */
-export default function PublicProfilePosts({ userId, canView, meId }: Readonly<Props>) {
+export default function PublicProfilePosts({
+  userId,
+  canView,
+  meId,
+  name,
+  photo,
+}: Readonly<Props>) {
   const { data, loading } = useQuery(PUBLIC_USER_POSTS, {
     variables: { id: userId },
     skip: !canView,
     fetchPolicy: 'cache-and-network',
   });
   const [openPostId, setOpenPostId] = useState<string | null>(null);
-  const [storyIndex, setStoryIndex] = useState<number | null>(null);
 
   if (!canView) {
     return (
@@ -84,10 +94,7 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
     </ImageList>
   );
 
-  const stories = (data?.stories ?? []).map((story: any) => ({
-    url: story.image_url,
-    type: story.media_type,
-  }));
+  const stories: ProfileStory[] = data?.stories ?? [];
 
   const postsGrid = (
     <ImageList cols={3} gap={4} sx={{ m: 0 }}>
@@ -133,26 +140,7 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
 
   return (
     <Stack spacing={1.5}>
-      {stories.length > 0 && (
-        <Stack direction="row" spacing={1.25} sx={{ overflowX: 'auto', pb: 0.5 }}>
-          {stories.map((story: { url: string }, index: number) => (
-            <Avatar
-              key={story.url}
-              src={story.url}
-              role="button"
-              aria-label={`Open status ${index + 1}`}
-              onClick={() => setStoryIndex(index)}
-              sx={{
-                width: 64,
-                height: 64,
-                cursor: 'pointer',
-                border: 3,
-                borderColor: 'primary.main',
-              }}
-            />
-          ))}
-        </Stack>
-      )}
+      <PublicProfileStories name={name} photo={photo} stories={stories} />
 
       <Stack
         direction="row"
@@ -177,12 +165,6 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
         meId={meId}
         onClose={() => setOpenPostId(null)}
         onDeleted={() => setOpenPostId(null)}
-      />
-      <MomentLightbox
-        moments={stories}
-        index={storyIndex}
-        onClose={() => setStoryIndex(null)}
-        onIndexChange={setStoryIndex}
       />
     </Stack>
   );

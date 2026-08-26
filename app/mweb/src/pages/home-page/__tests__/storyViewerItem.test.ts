@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildOwnStoryItem } from '../storyViewerItem';
+import { buildStoryViewerItem } from '../storyViewerItem';
 
 const story = (id: string, created_at: string) => ({
   id,
@@ -10,13 +10,13 @@ const story = (id: string, created_at: string) => ({
   expires_at: null,
 });
 
-describe('buildOwnStoryItem', () => {
+describe('buildStoryViewerItem', () => {
   it('returns null when there are no stories', () => {
-    expect(buildOwnStoryItem('Riya', null, [])).toBeNull();
+    expect(buildStoryViewerItem('Riya', null, [])).toBeNull();
   });
 
   it('orders slides oldest → newest and carries the post id + avatar', () => {
-    const item = buildOwnStoryItem('Riya', 'http://x/me.jpg', [
+    const item = buildStoryViewerItem('Riya', 'http://x/me.jpg', [
       story('b', '2026-06-09T12:00:00.000Z'),
       story('a', '2026-06-09T10:00:00.000Z'),
     ]);

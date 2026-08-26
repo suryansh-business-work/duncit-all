@@ -99,6 +99,8 @@ export default function PublicProfilePage() {
         userId={u.user_id}
         canView={isOwner || u.can_view_content !== false}
         meId={data?.me?.user_id ?? ''}
+        name={u.full_name || u.username || ''}
+        photo={u.profile_photo}
       />
     </Stack>
   );

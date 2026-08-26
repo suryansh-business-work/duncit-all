@@ -68,12 +68,22 @@ describe('PrivacyToggleCard', () => {
 
 describe('PublicProfilePosts', () => {
   it('shows a lock card for a private account', () => {
-    renderWithProviders(<PublicProfilePosts posts={[]} stories={[]} canView={false} />);
+    renderWithProviders(
+      <PublicProfilePosts
+        posts={[]}
+        stories={[]}
+        canView={false}
+        authorId="u1"
+        authorName="Riya"
+      />,
+    );
     expect(screen.getByTestId('public-profile-private')).toBeOnTheScreen();
   });
 
   it('shows the empty state with no posts', () => {
-    renderWithProviders(<PublicProfilePosts posts={[]} stories={[]} canView />);
+    renderWithProviders(
+      <PublicProfilePosts posts={[]} stories={[]} canView authorId="u1" authorName="Riya" />,
+    );
     expect(screen.getByTestId('public-profile-no-posts')).toBeOnTheScreen();
   });
 
@@ -84,15 +94,28 @@ describe('PublicProfilePosts', () => {
           { id: '1', image_url: 'a.jpg', caption: 'x' },
           { id: '2', image_url: 'b.jpg', caption: '' },
         ]}
-        stories={['s1.jpg']}
+        stories={[
+          {
+            id: 's1',
+            image_url: 's1.jpg',
+            media_type: 'IMAGE',
+            caption: '',
+            created_at: '2026-06-09T10:00:00.000Z',
+            expires_at: '2026-06-10T10:00:00.000Z',
+            seen_by_me: false,
+          },
+        ]}
         canView
+        authorId="u1"
+        authorName="Riya"
       />,
     );
     fireEvent.press(screen.getByTestId('public-profile-post-0'));
+    fireEvent.press(screen.getByTestId('image-viewer-close'));
+    // A story opens the timed story viewer, not the plain image viewer.
     fireEvent.press(screen.getByTestId('public-profile-story-0'));
-    const closes = screen.getAllByTestId('image-viewer-close');
-    expect(closes.length).toBe(2);
-    closes.forEach((button) => fireEvent.press(button));
+    expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('status-viewer-close'));
   });
 });
 

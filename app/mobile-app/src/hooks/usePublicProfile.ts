@@ -24,6 +24,7 @@ export type PublicProfileUser = NonNullable<ProfileData['publicUserProfile']>;
 export type UserBadge = ResultOf<typeof MobileUserBadgesDocument>['userBadges'][number];
 type PostsData = ResultOf<typeof MobilePublicUserPostsDocument>;
 export type PublicProfilePost = PostsData['posts'][number];
+export type PublicProfileStory = PostsData['stories'][number];
 
 /** A user's public profile + badges + posts/stories + whether the viewer owns
  * it. Private accounts hide posts/stories from non-followers (canView=false). */
@@ -36,7 +37,7 @@ export function usePublicProfile(userId: string) {
   const [canView, setCanView] = useState(true);
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [posts, setPosts] = useState<PublicProfilePost[]>([]);
-  const [stories, setStories] = useState<string[]>([]);
+  const [stories, setStories] = useState<PublicProfileStory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -47,7 +48,7 @@ export function usePublicProfile(userId: string) {
       { auth: true },
     ).catch(() => null);
     setPosts(data?.posts ?? []);
-    setStories((data?.stories ?? []).map((story) => story.image_url));
+    setStories(data?.stories ?? []);
   }, [userId]);
 
   // The server is the authority on both directions of the relationship, so

@@ -30,6 +30,7 @@ exports:
   - 'formatMjml'
   - 'nationalPhoneDigits'
   - 'isStoryLive'
+  - 'videoSourceUrl'
   - 'podPhase'
   - 'splitPodsByPhase'
   - 'hostPodSection'
@@ -499,6 +500,7 @@ clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
 | `formatMjml` | `(mjml: string) => string` | — | Pretty-prints an MJML template. |
 | `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
 | `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |
+| `videoSourceUrl` | `(url) => string` | — | The URL to hand a video player: our ImageKit addresses ask for the stored file, everything else is unchanged. |
 
 ### Pod phase — the Home rails
 

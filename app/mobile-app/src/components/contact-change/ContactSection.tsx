@@ -1,10 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Text, YStack } from 'tamagui';
-import {
-  buildContactChangeLabels,
-  type ContactChannel,
-  type ContactSnapshot,
-} from '@duncit/utils';
+import { buildContactChangeLabels, type ContactChannel, type ContactSnapshot } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChangeContactSheet } from './ChangeContactSheet';

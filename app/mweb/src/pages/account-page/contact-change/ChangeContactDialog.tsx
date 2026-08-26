@@ -81,7 +81,10 @@ export default function ChangeContactDialog({
             <ContactValueStep
               channel={active}
               labels={labels}
-              defaultValues={contactDraftFrom(snapshot, active)}
+              // The draft they already typed, when there is one: "Change this"
+              // exists to fix a typo, and reseeding from the account would
+              // throw away the number they came back to correct.
+              defaultValues={draft ?? contactDraftFrom(snapshot, active)}
               busy={state.sending}
               onSend={handleSend}
             />

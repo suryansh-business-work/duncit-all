@@ -14,7 +14,7 @@ import {
   SETTLEMENT_ENGINE_VERSION,
   type SettlementWaterfall,
 } from './settlement.service';
-import { payableSpots } from './breakdown.math';
+import { payableSpots, type BreakdownRates } from './breakdown.math';
 import { podExpenseSpend } from '@modules/finance/podExpense/podExpense.totals';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
@@ -26,7 +26,42 @@ export type SettlementStatus = 'LIVE' | 'PENDING_APPROVAL' | 'SETTLED';
 export interface PodEarningsProjection {
   total_spots: number;
   payable_spots: number;
+  /** The highest venue slot price the pod can still carry — see venueBudgetOf. */
+  venue_budget: number;
   waterfall: SettlementWaterfall;
+}
+
+/**
+ * The most a venue's slot can cost before the host earns nothing: the pool
+ * after GST, the platform fee and the club-admin cut. The venue's price comes
+ * off that pool and the host owns the rest, so a slot priced AT it leaves a
+ * host amount of 0 — which `assertViablePodEconomics` refuses. Stated on every
+ * projection so a console can show the ceiling before a venue exists.
+ */
+function venueBudgetOf(waterfall: SettlementWaterfall): number {
+  return round2(waterfall.pool_amount - waterfall.club_admin_amount);
+}
+
+/** One projection shape for every earnings preview: bill the payable spots
+ * (the host's own seat is free) and run the unclamped waterfall, so a venue
+ * that costs more than the pool shows as negative host earnings rather than
+ * being quietly shrunk. */
+function projectionFor(
+  podAmount: number,
+  noOfSpots: number,
+  venuePrice: number,
+  rates: BreakdownRates
+): PodEarningsProjection {
+  const billable = payableSpots(noOfSpots);
+  const waterfall = waterfallForAmount(round2(podAmount * billable), venuePrice, rates, {
+    clampVenueToPool: false,
+  });
+  return {
+    total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
+    payable_spots: billable,
+    venue_budget: venueBudgetOf(waterfall),
+    waterfall,
+  };
 }
 
 /** One row of the Step-4 "Suggested Ticket Prices" table. */
@@ -288,17 +323,54 @@ export const breakdownService = {
     }
     const venuePrice = assertPreviewInputs(noOfSpots, venueId, venueAmount);
     const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
-    // The host's spot is free — only (total - 1) spots are ever billed.
-    const billable = payableSpots(noOfSpots);
-    const amount = round2(podAmount * billable);
-    return {
-      total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
-      payable_spots: billable,
-      // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
-      // — a shortfall renders as negative host earnings so the clients can show
-      // the real gap. Settlement runs the same unclamped branch.
-      waterfall: waterfallForAmount(amount, venuePrice, rates, { clampVenueToPool: false }),
-    };
+    // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
+    // — a shortfall renders as negative host earnings so the clients can show
+    // the real gap. Settlement runs the same unclamped branch.
+    return projectionFor(podAmount, noOfSpots, venuePrice, rates);
+  },
+
+  /**
+   * The admin consoles' projection for a pod being WRITTEN there.
+   *
+   * Two things differ from a host's own preview. The rates are the chosen
+   * host's, not the caller's — an admin is not the host — and with no host
+   * chosen they are the platform defaults, which is what `validateTemplate`
+   * checks an Auto Pod against before anyone enrols; the console must show the
+   * same picture the save is judged on. And the venue's money is read from the
+   * slot document rather than sent by the client: the editor only holds the
+   * slot's id, and the booked slot of a pod being edited is no longer in any
+   * list the form reads.
+   */
+  async adminPotentialPodEarnings(input: {
+    hostUserId: string | null;
+    podAmount: number;
+    noOfSpots: number;
+    venueId?: string | null;
+    venueSlotId?: string | null;
+  }): Promise<PodEarningsProjection> {
+    const { hostUserId, podAmount, noOfSpots } = input;
+    if (!Number.isFinite(podAmount) || podAmount < 0) {
+      throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    assertPreviewInputs(noOfSpots, input.venueId, 0);
+    if (hostUserId && !Types.ObjectId.isValid(hostUserId)) {
+      throw new GraphQLError('Invalid host', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (input.venueSlotId && !Types.ObjectId.isValid(input.venueSlotId)) {
+      throw new GraphQLError('Invalid slot', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const venueId = input.venueId ?? null;
+    const venuePrice = venueId
+      ? await venueAmountForPod(
+          {
+            venue_id: new Types.ObjectId(venueId),
+            venue_slot_id: input.venueSlotId ? new Types.ObjectId(input.venueSlotId) : null,
+          },
+          0
+        )
+      : 0;
+    const rates = await resolveEffectiveRates({ hostUserId, venueId });
+    return projectionFor(podAmount, noOfSpots, venuePrice, rates);
   },
 
   /**
@@ -331,15 +403,9 @@ export const breakdownService = {
       throw new GraphQLError('Spots must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const rates = await resolveEffectiveRates({ hostUserId: null, venueId: null });
-    const billable = payableSpots(noOfSpots);
-    const amount = round2(podAmount * billable);
-    return {
-      total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
-      payable_spots: billable,
-      // Same preview rule as the app: a venue that costs more than the pool
-      // shows as a negative host payout rather than being quietly clamped.
-      waterfall: waterfallForAmount(amount, venuePrice, rates, { clampVenueToPool: false }),
-    };
+    // Same preview rule as the app: a venue that costs more than the pool
+    // shows as a negative host payout rather than being quietly clamped.
+    return projectionFor(podAmount, noOfSpots, venuePrice, rates);
   },
 
   /** Step-4 "Suggested Ticket Prices": walks the ₹x99 ladder (99, 199, 299, …)

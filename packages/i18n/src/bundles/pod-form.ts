@@ -118,11 +118,34 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       spots: 'Spots',
       whatThisPodOffers: 'What this pod offers',
     },
+    /** The admin editor's earnings projection — every figure is the server's
+     * potentialPodEarnings waterfall; this copy only names the rows. */
     priceBreakdown: {
+      title: 'Earnings projection',
+      perPerson: '{price} per person × {spots} payable spots — the host’s own seat is free.',
+      prompt: 'Enter a ticket price and at least 2 spots to project the payout.',
+      loading: 'Projecting…',
+      totalCollection: 'Total collection',
+      clubAdminFee: 'Club Admin Fee @{pct}%',
+      clubAdminFormula:
+        'Set in Finance › Default Deductions — taken off the pool before the venue and the host are paid.',
+      venueSlotPrice: 'Venue Slot Price',
+      venuePending: 'Deducted once a venue enrols — its booked slot price comes off the pool before the host is paid.',
+      venueNotPicked: 'Pick a venue slot — its price is deducted once for the whole pod.',
+      productCost: 'Duncit product cost',
+      productFormula: 'The products attached below, deducted from the host’s payout.',
+      totalDeductions: 'Total deductions',
+      hostReceives: 'Host receives',
+      hostReceivesBeforeVenue: 'Host receives before the venue',
       finalPayout: 'Final payout',
-      payoutBeforeProducts: 'Payout before products',
-      productCostPayableSpot: 'Product cost / payable spot',
-      userPays: 'User pays',
+      venueBudget: 'Venue budget',
+      venueBudgetValue: 'up to {amount}',
+      venueBudgetHint:
+        'A venue can be enrolled with a slot price under {amount}. At or above it the host earns nothing and the enrolment is refused.',
+      zeroEarnings:
+        'The host earns nothing at this price — the save will be refused. Raise the ticket price or the number of spots.',
+      estimateNote:
+        'Projected at today’s Finance rates with every payable spot sold. A host’s or a venue’s own commission rate applies once they are on the pod.',
     },
     reelField: {
       pickVideo: 'Pick video',

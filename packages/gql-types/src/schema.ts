@@ -14172,6 +14172,13 @@ export type PodEarningsProjection = {
   payable_spots: Scalars['Int']['output'];
   /** Spots the host entered (physical capacity, including the host's own seat). */
   total_spots: Scalars['Int']['output'];
+  /**
+   * The most a venue's slot can cost before the host earns nothing: the pool
+   * left after GST, the platform fee and the club-admin cut. The create and
+   * enrol guards refuse a venue priced at or above it, so a console can state
+   * the ceiling before any venue is chosen — an Auto Pod has none yet.
+   */
+  venue_budget: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
 };
 
@@ -15709,7 +15716,19 @@ export type PublicProfile = {
   follow_status: FollowStatus;
   followers_count: Scalars['Int']['output'];
   following_count: Scalars['Int']['output'];
+  /**
+   * Whether THIS user follows the signed-in viewer — the other direction of the
+   * edge. What turns the viewer's Follow button into Follow Back. False with no
+   * viewer.
+   */
+  follows_viewer: Scalars['Boolean']['output'];
   full_name?: Maybe<Scalars['String']['output']>;
+  /**
+   * The OPEN follow request this user has sent the viewer, if any — so the
+   * viewer can accept or deny it from the profile itself, not only from the
+   * notification about it. Null with no viewer or no open ask.
+   */
+  inbound_request_id?: Maybe<Scalars['ID']['output']>;
   /** Whether the signed-in viewer follows this user. */
   is_following: Scalars['Boolean']['output'];
   /** PRIVATE when this profile hides its posts/stories from non-followers. */
@@ -15789,6 +15808,15 @@ export type Query = {
   adminAutoPodsTable: AutoPodTablePage;
   /** Admin/Finance: everyone on a pod with contact info and replacement links. */
   adminPodAttendees: Array<AdminPodAttendee>;
+  /**
+   * The admin consoles' projection for a pod they are writing. Prices at the
+   * CHOSEN host's rates (host_user_id — the host picked in the editor) or, with
+   * none chosen, at the platform's default rates, which is exactly what an Auto
+   * Pod template is checked against before any host enrols. The venue's money
+   * is read from the slot itself (venue_slot_id), never typed by the client.
+   * Admin roles only.
+   */
+  adminPotentialPodEarnings: PodEarningsProjection;
   /** Onboarding/admin: all slots for any venue (role-gated, no owner check). */
   adminVenueSlots: Array<VenueSlot>;
   agentAvailability: AgentAvailability;
@@ -17009,6 +17037,15 @@ export type QueryAdminAutoPodsTableArgs = {
 
 export type QueryAdminPodAttendeesArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAdminPotentialPodEarningsArgs = {
+  host_user_id?: InputMaybe<Scalars['ID']['input']>;
+  no_of_spots: Scalars['Int']['input'];
+  pod_amount: Scalars['Float']['input'];
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 

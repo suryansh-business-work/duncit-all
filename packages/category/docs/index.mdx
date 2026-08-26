@@ -192,7 +192,7 @@ object is shared, and appending it directly makes every row the same object.
 | `required` | `boolean` | no | `false` | Marks every rendered level required. |
 | `disabled` | `boolean` | no | `false` | Disables all levels. |
 | `size` | `'small' \| 'medium'` | no | `'small'` | MUI size passed to each `Autocomplete`. |
-| `direction` | `'row' \| 'column'` | no | `'column'` | Stack direction. |
+| `direction` | `StackProps['direction']` | no | `'column'` | Stack direction; accepts MUI's responsive object (`{ xs: 'column', md: 'row' }`) so three levels sit in a row on a desktop and stack on a phone. |
 | `labels` | `Partial<Record<CategoryLevel, string>>` | no | Super Category / Category / Sub Category | Per-level label overrides. |
 | `errors` | `Partial<Record<CategoryLevel, string>>` | no | `undefined` | Per-level error text. |
 | `legend` | `string` | no | `undefined` | Setting it wraps the fields in a `<Fieldset>`. |

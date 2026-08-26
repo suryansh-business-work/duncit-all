@@ -232,6 +232,13 @@ export const financeTypeDefs = /* GraphQL */ `
     total_spots: Int!
     "Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited)."
     payable_spots: Int!
+    """
+    The most a venue's slot can cost before the host earns nothing: the pool
+    left after GST, the platform fee and the club-admin cut. The create and
+    enrol guards refuse a venue priced at or above it, so a console can state
+    the ceiling before any venue is chosen — an Auto Pod has none yet.
+    """
+    venue_budget: Float!
     waterfall: PodFinanceWaterfall!
   }
 
@@ -550,6 +557,21 @@ export const financeTypeDefs = /* GraphQL */ `
       no_of_spots: Int!
       venue_id: ID
       venue_amount: Float
+    ): PodEarningsProjection!
+    """
+    The admin consoles' projection for a pod they are writing. Prices at the
+    CHOSEN host's rates (host_user_id — the host picked in the editor) or, with
+    none chosen, at the platform's default rates, which is exactly what an Auto
+    Pod template is checked against before any host enrols. The venue's money
+    is read from the slot itself (venue_slot_id), never typed by the client.
+    Admin roles only.
+    """
+    adminPotentialPodEarnings(
+      pod_amount: Float!
+      no_of_spots: Int!
+      host_user_id: ID
+      venue_id: ID
+      venue_slot_id: ID
     ): PodEarningsProjection!
     """
     The same projection for a signed-OUT visitor — the marketing site's earnings

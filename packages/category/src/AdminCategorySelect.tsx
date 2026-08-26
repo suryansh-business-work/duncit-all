@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Autocomplete, Stack, TextField } from '@mui/material';
+import { Autocomplete, Stack, TextField, type StackProps } from '@mui/material';
 import { Fieldset } from './Fieldset';
 import { useAdminCategories } from './queries';
 import { categoryOptions, subOptions, superOptions, type Option } from './categoryOptions';
@@ -63,7 +63,9 @@ export interface AdminCategorySelectProps {
   required?: boolean;
   disabled?: boolean;
   size?: 'small' | 'medium';
-  direction?: 'row' | 'column';
+  /** Stack direction — a responsive object (`{ xs: 'column', md: 'row' }`)
+   * lets three levels sit side by side on a desktop and stack on a phone. */
+  direction?: StackProps['direction'];
   labels?: Partial<Record<CategoryLevel, string>>;
   errors?: Partial<Record<CategoryLevel, string>>;
   /** When set, wrap the fields in a titled <fieldset> with this legend. */

@@ -22,11 +22,11 @@ interface Props {
 export default function PodCategoryFilter({ value, onChange, matchCount, clubCount }: Readonly<Props>) {
   const filtering = !!(value.super_id && value.sub_id);
   return (
-    <Box sx={{ mb: 2 }} data-testid="pod-category-filter">
+    <Box data-testid="pod-category-filter">
       <AdminCategorySelect
         value={value}
         onChange={onChange}
-        direction="row"
+        direction={{ xs: 'column', md: 'row' }}
         legend="Pod category"
         hint="Pick the category first — the club list below is narrowed to it. Leave blank to see every club."
       />

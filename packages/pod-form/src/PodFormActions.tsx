@@ -23,7 +23,7 @@ export default function PodFormActions({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
+    <DialogActions sx={{ p: 0 }}>
       <Button onClick={onCancel}>{t('podForm.common.cancel')}</Button>
       {showDraft && (
         <Button variant="outlined" type="button" disabled={disabled} onClick={onDraft}>

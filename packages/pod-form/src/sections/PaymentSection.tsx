@@ -3,7 +3,7 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Box, MenuItem, Slider, Stack, Switch, TextField, Typography } from '@mui/material';
 import { payableSpots } from '@duncit/utils';
 import { useSpotsBounds } from '../useSpotsBounds';
-import PriceBreakdown from '../components/PriceBreakdown';
+import EarningsProjection from '../components/EarningsProjection';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
 import { usePodFormData } from '../context';
@@ -162,7 +162,7 @@ export default function PaymentSection() {
         )}
       </Stack>
       {config.showFinance && !isFree && Number(podAmount) > 0 && finance && (
-        <PriceBreakdown amount={podAmount} finance={finance} productCost={productCost} spots={noOfSpots} />
+        <EarningsProjection productCost={productCost} />
       )}
       <TextField
         label={t('podForm.common.paymentTerms')}

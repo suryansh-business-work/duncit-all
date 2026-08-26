@@ -47,9 +47,11 @@ export const contactChangeResolvers = {
         args.phone_number,
         args.otp
       );
-      // Answered through `me` so the caller gets the same public User shape
-      // every other profile mutation hands back, session mirrors included.
-      return userService.me(auth.id);
+      // Answered through `publishMe` so the caller gets the same public User
+      // shape every other profile mutation hands back — and so the account's
+      // OTHER open surfaces learn the number moved rather than showing the old
+      // one until they are reloaded.
+      return userService.publishMe(auth.id);
     },
 
     requestEmailChangeOtp: async (
@@ -68,7 +70,7 @@ export const contactChangeResolvers = {
     ) => {
       const auth = requireAuth(ctx);
       await contactChangeService.confirmEmailChange(auth.id, args.email, args.otp);
-      return userService.me(auth.id);
+      return userService.publishMe(auth.id);
     },
   },
 };

@@ -2771,6 +2771,18 @@ export const userService = {
     return toPublic(await ensureUsername(u));
   },
 
+  /**
+   * `me`, announced to the account's other open surfaces.
+   *
+   * For a mutation that changed something on the SESSION — the name, the email,
+   * the phone — rather than one that only read it back. Email and phone are in
+   * SESSION_FIELDS, so a change proved in one tab has to reach the header in
+   * the others; without this they show the old address until a reload.
+   */
+  async publishMe(id: string) {
+    return publishSession(await this.me(id));
+  },
+
   async getById(id: string) {
     const u = await UserModel.findById(id);
     return toPublic(u);

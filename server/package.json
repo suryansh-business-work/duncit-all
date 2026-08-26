@@ -75,6 +75,7 @@
     "migrate:email-chrome:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-chrome.ts --dry-run",
     "migrate:email-chrome:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-chrome.ts --uri mongodb://127.0.0.1:27017/duncit-local",
     "migrate:email-chrome:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-chrome.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run",
+    "check:whatsapp": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-whatsapp.ts",
     "check:emails": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-email-catalogue.ts",
     "docs:emails": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-email-doc.ts"
   },

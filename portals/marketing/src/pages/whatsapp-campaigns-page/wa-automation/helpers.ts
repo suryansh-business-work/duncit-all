@@ -19,23 +19,45 @@ export const BLOCKER_COLORS: StatusColorMap = { BLOCKED: 'error' };
 
 /**
  * Which header asset a send would actually carry, in the send path's own order
- * of preference: the admin's override beats the campaign's, and only a
- * media-header template with neither is a problem.
+ * of preference: the admin's override beats the campaign's, the campaign's
+ * beats the platform default, and only a media-header template with none of
+ * the three is a problem.
  */
-export type MediaState = 'CUSTOM' | 'CAMPAIGN' | 'MISSING' | 'NOT_NEEDED';
+export type MediaState = 'CUSTOM' | 'CAMPAIGN' | 'DEFAULT' | 'MISSING' | 'NOT_NEEDED';
 
-export const mediaStateFor = (row: WaScenario): MediaState => {
+/** The one header kind the platform default fits — it is a single image, so a
+ * VIDEO or FILE header still needs its own asset. Mirrors the send path. */
+const DEFAULTABLE_HEADER = 'IMAGE';
+
+export const mediaStateFor = (row: WaScenario, defaultUrl: string): MediaState => {
   if (row.override_media_url) return 'CUSTOM';
   if (row.media_url) return 'CAMPAIGN';
-  return row.needs_media ? 'MISSING' : 'NOT_NEEDED';
+  if (!row.needs_media) return 'NOT_NEEDED';
+  const covered = row.template_header_format === DEFAULTABLE_HEADER && !!defaultUrl;
+  return covered ? 'DEFAULT' : 'MISSING';
+};
+
+/** The URL a send on this row would actually carry, readable without opening
+ * the dialog. */
+export const effectiveMediaUrl = (row: WaScenario, defaultUrl: string): string => {
+  const own = row.override_media_url || row.media_url;
+  if (own) return own;
+  return mediaStateFor(row, defaultUrl) === 'DEFAULT' ? defaultUrl : '';
 };
 
 /** MISSING is the only failing state — it is the `Media URL Missing` send. */
 export const MEDIA_STATE_COLORS: StatusColorMap = {
   CUSTOM: 'info',
   CAMPAIGN: 'success',
+  DEFAULT: 'success',
   MISSING: 'error',
 };
+
+/** Whether the board has media-header rows that would fall through to a
+ * default nobody has set — the one warning worth a banner, because it is 52
+ * rows failing the same way for the same reason. */
+export const needsDefaultMedia = (rows: readonly WaScenario[], defaultUrl: string) =>
+  !defaultUrl && rows.some((row) => mediaStateFor(row, defaultUrl) === 'MISSING');
 
 /** AiSensy is not consistent about casing; the colour maps are. */
 export const statusKey = (status: string) => status.toUpperCase();

@@ -35,6 +35,8 @@ export const waAutomationTypeDefs = gql`
     template_category: String!
     "How many values the live template expects."
     template_params: Int!
+    "The live template's header kind — TEXT, IMAGE, VIDEO, FILE, or empty for none."
+    template_header_format: String!
     "The header asset the CAMPAIGN carries. Non-empty means every send must supply one."
     media_url: String!
     "The admin's own header asset. It wins over the campaign's; reconcile never touches it."
@@ -49,6 +51,14 @@ export const waAutomationTypeDefs = gql`
   type WaScenarioBoard {
     "The kill switch. Off by default — nothing sends until somebody turns it on."
     global_enabled: Boolean!
+    """
+    The platform default header asset: what every media-header scenario sends
+    when neither the row nor its campaign carries one. Empty means unset — and
+    with no campaign at AiSensy carrying an asset, unset means every one of
+    those scenarios fails with "Media URL Missing".
+    """
+    default_media_url: String!
+    default_media_filename: String!
     "False when AiSensy could not be read; the rows still render without live state."
     catalogue_ok: Boolean!
     catalogue_error: String!
@@ -133,11 +143,20 @@ export const waAutomationTypeDefs = gql`
     campaign_name: String!
   }
 
+  "The platform default header asset, alone — for the Settings tab."
+  type WaDefaultMedia {
+    "Empty when no default is set."
+    url: String!
+    filename: String!
+  }
+
   extend type Query {
     "Every automatic message, its switch, and what AiSensy holds for it."
     whatsappScenarios: WaScenarioBoard!
     "One send attempt in full — the detail behind a row of the merged WhatsApp log."
     whatsappMessageLog(id: ID!): WaMessageLogRow
+    "The default header asset every media-header scenario falls back to. Cheap: no AiSensy read."
+    whatsappDefaultMedia: WaDefaultMedia!
     "The signed-in person's own WhatsApp switches."
     myWhatsappPreference: WaPreference!
   }
@@ -147,7 +166,7 @@ export const waAutomationTypeDefs = gql`
     setWhatsappScenarioEnabled(event_key: String!, enabled: Boolean!): WaScenarioBoard!
     "Re-read AiSensy and cache each template's category, which sets the rate."
     reconcileWhatsappScenarios: WaScenarioBoard!
-    "Set the admin's own header asset for one scenario; an empty url clears it. Reconcile never overwrites it."
+    "Set the admin's own header asset for one scenario — or the platform default, with __global__ as the key. An empty url clears it. Reconcile never overwrites it."
     setWhatsappScenarioMedia(event_key: String!, url: String!, filename: String): WaScenarioBoard!
     setMyWhatsappPreference(category: String!, enabled: Boolean!): WaPreference!
     setAllMyWhatsappPreferences(enabled: Boolean!): WaPreference!

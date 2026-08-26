@@ -4,6 +4,7 @@ import {
   BADGE_WINDOW,
   BADGE_WINDOW_KEY,
   HOST_FREE_SPOT_NOTE,
+  POD_FEEDBACK_REMINDER_OPTIONS,
   authMessageCardState,
   autoPodActionable,
   autoPodCityLabel,
@@ -12,7 +13,9 @@ import {
   autoPodMissingRoles,
   badgeProgressPercent,
   buildCommPreferenceLabels,
+  buildPodFeedbackInput,
   canFollowBack,
+  canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
   contactDraftFrom,
@@ -25,6 +28,7 @@ import {
   hostPodSection,
   normalizeUsername,
   offersFollowBack,
+  orderedAspects,
   participationInputFrom,
   payableSpots,
   podParticipationActions,
@@ -41,11 +45,23 @@ import {
   type CommChannelState,
   type ContactChannel,
   type ContactSnapshot,
+  type PodFeedbackReminderChoice,
+  type PodFeedbackScores,
   type PodParticipationFields,
   type PodPhaseFields,
   type UsernameRejection,
 } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+
+/** One pending pod as the rating prompt receives it, plus the guest's answers. */
+interface PodFeedbackMock {
+  title: string;
+  /** `feedback_aspects` from the server — a virtual pod has no VENUE or FOOD. */
+  serverAspects: string[];
+  scores: PodFeedbackScores;
+  message: string;
+  closedWith: PodFeedbackReminderChoice;
+}
 
 /** One badge's standing for one member, exactly as `myBadgeProgress` reports it. */
 interface BadgeMock {
@@ -600,5 +616,40 @@ export default defineDemos('utils', [
       ],
     },
     compute: (mock) => Object.fromEntries(mock.urls.map((url) => [url, videoSourceUrl(url)])),
+  }),
+  defineDemo<PodFeedbackMock>({
+    id: 'pod-feedback',
+    title: 'The post-pod rating prompt, and the way out of it',
+    note:
+      'Drop `OVERALL` to 0 and Submit locks — it is the only required score. Score FOOD 0 ' +
+      'and it leaves the payload entirely: "not scored" and "scored badly" are different ' +
+      'answers. `closedWith` is what the Close button writes: LATER snoozes this pod, NEVER ' +
+      'retires it, and either way the server remembers, so a reload does not ask again.',
+    mock: {
+      // Exactly what myPendingPodFeedback answers for a pod at a real venue.
+      title: 'Sunday Chess & Filter Coffee',
+      serverAspects: ['OVERALL', 'HOST', 'VENUE', 'SAFETY', 'FOOD', 'OTHER'],
+      scores: { OVERALL: 4, HOST: 5, VENUE: 3, FOOD: 0 },
+      message: '  Great host, room was a bit loud.  ',
+      closedWith: 'LATER',
+    },
+    compute: (mock) => {
+      const aspects = orderedAspects(mock.serverAspects);
+      const chosen = POD_FEEDBACK_REMINDER_OPTIONS.find((o) => o.choice === mock.closedWith);
+      return {
+        Asked: aspects.join(' → '),
+        'Submit enabled': String(canSubmitPodFeedback(mock.scores)),
+        Payload: JSON.stringify(
+          buildPodFeedbackInput({
+            podId: 'DUN-POD-4821',
+            scores: mock.scores,
+            message: mock.message,
+            aspects,
+          })
+        ),
+        'Close offers': POD_FEEDBACK_REMINDER_OPTIONS.map((o) => o.labelKey).join(', '),
+        'Close writes': chosen ? chosen.choice : '(not one of the two options)',
+      };
+    },
   }),
 ]);

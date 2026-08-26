@@ -5,7 +5,12 @@ import { useTranslation } from '@duncit/app-settings';
 import GlobalSwitchCard from './GlobalSwitchCard';
 import MediaDialog from './MediaDialog';
 import { getScenarioColumns } from './scenarioColumns';
-import { boardIsHealthy, GLOBAL_EVENT_KEY, scenarioSearchText } from './helpers';
+import {
+  boardIsHealthy,
+  GLOBAL_EVENT_KEY,
+  needsDefaultMedia,
+  scenarioSearchText,
+} from './helpers';
 import { useWhatsappBoard } from './useWhatsappBoard';
 import type { WaScenario } from './queries';
 
@@ -48,9 +53,17 @@ export default function WaAutomation() {
   );
 
   const rows = board?.rows ?? EMPTY_ROWS;
+  const defaultMediaUrl = board?.default_media_url ?? '';
   const columns = useMemo(
-    () => getScenarioColumns({ t, busyKey, onToggle: toggle, onSetMedia: setMediaFor }),
-    [t, busyKey, toggle]
+    () =>
+      getScenarioColumns({
+        t,
+        busyKey,
+        onToggle: toggle,
+        onSetMedia: setMediaFor,
+        defaultMediaUrl,
+      }),
+    [t, busyKey, toggle, defaultMediaUrl]
   );
   const fetchRows = useMemo(() => clientTableFetch(rows, scenarioSearchText), [rows]);
 
@@ -93,6 +106,10 @@ export default function WaAutomation() {
           {t('adminWhatsapp.catalogueUnreachable')}
           {catalogueError && ` ${catalogueError}`}
         </Alert>
+      )}
+      {/* One banner for what is otherwise 52 identical blockers. */}
+      {board && needsDefaultMedia(rows, defaultMediaUrl) && (
+        <Alert severity="warning">{t('adminWhatsapp.defaultMediaMissing')}</Alert>
       )}
       {boardIsHealthy(rows) && <Alert severity="success">{t('adminWhatsapp.healthy')}</Alert>}
 

@@ -15,6 +15,8 @@ export interface WaScenario {
   template_status: string;
   template_category: string;
   template_params: number;
+  /** The live template's header kind — TEXT, IMAGE, VIDEO, FILE, or ''. */
+  template_header_format: string;
   /** The header asset the CAMPAIGN carries — reconcile-owned, read from AiSensy. */
   media_url: string;
   /** The admin's own header asset. It wins over the campaign's; reconcile never touches it. */
@@ -28,13 +30,22 @@ export interface WaScenario {
 
 export interface WaScenarioBoard {
   global_enabled: boolean;
+  /** The platform default header asset — one image, so it covers an IMAGE
+   * header and nothing else. Empty means unset. */
+  default_media_url: string;
   catalogue_ok: boolean;
   catalogue_error: string;
   rows: WaScenario[];
 }
 
+/** The default alone, for the Settings card — no AiSensy read behind it. */
+export interface WaDefaultMedia {
+  url: string;
+}
+
 const SCENARIO_BOARD_FIELDS = `
   global_enabled
+  default_media_url
   catalogue_ok
   catalogue_error
   rows {
@@ -51,6 +62,7 @@ const SCENARIO_BOARD_FIELDS = `
     template_status
     template_category
     template_params
+    template_header_format
     media_url
     override_media_url
     override_media_filename
@@ -63,6 +75,14 @@ export const WHATSAPP_SCENARIOS = gql`
   query WhatsappScenarios {
     whatsappScenarios {
       ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+export const WHATSAPP_DEFAULT_MEDIA = gql`
+  query WhatsappDefaultMedia {
+    whatsappDefaultMedia {
+      url
     }
   }
 `;
@@ -84,7 +104,8 @@ export const RECONCILE_WHATSAPP_SCENARIOS = gql`
   }
 `;
 
-/** An empty url clears the override. Reconcile never overwrites what this sets. */
+/** An empty url clears the override. Reconcile never overwrites what this sets.
+ * With `__global__` as the key it writes the platform default instead. */
 export const SET_WHATSAPP_SCENARIO_MEDIA = gql`
   mutation SetWhatsappScenarioMedia($event_key: String!, $url: String!, $filename: String) {
     setWhatsappScenarioMedia(event_key: $event_key, url: $url, filename: $filename) {

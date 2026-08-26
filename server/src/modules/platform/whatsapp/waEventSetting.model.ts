@@ -49,6 +49,18 @@ export interface IWaEventSetting {
    */
   media_synced_at: Date | null;
   /**
+   * The template's header kind — TEXT, IMAGE, VIDEO, FILE — cached off AiSensy
+   * with the pair above, under the same stamp. Empty for a template with no
+   * header at all, and for a row nobody has synced yet.
+   *
+   * The KIND, not a boolean, because the platform default is one image: a
+   * text-header template sent WITH a header it does not have is a different
+   * rejection, and the five FILE-header payment templates want that send's own
+   * invoice, never a shared picture. The send path cannot ask AiSensy per
+   * message, so the answer has to be here.
+   */
+  template_header_format: string;
+  /**
    * The header asset an ADMIN set for this scenario in the console.
    *
    * ADMIN-OWNED: written only by `setMedia`, NEVER touched by reconcile — the
@@ -67,6 +79,19 @@ export interface IWaEventSetting {
  * The one row that is not a scenario. Stored in the same collection rather than
  * its own singleton so the send path reads ONE collection: a second collection
  * would mean a second round trip in front of every message.
+ *
+ * Its `override_media_url` / `override_media_filename` pair is the DEFAULT
+ * header asset: what every media-header scenario sends when it has no asset of
+ * its own. 59 of the project's 74 templates carry an image or document header
+ * and not one campaign at AiSensy has an asset attached, so without a default
+ * every one of those scenarios fails with `Media URL Missing` until somebody
+ * sets media on it by hand, row by row. Set once, under Marketing > WhatsApp >
+ * Settings.
+ *
+ * Anything that UPSERTS this row must `$setOnInsert` `enabled` to
+ * {@link WA_GLOBAL_DEFAULT_ENABLED}: the schema default is `true`, and a plain
+ * upsert from the media editor would switch WhatsApp on for a database where
+ * nobody has turned it on yet.
  */
 export const WA_GLOBAL_KEY = '__global__';
 
@@ -78,6 +103,7 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
     media_url: { type: String, default: '' },
     media_filename: { type: String, default: '' },
     media_synced_at: { type: Date, default: null },
+    template_header_format: { type: String, default: '' },
     override_media_url: { type: String, default: '' },
     override_media_filename: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },

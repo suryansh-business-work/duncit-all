@@ -74,7 +74,7 @@ export default function PodFeedbackCard({
             justifyContent: "flex-end"
           }}>
             <Button onClick={onLeave}>
-              {saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.skip')}
+              {saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.close')}
             </Button>
             <Button
               variant="contained"

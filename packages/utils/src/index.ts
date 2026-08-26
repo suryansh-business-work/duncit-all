@@ -145,6 +145,7 @@ export {
   POD_FEEDBACK_ASPECTS,
   POD_FEEDBACK_ASPECT_KEY,
   POD_FEEDBACK_ASPECT_LABEL,
+  POD_FEEDBACK_REMINDER_OPTIONS,
   buildPodFeedbackInput,
   canSubmitPodFeedback,
   orderedAspects,
@@ -154,6 +155,7 @@ export {
   type MyPodFeedback,
   type PodFeedbackAspect,
   type PodFeedbackInput,
+  type PodFeedbackReminderChoice,
   type PodFeedbackScores,
 } from './pod-feedback';
 export { podMediaLink, podMediaPath } from './pod-media';

@@ -24,4 +24,5 @@ export {
   GSTIN_PATTERN,
   OTP_PATTERN,
   POSTAL_CODE_PATTERN,
+  PUBLIC_URL_PATTERN,
 } from './patterns';

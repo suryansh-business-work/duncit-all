@@ -1249,6 +1249,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       comments: 'Comments',
       commentsPlaceholder: 'Tell us more (optional)',
       skip: 'Not now',
+      close: 'Close',
+      // Closing the prompt without answering asks one more question, so the
+      // pop-up knows whether it is allowed to come back. Without it, "again
+      // and again" is the only behaviour a dismiss can have.
+      remindTitle: 'Should we ask you again?',
+      remindBody:
+        'Your rating is how the host, the venue and the club find out how “{title}” actually went.',
+      remindLater: 'Remind me next time',
+      remindNever: 'Do not remind me again',
       submit: 'Submit',
       submitting: 'Sending…',
       rateAspect: 'Rate {aspect} {stars} out of 5',

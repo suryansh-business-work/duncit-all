@@ -1,6 +1,6 @@
 import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
-import { MEDIA_STATE_COLORS, mediaStateFor, type MediaState } from './helpers';
+import { MEDIA_STATE_COLORS, effectiveMediaUrl, mediaStateFor, type MediaState } from './helpers';
 import type { WaScenario } from './queries';
 
 interface MediaCellProps {
@@ -8,6 +8,9 @@ interface MediaCellProps {
   /** One localized label per state, computed once by the column builder. */
   stateLabels: Readonly<Record<MediaState, string>>;
   setLabel: string;
+  /** The platform default, so a row with no asset of its own can say what it
+   * would actually send. */
+  defaultUrl: string;
   onOpen: (row: WaScenario) => void;
 }
 
@@ -19,10 +22,15 @@ interface MediaCellProps {
  * row stays a quiet caption rather than an invitation to attach something
  * AiSensy would refuse.
  */
-export function MediaCell({ row, stateLabels, setLabel, onOpen }: Readonly<MediaCellProps>) {
-  const state = mediaStateFor(row);
-  // The URL actually in play, readable without opening the dialog.
-  const effectiveUrl = row.override_media_url || row.media_url;
+export function MediaCell({
+  row,
+  stateLabels,
+  setLabel,
+  defaultUrl,
+  onOpen,
+}: Readonly<MediaCellProps>) {
+  const state = mediaStateFor(row, defaultUrl);
+  const effectiveUrl = effectiveMediaUrl(row, defaultUrl);
   return (
     <Stack
       spacing={0.25}

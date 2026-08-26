@@ -5,6 +5,8 @@ import {
   BouncerSosAlertModel,
   BouncerCallbackRequestModel,
   BouncerFeedbackModel,
+  PodFeedbackReminderModel,
+  type PodFeedbackReminderChoice,
   type BouncerSosStatus,
   type BouncerCallbackStatus,
   type BouncerFeedbackCategory,
@@ -194,6 +196,39 @@ async function toFeedbackPub(doc: any) {
 async function assertAttended(userId: string, podId: string) {
   if (await hasMarkedAttendance(podId, userId)) return;
   fail('FORBIDDEN', 'Only an attendee the host has marked present can rate this pod');
+}
+
+/**
+ * How long "remind me next time" stays quiet for.
+ *
+ * "Next time" means the next time the guest comes back, not the next screen
+ * they land on — without a window, closing the prompt and reloading the page
+ * puts the same question straight back in front of them, which is the whole
+ * complaint. NEVER is not on a clock at all.
+ */
+const FEEDBACK_SNOOZE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The pods this guest has asked us to stop asking about — the ones they said
+ * NEVER to, plus the ones they said LATER to and whose window is still open.
+ */
+async function silencedPodIds(
+  userId: string,
+  podIds: ReadonlyArray<Types.ObjectId>
+): Promise<Set<string>> {
+  const rows = await PodFeedbackReminderModel.find({
+    user_id: new Types.ObjectId(userId),
+    pod_id: { $in: podIds },
+  })
+    .select('pod_id choice updated_at')
+    .lean();
+  const now = Date.now();
+  const silenced = new Set<string>();
+  for (const row of rows) {
+    const quiet = row.choice === 'NEVER' || now - row.updated_at.getTime() < FEEDBACK_SNOOZE_MS;
+    if (quiet) silenced.add(String(row.pod_id));
+  }
+  return silenced;
 }
 
 async function loadPodOrFail(podId: string) {
@@ -602,23 +637,56 @@ export const bouncerService = {
    * "how was the pod?" feedback pop-up shown on next login (Bug 6). "Attended"
    * is the host's mark and not a booking, the same rule the shared link runs
    * on: prompting someone who cannot submit would open a form that throws.
+   *
+   * A pod the guest has already closed the prompt on is out too: that answer
+   * is the difference between asking once and asking every single page load.
    */
   async getPendingPodFeedback(userId: string) {
     const uid = new Types.ObjectId(userId);
     const podIds = await markedPodIdsFor(userId);
     if (podIds.length === 0) return null;
-    const fed = await BouncerFeedbackModel.find({ user_id: uid, pod_id: { $in: podIds } })
-      .select('pod_id')
-      .lean();
+    const [fed, silenced] = await Promise.all([
+      BouncerFeedbackModel.find({ user_id: uid, pod_id: { $in: podIds } })
+        .select('pod_id')
+        .lean(),
+      silencedPodIds(userId, podIds),
+    ]);
     const rated = new Set(fed.map((f) => String(f.pod_id)));
-    const pending = podIds.filter((p) => !rated.has(String(p)));
+    const pending = podIds.filter((p) => !rated.has(String(p)) && !silenced.has(String(p)));
     if (pending.length === 0) return null;
+    // Over, not merely started. Attendance is marked at the door, so a start
+    // time alone asks a guest how the evening went while they are still in it.
+    const now = new Date();
     const pod = await PodModel.findOne({
       _id: { $in: pending },
-      pod_date_time: { $lt: new Date() },
+      $or: [
+        { pod_end_date_time: { $lt: now } },
+        { pod_end_date_time: null, pod_date_time: { $lt: now } },
+      ],
     })
       .sort({ pod_date_time: -1 })
       .select('_id');
     return pod ? buildPodInfo(pod._id as Types.ObjectId) : null;
+  },
+
+  /**
+   * Remember that the guest closed the rating prompt for this pod without
+   * answering it, and whether they want to be asked again.
+   *
+   * Gated on the same attendance rule as the rating itself: the only pods a
+   * guest can be asked about are the ones they were marked present at, so
+   * those are the only ones they can silence.
+   */
+  async remindPodFeedback(userId: string, podId: string, choice: PodFeedbackReminderChoice) {
+    if (!Types.ObjectId.isValid(podId)) fail('BAD_USER_INPUT', 'Invalid pod_id');
+    await assertAttended(userId, podId);
+    // Upsert on the pair, so saying LATER twice restarts the window instead of
+    // leaving a stale row that expired hours ago.
+    await PodFeedbackReminderModel.updateOne(
+      { user_id: new Types.ObjectId(userId), pod_id: new Types.ObjectId(podId) },
+      { $set: { choice } },
+      { upsert: true }
+    );
+    return true;
   },
 };

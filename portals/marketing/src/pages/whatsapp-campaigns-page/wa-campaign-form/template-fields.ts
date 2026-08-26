@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PUBLIC_URL_PATTERN } from '@duncit/forms';
 import type { Translator } from '@duncit/app-settings';
 import type {
   AisensyButtonInput,
@@ -15,10 +16,6 @@ import type {
  * server path and are refused by the same gate — two copies of these rules
  * would be two ways to reach `Media URL Missing` from the same screen.
  */
-
-/** AiSensy fetches the asset itself at send time, so nothing but an absolute
- * public link can ever work: a relative path or a blob: URL is refused. */
-const MEDIA_URL_PATTERN = /^https?:\/\/\S+$/i;
 
 /** AiSensy says FILE where WhatsApp draws a DOCUMENT; both mean the header the
  * recipient sees a file name on. */
@@ -78,7 +75,9 @@ export function refineTemplateFields(
     });
     return;
   }
-  if (values.media_url && !MEDIA_URL_PATTERN.test(values.media_url)) {
+  // AiSensy fetches the asset itself at send time, so nothing but an absolute
+  // public link can ever work: a relative path or a blob: URL is refused.
+  if (values.media_url && !PUBLIC_URL_PATTERN.test(values.media_url)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['media_url'],

@@ -2,7 +2,11 @@ import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
 import { sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
-import { listCampaigns } from '@modules/platform/aisensy/aisensy.project';
+import {
+  isProjectApiConfigured,
+  listCampaigns,
+  listTemplates,
+} from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
 import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
 import { WaMessageLogModel, type WaMessageStatus } from './waMessageLog.model';
@@ -67,13 +71,20 @@ interface Switches {
    * synced is not "no asset" — it is "nobody looked", and `bindCampaignMedia`
    * is what looks. */
   media_synced: boolean;
+  /** The template's header kind, cached with the pair above. The platform
+   * default is one image, so it is attached to IMAGE and nothing else. */
+  header_format: string;
+  /** The platform-wide default header asset, off the global row. The last
+   * resort in the media order, and — with no campaign at AiSensy carrying an
+   * asset of its own — the one that actually sends today. */
+  default_media: { url: string; filename: string } | null;
 }
 
 /** Both switches in one read: the collection holds a handful of rows. */
 async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
     .select(
-      'event_key enabled template_category media_url media_filename media_synced_at override_media_url override_media_filename'
+      'event_key enabled template_category media_url media_filename media_synced_at template_header_format override_media_url override_media_filename'
     )
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
@@ -84,6 +95,8 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     category: '',
     media: null,
     media_synced: true,
+    header_format: '',
+    default_media: null,
   });
   // An absent global row means nobody has turned automatic WhatsApp on yet.
   if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) return off('Automatic WhatsApp is switched off');
@@ -96,17 +109,45 @@ async function switchesFor(eventKey: string): Promise<Switches> {
   // whichever url won, never mixed across the two pairs.
   const mediaUrl = own?.override_media_url || own?.media_url || '';
   const mediaFilename = own?.override_media_url ? own.override_media_filename : own?.media_filename;
+  const defaultUrl = global?.override_media_url ?? '';
   return {
     on: true,
     reason: '',
     category: own?.template_category ?? '',
     media: mediaUrl ? { url: mediaUrl, filename: mediaFilename || 'attachment' } : null,
-    media_synced: Boolean(own?.media_synced_at),
+    // A row stamped before `template_header_format` existed knows its asset
+    // but not its header kind — so it counts as unsynced and binds once more,
+    // rather than reading as "no header" until somebody presses Reconcile.
+    // `.lean()` applies no schema defaults, so an old document really is
+    // `undefined` here rather than ''.
+    media_synced: Boolean(own?.media_synced_at) && own?.template_header_format !== undefined,
+    header_format: own?.template_header_format ?? '',
+    default_media: defaultUrl
+      ? { url: defaultUrl, filename: global?.override_media_filename || 'attachment' }
+      : null,
   };
 }
 
+interface BoundMedia {
+  /** The asset the campaign was built with at AiSensy, or null. */
+  media: { url: string; filename: string } | null;
+  /** Its template's header kind — TEXT, IMAGE, VIDEO, FILE, or '' for none. */
+  header_format: string;
+}
+
 /**
- * The campaign's own header asset, read off AiSensy and cached onto the row.
+ * The only header kind the platform default fits.
+ *
+ * The default is one image an operator uploads once. A VIDEO header wants a
+ * video, and the five FILE-header templates are the payment ones — each wants
+ * that send's own invoice, never a shared picture. Both keep failing until
+ * they are given an asset of their own, which is the honest outcome.
+ */
+const DEFAULTABLE_HEADER = 'IMAGE';
+
+/**
+ * The campaign's own header asset — and its template's header kind — read off
+ * AiSensy and cached onto the row.
  *
  * The cache is normally filled by the console's Reconcile — but a scenario
  * nobody has reconciled sends with nothing attached, and a media campaign
@@ -116,30 +157,39 @@ async function switchesFor(eventKey: string): Promise<Switches> {
  *
  * It costs ONE catalogue read per scenario, ever: the stamp is written whatever
  * the answer was, so a text template never pays for a second one. The admin
- * override is untouched — this fills the reconcile-owned pair, and only when
- * that pair has never been filled.
+ * override is untouched — this fills the reconcile-owned fields, and only when
+ * they have never been filled.
  *
  * Best effort. The Project API is a second credential the send itself does not
  * need, so a console that cannot read it sends exactly as before — the rule
  * `resolveCampaign` already follows for a marketing send.
  */
-async function bindCampaignMedia(event: WaEvent, switches: Switches) {
-  if (switches.media_synced) return null;
+async function bindCampaignMedia(event: WaEvent): Promise<BoundMedia | null> {
+  // Asked first: without the Project API both reads below throw before they
+  // reach the network, and an unsynced row would pay for two throws on every
+  // send until somebody configures it.
+  if (!(await isProjectApiConfigured())) return null;
   try {
-    const campaign = (await listCampaigns()).find((row) => row.name === event.campaign);
+    const [campaigns, templates] = await Promise.all([listCampaigns(), listTemplates()]);
+    const campaign = campaigns.find((row) => row.name === event.campaign);
+    const template = templates.find((row) => row.name === campaign?.template_name);
+    const header_format = template?.header_format ?? '';
     await WaEventSettingModel.updateOne(
       { event_key: event.key },
       {
         $set: {
           media_url: campaign?.media_url ?? '',
           media_filename: campaign?.media_filename ?? '',
+          template_header_format: header_format,
           media_synced_at: new Date(),
         },
       },
       { upsert: true }
     );
-    if (!campaign?.media_url) return null;
-    return { url: campaign.media_url, filename: campaign.media_filename || 'attachment' };
+    const media = campaign?.media_url
+      ? { url: campaign.media_url, filename: campaign.media_filename || 'attachment' }
+      : null;
+    return { media, header_format };
   } catch (error) {
     // An unconfigured or unreachable Project API is not a send failure. No
     // stamp is written, so the next send on this scenario tries again.
@@ -251,6 +301,28 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
   return dispatch(event, input, destination, params, switches);
 }
 
+/**
+ * The header asset this send carries, or null.
+ *
+ * The platform default is attached ONLY to an IMAGE header: a text template
+ * sent with a header it does not have is a different rejection, not a fix, and
+ * a document header wants a document.
+ */
+async function resolveMedia(
+  event: WaEvent,
+  input: WaSendInput,
+  switches: Switches
+): Promise<{ url: string; filename: string } | null> {
+  const own = input.media ?? switches.media;
+  if (own) return own;
+
+  const bound = switches.media_synced ? null : await bindCampaignMedia(event);
+  if (bound?.media) return bound.media;
+
+  const headerFormat = bound?.header_format ?? switches.header_format;
+  return headerFormat === DEFAULTABLE_HEADER ? switches.default_media : null;
+}
+
 /** Claim the slot, send, then write what happened onto the same row. */
 async function dispatch(
   event: WaEvent,
@@ -261,12 +333,15 @@ async function dispatch(
 ): Promise<WaSendOutcome> {
   const pricing = await getWaPricing();
 
-  // A caller with a better asset — this pod's own image — wins over the row's,
-  // and the row's over the campaign's own (caller > admin override > cache >
-  // AiSensy). A media campaign rejects a send that carries none, and the
-  // requirement is invisible on the template.
-  const media =
-    input.media ?? switches.media ?? (await bindCampaignMedia(event, switches)) ?? undefined;
+  // The most specific asset wins: caller > this row's admin override > the
+  // campaign's own (cached, or bound off AiSensy on first use) > the platform
+  // default. A media campaign rejects a send that carries none and the
+  // requirement is invisible on the template — and today the default is the
+  // only rung on this ladder that is set for any scenario.
+  //
+  // Resolved lazily: a caller that brought its own asset must not pay for two
+  // AiSensy reads to learn a header kind this send will never consult.
+  const media = (await resolveMedia(event, input, switches)) ?? undefined;
 
   const claim = {
     event_key: event.key,

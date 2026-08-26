@@ -8,11 +8,13 @@ jest.mock('@/hooks/useBouncer', () => ({ useBouncer: jest.fn() }));
 const mockedBouncer = useBouncer as jest.Mock;
 const getPendingPodFeedback = jest.fn();
 const submitPodFeedback = jest.fn();
+const remindPodFeedback = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
   submitPodFeedback.mockResolvedValue(undefined);
-  mockedBouncer.mockReturnValue({ getPendingPodFeedback, submitPodFeedback });
+  remindPodFeedback.mockResolvedValue(undefined);
+  mockedBouncer.mockReturnValue({ getPendingPodFeedback, submitPodFeedback, remindPodFeedback });
 });
 
 describe('PodFeedbackPrompt', () => {
@@ -45,11 +47,17 @@ describe('PodFeedbackPrompt', () => {
     expect(getPendingPodFeedback).toHaveBeenCalled();
   });
 
-  it('dismisses on "Not now"', async () => {
+  it('asks whether to come back before it closes, and records the answer', async () => {
     getPendingPodFeedback.mockResolvedValue({ id: 'p1', title: 'Past Pod' });
     renderWithProviders(<PodFeedbackPrompt />);
     await waitFor(() => expect(screen.getByTestId('pod-feedback-prompt')).toBeOnTheScreen());
+
+    // Close swaps the form for the reminder question rather than vanishing.
     fireEvent.press(screen.getByTestId('pod-feedback-skip'));
+    expect(screen.getByTestId('pod-feedback-reminder')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('pod-feedback-remind-never'));
+    expect(remindPodFeedback).toHaveBeenCalledWith('p1', 'NEVER');
     expect(screen.queryByTestId('pod-feedback-prompt')).toBeNull();
   });
 

@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { bouncerService } from './bouncer.service';
+import type { PodFeedbackReminderChoice } from './bouncer.model';
 
 // Bouncer monitoring now lives in the Support portal, so the agent-side
 // queries/mutations are gated to support roles instead of city admins.
@@ -139,6 +140,14 @@ export const bouncerResolvers = {
     submitBouncerFeedback: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return bouncerService.submitFeedback(user.id, args.input);
+    },
+    remindPodFeedback: (
+      _p: unknown,
+      args: { pod_id: string; choice: PodFeedbackReminderChoice },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return bouncerService.remindPodFeedback(user.id, args.pod_id, args.choice);
     },
   },
 };

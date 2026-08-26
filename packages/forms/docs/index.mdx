@@ -27,6 +27,7 @@ exports:
   - 'SLUG_KEY_PATTERN'
   - 'PERSON_NAME_PATTERN'
   - 'PHONE_NUMBER_PATTERN'
+  - 'PUBLIC_URL_PATTERN'
   - 'GSTIN_PATTERN'
 ---
 
@@ -230,6 +231,7 @@ zodRules.optionalPhoneNumber('Phone number').safeParse('98450');      // fails â
 | `PAN_PATTERN` | `/^[A-Z]{5}\d{4}[A-Z]$/` | Indian PAN. |
 | `AADHAR_PATTERN` | `/^\d{12}$/` | Aadhaar. |
 | `GSTIN_PATTERN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | 15-char GSTIN with the literal `Z`. |
+| `PUBLIC_URL_PATTERN` | `/^https?:\/\/\S+$/i` | An absolute http(s) link a vendor can fetch â€” a WhatsApp header asset. Narrower than `optionalUrl`, which also takes `mailto:` and `tel:`. |
 | `OTP_PATTERN` | `/^\d{4,8}$/` | OTP codes. |
 | `POSTAL_CODE_PATTERN` | `/^[\dA-Za-z -]{3,12}$/` | Postal / ZIP codes. |
 

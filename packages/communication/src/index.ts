@@ -88,6 +88,7 @@ export {
   HttpTransport,
   DEFAULT_RETRY,
   isRetryableStatus,
+  describeFetchError,
   redact,
   type HttpRequest,
   type HttpResponse,

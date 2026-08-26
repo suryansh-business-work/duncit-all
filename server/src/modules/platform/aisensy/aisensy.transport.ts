@@ -49,6 +49,27 @@ export function isRetryableStatus(status: number): boolean {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Why the wire failed, in words a log row can carry.
+ *
+ * Node's `fetch` reports every connection-level failure as the same
+ * `TypeError: fetch failed` and puts the actual reason — DNS, a refused
+ * socket, undici's own connect timeout — on `cause`. Our abort arrives as an
+ * `AbortError`. Three rows that said only "fetch failed" were the whole of
+ * what the console had to say about an AiSensy outage.
+ */
+export function describeFetchError(error: unknown): string {
+  const err = error as { name?: string; message?: string; cause?: { code?: string; message?: string } };
+  if (err?.name === 'AbortError') return `no answer within ${TIMEOUT_MS / 1000}s`;
+  const cause = err?.cause;
+  // Both when both exist: the code is what a reader greps for, the message is
+  // where Node puts the host and port ("getaddrinfo ENOTFOUND backend.aisensy.com").
+  if (cause?.code && cause.message) return `${cause.code} (${cause.message})`;
+  if (cause?.code) return cause.code;
+  if (cause?.message) return cause.message;
+  return err?.message || String(error);
+}
+
 /** One attempt, abandoned if the vendor never answers. */
 async function attemptOnce(url: string, body: Record<string, unknown>): Promise<JsonResponse> {
   const controller = new AbortController();
@@ -100,6 +121,11 @@ export async function postJson(url: string, body: Record<string, unknown>): Prom
   }
 
   // Only reachable when every attempt threw — a returned response, retryable or
-  // not, leaves through the loop above.
-  throw lastError;
+  // not, leaves through the loop above. The message is what the log row
+  // records as the reason, so it says which failure and how many times, not
+  // the bare "fetch failed" Node hands over.
+  throw new Error(
+    `Could not reach AiSensy after ${ATTEMPTS} attempt(s): ${describeFetchError(lastError)}`,
+    { cause: lastError }
+  );
 }

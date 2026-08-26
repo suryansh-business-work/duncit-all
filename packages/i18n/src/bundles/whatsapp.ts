@@ -135,7 +135,10 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     mediaNotNeeded: 'Not needed',
     mediaNone: 'No asset',
     mediaFromCampaign: 'Campaign asset',
+    mediaDefault: 'Default asset',
     mediaCustom: 'Custom asset',
+    defaultMediaMissing:
+      'Some scenarios send a header image and no default is set — every one of them fails with "Media URL Missing" until you set one under Settings.',
     setMedia: 'Set media…',
     clearMedia: 'Clear custom asset',
     mediaDialogTitle: 'Set the header asset',
@@ -251,6 +254,22 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     errorButtonValue: 'Fill this in, or the button opens a link with {{n}} still in it',
     templateUnknown:
       'AiSensy could not be read, so this send could not be built from its template. Add the Project API credentials in the Tech portal to see the values, header asset and links it needs.',
+    // The platform default header asset, on the Settings tab. Most templates
+    // carry an image header and no campaign at AiSensy has an asset attached,
+    // so this one image is what makes fifty-odd scenarios sendable at all.
+    defaultMedia: {
+      title: 'Default header image',
+      body: 'Most templates carry an image above the message, and AiSensy has no asset attached to any campaign. This image is what every one of them sends unless a scenario on the Automation tab has its own. Upload one, or paste a public link.',
+      label: 'Header image',
+      hint: 'A full public link — AiSensy fetches it itself when it sends.',
+      save: 'Save default',
+      clear: 'Clear default',
+      saved: 'Default header image saved.',
+      saveFailed: 'Could not save the default header image.',
+      loadFailed: 'Could not read the default header image.',
+      errorUrl: 'Use a full public link that starts with http:// or https://',
+      none: 'No default set — every scenario with an image header fails until one is.',
+    },
     // The ONE logs view. Campaign sends and the messages the platform sends by
     // itself are the same record asked for in the same breath — "did this go
     // out, and if not why" — so they are one table, and the columns that differ

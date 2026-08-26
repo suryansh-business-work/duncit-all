@@ -446,6 +446,25 @@ Row clicks and ticks coexist: `enableClickSelection` stays at AG Grid's default 
 control in a 52px cell, so without the column-level guard, aiming at the tick box and missing
 would open your drawer with nothing selected.
 
+`onRowClick` is dead to a cell’s own controls too: `button`, `a`, `input`, `textarea`,
+`select`, `label`, `[role="button"]`, `[role="combobox"]` and `.MuiInputBase-root` (an MUI
+input’s padding and its notched outline are SIBLINGS of the `<input>`, not children of it, so
+`input` alone leaves the border of the box live). An editable cell therefore takes its own
+clicks instead of opening the row.
+
+When a renderer needs its WHOLE area dead to the row handler — the gaps between its controls
+included — put `data-row-click="ignore"` on the element wrapping them:
+
+```tsx
+<Stack direction="row" spacing={1} component="span" data-row-click="ignore">
+  <TextField size="small" value={draft} onChange={onDraftChange} />
+  <Button size="small" onClick={save}>Update</Button>
+</Stack>
+```
+
+Do not reach for `event.stopPropagation()` in a renderer instead — AG Grid reads the same
+click for cell focus and keyboard navigation, and a swallowed event breaks both.
+
 Note also that AG Grid 34 removed `rowSelection="multiple"`, `colDef.checkboxSelection` and
 `headerCheckboxSelection` — the object form is the only API left.
 

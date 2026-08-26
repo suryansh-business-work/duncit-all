@@ -35,11 +35,29 @@ const HEADER_HEIGHT = { compact: 36, standard: 48 } as const;
 export const SELECT_COL_ID = 'duncit-select';
 
 /**
- * What a row click must NOT fire from: a cell's own button or link, and the
- * entire selection column — its checkbox is 16px inside a 50px cell, so the
- * cell around it has to be dead to the row handler too.
+ * What a row click must NOT fire from: a cell's own button, link or form
+ * control, and the entire selection column — its checkbox is 16px inside a
+ * 50px cell, so the cell around it has to be dead to the row handler too.
+ *
+ * The form controls are listed because an editable cell is not a button: the
+ * partners' quantity box opened the product's detail page instead of taking
+ * the click. `.MuiInputBase-root` is there because an MUI input's padding and
+ * its notched outline are SIBLINGS of the `<input>`, so aiming at the box and
+ * landing on its border still bubbled with only `input` in this list.
  */
-const ROW_CLICK_IGNORE = `button, a, [col-id="${SELECT_COL_ID}"]`;
+const ROW_CLICK_IGNORE = [
+  'button',
+  'a',
+  'input',
+  'textarea',
+  'select',
+  'label',
+  '[role="button"]',
+  '[role="combobox"]',
+  '.MuiInputBase-root',
+  '[data-row-click="ignore"]',
+  `[col-id="${SELECT_COL_ID}"]`,
+].join(', ');
 const LOADING_DIM_OPACITY = 0.55;
 
 // AG Grid 34 took `rowSelection="multiple"`, `colDef.checkboxSelection` and

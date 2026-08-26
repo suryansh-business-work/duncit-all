@@ -56,9 +56,13 @@ interface QuantityCellProps {
 export function QuantityCell({ product, disabled, onSave }: Readonly<QuantityCellProps>) {
   const [value, setValue] = useState(String(product.inventory_count ?? 0));
   return (
-    <Stack direction="row" spacing={1} component="span" sx={{
-      alignItems: "center"
-    }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      component="span"
+      data-row-click="ignore"
+      sx={{ alignItems: 'center' }}
+    >
       <TextField
         size="small"
         type="number"

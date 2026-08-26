@@ -2,7 +2,15 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import StorageIcon from '@mui/icons-material/Storage';
 import { Paper, Stack } from '@mui/material';
-import { InfoRow, PageHeader, StatCard, StatusChip } from '@duncit/ui';
+import { useEffect, useState } from 'react';
+import {
+  InfoRow,
+  PageHeader,
+  SpotsStepper,
+  StatCard,
+  StatusChip,
+  type SpotsStepperLabels,
+} from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
 
@@ -19,6 +27,49 @@ interface RowsMock {
   spots: string;
   total: number;
   statuses: string[];
+}
+
+interface SpotsMock {
+  no_of_spots: number;
+  min_pax: number;
+  venue_capacity: number;
+  seats_taken: number;
+}
+
+/** The words a surface hands the control — mWeb passes `mwebSpotsLabels(t)`. */
+const SPOTS_LABELS: SpotsStepperLabels = {
+  totalSpots: 'Total spots',
+  hint: 'Number of available tickets.',
+  fixedHint: 'Set by the venue space you picked.',
+  increase: 'Increase spots',
+  decrease: 'Decrease spots',
+};
+
+/**
+ * The control is uncontrolled-by-design: it owns no value, so a demo has to
+ * hold one. Hoisted to module scope — a component defined inside `render`
+ * remounts on every keystroke in the mock editor (S6478).
+ */
+function SpotsDemo({ mock }: Readonly<{ mock: SpotsMock }>) {
+  const [spots, setSpots] = useState(mock.no_of_spots);
+  useEffect(() => {
+    setSpots(mock.no_of_spots);
+  }, [mock.no_of_spots]);
+  // Exactly what the server's `podSpotLimits` returns for a Club Admin: the
+  // floor is whichever is higher, the activity's minimum or the seats sold.
+  const min = Math.max(mock.min_pax, mock.seats_taken);
+  const boundsHint = `The space this pod booked holds ${mock.venue_capacity} people. ${mock.seats_taken} seats are already taken.`;
+  return (
+    <SpotsStepper
+      labels={SPOTS_LABELS}
+      value={spots}
+      onChange={setSpots}
+      min={min}
+      max={mock.venue_capacity}
+      slidable={mock.venue_capacity > min}
+      boundsHint={boundsHint}
+    />
+  );
 }
 
 export default defineDemos('ui', [
@@ -94,5 +145,14 @@ export default defineDemos('ui', [
         </Stack>
       </Stack>
     ),
+  }),
+
+  defineDemo<SpotsMock>({
+    id: 'spots-stepper',
+    title: 'SpotsStepper — sizing a pod, at creation and after it is live',
+    note:
+      'Drop venue_capacity to the floor and the slider becomes a plain stepper — there is nothing left to choose. Raise seats_taken past no_of_spots and the thumb cannot go back below the seats already sold.',
+    mock: { no_of_spots: 12, min_pax: 4, venue_capacity: 30, seats_taken: 9 },
+    render: (mock) => <SpotsDemo mock={mock} />,
   }),
 ]);

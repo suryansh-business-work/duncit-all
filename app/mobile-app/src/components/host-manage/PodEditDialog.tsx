@@ -12,7 +12,9 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { ContentCheckNotice } from './ContentCheckNotice';
+import { PodSpotsField } from './PodSpotsField';
 import { usePodEditSave } from './usePodEditSave';
+import { usePodSpotLimits } from './usePodSpotLimits';
 import {
   podEditInitialValues,
   podEditSchema,
@@ -27,7 +29,11 @@ interface Props {
 }
 
 /**
- * Host's limited pod edit sheet — only title, images and description (2A).
+ * Host's pod edit sheet — title, images, description and the pod's capacity.
+ *
+ * "Flexible pod count": a pod published with fewer spots than the space it
+ * booked can hold is not stuck that way. The range comes from the server, which
+ * guards the write with the same rules — a host may only ever raise it.
  *
  * Saving runs the same AI content check publishing does (mWeb twin: rule 27):
  * a pod that met the guidelines when it was created can be edited into one
@@ -36,11 +42,17 @@ interface Props {
 export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, setError } = useForm<PodEditValues>({
+  const { control, handleSubmit, reset, setError, setValue } = useForm<PodEditValues>({
     resolver: zodResolver(podEditSchema),
     defaultValues: podEditInitialValues(pod),
   });
-  const { busy, error, blocked, save, clear } = usePodEditSave(pod?.id, setError, onSaved);
+  const limits = usePodSpotLimits(pod?.id);
+  const { busy, error, blocked, save, clear } = usePodEditSave(
+    pod?.id,
+    setError,
+    onSaved,
+    !!limits,
+  );
 
   useEffect(() => {
     reset(podEditInitialValues(pod));
@@ -48,6 +60,12 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
     // `clear` is a fresh closure each render; re-seeding is keyed on the pod.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pod, reset]);
+
+  // The limits land after the reset above, so the capacity is seeded from the
+  // SERVER's current figure rather than the row the list happened to hold.
+  useEffect(() => {
+    if (limits) setValue('no_of_spots_text', String(limits.current));
+  }, [limits, setValue]);
 
   const submit = handleSubmit(save);
 
@@ -114,6 +132,20 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       />
                     )}
                   />
+                  {limits ? (
+                    <Controller
+                      control={control}
+                      name="no_of_spots_text"
+                      render={({ field, fieldState }) => (
+                        <PodSpotsField
+                          limits={limits}
+                          value={field.value || String(limits.current)}
+                          onChange={field.onChange}
+                          error={fieldState.error?.message}
+                        />
+                      )}
+                    />
+                  ) : null}
                   <ContentCheckNotice
                     violations={blocked}
                     title={t('mweb.hostPodEdit.contentCheck')}

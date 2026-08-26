@@ -21,7 +21,12 @@ export interface HostPodTarget {
   pod_images_and_videos?: HostPodMedia[] | null;
   venue_id?: string | null;
   venue_approval_status?: string | null;
+  /** Capacity as last published — the edit dialog starts its slider here. */
+  no_of_spots?: number | null;
 }
+
+/** The range a live pod may be resized within — one definition, in @duncit/utils. */
+export type { PodSpotLimits } from '@duncit/utils';
 
 /** The pod the completion dialog settles. */
 export interface HostPodForComplete {

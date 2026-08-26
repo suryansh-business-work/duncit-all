@@ -39,6 +39,11 @@ exports:
   - 'ModerationBlockedDialog'
   - 'LanguageSelect'
   - 'PodParticipationTimeline'
+  - 'SpotsStepper'
+  - 'buildSpotsLabels'
+  - 'mwebSpotsLabels'
+  - 'shellSpotsLabels'
+  - 'SpotsStepperLabels'
   - 'StatusColorMap'
   - 'StatCardLayout'
   - 'InfoRowVariant'
@@ -446,6 +451,49 @@ import { participationInputFrom } from '@duncit/utils';
 The branches **nest**: a backout leads to the spot being filled or not, and each of those leads
 somewhere else again. A flat list can show the same events but not which followed from which,
 and "why was I not refunded" is a question only the shape answers.
+
+## `SpotsStepper` — one slider for a pod's size, wherever it is set
+
+A pod's capacity is picked twice: once in Create-a-Pod, and again in Edit Pod once the pod is
+live and the host discovers the space holds more people than they published. Those were about
+to be two sliders. They are one.
+
+```tsx
+import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
+
+<SpotsStepper
+  labels={mwebSpotsLabels(t)}
+  value={spots}
+  onChange={setSpots}
+  min={limits.min}
+  max={limits.max}
+  slidable={limits.slidable}
+  boundsHint={`The space this pod booked holds ${limits.venue_capacity} people.`}
+/>;
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `value` | `number` | yes | — | Total spots, the host's own seat included. |
+| `onChange` | `(next: number) => void` | yes | — | Already clamped to `[min, max]`. |
+| `labels` | `SpotsStepperLabels` | yes | — | The surface's words — see below. |
+| `min` / `max` | `number` | no | `0` / `10000` | The range. |
+| `slidable` | `boolean` | no | `false` | True renders the slider; false, the ± stepper. |
+| `boundsHint` | `string` | no | — | Where the floor and ceiling come from. Outranks `labels.hint`. |
+| `readOnly` | `boolean` | no | `false` | Capacity is fixed — render the number, no control. |
+| `error` | `string` | no | — | Field error under the control. |
+
+It ships **no copy of its own**: mWeb's `mweb.createPod.*` keys are already translated in
+every locale, and moving them into a `ui.*` namespace would throw that away. Each surface
+hands over its own namespace instead — `mwebSpotsLabels(t)` for mWeb and the native app,
+`shellSpotsLabels(t)` for the portals, which ship the same words word-for-word (rule 27).
+
+**Where the range comes from matters.** Creating a pod, it is derived on the client from the
+slot being picked (`spotsBounds` in `@duncit/utils`). Editing a live one, the slot is
+BOOKED — `venueAvailableSlots` no longer returns it, and the seats already sold were never on
+the client at all — so the range comes from the server's `podSpotLimits`, which also guards
+the write. A host may only ever raise it; a Club Admin or an admin may also lower it, never
+below `seats_taken`.
 
 ## Localization and coverage
 

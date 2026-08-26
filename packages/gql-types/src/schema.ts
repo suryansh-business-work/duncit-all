@@ -6553,6 +6553,11 @@ export type HostTicketScanResult = {
 
 /** The only fields a host may edit on their own pod. */
 export type HostUpdatePodInput = {
+  /**
+   * A bigger pod. Only ever upwards for a host, and never past the capacity of
+   * the space the pod booked — omit it to leave the capacity alone.
+   */
+  no_of_spots?: InputMaybe<Scalars['Int']['input']>;
   pod_description: Scalars['String']['input'];
   pod_images_and_videos: Array<PodMediaInput>;
   pod_title: Scalars['String']['input'];
@@ -8682,6 +8687,11 @@ export type Mutation = {
   rejectVenue: Venue;
   /** Rejoin a pod the caller previously backed out of — no payment, until the pod completes. */
   rejoinPod: PodMember;
+  /**
+   * Record that the guest closed the rating prompt for this pod, and whether to
+   * ask again — so the pop-up stops reappearing on every page load.
+   */
+  remindPodFeedback: Scalars['Boolean']['output'];
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
@@ -11100,6 +11110,12 @@ export type MutationRejectVenueArgs = {
 
 export type MutationRejoinPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemindPodFeedbackArgs = {
+  choice: PodFeedbackReminderChoice;
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -14275,6 +14291,14 @@ export type PodFeedbackForm = {
   pod: BouncerPodInfo;
 };
 
+/**
+ * What a guest chose when they closed the rating prompt without answering it.
+ * LATER puts the pod back in front of them on a later visit; NEVER retires it.
+ */
+export type PodFeedbackReminderChoice =
+  | 'LATER'
+  | 'NEVER';
+
 /** Everything guests said about one pod — averages, plus the ratings themselves. */
 export type PodFeedbackSummary = {
   __typename?: 'PodFeedbackSummary';
@@ -14886,6 +14910,33 @@ export type PodSpotFill = {
   /** Null on requests filled before the replacement was recorded. */
   replacement_user_id?: Maybe<Scalars['ID']['output']>;
   replacement_user_name?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * How big a pod that already exists may be resized to, for the asking viewer.
+ *
+ * A live pod's slot is BOOKED, so venueAvailableSlots no longer returns it and
+ * no client can work the ceiling out for itself. Every resize surface reads this
+ * one answer, and the same rules guard the write.
+ */
+export type PodSpotLimits = {
+  __typename?: 'PodSpotLimits';
+  /** False for a host — they may only ever raise a live pod's capacity. */
+  can_decrease: Scalars['Boolean']['output'];
+  /** Spots the pod declares today. */
+  current: Scalars['Int']['output'];
+  /** Highest capacity — the booked space's own capacity, when it has one. */
+  max: Scalars['Int']['output'];
+  /** Lowest capacity this viewer may set. */
+  min: Scalars['Int']['output'];
+  /** The activity's own floor, from the club's sub-category (0 = none). */
+  min_pax: Scalars['Int']['output'];
+  /** Seats already held: attendees plus every extra seat a booking bought. */
+  seats_taken: Scalars['Int']['output'];
+  /** True when there is a real range to drag across rather than a fixed number. */
+  slidable: Scalars['Boolean']['output'];
+  /** The booked space's capacity (0 = the pod books no capped space). */
+  venue_capacity: Scalars['Int']['output'];
 };
 
 /** Server-side table page for the shared table engine (podsTable / myHostPodsTable). */
@@ -16498,6 +16549,8 @@ export type Query = {
   podSettlementPreview: PodSettlement;
   /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
   podSpotFills: Array<PodSpotFill>;
+  /** The range this pod may be resized within. Host, the pod's club admin, or an admin. */
+  podSpotLimits: PodSpotLimits;
   /**
    * Withdrawal Payments, grouped by pod.
    *
@@ -18457,6 +18510,11 @@ export type QueryPodSettlementPreviewArgs = {
 
 
 export type QueryPodSpotFillsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodSpotLimitsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
 

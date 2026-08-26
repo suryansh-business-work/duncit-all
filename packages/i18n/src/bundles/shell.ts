@@ -1168,6 +1168,24 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
     hostPodEdit: {
       contentCheck: 'Content check',
+      // Flexible pod count — the spots control inside the Edit Pod dialog.
+      spotsVenueHint:
+        'The space this pod booked holds {capacity} people. {taken} seats are already taken.',
+      spotsFreeHint: 'At least {min} spots. {taken} seats are already taken.',
+      spotsIncreaseOnly:
+        'A live pod’s spots can only be increased — ask your Club Admin to reduce them.',
+    },
+    /**
+     * The total-spots control, shared with mWeb's Create-a-Pod through
+     * @duncit/ui. Word-for-word identical to `mweb.createPod` — one component
+     * renders both, and rule 27 forbids the two drifting.
+     */
+    createPod: {
+      totalSpots: 'Total spots',
+      spotsHint: 'Number of available tickets.',
+      spotsFixedHint: 'Set by the venue space you picked.',
+      decreaseSpots: 'Decrease spots',
+      increaseSpots: 'Increase spots',
     },
     /**
      * Staff chat — the panel every console renders in its header.

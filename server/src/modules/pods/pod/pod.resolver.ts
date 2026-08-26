@@ -251,6 +251,18 @@ export const podResolvers = {
       const user = requireAuth(ctx);
       return podService.hostDeleteImpact(args.pod_doc_id, user.id);
     },
+    podSpotLimits: async (
+      _p: unknown,
+      args: { pod_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podService.spotLimits(args.pod_doc_id, {
+        id: user.id,
+        roles: user.roles,
+        isAdmin: isAdminCtx(ctx),
+      });
+    },
   },
   Mutation: {
     createPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

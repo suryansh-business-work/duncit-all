@@ -224,6 +224,7 @@ export {
   podSpotsLeft,
   spotsBounds,
   type PodSeatCounts,
+  type PodSpotLimits,
   type SpotsBounds,
 } from './pod-spots';
 export {

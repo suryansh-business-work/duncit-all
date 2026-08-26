@@ -40,6 +40,8 @@ export interface PodFormProps {
   dateFormatter: PodFormData['dateFormatter'];
   /** Slot-picker copy — `shell.slots.*` in the portals (rule 38). */
   slotLabels: PodFormData['slotLabels'];
+  /** Document id of the pod being edited — drives the live-pod spot range. */
+  editingPodDocId?: string;
   busy?: boolean;
   error?: string | null;
   onCancel: () => void;
@@ -72,6 +74,7 @@ export default function PodForm({
   searchHosts,
   dateFormatter,
   slotLabels,
+  editingPodDocId,
   busy = false,
   error,
   onCancel,
@@ -133,8 +136,9 @@ export default function PodForm({
       searchHosts,
       dateFormatter,
       slotLabels,
+      editingPodDocId,
     }),
-    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels],
+    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels, editingPodDocId],
   );
 
   const submit = methods.handleSubmit(async (values) => {

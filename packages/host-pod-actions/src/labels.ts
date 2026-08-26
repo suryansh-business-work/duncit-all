@@ -13,6 +13,8 @@
  * into one — the values are kept word-for-word identical instead.
  */
 
+import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@duncit/ui';
+
 export type HostPodTranslate = (
   key: string,
   options?: { count?: number; vars?: Record<string, string | number> },
@@ -66,6 +68,14 @@ export interface HostPodActionLabels {
   confirmDone: string;
   /** Heads the list of guideline rules an edit broke. */
   contentCheck: string;
+  /** The total-spots control in the edit dialog — @duncit/ui's own words. */
+  spots: SpotsStepperLabels;
+  /** Under the control when a booked space caps the pod. */
+  spotsVenueHint: (capacity: number, taken: number) => string;
+  /** Under the control when nothing but the activity's floor caps the pod. */
+  spotsFreeHint: (min: number, taken: number) => string;
+  /** Why the control will not go below where it starts, for a host. */
+  spotsIncreaseOnly: string;
   /** The pod-row menu and the dialogs it opens. */
   menuTooltip: string;
   scanTickets: string;
@@ -174,6 +184,11 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     checkedInList: t('mweb.hostScan.checkedInList'),
     confirmDone: t('mweb.hostScan.confirmDone'),
     contentCheck: t('mweb.hostPodEdit.contentCheck'),
+    spots: mwebSpotsLabels(t),
+    spotsVenueHint: (capacity, taken) =>
+      t('mweb.hostPodEdit.spotsVenueHint', { vars: { capacity, taken } }),
+    spotsFreeHint: (min, taken) => t('mweb.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
+    spotsIncreaseOnly: t('mweb.hostPodEdit.spotsIncreaseOnly'),
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
     completePod: t('mweb.hostPodActions.completePod'),
@@ -258,6 +273,11 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     checkedInList: t('shell.hostScan.checkedInList'),
     confirmDone: t('shell.hostScan.confirmDone'),
     contentCheck: t('shell.hostPodEdit.contentCheck'),
+    spots: shellSpotsLabels(t),
+    spotsVenueHint: (capacity, taken) =>
+      t('shell.hostPodEdit.spotsVenueHint', { vars: { capacity, taken } }),
+    spotsFreeHint: (min, taken) => t('shell.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
+    spotsIncreaseOnly: t('shell.hostPodEdit.spotsIncreaseOnly'),
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),
     completePod: t('shell.hostPodActions.completePod'),

@@ -2296,6 +2296,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     hostPodEdit: {
       contentCheck: 'Content check',
+      // Flexible pod count — the spots control inside the host's Edit Pod dialog.
+      spotsVenueHint:
+        'The space this pod booked holds {capacity} people. {taken} seats are already taken.',
+      spotsFreeHint: 'At least {min} spots. {taken} seats are already taken.',
+      spotsIncreaseOnly:
+        'A live pod’s spots can only be increased — ask your Club Admin to reduce them.',
     },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —

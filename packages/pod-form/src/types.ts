@@ -175,6 +175,13 @@ export interface PodFormData {
    * inside the shared form (rule 38). Portals pass `shell.slots.*`.
    */
   slotLabels: Readonly<SlotLabels>;
+  /**
+   * The DOCUMENT id of the pod being edited (not `pod_id`, which is the
+   * human-readable code). Set only on an edit, and only so the spots control
+   * can ask the server for the range a live pod may be resized within — its
+   * booked slot is no longer in any list this form reads.
+   */
+  editingPodDocId?: string;
 }
 
 export const POD_TYPES: PodOption[] = [

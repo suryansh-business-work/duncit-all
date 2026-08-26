@@ -32,6 +32,8 @@ export function usePodEditSave(
   podId: string | undefined,
   setFieldError: UseFormSetError<PodEditValues>,
   onSaved: () => void,
+  /** True once the server's spot range has landed — see buildHostUpdateInput. */
+  includeSpots = false,
 ) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export function usePodEditSave(
       }
       await graphqlRequest(
         HostUpdatePodDocument,
-        { pod_doc_id: podId, input: buildHostUpdateInput(values) },
+        { pod_doc_id: podId, input: buildHostUpdateInput(values, { includeSpots }) },
         { auth: true },
       );
       onSaved();

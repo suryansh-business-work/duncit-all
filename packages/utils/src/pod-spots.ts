@@ -62,6 +62,39 @@ export function spotsBounds(input: {
 }
 
 /**
+ * The range a pod that ALREADY EXISTS may be resized within, as the server's
+ * `podSpotLimits` answers it.
+ *
+ * A new pod's ceiling comes from the slot its author is picking, which
+ * `spotsBounds` above derives on the client. A live pod's slot is BOOKED, so
+ * nothing the client can read still carries the capacity — and the seats
+ * already sold, which set the floor, were never on the client at all. The
+ * server answers both, and guards the write with the same rules.
+ *
+ * The shape lives here so mWeb, the portals' pod form and the native app read
+ * one definition rather than three (rule 40); each surface still writes its own
+ * literal GraphQL document, because native's codegen refuses an interpolated one.
+ */
+export interface PodSpotLimits {
+  /** Spots the pod declares today. */
+  current: number;
+  /** Lowest capacity this viewer may set. */
+  min: number;
+  /** Highest capacity — the booked space's own capacity, when it has one. */
+  max: number;
+  /** Seats already held: attendees plus every extra seat a booking bought. */
+  seats_taken: number;
+  /** The booked space's capacity (0 = the pod books no capped space). */
+  venue_capacity: number;
+  /** The activity's own floor, from the club's sub-category (0 = none). */
+  min_pax: number;
+  /** True when there is a real range to drag across rather than a fixed number. */
+  slidable: boolean;
+  /** False for a host — they may only ever raise a live pod's capacity. */
+  can_decrease: boolean;
+}
+
+/**
  * Attendees who actually PAID. Hosts are written into `pod_attendees` when the
  * pod is created but never pay, so any earning derived from the head count must
  * drop them first or it over-states income by one ticket per host.

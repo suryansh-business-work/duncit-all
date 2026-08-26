@@ -1,16 +1,39 @@
 import { gql } from '@apollo/client';
 
-/** Host self-service edit — only title, images and description. */
+/** Host self-service edit — title, images, description and the pod's capacity. */
 export const HOST_UPDATE_POD = gql`
   mutation HostUpdatePod($pod_doc_id: ID!, $input: HostUpdatePodInput!) {
     hostUpdatePod(pod_doc_id: $pod_doc_id, input: $input) {
       id
       pod_title
       pod_description
+      no_of_spots
       pod_images_and_videos {
         url
         type
       }
+    }
+  }
+`;
+
+/**
+ * How big this pod may be resized to, for whoever is asking.
+ *
+ * The ceiling is the capacity of the venue space the pod booked, which no
+ * client can work out for itself once the slot is BOOKED — venueAvailableSlots
+ * stops returning it. The server answers, and the same rules guard the write.
+ */
+export const POD_SPOT_LIMITS = gql`
+  query HostPodSpotLimits($pod_doc_id: ID!) {
+    podSpotLimits(pod_doc_id: $pod_doc_id) {
+      current
+      min
+      max
+      seats_taken
+      venue_capacity
+      min_pax
+      slidable
+      can_decrease
     }
   }
 `;

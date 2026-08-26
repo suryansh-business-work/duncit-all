@@ -94,5 +94,8 @@ export default function usePodEditorState({
     }
   };
 
-  return { initialValues, busy, opError, submit };
+  // The DOCUMENT id, not the human-readable `pod_id` — it is what
+  // `podSpotLimits` is keyed on, so the spots control can read the range a
+  // live pod may be resized within.
+  return { initialValues, busy, opError, submit, editingPodDocId: editingPod?.id ?? undefined };
 }

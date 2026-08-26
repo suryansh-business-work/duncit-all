@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Button,
@@ -15,7 +15,8 @@ import {
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 import ContentCheckAlert from './ContentCheckAlert';
 import { useContentCheck } from './useContentCheck';
-import { HOST_UPDATE_POD } from './queries';
+import PodSpotsField from './PodSpotsField';
+import { HOST_UPDATE_POD, POD_SPOT_LIMITS } from './queries';
 import {
   buildHostUpdateInput,
   buildPodEditModerationInput,
@@ -23,7 +24,7 @@ import {
   buildPodEditSchema,
   type PodEditValues,
 } from './pod-edit.form';
-import type { HostPodTarget } from './types';
+import type { HostPodTarget, PodSpotLimits } from './types';
 
 interface Props {
   pod: HostPodTarget | null;
@@ -32,7 +33,12 @@ interface Props {
 }
 
 /**
- * Host's limited pod edit dialog — only title, images and description.
+ * Host's pod edit dialog — title, images, description and the pod's capacity.
+ *
+ * "Flexible pod count": a pod published with fewer spots than the space it
+ * booked can hold is not stuck that way. The range comes from the server, which
+ * guards the write with the same rules — a host may only ever raise it, a Club
+ * Admin or an admin may also lower it but never below the seats already sold.
  *
  * Saving runs the SAME content check publishing does. A pod that met the
  * guidelines the day it was created can be renamed into one that does not, and
@@ -46,6 +52,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     control,
     handleSubmit,
     reset,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<PodEditValues>({
@@ -53,6 +60,14 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     defaultValues: podEditInitialValues(pod),
   });
   const [save, saveState] = useMutation(HOST_UPDATE_POD);
+  // Network-only: capacity and seats sold both move while the dialog is closed,
+  // and a cached range would offer seats that are already gone.
+  const limitsQuery = useQuery<{ podSpotLimits: PodSpotLimits }>(POD_SPOT_LIMITS, {
+    variables: { pod_doc_id: pod?.id },
+    skip: !pod?.id,
+    fetchPolicy: 'network-only',
+  });
+  const limits = limitsQuery.data?.podSpotLimits ?? null;
   const check = useContentCheck(setError);
   const busy = saveState.loading || check.checking;
 
@@ -63,9 +78,16 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pod, reset]);
 
+  // The limits land after the reset above, so the capacity is seeded from the
+  // SERVER's current figure rather than the row the list happened to hold.
+  useEffect(() => {
+    if (limits) setValue('no_of_spots', limits.current);
+  }, [limits, setValue]);
+
   const submit = handleSubmit(async (values) => {
+    const input = buildHostUpdateInput(values, { includeSpots: !!limits });
     const saved = await check.run(buildPodEditModerationInput(values), () =>
-      save({ variables: { pod_doc_id: pod?.id, input: buildHostUpdateInput(values) } }),
+      save({ variables: { pod_doc_id: pod?.id, input } }),
     );
     if (saved) onSaved();
   });
@@ -105,6 +127,21 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
               })
             }
           />
+          {limits && (
+            <Controller
+              control={control}
+              name="no_of_spots"
+              render={({ field, fieldState }) => (
+                <PodSpotsField
+                  limits={limits}
+                  labels={labels}
+                  value={Number(field.value) || limits.current}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+          )}
           <ContentCheckAlert violations={check.blocked} title={labels.contentCheck} />
           {check.failure && <Alert severity="error">{check.failure}</Alert>}
         </Stack>

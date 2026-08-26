@@ -42,6 +42,7 @@ exports:
   - 'payableSpots'
   - 'payingAttendees'
   - 'HOST_FREE_SPOT_NOTE'
+  - 'PodSpotLimits'
   - 'buildEarningsStatement'
   - 'formatStatementMoney'
   - 'GRIEVANCE_FIELDS'
@@ -476,6 +477,14 @@ clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
 | `payingAttendees` | `(attendeeIds, hostIds) => number` | Attendees minus hosts; both args accept `null`/`undefined`. |
 | `attendeeSeatCount` | `(people: { seats?: number }[]) => number` | Seats a rendered attendee list holds — a booking for three is one row, so counting rows under-reports it. `seats` absent or `0` counts as one. |
 | `HOST_FREE_SPOT_NOTE` | `string` | Copy to render beside any spots-driven figure. |
+| `PodSpotLimits` | `type` | The range a pod that already EXISTS may be resized within, as the server's `podSpotLimits` answers it: `current`, `min`, `max`, `seats_taken`, `venue_capacity`, `min_pax`, `slidable`, `can_decrease`. |
+
+`spotsBounds` is the CREATE-time answer, derived on the client from the slot being picked.
+`PodSpotLimits` is the EDIT-time one, and only the server can produce it: a live pod's slot is
+BOOKED, so `venueAvailableSlots` no longer returns it, and the seats already sold — which set
+the floor — were never on the client at all. The type lives here so mWeb, the portals' pod form
+and the native app read one definition; each still writes its own literal GraphQL document,
+because native's codegen refuses an interpolated one.
 | `buildEarningsStatement` | `(w: EarningsWaterfall, o: EarningsStatementOptions) => EarningsStatement` | Formats the server waterfall; adds no math. |
 | `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |
 | `EarningsStatementOptions.symbol` | `string` (required) | Symbol used inside the formula strings. |

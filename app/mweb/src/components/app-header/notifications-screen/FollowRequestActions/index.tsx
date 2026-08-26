@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Stack, Typography } from '@mui/material';
-import { canFollowBack, followBackLabelKey, followRequestRowState, offersFollowBack } from '@duncit/utils';
+import {
+  canFollowBack,
+  followBackLabelKey,
+  followOutcomeLabelKey,
+  followRequestRowState,
+  offersFollowBack,
+} from '@duncit/utils';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import {
   ANSWER_FOLLOW_REQUEST,
@@ -94,10 +100,10 @@ export default function FollowRequestActions({
     }
   };
 
-  const answeredLabel = status === 'ACCEPTED' ? t('mweb.follow.accepted') : t('mweb.follow.rejected');
-  // A new-follower row has no request behind it, so there is no outcome to
-  // state beside the button — only a FOLLOW_REQUEST row carries this line.
-  const settledLabel = status ? answeredLabel : null;
+  // "Accepted" / "Denied" on an answered FOLLOW_REQUEST row; nothing on a
+  // NEW_FOLLOWER row (no request behind it) or a withdrawn one (going away).
+  const outcomeKey = followOutcomeLabelKey(status);
+  const settledLabel = outcomeKey ? t(outcomeKey) : null;
 
   const followBackOffered = offersFollowBack(row);
 

@@ -346,6 +346,46 @@ export const notificationService = {
     return !!res;
   },
 
+  /**
+   * Drop every follow row `targetUserId` holds about `actorId`, inbox links
+   * included. Called right before a new follow row about the same person is
+   * written, so a relationship is ever ONE row in the inbox: a re-request
+   * after a denial replaces "Denied", a re-follow after an unfollow replaces
+   * the older "started following you". Two rows for one pair is how the inbox
+   * ends up showing a stale outcome above a live request.
+   */
+  async removeFollowRowsAbout(targetUserId: string, actorId: string) {
+    if (!Types.ObjectId.isValid(targetUserId) || !Types.ObjectId.isValid(actorId)) return;
+    await this.removeRows({
+      action_type: { $in: ['FOLLOW_REQUEST', 'NEW_FOLLOWER'] },
+      action_actor_id: new Types.ObjectId(actorId),
+      scope: 'USER',
+      target_user_ids: new Types.ObjectId(targetUserId),
+    });
+  },
+
+  /** Drop the rows raised over one actionable document — what a withdrawn
+   * follow request does to the ask it had put in the owner's inbox. */
+  async removeByActionRef(refId: string) {
+    if (!Types.ObjectId.isValid(refId)) return;
+    await this.removeRows({ action_ref_id: new Types.ObjectId(refId) });
+  },
+
+  async removeRows(filter: Record<string, unknown>) {
+    const rows = await NotificationModel.find(filter).select('_id target_user_ids').lean();
+    if (rows.length === 0) return;
+    const ids = rows.map((r: any) => r._id);
+    await Promise.all([
+      UserNotificationModel.deleteMany({ notification_id: { $in: ids } }),
+      NotificationModel.deleteMany({ _id: { $in: ids } }),
+    ]);
+    const affected = new Set<string>();
+    for (const r of rows as any[]) {
+      for (const uid of r.target_user_ids ?? []) affected.add(String(uid));
+    }
+    emitNotifyForUsers([...affected], { kind: 'update', unread_count: -1 });
+  },
+
   async savePushSubscription(userId: string, input: { endpoint: string; p256dh: string; auth: string; user_agent?: string | null }) {
     await PushSubscriptionModel.updateOne(
       { endpoint: input.endpoint },

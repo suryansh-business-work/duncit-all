@@ -50,7 +50,7 @@ describe('HostCard', () => {
       <HostCard
         host={host()}
         isMe={false}
-        isFollowing={false}
+        status="NONE"
         pending={false}
         onOpen={onOpen}
         onToggleFollow={onToggleFollow}
@@ -69,7 +69,7 @@ describe('HostCard', () => {
       <HostCard
         host={host({ passport_photo_url: 'http://i' })}
         isMe={false}
-        isFollowing
+        status="FOLLOWING"
         pending={false}
         onOpen={jest.fn()}
         onToggleFollow={jest.fn()}
@@ -81,7 +81,7 @@ describe('HostCard', () => {
       <HostCard
         host={host()}
         isMe
-        isFollowing={false}
+        status="NONE"
         pending={false}
         onOpen={jest.fn()}
         onToggleFollow={jest.fn()}
@@ -96,7 +96,7 @@ describe('HostCard', () => {
       <HostCard
         host={host()}
         isMe={false}
-        isFollowing={false}
+        status="NONE"
         pending
         onOpen={jest.fn()}
         onToggleFollow={onToggleFollow}

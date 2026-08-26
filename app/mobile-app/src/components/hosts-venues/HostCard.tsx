@@ -1,15 +1,20 @@
 import { AppImage } from '@/components/AppImage';
 
+import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { FOLLOW_LABEL_KEY, type FollowStatus } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PublicHost } from '@/hooks/useHostsVenues';
 
 export interface HostCardProps {
   host: PublicHost;
   isMe: boolean;
-  isFollowing: boolean;
+  /** Follow / Requested / Following — read off the viewer's own lists, so a
+   * private host whose ask is still open reads Requested, not Follow. */
+  status: FollowStatus;
   pending: boolean;
   onOpen: () => void;
   onToggleFollow: () => void;
@@ -20,7 +25,7 @@ export interface HostCardProps {
 export function HostCard({
   host,
   isMe,
-  isFollowing,
+  status,
   pending,
   onOpen,
   onToggleFollow,
@@ -82,7 +87,7 @@ export function HostCard({
       {isMe ? null : (
         <FollowButton
           userId={host.user_id}
-          isFollowing={isFollowing}
+          status={status}
           pending={pending}
           onToggleFollow={onToggleFollow}
         />
@@ -91,26 +96,39 @@ export function HostCard({
   );
 }
 
+type IconName = ComponentProps<typeof MaterialIcons>['name'];
+
+const ICON: Record<FollowStatus, IconName> = {
+  NONE: 'person-add',
+  REQUESTED: 'hourglass-top',
+  FOLLOWING: 'check',
+};
+const ARIA: Record<FollowStatus, string> = {
+  NONE: 'Follow',
+  REQUESTED: 'Withdraw follow request',
+  FOLLOWING: 'Unfollow',
+};
+
 interface FollowButtonProps {
   userId: string;
-  isFollowing: boolean;
+  status: FollowStatus;
   pending: boolean;
   onToggleFollow: () => void;
 }
 
-/** Follow / Following pill with a busy spinner; no-ops while a toggle is pending. */
-function FollowButton({
-  userId,
-  isFollowing,
-  pending,
-  onToggleFollow,
-}: Readonly<FollowButtonProps>) {
+/** Follow / Requested / Following pill with a busy spinner; no-ops while a
+ * toggle is pending. Filled only in the resting state — both live states
+ * (a pending ask, an existing follow) read as outlined. */
+function FollowButton({ userId, status, pending, onToggleFollow }: Readonly<FollowButtonProps>) {
   const { onPrimary, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const filled = status === 'NONE';
+  const ink = filled ? onPrimary : primary;
   return (
     <XStack
       testID={`host-follow-${userId}`}
       role="button"
-      aria-label={isFollowing ? 'Unfollow' : 'Follow'}
+      aria-label={ARIA[status]}
       aria-disabled={pending}
       onPress={() => {
         if (!pending) onToggleFollow();
@@ -120,23 +138,19 @@ function FollowButton({
       minWidth={92}
       height={34}
       borderRadius={999}
-      borderWidth={isFollowing ? 1 : 0}
+      borderWidth={filled ? 0 : 1}
       borderColor="$borderColor"
-      backgroundColor={isFollowing ? 'transparent' : '$primary'}
+      backgroundColor={filled ? '$primary' : 'transparent'}
       opacity={pending ? 0.6 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
       {pending ? (
-        <Spinner size="small" color={isFollowing ? '$primary' : onPrimary} />
+        <Spinner size="small" color={ink} />
       ) : (
         <XStack alignItems="center" gap={4}>
-          <MaterialIcons
-            name={isFollowing ? 'check' : 'person-add'}
-            size={14}
-            color={isFollowing ? primary : onPrimary}
-          />
-          <Text fontSize={12} fontWeight="600" color={isFollowing ? '$primary' : onPrimary}>
-            {isFollowing ? 'Following' : 'Follow'}
+          <MaterialIcons name={ICON[status]} size={14} color={ink} />
+          <Text fontSize={12} fontWeight="600" color={ink}>
+            {t(FOLLOW_LABEL_KEY[status])}
           </Text>
         </XStack>
       )}

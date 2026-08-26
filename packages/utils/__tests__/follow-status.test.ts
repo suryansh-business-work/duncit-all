@@ -179,9 +179,11 @@ describe('followRequestRowState', () => {
     );
   });
 
-  it('settles a denied or cancelled request with nothing left to do', () => {
+  it('settles a denied request, and hides a withdrawn one', () => {
     expect(followRequestRowState(requestRow({ status: 'DENIED' }))).toBe('SETTLED');
-    expect(followRequestRowState(requestRow({ status: 'CANCELLED' }))).toBe('SETTLED');
+    // Withdrawn by the requester: the server deletes the row, and a stale one
+    // must not read as an answer the viewer never gave.
+    expect(followRequestRowState(requestRow({ status: 'CANCELLED' }))).toBe('HIDDEN');
   });
 
   it('offers Follow Back once accepted when the viewer does not follow them yet', () => {

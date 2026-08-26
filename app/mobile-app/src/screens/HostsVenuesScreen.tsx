@@ -19,7 +19,7 @@ type Tab = 'HOSTS' | 'VENUES';
 export function HostsVenuesScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { hosts, venues, meId, followingIds, pendingFollow, isLoading, error, toggleFollow } =
+  const { hosts, venues, meId, statusFor, pendingFollow, isLoading, error, toggleFollow } =
     useHostsVenues();
   const [tab, setTab] = useState<Tab>('HOSTS');
 
@@ -36,7 +36,7 @@ export function HostsVenuesScreen() {
             key={host.id}
             host={host}
             isMe={host.user_id === meId}
-            isFollowing={followingIds.has(host.user_id)}
+            status={statusFor(host.user_id)}
             pending={pendingFollow === host.user_id}
             onOpen={() => navigation.navigate('PublicProfile', { userId: host.user_id })}
             onToggleFollow={() => fireAndForget(toggleFollow(host.user_id))}

@@ -3,6 +3,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 import {
   canFollowBack,
   followBackLabelKey,
+  followOutcomeLabelKey,
   followRequestRowState,
   offersFollowBack,
 } from '@duncit/utils';
@@ -81,11 +82,10 @@ export function FollowRequestActions({
   const state = followRequestRowState(row);
   if (state === 'HIDDEN') return null;
 
-  const answeredLabel =
-    status === 'ACCEPTED' ? t('mweb.follow.accepted') : t('mweb.follow.rejected');
-  // A new-follower row has no request behind it, so there is no outcome to
-  // state beside the button — only a FOLLOW_REQUEST row carries this line.
-  const settledLabel = status ? answeredLabel : null;
+  // "Accepted" / "Denied" on an answered FOLLOW_REQUEST row; nothing on a
+  // NEW_FOLLOWER row (no request behind it) or a withdrawn one (going away).
+  const outcomeKey = followOutcomeLabelKey(status);
+  const settledLabel = outcomeKey ? t(outcomeKey) : null;
   // Hoisted to nesting 0 (rule 26g): both inks are the same decision in every
   // branch below, and computing them once keeps them all on one value — and
   // out of a child, where the branch would only run on that child's path and

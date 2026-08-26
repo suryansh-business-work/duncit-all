@@ -85,10 +85,12 @@ exports:
   - 'readFollowStatus'
   - 'followStatusFrom'
   - 'FOLLOW_LABEL_KEY'
+  - 'followButtonLabelKey'
   - 'followRequestRowState'
   - 'offersFollowBack'
   - 'followBackLabelKey'
   - 'canFollowBack'
+  - 'followOutcomeLabelKey'
   - 'CONTACT_CHANNELS'
   - 'isPhoneChannel'
   - 'formatPhoneLine'
@@ -1138,20 +1140,43 @@ nextFollowStatus('NONE', true);      // 'REQUESTED' — a private profile is ask
 nextFollowStatus('NONE', false);     // 'FOLLOWING'
 ```
 
-`followRequestRowState` is the same idea for the notification inbox, which is the ONLY
-surface follow requests are answered on. It takes a row exactly as `myNotifications` returns
-it and says what that row offers:
+The button's label knows the OTHER direction too. `PublicProfile.follows_viewer` says whether
+this person already follows the viewer, and `followButtonLabelKey` turns the resting state
+into "Follow Back" — the same words the inbox uses for the same tap, so a profile and the
+notification about that person never disagree. Only NONE changes; REQUESTED and FOLLOWING
+read as they always have.
+
+```ts
+followButtonLabelKey('NONE', true);       // 'mweb.follow.followBack' — they follow you, you don't follow them
+followButtonLabelKey('NONE', false);      // 'mweb.follow.follow'
+followButtonLabelKey('FOLLOWING', true);  // 'mweb.follow.following' — mutual, nothing to offer
+```
+
+A request is answered from two places — the inbox row, and the profile itself, which
+carries `inbound_request_id` (the owner's OPEN ask against the viewer) so Accept / Deny can
+sit above the button. Both act on the same FollowRequest; whichever the viewer reaches first
+is the one that counts.
+
+`followRequestRowState` is the same idea for the notification inbox. It takes a row exactly
+as `myNotifications` returns it and says what that row offers:
 
 ```ts
 followRequestRowState({ actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'PENDING' });
 // 'ANSWER'      — Accept / Deny
 followRequestRowState({ actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'ACCEPTED', followBackStatus: 'NONE' });
 // 'FOLLOW_BACK' — 'Accepted', and an offer to follow them back
+followRequestRowState({ actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'CANCELLED' });
+// 'HIDDEN'      — withdrawn by the requester; the server deletes the row, and a stale one
+//                 must not read as "Denied", an answer the viewer never gave
 followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-aarav', followBackStatus: 'NONE' });
 // 'FOLLOW_BACK' — no request behind it, so the button stands alone
 followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-meera', followBackStatus: 'FOLLOWING' });
 // 'HIDDEN'      — already followed back, so there is nothing to offer
 ```
+
+`followOutcomeLabelKey` is the line a settled row states in place of Accept / Deny —
+`'mweb.follow.accepted'`, `'mweb.follow.rejected'`, or null when there is nothing to state
+(still open, withdrawn, or a NEW_FOLLOWER row).
 
 `offersFollowBack` is the second, independent question the row asks: is there somebody here
 the viewer does not follow yet? A→B and B→A are separate edges, so a request that is still

@@ -109,7 +109,7 @@ describe('HostCard fallbacks', () => {
           } as never
         }
         isMe={false}
-        isFollowing={false}
+        status="NONE"
         pending
         onOpen={jest.fn()}
         onToggleFollow={jest.fn()}

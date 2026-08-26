@@ -82,6 +82,18 @@ export const profileTypeDefs = gql`
     is_following: Boolean!
     "The three-state Follow button. is_following stays as the FOLLOWING shorthand."
     follow_status: FollowStatus!
+    """
+    Whether THIS user follows the signed-in viewer — the other direction of the
+    edge. What turns the viewer's Follow button into Follow Back. False with no
+    viewer.
+    """
+    follows_viewer: Boolean!
+    """
+    The OPEN follow request this user has sent the viewer, if any — so the
+    viewer can accept or deny it from the profile itself, not only from the
+    notification about it. Null with no viewer or no open ask.
+    """
+    inbound_request_id: ID
     "True when the viewer may see this user's posts/stories (owner, public, or follower)."
     can_view_content: Boolean!
   }

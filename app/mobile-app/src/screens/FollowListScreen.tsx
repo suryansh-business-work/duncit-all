@@ -4,9 +4,10 @@ import { AppImage } from '@/components/AppImage';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
+import { followButtonLabelKey, readFollowStatus } from '@duncit/utils';
 
 import { FeedList } from '@/components/FeedList';
-import { FollowPillButton } from '@/components/FollowPillButton';
+import { FollowStatusButton } from '@/components/FollowStatusButton';
 import { StackScreen } from '@/components/StackScreen';
 import { useFollowList, type FollowListPerson, type FollowTab } from '@/hooks/useFollowList';
 import { useMe } from '@/hooks/useMe';
@@ -26,7 +27,11 @@ interface RowProps {
 
 /** One person in the follow list — avatar, name, @handle and a follow toggle. */
 function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps>) {
+  const { t } = useTranslation();
   const initial = (person.full_name?.[0] ?? person.first_name?.[0] ?? '?').toUpperCase();
+  // Three states, read off the row the server sent — never the boolean alone,
+  // which cannot tell a pending ask from nothing.
+  const status = readFollowStatus(person);
   return (
     <XStack
       testID={`follow-row-${person.user_id}`}
@@ -77,11 +82,12 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
         </YStack>
       </XStack>
       {isSelf ? null : (
-        <FollowPillButton
+        <FollowStatusButton
           testID={`follow-toggle-${person.user_id}`}
-          following={person.is_following}
+          status={status}
+          label={t(followButtonLabelKey(status, person.follows_viewer))}
           busy={busy}
-          onToggle={onToggle}
+          onPress={onToggle}
         />
       )}
     </XStack>

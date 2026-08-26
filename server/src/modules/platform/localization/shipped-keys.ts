@@ -4037,6 +4037,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.follow.reject": "Deny",
   "mweb.follow.rejected": "Denied",
   "mweb.follow.requested": "Requested",
+  "mweb.follow.wantsToFollowYou": "Wants to follow you",
   "mweb.followList.connections": "Connections",
   "mweb.followList.followers": "Followers",
   "mweb.followPage.followClubsToSeeTheirPosts": "Follow clubs to see their posts here",

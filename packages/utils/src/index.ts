@@ -277,6 +277,8 @@ export {
   canFollowBack,
   followActionFor,
   followBackLabelKey,
+  followButtonLabelKey,
+  followOutcomeLabelKey,
   followRequestRowState,
   followStatusFrom,
   nextFollowStatus,

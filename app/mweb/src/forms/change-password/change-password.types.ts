@@ -17,31 +17,19 @@ export const currentPasswordDefaults: CurrentPasswordValues = {
   current_password: '',
 };
 
-/**
- * Step 2's contract. `currentPassword` is the one step 1 already verified, so
- * reusing it is rejected on the field instead of coming back as a server error
- * after the OTP was spent.
- */
-export const makeNewPasswordSchema = (currentPassword = '') =>
-  z
-    .object({
-      otp: z
-        .string()
-        .trim()
-        .regex(/^\d{6}$/, 'Enter the 6 digit OTP'),
-      new_password: z.string().min(8, 'Min 8 characters').max(100, 'Password is too long'),
-      confirm_password: z.string().min(8, 'Min 8 characters'),
-    })
-    .refine((data) => data.new_password === data.confirm_password, {
-      message: 'Passwords do not match',
-      path: ['confirm_password'],
-    })
-    .refine((data) => !currentPassword || data.new_password !== currentPassword, {
-      message: 'New password must be different from your current password',
-      path: ['new_password'],
-    });
-
-export const newPasswordSchema = makeNewPasswordSchema();
+export const newPasswordSchema = z
+  .object({
+    otp: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, 'Enter the 6 digit OTP'),
+    new_password: z.string().min(8, 'Min 8 characters').max(100, 'Password is too long'),
+    confirm_password: z.string().min(8, 'Min 8 characters'),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_password'],
+  });
 
 export type NewPasswordValues = z.infer<typeof newPasswordSchema>;
 

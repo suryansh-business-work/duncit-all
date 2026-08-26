@@ -2816,6 +2816,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       createANewPassword: 'Create a new password',
       currentPassword: 'Current password',
       enterYourCurrentPassword: 'Enter your current password',
+      mustDifferFromCurrent: 'New password must be different from your current password',
       newPassword: 'New password',
       reEnterNewPassword: 'Re-enter new password',
     },

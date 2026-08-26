@@ -3233,6 +3233,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.changePassword.createANewPassword": "Create a new password",
   "mweb.changePassword.currentPassword": "Current password",
   "mweb.changePassword.enterYourCurrentPassword": "Enter your current password",
+  "mweb.changePassword.mustDifferFromCurrent": "New password must be different from your current password",
   "mweb.changePassword.newPassword": "New password",
   "mweb.changePassword.reEnterNewPassword": "Re-enter new password",
   "mweb.chat.chatMessage": "Chat message",

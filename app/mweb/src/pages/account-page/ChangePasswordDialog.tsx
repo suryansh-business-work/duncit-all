@@ -61,6 +61,9 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
   };
 
   const handleChange = async (values: NewPasswordValues) => {
+    if (values.new_password === currentPassword) {
+      throw new Error(t('mweb.changePassword.mustDifferFromCurrent'));
+    }
     try {
       await changePassword({
         variables: { input: { otp: values.otp, new_password: values.new_password } },
@@ -88,11 +91,7 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
         ) : (
           <Stack spacing={1.5}>
             {info && <Alert severity="success">{info}</Alert>}
-            <NewPasswordForm
-              loading={changing}
-              currentPassword={currentPassword}
-              onSubmit={handleChange}
-            />
+            <NewPasswordForm loading={changing} onSubmit={handleChange} />
             <Typography
               variant="body2"
               sx={{

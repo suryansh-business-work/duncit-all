@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
@@ -8,8 +7,8 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import {
   currentPasswordDefaults,
   currentPasswordSchema,
-  makeNewPasswordSchema,
   newPasswordDefaults,
+  newPasswordSchema,
   type CurrentPasswordValues,
   type NewPasswordValues,
 } from './change-password.types';
@@ -20,9 +19,6 @@ interface StepProps<T> {
   errorMessage?: string | null;
   onSubmit: (values: T) => void | Promise<void>;
 }
-
-/** Step 2 also takes the password step 1 verified, to reject reusing it. */
-type NewPasswordProps = StepProps<NewPasswordValues> & { currentPassword?: string };
 
 /** Step 1 — verify the current password to request an OTP. */
 export function CurrentPasswordForm({
@@ -68,14 +64,12 @@ export function CurrentPasswordForm({
 export function NewPasswordForm({
   loading,
   errorMessage,
-  currentPassword,
   onSubmit,
-}: Readonly<NewPasswordProps>) {
+}: Readonly<StepProps<NewPasswordValues>>) {
   const { t } = useTranslation();
-  const schema = useMemo(() => makeNewPasswordSchema(currentPassword), [currentPassword]);
   const { control, handleSubmit } = useForm<NewPasswordValues>({
     defaultValues: newPasswordDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(newPasswordSchema),
     mode: 'onBlur',
   });
 

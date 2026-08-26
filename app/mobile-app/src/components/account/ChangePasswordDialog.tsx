@@ -78,6 +78,10 @@ export function ChangePasswordDialog({
   };
 
   const handleChange = async (values: NewPasswordValues) => {
+    if (values.new_password === currentPassword) {
+      setError(t('mweb.changePassword.mustDifferFromCurrent'));
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -114,12 +118,7 @@ export function ChangePasswordDialog({
           <Text fontSize={13.5} color="$primary" testID="change-password-info">
             {info}
           </Text>
-          <NewPasswordForm
-            loading={loading}
-            errorMessage={error}
-            currentPassword={currentPassword}
-            onSubmit={handleChange}
-          />
+          <NewPasswordForm loading={loading} errorMessage={error} onSubmit={handleChange} />
           <Text
             testID="change-password-resend"
             role="button"

@@ -50,6 +50,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execFileSync } from 'node:child_process';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 const GRAPHQL_URL = process.env.DUNCIT_GRAPHQL_URL || 'https://server.duncit.com/graphql';
 const MAX_COMMITS = 50;
@@ -124,9 +125,84 @@ function getStats(range) {
   };
 }
 
+/* ── surviving a server that is briefly not there ─────────────────────────── */
+
+/**
+ * `fetch` reports every network-level failure as the same three words —
+ * "fetch failed" — and hides the errno that says which failure it was on
+ * `cause`. Printing only the message turns a DNS miss, a refused connection and
+ * a connect timeout into one indistinguishable line, which is how a build can
+ * fail twenty-eight times over without anyone learning what it could not reach.
+ */
+function describeError(err) {
+  const seen = [];
+  let current = err;
+  while (current && seen.length < 4) {
+    const message = current instanceof Error ? current.message : String(current);
+    if (message && !seen.includes(message)) seen.push(message);
+    current = current.cause;
+  }
+  return seen.join(': ') || 'unknown error';
+}
+
+/** What nginx answers with while the container behind it is coming back up. */
+const TRANSIENT_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+/**
+ * Transient means "the server is not answering right now", which is worth
+ * asking again. An ANSWER is not transient however unwelcome it is: a GraphQL
+ * error or any other 4xx says the request itself is wrong, and repetition does
+ * not improve it — retrying a schema mismatch would just take ten minutes to
+ * report the same thing.
+ */
+function isTransient(err) {
+  if (err?.graphQLErrors) return false;
+  if (typeof err?.status === 'number') return TRANSIENT_STATUS.has(err.status);
+  // Everything undici raises for "could not complete the round trip" — refused,
+  // timed out, reset, DNS — arrives as a TypeError carrying the errno on cause.
+  return err instanceof TypeError;
+}
+
+const RETRY_DELAYS_MS = [5_000, 15_000, 30_000, 60_000];
+
+/**
+ * How long to keep trying a round trip that keeps failing transiently.
+ *
+ * Sized against the thing that actually causes it: THIS SAME MERGE fired the
+ * deploy workflow, which restarts the very server the build is reporting to,
+ * and an Android build runs long enough to land squarely in that window. Three
+ * separate red runs each compiled and signed a perfectly good APK and AAB and
+ * then threw both away — twice over an nginx 502 that lasted seconds, once over
+ * a connect timeout. A finished build is worth waiting out a restart for.
+ *
+ * Zero for a progress ping: it is cosmetic, its caller already forgives it with
+ * `|| true`, and a build sends seven of them, so retrying each one through an
+ * outage would add minutes to every build merely to move a label.
+ */
+const RETRY_WINDOW_MS = process.env.PROGRESS_ONLY === '1' ? 0 : 10 * 60 * 1000;
+
+/**
+ * The same treatment the workflow already gives the Gradle distribution fetch:
+ * try again, backing off, and give up only once the outage has outlived the
+ * window rather than on the first refusal.
+ */
+async function withRetry(label, run, windowMs = RETRY_WINDOW_MS) {
+  const giveUpAt = Date.now() + windowMs;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await run();
+    } catch (err) {
+      const delay = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)];
+      if (!isTransient(err) || Date.now() + delay >= giveUpAt) throw err;
+      console.warn(`⚠ ${label}: ${describeError(err)} — retrying in ${delay / 1000}s`);
+      await sleep(delay);
+    }
+  }
+}
+
 /* ── graphql + upload ─────────────────────────────────────────────────────── */
 
-async function gql(query, variables, token) {
+async function gqlOnce(query, variables, token) {
   const headers = { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
   const res = await fetch(GRAPHQL_URL, {
@@ -140,9 +216,18 @@ async function gql(query, variables, token) {
     err.graphQLErrors = json.errors;
     throw err;
   }
-  if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}`);
+  if (!res.ok) {
+    // Carried so isTransient can tell a gateway that is restarting from a
+    // request the server has understood and rejected.
+    const err = new Error(`GraphQL HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
   return json.data;
 }
+
+const gql = (query, variables, token, windowMs) =>
+  withRetry('server request failed', () => gqlOnce(query, variables, token), windowMs);
 
 async function resolveToken() {
   if (process.env.DUNCIT_RELEASE_TOKEN) return process.env.DUNCIT_RELEASE_TOKEN;
@@ -174,7 +259,11 @@ async function lastReportedSha(token, platform) {
         }
       }`,
       { platform },
-      token
+      token,
+      // No retry: this only picks a nicer changelog base, and falls back to
+      // this push's own base the moment it cannot be had. Spending the outage
+      // window on an optimisation would leave none for the report itself.
+      0
     );
     const runId = process.env.GITHUB_RUN_ID || '';
     const rows = data?.appBuildsTable?.rows ?? [];
@@ -215,10 +304,16 @@ async function uploadAll(token, paths) {
     const sizeMb = Number((fs.statSync(filePath).size / 1024 / 1024).toFixed(2));
     console.log(`Uploading ${name} (${sizeMb} MB)…`);
     try {
-      const { url, fileId } = await uploadArtifact(token, filePath);
+      // Retried as ONE unit, deliberately: the ticket is spent before the
+      // server starts parsing the body, so a second attempt needs a second
+      // ticket — reusing the first would be rejected as authoritatively as it
+      // deserves to be.
+      const { url, fileId } = await withRetry(`upload of ${name} failed`, () =>
+        uploadArtifact(token, filePath)
+      );
       artifacts.push({ kind, name, url, file_id: fileId, size_mb: sizeMb, error: '' });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      const message = describeError(err);
       console.error(`✗ ${name} was not stored: ${message}`);
       artifacts.push({ kind, name, url: '', file_id: '', size_mb: sizeMb, error: message });
     }
@@ -227,8 +322,10 @@ async function uploadAll(token, paths) {
 }
 
 async function uploadArtifact(token, filePath) {
+  // gqlOnce, not gql: uploadAll already retries this whole function, and a
+  // retry nested inside a retry would spend the window twice over.
   const auth = (
-    await gql('mutation{ appBuildUploadAuth{ upload_url ticket folder } }', {}, token)
+    await gqlOnce('mutation{ appBuildUploadAuth{ upload_url ticket folder } }', {}, token)
   ).appBuildUploadAuth;
   const fileName = path.basename(filePath);
   const form = new FormData();
@@ -241,7 +338,9 @@ async function uploadArtifact(token, filePath) {
   const res = await fetch(`${auth.upload_url}?${query}`, { method: 'POST', body: form });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || !json.url) {
-    throw new Error(`Artifact upload failed: ${json.message || res.statusText}`);
+    const err = new Error(`Artifact upload failed: ${json.message || res.statusText}`);
+    err.status = res.status;
+    throw err;
   }
   return { url: json.url, fileId: json.fileId || '' };
 }
@@ -465,6 +564,6 @@ try {
     process.exit(1);
   }
 } catch (err) {
-  console.error(`✗ report-app-build: ${err instanceof Error ? err.message : err}`);
+  console.error(`✗ report-app-build: ${describeError(err)}`);
   process.exit(1);
 }

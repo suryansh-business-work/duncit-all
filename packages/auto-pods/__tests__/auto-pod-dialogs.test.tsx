@@ -46,6 +46,7 @@ const row = (over: Partial<AutoPodRow> = {}): AutoPodRow =>
     venue_claim: null,
     host_claim: null,
     club_claim: null,
+    location: null,
     viewer_claimed: false,
     pod_id: null,
     expected_host_earnings: 1400,
@@ -126,7 +127,16 @@ describe('VenueAcceptDialog', () => {
 });
 
 describe('HostClaimDialog', () => {
-  const props = { labels, onClose: vi.fn(), onAssigned: vi.fn(), formatWhen, formatMoney };
+  // The host has a city selected, so an unpinned offer can take it from them.
+  const props = {
+    labels,
+    onClose: vi.fn(),
+    onAssigned: vi.fn(),
+    formatWhen,
+    formatMoney,
+    locationId: 'loc-blr',
+    locationLabel: 'Bengaluru, Karnataka',
+  };
 
   it('renders nothing while it is closed', () => {
     wrap(<HostClaimDialog {...props} row={row()} open={false} />);

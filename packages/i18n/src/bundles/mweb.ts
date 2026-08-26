@@ -167,7 +167,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewPhoto: 'View photo',
       wallet: 'Wallet',
       whatsappNumber: 'WhatsApp number',
-      whatsappNumberSameAsContactNumber: 'WhatsApp number same as contact number',
       whatWeDo: 'What We Do',
       whoWeAre: 'Who We Are',
       writeAReply: 'Write a reply…',
@@ -474,7 +473,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       youHaveUnsavedChangesClosingNow: 'You have unsaved changes. Closing now will lose them.',
       yourPasswordHasBeenChangedSuccessfully: 'Your password has been changed successfully.',
       enterYourCity: 'Enter your city',
-      whatsappSameAsContact: 'WhatsApp number same as contact number',
+      // The heading over the three read-only contact rows in Edit profile.
+      // Read-only because each of them is changed on its own, behind a
+      // one-time code sent to the new value.
+      contactDetails: 'Contact details',
       yourCityUsedToSurfacePods: 'Your city — used to surface pods and clubs near you.',
     },
     // The auth journey — login, signup, forgot password, reset password. mWeb
@@ -2676,10 +2678,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pickSlot: 'Pick a slot',
       pickClub: 'Which club?',
       confirmAccept: 'Accept this Auto Pod?',
-      confirmAcceptBody:
-        'Your slot is booked for this pod straight away. It goes live once a host and a club admin enrol too.',
+      // Enrolments happen in any order, so the body names "the others" rather
+      // than a fixed sequence.
+      confirmAcceptAnyOrder:
+        'Your slot is booked for this pod straight away. It goes live once everyone else has enrolled too.',
       confirmAssign: 'Host this Auto Pod?',
-      confirmAssignBody: 'You become the host of this pod. It goes live once a club admin claims it.',
+      confirmAssignAnyOrder:
+        'You become the host of this pod. It goes live once everyone else has enrolled too.',
       confirmClaim: 'Claim this Auto Pod?',
       confirmClaimBody: 'The pod is created under this club as soon as everyone has enrolled.',
       priceLabel: 'Ticket',
@@ -2688,6 +2693,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       waitingVenue: 'Waiting for a venue to accept',
       waitingHost: 'Waiting for a host',
       waitingClub: 'Waiting for a club admin',
+      waitingFor: 'Waiting for {roles}',
+      roleVenue: 'a venue',
+      roleHost: 'a host',
+      roleClub: 'a club admin',
+      // The filters at the top of every queue page, and the card's city line.
+      locationLabel: 'Location',
+      allLocations: 'All cities',
+      changeLocation: 'Change',
+      categoryLabel: 'Category',
+      allCategories: 'All my categories',
+      noHostCategories: 'You are not an approved host in any category yet.',
+      pinnedTo: 'In {city}',
+      unpinned: 'Any city — the first partner to enrol sets it',
+      pickLocationFirst: 'Select your city at the top first — this pod takes its city from you.',
+      willPinTo: 'This pod will be set to {city}.',
+      noVenueInCity: 'None of your venues is in {city}.',
+      noClubInCity: 'None of your clubs is in {city}.',
       liveNow: 'Live',
       viewPod: 'View pod',
       cancelled: 'Cancelled',
@@ -2918,6 +2940,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       duncitRevenue: 'Duncit revenue',
       duncitTakenPct: 'Duncit Taken ({pct}%)',
       editPod: 'Edit pod',
+      eventDate: 'Event date',
+      filterCount: 'Filter ({count})',
       filterPods: 'Filter pods',
       gstPct: 'GST ({pct}%)',
       hostDashboardAndInsights: 'Host dashboard and insights',
@@ -2927,6 +2951,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       markAttendance: 'Mark attendance',
       media: 'Media',
       noPodsMatchTheseFiltersTry: 'No pods match these filters. Try adjusting or resetting them.',
+      noRequestedPods: 'No Requested Pods',
       noteForAttendees: 'Note for attendees',
       noteSharedWithAttendees: 'Note (shared with attendees)',
       payout: 'Payout',
@@ -2934,6 +2959,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       podMedia: 'Pod Media',
       podsByMonth: 'Pods by month',
       pool: 'Pool',
+      rejectedPods: 'Rejected Pods',
+      rejectedPodsSubtitle:
+        'The venue turned these slots down. Edit the pod and send the request again.',
+      requestedOn: 'Requested on',
+      requestedPods: 'Requested Pods',
+      requestedPodsEmpty: 'Pods awaiting venue approval will appear here.',
+      requestedPodsSubtitle: 'Waiting on the venue to approve the slot you asked for.',
       resubmitRequest: 'Resubmit request',
       saveChanges: 'Save changes',
       scanAttendeeEventTickets: 'Scan attendee event tickets',
@@ -3089,6 +3121,45 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       saved: 'Preferences updated',
       saveFailed: 'Could not change that. Please try again.',
       loadFailed: 'Could not load your communication preferences.',
+    },
+    // Changing the email address, phone number or WhatsApp number on the
+    // account. Rendered by mWeb and the native app from ONE label builder in
+    // @duncit/utils, so the two screens cannot say different things (rule 27).
+    contactChange: {
+      emailName: 'Email',
+      emailField: 'New email address',
+      emailEmpty: 'No email address yet',
+      emailTitle: 'Change email address',
+      emailHint: 'We will email a 6-digit code to the new address to confirm it is yours.',
+      phoneName: 'Phone number',
+      phoneField: 'New phone number',
+      phoneEmpty: 'No phone number yet',
+      phoneTitle: 'Change phone number',
+      phoneHint: 'We will send a 6-digit code to the new number to confirm it is yours.',
+      whatsappName: 'WhatsApp number',
+      whatsappField: 'New WhatsApp number',
+      whatsappEmpty: 'No WhatsApp number yet',
+      whatsappTitle: 'Change WhatsApp number',
+      whatsappHint: 'We will send a 6-digit code on WhatsApp to confirm the new number is yours.',
+      change: 'Change',
+      add: 'Add',
+      sendCode: 'Send code',
+      sending: 'Sending…',
+      codeLabel: '6-digit code',
+      codeSentTo: 'We sent a code to {destination}.',
+      verifyAndSave: 'Verify and save',
+      verifying: 'Verifying…',
+      resend: 'Send another code',
+      resendIn: 'You can ask for another code in {seconds}s',
+      editValue: 'Change this',
+      cancel: 'Cancel',
+      unchanged: 'That is what your account already has.',
+      // Shown only while no SMS or WhatsApp transport is wired, which is when
+      // the server hands the code back rather than sending it anywhere.
+      testCode: 'Test code: {code}',
+      whyOtp:
+        'We ask for a code so nobody else can move your account to an address or number you do not use.',
+      saved: '{channelName} updated',
     },
     smsPreference: {
       title: 'SMS Preference',

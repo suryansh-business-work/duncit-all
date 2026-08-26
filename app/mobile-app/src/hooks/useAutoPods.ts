@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AutoPodRole, AutoPodRow, AutoPodStage } from '@duncit/utils';
+import type { AutoPodLocation, AutoPodRole, AutoPodRow, AutoPodStage } from '@duncit/utils';
 
 import {
   ClubAdminAutoPodsDocument,
@@ -18,6 +18,17 @@ export interface AutoPodQueueRow extends AutoPodRow {
   sub_category_id: string;
 }
 
+/**
+ * What narrows a role's queue: the city chosen in the header ('' = every city)
+ * and, for a host, one of their approved sub-categories ('' = all of them).
+ * A city narrows to offers pinned there PLUS every unpinned offer — an offer
+ * nobody has enrolled in yet belongs to no city until somebody does.
+ */
+export interface AutoPodQueueScope {
+  locationId?: string;
+  subCategoryId?: string;
+}
+
 /** The three list queries select identical fields, so one node type covers all. */
 type AutoPodNode = MobileVenueAutoPodsQuery['venueAutoPods'][number];
 
@@ -27,6 +38,13 @@ type AutoPodNode = MobileVenueAutoPodsQuery['venueAutoPods'][number];
  */
 const venueClaimOf = (claim: AutoPodNode['venue_claim']): AutoPodRow['venue_claim'] =>
   claim ? { ...claim, pod_end_date_time: claim.pod_end_date_time ?? null } : null;
+
+/** The pinned city, with `bound_by` re-read as the plain string union the
+ * shared helpers declare (codegen emits it as a string enum, like `stage`). */
+const locationOf = (location: AutoPodNode['location']): AutoPodLocation | null =>
+  location
+    ? { ...location, bound_by: String(location.bound_by) as AutoPodLocation['bound_by'] }
+    : null;
 
 /**
  * Codegen emits `stage` and media `type` as TypeScript string ENUMS, while the
@@ -48,19 +66,31 @@ const toRow = (node: AutoPodNode): AutoPodQueueRow => ({
   venue_claim: venueClaimOf(node.venue_claim),
   host_claim: node.host_claim ?? null,
   club_claim: node.club_claim ?? null,
+  location: locationOf(node.location),
 });
 
+/** An empty selection is "no narrowing" to the server, so '' travels as null. */
+const orNull = (value: string | undefined) => value || null;
+
 /** Each role reads its OWN queue; the server decides what a caller may see. */
-async function fetchAutoPods(role: AutoPodRole): Promise<AutoPodQueueRow[]> {
+async function fetchAutoPods(
+  role: AutoPodRole,
+  scope: AutoPodQueueScope,
+): Promise<AutoPodQueueRow[]> {
+  const location_id = orNull(scope.locationId);
   if (role === 'venue') {
-    const res = await graphqlRequest(VenueAutoPodsDocument, undefined, { auth: true });
+    const res = await graphqlRequest(VenueAutoPodsDocument, { location_id }, { auth: true });
     return res.venueAutoPods.map(toRow);
   }
   if (role === 'host') {
-    const res = await graphqlRequest(HostAutoPodsDocument, undefined, { auth: true });
+    const res = await graphqlRequest(
+      HostAutoPodsDocument,
+      { location_id, sub_category_id: orNull(scope.subCategoryId) },
+      { auth: true },
+    );
     return res.hostAutoPods.map(toRow);
   }
-  const res = await graphqlRequest(ClubAdminAutoPodsDocument, undefined, { auth: true });
+  const res = await graphqlRequest(ClubAdminAutoPodsDocument, { location_id }, { auth: true });
   return res.clubAdminAutoPods.map(toRow);
 }
 
@@ -76,16 +106,19 @@ async function fetchAutoPods(role: AutoPodRole): Promise<AutoPodQueueRow[]> {
  * against other partners, so the queue is re-read from the server rather than
  * patched locally.
  */
-export function useAutoPods(role: AutoPodRole) {
+export function useAutoPods(role: AutoPodRole, scope: AutoPodQueueScope = {}) {
   const [rows, setRows] = useState<AutoPodQueueRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  // Read out here so a caller passing a fresh `{}` each render does not re-run
+  // the effect: the two strings are what the query actually depends on.
+  const { locationId = '', subCategoryId = '' } = scope;
 
   const load = useCallback(async () => {
-    const next = await fetchAutoPods(role);
+    const next = await fetchAutoPods(role, { locationId, subCategoryId });
     setRows(next);
     setHasError(false);
-  }, [role]);
+  }, [role, locationId, subCategoryId]);
 
   const refetch = useCallback(() => {
     load().catch(() => setHasError(true));

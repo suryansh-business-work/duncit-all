@@ -9,6 +9,20 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const POD_FORM_BUNDLE: NestedCatalogue = {
   podForm: {
+    /** The form in Auto Pod mode: no club, venue or host — a category instead. */
+    autoPod: {
+      categoryLegend: 'Pod category',
+      categoryHint:
+        'Hosts approved in this sub-category and clubs carrying it are the ones offered the pod.',
+      categoryRequired: 'Select a category',
+      categoryLocked: 'Locked — a host or club has already enrolled on this category.',
+      // The template's own rules, mirroring the server's validateTemplate.
+      priceRange: 'Ticket price must be between 1 and 1999',
+      priceHint: 'GROSS price per person (incl. fee + GST). 1 – 1999 — an Auto Pod is never free.',
+      spotsMin: 'An Auto Pod needs at least 2 spots',
+      spotsMax: 'An Auto Pod cannot have more than 999 spots',
+      mediaRequired: 'At least one image is required',
+    },
     aboutSection: {
       logisticsWhatToBringParkingNotes: 'Logistics, what to bring, parking notes, etc.',
       podInfoAdditionalNotes: 'Pod info / additional notes',

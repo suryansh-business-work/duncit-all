@@ -13,6 +13,7 @@ interface Props {
   toolbarActions?: ReactNode;
   onEdit: (row: AutoPodTableRow) => void;
   onCancel: (row: AutoPodTableRow) => void;
+  onDelete: (row: AutoPodTableRow) => void;
   onViewPod: (row: AutoPodTableRow) => void;
 }
 
@@ -27,11 +28,12 @@ export default function AutoPodsTable({
   toolbarActions,
   onEdit,
   onCancel,
+  onDelete,
   onViewPod,
 }: Readonly<Props>) {
   const columns = useMemo(
-    () => getAutoPodColumns({ t, labels, formatDateTime, onEdit, onCancel, onViewPod }),
-    [t, labels, formatDateTime, onEdit, onCancel, onViewPod]
+    () => getAutoPodColumns({ t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod }),
+    [t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod]
   );
 
   return (

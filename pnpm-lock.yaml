@@ -592,9 +592,6 @@ importers:
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../forms
       '@duncit/ui':
         specifier: workspace:*
         version: link:../ui

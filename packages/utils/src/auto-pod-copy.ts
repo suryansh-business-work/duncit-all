@@ -44,8 +44,10 @@ export interface AutoPodLabels {
   priceLabel: string;
   spotsLabel: string;
   expectedEarnings: (amount: string) => string;
-  /** Who the offer is still waiting on. */
+  /** Who the offer is still waiting on — the first missing role. */
   waitingOn: (role: AutoPodRole) => string;
+  /** Everyone the offer is still waiting on, in tick order. */
+  waitingFor: (roles: AutoPodRole[]) => string;
   liveNow: string;
   viewPod: string;
   cancelled: string;
@@ -59,7 +61,27 @@ export interface AutoPodLabels {
   addAvailability: string;
   loadFailed: string;
   retry: string;
+  /** The filters at the top of every queue page. */
+  locationLabel: string;
+  allLocations: string;
+  changeLocation: string;
+  categoryLabel: string;
+  allCategories: string;
+  noHostCategories: string;
+  /** The card's city line: pinned by the first enrolment, or not yet. */
+  pinnedTo: (city: string) => string;
+  unpinned: string;
+  /** A host's "Assign Myself" on an offer that takes its city from them. */
+  pickLocationFirst: string;
+  willPinTo: (city: string) => string;
+  /** A pinned offer only takes a venue / club from its own city. */
+  noVenueInCity: (city: string) => string;
+  noClubInCity: (city: string) => string;
 }
+
+/** "a venue, a host, a club admin" — the missing roles as one list. */
+const joinRoles = (roles: AutoPodRole[], name: Record<AutoPodRole, string>) =>
+  roles.map((role) => name[role]).join(', ');
 
 /** mWeb + native (`mweb.autoPods.*`). */
 export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
@@ -78,6 +100,11 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     host: t('mweb.autoPods.emptyHost'),
     club: t('mweb.autoPods.emptyClub'),
   };
+  const roleName: Record<AutoPodRole, string> = {
+    venue: t('mweb.autoPods.roleVenue'),
+    host: t('mweb.autoPods.roleHost'),
+    club: t('mweb.autoPods.roleClub'),
+  };
   return {
     venueTitle: t('mweb.autoPods.venueTitle'),
     hostTitle: t('mweb.autoPods.hostTitle'),
@@ -94,15 +121,17 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     pickSlot: t('mweb.autoPods.pickSlot'),
     pickClub: t('mweb.autoPods.pickClub'),
     confirmAccept: t('mweb.autoPods.confirmAccept'),
-    confirmAcceptBody: t('mweb.autoPods.confirmAcceptBody'),
+    confirmAcceptBody: t('mweb.autoPods.confirmAcceptAnyOrder'),
     confirmAssign: t('mweb.autoPods.confirmAssign'),
-    confirmAssignBody: t('mweb.autoPods.confirmAssignBody'),
+    confirmAssignBody: t('mweb.autoPods.confirmAssignAnyOrder'),
     confirmClaim: t('mweb.autoPods.confirmClaim'),
     confirmClaimBody: t('mweb.autoPods.confirmClaimBody'),
     priceLabel: t('mweb.autoPods.priceLabel'),
     spotsLabel: t('mweb.autoPods.spotsLabel'),
     expectedEarnings: (amount) => t('mweb.autoPods.expectedEarnings', { vars: { amount } }),
     waitingOn: (role) => waitingByRole[role],
+    waitingFor: (roles) =>
+      t('mweb.autoPods.waitingFor', { vars: { roles: joinRoles(roles, roleName) } }),
     liveNow: t('mweb.autoPods.liveNow'),
     viewPod: t('mweb.autoPods.viewPod'),
     cancelled: t('mweb.autoPods.cancelled'),
@@ -114,6 +143,18 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     addAvailability: t('mweb.autoPods.addAvailability'),
     loadFailed: t('mweb.autoPods.loadFailed'),
     retry: t('mweb.autoPods.retry'),
+    locationLabel: t('mweb.autoPods.locationLabel'),
+    allLocations: t('mweb.autoPods.allLocations'),
+    changeLocation: t('mweb.autoPods.changeLocation'),
+    categoryLabel: t('mweb.autoPods.categoryLabel'),
+    allCategories: t('mweb.autoPods.allCategories'),
+    noHostCategories: t('mweb.autoPods.noHostCategories'),
+    pinnedTo: (city) => t('mweb.autoPods.pinnedTo', { vars: { city } }),
+    unpinned: t('mweb.autoPods.unpinned'),
+    pickLocationFirst: t('mweb.autoPods.pickLocationFirst'),
+    willPinTo: (city) => t('mweb.autoPods.willPinTo', { vars: { city } }),
+    noVenueInCity: (city) => t('mweb.autoPods.noVenueInCity', { vars: { city } }),
+    noClubInCity: (city) => t('mweb.autoPods.noClubInCity', { vars: { city } }),
   };
 }
 
@@ -134,6 +175,11 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     host: t('shell.autoPods.emptyHost'),
     club: t('shell.autoPods.emptyClub'),
   };
+  const roleName: Record<AutoPodRole, string> = {
+    venue: t('shell.autoPods.roleVenue'),
+    host: t('shell.autoPods.roleHost'),
+    club: t('shell.autoPods.roleClub'),
+  };
   return {
     venueTitle: t('shell.autoPods.venueTitle'),
     hostTitle: t('shell.autoPods.hostTitle'),
@@ -150,15 +196,17 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     pickSlot: t('shell.autoPods.pickSlot'),
     pickClub: t('shell.autoPods.pickClub'),
     confirmAccept: t('shell.autoPods.confirmAccept'),
-    confirmAcceptBody: t('shell.autoPods.confirmAcceptBody'),
+    confirmAcceptBody: t('shell.autoPods.confirmAcceptAnyOrder'),
     confirmAssign: t('shell.autoPods.confirmAssign'),
-    confirmAssignBody: t('shell.autoPods.confirmAssignBody'),
+    confirmAssignBody: t('shell.autoPods.confirmAssignAnyOrder'),
     confirmClaim: t('shell.autoPods.confirmClaim'),
     confirmClaimBody: t('shell.autoPods.confirmClaimBody'),
     priceLabel: t('shell.autoPods.priceLabel'),
     spotsLabel: t('shell.autoPods.spotsLabel'),
     expectedEarnings: (amount) => t('shell.autoPods.expectedEarnings', { vars: { amount } }),
     waitingOn: (role) => waitingByRole[role],
+    waitingFor: (roles) =>
+      t('shell.autoPods.waitingFor', { vars: { roles: joinRoles(roles, roleName) } }),
     liveNow: t('shell.autoPods.liveNow'),
     viewPod: t('shell.autoPods.viewPod'),
     cancelled: t('shell.autoPods.cancelled'),
@@ -170,6 +218,18 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     addAvailability: t('shell.autoPods.addAvailability'),
     loadFailed: t('shell.autoPods.loadFailed'),
     retry: t('shell.autoPods.retry'),
+    locationLabel: t('shell.autoPods.locationLabel'),
+    allLocations: t('shell.autoPods.allLocations'),
+    changeLocation: t('shell.autoPods.changeLocation'),
+    categoryLabel: t('shell.autoPods.categoryLabel'),
+    allCategories: t('shell.autoPods.allCategories'),
+    noHostCategories: t('shell.autoPods.noHostCategories'),
+    pinnedTo: (city) => t('shell.autoPods.pinnedTo', { vars: { city } }),
+    unpinned: t('shell.autoPods.unpinned'),
+    pickLocationFirst: t('shell.autoPods.pickLocationFirst'),
+    willPinTo: (city) => t('shell.autoPods.willPinTo', { vars: { city } }),
+    noVenueInCity: (city) => t('shell.autoPods.noVenueInCity', { vars: { city } }),
+    noClubInCity: (city) => t('shell.autoPods.noClubInCity', { vars: { city } }),
   };
 }
 

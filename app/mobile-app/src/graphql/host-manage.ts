@@ -2,9 +2,11 @@ import { gql } from '@/generated/graphql';
 
 /** Pods this host runs — the host-scoped query mWeb's Host Studio uses, so the
  * two stay identical. Unlike the public \`pods\` query it also returns pods
- * that are offline awaiting/refused venue approval, so a "Venue Rejected" pod
- * stays visible and fully editable. Carries description + media for the
- * in-place edit form. */
+ * that are offline awaiting/refused venue approval, which is what lets the
+ * screen split them into Requested Pods / Your pods / Rejected Pods. Carries
+ * description + media for the in-place edit form, and place_label (the venue
+ * name) + created_at (when the slot was asked for) for the two request
+ * sections. */
 export const HostPodsDocument = gql(`
   query MobileHostPods {
     myHostPods {
@@ -27,8 +29,10 @@ export const HostPodsDocument = gql(`
       location_id
       venue_id
       zone_name
+      place_label
       venue_approval_status
       is_active
+      created_at
     }
   }
 `);

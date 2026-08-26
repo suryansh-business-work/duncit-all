@@ -28,6 +28,12 @@ exports:
   - 'POD_TYPES'
   - 'OCCURRENCES'
   - 'POD_MODES'
+  - 'useAutoPodEditorState'
+  - 'buildAutoPodInput'
+  - 'autoPodToFormValues'
+  - 'blankAutoPodFormValues'
+  - 'AUTO_POD_TYPE'
+  - 'AutoPodTemplateRow'
 ---
 
 ## Why this exists
@@ -295,6 +301,7 @@ Takes every `PodForm` prop except `onCancel` and `preview` (it mounts `<PodPrevi
 | `backLabel` | `string` | yes | — | Back button label. |
 | `titleExtras` | `ReactNode` | no | `undefined` | Extra heading-row content (admin AI-fill button). |
 | `intro` | `ReactNode` | no | `undefined` | Content above the form (club-admin host alert). |
+| `title` | `string` | no | `undefined` | Heading override — the Auto Pod editors say "New Auto Pod" / "Edit Auto Pod" here. Defaults to New Pod / Edit Pod. |
 
 ### `<PodPreview>` — no props
 
@@ -316,6 +323,9 @@ both surfaces render can be asserted without mounting either.
 | `usePodEditorState` | `(args: UsePodEditorStateArgs) => …` | `{ open, initialValues, editingPod, busy, opError, openCreate, openEdit, submit, close }` |
 | `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
 | `useVenueSlots` | `(venueId: string, skip?: boolean) => …` | `{ slots: VenueSlot[], loading, error }` — the one slot query the picker and the spots bounds share. |
+| `useAutoPodEditorState` | `(args: UseAutoPodEditorStateArgs) => …` | `{ initialValues, busy, opError, submit }` — the Auto Pod twin of `usePodEditorState`; see "Auto Pod mode". |
+| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — no club, venue, host, date, mode or products. |
+| `autoPodToFormValues` | `(row: AutoPodTemplateRow) => PodFormValues` | Form values for editing an Auto Pod, blank-defaulted over `blankAutoPodFormValues`. |
 
 `VENUE_AVAILABLE_SLOTS` is that query document, exported for a consumer that has to read the same
 slots outside the form tree — the admin AI-fill books the venue's next free slot before it resets
@@ -340,6 +350,8 @@ them straight to `MediaPickerDialog`.
 | `showIsActive` | `boolean` | — | Active toggle (edit only). |
 | `showProducts` | `boolean` | — | Approved-products section + its rules. |
 | `showReel` | `boolean` | `false` | Explore reel `reel_url` field. |
+| `autoPod` | `boolean` | `false` | Auto Pod mode — the template only; see "Auto Pod mode" below. |
+| `lockCategory` | `boolean` | `false` | Auto Pod mode only: the category is fixed and shown read-only. |
 
 ## Live preview
 
@@ -411,6 +423,117 @@ edited (`editingPod`) and owns only the values and the submit; the route owns wh
 (`onPicked(url)`) while the form wants promises (`onPickImage: () => Promise<string | null>`). The
 hook adapts one to the other and hands back ready-made `accept` / `title` dialog props for the kind
 being picked. Do not re-implement the promise bridge at the call site.
+
+## Auto Pod mode
+
+An **Auto Pod** is a pod written without a venue, a host or a club — a venue, a host and a club
+admin each enrol later, in any order, and the first to enrol pins it to a city (`@duncit/auto-pods`
+renders that side). The Admin and Partners consoles used to open a separate, smaller form for it.
+They now open **this** form with `config.autoPod: true`, so an Auto Pod is authored in the same
+accordion sections, with the same media picker, place charges, reel and finance breakdown as an
+ordinary pod. One form, one schema; the mode is one more config flag.
+
+What `autoPod: true` changes:
+
+| Ordinary pod | Auto Pod mode |
+| --- | --- |
+| Club picker (category inherited from the club) | `AutoPodCategoryField` — a REQUIRED Super › Sub cascade in the club picker's place. It writes `super_category_id` + `sub_category_id`; only hosts approved in that sub-category and clubs carrying it are ever offered the pod. |
+| Hosts, venue slot, mode, date/time | Gone — nothing to pick yet. The When/Where section is dropped. |
+| Products section | Dropped. |
+| `pod_type` select | Fixed to `AUTO_POD_TYPE` (`'PAID'`) — an Auto Pod is physical and never free. |
+| "Save as Draft" | Gone; the template is either saved or not. |
+
+`makePodSchema(config)` swaps the club/venue/host/date rules for the template's own: a category is
+required, the ticket price floor is 1, spots are 2–999 (the host attends free, so two is the fewest
+that bill anyone) and at least one image. `lockCategory: true` shows the category read-only — a
+Club Admin opening one for their club, or a template a host or club has already enrolled on (the
+server refuses a category change from then on).
+
+A sensible console config:
+
+```ts
+import { makeNativeParityPodConfig, type PodFormConfig } from '@duncit/pod-form';
+
+const ADMIN_AUTO_POD_CONFIG: PodFormConfig = {
+  ...makeNativeParityPodConfig({ showProducts: false }),
+  autoPod: true,
+  showHosts: false,
+  showVenueSlot: false,
+  showPlaceCharges: true,
+  showReel: true,
+  showFinance: true, // false on Partners, which has no finance settings
+};
+```
+
+### `useAutoPodEditorState` — the editor plumbing
+
+The twin of `usePodEditorState`: it seeds the form (`blankAutoPodFormValues` merged with
+`createDefaults`, or `autoPodToFormValues(editingAutoPod)` when editing), builds the input with
+`buildAutoPodInput`, and routes it to `submitCreate` or `submitUpdate(id, input)`. A content
+refusal surfaces as `opError` with the rules it broke, exactly as for an ordinary pod.
+
+```tsx
+import {
+  PodEditorPage,
+  useAutoPodEditorState,
+  type AutoPodTemplateRow,
+} from '@duncit/pod-form';
+
+const editor = useAutoPodEditorState({
+  editingAutoPod, // (AutoPodTemplateRow & { id: string }) | null
+  createDefaults: { super_category_id: club.super_category_id, sub_category_id: club.sub_category_id },
+  submitCreate: (input) => createAutoPod({ variables: { input, club_id: club.id } }),
+  submitUpdate: (id, input) => updateAutoPod({ variables: { auto_pod_doc_id: id, input } }),
+  onSaved: () => navigate('/auto-pods'),
+});
+
+<PodEditorPage
+  title={editingAutoPod ? t('admin.autoPods.editTitle') : t('admin.autoPods.newTitle')}
+  editing={!!editingAutoPod}
+  eyebrow={t('admin.autoPods.eyebrow')}
+  onBack={() => navigate('/auto-pods')}
+  backLabel={t('admin.autoPods.backToList')}
+  initialValues={editor.initialValues}
+  config={{ ...ADMIN_AUTO_POD_CONFIG, lockCategory: !!club }}
+  busy={editor.busy}
+  error={editor.opError}
+  clubs={[]}
+  venues={[]}
+  getClubVenueIds={() => []}
+  dateFormatter={dateFormatter}
+  slotLabels={slotLabels}
+  onSubmit={(values) => editor.submit(values)}
+/>;
+```
+
+`PodEditorPage.onSubmit` still carries `{ draft }` in its second argument for the ordinary form;
+in Auto Pod mode there is no draft, so ignore it and call `editor.submit(values)`.
+
+### `buildAutoPodInput(values)` — the template, and only the template
+
+```js
+{
+  pod_title: 'Sunday Badminton Doubles',
+  pod_description: 'Friendly doubles. Rackets available on site.',
+  sub_category_id: '66f1a2b3c4d5e6f708192c11',
+  pod_amount: 499,
+  no_of_spots: 8,
+  pod_images_and_videos: [{ url: 'https://ik.imagekit.io/duncit/pods/badminton-hero.jpg', type: 'IMAGE' }],
+  pod_info: '',
+  pod_hashtag: ['badminton', 'bengaluru'],
+  reel_url: null,
+  pod_occurrence: 'WEEKLY',
+  what_this_pod_offers: [],
+  available_perks: [],
+  payment_terms: null,
+  place_charges: []
+}
+```
+
+No `club_id`, `venue_id`, `pod_hosts_id`, `pod_date_time` or `pod_mode` — those are what the
+enrolling partners supply. The same shape serves `createAutoPod` and `updateAutoPod`.
+`AutoPodTemplateRow` is the inverse's input: the fields every `AutoPod` row carries, which
+`autoPodToFormValues` rehydrates into form values with `pod_type` forced back to `AUTO_POD_TYPE`.
 
 ## Peer dependencies, not dependencies
 

@@ -117,6 +117,12 @@ export function AccountScreen() {
         onClose={() => setEditOpen(false)}
         onSave={updateProfile}
         onSaveUsername={setUsername}
+        // A proved contact change is already stored, so the account is
+        // reloaded the moment it lands rather than waiting for a Save that
+        // will not carry it.
+        onContactChanged={() => {
+          refresh().catch(() => undefined);
+        }}
       />
     </StackScreen>
   );

@@ -412,7 +412,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
-      { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },

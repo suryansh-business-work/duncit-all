@@ -48,6 +48,9 @@ export interface PodEditorPageProps {
   titleExtras?: ReactNode;
   /** Content rendered above the form (e.g. the club-admin host info alert). */
   intro?: ReactNode;
+  /** Heading override — the Auto Pod editors say "New Auto Pod" here. Defaults
+   * to New Pod / Edit Pod. */
+  title?: string;
 }
 
 /**
@@ -85,7 +88,9 @@ export default function PodEditorPage({
   hideDraftOnEdit,
   titleExtras,
   intro,
+  title,
 }: Readonly<PodEditorPageProps>) {
+  const defaultTitle = editing ? 'Edit Pod' : 'New Pod';
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -109,7 +114,7 @@ export default function PodEditorPage({
               <Typography variant="h6" sx={{
                 fontWeight: 950
               }}>
-                {editing ? 'Edit Pod' : 'New Pod'}
+                {title ?? defaultTitle}
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1} sx={{

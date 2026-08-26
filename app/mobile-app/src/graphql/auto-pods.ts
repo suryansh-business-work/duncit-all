@@ -3,10 +3,12 @@ import { gql } from '@/generated/graphql';
 /**
  * Auto Pods, for the three partners who enrol in one.
  *
- * An admin writes the pod with no venue, host or club; a venue accepts it and
- * commits a slot, then a host and a club admin each enrol, and only then does it
- * become an ordinary pod. Each role reads its OWN queue — the server decides
- * which offers a caller may see, so these carry no filters of their own.
+ * An admin writes the pod with no venue, host or club; a venue, a host and a
+ * club admin each enrol — in ANY order — and only once all three are on it does
+ * it become an ordinary pod. The FIRST enrolment pins the offer to a city, and
+ * from then on only partners in that city are offered it. Each role reads its
+ * OWN queue — the server decides which offers a caller may see; the one filter
+ * every queue carries is the city, and the host queue adds a sub-category.
  *
  * Every document selects the same fields the MUI surfaces do
  * (`@duncit/auto-pods`' `AUTO_POD_FIELDS`), because both feed the identical
@@ -23,10 +25,11 @@ import { gql } from '@/generated/graphql';
  * a screen that never loads.
  */
 
-/** Open offers this venue may accept, plus the ones it already accepted. */
+/** Open offers this venue may accept, plus the ones it already accepted. A
+ * `location_id` narrows to offers pinned to that city plus every unpinned one. */
 export const VenueAutoPodsDocument = gql(`
-  query MobileVenueAutoPods {
-    venueAutoPods {
+  query MobileVenueAutoPods($location_id: ID) {
+    venueAutoPods(location_id: $location_id) {
       id
       auto_pod_no
       stage
@@ -43,6 +46,15 @@ export const VenueAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
+      location {
+        location_id
+        location_name
+        country
+        state
+        city
+        bound_by
+        bound_at
+      }
       venue_claim {
         venue_id
         venue_slot_id
@@ -68,10 +80,10 @@ export const VenueAutoPodsDocument = gql(`
   }
 `);
 
-/** Venue-accepted offers this host may take, plus their own. */
+/** Offers this host may take, plus their own — optionally one sub-category. */
 export const HostAutoPodsDocument = gql(`
-  query MobileHostAutoPods {
-    hostAutoPods {
+  query MobileHostAutoPods($location_id: ID, $sub_category_id: ID) {
+    hostAutoPods(location_id: $location_id, sub_category_id: $sub_category_id) {
       id
       auto_pod_no
       stage
@@ -88,6 +100,15 @@ export const HostAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
+      location {
+        location_id
+        location_name
+        country
+        state
+        city
+        bound_by
+        bound_at
+      }
       venue_claim {
         venue_id
         venue_slot_id
@@ -113,10 +134,10 @@ export const HostAutoPodsDocument = gql(`
   }
 `);
 
-/** Venue-accepted offers this admin's clubs may claim, plus their own. */
+/** Offers this admin's clubs may claim, plus their own. */
 export const ClubAdminAutoPodsDocument = gql(`
-  query MobileClubAdminAutoPods {
-    clubAdminAutoPods {
+  query MobileClubAdminAutoPods($location_id: ID) {
+    clubAdminAutoPods(location_id: $location_id) {
       id
       auto_pod_no
       stage
@@ -133,6 +154,15 @@ export const ClubAdminAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
+      location {
+        location_id
+        location_name
+        country
+        state
+        city
+        bound_by
+        bound_at
+      }
       venue_claim {
         venue_id
         venue_slot_id
@@ -178,6 +208,15 @@ export const VenueAcceptAutoPodDocument = gql(`
       id
       stage
       viewer_claimed
+      location {
+        location_id
+        location_name
+        country
+        state
+        city
+        bound_by
+        bound_at
+      }
       venue_claim {
         venue_id
         venue_slot_id
@@ -190,13 +229,24 @@ export const VenueAcceptAutoPodDocument = gql(`
   }
 `);
 
-/** "Assign Myself" — the host takes the pod at the venue's fixed date + price. */
+/** "Assign Myself" — the host takes the pod. `location_id` is REQUIRED on an
+ * offer nobody has enrolled in yet (the host's city pins it) and null once the
+ * offer is already pinned. */
 export const HostAssignAutoPodDocument = gql(`
-  mutation MobileHostAssignAutoPod($auto_pod_doc_id: ID!) {
-    hostAssignAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+  mutation MobileHostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID) {
+    hostAssignAutoPod(auto_pod_doc_id: $auto_pod_doc_id, location_id: $location_id) {
       id
       stage
       viewer_claimed
+      location {
+        location_id
+        location_name
+        country
+        state
+        city
+        bound_by
+        bound_at
+      }
       host_claim {
         user_id
         host_name
@@ -213,6 +263,15 @@ export const ClubClaimAutoPodDocument = gql(`
       id
       stage
       viewer_claimed
+      location {
+        location_id
+        location_name
+        country
+        state
+        city
+        bound_by
+        bound_at
+      }
       club_claim {
         club_id
         club_name
@@ -223,15 +282,35 @@ export const ClubClaimAutoPodDocument = gql(`
   }
 `);
 
-/** Clubs the caller administers — a claim is made FOR one of them. The venue
- * picker reuses `VenueDashboardDocument` and the slot picker
- * `VenueAvailableSlotsDocument`, which already select exactly these fields. */
+/** Clubs the caller administers — a claim is made FOR one of them, and only a
+ * club in the offer's pinned city may. The venue picker reuses
+ * `VenueDashboardDocument` and the slot picker `VenueAvailableSlotsDocument`,
+ * which already select exactly these fields. */
 export const MyAdminClubsForAutoPodDocument = gql(`
   query MobileMyAdminClubsForAutoPod {
     myAdminClubs {
       id
       club_name
       category_id
+      location_id
+    }
+  }
+`);
+
+/** The sub-categories this host is approved in — the host queue's category
+ * filter offers exactly these. */
+export const MyHostCategoriesForAutoPodDocument = gql(`
+  query MobileMyHostCategoriesForAutoPod {
+    myHost {
+      id
+      status
+      is_active
+      host_categories {
+        sub_category_id
+        sub_category_name
+        category_name
+        super_category_name
+      }
     }
   }
 `);

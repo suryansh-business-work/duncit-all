@@ -1,29 +1,35 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 import { autoPodActionable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
-import { AutoPodQueue, VenueAcceptSheet } from '@/components/auto-pods';
+import { AutoPodLocationRow, AutoPodQueue, VenueAcceptSheet } from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
+import { useLocations } from '@/hooks/useLocations';
 import type { RootStackParamList } from '@/navigation/types';
 
 /**
  * Venue Studio > Auto Pods — the offers a venue may take.
  *
- * A venue enrols FIRST: nothing else can happen until one commits a date, so
- * this queue is where an Auto Pod stops being an idea. Accepting books one of
- * the venue's own free slots in the same step.
+ * A venue may enrol at any point: first, and its city pins the offer, or after
+ * a host or club has, in which case only a venue in that city is offered it.
+ * Accepting books one of the venue's own free slots in the same step. The
+ * header's city narrows the queue to offers pinned there plus every unpinned
+ * one.
  *
  * The mWeb twin is `/venues/auto-pods` (rule 27); the logic both read is
  * `@duncit/utils`' auto-pod helpers.
  */
 export function VenueAutoPodsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { labels, formatWhen, formatMoney, rows, isLoading, hasError, refetch } =
-    useAutoPodScreen('venue');
+  const { selectedId } = useLocations();
+  const { labels, formatWhen, formatMoney, rows, isLoading, hasError, refetch } = useAutoPodScreen(
+    'venue',
+    { locationId: selectedId },
+  );
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
 
   const renderAction = (row: AutoPodRow) =>
@@ -40,17 +46,20 @@ export function VenueAutoPodsScreen() {
   return (
     <StackScreen title={labels.venueTitle} testID="venue-auto-pods-screen">
       <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
-        <AutoPodQueue
-          role="venue"
-          rows={rows}
-          labels={labels}
-          loading={isLoading}
-          error={hasError}
-          onRetry={refetch}
-          formatWhen={formatWhen}
-          formatMoney={formatMoney}
-          renderAction={renderAction}
-        />
+        <YStack gap={14}>
+          <AutoPodLocationRow labels={labels} />
+          <AutoPodQueue
+            role="venue"
+            rows={rows}
+            labels={labels}
+            loading={isLoading}
+            error={hasError}
+            onRetry={refetch}
+            formatWhen={formatWhen}
+            formatMoney={formatMoney}
+            renderAction={renderAction}
+          />
+        </YStack>
       </ScrollView>
 
       <VenueAcceptSheet

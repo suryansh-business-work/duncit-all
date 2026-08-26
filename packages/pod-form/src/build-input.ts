@@ -1,4 +1,11 @@
-import { blankPodFormValues, type PodFormConfig, type PodFormValues, type PodProductRequest } from './types';
+import {
+  AUTO_POD_TYPE,
+  blankAutoPodFormValues,
+  blankPodFormValues,
+  type PodFormConfig,
+  type PodFormValues,
+  type PodProductRequest,
+} from './types';
 
 /** Split newline text into trimmed non-empty lines. */
 const lines = (text: string) =>
@@ -35,10 +42,7 @@ export interface BuildPodInputOptions {
 export function buildPodInput(values: PodFormValues, { draft, config }: BuildPodInputOptions) {
   const isVirtual = values.pod_mode === 'VIRTUAL';
   const isPhysical = !isVirtual;
-  const tags = values.pod_hashtag_text
-    .split(/[\s,]+/)
-    .map((s) => s.replace(/^#/, '').trim())
-    .filter(Boolean);
+  const tags = hashtagsOf(values.pod_hashtag_text);
   // `products_enabled` is DERIVED, not chosen: the "Attach products" switch is
   // gone and attaching a product IS enabling them. A pod with rows has its shop
   // open, a pod without has it closed — the two can no longer disagree, which is
@@ -71,14 +75,7 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     payment_terms: values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
-    place_charges:
-      isPhysical && config.showPlaceCharges
-        ? values.place_charges.map((c) => ({
-            label: c.label.trim(),
-            amount: Number(c.amount) || 0,
-            note: c.note?.trim() || null,
-          }))
-        : [],
+    place_charges: isPhysical && config.showPlaceCharges ? placeChargesOf(values) : [],
     products_enabled: productsOn,
     product_requests: productsOn
       ? values.product_requests
@@ -93,6 +90,90 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
   }
 
   return input;
+}
+
+/** Hashtags as typed → the array the server stores (leading # dropped). */
+const hashtagsOf = (text: string) =>
+  text
+    .split(/[\s,]+/)
+    .map((s) => s.replace(/^#/, '').trim())
+    .filter(Boolean);
+
+const placeChargesOf = (values: PodFormValues) =>
+  values.place_charges.map((c) => ({
+    label: c.label.trim(),
+    amount: Number(c.amount) || 0,
+    note: c.note?.trim() || null,
+  }));
+
+/**
+ * Auto Pod mode: form values → `CreateAutoPodInput` (the update input is the
+ * same shape). Only the TEMPLATE goes: no club, venue, host, date, mode or
+ * products — a venue, a host and a club admin supply theirs when they enrol.
+ */
+export function buildAutoPodInput(values: PodFormValues) {
+  return {
+    pod_title: values.pod_title.trim(),
+    pod_description: values.pod_description,
+    sub_category_id: values.sub_category_id,
+    pod_amount: Number(values.pod_amount) || 0,
+    no_of_spots: Number(values.no_of_spots) || 0,
+    pod_images_and_videos: linesToMedia(values.media_text),
+    pod_info: values.pod_info,
+    pod_hashtag: hashtagsOf(values.pod_hashtag_text),
+    reel_url: values.reel_url.trim() || null,
+    pod_occurrence: values.pod_occurrence,
+    what_this_pod_offers: values.what_this_pod_offers,
+    available_perks: values.available_perks,
+    payment_terms: values.payment_terms || null,
+    place_charges: placeChargesOf(values),
+  };
+}
+
+/** The Auto Pod fields an edit rehydrates from — every `AutoPod` row carries them. */
+export interface AutoPodTemplateRow {
+  pod_title: string;
+  pod_description: string;
+  pod_info?: string | null;
+  pod_hashtag?: string[] | null;
+  pod_images_and_videos: { url: string; type?: string | null }[];
+  reel_url?: string | null;
+  super_category_id: string;
+  sub_category_id: string;
+  pod_amount: number;
+  no_of_spots: number;
+  pod_occurrence?: string | null;
+  what_this_pod_offers?: string[] | null;
+  available_perks?: string[] | null;
+  payment_terms?: string | null;
+  place_charges?: { label: string; amount: number; note?: string | null }[] | null;
+}
+
+/** Build RHF form values from an Auto Pod so the form can prefill for edit. */
+export function autoPodToFormValues(row: AutoPodTemplateRow): PodFormValues {
+  return {
+    ...blankAutoPodFormValues,
+    pod_title: row.pod_title ?? '',
+    super_category_id: row.super_category_id ?? '',
+    sub_category_id: row.sub_category_id ?? '',
+    pod_description: row.pod_description ?? '',
+    pod_type: AUTO_POD_TYPE,
+    pod_amount: Number(row.pod_amount ?? 1),
+    pod_occurrence: row.pod_occurrence ?? 'ONE_TIME',
+    no_of_spots: Number(row.no_of_spots ?? 2),
+    pod_info: row.pod_info ?? '',
+    pod_hashtag_text: (row.pod_hashtag ?? []).join(' '),
+    media_text: (row.pod_images_and_videos ?? []).map((m) => m.url).join('\n'),
+    reel_url: row.reel_url ?? '',
+    payment_terms: row.payment_terms ?? '',
+    what_this_pod_offers: row.what_this_pod_offers ?? [],
+    available_perks: row.available_perks ?? [],
+    place_charges: (row.place_charges ?? []).map((c) => ({
+      label: c.label ?? '',
+      amount: c.amount ?? 0,
+      note: c.note ?? '',
+    })),
+  };
 }
 
 /** Build RHF form values from an existing pod so the form can prefill for edit. */

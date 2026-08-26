@@ -143,6 +143,58 @@ export const MobileUpdateProfileDocument = gql(`
   }
 `);
 
+/**
+ * Step 1 of a phone or WhatsApp change — send a code to the NEW number.
+ *
+ * Twin of mWeb's REQUEST_PHONE_CHANGE_OTP. `test_code` is filled only while no
+ * SMS or WhatsApp transport is wired, which is when the server hands the code
+ * straight back for the screen to display.
+ */
+export const MobileRequestContactPhoneChangeOtpDocument = gql(`
+  mutation MobileRequestContactPhoneChangeOtp($field: ContactPhoneField!, $ext: String!, $num: String!) {
+    requestContactPhoneChangeOtp(field: $field, phone_extension: $ext, phone_number: $num) {
+      challenge_id
+      resend_after_seconds
+      test_code
+    }
+  }
+`);
+
+/** Step 2 of a phone or WhatsApp change — spend the code and store the number. */
+export const MobileConfirmContactPhoneChangeDocument = gql(`
+  mutation MobileConfirmContactPhoneChange($field: ContactPhoneField!, $ext: String!, $num: String!, $otp: String!) {
+    confirmContactPhoneChange(field: $field, phone_extension: $ext, phone_number: $num, otp: $otp) {
+      user_id
+      phone_number
+      phone_extension
+      is_phone_verified
+      whatsapp_number
+      whatsapp_extension
+    }
+  }
+`);
+
+/** Step 1 of an email change — email a code to the NEW address. */
+export const MobileRequestEmailChangeOtpDocument = gql(`
+  mutation MobileRequestEmailChangeOtp($email: String!) {
+    requestEmailChangeOtp(email: $email) {
+      ok
+      dev_otp
+    }
+  }
+`);
+
+/** Step 2 of an email change — spend the code and store the address. */
+export const MobileConfirmEmailChangeDocument = gql(`
+  mutation MobileConfirmEmailChange($email: String!, $otp: String!) {
+    confirmEmailChange(email: $email, otp: $otp) {
+      user_id
+      email
+      is_email_verified
+    }
+  }
+`);
+
 /** Step 1 of change-password — verify current password, email an OTP. */
 export const MobileRequestPasswordChangeOtpDocument = gql(`
   mutation MobileRequestPasswordChangeOtp($input: RequestPasswordChangeInput!) {

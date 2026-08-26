@@ -11,7 +11,16 @@ export type OtpMedium = (typeof OTP_MEDIUMS)[number];
  * newest LIVE challenge for a phone number, so a signup code and an attendance
  * code for the same number must never be able to satisfy each other.
  */
-export const OTP_PURPOSES = ['ATTENDANCE', 'WHATSAPP_SIGNUP'] as const;
+export const OTP_PURPOSES = [
+  'ATTENDANCE',
+  'WHATSAPP_SIGNUP',
+  // Changing the contact number on an account that already exists. Separate
+  // from WHATSAPP_SIGNUP so a code minted during onboarding can never be spent
+  // to move the number on a live account, and separate from each other so the
+  // code proving a contact number cannot move the WhatsApp one instead.
+  'PHONE_CHANGE',
+  'WHATSAPP_CHANGE',
+] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 
 /** What happened when one medium was asked to carry a code. */

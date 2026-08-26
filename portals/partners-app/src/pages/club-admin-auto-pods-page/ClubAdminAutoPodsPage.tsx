@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Button, Stack } from '@mui/material';
 import { AutoPodQueue, ClubClaimDialog, CLUB_ADMIN_AUTO_PODS } from '@duncit/auto-pods';
+import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { AutoPodRow } from '@duncit/utils';
+import AutoPodFilters from '../../components/auto-pods/AutoPodFilters';
 import AutoPodMineAction from '../../components/auto-pods/AutoPodMineAction';
 import AutoPodsPageHeader from '../../components/auto-pods/AutoPodsPageHeader';
 import useAutoPodsQueue from '../../components/auto-pods/useAutoPodsQueue';
@@ -13,13 +15,17 @@ function clubPodHref(row: AutoPodRow): string | null {
 }
 
 /**
- * Auto Pods a club admin may claim. Claiming attaches a venue-accepted offer to
- * one of their clubs, which is what gives the resulting pod its club — and,
- * alongside a host, is the last enrolment before it goes live. First club wins.
+ * Auto Pods a club admin may claim, in any order with the venue and the host.
+ * Claiming attaches the offer to one of their clubs: the club's own city pins
+ * an offer nobody has enrolled in yet, and only clubs in a pinned offer's city
+ * can take it. First club wins.
  */
 export default function ClubAdminAutoPodsPage() {
   const [selected, setSelected] = useState<AutoPodRow | null>(null);
-  const queue = useAutoPodsQueue(CLUB_ADMIN_AUTO_PODS, 'clubAdminAutoPods');
+  const [location, setLocation] = useState<AdminLocationValue>(EMPTY_LOCATION);
+  const queue = useAutoPodsQueue(CLUB_ADMIN_AUTO_PODS, 'clubAdminAutoPods', {
+    location_id: location.location_id || null,
+  });
 
   const renderAction = (row: AutoPodRow) => (
     <Button fullWidth size="small" variant="contained" onClick={() => setSelected(row)}>
@@ -30,6 +36,7 @@ export default function ClubAdminAutoPodsPage() {
   return (
     <Stack spacing={2} sx={{ width: '100%', pb: 4 }}>
       <AutoPodsPageHeader title={queue.labels.clubTitle} />
+      <AutoPodFilters location={location} onLocationChange={setLocation} labels={queue.labels} />
       <AutoPodQueue
         role="club"
         rows={queue.rows}

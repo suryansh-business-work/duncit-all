@@ -4,9 +4,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SaveIcon from '@mui/icons-material/Save';
 import { RhfTextField } from '@duncit/forms';
-import PhoneExtensionField from '../../components/PhoneExtensionField';
 import MediaPickerField from '../../components/MediaPickerField';
 import AddressFields from './AddressFields';
+import ContactFields from './ContactFields';
 import type { EditForm } from './queries';
 import { userProfileSchema } from './user-profile.form';
 import { useTranslation } from '@duncit/shell';
@@ -74,35 +74,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             }}>
             <RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required />
           </Grid>
-          <Grid size={12}>
-            <RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 4,
-              sm: 3
-            }}>
-            <Controller
-              control={control}
-              name="phone_extension"
-              render={({ field, fieldState }) => (
-                <PhoneExtensionField
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message ?? ' '}
-                  fullWidth
-                />
-              )}
-            />
-          </Grid>
-          <Grid
-            size={{
-              xs: 8,
-              sm: 9
-            }}>
-            <RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required />
-          </Grid>
+          <ContactFields control={control} />
           <AddressFields
             state={watch('state')}
             city={watch('city')}

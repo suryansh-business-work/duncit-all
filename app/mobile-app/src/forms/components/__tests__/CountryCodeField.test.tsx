@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Text } from 'tamagui';
 
 import { CountryCodeField } from '@/forms/components/CountryCodeField';
-import type { AccountEditValues } from '@/forms/account-edit/account-edit.types';
+import type { ContactValueValues } from '@/forms/contact-change/contact-change.types';
 import { renderWithProviders } from '@/utils/test-utils';
 
 function Harness({
@@ -11,19 +11,22 @@ function Harness({
   disabled = false,
   unset = false,
 }: Readonly<{ initial?: string; disabled?: boolean; unset?: boolean }>) {
-  const { control, watch } = useForm<AccountEditValues>({
-    defaultValues: (unset ? {} : { phone_extension: initial }) as AccountEditValues,
+  // The contact-change dialog is where a country code is picked now: phone and
+  // WhatsApp left the edit-profile form when each became its own verified
+  // write behind a one-time code.
+  const { control, watch } = useForm<ContactValueValues>({
+    defaultValues: (unset ? {} : { extension: initial }) as ContactValueValues,
   });
   return (
     <>
       <CountryCodeField
         control={control}
-        name="phone_extension"
+        name="extension"
         label="Code"
         testID="code"
         disabled={disabled}
       />
-      <Text testID="ext">{watch('phone_extension')}</Text>
+      <Text testID="ext">{watch('extension')}</Text>
     </>
   );
 }

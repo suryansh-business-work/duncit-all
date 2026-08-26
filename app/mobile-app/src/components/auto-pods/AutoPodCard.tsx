@@ -1,7 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack } from 'tamagui';
-import { autoPodWaitingOn, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
+import {
+  autoPodCityLabel,
+  autoPodMissingRoles,
+  type AutoPodLabels,
+  type AutoPodRow,
+} from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
 import { AutoPodTicksRow } from '@/components/auto-pods/AutoPodTicksRow';
@@ -21,12 +26,12 @@ interface Props {
 const firstImage = (row: AutoPodRow): string | null =>
   row.pod_images_and_videos.find((media) => (media.type ?? 'IMAGE') === 'IMAGE')?.url ?? null;
 
-/** One labelled detail line with its icon, e.g. the venue and the slot date. */
+/** One labelled detail line with its icon: the pinned city, the venue, the slot. */
 function DetailLine({
   icon,
   value,
   tint,
-}: Readonly<{ icon: 'place' | 'event'; value: string; tint: string }>) {
+}: Readonly<{ icon: 'location-city' | 'place' | 'event'; value: string; tint: string }>) {
   return (
     <XStack alignItems="center" gap={6}>
       <MaterialIcons name={icon} size={14} color={tint} />
@@ -88,17 +93,19 @@ function AutoPodCover({ url }: Readonly<{ url: string }>) {
 
 /**
  * One Auto Pod, as every role sees it. The card itself is role-agnostic: the
- * three enrolment ticks and the pod's own details read the same to a venue, a
- * host and a club admin, and only the button differs — which is why the caller
- * passes it in rather than the card branching per role.
+ * three enrolment ticks, the pinned city and the pod's own details read the
+ * same to a venue, a host and a club admin, and only the button differs —
+ * which is why the caller passes it in rather than the card branching per role.
  *
  * The Tamagui twin of `@duncit/auto-pods`' `AutoPodCard` (rule 27).
  */
 export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Readonly<Props>) {
   const { muted, success } = useThemeColors();
   const image = firstImage(row);
-  const waitingOn = autoPodWaitingOn(row);
+  const missing = autoPodMissingRoles(row);
   const venue = row.venue_claim;
+  const city = autoPodCityLabel(row.location);
+  const cityLine = city ? labels.pinnedTo(city) : labels.unpinned;
   const subtitle = row.category_name
     ? `${row.auto_pod_no} · ${row.category_name}`
     : row.auto_pod_no;
@@ -125,12 +132,15 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
 
         <AutoPodTicksRow row={row} labels={labels} />
 
-        {venue ? (
-          <YStack gap={4}>
-            <DetailLine icon="place" value={venue.venue_name} tint={muted} />
-            <DetailLine icon="event" value={formatWhen(venue.pod_date_time)} tint={muted} />
-          </YStack>
-        ) : null}
+        <YStack gap={4}>
+          <DetailLine icon="location-city" value={cityLine} tint={muted} />
+          {venue ? (
+            <>
+              <DetailLine icon="place" value={venue.venue_name} tint={muted} />
+              <DetailLine icon="event" value={formatWhen(venue.pod_date_time)} tint={muted} />
+            </>
+          ) : null}
+        </YStack>
 
         <Separator borderColor="$borderColor" />
 
@@ -145,9 +155,9 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
           </Text>
         ) : null}
 
-        {waitingOn ? (
+        {missing.length > 0 ? (
           <Text fontSize={11.5} color="$muted">
-            {labels.waitingOn(waitingOn)}
+            {labels.waitingFor(missing)}
           </Text>
         ) : null}
 

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Badge,
@@ -15,10 +14,9 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { useHostPodActions } from '@duncit/host-pod-actions';
 import HostPodRow from './HostPodRow';
 import HostPodsFilterSheet from './HostPodsFilterSheet';
-import PodClubAdminDialog, { type PodClubAdminTarget } from './PodClubAdminDialog';
+import type { HostPodRowActions } from './hostPodRowActions';
 import {
   DEFAULT_HOST_PODS_FILTERS,
   activeHostFilterCount,
@@ -31,7 +29,8 @@ interface HostPodsCardProps {
   pods: any[];
   loading: boolean;
   errorMessage?: string;
-  onChanged: () => void;
+  /** Per-row wiring into the action dialogs the sections container owns. */
+  rowProps: (pod: any) => HostPodRowActions;
 }
 
 /** "Your pods" — every pod this host runs, with a Type/Time/Price filter and the
@@ -40,14 +39,11 @@ export default function HostPodsCard({
   pods,
   loading,
   errorMessage,
-  onChanged,
+  rowProps,
 }: Readonly<HostPodsCardProps>) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { menuHandlers, dialogs } = useHostPodActions(onChanged);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [clubAdminPod, setClubAdminPod] = useState<PodClubAdminTarget | null>(null);
 
   const visible = filterHostPods(pods, filters);
   const activeCount = activeHostFilterCount(filters);
@@ -79,14 +75,7 @@ export default function HostPodsCard({
     body = (
       <Stack spacing={1}>
         {visible.map((p: any) => (
-          <HostPodRow
-            key={p.id}
-            pod={p}
-            actions={menuHandlers(p)}
-            onClubAdmin={() => setClubAdminPod(p)}
-            onSeeAttendance={() => navigate(`/host/pod/${p.id}/attendance`)}
-            onSlotRequest={() => navigate(`/host/pod-pending/${p.id}`)}
-          />
+          <HostPodRow key={p.id} pod={p} {...rowProps(p)} />
         ))}
       </Stack>
     );
@@ -127,8 +116,6 @@ export default function HostPodsCard({
         }}
         onClose={() => setFilterOpen(false)}
       />
-      <PodClubAdminDialog pod={clubAdminPod} onClose={() => setClubAdminPod(null)} />
-      {dialogs}
     </Card>
   );
 }

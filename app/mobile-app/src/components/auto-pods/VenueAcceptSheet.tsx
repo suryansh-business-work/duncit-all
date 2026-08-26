@@ -1,9 +1,10 @@
 import { Text, XStack, YStack } from 'tamagui';
-import type { AutoPodLabels, AutoPodRow } from '@duncit/utils';
+import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenueAcceptAutoPod } from '@/hooks/useVenueAcceptAutoPod';
 
 interface Props {
@@ -36,7 +37,13 @@ export function VenueAcceptSheet({
   formatMoney,
   onAddAvailability,
 }: Readonly<Props>) {
-  const accept = useVenueAcceptAutoPod(row?.id ?? null, labels, onAccepted);
+  const { warning } = useThemeColors();
+  const accept = useVenueAcceptAutoPod(
+    row?.id ?? null,
+    row?.location?.location_id ?? null,
+    labels,
+    onAccepted,
+  );
 
   const venueOptions = accept.venues.map(
     (venue) => [venue.id, venue.venue_name] as readonly [string, string],
@@ -88,6 +95,18 @@ export function VenueAcceptSheet({
         {row ? (
           <Text fontSize={14} fontWeight="700" color="$color">
             {row.pod_title}
+          </Text>
+        ) : null}
+
+        {row?.location ? (
+          <Text testID="auto-pod-accept-city" fontSize={12.5} color="$color">
+            {labels.pinnedTo(autoPodCityLabel(row.location))}
+          </Text>
+        ) : null}
+
+        {accept.noVenueInCity ? (
+          <Text testID="auto-pod-no-venue-in-city" fontSize={12} color={warning}>
+            {labels.noVenueInCity(autoPodCityLabel(row?.location))}
           </Text>
         ) : null}
 

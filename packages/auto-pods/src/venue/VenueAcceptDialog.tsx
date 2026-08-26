@@ -10,7 +10,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import type { AutoPodRow, AutoPodLabels } from '@duncit/utils';
+import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import {
   MY_VENUES_FOR_AUTO_POD,
   VENUE_ACCEPT_AUTO_POD,
@@ -22,6 +22,7 @@ interface VenueOption {
   venue_name: string;
   status: string;
   is_active: boolean;
+  location_id: string | null;
 }
 
 interface SlotOption {
@@ -66,9 +67,17 @@ export function VenueAcceptDialog({
   const [failure, setFailure] = useState<string | null>(null);
 
   const venuesQuery = useQuery<{ myVenues: VenueOption[] }>(MY_VENUES_FOR_AUTO_POD, { skip: !open });
+  // A pinned offer only takes a venue from its own city — the server refuses
+  // any other, so the picker never offers one.
+  const pinnedLocationId = row?.location?.location_id ?? null;
   const venues = (venuesQuery.data?.myVenues ?? []).filter(
-    (v) => v.status === 'APPROVED' && v.is_active
+    (v) =>
+      v.status === 'APPROVED' &&
+      v.is_active &&
+      (!pinnedLocationId || v.location_id === pinnedLocationId)
   );
+  const noVenueInCity =
+    !!pinnedLocationId && !venuesQuery.loading && venues.length === 0 && !!row;
 
   const slotsQuery = useQuery<{ venueAvailableSlots: SlotOption[] }>(
     VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD,
@@ -122,6 +131,14 @@ export function VenueAcceptDialog({
           </Typography>
           {row ? (
             <Typography variant="subtitle2">{row.pod_title}</Typography>
+          ) : null}
+          {row?.location ? (
+            <Typography variant="body2">{labels.pinnedTo(autoPodCityLabel(row.location))}</Typography>
+          ) : null}
+          {noVenueInCity ? (
+            <Alert severity="warning">
+              {labels.noVenueInCity(autoPodCityLabel(row?.location))}
+            </Alert>
           ) : null}
 
           <TextField

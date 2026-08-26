@@ -2,15 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
-import { usernameBlocksSave, type UsernameStatus } from '@duncit/utils';
+import { usernameBlocksSave, type ContactSnapshot, type UsernameStatus } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { AddressFields } from '@/forms/components/AddressFields';
+import { ContactSection } from '@/components/contact-change';
 import type { AccountMe } from '@/hooks/useAccount';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useDateFormat } from '@/hooks/useDateFormat';
-import { ContactFields } from './ContactFields';
 import { DobDateField } from './DobDateField';
 import { LocationSelect } from './LocationSelect';
 import { UsernameField } from './UsernameField';
@@ -41,6 +41,13 @@ export interface AccountEditFormProps {
   onDirtyChange?: (dirty: boolean) => void;
   /** Lets the parent revert the form to its loaded values (discard-on-close). */
   onRegisterReset?: (reset: () => void) => void;
+  /**
+   * Told when a contact detail is proved and stored.
+   *
+   * Contacts do NOT ride this form's Save: each is its own verified write, so
+   * it has already landed by the time this fires. The parent reloads on it.
+   */
+  onContactChanged?: () => void;
 }
 
 /** Edit-profile form — name, bio, DOB picker, dependent location and phone/
@@ -53,8 +60,18 @@ export function AccountEditForm({
   onSubmit,
   onDirtyChange,
   onRegisterReset,
+  onContactChanged,
 }: Readonly<AccountEditFormProps>) {
   const { t } = useTranslation();
+  // Mirrored into state so a proved change shows on the row immediately,
+  // rather than only once the parent's reload comes back.
+  const [contacts, setContacts] = useState<ContactSnapshot>(() => ({
+    email: me?.email,
+    phone_extension: me?.phone_extension,
+    phone_number: me?.phone_number,
+    whatsapp_extension: me?.whatsapp_extension,
+    whatsapp_number: me?.whatsapp_number,
+  }));
   // The handle is checked against the server, which no Zod rule can wait for,
   // so its verdict is held here and ANDed into the one Save button below.
   const [handleStatus, setHandleStatus] = useState<UsernameStatus>('IDLE');
@@ -137,7 +154,13 @@ export function AccountEditForm({
 
       <LocationSelect control={control} setValue={setValue} />
 
-      <ContactFields control={control} setValue={setValue} />
+      <ContactSection
+        snapshot={contacts}
+        onChanged={(_channel, next) => {
+          setContacts(next);
+          onContactChanged?.();
+        }}
+      />
 
       <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
         MAIN ADDRESS

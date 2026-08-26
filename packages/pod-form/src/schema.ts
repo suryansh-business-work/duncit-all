@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { PodFormConfig, PodFormValues } from './types';
+import { fallbackT } from './i18n/useTranslation';
 
 /** Returns true when the string parses as an http(s) URL. */
 const isHttpUrl = (value: string) => {
@@ -42,8 +43,11 @@ const productRequestSchema = z.object({
   ),
 });
 
-/** Host, venue, venue-slot and meeting-link rules (config-gated). */
+/** Club, host, venue, venue-slot and meeting-link rules (config-gated). */
 function refineVenue(values: PodFormValues, ctx: z.RefinementCtx, config: PodFormConfig) {
+  if (!values.club_id) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['club_id'], message: 'Select a club' });
+  }
   if (config.showHosts && (config.requireHosts ?? true) && values.pod_hosts_id.length < 1) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_hosts_id'], message: 'Add at least one host' });
   }
@@ -124,17 +128,51 @@ function refineProducts(values: PodFormValues, ctx: z.RefinementCtx, config: Pod
 }
 
 /**
+ * Auto Pod mode: the template's own rules, mirroring the server's
+ * `validateTemplate` so a bad template never round-trips. No club, venue, host
+ * or date exists yet — a category stands in for the club, the price floor is 1
+ * (a physical pod is never free) and two spots are the fewest that bill anyone
+ * (the host attends free).
+ */
+function refineAutoPod(values: PodFormValues, ctx: z.RefinementCtx) {
+  if (!values.sub_category_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['sub_category_id'],
+      message: fallbackT('podForm.autoPod.categoryRequired'),
+    });
+  }
+  if (values.pod_amount < 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_amount'], message: fallbackT('podForm.autoPod.priceRange') });
+  }
+  if (values.no_of_spots < 2) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['no_of_spots'], message: fallbackT('podForm.autoPod.spotsMin') });
+  }
+  if (values.no_of_spots > 999) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['no_of_spots'], message: fallbackT('podForm.autoPod.spotsMax') });
+  }
+  if (!hasImage(values.media_text)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['media_text'], message: fallbackT('podForm.autoPod.mediaRequired') });
+  }
+}
+
+/**
  * Config-driven Zod factory. Ports the admin `podFormSchema` 1:1 (identical
  * messages/min/max/refinements) but gates the host / place-charges / products /
  * venue-slot rules on the supplied flags. Dates are unified to `Date | null`
  * (MUI X) with the partner-form's date refinements — same messages as admin.
+ *
+ * In Auto Pod mode the club/venue/host/date rules are replaced wholesale by
+ * `refineAutoPod`: none of those things exist when the template is written.
  */
 export function makePodSchema(config: PodFormConfig) {
   return z
     .object({
       pod_id: z.string().optional(),
       pod_title: z.string().trim().min(3, 'Title is too short').max(120).min(1, 'Title required'),
-      club_id: z.string().min(1, 'Select a club'),
+      club_id: z.string().default(''),
+      super_category_id: z.string().default(''),
+      sub_category_id: z.string().default(''),
       pod_mode: z.enum(['PHYSICAL', 'VIRTUAL'], { required_error: 'Select pod mode' }),
       venue_id: z.string().default(''),
       venue_slot_id: z.string().default(''),
@@ -181,6 +219,11 @@ export function makePodSchema(config: PodFormConfig) {
       is_active: z.boolean().default(true),
     })
     .superRefine((values, ctx) => {
+      if (config.autoPod) {
+        refineAutoPod(values, ctx);
+        refineReel(values, ctx, config);
+        return;
+      }
       refineVenue(values, ctx, config);
       refineDates(values, ctx);
       refinePricingAndMedia(values, ctx);

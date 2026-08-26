@@ -7,7 +7,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
-import { buildUsernameLabels, normalizeUsername } from '@duncit/utils';
+import { buildUsernameLabels, normalizeUsername, type ContactSnapshot } from '@duncit/utils';
 import {
   AccountEditForm,
   accountEditDefaults,
@@ -50,10 +50,18 @@ export interface EditAccountDialogProps {
   open: boolean;
   onClose: () => void;
   initial: Partial<AccountEditValues>;
+  /** Email, phone and WhatsApp as the account holds them — read-only rows. */
+  contacts: ContactSnapshot;
   onSaved: () => void;
 }
 
-export default function EditAccountDialog({ open, onClose, initial, onSaved }: Readonly<EditAccountDialogProps>) {
+export default function EditAccountDialog({
+  open,
+  onClose,
+  initial,
+  contacts,
+  onSaved,
+}: Readonly<EditAccountDialogProps>) {
   const { t } = useTranslation();
   const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE);
   const [setUsername, { loading: renaming, error: renameError }] = useMutation(SET_MY_USERNAME);
@@ -89,11 +97,16 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
         <DialogContent dividers>
           <AccountEditForm
             defaultValues={accountEditDefaults(initial)}
+            contacts={contacts}
             loading={loading || renaming}
             errorMessage={saveError}
             onSubmit={handleSubmit}
             onDirtyChange={guard.setDirty}
             onRegisterReset={guard.registerReset}
+            // A proved contact change is already stored, so the account behind
+            // this dialog is refreshed the moment it lands rather than waiting
+            // for a Save that will not carry it.
+            onContactChanged={onSaved}
           />
         </DialogContent>
       </Dialog>

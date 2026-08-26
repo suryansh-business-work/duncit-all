@@ -27,12 +27,27 @@ export const createUserSchema = yup.object({
   assigned_zones: yup.array().of(yup.string()).optional(),
 });
 
+/*
+  An admin may CLEAR a contact field, so every one of them accepts '' as well
+  as a well-formed value.
+
+  yup's `.matches()` tests the empty string against the pattern unless it is
+  told not to, and `.email()` does the same. Without `excludeEmptyString` the
+  admin form — which sends all three contact fields on every save — could not
+  save ANY account that has no phone number: the blank it faithfully echoed
+  back failed validation before the write was ever attempted.
+*/
+const optionalOrBlank = (pattern: RegExp) =>
+  yup.string().matches(pattern, { excludeEmptyString: true }).optional();
+
 export const updateUserSchema = yup.object({
   first_name: yup.string().min(1).max(60).optional(),
   last_name: yup.string().min(1).max(60).optional(),
   email: yup.string().email().optional(),
-  phone_number: yup.string().matches(phoneRegex).optional(),
-  phone_extension: yup.string().matches(extRegex).optional(),
+  phone_number: optionalOrBlank(phoneRegex),
+  phone_extension: optionalOrBlank(extRegex),
+  whatsapp_number: optionalOrBlank(phoneRegex),
+  whatsapp_extension: optionalOrBlank(extRegex),
   dob: yup.date().max(new Date()).optional(),
   city: yup.string().optional(),
   zone: yup.string().optional(),

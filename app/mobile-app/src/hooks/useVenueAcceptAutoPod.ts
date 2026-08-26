@@ -7,7 +7,8 @@ import { VenueDashboardDocument } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 
-/** A venue the owner may accept with — approved and still switched on. */
+/** A venue the owner may accept with — approved, still switched on and, once
+ * the offer is pinned, in its city. */
 export interface VenueOption {
   id: string;
   venue_name: string;
@@ -29,16 +30,21 @@ export interface SlotOption {
  * would leave hosts and club admins nothing to enrol against — so the sheet
  * cannot submit until both are chosen, and the server enforces the same.
  *
+ * A pinned offer only takes a venue from its own city (`pinnedLocationId`);
+ * the server refuses any other, so the picker never offers one.
+ *
  * The venue and slot lists come from documents the app already ships
  * (`VenueDashboardDocument`, `VenueAvailableSlotsDocument`) rather than new
  * copies of the same two queries (rule 34).
  */
 export function useVenueAcceptAutoPod(
   autoPodId: string | null,
+  pinnedLocationId: string | null,
   labels: AutoPodLabels,
   onAccepted: () => void,
 ) {
   const [venues, setVenues] = useState<VenueOption[]>([]);
+  const [venuesLoaded, setVenuesLoaded] = useState(false);
   const [slots, setSlots] = useState<SlotOption[]>([]);
   const [venueId, setVenueId] = useState('');
   const [slotId, setSlotId] = useState('');
@@ -52,6 +58,7 @@ export function useVenueAcceptAutoPod(
     setVenueId('');
     setSlotId('');
     setFailure('');
+    setVenuesLoaded(false);
   }, [autoPodId]);
 
   useEffect(() => {
@@ -61,9 +68,15 @@ export function useVenueAcceptAutoPod(
       .then((res) => {
         if (!active) return;
         const approved = res.myVenues
-          .filter((venue) => String(venue.status) === 'APPROVED' && venue.is_active)
+          .filter(
+            (venue) =>
+              String(venue.status) === 'APPROVED' &&
+              venue.is_active &&
+              (!pinnedLocationId || venue.location_id === pinnedLocationId),
+          )
           .map((venue) => ({ id: venue.id, venue_name: venue.venue_name }));
         setVenues(approved);
+        setVenuesLoaded(true);
         // One venue is not a choice — preselect it.
         const only = approved.length === 1 ? approved[0] : undefined;
         if (only) setVenueId(only.id);
@@ -72,7 +85,7 @@ export function useVenueAcceptAutoPod(
     return () => {
       active = false;
     };
-  }, [autoPodId, labels.loadFailed]);
+  }, [autoPodId, pinnedLocationId, labels.loadFailed]);
 
   useEffect(() => {
     // Clearing here as well as on the row change: a slot belongs to the venue
@@ -134,5 +147,7 @@ export function useVenueAcceptAutoPod(
     accept,
     /** Nothing free to commit — the sheet offers the availability screen instead. */
     showNoSlots: !!venueId && !slotsLoading && slots.length === 0,
+    /** The offer is pinned to a city none of the owner's venues is in. */
+    noVenueInCity: !!pinnedLocationId && venuesLoaded && venues.length === 0,
   };
 }

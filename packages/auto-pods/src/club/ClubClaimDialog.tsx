@@ -10,13 +10,14 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import type { AutoPodRow, AutoPodLabels } from '@duncit/utils';
+import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import { CLUB_CLAIM_AUTO_POD, MY_ADMIN_CLUBS_FOR_AUTO_POD } from '../queries';
 
 interface ClubOption {
   id: string;
   club_name: string;
   category_id: string | null;
+  location_id: string | null;
 }
 
 export interface ClubClaimDialogProps {
@@ -52,9 +53,16 @@ export function ClubClaimDialog({
   const clubsQuery = useQuery<{ myAdminClubs: ClubOption[] }>(MY_ADMIN_CLUBS_FOR_AUTO_POD, {
     skip: !open,
   });
+  // Only a club in the offer's category AND (once pinned) its city may claim —
+  // the server refuses any other, so the picker never offers one.
+  const pinnedLocationId = row?.location?.location_id ?? null;
   const clubs = (clubsQuery.data?.myAdminClubs ?? []).filter(
-    (club) => !subCategoryId || String(club.category_id ?? '') === subCategoryId
+    (club) =>
+      (!subCategoryId || String(club.category_id ?? '') === subCategoryId) &&
+      (!pinnedLocationId || club.location_id === pinnedLocationId)
   );
+  const noClubInCity =
+    !!pinnedLocationId && !clubsQuery.loading && clubs.length === 0 && !!row;
 
   const [claim, claimState] = useMutation(CLUB_CLAIM_AUTO_POD);
 
@@ -93,12 +101,20 @@ export function ClubClaimDialog({
           {row ? (
             <>
               <Typography variant="subtitle2">{row.pod_title}</Typography>
+              {row.location ? (
+                <Typography variant="body2">
+                  {labels.pinnedTo(autoPodCityLabel(row.location))}
+                </Typography>
+              ) : null}
               {row.venue_claim ? (
                 <Typography variant="body2">
                   {row.venue_claim.venue_name} · {formatWhen(row.venue_claim.pod_date_time)}
                 </Typography>
               ) : null}
             </>
+          ) : null}
+          {noClubInCity ? (
+            <Alert severity="warning">{labels.noClubInCity(autoPodCityLabel(row?.location))}</Alert>
           ) : null}
 
           <TextField

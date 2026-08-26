@@ -12,6 +12,9 @@ export const USER = gql`
       phone_number
       phone_extension
       is_phone_verified
+      whatsapp_number
+      whatsapp_extension
+      whatsapp_verified_at
       country
       city
       state
@@ -58,6 +61,8 @@ export const UPDATE_USER = gql`
       email
       phone_number
       phone_extension
+      whatsapp_number
+      whatsapp_extension
       city
       state
       pincode
@@ -260,6 +265,8 @@ export interface EditForm {
   email: string;
   phone_extension: string;
   phone_number: string;
+  whatsapp_extension: string;
+  whatsapp_number: string;
   city: string;
   state: string;
   pincode: string;

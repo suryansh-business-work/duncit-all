@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { AutoPodModel } from './autoPod.model';
-import { autoPodService } from './autoPod.service';
+import { autoPodService, type AutoPodQueueScope } from './autoPod.service';
 import {
   clubClaimAutoPod,
   hostAssignAutoPod,
@@ -26,13 +26,7 @@ const isAdminCtx = (ctx: GraphQLContext) =>
 async function assertCanReadAutoPod(ctx: GraphQLContext, autoPodDocId: string) {
   if (isAdminCtx(ctx)) return;
   const user = requireAuth(ctx);
-  const rows = await Promise.all([
-    autoPodService.listForVenue(user.id),
-    autoPodService.listForHost(user.id),
-    autoPodService.listForClubAdmin(user.id),
-  ]);
-  const visible = rows.flat().some((row) => row?.id === autoPodDocId);
-  if (!visible) {
+  if (!(await autoPodService.canRead(user.id, autoPodDocId))) {
     throw new GraphQLError('Auto Pod not found', { extensions: { code: 'NOT_FOUND' } });
   }
 }
@@ -83,15 +77,16 @@ export const autoPodResolvers = {
 
     // Scope is derived from venue ownership / host approval / club membership
     // inside the service, so a caller with no such standing gets an empty list
-    // rather than someone else's queue.
-    venueAutoPods: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      autoPodService.listForVenue(requireAuth(ctx).id),
+    // rather than someone else's queue. The optional city / category arguments
+    // only ever NARROW that.
+    venueAutoPods: (_p: unknown, args: AutoPodQueueScope, ctx: GraphQLContext) =>
+      autoPodService.listForVenue(requireAuth(ctx).id, args),
 
-    hostAutoPods: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      autoPodService.listForHost(requireAuth(ctx).id),
+    hostAutoPods: (_p: unknown, args: AutoPodQueueScope, ctx: GraphQLContext) =>
+      autoPodService.listForHost(requireAuth(ctx).id, args),
 
-    clubAdminAutoPods: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      autoPodService.listForClubAdmin(requireAuth(ctx).id),
+    clubAdminAutoPods: (_p: unknown, args: AutoPodQueueScope, ctx: GraphQLContext) =>
+      autoPodService.listForClubAdmin(requireAuth(ctx).id, args),
 
     myAutoPodActionCounts: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       autoPodService.actionCounts(requireAuth(ctx).id),
@@ -134,6 +129,11 @@ export const autoPodResolvers = {
       return autoPodService.cancel(user.id, args.auto_pod_doc_id, args.reason);
     },
 
+    deleteAutoPod: (_p: unknown, args: { auto_pod_doc_id: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return autoPodService.delete(user.id, args.auto_pod_doc_id);
+    },
+
     // Venue ownership, host capability and club membership are each asserted
     // inside the claim itself — the same rules that gate creating a pod.
     venueAcceptAutoPod: (
@@ -150,9 +150,9 @@ export const autoPodResolvers = {
 
     hostAssignAutoPod: (
       _p: unknown,
-      args: { auto_pod_doc_id: string },
+      args: { auto_pod_doc_id: string; location_id?: string | null },
       ctx: GraphQLContext
-    ) => hostAssignAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id),
+    ) => hostAssignAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id, args.location_id),
 
     clubClaimAutoPod: (
       _p: unknown,

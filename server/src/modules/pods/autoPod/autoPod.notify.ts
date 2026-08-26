@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
-import type { IAutoPod } from './autoPod.model';
+import type { IAutoPod, IAutoPodLocation } from './autoPod.model';
+import { autoPodCityLabel } from './autoPod.location';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
@@ -18,6 +19,8 @@ export const AUTO_POD_LINKS = {
   host: '/host/auto-pods',
   club: '/clubs/auto-pods',
 } as const;
+
+type Role = keyof typeof AUTO_POD_LINKS;
 
 /** Every title carries "Auto Pod" so the clients' title-keyword categoriser
  * files these under the existing pod/approval buckets rather than inventing a
@@ -43,16 +46,22 @@ async function push(
   });
 }
 
-/** Owners of every approved, active venue — the audience for an open offer. */
-async function approvedVenueOwnerIds(): Promise<string[]> {
+/** Only partners in the pinned city are offered a pinned Auto Pod. */
+const inCity = (location: IAutoPodLocation | null) =>
+  location ? { location_id: location.location_id } : {};
+
+/** Owners of every approved, active venue (in the city, once pinned). */
+async function venueOwnerIds(location: IAutoPodLocation | null): Promise<string[]> {
   const ids = await VenueModel.distinct('owner_user_id', {
     status: 'APPROVED',
     is_active: true,
+    ...inCity(location),
   });
   return ids.map(String);
 }
 
-/** Approved, active hosts onboarded into this sub-category. */
+/** Approved, active hosts onboarded into this sub-category. A host has no city
+ * of their own — they pick one when they enrol — so category is the audience. */
 async function hostIdsForSubCategory(subCategoryId: Types.ObjectId): Promise<string[]> {
   const hosts = await HostModel.find({
     status: 'APPROVED',
@@ -62,22 +71,54 @@ async function hostIdsForSubCategory(subCategoryId: Types.ObjectId): Promise<str
   return hosts.map((h: any) => String(h.user_id));
 }
 
-/** Admins of active clubs carrying this sub-category. */
-async function clubAdminIdsForSubCategory(subCategoryId: Types.ObjectId): Promise<string[]> {
-  const clubs = await ClubModel.find({ category_id: subCategoryId, is_active: true }).select(
-    'admin_user_ids'
-  );
+/** Admins of active clubs carrying this sub-category (in the city, once pinned). */
+async function clubAdminIdsForSubCategory(
+  subCategoryId: Types.ObjectId,
+  location: IAutoPodLocation | null
+): Promise<string[]> {
+  const clubs = await ClubModel.find({
+    category_id: subCategoryId,
+    is_active: true,
+    ...inCity(location),
+  }).select('admin_user_ids');
   return clubs.flatMap((c: any) => (c.admin_user_ids ?? []).map(String));
 }
 
-/** Everyone who has enrolled so far, plus the admin who opened it. */
-function claimantIds(doc: IAutoPod): string[] {
-  return [
-    doc.created_by ? String(doc.created_by) : '',
-    doc.venue_claim ? String(doc.venue_claim.owner_user_id) : '',
-    doc.host_claim ? String(doc.host_claim.user_id) : '',
-    doc.club_claim ? String(doc.club_claim.user_id) : '',
-  ].filter(Boolean);
+/**
+ * Everyone with a stake in the offer, each with the page THEY act from: the
+ * venue owner's venue queue, the host's host queue, the claiming club admin's
+ * club queue. The opener (a Duncit admin, or the club admin who opened it for
+ * their club) is sent to the club queue when they are that club admin, and to
+ * the venue queue otherwise — the one partner page an admin account can read.
+ */
+function stakeholders(doc: IAutoPod): { id: string; link: string }[] {
+  const rows: { id: string; link: string }[] = [];
+  if (doc.venue_claim) rows.push({ id: String(doc.venue_claim.owner_user_id), link: AUTO_POD_LINKS.venue });
+  if (doc.host_claim) rows.push({ id: String(doc.host_claim.user_id), link: AUTO_POD_LINKS.host });
+  if (doc.club_claim) rows.push({ id: String(doc.club_claim.user_id), link: AUTO_POD_LINKS.club });
+  if (doc.created_by) {
+    const creator = String(doc.created_by);
+    const openedForClub = doc.club_claim && String(doc.club_claim.user_id) === creator;
+    rows.push({ id: creator, link: openedForClub ? AUTO_POD_LINKS.club : AUTO_POD_LINKS.venue });
+  }
+  // One notification per person, on the first (most specific) link listed.
+  const seen = new Set<string>();
+  return rows.filter((row) => (seen.has(row.id) ? false : seen.add(row.id)));
+}
+
+/** One push per link, so every recipient lands on their own queue. */
+async function pushStakeholders(
+  rows: { id: string; link: string }[],
+  title: string,
+  body: string,
+  except: string[] = []
+): Promise<void> {
+  const byLink = new Map<string, string[]>();
+  for (const row of rows) {
+    if (except.includes(row.id)) continue;
+    byLink.set(row.link, [...(byLink.get(row.link) ?? []), row.id]);
+  }
+  await Promise.all([...byLink].map(([link, ids]) => push(ids, title, body, link)));
 }
 
 const whenLabel = (value?: Date | null) =>
@@ -85,70 +126,86 @@ const whenLabel = (value?: Date | null) =>
     ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     : '';
 
+/** "at Play Arena on 12 Sep, 6:00 pm · in Bengaluru, Karnataka" — whatever is known. */
+function whereLine(doc: IAutoPod): string {
+  const parts: string[] = [];
+  if (doc.venue_claim) {
+    parts.push(`at ${doc.venue_claim.venue_name} on ${whenLabel(doc.venue_claim.pod_date_time)}`);
+  }
+  const city = autoPodCityLabel(doc.location);
+  if (city) parts.push(`in ${city}`);
+  return parts.length > 0 ? ` (${parts.join(' · ')})` : '';
+}
+
+const ROLE_NOUN: Record<Role, string> = { venue: 'a venue', host: 'a host', club: 'a club' };
+
+/**
+ * Tell each role that has NOT enrolled yet that the offer is waiting on them.
+ * Enrolments happen in any order, so this is the one audience computation:
+ * the opener calls it with nobody enrolled, and every enrolment calls it again
+ * for whoever is still missing — now narrowed to the pinned city. `skip` holds
+ * roles for whom this enrolment changed nothing, so they are not told twice.
+ */
+async function remaining(doc: IAutoPod, skip: Role[] = []): Promise<void> {
+  const missing: Role[] = [];
+  if (!doc.venue_claim && !skip.includes('venue')) missing.push('venue');
+  if (!doc.host_claim && !skip.includes('host')) missing.push('host');
+  if (!doc.club_claim && !skip.includes('club')) missing.push('club');
+  if (missing.length === 0) return;
+
+  const where = whereLine(doc);
+  const audiences = await Promise.all(
+    missing.map(async (role) => {
+      if (role === 'venue') return venueOwnerIds(doc.location);
+      if (role === 'host') return hostIdsForSubCategory(doc.sub_category_id);
+      return clubAdminIdsForSubCategory(doc.sub_category_id, doc.location);
+    })
+  );
+  const actions: Record<Role, string> = {
+    venue: 'Accept it with one of your slots.',
+    host: 'Assign yourself to host it.',
+    club: 'Claim it for your club.',
+  };
+  await Promise.all(
+    missing.map((role, index) =>
+      push(
+        audiences[index],
+        `Auto Pod needs ${ROLE_NOUN[role]}`,
+        `"${doc.pod_title}"${where} is waiting for ${ROLE_NOUN[role]}. ${actions[role]}`,
+        AUTO_POD_LINKS[role]
+      )
+    )
+  );
+}
+
 export const autoPodNotify = {
-  /** A new offer is on the table — every approved venue may take it. */
+  /** A new offer is on the table — every role that could take it hears. */
   async opened(doc: IAutoPod) {
-    await push(
-      await approvedVenueOwnerIds(),
-      'New Auto Pod for your venue',
-      `"${doc.pod_title}" is open for any venue to accept. Pick a slot to take it.`,
-      AUTO_POD_LINKS.venue
-    );
+    await remaining(doc);
   },
 
-  /** A venue enrolled: hosts and club admins can now act, in parallel. */
-  async venueEnrolled(doc: IAutoPod) {
-    const when = whenLabel(doc.venue_claim?.pod_date_time);
-    // A club admin who opened this FOR their club is already enrolled, so there
-    // is nothing left for any club admin to claim — only hosts are still needed.
-    const [hosts, clubAdmins] = await Promise.all([
-      hostIdsForSubCategory(doc.sub_category_id),
-      doc.club_claim ? [] : clubAdminIdsForSubCategory(doc.sub_category_id),
-    ]);
+  /**
+   * One partner enrolled: everyone already on it (and the opener) hears who,
+   * and whoever is still missing is asked again — now for this city. A club's
+   * enrolment changes nothing a host sees unless it was the one that pinned
+   * the city, so hosts are not re-told in that case.
+   */
+  async enrolled(doc: IAutoPod, who: Role) {
+    const headline: Record<Role, string> = {
+      venue: `${doc.venue_claim?.venue_name} accepted "${doc.pod_title}" for ${whenLabel(doc.venue_claim?.pod_date_time)}.`,
+      host: `${doc.host_claim?.host_name} will host "${doc.pod_title}".`,
+      club: `${doc.club_claim?.club_name} claimed "${doc.pod_title}".`,
+    };
+    const actorId = {
+      venue: doc.venue_claim ? String(doc.venue_claim.owner_user_id) : '',
+      host: doc.host_claim ? String(doc.host_claim.user_id) : '',
+      club: doc.club_claim ? String(doc.club_claim.user_id) : '',
+    }[who];
+    const skip: Role[] = who === 'club' && doc.location?.bound_by !== 'CLUB' ? ['host'] : [];
     await Promise.all([
-      push(
-        hosts,
-        'Auto Pod needs a host',
-        `"${doc.pod_title}" is booked at ${doc.venue_claim?.venue_name} on ${when}. Assign yourself to host it.`,
-        AUTO_POD_LINKS.host
-      ),
-      push(
-        clubAdmins,
-        'Auto Pod needs a club',
-        `"${doc.pod_title}" is booked at ${doc.venue_claim?.venue_name} on ${when}. Claim it for your club.`,
-        AUTO_POD_LINKS.club
-      ),
-      push(
-        doc.created_by ? [String(doc.created_by)] : [],
-        'Auto Pod accepted by a venue',
-        `${doc.venue_claim?.venue_name} accepted "${doc.pod_title}" for ${when}.`,
-        AUTO_POD_LINKS.venue
-      ),
+      pushStakeholders(stakeholders(doc), `Auto Pod has ${ROLE_NOUN[who]}`, headline[who], [actorId]),
+      remaining(doc, skip),
     ]);
-  },
-
-  async hostEnrolled(doc: IAutoPod) {
-    await push(
-      [
-        doc.created_by ? String(doc.created_by) : '',
-        doc.venue_claim ? String(doc.venue_claim.owner_user_id) : '',
-      ].filter(Boolean),
-      'Auto Pod has a host',
-      `${doc.host_claim?.host_name} will host "${doc.pod_title}".`,
-      AUTO_POD_LINKS.venue
-    );
-  },
-
-  async clubEnrolled(doc: IAutoPod) {
-    await push(
-      [
-        doc.created_by ? String(doc.created_by) : '',
-        doc.venue_claim ? String(doc.venue_claim.owner_user_id) : '',
-      ].filter(Boolean),
-      'Auto Pod claimed by a club',
-      `${doc.club_claim?.club_name} claimed "${doc.pod_title}".`,
-      AUTO_POD_LINKS.venue
-    );
   },
 
   /** It is a real pod now — everyone involved gets the pod's own link. */
@@ -161,30 +218,28 @@ export const autoPodNotify = {
       const pod = await PodModel.findById(doc.pod_id);
       if (pod) link = podNotificationLink(pod, await loadPodClubSlugMap([pod]));
     }
-    await push(
-      claimantIds(doc),
+    const rows = stakeholders(doc).map((row) => ({ id: row.id, link: link ?? row.link }));
+    await pushStakeholders(
+      rows,
       'Auto Pod is live',
-      `"${doc.pod_title}" is now live and open for bookings.`,
-      link ?? AUTO_POD_LINKS.host
+      `"${doc.pod_title}" is now live and open for bookings.`
     );
   },
 
   async cancelled(doc: IAutoPod) {
     const reason = doc.cancel_reason ? ` Reason: ${doc.cancel_reason}` : '';
-    await push(
-      claimantIds(doc),
+    await pushStakeholders(
+      stakeholders(doc),
       'Auto Pod cancelled',
-      `"${doc.pod_title}" was cancelled before it went live.${reason}`,
-      AUTO_POD_LINKS.venue
+      `"${doc.pod_title}" was cancelled before it went live.${reason}`
     );
   },
 
   async expired(doc: IAutoPod) {
-    await push(
-      claimantIds(doc),
+    await pushStakeholders(
+      stakeholders(doc),
       'Auto Pod expired',
-      `"${doc.pod_title}" expired because its date passed before everyone enrolled.`,
-      AUTO_POD_LINKS.venue
+      `"${doc.pod_title}" expired because its date passed before everyone enrolled.`
     );
   },
 };

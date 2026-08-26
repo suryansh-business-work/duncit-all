@@ -25,6 +25,14 @@ export interface EditAccountDialogProps {
   onSave: (input: UpdateProfileInput) => Promise<void>;
   /** Renames the @handle. Called first, and only when it actually changed. */
   onSaveUsername: (username: string) => Promise<void>;
+  /**
+   * Told when a contact detail is proved and stored.
+   *
+   * Email, phone and WhatsApp do NOT ride Save: each is its own verified
+   * write behind a one-time code, so it has already landed by the time this
+   * fires and the account behind the sheet is reloaded on it.
+   */
+  onContactChanged?: () => void;
 }
 
 /* istanbul ignore next -- placeholder ref value, replaced once the form mounts */
@@ -38,6 +46,7 @@ export function EditAccountDialog({
   onClose,
   onSave,
   onSaveUsername,
+  onContactChanged,
 }: Readonly<EditAccountDialogProps>) {
   const { t } = useTranslation();
   const { color } = useThemeColors();
@@ -156,6 +165,7 @@ export function EditAccountDialog({
                       onRegisterReset={(reset) => {
                         resetRef.current = reset;
                       }}
+                      onContactChanged={onContactChanged}
                     />
                   </YStack>
                 </ScrollView>

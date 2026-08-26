@@ -9,8 +9,14 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import PlaceIcon from '@mui/icons-material/Place';
 import EventIcon from '@mui/icons-material/Event';
+import LocationCityIcon from '@mui/icons-material/LocationCity';
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
-import { autoPodWaitingOn, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
+import {
+  autoPodCityLabel,
+  autoPodMissingRoles,
+  type AutoPodRow,
+  type AutoPodLabels,
+} from '@duncit/utils';
 import { AutoPodTicks } from './AutoPodTicks';
 
 /**
@@ -49,6 +55,18 @@ function AutoPodCover({ url }: Readonly<{ url: string }>) {
   );
 }
 
+/** One icon + text line: the pinned city, the venue, the slot. */
+function DetailLine({ icon, text }: Readonly<{ icon: ReactNode; text: string }>) {
+  return (
+    <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+      {icon}
+      <Typography variant="body2" noWrap title={text}>
+        {text}
+      </Typography>
+    </Stack>
+  );
+}
+
 export interface AutoPodCardProps {
   row: AutoPodRow;
   labels: AutoPodLabels;
@@ -65,9 +83,9 @@ const firstImage = (row: AutoPodRow): string | null =>
 
 /**
  * One Auto Pod, as every role sees it. The card itself is role-agnostic: the
- * three enrolment ticks and the pod's own details read the same to a venue, a
- * host and a club admin, and only the button differs — which is why the caller
- * passes it in rather than the card branching per role.
+ * three enrolment ticks, the pinned city and the pod's own details read the
+ * same to a venue, a host and a club admin, and only the button differs —
+ * which is why the caller passes it in rather than the card branching per role.
  */
 export function AutoPodCard({
   row,
@@ -77,8 +95,10 @@ export function AutoPodCard({
   action,
 }: Readonly<AutoPodCardProps>) {
   const image = firstImage(row);
-  const waitingOn = autoPodWaitingOn(row);
+  const missing = autoPodMissingRoles(row);
   const venue = row.venue_claim;
+  const city = autoPodCityLabel(row.location);
+  const cityLine = city ? labels.pinnedTo(city) : labels.unpinned;
 
   return (
     <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -100,24 +120,18 @@ export function AutoPodCard({
 
         <AutoPodTicks row={row} labels={labels} />
 
-        {venue ? (
-          <Stack spacing={0.5}>
-            <Stack direction="row" spacing={0.75} sx={{
-              alignItems: "center"
-            }}>
-              <PlaceIcon fontSize="small" color="action" />
-              <Typography variant="body2" noWrap title={venue.venue_name}>
-                {venue.venue_name}
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={0.75} sx={{
-              alignItems: "center"
-            }}>
-              <EventIcon fontSize="small" color="action" />
-              <Typography variant="body2">{formatWhen(venue.pod_date_time)}</Typography>
-            </Stack>
-          </Stack>
-        ) : null}
+        <Stack spacing={0.5}>
+          <DetailLine icon={<LocationCityIcon fontSize="small" color="action" />} text={cityLine} />
+          {venue ? (
+            <>
+              <DetailLine icon={<PlaceIcon fontSize="small" color="action" />} text={venue.venue_name} />
+              <DetailLine
+                icon={<EventIcon fontSize="small" color="action" />}
+                text={formatWhen(venue.pod_date_time)}
+              />
+            </>
+          ) : null}
+        </Stack>
 
         <Divider />
 
@@ -136,11 +150,11 @@ export function AutoPodCard({
           </Typography>
         ) : null}
 
-        {waitingOn ? (
+        {missing.length > 0 ? (
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {labels.waitingOn(waitingOn)}
+            {labels.waitingFor(missing)}
           </Typography>
         ) : null}
 

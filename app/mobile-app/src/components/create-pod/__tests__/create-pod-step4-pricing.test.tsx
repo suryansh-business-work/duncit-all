@@ -43,6 +43,9 @@ const brokeWaterfall = {
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 400,
+  venue_commission_pct: 10,
+  venue_commission_amount: 40,
+  venue_receives: 360,
   host_amount: -319.49,
   host_commission_pct: 10,
   host_commission_amount: -31.95,
@@ -50,7 +53,14 @@ const brokeWaterfall = {
   host_earn_pct: -287.54,
 };
 const brokeProjection = { total_spots: 2, payable_spots: 1, waterfall: brokeWaterfall };
-const healthy = { ...brokeWaterfall, venue_amount: 0, host_receives: 60.5, host_earn_pct: 60.5 };
+const healthy = {
+  ...brokeWaterfall,
+  venue_amount: 0,
+  venue_commission_amount: 0,
+  venue_receives: 0,
+  host_receives: 60.5,
+  host_earn_pct: 60.5,
+};
 
 const ladder = {
   suggestedTicketPrices: [

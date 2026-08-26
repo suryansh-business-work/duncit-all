@@ -28,6 +28,9 @@ export const POTENTIAL_POD_EARNINGS = gql`
         club_admin_pct
         club_admin_amount
         venue_amount
+        venue_commission_pct
+        venue_commission_amount
+        venue_receives
         host_amount
         host_commission_pct
         host_commission_amount

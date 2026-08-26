@@ -10,6 +10,12 @@
  * from the GST-inclusive collection (there is no per-fee GST in the engine), so
  * the statement shows the real taxable base (net = collection − GST) instead of
  * inventing per-charge tax lines.
+ *
+ * The two Duncit commissions are charged on DIFFERENT bases and are shown that
+ * way: the host's (host_amount × host_commission_pct) is a real deduction from
+ * the collection and lives under Platform Charges, venue or no venue; the
+ * venue's (venue_amount × venue_commission_pct) is already inside the slot
+ * price, so it renders as a context row under Venue Charges.
  */
 import { formatMoney } from './format-money';
 
@@ -25,6 +31,9 @@ export interface EarningsWaterfall {
   club_admin_pct: number;
   club_admin_amount: number;
   venue_amount: number;
+  venue_commission_pct: number;
+  venue_commission_amount: number;
+  venue_receives: number;
   host_amount: number;
   host_commission_pct: number;
   host_commission_amount: number;
@@ -95,6 +104,10 @@ export function buildEarningsStatement(
     w.host_amount > 0
       ? `${money(w.host_amount)} × ${w.host_commission_pct}% (your remainder)`
       : 'No commission — host remainder is not positive';
+  // Duncit's cut of the VENUE's money is charged on the venue's slot price and
+  // is already inside it, so the host's statement states it without deducting
+  // it a second time: `venue_receives` is what the venue is left with.
+  const venueCommissionFormula = `${money(w.venue_amount)} × ${w.venue_commission_pct}% of the slot price above — the venue receives ${money(w.venue_receives)}`;
 
   const taxes: StatementSection = {
     key: 'taxes',
@@ -129,6 +142,13 @@ export function buildEarningsStatement(
         formula: `${money(w.net_amount)} × ${w.platform_fee_pct}%`,
         deduction: true,
       },
+      {
+        key: 'duncit-commission',
+        label: `Duncit Commission @${w.host_commission_pct}%`,
+        amount: w.host_commission_amount,
+        formula: commissionFormula,
+        deduction: true,
+      },
     ],
     total: 0,
   };
@@ -153,36 +173,27 @@ export function buildEarningsStatement(
   }
 
   if (options.has_venue) {
-    sections.push({
-      key: 'venue',
-      title: 'Venue Charges',
-      lines: [
-        {
-          key: 'venue-slot',
-          label: 'Venue Slot Price',
-          amount: w.venue_amount,
-          formula: 'Fixed booked slot price (deducted once per pod)',
-          deduction: true,
-        },
-        {
-          key: 'venue-commission',
-          label: `Duncit Commission from Venue @${w.host_commission_pct}%`,
-          amount: w.host_commission_amount,
-          formula: commissionFormula,
-          deduction: true,
-        },
-      ],
-      total: 0,
-    });
-  } else {
-    // No venue group to carry it — the commission is a platform-side charge.
-    platform.lines.push({
-      key: 'duncit-commission',
-      label: `Duncit Commission @${w.host_commission_pct}%`,
-      amount: w.host_commission_amount,
-      formula: commissionFormula,
-      deduction: true,
-    });
+    const venueLines: StatementLine[] = [
+      {
+        key: 'venue-slot',
+        label: 'Venue Slot Price',
+        amount: w.venue_amount,
+        formula: 'Fixed booked slot price (deducted once per pod)',
+        deduction: true,
+      },
+    ];
+    // Context row, never a deduction: this cut comes OUT of the slot price on
+    // the row above, so counting it again would over-state the section by it.
+    if (w.venue_commission_amount > 0) {
+      venueLines.push({
+        key: 'venue-commission',
+        label: `Duncit Commission from Venue @${w.venue_commission_pct}%`,
+        amount: w.venue_commission_amount,
+        formula: venueCommissionFormula,
+        deduction: false,
+      });
+    }
+    sections.push({ key: 'venue', title: 'Venue Charges', lines: venueLines, total: 0 });
   }
 
   for (const section of sections) {

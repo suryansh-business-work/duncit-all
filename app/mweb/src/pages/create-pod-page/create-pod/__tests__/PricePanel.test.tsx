@@ -66,6 +66,9 @@ const waterfall = {
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 300,
+  venue_commission_pct: 10,
+  venue_commission_amount: 30,
+  venue_receives: 270,
   host_amount: 23047.46,
   host_commission_pct: 10,
   host_commission_amount: 2304.75,
@@ -122,10 +125,13 @@ describe('PricePanel (auditable earnings statement)', () => {
     expect(screen.getByText('Total deductions')).toBeInTheDocument();
     expect(screen.getByText('Taxes')).toBeInTheDocument();
     expect(screen.getByText('₹4,423.73')).toBeInTheDocument();
+    // Platform Charges = fee ₹1,228.81 + Duncit's commission on the host's
+    // remainder ₹2,304.75; Venue Charges is the slot price alone, because
+    // Duncit's cut of the venue comes out of that ₹300, not on top of it.
     expect(screen.getByText('Platform Charges')).toBeInTheDocument();
-    expect(screen.getByText('₹1,228.81')).toBeInTheDocument();
+    expect(screen.getByText('₹3,533.56')).toBeInTheDocument();
     expect(screen.getByText('Venue Charges')).toBeInTheDocument();
-    expect(screen.getByText('₹2,604.75')).toBeInTheDocument();
+    expect(screen.getByText('₹300.00')).toBeInTheDocument();
     // Reconciled statement → no warning.
     expect(screen.queryByTestId('price-panel-reconcile-warning')).not.toBeInTheDocument();
     // The old commission naming is gone.
@@ -145,13 +151,22 @@ describe('PricePanel (auditable earnings statement)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Platform Charges/ }));
     expect(screen.getByText('Platform Fee @5%')).toBeVisible();
     expect(screen.getByText('Formula: ₹24,576.27 × 5%')).toBeVisible();
+    expect(screen.getByText('Duncit Commission @10%')).toBeVisible();
+    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: /Venue Charges/ }));
     expect(screen.getByText('Venue Slot Price')).toBeVisible();
-    expect(screen.getByText('₹300.00')).toBeVisible();
+    // The section header and the slot row both read ₹300.00 — the commission
+    // below is 10% of THAT, not of the host's remainder.
+    expect(screen.getAllByText('₹300.00')).toHaveLength(2);
     expect(screen.getByText('Formula: Fixed booked slot price (deducted once per pod)')).toBeVisible();
     expect(screen.getByText('Duncit Commission from Venue @10%')).toBeVisible();
-    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeVisible();
+    expect(screen.getByText('₹30.00')).toBeVisible();
+    expect(
+      screen.getByText(
+        'Formula: ₹300.00 × 10% of the slot price above — the venue receives ₹270.00',
+      ),
+    ).toBeVisible();
   });
 
   it('renders the Net Payout arithmetic inside the payout card', async () => {
@@ -231,8 +246,11 @@ describe('PricePanel (auditable earnings statement)', () => {
     expect(screen.getByText('Formula: ₹23,347.46 × 3%')).toBeVisible();
   });
 
-  it('folds the Duncit commission into Platform Charges for a non-physical pod', async () => {
-    const onlineProjection = { ...projection, waterfall: { ...waterfall, venue_amount: 0 } };
+  it('keeps the Duncit commission in Platform Charges for a non-physical pod', async () => {
+    const onlineProjection = {
+      ...projection,
+      waterfall: { ...waterfall, venue_amount: 0, venue_commission_amount: 0, venue_receives: 0 },
+    };
     render(
       <MockedProvider
         mocks={[

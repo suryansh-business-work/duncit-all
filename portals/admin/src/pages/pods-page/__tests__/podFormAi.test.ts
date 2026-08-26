@@ -28,6 +28,10 @@ import { buildAiFilledPod, type AvailableSlot, type PodFillLookups } from '../po
 const prev = (over: Partial<PodFormValues> = {}): PodFormValues => ({
   pod_title: '',
   club_id: '',
+  // Auto Pod mode only — an ordinary pod takes its category from its club, so
+  // these stay empty here. Required on PodFormValues, hence spelled out.
+  super_category_id: '',
+  sub_category_id: '',
   pod_mode: 'PHYSICAL',
   venue_id: '',
   venue_slot_id: '',

@@ -994,10 +994,13 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       methodManual: 'Marked by host',
       methodClubAdmin: 'Marked by Club Admin',
       methodAdmin: 'Marked by Duncit',
+      methodVirtualJoin: 'Joined the meeting',
       scanCta: 'Scan Attendee Event Tickets',
       earningsTitle: 'Marking attendance is how you get paid',
       earningsBody:
         'Your earnings are calculated only from the attendees you mark. If someone came but is never marked, their seat is left out of your payout.',
+      earningsBodyVirtual:
+        'This pod is online, so there is no door to scan at. A member is marked present the moment they open the meeting link from the pod page during the pod — anyone who never opens it is left out of your payout unless you mark them by hand.',
       lockedCompletedTitle: 'Attendance is closed for this pod',
       lockedCompletedBody:
         'This pod is completed and its payout is already split, so attendance can no longer be changed. If somebody is missing, contact your Club Admin below.',

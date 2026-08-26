@@ -57,6 +57,30 @@ export function attendanceLock(pod: any): AttendanceLock {
   return 'OPEN';
 }
 
+/** How far either side of the pod a link-open still counts as attending. */
+const VIRTUAL_JOIN_LEAD_MS = 60 * 60_000;
+/** A virtual pod created before its end became required has no end to close
+ * the window on; this is the widest a session is assumed to run. */
+const VIRTUAL_DEFAULT_DURATION_MS = 4 * 60 * 60_000;
+
+/**
+ * Whether opening the meeting link right now counts as attending.
+ *
+ * A virtual pod has no door, so the window IS the door: from an hour before
+ * the start — people join early — to an hour after the end. A link opened the
+ * day before is somebody checking it works, not attendance, and must not be
+ * paid on.
+ */
+export function withinVirtualJoinWindow(pod: any, now: Date = new Date()): boolean {
+  const start = pod?.pod_date_time ? new Date(pod.pod_date_time).getTime() : null;
+  if (!start || Number.isNaN(start)) return false;
+  const end = pod?.pod_end_date_time
+    ? new Date(pod.pod_end_date_time).getTime()
+    : start + VIRTUAL_DEFAULT_DURATION_MS;
+  const at = now.getTime();
+  return at >= start - VIRTUAL_JOIN_LEAD_MS && at <= end + VIRTUAL_JOIN_LEAD_MS;
+}
+
 /**
  * Who is allowed to read this pod's roster, and in which capacity.
  *
@@ -208,6 +232,67 @@ async function markerNames(tickets: readonly ITicket[]): Promise<Map<string, str
 
 export const attendanceService = {
   /**
+   * A joined member opens a virtual pod's meeting — and is marked present.
+   *
+   * The link is already readable on the Pod for a joined member, so this is
+   * not about access; it is about the RECORD. Settlement pays the host from
+   * CHECKED_IN bookings, and a virtual pod has no door to scan at, so before
+   * this a paid virtual pod settled its host at zero unless every attendee was
+   * marked by hand, one-time code and all. Opening the link inside the pod
+   * window is the honest online equivalent of the scan, and it goes through
+   * the same write as every other path, stamped VIRTUAL_JOIN.
+   *
+   * A multi-seat booking is marked whole: the people it admits are on the same
+   * call, and there is no door to name them at. The host is handed the link
+   * and marks nothing — hosts are never attendees of their own pod.
+   */
+  async joinMeeting(podDocId: string, actor: Readonly<{ id: string; roles: string[] }>) {
+    if (!Types.ObjectId.isValid(podDocId)) throw badInput('Invalid pod id');
+    const pod = await PodModel.findById(podDocId);
+    if (!pod) throw notFound('Pod not found');
+    if ((pod.pod_mode ?? 'PHYSICAL') !== 'VIRTUAL') throw badInput('This pod is not virtual');
+    const meetingUrl = String(pod.meeting_url ?? '').trim();
+    if (!meetingUrl) throw badInput('This pod has no meeting link yet');
+
+    const access = {
+      meeting_url: meetingUrl,
+      meeting_notes: pod.meeting_notes ?? null,
+      attendance_marked: false,
+    };
+    const isHost = (pod.pod_hosts_id ?? []).some((id: any) => String(id) === actor.id);
+    if (isHost) return access;
+
+    const membership = await PodMemberModel.findOne({
+      pod_id: pod._id,
+      user_id: new Types.ObjectId(actor.id),
+      status: 'JOINED',
+    });
+    if (!membership) {
+      throw new GraphQLError('Join this pod to get the meeting link', {
+        extensions: { code: 'FORBIDDEN' },
+      });
+    }
+
+    const ticket = await TicketModel.findOne({ membership_id: membership._id });
+    if (!ticket || ticket.status === 'CANCELLED') return access;
+    if (ticket.status === 'CHECKED_IN') return { ...access, attendance_marked: true };
+    // Outside the window the link still opens — checking it works the day
+    // before is reasonable — but nothing is recorded, because nothing was
+    // attended. Completion closes it for good, as it does every other path.
+    if (attendanceLock(pod) !== 'OPEN' || !withinVirtualJoinWindow(pod)) return access;
+
+    await markTicketPresent(ticket, actor.id, 'VIRTUAL_JOIN');
+    const { notifyAttendanceMarked } = await import('./ticket.service');
+    await notifyAttendanceMarked(ticket);
+    logs.server.info('attendance.service', 'virtualJoin', {
+      msg: 'attendance marked by opening the meeting link',
+      pod_doc_id: podDocId,
+      membership_id: String(membership._id),
+    });
+    return { ...access, attendance_marked: true };
+  },
+
+  /**
    * Everything the attendance page renders, in one read.
    *
    * One query for both surfaces on purpose: the host's page and the Club
@@ -247,6 +332,7 @@ export const attendanceService = {
       pod_title: pod.pod_title ?? '',
       pod_date_time: pod.pod_date_time?.toISOString?.() ?? null,
       pod_end_date_time: pod.pod_end_date_time?.toISOString?.() ?? null,
+      pod_mode: pod.pod_mode ?? 'PHYSICAL',
       viewer,
       lock,
       can_mark: lock === 'OPEN',

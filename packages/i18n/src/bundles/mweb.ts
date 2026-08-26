@@ -896,6 +896,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Stands in for a meeting platform we have no name for.
       online: 'Online',
       joinMeeting: 'Join meeting',
+      joiningMeeting: 'Opening…',
+      joinMeetingFailed: 'Could not open the meeting link',
       meetingLinkAfterJoin: 'Meeting link will be visible after joining this pod.',
       where: 'Where',
       venueDetails: 'Venue details',
@@ -2003,6 +2005,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         startFuture: 'Start date/time must be in the future',
         endAfterStart: 'End must be after start',
         endMinDuration: 'End must be at least 30 minutes after the start',
+        // A virtual pod has no slot to take its end from, and the end is what
+        // closes the meeting link's attendance window.
+        endRequiredVirtual: 'A virtual pod needs an end date and time',
         // Native only — its schedule is typed as text and must parse first.
         dateTimeFormat: 'Use the format {format}',
         // mWeb only — its pod type can be cleared, native's is always one of two.
@@ -2126,10 +2131,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       methodManual: 'Marked by host',
       methodClubAdmin: 'Marked by Club Admin',
       methodAdmin: 'Marked by Duncit',
+      methodVirtualJoin: 'Joined the meeting',
       scanCta: 'Scan Attendee Event Tickets',
       earningsTitle: 'Marking attendance is how you get paid',
       earningsBody:
         'Your earnings are calculated only from the attendees you mark. If someone came but is never marked, their seat is left out of your payout.',
+      earningsBodyVirtual:
+        'This pod is online, so there is no door to scan at. A member is marked present the moment they open the meeting link from the pod page during the pod — anyone who never opens it is left out of your payout unless you mark them by hand.',
       lockedCompletedTitle: 'Attendance is closed for this pod',
       lockedCompletedBody:
         'This pod is completed and its payout is already split, so attendance can no longer be changed. If somebody is missing, contact your Club Admin below.',

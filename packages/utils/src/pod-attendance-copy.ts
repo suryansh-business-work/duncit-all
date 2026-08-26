@@ -19,6 +19,12 @@ export type AttendanceTranslate = (
   options?: { vars?: Record<string, string | number> },
 ) => string;
 
+/** The rule the host is paid by, worded for the kind of pod this is. */
+export const earningsBodyFor = (
+  board: Readonly<{ pod_mode: 'PHYSICAL' | 'VIRTUAL' }>,
+  labels: Readonly<Pick<PodAttendanceLabels, 'earningsBody' | 'earningsBodyVirtual'>>
+): string => (board.pod_mode === 'VIRTUAL' ? labels.earningsBodyVirtual : labels.earningsBody);
+
 export interface PodAttendanceLabels {
   pageTitle: string;
   menuItem: string;
@@ -44,6 +50,8 @@ export interface PodAttendanceLabels {
   /** Why any of this matters. */
   earningsTitle: string;
   earningsBody: string;
+  /** The same rule for a virtual pod, where the link-open is the door. */
+  earningsBodyVirtual: string;
   /** The roster is closed. */
   lockedTitle: (lock: PodAttendanceLock) => string;
   lockedBody: (lock: PodAttendanceLock) => string;
@@ -112,6 +120,7 @@ export function mwebAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabel
     scanCta: t('mweb.attendance.scanCta'),
     earningsTitle: t('mweb.attendance.earningsTitle'),
     earningsBody: t('mweb.attendance.earningsBody'),
+    earningsBodyVirtual: t('mweb.attendance.earningsBodyVirtual'),
     lockedTitle: (lock) => mwebLockedTitle(t, lock),
     lockedBody: (lock) => mwebLockedBody(t, lock),
     clubAdminTitle: t('mweb.attendance.clubAdminTitle'),
@@ -156,6 +165,7 @@ function mwebMethodLabel(t: AttendanceTranslate, method: AttendanceMarkMethod): 
   if (method === 'HOST_SCAN') return t('mweb.attendance.methodScan');
   if (method === 'HOST_MANUAL') return t('mweb.attendance.methodManual');
   if (method === 'CLUB_ADMIN_FORCE') return t('mweb.attendance.methodClubAdmin');
+  if (method === 'VIRTUAL_JOIN') return t('mweb.attendance.methodVirtualJoin');
   return t('mweb.attendance.methodAdmin');
 }
 
@@ -196,6 +206,7 @@ export function shellAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabe
     scanCta: t('shell.attendance.scanCta'),
     earningsTitle: t('shell.attendance.earningsTitle'),
     earningsBody: t('shell.attendance.earningsBody'),
+    earningsBodyVirtual: t('shell.attendance.earningsBodyVirtual'),
     lockedTitle: (lock) => shellLockedTitle(t, lock),
     lockedBody: (lock) => shellLockedBody(t, lock),
     clubAdminTitle: t('shell.attendance.clubAdminTitle'),
@@ -239,6 +250,7 @@ function shellMethodLabel(t: AttendanceTranslate, method: AttendanceMarkMethod):
   if (method === 'HOST_SCAN') return t('shell.attendance.methodScan');
   if (method === 'HOST_MANUAL') return t('shell.attendance.methodManual');
   if (method === 'CLUB_ADMIN_FORCE') return t('shell.attendance.methodClubAdmin');
+  if (method === 'VIRTUAL_JOIN') return t('shell.attendance.methodVirtualJoin');
   return t('shell.attendance.methodAdmin');
 }
 

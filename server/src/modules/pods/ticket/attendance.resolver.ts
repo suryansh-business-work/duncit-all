@@ -21,6 +21,11 @@ export const podAttendanceResolvers = {
       attendanceService.board(args.pod_doc_id, actorOf(ctx)),
   },
   Mutation: {
+    // Any signed-in person may ask; the service answers only a joined member
+    // (or the host), which is a relationship on the pod rather than a role.
+    joinPodMeeting: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
+      attendanceService.joinMeeting(args.pod_doc_id, actorOf(ctx)),
+
     requestPodAttendanceOtp: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
       attendanceService.requestOtp(args.input, actorOf(ctx)),
 

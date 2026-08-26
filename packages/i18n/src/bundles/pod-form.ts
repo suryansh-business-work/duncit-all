@@ -72,6 +72,7 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       meetingLink: 'Meeting link',
       meetingNotes: 'Meeting notes',
       meetingPlatform: 'Meeting platform',
+      endRequired: 'A virtual pod needs an end date and time',
     },
     offersSection: {
       amenitiesAndFacilities: 'Amenities & facilities',

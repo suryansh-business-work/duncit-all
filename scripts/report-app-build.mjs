@@ -175,19 +175,41 @@ const RETRY_DELAYS_MS = [5_000, 15_000, 30_000, 60_000];
  * then threw both away — twice over an nginx 502 that lasted seconds, once over
  * a connect timeout. A finished build is worth waiting out a restart for.
  *
+ * Twenty minutes, not ten, because the deploy it waits out has grown: a merge
+ * to main can be redeploying for forty. It is deliberately NOT sized for the
+ * other fault seen here — a job whose every connect to the server timed out for
+ * its entire life while the same host answered everyone else, which is a
+ * source-address block and outlasts any window a job could afford. That one is
+ * survived by keeping the artifacts on the run, not by trying for longer.
+ *
  * Zero for a progress ping: it is cosmetic, its caller already forgives it with
  * `|| true`, and a build sends seven of them, so retrying each one through an
  * outage would add minutes to every build merely to move a label.
  */
-const RETRY_WINDOW_MS = process.env.PROGRESS_ONLY === '1' ? 0 : 10 * 60 * 1000;
+const RETRY_WINDOW_MS = process.env.PROGRESS_ONLY === '1' ? 0 : 20 * 60 * 1000;
+
+/**
+ * ONE deadline for the whole reporting phase, fixed when the script starts.
+ *
+ * It used to be a window granted afresh to every call, which is the wrong shape
+ * for the only thing that ever spends it. An unreachable server is unreachable
+ * for all of them, so a single outage was paid for three times over — the
+ * window on the APK, the whole of it again on the AAB, and again on the report
+ * — half an hour of runner time that still ended with the build thrown away,
+ * written into the log as three unrelated failures rather than one outage.
+ * Sharing the deadline spends that wall-clock once, and because the whole of it
+ * is now available to whichever call is in flight, any single call can ride out
+ * twice the outage it could before.
+ */
+const RETRY_DEADLINE = Date.now() + RETRY_WINDOW_MS;
 
 /**
  * The same treatment the workflow already gives the Gradle distribution fetch:
  * try again, backing off, and give up only once the outage has outlived the
- * window rather than on the first refusal.
+ * deadline rather than on the first refusal. A deadline of 0 is already in the
+ * past, which is how a caller asks for no retry at all.
  */
-async function withRetry(label, run, windowMs = RETRY_WINDOW_MS) {
-  const giveUpAt = Date.now() + windowMs;
+async function withRetry(label, run, giveUpAt = RETRY_DEADLINE) {
   for (let attempt = 0; ; attempt += 1) {
     try {
       return await run();
@@ -226,8 +248,8 @@ async function gqlOnce(query, variables, token) {
   return json.data;
 }
 
-const gql = (query, variables, token, windowMs) =>
-  withRetry('server request failed', () => gqlOnce(query, variables, token), windowMs);
+const gql = (query, variables, token, giveUpAt) =>
+  withRetry('server request failed', () => gqlOnce(query, variables, token), giveUpAt);
 
 async function resolveToken() {
   if (process.env.DUNCIT_RELEASE_TOKEN) return process.env.DUNCIT_RELEASE_TOKEN;
@@ -260,9 +282,10 @@ async function lastReportedSha(token, platform) {
       }`,
       { platform },
       token,
-      // No retry: this only picks a nicer changelog base, and falls back to
-      // this push's own base the moment it cannot be had. Spending the outage
-      // window on an optimisation would leave none for the report itself.
+      // A deadline already past, i.e. no retry: this only picks a nicer
+      // changelog base, and falls back to this push's own base the moment it
+      // cannot be had. Spending the shared deadline on an optimisation would
+      // leave none for the upload and the report it exists to protect.
       0
     );
     const runId = process.env.GITHUB_RUN_ID || '';

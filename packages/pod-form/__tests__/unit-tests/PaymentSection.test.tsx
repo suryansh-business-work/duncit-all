@@ -77,7 +77,7 @@ describe('PaymentSection', () => {
   it('shows the finance breakdown for a paid pod when finance is enabled', () => {
     const data = makeData({ config: makeConfig({ showFinance: true, showInventory: true }), finance: FINANCE });
     renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, products_enabled: false });
-    expect(screen.getByText('User pays')).toBeInTheDocument();
+    expect(screen.getByText('Earnings projection')).toBeInTheDocument();
   });
 
   it('feeds product cost into the breakdown when inventory + products are on', () => {
@@ -98,7 +98,7 @@ describe('PaymentSection', () => {
   it('hides the breakdown for a free pod even with finance enabled', () => {
     const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
     renderPayment(data, { pod_type: 'NATIVE_FREE', pod_amount: 0 });
-    expect(screen.queryByText('User pays')).not.toBeInTheDocument();
+    expect(screen.queryByText('Earnings projection')).not.toBeInTheDocument();
   });
 
   it('toggles the active switch while editing when the flag is on', async () => {

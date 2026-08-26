@@ -36,6 +36,9 @@ const waterfall = {
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 300,
+  venue_commission_pct: 10,
+  venue_commission_amount: 30,
+  venue_receives: 270,
   host_amount: 23047.46,
   host_commission_pct: 10,
   host_commission_amount: 2304.75,
@@ -470,10 +473,13 @@ describe('PricePanel', () => {
     // Section headers show their subtotals without opening anything.
     expect(screen.getByText('Taxes')).toBeOnTheScreen();
     expect(screen.getByText('₹4,423.73')).toBeOnTheScreen();
+    // Platform Charges = fee ₹1,228.81 + Duncit's commission on the host's
+    // remainder ₹2,304.75; Venue Charges is the slot price alone, because
+    // Duncit's cut of the venue comes out of that ₹300, not on top of it.
     expect(screen.getByText('Platform Charges')).toBeOnTheScreen();
-    expect(screen.getByText('₹1,228.81')).toBeOnTheScreen();
+    expect(screen.getByText('₹3,533.56')).toBeOnTheScreen();
     expect(screen.getByText('Venue Charges')).toBeOnTheScreen();
-    expect(screen.getByText('₹2,604.75')).toBeOnTheScreen();
+    expect(screen.getByText('₹300.00')).toBeOnTheScreen();
     expect(screen.queryByTestId('price-panel-reconcile-warning')).toBeNull();
     // The payout card is the strongest element, with the Net Payout arithmetic.
     expect(screen.getByText('You will receive')).toBeOnTheScreen();
@@ -510,14 +516,23 @@ describe('PricePanel', () => {
     fireEvent.press(screen.getByTestId('price-panel-platform-group'));
     expect(screen.getByText('Platform Fee @5%')).toBeOnTheScreen();
     expect(screen.getByText('Formula: ₹24,576.27 × 5%')).toBeOnTheScreen();
+    expect(screen.getByText('Duncit Commission @10%')).toBeOnTheScreen();
+    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('price-panel-venue-group'));
     expect(screen.getByText('Venue Slot Price')).toBeOnTheScreen();
-    expect(screen.getByText('₹300.00')).toBeOnTheScreen();
+    // The section header and the slot row both read ₹300.00 — the commission
+    // below is 10% of THAT, not of the host's remainder.
+    expect(screen.getAllByText('₹300.00')).toHaveLength(2);
     expect(
       screen.getByText('Formula: Fixed booked slot price (deducted once per pod)'),
     ).toBeOnTheScreen();
     expect(screen.getByText('Duncit Commission from Venue @10%')).toBeOnTheScreen();
-    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeOnTheScreen();
+    expect(screen.getByText('₹30.00')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Formula: ₹300.00 × 10% of the slot price above — the venue receives ₹270.00',
+      ),
+    ).toBeOnTheScreen();
     // Pressing again closes the section.
     fireEvent.press(screen.getByTestId('price-panel-venue-group'));
     expect(screen.queryByText('Venue Slot Price')).toBeNull();
@@ -609,6 +624,8 @@ describe('PricePanel', () => {
     const virtualWaterfall = {
       ...waterfall,
       venue_amount: 0,
+      venue_commission_amount: 0,
+      venue_receives: 0,
       host_amount: 23347.46,
       host_receives: 21012.71,
       host_earn_pct: 72.46,
@@ -629,7 +646,7 @@ describe('PricePanel', () => {
       />,
     );
     expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
-    // No venue section; the Duncit commission joins Platform Charges instead.
+    // No venue section; the Duncit commission stays in Platform Charges.
     expect(screen.queryByText('Venue Charges')).toBeNull();
     fireEvent.press(screen.getByTestId('price-panel-platform-group'));
     expect(screen.getByText('Duncit Commission @10%')).toBeOnTheScreen();

@@ -15,7 +15,12 @@ export type NotifyEvent = {
   user_id: string;
   unread_count: number;
   notification_id?: string | null;
-  kind: 'new' | 'read' | 'read_all';
+  /**
+   * `update` is a row whose LIVE fields changed without a new row being
+   * written — a follow request answered or withdrawn, a follow-back state that
+   * moved. The inbox re-reads on it exactly as it does on `new`.
+   */
+  kind: 'new' | 'read' | 'read_all' | 'update';
   at: string;
 };
 

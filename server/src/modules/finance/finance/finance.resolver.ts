@@ -197,6 +197,26 @@ export const financeResolvers = {
         args.venue_amount ?? null
       );
     },
+    adminPotentialPodEarnings: async (
+      _p: unknown,
+      args: {
+        pod_amount: number;
+        no_of_spots: number;
+        host_user_id?: string | null;
+        venue_id?: string | null;
+        venue_slot_id?: string | null;
+      },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_POD);
+      return breakdownService.adminPotentialPodEarnings({
+        hostUserId: args.host_user_id ?? null,
+        podAmount: args.pod_amount,
+        noOfSpots: args.no_of_spots,
+        venueId: args.venue_id ?? null,
+        venueSlotId: args.venue_slot_id ?? null,
+      });
+    },
     // No requireAuth: this is the marketing site's estimator. It reads the
     // platform's public rates and nothing about anybody.
     publicPodEarningsEstimate: (

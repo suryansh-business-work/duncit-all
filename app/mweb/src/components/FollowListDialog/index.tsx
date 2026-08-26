@@ -1,20 +1,18 @@
 import { useEffect } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Avatar,
-  Box,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
-import FollowButton from './FollowButton';
-import ResponsiveDialog from './ResponsiveDialog';
-import { CANCEL_FOLLOW_REQUEST, FOLLOW_USER, UNFOLLOW_USER } from '../pages/hosts-venues-page/queries';
-import { useTranslation } from '../i18n/useTranslation';
-import type { Translate } from '../i18n/fallback';
+import ResponsiveDialog from '../ResponsiveDialog';
+import FollowRow, { type Person } from './FollowRow';
+import {
+  CANCEL_FOLLOW_REQUEST,
+  FOLLOW_USER,
+  UNFOLLOW_USER,
+} from '../../pages/hosts-venues-page/queries';
+import { useTranslation } from '../../i18n/useTranslation';
+import type { Translate } from '../../i18n/fallback';
 
 export const FOLLOW_LISTS = gql`
   query FollowLists($userId: ID!) {
@@ -26,6 +24,7 @@ export const FOLLOW_LISTS = gql`
       profile_photo
       is_following
       follow_status
+      follows_viewer
     }
     followingOf(user_id: $userId) {
       user_id
@@ -35,6 +34,7 @@ export const FOLLOW_LISTS = gql`
       profile_photo
       is_following
       follow_status
+      follows_viewer
     }
   }
 `;
@@ -44,61 +44,6 @@ const followTabs = (t: Translate): DuncitTabItem<Tab>[] => [
   { value: 'followers', label: t('mweb.followList.followers') },
   { value: 'following', label: t('mweb.nav.following') },
 ];
-type Person = {
-  user_id: string;
-  username: string;
-  full_name?: string | null;
-  first_name?: string | null;
-  profile_photo?: string | null;
-  is_following: boolean;
-  follow_status?: string | null;
-};
-
-interface RowProps {
-  person: Person;
-  isSelf: boolean;
-  onToggle: (p: Person) => void;
-  onOpen: (id: string) => void;
-}
-
-function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly<RowProps>) {
-  const name = person.full_name || person.first_name || 'Duncit user';
-  return (
-    <Stack
-      direction="row"
-      spacing={1.5}
-      sx={{
-        alignItems: "center",
-        py: 1
-      }}>
-      <Avatar
-        src={person.profile_photo || undefined}
-        onClick={() => onOpen(person.user_id)}
-        sx={{ cursor: 'pointer' }}
-      >
-        {name[0]?.toUpperCase()}
-      </Avatar>
-      <Box
-        onClick={() => onOpen(person.user_id)}
-        sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
-      >
-        <Typography noWrap sx={{
-          fontWeight: 600
-        }}>
-          {name}
-        </Typography>
-        <Typography variant="caption" noWrap sx={{
-          color: "text.secondary"
-        }}>
-          @{person.username}
-        </Typography>
-      </Box>
-      {isSelf ? null : (
-        <FollowButton status={readFollowStatus(person)} onToggle={() => onToggle(person)} />
-      )}
-    </Stack>
-  );
-}
 
 interface Props {
   open: boolean;

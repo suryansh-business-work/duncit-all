@@ -18,6 +18,9 @@ const venueWaterfall: EarningsWaterfall = {
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 499,
+  venue_commission_pct: 10,
+  venue_commission_amount: 49.9,
+  venue_receives: 449.1,
   host_amount: 223.16,
   host_commission_pct: 10,
   host_commission_amount: 22.32,
@@ -59,7 +62,10 @@ describe('buildEarningsStatement (venue pod)', () => {
     const platform = s.sections.find((sec) => sec.key === 'platform')!;
     expect(platform.lines[0].label).toBe('Platform Fee @5%');
     expect(platform.lines[0].formula).toBe('₹760.17 × 5%');
-    expect(platform.total).toBe(38.01);
+    // Duncit's cut of the HOST's remainder — a real deduction, so it counts.
+    expect(platform.lines[1].label).toBe('Duncit Commission @10%');
+    expect(platform.lines[1].formula).toBe('₹223.16 × 10% (your remainder)');
+    expect(platform.total).toBe(60.33);
 
     const venue = s.sections.find((sec) => sec.key === 'venue')!;
     expect(venue.lines.map((l) => l.label)).toEqual([
@@ -67,8 +73,13 @@ describe('buildEarningsStatement (venue pod)', () => {
       'Duncit Commission from Venue @10%',
     ]);
     expect(venue.lines[0].formula).toBe('Fixed booked slot price (deducted once per pod)');
-    expect(venue.lines[1].formula).toBe('₹223.16 × 10% (your remainder)');
-    expect(venue.total).toBe(521.32);
+    // Charged on the VENUE's ₹499 slot price and already inside it: stated as
+    // context, so the section total is the slot price alone.
+    expect(venue.lines[1]).toMatchObject({ amount: 49.9, deduction: false });
+    expect(venue.lines[1].formula).toBe(
+      '₹499.00 × 10% of the slot price above — the venue receives ₹449.10',
+    );
+    expect(venue.total).toBe(499);
   });
 
   it('reconciles: line sums == section totals, sections == deductions, net payout exact', () => {
@@ -102,9 +113,17 @@ describe('buildEarningsStatement (venue pod)', () => {
 });
 
 describe('buildEarningsStatement (no venue / club cut)', () => {
-  it('moves the Duncit commission into Platform Charges without a venue', () => {
+  it('keeps the Duncit commission in Platform Charges without a venue', () => {
     const s = buildEarningsStatement(
-      { ...venueWaterfall, venue_amount: 0, host_amount: 722.16, host_commission_amount: 72.22, host_receives: 649.94 },
+      {
+        ...venueWaterfall,
+        venue_amount: 0,
+        venue_commission_amount: 0,
+        venue_receives: 0,
+        host_amount: 722.16,
+        host_commission_amount: 72.22,
+        host_receives: 649.94,
+      },
       { has_venue: false, symbol: '₹' },
     );
     expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform']);
@@ -153,6 +172,8 @@ describe('buildEarningsStatement (no venue / club cut)', () => {
 const shortfallWaterfall: EarningsWaterfall = {
   ...venueWaterfall,
   venue_amount: 800,
+  venue_commission_amount: 80,
+  venue_receives: 720,
   host_amount: -77.84,
   host_commission_amount: 0,
   host_receives: -77.84,
@@ -164,17 +185,21 @@ const NO_COMMISSION_NOTE = 'No commission — host remainder is not positive';
 describe('buildEarningsStatement (non-positive host remainder)', () => {
   it('charges no commission on a venue shortfall and passes the shortfall through whole', () => {
     const s = buildEarningsStatement(shortfallWaterfall, { has_venue: true, symbol: '₹' });
-    const venue = s.sections.find((sec) => sec.key === 'venue')!;
-    const [slot, commission] = venue.lines;
-    expect(slot.amount).toBe(800);
-    expect(commission).toMatchObject({
-      label: 'Duncit Commission from Venue @10%',
+    const platform = s.sections.find((sec) => sec.key === 'platform')!;
+    expect(platform.lines.find((l) => l.key === 'duncit-commission')).toMatchObject({
+      label: 'Duncit Commission @10%',
       amount: 0,
       formula: NO_COMMISSION_NOTE,
       deduction: true,
     });
-    // The venue keeps its full price, so the deductions exceed the collection and
-    // the host's payout is the negative remainder — the statement still reconciles.
+    // The venue is unaffected by the host's shortfall: it keeps its full price,
+    // and Duncit's 10% of it is still charged (and still only context here).
+    const venue = s.sections.find((sec) => sec.key === 'venue')!;
+    const [slot, commission] = venue.lines;
+    expect(slot.amount).toBe(800);
+    expect(commission).toMatchObject({ amount: 80, deduction: false });
+    // The deductions exceed the collection and the host's payout is the negative
+    // remainder — the statement still reconciles.
     expect(venue.total).toBe(800);
     expect(s.total_deductions).toBe(974.84);
     expect(s.net_payout).toEqual({ collection: 897, total_deductions: 974.84, receives: -77.84 });
@@ -187,6 +212,8 @@ describe('buildEarningsStatement (non-positive host remainder)', () => {
       {
         ...venueWaterfall,
         venue_amount: 722.16,
+        venue_commission_amount: 72.22,
+        venue_receives: 649.94,
         host_amount: 0,
         host_commission_amount: 0,
         host_receives: 0,
@@ -194,9 +221,11 @@ describe('buildEarningsStatement (non-positive host remainder)', () => {
       },
       { has_venue: true, symbol: '₹' },
     );
-    const venue = s.sections.find((sec) => sec.key === 'venue')!;
-    expect(venue.lines[1].formula).toBe(NO_COMMISSION_NOTE);
-    expect(venue.lines[1].amount).toBe(0);
+    const commission = s.sections
+      .flatMap((sec) => sec.lines)
+      .find((l) => l.key === 'duncit-commission')!;
+    expect(commission.formula).toBe(NO_COMMISSION_NOTE);
+    expect(commission.amount).toBe(0);
     expect(s.net_payout.receives).toBe(0);
     expect(s.total_deductions).toBe(897);
     expect(s.reconciled).toBe(true);
@@ -209,6 +238,8 @@ describe('buildEarningsStatement (non-positive host remainder)', () => {
       {
         ...venueWaterfall,
         venue_amount: 0,
+        venue_commission_amount: 0,
+        venue_receives: 0,
         club_admin_pct: 100,
         club_admin_amount: 722.16,
         host_amount: 0,
@@ -275,6 +306,8 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
         club_admin_pct: 3,
         club_admin_amount: 0,
         venue_amount: 0,
+        venue_commission_amount: 0,
+        venue_receives: 0,
         host_amount: 0,
         host_commission_amount: 0,
         host_receives: 0,
@@ -302,10 +335,11 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
   });
 
   it('keys every row with a stable, unique render key that names its placement', () => {
-    // Both surfaces use these as React keys, so the list is a contract: the
-    // commission row is `venue-commission` under Venue Charges and
-    // `duncit-commission` when it falls back to Platform Charges — never the
-    // same key in two places, and every other row keeps its key either way.
+    // Both surfaces use these as React keys, so the list is a contract: the two
+    // commissions are separate rows with separate keys — `duncit-commission`
+    // (the host's, always under Platform Charges) and `venue-commission` (the
+    // venue's, only when a slot is attached) — and no row moves between
+    // sections when a venue comes or goes.
     const withVenue = buildEarningsStatement(
       { ...venueWaterfall, club_admin_pct: 3, club_admin_amount: 21.66 },
       { has_venue: true, symbol: '₹' },
@@ -314,6 +348,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
       'taxable',
       'gst',
       'platform-fee',
+      'duncit-commission',
       'club-admin',
       'venue-slot',
       'venue-commission',

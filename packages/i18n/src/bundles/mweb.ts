@@ -2076,6 +2076,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // accepted one, and alone on "X started following you". The two follow
       // directions are separate edges, so this never answers their request.
       followBack: 'Follow Back',
+      // Above Accept / Deny on a profile whose owner has an OPEN request
+      // against the viewer — answered from the relationship itself, not only
+      // from the notification about it.
+      wantsToFollowYou: 'Wants to follow you',
     },
     // The attendance page (Host Studio > Your Pods > three dots > See Marked
     // Attendance, and the Club Admin's Mark Attendance section). Attendance is
@@ -2296,6 +2300,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     hostPodEdit: {
       contentCheck: 'Content check',
+      // Flexible pod count — the spots control inside the host's Edit Pod dialog.
+      spotsVenueHint:
+        'The space this pod booked holds {capacity} people. {taken} seats are already taken.',
+      spotsFreeHint: 'At least {min} spots. {taken} seats are already taken.',
+      spotsIncreaseOnly:
+        'A live pod’s spots can only be increased — ask your Club Admin to reduce them.',
     },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —

@@ -71,6 +71,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
 import { joinUrl } from '@utils/url';
+import { emitNotifyForUsers } from '@modules/engagement/notification/notification.events';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
@@ -137,6 +138,17 @@ async function loadRelationIds(userId: string) {
 }
 
 const escapeSavedRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+
+/**
+ * Tell these users' open inboxes to re-read. Every follow transition changes a
+ * LIVE field on rows that already exist — `action_status` once a request is
+ * answered or withdrawn, `follow_back_status` once the viewer follows someone
+ * from a profile — and nothing writes a new row for those, so without this
+ * the inbox on a second device kept offering buttons that would now fail.
+ */
+function pokeInbox(userIds: string[]) {
+  emitNotifyForUsers(userIds, { kind: 'update', unread_count: -1 });
+}
 
 /** Walk the category tree downward so a SUPER/CATEGORY selection also matches its
  * descendant sub-categories (a club may be tagged at any level). */
@@ -2415,6 +2427,8 @@ export const userService = {
     const updated = await UserModel.findById(user_id);
     const follower = await toPublic(updated);
     if (created && notify) await this.notifyNewFollower(targetUserId, follower);
+    // The follower's own rows about this person just lost their Follow Back.
+    if (created) pokeInbox([user_id]);
     return follower;
   },
 
@@ -2448,6 +2462,8 @@ export const userService = {
       });
     }
     await this.notifyFollowRequest(targetUserId, user_id, String(request._id));
+    // The requester's own rows about this person now read "Requested".
+    pokeInbox([user_id]);
     return request;
   },
 
@@ -2461,6 +2477,9 @@ export const userService = {
       );
       const requester = await toPublic(await UserModel.findById(requesterId));
       const name = requester?.full_name?.trim() || 'Someone';
+      // One row per relationship: a fresh ask replaces the "Denied" (or the
+      // older "started following you") the owner still had about this person.
+      await notificationService.removeFollowRowsAbout(targetUserId, requesterId);
       await notificationService.create({
         title: 'Follow request',
         body: `${name} wants to follow you`,
@@ -2496,6 +2515,9 @@ export const userService = {
     // that now reads "Accepted · Follow Back", and a second, newer row about
     // the same person would bury it with nothing to act on.
     await this.createFollowEdge(String(request.requester_id), user_id, false);
+    // The row is not rewritten — its status resolves live — so the accepter's
+    // other devices only learn it is answered if told to re-read.
+    pokeInbox([user_id]);
     return toPublic(await UserModel.findById(user_id));
   },
 
@@ -2508,6 +2530,7 @@ export const userService = {
       { _id: request._id, status: 'PENDING' },
       { $set: { status: 'REJECTED', resolved_at: new Date() } }
     );
+    pokeInbox([user_id]);
     return toPublic(await UserModel.findById(user_id));
   },
 
@@ -2535,14 +2558,24 @@ export const userService = {
     if (!Types.ObjectId.isValid(targetUserId)) {
       throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    await FollowRequestModel.updateOne(
+    const withdrawn = await FollowRequestModel.findOneAndUpdate(
       {
         requester_id: new Types.ObjectId(user_id),
         target_id: new Types.ObjectId(targetUserId),
         status: 'PENDING',
       },
       { $set: { status: 'CANCELLED', resolved_at: new Date() } }
-    );
+    ).select('_id');
+    if (withdrawn) {
+      // The ask no longer exists, so neither does the owner's row about it.
+      // Left in place it would read as a request they had denied — an answer
+      // they never gave. removeByActionRef re-reads the owner's inbox itself.
+      const { notificationService } = await import(
+        '@modules/engagement/notification/notification.service'
+      );
+      await notificationService.removeByActionRef(String(withdrawn._id));
+      pokeInbox([user_id]);
+    }
     return toPublic(await UserModel.findById(user_id));
   },
 
@@ -2560,6 +2593,23 @@ export const userService = {
       status: 'PENDING',
     });
     return pending ? 'REQUESTED' : 'NONE';
+  },
+
+  /** The id of the OPEN ask `requesterId` has against `targetId`, or null. What
+   * lets a profile page answer a request from the relationship itself rather
+   * than only from the notification about it. */
+  async pendingFollowRequestId(requesterId: string | null, targetId: string) {
+    if (!requesterId || !Types.ObjectId.isValid(requesterId) || !Types.ObjectId.isValid(targetId)) {
+      return null;
+    }
+    const open = await FollowRequestModel.findOne({
+      requester_id: new Types.ObjectId(requesterId),
+      target_id: new Types.ObjectId(targetId),
+      status: 'PENDING',
+    })
+      .select('_id')
+      .lean();
+    return open ? String(open._id) : null;
   },
 
   /** Open requests waiting on `targetId`, newest first — the owner's inbox of
@@ -2608,6 +2658,11 @@ export const userService = {
         '@modules/engagement/notification/notification.service'
       );
       const name = follower?.full_name?.trim() || 'Someone';
+      // One row per relationship: a re-follow replaces the older row about
+      // this person instead of stacking a second one above it.
+      if (follower?.user_id) {
+        await notificationService.removeFollowRowsAbout(targetUserId, follower.user_id);
+      }
       await notificationService.create({
         title: 'New follower',
         body: `${name} started following you`,
@@ -2640,6 +2695,8 @@ export const userService = {
         UserModel.updateOne({ _id: followerOid }, { $inc: { 'counters.following_count': -1 } }),
         UserModel.updateOne({ _id: followingOid }, { $inc: { 'counters.followers_count': -1 } }),
       ]);
+      // Follow Back is back on offer on their rows about this person.
+      pokeInbox([user_id]);
     }
     const updated = await UserModel.findById(user_id);
     return toPublic(updated);

@@ -28,13 +28,28 @@ function displayUsername(u: any): string {
 // Shape a public profile and apply privacy. A PRIVATE profile hides its
 // bio/city/zone (and, via can_view_content, its posts/stories) from anyone who
 // is not the owner or a follower. Name + avatar always stay visible.
-function toPublicProfile(
-  u: any,
-  viewerId: string | null = null,
-  isFollowing = false,
-  hasRequested = false
-) {
+/**
+ * Both directions of the pair, as seen from the viewer. The viewer→user half
+ * drives the Follow button; the user→viewer half is what turns it into Follow
+ * Back and what lets the profile answer an open ask.
+ */
+interface ViewerRelation {
+  isFollowing: boolean;
+  hasRequested: boolean;
+  followsViewer: boolean;
+  inboundRequestId: string | null;
+}
+
+const NO_RELATION: ViewerRelation = {
+  isFollowing: false,
+  hasRequested: false,
+  followsViewer: false,
+  inboundRequestId: null,
+};
+
+function toPublicProfile(u: any, viewerId: string | null = null, rel: ViewerRelation = NO_RELATION) {
   if (!u) return null;
+  const { isFollowing, hasRequested } = rel;
   const isPrivate = (u.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
   const isOwner = !!viewerId && viewerId === u.user_id;
   const canView = isOwner || !isPrivate || isFollowing;
@@ -56,6 +71,8 @@ function toPublicProfile(
     is_private: isPrivate,
     is_following: isFollowing,
     follow_status: followStatusOf(isFollowing, requested),
+    follows_viewer: rel.followsViewer,
+    inbound_request_id: rel.inboundRequestId,
     can_view_content: canView,
   };
 }
@@ -73,24 +90,27 @@ export async function mapPublicProfiles(ids: string[], viewerId: string | null) 
   const clean = ids.filter(Boolean);
   if (clean.length === 0) return [];
   const users = await Promise.all(clean.map((id) => userService.getById(id).catch(() => null)));
-  // Both sets are fetched once for the whole list — a per-row lookup would make
-  // a 200-follower list 400 queries.
-  const [following, requested] = viewerId
+  // Every set is fetched once for the whole list — a per-row lookup would make
+  // a 200-follower list 800 queries.
+  const [following, requested, followers, inbound] = viewerId
     ? await Promise.all([
         userService.listFollowingUserIds(viewerId).then((r) => new Set(r)),
         userService.listRequestedUserIds(viewerId).then((r) => new Set(r)),
+        userService.listFollowerUserIds(viewerId).then((r) => new Set(r)),
+        userService
+          .listPendingFollowRequests(viewerId)
+          .then((rows) => new Map(rows.map((r) => [r.requester_id, r.id]))),
       ])
-    : [new Set<string>(), new Set<string>()];
-  return users
-    .filter(Boolean)
-    .map((u) =>
-      toPublicProfile(
-        u,
-        viewerId,
-        following.has((u as any).user_id),
-        requested.has((u as any).user_id)
-      )
-    );
+    : [new Set<string>(), new Set<string>(), new Set<string>(), new Map<string, string>()];
+  return users.filter(Boolean).map((u) => {
+    const id = (u as any).user_id;
+    return toPublicProfile(u, viewerId, {
+      isFollowing: following.has(id),
+      hasRequested: requested.has(id),
+      followsViewer: followers.has(id),
+      inboundRequestId: inbound.get(id) ?? null,
+    });
+  });
 }
 
 export const profileResolvers = {
@@ -123,8 +143,17 @@ export const profileResolvers = {
       const u = await userService.getByHandle(args.user_id).catch(() => null);
       if (!u) return null;
       const viewerId = ctx.user?.id ?? null;
-      const status = await userService.followStatus(viewerId, u.user_id);
-      return toPublicProfile(u, viewerId, status === 'FOLLOWING', status === 'REQUESTED');
+      const [status, followsViewer, inboundRequestId] = await Promise.all([
+        userService.followStatus(viewerId, u.user_id),
+        viewerId ? userService.isFollowing(u.user_id, viewerId) : false,
+        viewerId ? userService.pendingFollowRequestId(u.user_id, viewerId) : null,
+      ]);
+      return toPublicProfile(u, viewerId, {
+        isFollowing: status === 'FOLLOWING',
+        hasRequested: status === 'REQUESTED',
+        followsViewer,
+        inboundRequestId,
+      });
     },
     usernameAvailability: async (
       _p: unknown,

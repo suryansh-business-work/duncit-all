@@ -85,13 +85,12 @@ export default function PodSections() {
   const collapseAll = () => setExpanded(new Set());
 
   return (
-    <>
+    <Stack spacing={2}>
       <Stack
         direction="row"
         spacing={1}
         sx={{
-          justifyContent: "flex-end",
-          mb: 1
+          justifyContent: "flex-end"
         }}>
         <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
           Expand all
@@ -139,13 +138,11 @@ export default function PodSections() {
             square
             sx={{
               '&:before': { display: 'none' },
-              mb: 1.5,
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 1.5,
               overflow: 'hidden',
               boxShadow: 'none',
-              '&.Mui-expanded': { mb: 1.5 },
             }}
           >
             {/* The products section used to carry an "Enable" switch that both
@@ -161,6 +158,6 @@ export default function PodSections() {
           </Accordion>
         );
       })}
-    </>
+    </Stack>
   );
 }

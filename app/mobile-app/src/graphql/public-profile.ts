@@ -18,6 +18,8 @@ export const MobilePublicProfileDocument = gql(`
       is_private
       is_following
       follow_status
+      follows_viewer
+      inbound_request_id
       can_view_content
     }
     me {
@@ -40,6 +42,11 @@ export const MobilePublicUserPostsDocument = gql(`
     stories(author_id: $user_id) {
       id
       image_url
+      media_type
+      caption
+      created_at
+      expires_at
+      seen_by_me
     }
   }
 `);

@@ -11,7 +11,8 @@ import { useTranslation } from './i18n/useTranslation';
  * claims it — and only hosts approved in this sub-category and clubs carrying
  * it are ever offered the pod.
  *
- * The form holds ids only (`super_category_id`, `sub_category_id`) — the same
+ * All three levels render — Super → Category → Sub — like every other category
+ * picker. The form holds ids only (`super_category_id`, `sub_category_id`) — the same
  * pair the server stores — so the cascade shows Super and Sub and derives the
  * middle level from the Sub, and the names are hydrated from the category tree
  * on every render. Picking a Super clears the Sub without complaint; only a
@@ -36,12 +37,11 @@ export default function AutoPodCategoryField() {
     : t('podForm.autoPod.categoryHint');
 
   return (
-    <Box sx={{ mb: 2 }} data-testid="auto-pod-category">
+    <Box data-testid="auto-pod-category">
       <AdminCategorySelect
         value={value}
         onChange={handleChange}
-        fields={['super', 'sub']}
-        direction="row"
+        direction={{ xs: 'column', md: 'row' }}
         required
         disabled={!!config.lockCategory}
         legend={t('podForm.autoPod.categoryLegend')}

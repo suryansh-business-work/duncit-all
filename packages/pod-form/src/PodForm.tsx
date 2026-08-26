@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import { makePodSchema } from './schema';
 import { PodFormDataProvider } from './context';
 import CascadeEffect from './CascadeEffect';
@@ -40,6 +40,8 @@ export interface PodFormProps {
   dateFormatter: PodFormData['dateFormatter'];
   /** Slot-picker copy — `shell.slots.*` in the portals (rule 38). */
   slotLabels: PodFormData['slotLabels'];
+  /** Document id of the pod being edited — drives the live-pod spot range. */
+  editingPodDocId?: string;
   busy?: boolean;
   error?: string | null;
   onCancel: () => void;
@@ -72,6 +74,7 @@ export default function PodForm({
   searchHosts,
   dateFormatter,
   slotLabels,
+  editingPodDocId,
   busy = false,
   error,
   onCancel,
@@ -133,8 +136,9 @@ export default function PodForm({
       searchHosts,
       dateFormatter,
       slotLabels,
+      editingPodDocId,
     }),
-    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels],
+    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels, editingPodDocId],
   );
 
   const submit = methods.handleSubmit(async (values) => {
@@ -160,14 +164,16 @@ export default function PodForm({
     />
   );
 
+  // One spacing for every block in the column — the category, the media, each
+  // section, the error and the actions — rather than a margin per component.
   const fields = (
-    <>
+    <Stack spacing={2}>
       {categoryField}
       <PodSections />
       {/* `whiteSpace: pre-line` keeps a content refusal readable: it arrives as
           a headline followed by one line per rule broken. */}
       {error && (
-        <Alert severity="error" sx={{ mt: 2, whiteSpace: 'pre-line' }}>
+        <Alert severity="error" sx={{ whiteSpace: 'pre-line' }}>
           {error}
         </Alert>
       )}
@@ -184,7 +190,7 @@ export default function PodForm({
           submitMode.current = 'publish';
         }}
       />
-    </>
+    </Stack>
   );
 
   return (

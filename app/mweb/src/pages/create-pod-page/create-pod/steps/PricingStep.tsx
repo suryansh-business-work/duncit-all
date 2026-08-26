@@ -1,10 +1,10 @@
 import { Controller } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import { PodProductsField } from '@duncit/pod-product-picker';
+import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import PlaceChargesField from '../fields/PlaceChargesField';
 import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
-import SpotsStepper from '../SpotsStepper';
 import TermsAgreement from '../TermsAgreement';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { SpotsBounds } from '@duncit/utils';
@@ -24,6 +24,7 @@ interface Props {
 export default function PricingStep({ form, products, showProducts, preview, spots }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
   const { t } = useTranslation();
+  const spotsLabels = mwebSpotsLabels(t);
   const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const boundsHint = spots.slidable
@@ -39,6 +40,7 @@ export default function PricingStep({ form, products, showProducts, preview, spo
         name="no_of_spots"
         render={({ field, fieldState }) => (
           <SpotsStepper
+            labels={spotsLabels}
             value={Number(field.value) || 0}
             onChange={field.onChange}
             error={fieldState.error?.message}

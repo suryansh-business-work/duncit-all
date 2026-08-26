@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { podSeatsAvailable, podSeatsTaken } from './pod.seats';
+import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from './pod.capacity';
 import { podLifecycleFilter, type PodLifecycle } from './pod.lifecycle';
 import { podRowStatusFilter, type PodRowStatus } from './pod.rowStatus';
 import { PodModel, type PodMode, type PodType } from './pod.model';
@@ -2135,6 +2136,16 @@ export const podService = {
     // contradict its cancellation by flipping it live again.
     if (doc.deleted_at) delete input.is_active;
     const reroute = await prepareSlotReroute(doc, input);
+    // A portal may shrink a pod as well as grow it, but never past the space it
+    // booked or below the seats already sold — the same range the host's slider
+    // is drawn from, so the two cannot disagree.
+    //
+    // Skipped while the booking is being RE-ROUTED: the ceiling then belongs to
+    // the slot being moved to, and `doc` still holds the one being left. That
+    // path is unguarded exactly as it was before this rule existed.
+    if (input.no_of_spots !== undefined && !reroute) {
+      await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: true });
+    }
     const booking = reroute ? snapshotBooking(doc) : null;
     const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);
@@ -2236,7 +2247,37 @@ export const podService = {
     return toPub(doc, slugMap);
   },
 
-  /** Host self-service edit — only title, description and media (2A). */
+  /**
+   * The range this pod's capacity may be resized within, for this viewer.
+   *
+   * The host's Edit Pod sheet, the Club Admin console and Admin > Pod
+   * Management all draw their slider from this one answer, and the writes below
+   * are guarded by the same function — so a client can never offer a seat the
+   * server would refuse.
+   */
+  async spotLimits(
+    id: string,
+    actor: Readonly<{ id: string; roles: string[]; isAdmin: boolean }>
+  ): Promise<PodSpotLimits> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const isHost = (doc!.pod_hosts_id ?? []).some((hostId: any) => String(hostId) === actor.id);
+    // A host who also administers the club is treated as a HOST — the stricter
+    // of the two, so the increase-only rule is not skipped by an accident of
+    // club membership. Same precedence the attendance board uses.
+    if (isHost) return resolveSpotLimits(doc, { canDecrease: false });
+    if (actor.isAdmin) return resolveSpotLimits(doc, { canDecrease: true });
+    const { clubAdminService } = await import('@modules/clubs/clubAdmin/clubAdmin.service');
+    // Throws FORBIDDEN itself when they are neither — one definition of
+    // "admin of this club", shared with the attendance board.
+    await clubAdminService.assertClubAdminForPod(actor, id);
+    return resolveSpotLimits(doc, { canDecrease: true });
+  },
+
+  /** Host self-service edit — title, description, media and a bigger pod (2A). */
   async hostUpdate(id: string, userId: string, input: any) {
     const doc = await findHostedPod(id, userId);
     const before = snapshotPod(doc);
@@ -2265,6 +2306,13 @@ export const podService = {
       type: m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
     }));
     if (input.reel_url !== undefined) doc.reel_url = normalizeReelUrl(input.reel_url);
+    // Flexible pod count: a host may grow a live pod up to the capacity of the
+    // space it booked, so a pod published smaller than the venue allows is not
+    // stuck that way. Only upwards — people already bought into this size.
+    if (input.no_of_spots !== undefined && input.no_of_spots !== null) {
+      await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: false });
+      doc.no_of_spots = Math.floor(Number(input.no_of_spots) || 0);
+    }
     await doc.save();
     await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
 

@@ -1,16 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { followActionFor, readFollowStatus } from '@duncit/utils';
 
 import { FollowersOfDocument, FollowingOfDocument } from '@/graphql/following';
-import { MobileFollowUserDocument, MobileUnfollowUserDocument } from '@/graphql/hosts-venues';
+import { runUserFollowAction } from '@/services/follow-user';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export type FollowListPerson = ResultOf<typeof FollowersOfDocument>['followersOf'][number];
 export type FollowTab = 'followers' | 'following';
 
 /**
- * Loads a profile's followers or following list (bug 9) and toggles the viewer's
- * own follow state on each row, optimistically flipping the button.
+ * Loads a profile's followers or following list (bug 9) and moves the viewer's
+ * own follow state on each row — Follow / Follow Back / Requested / Following.
+ *
+ * The row is patched with the status the SERVER settled on, not the tap: a
+ * private person in the list lands on Requested, and tapping that withdraws
+ * the ask rather than unfollowing an edge that does not exist yet. Twin of
+ * mWeb's FollowListDialog (rule 27).
  */
 export function useFollowList(userId: string, tab: FollowTab) {
   const [people, setPeople] = useState<FollowListPerson[]>([]);
@@ -41,12 +47,17 @@ export function useFollowList(userId: string, tab: FollowTab) {
   const toggle = useCallback(async (target: FollowListPerson) => {
     setBusyId(target.user_id);
     try {
-      const doc = target.is_following ? MobileUnfollowUserDocument : MobileFollowUserDocument;
-      await graphqlRequest(doc, { user_id: target.user_id }, { auth: true });
+      const settled = await runUserFollowAction(
+        followActionFor(readFollowStatus(target)),
+        target.user_id,
+      );
+      // The generated document types the field as the schema enum; the shared
+      // helper answers with its string form. Same three values either way.
+      const follow_status = settled as FollowListPerson['follow_status'];
       setPeople((prev) =>
         prev.map((person) =>
           person.user_id === target.user_id
-            ? { ...person, is_following: !person.is_following }
+            ? { ...person, follow_status, is_following: settled === 'FOLLOWING' }
             : person,
         ),
       );

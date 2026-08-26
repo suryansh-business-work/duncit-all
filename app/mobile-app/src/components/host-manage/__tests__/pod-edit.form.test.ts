@@ -12,6 +12,7 @@ const valid = {
   pod_title: 'Sunday community hike',
   pod_description: 'A relaxed group hike around the lake.',
   media_text: 'https://cdn/img.jpg',
+  no_of_spots_text: '12',
 };
 
 const issuesOf = (values: typeof valid) => {
@@ -33,7 +34,7 @@ describe('podEditSchema', () => {
   });
 
   it('rejects a short title, short description and missing image', () => {
-    const paths = issuesOf({ pod_title: 'x', pod_description: 'short', media_text: '' });
+    const paths = issuesOf({ ...valid, pod_title: 'x', pod_description: 'short', media_text: '' });
     expect(paths).toEqual(expect.arrayContaining(['pod_title', 'pod_description', 'media_text']));
   });
 });

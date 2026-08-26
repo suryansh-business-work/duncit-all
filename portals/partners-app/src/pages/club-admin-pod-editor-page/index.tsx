@@ -85,6 +85,7 @@ export default function ClubAdminPodEditorPage() {
             searchHosts={editor.searchHosts}
             dateFormatter={fmt}
             slotLabels={slotLabels}
+            editingPodDocId={editor.editingPodDocId}
             onSubmit={editor.submit}
             intro={
               <>

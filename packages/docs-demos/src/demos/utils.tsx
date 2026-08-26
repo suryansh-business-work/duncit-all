@@ -23,6 +23,8 @@ import {
   contactDraftValue,
   currentContactValue,
   followBackLabelKey,
+  followButtonLabelKey,
+  followOutcomeLabelKey,
   followRequestRowState,
   formatMoney,
   hostPodSection,
@@ -132,6 +134,16 @@ interface FollowRowsMock {
     status: string | null;
     actorId: string | null;
     followBackStatus: string;
+  }>;
+}
+
+/** Profiles as `publicUserProfile` describes them to the viewer: their own
+ * follow state towards the person, and whether that person follows them. */
+interface FollowButtonMock {
+  profiles: Array<{
+    label: string;
+    status: 'NONE' | 'REQUESTED' | 'FOLLOWING';
+    followsViewer: boolean;
   }>;
 }
 
@@ -381,6 +393,14 @@ export default defineDemos('utils', [
           actorId: 'u-meera',
           followBackStatus: 'FOLLOWING',
         },
+        {
+          label: 'Dev asked, then withdrew the ask',
+          actionType: 'FOLLOW_REQUEST',
+          requestId: 'fr-4824',
+          status: 'CANCELLED',
+          actorId: 'u-dev',
+          followBackStatus: 'NONE',
+        },
       ],
     },
     compute: (mock) =>
@@ -390,8 +410,27 @@ export default defineDemos('utils', [
           const button = offersFollowBack(row)
             ? `${followBackLabelKey(row.followBackStatus)} (tappable: ${canFollowBack(row.followBackStatus)})`
             : 'no follow-back button';
-          return [row.label, `${state}   ·   ${button}`];
+          const outcome = followOutcomeLabelKey(row.status) ?? 'no outcome line';
+          return [row.label, `${state}   ·   ${outcome}   ·   ${button}`];
         })
+      ),
+  }),
+  defineDemo<FollowButtonMock>({
+    id: 'follow-button-label',
+    title: 'What the Follow button on a profile reads',
+    note:
+      'Flip followsViewer on a NONE profile and the button reads Follow Back — the same words the inbox uses for the same tap, so a profile and the notification about that person never disagree. REQUESTED and FOLLOWING ignore it: a pending ask and a mutual follow read as they always have.',
+    mock: {
+      profiles: [
+        { label: 'Riya (follows you, you do not follow her)', status: 'NONE', followsViewer: true },
+        { label: 'Aarav (neither of you follows the other)', status: 'NONE', followsViewer: false },
+        { label: 'Kabir (you asked, he has not answered)', status: 'REQUESTED', followsViewer: true },
+        { label: 'Meera (you follow each other)', status: 'FOLLOWING', followsViewer: true },
+      ],
+    },
+    compute: (mock) =>
+      Object.fromEntries(
+        mock.profiles.map((p) => [p.label, followButtonLabelKey(p.status, p.followsViewer)])
       ),
   }),
   defineDemo<{ amounts: number[] }>({

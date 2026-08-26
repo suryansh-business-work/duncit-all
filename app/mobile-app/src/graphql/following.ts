@@ -45,6 +45,8 @@ export const FollowersOfDocument = gql(`
       first_name
       profile_photo
       is_following
+      follow_status
+      follows_viewer
     }
   }
 `);
@@ -58,6 +60,8 @@ export const FollowingOfDocument = gql(`
       first_name
       profile_photo
       is_following
+      follow_status
+      follows_viewer
     }
   }
 `);

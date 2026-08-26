@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -9,8 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { followActionFor, readFollowStatus } from '@duncit/utils';
-import FollowButton from '../../components/FollowButton';
+import ProfileFollowActions from './ProfileFollowActions';
 import PublicProfileHeader from './PublicProfileHeader';
 import PublicProfileOwnerActions from './PublicProfileOwnerActions';
 import PublicProfileBadges from './PublicProfileBadges';
@@ -34,36 +33,11 @@ const PUBLIC_PROFILE = gql`
       is_private
       is_following
       follow_status
+      follows_viewer
+      inbound_request_id
       can_view_content
     }
     me {
-      user_id
-      following_user_ids
-    }
-  }
-`;
-
-const CANCEL_FOLLOW_REQUEST = gql`
-  mutation CancelFollowRequestFromProfile($user_id: ID!) {
-    cancelFollowRequest(user_id: $user_id) {
-      user_id
-      following_user_ids
-    }
-  }
-`;
-
-const FOLLOW_USER = gql`
-  mutation FollowUserFromProfile($user_id: ID!) {
-    followUser(user_id: $user_id) {
-      user_id
-      following_user_ids
-    }
-  }
-`;
-
-const UNFOLLOW_USER = gql`
-  mutation UnfollowUserFromProfile($user_id: ID!) {
-    unfollowUser(user_id: $user_id) {
       user_id
       following_user_ids
     }
@@ -81,9 +55,6 @@ export default function PublicProfilePage() {
     variables: { user_id: handle },
     fetchPolicy: 'cache-and-network',
   });
-  const [follow, followState] = useMutation(FOLLOW_USER);
-  const [unfollow, unfollowState] = useMutation(UNFOLLOW_USER);
-  const [cancelRequest, cancelState] = useMutation(CANCEL_FOLLOW_REQUEST);
   useEntityPageMeta(data?.publicUserProfile?.full_name);
 
   if (loading && !data) {
@@ -100,15 +71,6 @@ export default function PublicProfilePage() {
   const u = data?.publicUserProfile;
   if (!u) return <Alert severity="warning">{t('mweb.publicProfile.userNotFound')}</Alert>;
   const isOwner = data?.me?.user_id && data.me.user_id === u.user_id;
-  // The server is the authority on the state — a private profile answers a
-  // follow with REQUESTED, so the button must read its verdict rather than
-  // assume the tap succeeded.
-  const status = readFollowStatus(u);
-  const MUTATIONS = { FOLLOW: follow, UNFOLLOW: unfollow, CANCEL_REQUEST: cancelRequest };
-  const toggleFollow = async () => {
-    await MUTATIONS[followActionFor(status)]({ variables: { user_id: u.user_id } });
-    await refetch();
-  };
 
   return (
     <Stack spacing={3} sx={{ pt: 1, pb: 4 }}>
@@ -130,25 +92,15 @@ export default function PublicProfilePage() {
       </Stack>
 
       <PublicProfileHeader user={u} viewerId={data?.me?.user_id} />
-      {!isOwner && (
-        <Stack direction="row" sx={{
-          justifyContent: "center"
-        }}>
-          <FollowButton
-            status={status}
-            loading={followState.loading || unfollowState.loading || cancelState.loading}
-            onToggle={() => {
-              toggleFollow().catch(() => undefined);
-            }}
-          />
-        </Stack>
-      )}
+      {!isOwner && <ProfileFollowActions profile={u} onChanged={refetch} />}
       {isOwner && <PublicProfileOwnerActions />}
       <PublicProfileBadges userId={u.user_id} />
       <PublicProfilePosts
         userId={u.user_id}
         canView={isOwner || u.can_view_content !== false}
         meId={data?.me?.user_id ?? ''}
+        name={u.full_name || u.username || ''}
+        photo={u.profile_photo}
       />
     </Stack>
   );

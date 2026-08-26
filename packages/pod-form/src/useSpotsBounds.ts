@@ -3,6 +3,7 @@ import { useAdminCategories } from '@duncit/category';
 import { spotsBounds, type SpotsBounds } from '@duncit/utils';
 import { usePodFormData } from './context';
 import { useVenueSlots } from './slots/useVenueSlots';
+import { usePodSpotLimits } from './usePodSpotLimits';
 import type { PodFormValues } from './types';
 
 /**
@@ -17,9 +18,15 @@ import type { PodFormValues } from './types';
  * the category tree the cascade fetched. The bounds themselves come from the one
  * shared `spotsBounds` in @duncit/utils, so the portals, mWeb and native cannot
  * disagree about the range (rules 27 + 40).
+ *
+ * EDITING an existing pod is the exception, and the server owns that answer.
+ * Its slot is BOOKED, so `venueAvailableSlots` no longer lists it and the
+ * capacity below resolves to null — which is how a live pod's spots used to
+ * open as an uncapped number field. `podSpotLimits` also folds in the seats
+ * already sold, which nothing on this form can see.
  */
 export function useSpotsBounds(): SpotsBounds {
-  const { clubs, config } = usePodFormData();
+  const { clubs, config, editingPodDocId } = usePodFormData();
   const { control } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
@@ -38,6 +45,10 @@ export function useSpotsBounds(): SpotsBounds {
   const minPax = categories.find((category) => category.id === subId)?.min_pax ?? 0;
 
   const capacity = slots.find((slot) => slot.id === slotId)?.capacity ?? null;
+  const limits = usePodSpotLimits(editingPodDocId);
+  if (limits) {
+    return { min: limits.min, max: limits.max, slidable: limits.slidable };
+  }
 
   return spotsBounds({ minPax, venueCapacity: capacity });
 }

@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { followActionFor, followStatusFrom } from '@duncit/utils';
 
-import {
-  MobileFollowUserDocument,
-  MobilePublicHostsDocument,
-  MobilePublicVenuesDocument,
-  MobileUnfollowUserDocument,
-} from '@/graphql/hosts-venues';
+import { MobilePublicHostsDocument, MobilePublicVenuesDocument } from '@/graphql/hosts-venues';
+import { runUserFollowAction } from '@/services/follow-user';
 import { graphqlRequest } from '@/services/graphql.client';
 
 type HostsData = ResultOf<typeof MobilePublicHostsDocument>;
@@ -48,22 +45,29 @@ export function useHostsVenues() {
     () => new Set(hostsData?.me?.following_user_ids ?? []),
     [hostsData?.me?.following_user_ids],
   );
+  // A host with a private profile sits in neither set until they answer — the
+  // button must say Requested there, not fall back to Follow.
+  const requestedIds = useMemo(
+    () => new Set(hostsData?.me?.requested_user_ids ?? []),
+    [hostsData?.me?.requested_user_ids],
+  );
+  const statusFor = useCallback(
+    (userId: string) => followStatusFrom(followingIds, requestedIds, userId),
+    [followingIds, requestedIds],
+  );
 
   const toggleFollow = useCallback(
     async (userId: string) => {
       if (!userId || userId === meId) return;
       setPendingFollow(userId);
       try {
-        const doc = followingIds.has(userId)
-          ? MobileUnfollowUserDocument
-          : MobileFollowUserDocument;
-        await graphqlRequest(doc, { user_id: userId }, { auth: true });
+        await runUserFollowAction(followActionFor(statusFor(userId)), userId);
         await loadHosts();
       } finally {
         setPendingFollow(null);
       }
     },
-    [followingIds, meId, loadHosts],
+    [statusFor, meId, loadHosts],
   );
 
   return {
@@ -71,6 +75,7 @@ export function useHostsVenues() {
     venues,
     meId,
     followingIds,
+    statusFor,
     pendingFollow,
     isLoading,
     error,

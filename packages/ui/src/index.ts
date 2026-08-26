@@ -31,3 +31,5 @@ export { default as AttendanceChip } from './AttendanceChip';
 export type { PodAttendanceSummary } from './AttendanceChip';
 export { FinanceWaterfallList, buildWaterfallLines } from './finance-waterfall';
 export type { PodFinanceWaterfall, WaterfallLine } from './finance-waterfall';
+export { SpotsStepper, buildSpotsLabels, mwebSpotsLabels, shellSpotsLabels } from './spots';
+export type { SpotsStepperLabels, SpotsStepperProps, SpotsTranslate } from './spots';

@@ -353,12 +353,43 @@ export const podTypeDefs = /* GraphQL */ `
     currency_symbol: String!
   }
 
+  """
+  How big a pod that already exists may be resized to, for the asking viewer.
+
+  A live pod's slot is BOOKED, so venueAvailableSlots no longer returns it and
+  no client can work the ceiling out for itself. Every resize surface reads this
+  one answer, and the same rules guard the write.
+  """
+  type PodSpotLimits {
+    "Spots the pod declares today."
+    current: Int!
+    "Lowest capacity this viewer may set."
+    min: Int!
+    "Highest capacity — the booked space's own capacity, when it has one."
+    max: Int!
+    "Seats already held: attendees plus every extra seat a booking bought."
+    seats_taken: Int!
+    "The booked space's capacity (0 = the pod books no capped space)."
+    venue_capacity: Int!
+    "The activity's own floor, from the club's sub-category (0 = none)."
+    min_pax: Int!
+    "True when there is a real range to drag across rather than a fixed number."
+    slidable: Boolean!
+    "False for a host — they may only ever raise a live pod's capacity."
+    can_decrease: Boolean!
+  }
+
   "The only fields a host may edit on their own pod."
   input HostUpdatePodInput {
     pod_title: String!
     pod_description: String!
     pod_images_and_videos: [PodMediaInput!]!
     reel_url: String
+    """
+    A bigger pod. Only ever upwards for a host, and never past the capacity of
+    the space the pod booked — omit it to leave the capacity alone.
+    """
+    no_of_spots: Int
   }
 
   "Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed."
@@ -414,6 +445,8 @@ export const podTypeDefs = /* GraphQL */ `
     "Location ids that currently have at least one live (active, not-yet-passed) pod."
     activePodLocationIds: [ID!]!
     hostPodDeleteImpact(pod_doc_id: ID!): HostPodDeleteImpact!
+    "The range this pod may be resized within. Host, the pod's club admin, or an admin."
+    podSpotLimits(pod_doc_id: ID!): PodSpotLimits!
     "Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited."
     coHostCandidates(sub_category_id: ID!, search: String, pod_doc_id: ID): [CoHostCandidate!]!
     "Pods where I am a co-host. status defaults to ACCEPTED; pass PENDING for my invites."

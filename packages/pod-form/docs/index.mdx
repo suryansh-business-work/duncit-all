@@ -273,7 +273,7 @@ Every key absent from the server pod comes back as its `blankPodFormValues` defa
 | `venues` | `any[]` | yes | — | Venue options, narrowed by the selected club. |
 | `users` | `any[]` | no | `[]` | Local host options when `searchHosts` is not supplied. Admin passes its approved hosts here (`hosts(status: APPROVED)`), not the user directory. |
 | `products` | `any[]` | no | `[]` | Approved product catalogue for the products section. |
-| `finance` | `PodFormFinance` | no | `undefined` | `platform_fee_pct` / `gst_pct` / `currency_symbol` for the live breakdown. |
+| `finance` | `PodFormFinance` | no | `undefined` | Public finance settings; the earnings projection reads `currency_symbol` from it — every figure comes from the server's `adminPotentialPodEarnings`, never from these rates. |
 | `getClubVenueIds` | `(club: any) => string[]` | yes | — | Portal-specific accessor for a club's linked venue ids. |
 | `meetingPlatforms` | `PodOption[]` | no | `undefined` | Renders the meeting platform as a select instead of free text. |
 | `onGenerateMeetingLink` | `(input: GenerateMeetingLinkInput) => Promise<string>` | no | `undefined` | Shows an auto-generate button next to the meeting link. |
@@ -345,8 +345,8 @@ them straight to `MediaPickerDialog`.
 | `showLocationZone` | `boolean` | — | Reserved; no editor exists yet. |
 | `showVenueSlot` | `boolean` | — | Slot picker **and** the `venue_slot_id` key in the input. |
 | `showPlaceCharges` | `boolean` | — | Per-venue place charges editor. |
-| `showInventory` | `boolean` | — | Feeds product cost into the price breakdown. |
-| `showFinance` | `boolean` | — | Live fee/GST/payout breakdown. |
+| `showInventory` | `boolean` | — | Feeds the attached products' cost into the earnings projection. |
+| `showFinance` | `boolean` | — | Live earnings projection: the server's `adminPotentialPodEarnings` waterfall (GST, platform fee, club-admin cut, venue slot price, host commission) rendered through `buildEarningsStatement`, plus the venue budget — the highest slot price the pod can still carry. |
 | `showIsActive` | `boolean` | — | Active toggle (edit only). |
 | `showProducts` | `boolean` | — | Approved-products section + its rules. |
 | `showReel` | `boolean` | `false` | Explore reel `reel_url` field. |
@@ -508,6 +508,19 @@ const editor = useAutoPodEditorState({
 
 `PodEditorPage.onSubmit` still carries `{ draft }` in its second argument for the ordinary form;
 in Auto Pod mode there is no draft, so ignore it and call `editor.submit(values)`.
+
+### `editingPodDocId` — the spots ceiling on a pod that already exists
+
+Pass `editingPodDocId={editor.editingPodDocId}` whenever the page is EDITING. It is the pod's
+document id, not the human-readable `pod_id`, and it is what lets the spots control ask the
+server for the range a live pod may be resized within.
+
+Without it the form falls back to `spotsBounds` over the slot picker's list — and that list no
+longer contains the pod's own slot, because a booked slot is not an available one. Admin > Pod
+Management used to open a live pod's capacity as an uncapped number field for exactly that
+reason, and nothing on the form could see the seats already sold either. With the id set,
+`useSpotsBounds` returns the server's `podSpotLimits`, which caps at the booked space's
+capacity and floors at the seats sold. Omit it when creating; there is no pod to ask about yet.
 
 ### `buildAutoPodInput(values)` — the template, and only the template
 

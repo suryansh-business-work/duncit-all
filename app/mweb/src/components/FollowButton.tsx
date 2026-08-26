@@ -2,7 +2,7 @@ import { Button, CircularProgress } from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import { FOLLOW_LABEL_KEY, type FollowStatus } from '@duncit/utils';
+import { followButtonLabelKey, type FollowStatus } from '@duncit/utils';
 import { useTranslation } from '../i18n/useTranslation';
 
 const ICONS: Record<FollowStatus, React.ReactNode> = {
@@ -13,15 +13,24 @@ const ICONS: Record<FollowStatus, React.ReactNode> = {
 
 interface Props {
   status: FollowStatus;
+  /** Whether this person already follows the viewer — the resting state then
+   * reads "Follow Back", the same words the inbox uses for the same tap. */
+  followsViewer?: boolean | null;
   disabled?: boolean;
   loading?: boolean;
   onToggle: () => void;
 }
 
-/** Follow / Requested / Following. REQUESTED is a real, tappable state — it
- * withdraws the pending ask — so it is styled as an outlined button rather than
- * a disabled one. Twin of native's <FollowButton/> (rule 27). */
-export default function FollowButton({ status, disabled, loading, onToggle }: Readonly<Props>) {
+/** Follow / Follow Back / Requested / Following. REQUESTED is a real, tappable
+ * state — it withdraws the pending ask — so it is styled as an outlined button
+ * rather than a disabled one. Twin of native's <FollowStatusButton/> (rule 27). */
+export default function FollowButton({
+  status,
+  followsViewer,
+  disabled,
+  loading,
+  onToggle,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Button
@@ -35,7 +44,7 @@ export default function FollowButton({ status, disabled, loading, onToggle }: Re
         onToggle();
       }}
     >
-      {t(FOLLOW_LABEL_KEY[status])}
+      {t(followButtonLabelKey(status, followsViewer))}
     </Button>
   );
 }

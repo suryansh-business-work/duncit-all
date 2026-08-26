@@ -41,6 +41,8 @@ export interface PodEditorPageProps {
   dateFormatter: PodFormData['dateFormatter'];
   /** Slot-picker copy — `shell.slots.*` in the portals (rule 38). */
   slotLabels: PodFormData['slotLabels'];
+  /** Document id of the pod being edited — drives the live-pod spot range. */
+  editingPodDocId?: string;
   onSubmit: (values: PodFormValues, options: { draft: boolean }) => Promise<void> | void;
   onReady?: (methods: UseFormReturn<PodFormValues>) => void;
   hideDraftOnEdit?: boolean;
@@ -83,6 +85,7 @@ export default function PodEditorPage({
   searchHosts,
   dateFormatter,
   slotLabels,
+  editingPodDocId,
   onSubmit,
   onReady,
   hideDraftOnEdit,
@@ -145,6 +148,7 @@ export default function PodEditorPage({
             searchHosts={searchHosts}
             dateFormatter={dateFormatter}
             slotLabels={slotLabels}
+            editingPodDocId={editingPodDocId}
             busy={busy}
             error={error}
             onCancel={onBack}

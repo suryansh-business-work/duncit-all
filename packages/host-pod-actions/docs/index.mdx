@@ -97,8 +97,26 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 ```
 
 `menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
-`PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the limited
-title/description/media `PodEditDialog`.
+`PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the narrow
+`PodEditDialog` — title, description, media and the pod's capacity.
+
+### Capacity, after the pod is live
+
+A host who published 12 spots at a space that holds 30 used to be stuck at 12 forever: the only
+spot control lived in Create-a-Pod. `PodEditDialog` now renders `SpotsStepper` from
+`@duncit/ui` — the same slider Create-a-Pod uses — bounded by the server's `podSpotLimits`.
+
+The range is a SERVER answer on purpose. A live pod's slot is BOOKED, so `venueAvailableSlots`
+no longer returns it and the ceiling is unreadable here; the seats already sold, which set the
+floor, were never on the client at all. The same rules guard the write, so this dialog cannot
+offer a seat the mutation would refuse:
+
+- a **host** may only ever RAISE the capacity — people already bought into the size they saw;
+- a **Club Admin** or an **admin** may also lower it, but never below `seats_taken`;
+- nobody may exceed the booked space's own capacity.
+
+The field renders only once the limits land, and `buildHostUpdateInput(values, { includeSpots })`
+omits `no_of_spots` until then — sending the seeded `0` would ask the server to empty the pod.
 
 ## The pod's media
 

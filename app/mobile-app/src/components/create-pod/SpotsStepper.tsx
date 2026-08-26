@@ -102,6 +102,11 @@ export function SpotsStepper({
   const parsed = Number.parseInt(value, 10);
   const current = Number.isFinite(parsed) ? parsed : min;
   const set = (next: number) => onChange(String(Math.max(min, Math.min(max, next))));
+  // The bounds sentence outranks the generic hint wherever there is one — the
+  // MUI twin says the same thing in the same place (rule 27).
+  const stepperHint = readOnly
+    ? t('mweb.createPod.spotsFixedHint')
+    : (boundsHint ?? t('mweb.createPod.spotsHint'));
 
   if (slidable) {
     return (
@@ -162,7 +167,7 @@ export function SpotsStepper({
             {totalSpots}
           </Text>
           <Text fontSize={12} color="$muted">
-            {readOnly ? t('mweb.createPod.spotsFixedHint') : t('mweb.createPod.spotsHint')}
+            {stepperHint}
           </Text>
         </YStack>
         {readOnly ? (

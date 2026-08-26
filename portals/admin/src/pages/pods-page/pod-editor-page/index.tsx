@@ -116,6 +116,7 @@ export default function AdminPodEditorPage() {
             onPickVideo={picker.pickVideo}
             dateFormatter={fmt}
             slotLabels={slotLabels}
+            editingPodDocId={editor.editingPodDocId}
             onSubmit={editor.submit}
             onReady={ai.onReady}
             hideDraftOnEdit

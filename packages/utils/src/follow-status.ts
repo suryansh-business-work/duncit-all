@@ -79,6 +79,20 @@ export const FOLLOW_LABEL_KEY: Record<FollowStatus, string> = {
 };
 
 /**
+ * The Follow button's label once the OTHER direction of the edge is known.
+ *
+ * `followsViewer` is the profile's `follows_viewer` — whether this person
+ * already follows the viewer. It only changes the resting state: a viewer who
+ * does not follow someone who follows them is offered "Follow Back", the same
+ * words the inbox uses, so the profile and the notification never disagree
+ * about what the tap does. REQUESTED and FOLLOWING read as they always have.
+ */
+export function followButtonLabelKey(status: FollowStatus, followsViewer?: boolean | null): string {
+  if (status === 'NONE' && followsViewer) return 'mweb.follow.followBack';
+  return FOLLOW_LABEL_KEY[status];
+}
+
+/**
  * What an actionable follow notification row should render right now.
  *
  * mWeb and native both own a Tamagui/MUI view of this row, so the DECISION
@@ -123,6 +137,10 @@ export function followRequestRowState(row: FollowNotificationRow): FollowRequest
   // A row whose status has not loaded yet is treated as open: the request only
   // stops being answerable once the server says so.
   if (!row.status || row.status === 'PENDING') return 'ANSWER';
+  // Withdrawn by the requester. The server deletes the row when that happens;
+  // one still on screen has nothing to state — least of all "Denied", an answer
+  // the viewer never gave — so it goes inert until the inbox re-reads.
+  if (row.status === 'CANCELLED') return 'HIDDEN';
   if (row.status !== 'ACCEPTED') return 'SETTLED';
   // Accepted. FOLLOWING is the one state with nothing to offer — REQUESTED
   // still renders the button so the viewer can see their ask is pending.
@@ -164,4 +182,17 @@ export function followBackLabelKey(followBackStatus?: string | null): string {
  * re-sent, so the button reads "Requested" and stops accepting taps. */
 export function canFollowBack(followBackStatus?: string | null): boolean {
   return followBackStatus !== 'REQUESTED' && followBackStatus !== 'FOLLOWING';
+}
+
+/**
+ * The i18n key for the outcome line a settled FOLLOW_REQUEST row states in
+ * place of Accept / Deny — "Accepted" or "Denied". Null when there is nothing
+ * to state: the request is still open, was withdrawn (the row is going away),
+ * or the row is a NEW_FOLLOWER with no request behind it. One definition so
+ * the two inbox twins cannot label the same status differently.
+ */
+export function followOutcomeLabelKey(status?: string | null): string | null {
+  if (status === 'ACCEPTED') return 'mweb.follow.accepted';
+  if (status === 'REJECTED' || status === 'DENIED') return 'mweb.follow.rejected';
+  return null;
 }

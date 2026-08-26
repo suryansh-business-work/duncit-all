@@ -6,17 +6,16 @@ import {
   MobilePublicUserPostsDocument,
   MobileUserBadgesDocument,
 } from '@/graphql/public-profile';
-import { graphqlRequest } from '@/services/graphql.client';
 import {
-  MobileCancelFollowRequestDocument,
-  MobileFollowUserDocument,
-  MobileUnfollowUserDocument,
+  MobileAcceptFollowRequestDocument,
+  MobileRejectFollowRequestDocument,
 } from '@/graphql/hosts-venues';
+import { graphqlRequest } from '@/services/graphql.client';
+import { runUserFollowAction } from '@/services/follow-user';
 import {
   followActionFor,
   nextFollowStatus,
   readFollowStatus,
-  type FollowAction,
   type FollowStatus,
 } from '@duncit/utils';
 
@@ -25,43 +24,7 @@ export type PublicProfileUser = NonNullable<ProfileData['publicUserProfile']>;
 export type UserBadge = ResultOf<typeof MobileUserBadgesDocument>['userBadges'][number];
 type PostsData = ResultOf<typeof MobilePublicUserPostsDocument>;
 export type PublicProfilePost = PostsData['posts'][number];
-
-/**
- * Run one follow action and report the status the SERVER settled on.
- *
- * Following a private profile returns REQUESTED, not FOLLOWING — the follow
- * edge is only written when its owner accepts, so the button must believe the
- * response rather than the tap.
- */
-async function runFollowAction(
-  action: FollowAction,
-  userId: string,
-  isPrivate: boolean,
-): Promise<FollowStatus> {
-  if (action === 'UNFOLLOW') {
-    const res = await graphqlRequest(
-      MobileUnfollowUserDocument,
-      { user_id: userId },
-      { auth: true },
-    );
-    return (res.unfollowUser.following_user_ids ?? []).includes(userId) ? 'FOLLOWING' : 'NONE';
-  }
-  if (action === 'CANCEL_REQUEST') {
-    const res = await graphqlRequest(
-      MobileCancelFollowRequestDocument,
-      { user_id: userId },
-      { auth: true },
-    );
-    return (res.cancelFollowRequest.requested_user_ids ?? []).includes(userId)
-      ? 'REQUESTED'
-      : 'NONE';
-  }
-  const res = await graphqlRequest(MobileFollowUserDocument, { user_id: userId }, { auth: true });
-  if ((res.followUser.following_user_ids ?? []).includes(userId)) return 'FOLLOWING';
-  // No edge came back. On a private profile that is the expected answer — the
-  // ask is pending. On a public one it means the follow simply did not land.
-  return isPrivate ? 'REQUESTED' : 'NONE';
-}
+export type PublicProfileStory = PostsData['stories'][number];
 
 /** A user's public profile + badges + posts/stories + whether the viewer owns
  * it. Private accounts hide posts/stories from non-followers (canView=false). */
@@ -70,10 +33,11 @@ export function usePublicProfile(userId: string) {
   const [isOwner, setIsOwner] = useState(false);
   const [followStatus, setFollowStatus] = useState<FollowStatus>('NONE');
   const [followBusy, setFollowBusy] = useState(false);
+  const [answerBusy, setAnswerBusy] = useState(false);
   const [canView, setCanView] = useState(true);
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [posts, setPosts] = useState<PublicProfilePost[]>([]);
-  const [stories, setStories] = useState<string[]>([]);
+  const [stories, setStories] = useState<PublicProfileStory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -84,21 +48,29 @@ export function usePublicProfile(userId: string) {
       { auth: true },
     ).catch(() => null);
     setPosts(data?.posts ?? []);
-    setStories((data?.stories ?? []).map((story) => story.image_url));
+    setStories(data?.stories ?? []);
+  }, [userId]);
+
+  // The server is the authority on both directions of the relationship, so
+  // anything that changes it re-reads the profile rather than patching state.
+  const loadProfile = useCallback(async () => {
+    const d = await graphqlRequest(
+      MobilePublicProfileDocument,
+      { user_id: userId },
+      { auth: true },
+    );
+    const profile = d.publicUserProfile ?? null;
+    const owner = !!d.me?.user_id && d.me.user_id === profile?.user_id;
+    setUser(profile);
+    setIsOwner(owner);
+    setFollowStatus(profile ? readFollowStatus(profile) : 'NONE');
+    setCanView(owner || profile?.can_view_content !== false);
   }, [userId]);
 
   useEffect(() => {
     let active = true;
     Promise.all([
-      graphqlRequest(MobilePublicProfileDocument, { user_id: userId }, { auth: true }).then((d) => {
-        if (!active) return;
-        const profile = d.publicUserProfile ?? null;
-        const owner = !!d.me?.user_id && d.me.user_id === profile?.user_id;
-        setUser(profile);
-        setIsOwner(owner);
-        setFollowStatus(profile ? readFollowStatus(profile) : 'NONE');
-        setCanView(owner || profile?.can_view_content !== false);
-      }),
+      loadProfile(),
       graphqlRequest(MobileUserBadgesDocument, { user_id: userId }, { auth: true })
         .then((d) => active && setBadges(d.userBadges))
         .catch(() => undefined),
@@ -109,7 +81,7 @@ export function usePublicProfile(userId: string) {
     return () => {
       active = false;
     };
-  }, [userId, loadPosts]);
+  }, [userId, loadProfile, loadPosts]);
 
   // Follow / Requested / Following — optimistic, reverts on failure.
   //
@@ -124,7 +96,7 @@ export function usePublicProfile(userId: string) {
     setFollowStatus(nextFollowStatus(prev, isPrivate));
     setFollowBusy(true);
     try {
-      const settled = await runFollowAction(followActionFor(prev), userId, isPrivate);
+      const settled = await runUserFollowAction(followActionFor(prev), userId);
       setFollowStatus(settled);
       // A private feed opens only on a confirmed edge, never on the tap.
       if (!isOwner && isPrivate) {
@@ -138,6 +110,26 @@ export function usePublicProfile(userId: string) {
     }
   };
 
+  // Accept / Deny this person's open ask to follow the viewer — the same
+  // FollowRequest the inbox row answers, reached from the relationship itself.
+  const answerRequest = async (accept: boolean) => {
+    const requestId = user?.inbound_request_id;
+    if (!requestId || answerBusy) return;
+    setAnswerBusy(true);
+    try {
+      await graphqlRequest(
+        accept ? MobileAcceptFollowRequestDocument : MobileRejectFollowRequestDocument,
+        { request_id: requestId },
+        { auth: true },
+      );
+      await loadProfile();
+    } catch {
+      // The profile keeps offering the answer, so the viewer can simply retry.
+    } finally {
+      setAnswerBusy(false);
+    }
+  };
+
   return {
     user,
     isOwner,
@@ -147,7 +139,11 @@ export function usePublicProfile(userId: string) {
     canView,
     followStatus,
     followBusy,
+    followsViewer: !!user?.follows_viewer,
+    inboundRequestId: user?.inbound_request_id ?? null,
+    answerBusy,
     toggleFollow,
+    answerRequest,
     isLoading,
     error,
   };

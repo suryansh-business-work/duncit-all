@@ -76,7 +76,7 @@ export default function ReelField({ value, onChange, error, onPickVideo }: Reado
   };
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box>
       <Stack
         direction="row"
         sx={{

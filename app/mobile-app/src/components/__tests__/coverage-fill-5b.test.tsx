@@ -13,7 +13,7 @@ describe('HostCard pending + following', () => {
           { user_id: 'h1', full_name: 'Asha', passport_photo_url: 'x', tags: ['Yoga'] } as never
         }
         isMe={false}
-        isFollowing
+        status="FOLLOWING"
         pending
         onOpen={jest.fn()}
         onToggleFollow={jest.fn()}

@@ -28,6 +28,10 @@ export const waAutomationResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return whatsappAdminService.logById(args.id);
     },
+    whatsappDefaultMedia: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return whatsappAdminService.defaultMedia();
+    },
     myWhatsappPreference: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return whatsappPreferenceService.mine(user.id);

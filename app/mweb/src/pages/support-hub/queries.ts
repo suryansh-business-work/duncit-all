@@ -77,6 +77,12 @@ export interface SupportPodOption {
   endsAt: string | null;
 }
 
+export const REMIND_POD_FEEDBACK = gql`
+  mutation RemindPodFeedback($pod_id: ID!, $choice: PodFeedbackReminderChoice!) {
+    remindPodFeedback(pod_id: $pod_id, choice: $choice)
+  }
+`;
+
 export const MY_PENDING_POD_FEEDBACK = gql`
   query MyPendingPodFeedback {
     myPendingPodFeedback {

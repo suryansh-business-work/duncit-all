@@ -8964,7 +8964,7 @@ export type Mutation = {
   setVenueDeductions: Venue;
   /** Flip one scenario. Pass __global__ as the key for the kill switch. */
   setWhatsappScenarioEnabled: WaScenarioBoard;
-  /** Set the admin's own header asset for one scenario; an empty url clears it. Reconcile never overwrites it. */
+  /** Set the admin's own header asset for one scenario — or the platform default, with __global__ as the key. An empty url clears it. Reconcile never overwrites it. */
   setWhatsappScenarioMedia: WaScenarioBoard;
   /** Email the signed contract, with the PDF attached. */
   shareContract: Scalars['Boolean']['output'];
@@ -16886,6 +16886,8 @@ export type Query = {
   websiteContentTable: WebsiteContentItemTablePage;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
+  /** The default header asset every media-header scenario falls back to. Cheap: no AiSensy read. */
+  whatsappDefaultMedia: WaDefaultMedia;
   /** One send attempt in full — the detail behind a row of the merged WhatsApp log. */
   whatsappMessageLog?: Maybe<WaMessageLogRow>;
   /** Every automatic message, its switch, and what AiSensy holds for it. */
@@ -23436,6 +23438,14 @@ export type WaDashboardCategory = {
   skipped: Scalars['Int']['output'];
 };
 
+/** The platform default header asset, alone — for the Settings tab. */
+export type WaDefaultMedia = {
+  __typename?: 'WaDefaultMedia';
+  filename: Scalars['String']['output'];
+  /** Empty when no default is set. */
+  url: Scalars['String']['output'];
+};
+
 /** Background extraction job — live progress + quality breakdown. */
 export type WaExtraction = {
   __typename?: 'WaExtraction';
@@ -23666,6 +23676,8 @@ export type WaScenario = {
   params: Array<Scalars['String']['output']>;
   /** Meta's category, which decides the per-message rate. */
   template_category: Scalars['String']['output'];
+  /** The live template's header kind — TEXT, IMAGE, VIDEO, FILE, or empty for none. */
+  template_header_format: Scalars['String']['output'];
   template_name: Scalars['String']['output'];
   /** How many values the live template expects. */
   template_params: Scalars['Int']['output'];
@@ -23677,6 +23689,14 @@ export type WaScenarioBoard = {
   catalogue_error: Scalars['String']['output'];
   /** False when AiSensy could not be read; the rows still render without live state. */
   catalogue_ok: Scalars['Boolean']['output'];
+  default_media_filename: Scalars['String']['output'];
+  /**
+   * The platform default header asset: what every media-header scenario sends
+   * when neither the row nor its campaign carries one. Empty means unset — and
+   * with no campaign at AiSensy carrying an asset, unset means every one of
+   * those scenarios fails with "Media URL Missing".
+   */
+  default_media_url: Scalars['String']['output'];
   /** The kill switch. Off by default — nothing sends until somebody turns it on. */
   global_enabled: Scalars['Boolean']['output'];
   rows: Array<WaScenario>;

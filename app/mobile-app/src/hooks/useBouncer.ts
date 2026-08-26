@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import * as Location from 'expo-location';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import type { PodFeedbackInput } from '@duncit/utils';
+import type { PodFeedbackInput, PodFeedbackReminderChoice } from '@duncit/utils';
 
 import {
   MobileActiveSosDocument,
@@ -9,6 +9,7 @@ import {
   MobilePendingPodFeedbackDocument,
   MobilePodFeedbackFormDocument,
   MobileRaiseSosDocument,
+  MobileRemindPodFeedbackDocument,
   MobileRequestCallbackDocument,
   MobileSubmitFeedbackDocument,
   MobileSupportCallTargetDocument,
@@ -106,6 +107,20 @@ export function useBouncer() {
     await graphqlRequest(MobileSubmitFeedbackDocument, { input: input as never }, { auth: true });
   }, []);
 
+  // Closing the prompt without answering is itself an answer, and it is kept
+  // on the server: a dismiss held in memory is a dismiss the next app launch
+  // has never heard of.
+  const remindPodFeedback = useCallback(
+    async (podId: string, choice: PodFeedbackReminderChoice) => {
+      await graphqlRequest(
+        MobileRemindPodFeedbackDocument,
+        { pod_id: podId, choice: choice as never },
+        { auth: true },
+      );
+    },
+    [],
+  );
+
   return {
     loadSupportTarget,
     getActiveSos,
@@ -115,5 +130,6 @@ export function useBouncer() {
     getPendingPodFeedback,
     getPodFeedbackForm,
     submitPodFeedback,
+    remindPodFeedback,
   };
 }

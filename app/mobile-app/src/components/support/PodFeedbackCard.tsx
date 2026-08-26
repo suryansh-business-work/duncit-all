@@ -44,7 +44,7 @@ export function PodFeedbackCard({
   const ready = canSubmitPodFeedback(scores) && !saving;
   const submitLabel = rated ? t('mweb.podFeedback.update') : t('mweb.podFeedback.submit');
   const busyLabel = rated ? t('mweb.podFeedback.updating') : t('mweb.podFeedback.submitting');
-  const leaveLabel = saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.skip');
+  const leaveLabel = saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.close');
 
   return (
     <YStack gap={12} padding={16} borderRadius={16} backgroundColor="$background">

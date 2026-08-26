@@ -35,6 +35,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.field.quantity': 'Quantity added',
   'email.field.available': 'Units left',
   'email.field.paymentId': 'Reference',
+  'email.field.invoiceNo': 'Invoice',
+  'email.field.items': 'Items',
+  'email.field.recipient': 'For',
   'email.field.category': 'Category',
   'email.field.subject': 'Subject',
   'email.field.ticketNo': 'Ticket',
@@ -63,6 +66,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.label.ad': 'Ad',
   'email.label.refund': 'Refund',
   'email.label.order': 'Order',
+  'email.label.giftCard': 'Gift card',
   'email.label.signIn': 'Sign-in',
 
   // --- Shared buttons ------------------------------------------------------
@@ -76,6 +80,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.cta.viewPayout': 'View your payouts',
   'email.cta.manageStock': 'Manage your stock',
   'email.cta.viewOrder': 'View your order',
+  'email.cta.viewGiftCard': 'View your gift cards',
   'email.cta.retryPayment': 'Try booking again',
   'email.cta.viewAd': 'View your ad',
   'email.cta.completePod': 'Complete the pod',
@@ -87,6 +92,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.footer.account':
     "You're receiving this because it concerns your Duncit account.",
   'email.footer.podJoined': "You're receiving this because you joined this pod on Duncit.",
+  'email.footer.purchase': "You're receiving this because you paid for this on Duncit.",
   'email.footer.podHosted': "You're receiving this because you host this pod on Duncit.",
   'email.footer.podVenue': "You're receiving this because this pod is booked at your venue.",
   'email.footer.podClub': "You're receiving this because you are the club admin for this pod.",
@@ -106,6 +112,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.help.refundTiming':
     'Refunds go back to the method you paid with. Your bank decides exactly when it appears — if it has not by then, reply to this email and we will trace it.',
   'email.help.noAction': 'Nothing is needed from you — this is just so you know.',
+  'email.help.invoiceAttached':
+    'Your tax invoice is attached to this email as a PDF. Keep it — it is the document you claim against, and we cannot re-issue it with different details later.',
   'email.help.onboardingNext':
     'We will confirm the call and send you the link. If the time no longer works, reply to this email and we will move it.',
   'email.help.accountPaused':
@@ -330,6 +338,17 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.adRejected.title': 'About your ad',
   'email.adRejected.body':
     'We reviewed your ad and cannot run it as it stands. The reason is below — fix it and resubmit, and we will look again.',
+
+  // --- Receipts: one per thing a checkout can buy ------------------------------------
+  'email.paymentReceiptPod.title': 'Your pod booking is paid',
+  'email.paymentReceiptPod.body':
+    'Your spot is held and paid for. Everything you need on the day is below, and your ticket arrives in its own email.',
+  'email.paymentReceiptProduct.title': 'Your order is paid',
+  'email.paymentReceiptProduct.body':
+    'We have your payment and your order is being prepared. We will write again the moment it ships or is ready to collect.',
+  'email.paymentReceiptGiftCard.title': 'Your gift card is paid',
+  'email.paymentReceiptGiftCard.body':
+    'The card is bought and on its way. The code itself goes to whoever the card is for, in an email of its own — this one is your record of the purchase.',
 
   // --- Shop refunds ------------------------------------------------------------------
   'email.orderRefund.title': 'Your refund is on its way',

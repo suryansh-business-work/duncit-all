@@ -86,6 +86,24 @@ export function isRetryableStatus(status: number): boolean {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
+ * Why the wire failed, in words a log row can carry.
+ *
+ * `fetch` reports every connection-level failure as the same
+ * `TypeError: fetch failed` and puts the actual reason — DNS, a refused
+ * socket, the runtime's own connect timeout — on `cause`. An abort from the
+ * per-attempt timer arrives as an `AbortError`. Mirrored in the server's
+ * `aisensy.transport.ts`; change one, change the other.
+ */
+export function describeFetchError(error: unknown, timeoutMs: number): string {
+  const err = error as { name?: string; message?: string; cause?: { code?: string; message?: string } };
+  if (err?.name === 'AbortError') return `no answer within ${timeoutMs / 1000}s`;
+  const cause = err?.cause;
+  if (cause?.code) return cause.code;
+  if (cause?.message) return cause.message;
+  return err?.message || String(error);
+}
+
+/**
  * Response headers as a plain lower-cased object. A stubbed fetch in a test
  * rarely bothers with a `Headers` instance, and a missing header set must not
  * be the thing that breaks a send.
@@ -189,7 +207,7 @@ export class HttpTransport {
 
     // Every attempt threw before the provider answered.
     throw new CommunicationProviderError(
-      `${this.provider} could not be reached after ${this.retry.attempts} attempt(s): ${String(lastError)}`,
+      `${this.provider} could not be reached after ${this.retry.attempts} attempt(s): ${describeFetchError(lastError, this.timeoutMs)}`,
       { provider: this.provider, retryable: true, cause: lastError },
     );
   }

@@ -6,6 +6,7 @@ import { parseApiError } from '@duncit/utils';
 import type { CampaignNameValues } from '../campaign-name-form';
 import { UPDATE_WA_PRICING, WA_PRICING, type WaCampaignNameOption, type WaPricing } from '../queries';
 import CampaignNamesCard from './CampaignNamesCard';
+import DefaultMediaCard from './DefaultMediaCard';
 import {
   WaPricingForm,
   fromWaPricing,
@@ -96,6 +97,7 @@ export default function WaSettings({
   return (
     <Stack spacing={2}>
       {pricingCard}
+      <DefaultMediaCard />
       <CampaignNamesCard
         names={names}
         busy={namesBusy}

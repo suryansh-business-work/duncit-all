@@ -90,6 +90,17 @@ export const MobilePendingPodFeedbackDocument = gql(`
 `);
 
 /**
+ * Remember that the guest closed the rating prompt, and whether to ask again —
+ * mWeb's REMIND_POD_FEEDBACK. Without it a dismiss lives only in memory, and
+ * the same pod is back the next time the app opens.
+ */
+export const MobileRemindPodFeedbackDocument = gql(`
+  mutation MobileRemindPodFeedback($pod_id: ID!, $choice: PodFeedbackReminderChoice!) {
+    remindPodFeedback(pod_id: $pod_id, choice: $choice)
+  }
+`);
+
+/**
  * The rating form for one pod plus this guest's own answers, if they have
  * already sent some — backs the shared feedback link. mWeb's POD_FEEDBACK_FORM.
  */

@@ -5,6 +5,7 @@ import { USER_EMAILS } from './catalogue.user';
 import { ONBOARDING_EMAILS } from './catalogue.onboarding';
 import { CLUB_ADMIN_EMAILS, ECOMM_EMAILS, HOST_EMAILS, VENUE_EMAILS } from './catalogue.partners';
 import { COMMERCE_EMAILS, SECURITY_EMAILS, SUPPORT_EMAILS } from './catalogue.support';
+import { RECEIPT_EMAILS } from './catalogue.receipts';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -29,6 +30,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...SUPPORT_EMAILS,
   ...SECURITY_EMAILS,
   ...COMMERCE_EMAILS,
+  ...RECEIPT_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

@@ -581,6 +581,7 @@ pending pod), so neither app carries that rule.
 | `orderedAspects` | `(fromServer) => PodFeedbackAspect[]` | Server's list, deduped, ordered, `OVERALL` guaranteed. |
 | `canSubmitPodFeedback` | `(scores) => boolean` | Only `OVERALL` is required. |
 | `buildPodFeedbackInput` | `({podId, scores, message, aspects}) => PodFeedbackInput` | The mutation payload. |
+| `POD_FEEDBACK_REMINDER_OPTIONS` | `readonly {choice: PodFeedbackReminderChoice; labelKey: string}[]` | The two ways out of the prompt, in the order they are offered. |
 
 ```ts
 orderedAspects(['FOOD', 'HOST', 'NOT_A_THING'])
@@ -598,6 +599,20 @@ buildPodFeedbackInput({
 // { pod_id: 'p1', rating: 4, message: null, ratings: [{ aspect: 'HOST', rating: 5 }] }
 // FOOD is absent, not zero: "not scored" and "scored badly" are different answers.
 ```
+
+Closing the prompt without answering it is an answer too, and the server keeps it —
+otherwise the dismiss lives in memory and the same pod is back on the next page load.
+`POD_FEEDBACK_REMINDER_OPTIONS` is the pair of ways out, so mWeb and native offer the
+same two in the same order:
+
+```ts
+POD_FEEDBACK_REMINDER_OPTIONS
+// [{ choice: 'LATER', labelKey: 'mweb.podFeedback.remindLater' },
+//  { choice: 'NEVER', labelKey: 'mweb.podFeedback.remindNever' }]
+```
+
+`LATER` snoozes THIS pod for a day (`remindPodFeedback(pod_id, LATER)`); `NEVER` retires
+it. Neither touches the other pods the guest was marked present at.
 
 The category is deliberately NOT sent — the server derives it from the weakest score,
 so a guest is never asked to triage their own feedback.

@@ -4,6 +4,7 @@ import {
   campaignPayload,
   campaignSucceeded,
 } from '@modules/platform/aisensy/aisensy.gateway';
+import { describeFetchError } from '@modules/platform/aisensy/aisensy.transport';
 import { missingBotScopes } from '@modules/platform/slack/slack.gateway';
 
 /**
@@ -401,7 +402,10 @@ function transportFailure(category: string, error: any): EnvConnectionResult {
   if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
     return { ok: false, message: `${category} did not answer within ${TIMEOUT_MS / 1000}s`, details: [] };
   }
-  const reason = typeof error?.message === 'string' ? error.message : 'unknown error';
+  // Not error.message: Node reports every connection-level failure as the same
+  // `fetch failed` and hides the real one on `cause`. This row lands in the
+  // WhatsApp log beside the automatic sends, which already name it.
+  const reason = describeFetchError(error);
   return { ok: false, message: `Connection failed: ${reason}`, details: [] };
 }
 

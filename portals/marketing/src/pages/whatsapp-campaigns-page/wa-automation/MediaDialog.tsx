@@ -11,13 +11,9 @@ import {
   DialogTitle,
   Stack,
 } from '@mui/material';
-import { RhfTextField } from '@duncit/forms';
+import { PUBLIC_URL_PATTERN, RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import type { WaScenario } from './queries';
-
-/** AiSensy fetches the asset itself at send time, so nothing but an absolute
- * public link can ever work — the same rule the Marketing send forms apply. */
-const MEDIA_URL_PATTERN = /^https?:\/\/\S+$/i;
 
 interface MediaFormValues {
   url: string;
@@ -45,7 +41,9 @@ export default function MediaDialog({ scenario, saving, onClose, onSave }: Reado
   const schema = useMemo(
     () =>
       z.object({
-        url: z.string().trim().regex(MEDIA_URL_PATTERN, t('adminWhatsapp.mediaUrlHelp')),
+        // AiSensy fetches the asset itself at send time, so nothing but an
+        // absolute public link can ever work — the rule every media field shares.
+        url: z.string().trim().regex(PUBLIC_URL_PATTERN, t('adminWhatsapp.mediaUrlHelp')),
         filename: z.string().trim(),
       }),
     [t]

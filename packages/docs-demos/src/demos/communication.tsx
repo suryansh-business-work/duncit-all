@@ -1,4 +1,5 @@
 import {
+  describeFetchError,
   redact,
   renderTemplateBody,
   templateParamCount,
@@ -49,6 +50,24 @@ export default defineDemos('communication', [
     },
     compute: (mock) => ({
       'What the log actually records': redact(mock.request),
+    }),
+  }),
+
+  defineDemo<{ error: { name: string; message: string; cause?: { code?: string; message?: string } } }>({
+    id: 'describe-fetch-error',
+    title: 'What a dead wire is called in the log',
+    note:
+      "fetch reports every connection failure as the same \"fetch failed\" and hides the reason on cause. Change cause.code to ENOTFOUND, or the name to AbortError, and watch the reason follow.",
+    mock: {
+      error: {
+        name: 'TypeError',
+        message: 'fetch failed',
+        cause: { code: 'UND_ERR_CONNECT_TIMEOUT', message: 'Connect Timeout Error' },
+      },
+    },
+    compute: (mock) => ({
+      'What the message says on its own': mock.error.message,
+      'describeFetchError(error, 15000)': describeFetchError(mock.error, 15_000),
     }),
   }),
 ]);

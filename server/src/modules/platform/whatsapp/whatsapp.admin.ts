@@ -10,6 +10,19 @@ import {
 } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENTS, isRequiredWaCategory } from './whatsapp.events';
 import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
+
+export interface WaDefaultMedia {
+  url: string;
+  filename: string;
+}
+
+type GlobalRowMedia = { override_media_url?: string; override_media_filename?: string } | undefined;
+
+/** The global row's own asset pair — see {@link WA_GLOBAL_KEY}. */
+const defaultMediaOf = (global: GlobalRowMedia): WaDefaultMedia => ({
+  url: global?.override_media_url ?? '',
+  filename: global?.override_media_filename ?? '',
+});
 import { WaMessageLogModel } from './waMessageLog.model';
 
 /**
@@ -32,7 +45,9 @@ function blockerFor(
   template: AisensyTemplate | undefined,
   declaredParams: number,
   cachedMediaUrl: string,
-  overrideMediaUrl: string
+  overrideMediaUrl: string,
+  /** The platform default — one image, so it only ever covers an IMAGE header. */
+  defaultMediaUrl: string
 ): string {
   if (!campaign) return `No AiSensy campaign named "${campaignName}"`;
   if (campaign.status && campaign.status !== 'LIVE') return `Campaign is ${campaign.status}`;
@@ -46,11 +61,20 @@ function blockerFor(
   // an optimisation rather than something an operator has to remember.
   //
   // A media-header template with NO asset anywhere — not on the campaign (the
-  // API cannot attach one), not cached, not set by an admin — is the one case
-  // nothing can bind, because there is nothing to bind. Only an operator can
-  // fix it.
+  // API cannot attach one), not cached, not set on the row, and no platform
+  // default — is the one case nothing can bind, because there is nothing to
+  // bind. Only an operator can fix it, and the default is the one-click fix.
+  const coveredByDefault = template.header_format === 'IMAGE' && !!defaultMediaUrl;
   if (template.needs_media && !campaign.media_url && !cachedMediaUrl && !overrideMediaUrl) {
-    return 'Template needs a header asset — set media on this row, or attach it to the campaign in the AiSensy console';
+    if (coveredByDefault) return '';
+    // A VIDEO or FILE header is not covered by the default, which is one
+    // image — the five FILE templates are the payment ones, and each wants
+    // that send's own invoice.
+    const needsOwn = template.header_format && template.header_format !== 'IMAGE';
+    if (needsOwn) {
+      return `Template needs its own header ${template.header_format.toLowerCase()} — set media on this row`;
+    }
+    return 'Template needs a header asset — set the default header image under Settings, or set media on this row';
   }
   return '';
 }
@@ -93,6 +117,7 @@ export const whatsappAdminService = {
     ]);
     const byKey = new Map(settings.map((row) => [row.event_key, row]));
     const global = byKey.get(WA_GLOBAL_KEY);
+    const defaultMedia = defaultMediaOf(global);
 
     const rows = WA_EVENTS.map((event) => {
       const campaign = live.campaigns.get(event.campaign);
@@ -113,6 +138,7 @@ export const whatsappAdminService = {
         template_status: template?.status ?? '',
         template_category: template?.category ?? '',
         template_params: template?.param_count ?? 0,
+        template_header_format: template?.header_format ?? '',
         media_url: campaign?.media_url ?? '',
         override_media_url: setting?.override_media_url ?? '',
         override_media_filename: setting?.override_media_filename ?? '',
@@ -124,7 +150,8 @@ export const whatsappAdminService = {
               template,
               event.params.length,
               setting?.media_url ?? '',
-              setting?.override_media_url ?? ''
+              setting?.override_media_url ?? '',
+              defaultMedia.url
             )
           : '',
       };
@@ -132,10 +159,26 @@ export const whatsappAdminService = {
 
     return {
       global_enabled: global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED,
+      default_media_url: defaultMedia.url,
+      default_media_filename: defaultMedia.filename,
       catalogue_ok: live.ok,
       catalogue_error: live.error,
       rows,
     };
+  },
+
+  /**
+   * The platform default header asset alone — what the Settings tab reads.
+   *
+   * Separate from `scenarios()` on purpose: that one joins the whole registry
+   * against two AiSensy reads, and a settings card that only wants to show one
+   * URL must not pay for them.
+   */
+  async defaultMedia(): Promise<WaDefaultMedia> {
+    const global = await WaEventSettingModel.findOne({ event_key: WA_GLOBAL_KEY })
+      .select('override_media_url override_media_filename')
+      .lean();
+    return defaultMediaOf(global ?? undefined);
   },
 
   /** Flip one scenario, or the global switch when `event_key` is `__global__`. */
@@ -149,7 +192,9 @@ export const whatsappAdminService = {
   },
 
   /**
-   * Set or clear (empty url) the admin's own header asset for one scenario.
+   * Set or clear (empty url) the admin's own header asset for one scenario —
+   * or, with `__global__` as the key, the platform DEFAULT every media-header
+   * scenario falls back to.
    *
    * It writes ONLY the override pair. The campaign cache (`media_url` /
    * `media_filename`) belongs to reconcile, which overwrites it wholesale on
@@ -175,6 +220,11 @@ export const whatsappAdminService = {
           override_media_filename: mediaUrl ? filename.trim() : '',
           updated_by: actorId(actor),
         },
+        // The schema default for `enabled` is true, which is right for a
+        // scenario row (absent means ON) and wrong for the global row (absent
+        // means nobody has turned WhatsApp on). Without this, setting the
+        // default asset on a fresh database would flip the kill switch on.
+        $setOnInsert: { enabled: eventKey === WA_GLOBAL_KEY ? WA_GLOBAL_DEFAULT_ENABLED : true },
       },
       { upsert: true }
     );
@@ -208,6 +258,9 @@ export const whatsappAdminService = {
               // blank over it is how a custom asset would silently vanish.
               media_url: campaign?.media_url ?? '',
               media_filename: campaign?.media_filename ?? '',
+              // The header KIND, because the platform default is one image and
+              // the send path cannot ask AiSensy per message.
+              template_header_format: template?.header_format ?? '',
               // Stamped so the send path knows a blank asset means "this
               // campaign has none" rather than "nobody has looked yet".
               media_synced_at: new Date(),

@@ -8,8 +8,8 @@ import {
   type FulfilmentStatus,
   type IProductOrder,
 } from './productOrder.model';
-import { InventoryProductModel, type IInventoryProduct } from '@modules/venues/inventory/inventory.model';
-import { notifyProductOwner } from '@modules/venues/inventory/inventory.service';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { availableOf, notifyStockCrossings } from '@modules/venues/inventory/inventory.service';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -160,18 +160,6 @@ async function buildLineItem(line: any, session?: ClientSession) {
 }
 
 /**
- * "Out of stock" is the CROSSING, not the state — without a before-value every
- * later order of an already-empty product would send the brand another message.
- * `$inc` is atomic, so the count before this decrement is exactly `after + qty`
- * and no second read can disagree with it.
- */
-async function notifyStockOutIfEmptied(product: IInventoryProduct, qty: number) {
-  const after = Number(product.inventory_count) || 0;
-  if (after > 0 || after + qty <= 0) return;
-  await notifyProductOwner(product, 'ECOMM_STOCK_OUT', Math.max(0, after));
-}
-
-/**
  * Point-of-sale stock movement for a freshly created order: decrement the
  * product's inventory (and the bought variant's own count), and step the pod
  * row's sold_count so the pod's available_count reflects real sales. Runs only
@@ -193,19 +181,32 @@ async function recordStockForOrder(order: IProductOrder, session?: ClientSession
       inc['variants.$[v].inventory_count'] = -qty;
       options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
     }
-    if (order.pod_id) {
-      // Pod-channel sales consume units the pod had reserved — release that
-      // share of the reservation so available stock stays truthful.
-      inc.requested_count = -qty;
+    // Pod-channel sales consume units the pod had reserved — release that
+    // share of the reservation so available stock stays truthful.
+    const reservationReleased = order.pod_id ? qty : 0;
+    if (reservationReleased) {
+      inc.requested_count = -reservationReleased;
     }
-    // findOneAndUpdate rather than updateOne so the post-decrement count comes
-    // back with the write that caused it — see notifyStockOutIfEmptied.
+    // findOneAndUpdate rather than updateOne so the post-decrement counts come
+    // back with the write that caused them — a crossing needs both sides.
     const product = await InventoryProductModel.findOneAndUpdate(
       { _id: item.product_id },
       { $inc: inc },
       { ...options, new: true }
     );
-    if (product) await notifyStockOutIfEmptied(product, qty);
+    if (product) {
+      // `$inc` is atomic, so this decrement IS the difference: adding it back
+      // to the returned doc is the state before the sale, and no second read
+      // can disagree with it. A pod-channel sale drops inventory and
+      // reservation together, so AVAILABLE does not move and nothing is sent —
+      // it already crossed when the pod reserved the units.
+      const beforeAvailable = availableOf({
+        inventory_count: (product.inventory_count ?? 0) + qty,
+        requested_count: (product.requested_count ?? 0) + reservationReleased,
+        reserved_count: product.reserved_count ?? 0,
+      });
+      await notifyStockCrossings(product, beforeAvailable);
+    }
     if (order.pod_id) {
       await PodModel.updateOne(
         { _id: order.pod_id, 'product_requests.product_id': item.product_id },

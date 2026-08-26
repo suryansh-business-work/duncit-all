@@ -4,10 +4,13 @@ import {
   buildPodFeedbackInput,
   canSubmitPodFeedback,
   orderedAspects,
+  type PodFeedbackReminderChoice,
   type PodFeedbackScores,
 } from '@duncit/utils';
+import { logs } from '@duncit/logs';
 
 import { PodFeedbackFields } from '@/components/support/PodFeedbackFields';
+import { PodFeedbackReminder } from '@/components/support/PodFeedbackReminder';
 import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -26,9 +29,10 @@ const SCRIM_PADDING = 24;
  */
 export function PodFeedbackPrompt() {
   const { t } = useTranslation();
-  const { getPendingPodFeedback, submitPodFeedback } = useBouncer();
+  const { getPendingPodFeedback, submitPodFeedback, remindPodFeedback } = useBouncer();
   const [pod, setPod] = useState<PendingPodFeedback>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [asking, setAsking] = useState(false);
   const [scores, setScores] = useState<PodFeedbackScores>({});
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -51,6 +55,20 @@ export function PodFeedbackPrompt() {
   const ready = canSubmitPodFeedback(scores);
 
   if (!pod || dismissed) return null;
+
+  /**
+   * Closing the prompt is an answer in its own right, so it is written down.
+   * The sheet goes first: a guest who just said "stop asking" should not be
+   * held in front of it by a slow request, and a failed write only means the
+   * next launch asks once more.
+   */
+  const remind = (choice: PodFeedbackReminderChoice) => {
+    setAsking(false);
+    setDismissed(true);
+    remindPodFeedback(pod.id, choice).catch((error) =>
+      logs.mobileApp.error('PodFeedbackPrompt', 'remind', { error, choice }),
+    );
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -81,77 +99,81 @@ export function PodFeedbackPrompt() {
       padding={SCRIM_PADDING}
       paddingBottom={SCRIM_PADDING + keyboardInset}
     >
-      <YStack
-        width="100%"
-        maxWidth={360}
-        maxHeight="90%"
-        gap={12}
-        padding={20}
-        borderRadius={16}
-        backgroundColor="$background"
-      >
-        <Text fontSize={16} fontWeight="700" color="$color">
-          {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
-        </Text>
-        <Text fontSize={12} color="$muted">
-          {t('mweb.podFeedback.subtitle')}
-        </Text>
-
-        {/* Seven rows plus a keyboard on a small phone: the sheet scrolls
-            rather than pushing its buttons off the screen. */}
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <PodFeedbackFields
-            aspects={aspects}
-            scores={scores}
-            onScore={(aspect, value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
-            message={message}
-            onMessage={setMessage}
-          />
-        </ScrollView>
-        {failed && (
-          <Text testID="pod-feedback-error" fontSize={12} color="$red10">
-            {t('mweb.podFeedback.failed')}
+      {asking ? (
+        <PodFeedbackReminder title={pod.title} onChoose={remind} />
+      ) : (
+        <YStack
+          width="100%"
+          maxWidth={360}
+          maxHeight="90%"
+          gap={12}
+          padding={20}
+          borderRadius={16}
+          backgroundColor="$background"
+        >
+          <Text fontSize={16} fontWeight="700" color="$color">
+            {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
           </Text>
-        )}
+          <Text fontSize={12} color="$muted">
+            {t('mweb.podFeedback.subtitle')}
+          </Text>
 
-        <XStack gap={8} justifyContent="flex-end">
-          <XStack
-            testID="pod-feedback-skip"
-            role="button"
-            aria-label={t('mweb.podFeedback.skip')}
-            onPress={() => setDismissed(true)}
-            height={42}
-            paddingHorizontal={18}
-            alignItems="center"
-            justifyContent="center"
-            borderRadius={999}
-            borderWidth={1}
-            borderColor="$borderColor"
-          >
-            <Text fontSize={14} fontWeight="600" color="$color">
-              {t('mweb.podFeedback.skip')}
+          {/* Seven rows plus a keyboard on a small phone: the sheet scrolls
+              rather than pushing its buttons off the screen. */}
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <PodFeedbackFields
+              aspects={aspects}
+              scores={scores}
+              onScore={(aspect, value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
+              message={message}
+              onMessage={setMessage}
+            />
+          </ScrollView>
+          {failed && (
+            <Text testID="pod-feedback-error" fontSize={12} color="$red10">
+              {t('mweb.podFeedback.failed')}
             </Text>
+          )}
+
+          <XStack gap={8} justifyContent="flex-end">
+            <XStack
+              testID="pod-feedback-skip"
+              role="button"
+              aria-label={t('mweb.podFeedback.close')}
+              onPress={() => setAsking(true)}
+              height={42}
+              paddingHorizontal={18}
+              alignItems="center"
+              justifyContent="center"
+              borderRadius={999}
+              borderWidth={1}
+              borderColor="$borderColor"
+            >
+              <Text fontSize={14} fontWeight="600" color="$color">
+                {t('mweb.podFeedback.close')}
+              </Text>
+            </XStack>
+            <XStack
+              testID="pod-feedback-submit"
+              role="button"
+              aria-label={t('mweb.podFeedback.submit')}
+              aria-disabled={!ready || busy}
+              onPress={!ready || busy ? undefined : () => void submit()}
+              height={42}
+              paddingHorizontal={18}
+              alignItems="center"
+              justifyContent="center"
+              borderRadius={999}
+              backgroundColor="$primary"
+              opacity={!ready || busy ? 0.5 : 1}
+            >
+              <Text fontSize={14} fontWeight="600" color="$onPrimary">
+                {busy ? t('mweb.podFeedback.submitting') : t('mweb.podFeedback.submit')}
+              </Text>
+            </XStack>
           </XStack>
-          <XStack
-            testID="pod-feedback-submit"
-            role="button"
-            aria-label={t('mweb.podFeedback.submit')}
-            aria-disabled={!ready || busy}
-            onPress={!ready || busy ? undefined : () => void submit()}
-            height={42}
-            paddingHorizontal={18}
-            alignItems="center"
-            justifyContent="center"
-            borderRadius={999}
-            backgroundColor="$primary"
-            opacity={!ready || busy ? 0.5 : 1}
-          >
-            <Text fontSize={14} fontWeight="600" color="$onPrimary">
-              {busy ? t('mweb.podFeedback.submitting') : t('mweb.podFeedback.submit')}
-            </Text>
-          </XStack>
-        </XStack>
-      </YStack>
+        </YStack>
+      )}
     </YStack>
   );
 }

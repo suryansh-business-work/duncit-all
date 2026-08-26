@@ -31,7 +31,15 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   ],
 
   // Money.
-  billing: ['payment-receipt', 'payment-release-approved', 'payout-statement', 'pod-refund'],
+  billing: [
+    'payment-receipt',
+    'payment-receipt-pod',
+    'payment-receipt-product',
+    'payment-receipt-gift-card',
+    'payment-release-approved',
+    'payout-statement',
+    'pod-refund',
+  ],
 
   // Staff only — never reaches a customer.
   internal: [

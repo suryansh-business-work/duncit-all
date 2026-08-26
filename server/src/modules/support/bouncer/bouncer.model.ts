@@ -176,3 +176,39 @@ const feedbackSchema = new Schema<IBouncerFeedback>(
 feedbackSchema.index({ user_id: 1, pod_id: 1 });
 
 export const BouncerFeedbackModel = model<IBouncerFeedback>('BouncerFeedback', feedbackSchema);
+
+/**
+ * What a guest chose when they closed the rating prompt without answering it.
+ * LATER puts the same pod back in front of them on a later visit; NEVER means
+ * this pod is finished asking.
+ */
+export const POD_FEEDBACK_REMINDERS = ['LATER', 'NEVER'] as const;
+export type PodFeedbackReminderChoice = (typeof POD_FEEDBACK_REMINDERS)[number];
+
+export interface IPodFeedbackReminder extends Document {
+  user_id: Types.ObjectId;
+  pod_id: Types.ObjectId;
+  choice: PodFeedbackReminderChoice;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const reminderSchema = new Schema<IPodFeedbackReminder>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true, index: true },
+    choice: { type: String, enum: POD_FEEDBACK_REMINDERS, required: true },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+// One answer per guest per pod: closing the prompt a second time changes the
+// answer rather than stacking a second row whose age would then be wrong. The
+// snooze window is measured from `updated_at`, so the upsert has to land on the
+// same document every time.
+reminderSchema.index({ user_id: 1, pod_id: 1 }, { unique: true });
+
+export const PodFeedbackReminderModel = model<IPodFeedbackReminder>(
+  'PodFeedbackReminder',
+  reminderSchema
+);

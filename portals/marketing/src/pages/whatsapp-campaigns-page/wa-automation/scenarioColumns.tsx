@@ -24,6 +24,8 @@ interface ColumnDeps {
   onToggle: (eventKey: string, enabled: boolean) => void;
   /** Opens the header-asset dialog for one row. */
   onSetMedia: (row: WaScenario) => void;
+  /** The platform default header asset, off the board. */
+  defaultMediaUrl: string;
 }
 
 /**
@@ -37,6 +39,7 @@ export function getScenarioColumns({
   busyKey,
   onToggle,
   onSetMedia,
+  defaultMediaUrl,
 }: Readonly<ColumnDeps>): DuncitColumn<WaScenario>[] {
   const firesLabel = t('adminWhatsapp.firesLabel');
   const paramsLabel = t('adminWhatsapp.paramsLabel');
@@ -47,6 +50,7 @@ export function getScenarioColumns({
     NOT_NEEDED: t('adminWhatsapp.mediaNotNeeded'),
     MISSING: t('adminWhatsapp.mediaNone'),
     CAMPAIGN: t('adminWhatsapp.mediaFromCampaign'),
+    DEFAULT: t('adminWhatsapp.mediaDefault'),
     CUSTOM: t('adminWhatsapp.mediaCustom'),
   };
   const setMediaLabel = t('adminWhatsapp.setMedia');
@@ -128,10 +132,11 @@ export function getScenarioColumns({
           row={row}
           stateLabels={mediaStateLabels}
           setLabel={setMediaLabel}
+          defaultUrl={defaultMediaUrl}
           onOpen={onSetMedia}
         />
       ),
-      valueGetter: (row) => mediaStateLabels[mediaStateFor(row)],
+      valueGetter: (row) => mediaStateLabels[mediaStateFor(row, defaultMediaUrl)],
     },
     {
       field: 'blocker',

@@ -115,6 +115,26 @@ export function scoresFromMyFeedback(mine: MyPodFeedback | null | undefined): Po
   return scores;
 }
 
+/**
+ * What a guest chose when they closed the rating prompt without answering it.
+ * The server holds the answer, so it survives a reload — which is the whole
+ * point: an in-memory dismiss asks the same question again on the next screen.
+ */
+export type PodFeedbackReminderChoice = 'LATER' | 'NEVER';
+
+/**
+ * The two ways out of the prompt, in the order they are offered, keyed to the
+ * words rather than carrying them (rule 38). Shared so mWeb and the native app
+ * cannot end up offering different escapes from the same dialog.
+ */
+export const POD_FEEDBACK_REMINDER_OPTIONS: ReadonlyArray<{
+  choice: PodFeedbackReminderChoice;
+  labelKey: string;
+}> = [
+  { choice: 'LATER', labelKey: 'mweb.podFeedback.remindLater' },
+  { choice: 'NEVER', labelKey: 'mweb.podFeedback.remindNever' },
+];
+
 export interface PodFeedbackInput {
   pod_id: string;
   rating: number;

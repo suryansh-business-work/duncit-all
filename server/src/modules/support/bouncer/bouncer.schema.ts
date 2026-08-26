@@ -218,6 +218,15 @@ export const bouncerTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  What a guest chose when they closed the rating prompt without answering it.
+  LATER puts the pod back in front of them on a later visit; NEVER retires it.
+  """
+  enum PodFeedbackReminderChoice {
+    LATER
+    NEVER
+  }
+
   extend type Query {
     bouncerSupportTarget: BouncerSupportTarget!
     bouncerSosAlerts(
@@ -271,5 +280,10 @@ export const bouncerTypeDefs = /* GraphQL */ `
       conclusion: String
     ): BouncerCallbackRequest!
     submitBouncerFeedback(input: SubmitBouncerFeedbackInput!): BouncerFeedback!
+    """
+    Record that the guest closed the rating prompt for this pod, and whether to
+    ask again — so the pop-up stops reappearing on every page load.
+    """
+    remindPodFeedback(pod_id: ID!, choice: PodFeedbackReminderChoice!): Boolean!
   }
 `;

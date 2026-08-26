@@ -13,3 +13,13 @@ export const AADHAR_PATTERN = /^\d{12}$/;
 export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 export const OTP_PATTERN = /^\d{4,8}$/;
 export const POSTAL_CODE_PATTERN = /^[\dA-Za-z -]{3,12}$/;
+/**
+ * An absolute http(s) link — the only shape a third party can fetch.
+ *
+ * AiSensy fetches a WhatsApp header asset itself at send time, so a relative
+ * path, a blob: URL or a mailto: fails once per recipient; `optionalUrl` is
+ * deliberately wider than this. Loose beyond the scheme on purpose: whether
+ * the host resolves is the vendor's answer, and a stricter pattern only
+ * refuses valid CDN links.
+ */
+export const PUBLIC_URL_PATTERN = /^https?:\/\/\S+$/i;

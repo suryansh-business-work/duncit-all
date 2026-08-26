@@ -5,6 +5,7 @@ import {
   PAN_PATTERN,
   PERSON_NAME_PATTERN,
   PHONE_NUMBER_PATTERN,
+  PUBLIC_URL_PATTERN,
   SLUG_KEY_PATTERN,
   zodRules,
 } from '@duncit/forms';
@@ -51,6 +52,9 @@ export default defineDemos('forms', [
           : parsed.error.issues.map((issue) => `${issue.path.join('.')} — ${issue.message}`),
         'PERSON_NAME_PATTERN': PERSON_NAME_PATTERN.test(mock.full_name),
         'PHONE_NUMBER_PATTERN': PHONE_NUMBER_PATTERN.test(mock.phone_number),
+        'PUBLIC_URL_PATTERN (a WhatsApp header asset)': PUBLIC_URL_PATTERN.test(
+          'https://ik.imagekit.io/duncit/whatsapp/pod-header.jpg'
+        ),
         'PAN_PATTERN': PAN_PATTERN.test(mock.pan),
         'AADHAR_PATTERN': AADHAR_PATTERN.test(mock.aadhar),
         'GSTIN_PATTERN': GSTIN_PATTERN.test(mock.gstin),

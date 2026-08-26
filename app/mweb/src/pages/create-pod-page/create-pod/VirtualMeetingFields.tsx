@@ -87,7 +87,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
           name="pod_end_date_time"
           render={({ field }) => (
             <DateTimePicker
-              label={t('mweb.createPod.endDateTime')}
+              label={requiredLabel(t('mweb.createPod.endDateTime'), true)}
               value={field.value}
               onChange={field.onChange}
               minDateTime={minEndDateTime}

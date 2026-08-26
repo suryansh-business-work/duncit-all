@@ -178,6 +178,11 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
       }
+      // A virtual pod's window is what marks a joining member present, so it
+      // needs an end — the server refuses one without. Native twin.
+      if (values.pod_mode === 'VIRTUAL' && !values.pod_end_date_time) {
+        ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: t('mweb.createPod.validation.endRequiredVirtual') });
+      }
       if (values.pod_end_date_time && values.pod_end_date_time <= values.pod_date_time) {
         ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: t('mweb.createPod.validation.endAfterStart') });
       } else if (

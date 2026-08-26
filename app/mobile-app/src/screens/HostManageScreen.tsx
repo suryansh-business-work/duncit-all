@@ -2,38 +2,28 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { semantic } from '@duncit/auth-tokens';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm';
 import { HostApplyBanner } from '@/components/host-manage/HostApplyBanner';
 import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard';
+import { HostDraftsSection } from '@/components/host-manage/HostDraftsSection';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { useHostPayouts } from '@/hooks/useHostPayouts';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { STEP_TITLES } from '@/components/create-pod';
-import { useAppSettings } from '@/hooks/useAppSettings';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
-import { formatDate } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
-
-function formatWhen(value?: string | null) {
-  if (!value) return '';
-  const date = new Date(value);
-  return formatDate(date);
-}
 
 /** Hosts Management — start a new pod and resume/delete in-progress drafts. */
 export function HostManageScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { danger, color: ink } = useThemeColors();
-  const { draftRetentionDays } = useAppSettings();
+  const { color: ink } = useThemeColors();
   const { drafts, isLoading, remove } = useHostDrafts();
   // Owned here (not inside HostShareSection) so completing a pod in the pods
   // section can refetch the share list it just changed.
@@ -94,92 +84,12 @@ export function HostManageScreen() {
 
           <HostShareSection {...payoutsApi} />
 
-          <Text fontSize={16} fontWeight="700" color="$color">
-            Draft pods
-          </Text>
-          {drafts.length > 0 ? (
-            <XStack
-              testID="draft-retention-note"
-              gap={8}
-              padding={12}
-              borderRadius={12}
-              borderWidth={1}
-              borderColor="$borderColor"
-              backgroundColor="$surface"
-              alignItems="flex-start"
-            >
-              <MaterialIcons name="schedule" size={16} color={semantic.warning} />
-              <Text flex={1} fontSize={12.5} color="$muted">
-                Draft Pods are automatically deleted after {draftRetentionDays} days of being saved.
-                Please publish your Pod before it expires.
-              </Text>
-            </XStack>
-          ) : null}
-          {isLoading ? <Spinner testID="host-manage-loading" color="$primary" /> : null}
-          {!isLoading && drafts.length === 0 ? (
-            <Text testID="host-manage-empty" fontSize={13} color="$muted">
-              No drafts yet. Pods you start saving will show up here.
-            </Text>
-          ) : null}
-          {drafts.map((draft) => {
-            const stepLabel = STEP_TITLES[Math.min(draft.step, STEP_TITLES.length - 1)];
-            const when = formatWhen(draft.updated_at);
-            return (
-              <YStack
-                key={draft.id}
-                gap={8}
-                padding={12}
-                borderRadius={12}
-                borderWidth={1}
-                borderColor="$borderColor"
-                backgroundColor="$surface"
-              >
-                <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
-                  {draft.pod_title || 'Untitled pod'}
-                </Text>
-                <Text fontSize={12} color="$muted">
-                  Step {Math.min(draft.step + 1, STEP_TITLES.length)}/{STEP_TITLES.length} ·{' '}
-                  {stepLabel}
-                  {when ? ` · ${when}` : ''}
-                </Text>
-                <XStack gap={10} alignItems="center">
-                  <XStack
-                    testID={`draft-continue-${draft.id}`}
-                    role="button"
-                    aria-label={t('mweb.hostManage.continueDraft')}
-                    onPress={() => navigation.navigate('CreatePod', { draftId: draft.id })}
-                    flex={1}
-                    height={42}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={10}
-                    backgroundColor="$primary"
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    <Text fontSize={13} fontWeight="700" color="$onPrimary">
-                      Continue
-                    </Text>
-                  </XStack>
-                  <XStack
-                    testID={`draft-delete-${draft.id}`}
-                    role="button"
-                    aria-label={t('mweb.common.deleteDraft2')}
-                    onPress={() => setTarget(draft.id)}
-                    width={42}
-                    height={42}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={10}
-                    borderWidth={1}
-                    borderColor="$borderColor"
-                    pressStyle={{ opacity: 0.7 }}
-                  >
-                    <MaterialIcons name="delete-outline" size={20} color={danger} />
-                  </XStack>
-                </XStack>
-              </YStack>
-            );
-          })}
+          <HostDraftsSection
+            drafts={drafts}
+            isLoading={isLoading}
+            onContinue={(draftId) => navigation.navigate('CreatePod', { draftId })}
+            onDelete={setTarget}
+          />
         </YStack>
       </ScrollView>
       {target ? (

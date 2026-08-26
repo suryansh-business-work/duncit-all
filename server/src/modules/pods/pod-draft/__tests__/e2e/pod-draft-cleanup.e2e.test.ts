@@ -14,11 +14,12 @@ afterAll(async () => {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Force a draft's last-save timestamp without tripping mongoose auto-timestamps. */
+/** Force a draft's CREATION date without tripping mongoose auto-timestamps —
+ * the sweep counts from creation, never from the last autosave. */
 async function ageDraft(id: Types.ObjectId, daysAgo: number) {
   await PodDraftModel.updateOne(
     { _id: id },
-    { $set: { updated_at: new Date(Date.now() - daysAgo * DAY_MS) } },
+    { $set: { created_at: new Date(Date.now() - daysAgo * DAY_MS) } },
     { timestamps: false },
   );
 }
@@ -33,8 +34,8 @@ describe('runPodDraftCleanup', () => {
     const uid = new Types.ObjectId();
     const stale = await PodDraftModel.create({ user_id: uid, pod_title: 'Stale', payload: '{}' });
     const fresh = await PodDraftModel.create({ user_id: uid, pod_title: 'Fresh', payload: '{}' });
-    await ageDraft(stale._id as Types.ObjectId, 5); // older than the 3-day window
-    await ageDraft(fresh._id as Types.ObjectId, 1); // still within the window
+    await ageDraft(stale._id as Types.ObjectId, 5); // created before the 3-day window
+    await ageDraft(fresh._id as Types.ObjectId, 1); // created inside the window
 
     const removed = await runPodDraftCleanup();
 

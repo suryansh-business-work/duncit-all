@@ -87,6 +87,11 @@ function refineDates(values: PodFormValues, ctx: z.RefinementCtx) {
   } else if (values.pod_date_time.getTime() <= Date.now()) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_date_time'], message: 'Start date/time must be after current date/time' });
   }
+  // A physical pod's end comes off its booked slot; a virtual pod has no slot,
+  // and its end is what closes the meeting link's attendance window.
+  if (values.pod_mode === 'VIRTUAL' && !values.pod_end_date_time) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_end_date_time'], message: 'End date/time is required for a virtual pod' });
+  }
   if (
     values.pod_end_date_time &&
     values.pod_date_time &&

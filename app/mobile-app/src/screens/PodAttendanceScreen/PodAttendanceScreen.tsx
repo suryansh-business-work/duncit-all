@@ -3,7 +3,12 @@ import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, YStack } from 'tamagui';
-import { mwebAttendanceLabels, splitAttendance } from '@duncit/utils';
+import {
+  canScanTickets,
+  earningsBodyFor,
+  mwebAttendanceLabels,
+  splitAttendance,
+} from '@duncit/utils';
 
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { StackScreen } from '@/components/StackScreen';
@@ -70,7 +75,7 @@ export function PodAttendanceScreen() {
       <YStack gap={16}>
         <AttendanceSummary board={data} labels={labels} />
         {data.can_mark ? (
-          <EarningsNotice labels={labels} />
+          <EarningsNotice labels={labels} body={earningsBodyFor(data, labels)} />
         ) : (
           <LockedNotice lock={data.lock} labels={labels} />
         )}
@@ -104,7 +109,9 @@ export function PodAttendanceScreen() {
           formatDateTime={formatDateTime}
         />
 
-        {data.can_mark ? (
+        {/* A virtual pod has no door: its members are marked when they open the
+            meeting link, so there is nothing to scan. */}
+        {canScanTickets(data) ? (
           <PillButton
             testID="attendance-scan-cta"
             label={labels.scanCta}

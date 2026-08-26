@@ -13,6 +13,11 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/constants/config', () => ({ config: { googleMapApiKey: 'KEY' } }));
 
+/** The join handler for a physical pod, which renders no Join button. It
+ * rejects rather than resolves so a button appearing on the wrong pod mode
+ * shows up as a failure instead of passing quietly. */
+const neverJoined = () => Promise.reject(new Error('not a virtual pod'));
+
 const basePod = {
   pod_title: 'Jam',
   host_names: ['Asha'],
@@ -49,7 +54,9 @@ describe('PodSchedule venue without coordinates', () => {
       lng: null,
     } as never;
     const pod = { pod_mode: 'PHYSICAL', pod_date_time: null, zone_name: 'Z' } as never;
-    renderWithProviders(<PodSchedule pod={pod} venue={venue} location={null} />);
+    renderWithProviders(
+      <PodSchedule pod={pod} venue={venue} location={null} onJoinMeeting={neverJoined} />,
+    );
     expect(screen.getByTestId('pod-map')).toBeOnTheScreen();
   });
 });

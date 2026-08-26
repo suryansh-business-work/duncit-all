@@ -17,6 +17,8 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     CLUB_ADMIN_FORCE
     "A Duncit admin checked the ticket in."
     ADMIN
+    "They opened a virtual pod's meeting link as a joined member, inside the pod window — the online equivalent of the door scan."
+    VIRTUAL_JOIN
   }
 
   """
@@ -86,6 +88,8 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     pod_title: String!
     pod_date_time: String
     pod_end_date_time: String
+    "PHYSICAL or VIRTUAL. A virtual pod has no door to scan at: a member is marked when they open the meeting link."
+    pod_mode: PodMode!
     viewer: PodAttendanceViewer!
     lock: PodAttendanceLock!
     "False once the pod is completed or cancelled — nothing can be marked then."
@@ -120,7 +124,31 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     podAttendanceBoard(pod_doc_id: ID!): PodAttendanceBoard!
   }
 
+  """
+  What a joined member gets back when they open a virtual pod's meeting.
+
+  The link itself is also readable on the Pod (gated to joined members), so
+  this is not the only way to see it — it is the way that COUNTS: opening it
+  through here, inside the pod window, marks the booking present.
+  """
+  type PodMeetingAccess {
+    meeting_url: String!
+    meeting_notes: String
+    "True when this open marked the booking present (or it already was)."
+    attendance_marked: Boolean!
+  }
+
   extend type Mutation {
+    """
+    Open a virtual pod's meeting as a joined member.
+
+    Returns the link, and — inside the pod window (from an hour before the
+    start to an hour after the end) — marks the booking present through the
+    same write every other attendance path uses, as VIRTUAL_JOIN. A host
+    opening their own pod's link is handed the link and marks nothing: hosts
+    are never attendees of their own pod.
+    """
+    joinPodMeeting(pod_doc_id: ID!): PodMeetingAccess!
     "Send the attendee a one-time code over the chosen medium(s)."
     requestPodAttendanceOtp(input: PodAttendanceOtpInput!): PhoneOtpRequestResult!
     "Check the code the attendee read out. Spending it happens at the mark."

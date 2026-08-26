@@ -16,6 +16,12 @@ interface Props {
    * rate it are all meaningless then — the host resubmits or cancels instead.
    */
   venueRejected: boolean;
+  /**
+   * The pod has ended. Completion is the settlement — it prices the payout off
+   * the seats scanned in — so it is offered on a PAST pod only: an upcoming or
+   * ongoing pod would freeze the answer while the door is still open.
+   */
+  canComplete: boolean;
   onClose: () => void;
   onScan: () => void;
   onSeeAttendance: () => void;
@@ -40,6 +46,7 @@ export function PodActionsSheet({
   open,
   podTitle,
   venueRejected,
+  canComplete,
   onClose,
   onScan,
   onSeeAttendance,
@@ -98,7 +105,7 @@ export function PodActionsSheet({
           tint={warning}
           onPress={onSlotRequest}
         />
-        {showAttendeeActions ? (
+        {showAttendeeActions && canComplete ? (
           <ActionRow
             testID="pod-action-complete"
             icon="task-alt"

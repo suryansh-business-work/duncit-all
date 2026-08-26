@@ -312,6 +312,24 @@ export const JoinFreePodDocument = gql(`
   }
 `);
 
+/**
+ * Open a virtual pod's meeting as a joined member.
+ *
+ * The link is also readable on the Pod, but THIS is the way that counts: inside
+ * the pod window the call marks the booking present as VIRTUAL_JOIN — the
+ * online equivalent of the door scan, and what a virtual host is paid on. A
+ * host asking for their own link is handed it and marks nothing.
+ */
+export const JoinPodMeetingDocument = gql(`
+  mutation MobileJoinPodMeeting($podId: ID!) {
+    joinPodMeeting(pod_doc_id: $podId) {
+      meeting_url
+      meeting_notes
+      attendance_marked
+    }
+  }
+`);
+
 /** Seats each attendee's booking holds — the "+N other members" label. Mirrors
  * mWeb's POD_ATTENDEE_SEATS (rule 27). */
 export const PodAttendeeSeatsDocument = gql(`

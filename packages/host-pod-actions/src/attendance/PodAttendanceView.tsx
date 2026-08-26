@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Alert, Button, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import {
+  canScanTickets,
+  earningsBodyFor,
   splitAttendance,
   type PodAttendanceLabels,
   type PodAttendanceRow as AttendanceRowData,
@@ -117,11 +119,14 @@ export default function PodAttendanceView({
   const { marked, unmarked } = splitAttendance(board.rows);
   // Hoisted out of the JSX so the conditional sits at nesting 0 (Sonar S3358).
   const onMark = board.can_mark ? api.startMark : undefined;
+  // A virtual pod's door is the meeting link: the payout sentence and the scanner follow the kind.
+  const earningsBody = earningsBodyFor(board, labels);
+  const showScan = canScanTickets(board);
 
   return (
     <Stack spacing={2} data-testid="pod-attendance-view">
       <AttendanceSummary board={board} labels={labels} />
-      {board.can_mark ? <EarningsNotice labels={labels} /> : <LockedNotice lock={board.lock} labels={labels} />}
+      {board.can_mark ? <EarningsNotice labels={labels} body={earningsBody} /> : <LockedNotice lock={board.lock} labels={labels} />}
 
       {board.rows.length === 0 && (
         <Typography variant="body2" sx={{
@@ -153,9 +158,9 @@ export default function PodAttendanceView({
         formatDateTime={formatDateTime}
       />
 
-      {/* Only the host has a door to scan at; a Club Admin reading the same
-          board is fixing a record after the fact. */}
-      {board.viewer === 'HOST' && board.can_mark && (
+      {/* Only the host has a door to scan at (a virtual pod has none); a Club
+          Admin reading the same board is fixing a record after the fact. */}
+      {showScan && (
         <ScanCta labels={labels} onScan={() => setScanOpen(true)} icon={<QrCodeScannerIcon />} />
       )}
 

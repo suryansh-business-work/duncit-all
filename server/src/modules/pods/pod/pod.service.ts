@@ -273,12 +273,29 @@ function validateAmount(type: PodType, amount: number) {
   }
 }
 
-function validateFutureDates(startValue?: string | Date | null, endValue?: string | Date | null) {
+/**
+ * The pod window.
+ *
+ * A physical pod's end comes off its booked slot, so it may be blank here. A
+ * VIRTUAL pod has no slot: its window is the only thing that says when the
+ * meeting is over — when the link stops counting as attendance, when the
+ * feedback ask fires — so it has to be given.
+ */
+function validateFutureDates(
+  startValue?: string | Date | null,
+  endValue?: string | Date | null,
+  requireEnd = false
+) {
   const now = Date.now();
   const start = startValue ? new Date(startValue) : null;
   const end = endValue ? new Date(endValue) : null;
   if (!start || Number.isNaN(start.getTime()) || start.getTime() <= now) {
     throw new GraphQLError('Start date/time must be after current date/time', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (requireEnd && !end) {
+    throw new GraphQLError('End date/time is required for a virtual pod', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -1463,18 +1480,29 @@ async function bookOrHoldSlotForPod(
   );
 }
 
-/** An edit only re-checks the pod window when the incoming start/end actually
- * differ from what is stored, so re-saving an untouched date still works. */
-function validatePodDatesForUpdate(input: any, doc: any) {
-  if (input.pod_date_time === undefined && input.pod_end_date_time === undefined) return;
+/** An edit only re-checks the pod window when the incoming start/end (or the
+ * mode, which decides whether an end is required) actually moves, so re-saving
+ * an untouched date still works — including a virtual pod created before its
+ * end became required, until somebody touches its schedule. */
+function validatePodDatesForUpdate(input: any, doc: any, nextMode: PodMode) {
+  const touchesSchedule =
+    input.pod_date_time !== undefined ||
+    input.pod_end_date_time !== undefined ||
+    input.pod_mode !== undefined;
+  if (!touchesSchedule) return;
   const nextStart = input.pod_date_time ?? doc.pod_date_time;
   const nextEnd = input.pod_end_date_time === undefined ? doc.pod_end_date_time : input.pod_end_date_time;
+  if (nextMode === 'VIRTUAL' && !nextEnd) {
+    throw new GraphQLError('End date/time is required for a virtual pod', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
   const startChanged = input.pod_date_time !== undefined
     && new Date(input.pod_date_time).getTime() !== doc.pod_date_time?.getTime();
   const nextEndTime = nextEnd ? new Date(nextEnd).getTime() : null;
   const docEndTime = doc.pod_end_date_time ? doc.pod_end_date_time.getTime() : null;
   const endChanged = input.pod_end_date_time !== undefined && nextEndTime !== docEndTime;
-  if (startChanged || endChanged) validateFutureDates(nextStart, nextEnd);
+  if (startChanged || endChanged) validateFutureDates(nextStart, nextEnd, nextMode === 'VIRTUAL');
 }
 
 /** A virtual pod carries no place; a physical one re-resolves its venue/location
@@ -1567,7 +1595,7 @@ async function applyPodEditCore(doc: any, input: any) {
     validateAmount(input.pod_type ?? doc.pod_type, input.pod_amount ?? doc.pod_amount);
   }
   validateMeetingDetails(nextMode, input, doc);
-  validatePodDatesForUpdate(input, doc);
+  validatePodDatesForUpdate(input, doc, nextMode);
   if (input.reel_url !== undefined) input.reel_url = normalizeReelUrl(input.reel_url);
 
   await applyPlaceForUpdate(doc, input, nextMode);
@@ -1995,7 +2023,7 @@ export const podService = {
       autoPodSlot?.autoPodId
     );
 
-    validateFutureDates(input.pod_date_time, input.pod_end_date_time);
+    validateFutureDates(input.pod_date_time, input.pod_end_date_time, podMode === 'VIRTUAL');
     validateMeetingDetails(podMode, input);
     const venueLocation = podMode === 'PHYSICAL'
       ? await resolveVenueLocation(input)

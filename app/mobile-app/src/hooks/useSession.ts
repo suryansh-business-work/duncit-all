@@ -8,6 +8,7 @@ import {
   initials as deriveInitials,
   makeDevice,
   normalizeMe,
+  subscribeSessionRevoked,
   subscribeUserChanged,
   type SessionDevice,
   type SessionSnapshot,
@@ -16,6 +17,7 @@ import {
 import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
 import { readDevice } from '@/services/device';
+import { endRejectedSession } from '@/services/session-guard';
 import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { patchMe, useMeStore } from '@/stores/me.store';
 
@@ -55,6 +57,12 @@ function useDevice(): SessionDevice {
  *
  * A name or language changed on the web lands here without a refetch, which is
  * what makes one shared context worth having rather than three that drift.
+ *
+ * The same connection carries the account's ending. When its owner asks for it
+ * to be deleted — from mWeb, or from another phone — the server stops accepting
+ * this install's token and says so on this channel. Without that frame the app
+ * would sit on whatever screen it was on, looking signed in, until something
+ * made it talk to the server; a phone in a pocket could be hours.
  */
 function useUserRealtime(userId: string, apply: (patch: Record<string, unknown>) => void): void {
   useEffect(() => {
@@ -73,8 +81,10 @@ function useUserRealtime(userId: string, apply: (patch: Record<string, unknown>)
           transports: ['websocket', 'polling'],
         });
         const off = subscribeUserChanged(socket, userId, apply);
+        const offRevoked = subscribeSessionRevoked(socket, userId, endRejectedSession);
         cleanup = () => {
           off();
+          offRevoked();
           socket.disconnect();
         };
         if (disposed) cleanup();

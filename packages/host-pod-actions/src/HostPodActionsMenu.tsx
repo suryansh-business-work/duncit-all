@@ -23,6 +23,12 @@ interface Props {
    * rate it are all meaningless then — the host resubmits or cancels instead.
    */
   venueRejected?: boolean;
+  /**
+   * The pod has ended. Completion is the settlement — it prices the payout off
+   * the seats scanned in — so it is offered on a PAST pod only: an upcoming or
+   * ongoing pod would freeze the answer while the door is still open.
+   */
+  canComplete?: boolean;
   onScan: () => void;
   onComplete: () => void;
   /**
@@ -67,6 +73,7 @@ export default function HostPodActionsMenu({
   podTitle,
   disabled = false,
   venueRejected = false,
+  canComplete = false,
   onScan,
   onComplete,
   onSeeAttendance,
@@ -137,7 +144,7 @@ export default function HostPodActionsMenu({
             <ListItemText primary={labels.slotRequest} />
           </MenuItem>
         )}
-        {showAttendeeActions && (
+        {showAttendeeActions && canComplete && (
           <MenuItem onClick={pick(onComplete)}>
             <ListItemIcon>
               <TaskAltIcon fontSize="small" color="success" />

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { canCompletePod } from '@duncit/utils';
 import PodCancelDialog from './PodCancelDialog';
 import PodCompleteDialog from './pod-complete/PodCompleteDialog';
 import PodEditDialog from './PodEditDialog';
@@ -14,6 +15,11 @@ export interface HostPodMenuHandlers {
   podTitle: string;
   /** The venue refused this pod's slot — the attendee-facing actions are gone. */
   venueRejected: boolean;
+  /**
+   * The pod is over, so completing it settles a door that is already shut.
+   * False on an upcoming or ongoing pod, and the menu then has no Complete row.
+   */
+  canComplete: boolean;
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
@@ -66,6 +72,7 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
   const menuHandlers = (pod: HostPodTarget): HostPodMenuHandlers => ({
     podTitle: pod.pod_title,
     venueRejected: isVenueRejected(pod.venue_approval_status),
+    canComplete: canCompletePod(pod),
     onScan: () => setScanPod({ id: pod.id, pod_title: pod.pod_title }),
     onComplete: () =>
       setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id }),

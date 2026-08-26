@@ -11,8 +11,18 @@
  * Tamagui import here would break the app build and not the web one.
  */
 
-/** How a booking came to be marked present. Mirrors `AttendanceMarkMethod`. */
-export type AttendanceMarkMethod = 'HOST_SCAN' | 'HOST_MANUAL' | 'CLUB_ADMIN_FORCE' | 'ADMIN';
+/** How a booking came to be marked present. Mirrors `AttendanceMarkMethod`.
+ * VIRTUAL_JOIN is a virtual pod's door: a joined member opening the meeting
+ * link from the pod page, inside the pod window. */
+export type AttendanceMarkMethod =
+  | 'HOST_SCAN'
+  | 'HOST_MANUAL'
+  | 'CLUB_ADMIN_FORCE'
+  | 'ADMIN'
+  | 'VIRTUAL_JOIN';
+
+/** The two kinds of pod. Mirrors the server's `PodMode`. */
+export type PodAttendanceMode = 'PHYSICAL' | 'VIRTUAL';
 
 /** Why the roster is read-only, or OPEN when it is not. */
 export type PodAttendanceLock = 'OPEN' | 'COMPLETED' | 'CANCELLED';
@@ -66,6 +76,9 @@ export interface PodAttendanceBoard {
   pod_title: string;
   pod_date_time: string | null;
   pod_end_date_time: string | null;
+  /** A virtual pod has no door to scan at — the scanner is hidden and the
+   * earnings note says how attendance is recorded instead. */
+  pod_mode: PodAttendanceMode;
   viewer: PodAttendanceViewer;
   lock: PodAttendanceLock;
   can_mark: boolean;
@@ -143,6 +156,18 @@ export const hasUnmarked = (
 export const needsOtp = (
   board: Readonly<Pick<PodAttendanceBoard, 'viewer' | 'otp_required'>>
 ): boolean => board.viewer === 'HOST' && board.otp_required;
+
+/**
+ * Whether the host has a door to scan at.
+ *
+ * Only a physical pod does; a virtual pod's attendance is recorded when a
+ * member opens the meeting link, so offering the scanner there is an
+ * invitation to a step that cannot happen. Decided here so the MUI and the
+ * Tamagui screens cannot disagree about it (rule 27).
+ */
+export const canScanTickets = (
+  board: Readonly<Pick<PodAttendanceBoard, 'viewer' | 'can_mark' | 'pod_mode'>>
+): boolean => board.viewer === 'HOST' && board.can_mark && board.pod_mode !== 'VIRTUAL';
 
 /**
  * The three shapes the verify-the-attendee form checks.

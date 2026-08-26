@@ -243,6 +243,11 @@ The slot rule is conditional in a way worth knowing: `venue_slot_id` is only req
 `pod_date_time` is **also** empty. An edited pod that keeps its already-booked slot dates never
 forces a re-pick, which is why the same values with a date set report no slot error.
 
+The end date is conditional the other way round: a **VIRTUAL** pod must carry
+`pod_end_date_time` (`End date/time is required for a virtual pod`), because it has no slot
+to take an end from and the end is what closes the meeting link's attendance window. A
+physical pod's end still comes off the slot it booked.
+
 ### `podToFormValues(pod)` — the inverse
 
 Given a server pod with `pod_hashtag: ['sourdough', 'baking']` and one image, the round-trip fields:

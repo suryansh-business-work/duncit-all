@@ -16,6 +16,7 @@ export const PodAttendanceBoardDocument = gql(`
       pod_title
       pod_date_time
       pod_end_date_time
+      pod_mode
       viewer
       lock
       can_mark

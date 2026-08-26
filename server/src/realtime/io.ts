@@ -2,6 +2,7 @@ import http from 'node:http';
 import jwt from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { isAllowedOrigin } from '../config/cors';
+import { isAccountLocked } from '../modules/access/accountDeletion/accountDeletion.lock';
 
 export interface AuthedSocket extends Socket {
   userId?: string;
@@ -33,6 +34,11 @@ export function initSocketServer(httpServer: http.Server): Server {
         id: string;
         roles?: string[];
       };
+      // Same rule as the GraphQL context: an account whose owner has asked for
+      // it to be deleted holds no session, and a socket is a session that
+      // outlives the request that opened it. Without this the chat and presence
+      // channels would stay live on a token every query already refuses.
+      if (isAccountLocked(decoded.id)) return next(new Error('UNAUTHENTICATED'));
       socket.userId = decoded.id;
       socket.roles = decoded.roles ?? [];
       next();

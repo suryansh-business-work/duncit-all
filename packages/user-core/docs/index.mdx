@@ -29,6 +29,8 @@ exports:
   - 'USER_CHANGED_EVENT'
   - 'parseUserChangedFrame'
   - 'subscribeUserChanged'
+  - 'SESSION_REVOKED_EVENT'
+  - 'subscribeSessionRevoked'
   - 'SURFACE_HEADER'
 ---
 
@@ -167,3 +169,25 @@ header would turn a display bug into an authorisation one.
 The payload is a **partial**, deliberately. A full `me` would need the
 seven-collection read `toPublic` performs, on every keystroke of a profile form,
 for a client that only cares about the two fields that moved.
+
+### The account's ending
+
+The same room carries `session:revoked` — the server has stopped accepting this
+account's tokens, today because its owner asked for the account to be deleted:
+
+```ts
+import { subscribeSessionRevoked } from '@duncit/user-core';
+
+const off = subscribeSessionRevoked(socket, myUserId, () => endSession());
+```
+
+**This is not what ends the session.** The token is refused before the frame is
+emitted (`isAccountLocked` in the server's GraphQL context), and a surface that
+never receives the frame still signs out on its next request. What it changes is
+*how soon* a surface that is not currently talking to the server finds out — a
+phone left on a screen, a tab open in the background. Without it, "you have been
+signed out everywhere" is only true of the device somebody is holding.
+
+The frame is checked against `selfUserId` for the same reason `user:changed` is,
+and the stakes are higher: one socket is shared with whatever else the app does
+next, and a misrouted revocation would sign the wrong person out.

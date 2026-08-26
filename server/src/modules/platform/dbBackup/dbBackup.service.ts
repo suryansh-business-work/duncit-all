@@ -26,7 +26,7 @@ import {
   type DbBackupDoc,
   type DbBackupSettingsDoc,
 } from './dbBackup.model';
-import { isDue, nextRunAt, parseTimeOfDay, type BackupSchedule } from './dbBackup.schedule';
+import { isDue, nextRunAt, parseTimeOfDay, type CronSchedule } from '@utils/cron-schedule';
 import {
   backupPath,
   backupSize,
@@ -327,7 +327,7 @@ function settingsDoc(): Promise<DbBackupSettingsDoc> {
     .exec() as Promise<DbBackupSettingsDoc>;
 }
 
-const scheduleOf = (doc: DbBackupSettingsDoc): BackupSchedule => ({
+const scheduleOf = (doc: DbBackupSettingsDoc): CronSchedule => ({
   enabled: doc.enabled,
   frequency: doc.frequency,
   time_of_day: doc.time_of_day,

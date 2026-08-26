@@ -67,6 +67,7 @@ export interface PartnerPodRow {
   pod_mode?: string | null;
   pod_type?: string | null;
   pod_date_time?: string | null;
+  pod_end_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
   /** Hosts sit inside pod_attendees but never pay — see payingAttendees. */
@@ -96,6 +97,7 @@ const PARTNER_POD_ROW_FIELDS = gql`
     pod_mode
     pod_type
     pod_date_time
+    pod_end_date_time
     pod_amount
     pod_attendees
     attendance { attended_seats booked_seats recorded }

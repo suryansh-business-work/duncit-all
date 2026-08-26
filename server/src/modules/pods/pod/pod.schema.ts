@@ -203,6 +203,7 @@ export const podTypeDefs = /* GraphQL */ `
     liked_user_ids: [ID!]!
     pod_description: String!
     pod_date_time: String!
+    "Required for a VIRTUAL pod — its window is the only thing that says when the meeting is over. A physical pod takes its end from the booked slot."
     pod_end_date_time: String
     pod_type: PodType!
     pod_amount: Int!

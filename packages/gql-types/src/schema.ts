@@ -14,6 +14,36 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AccountDeletionCronFrequency =
+  | 'DAILY'
+  | 'WEEKLY';
+
+/**
+ * The retention window AND the job that acts on it, as the Admin Panel sees it.
+ *
+ * Separate from `AccountDeletionSettings`, which any signed-in member may read
+ * because both apps quote the window before anybody confirms. When the sweep
+ * runs, how large a batch it takes and when it last fired are operational
+ * facts, not a promise made to a member.
+ */
+export type AccountDeletionCronSettings = {
+  __typename?: 'AccountDeletionCronSettings';
+  /** How many accounts one sweep will carry out. A ceiling, not a target. */
+  cron_batch_size: Scalars['Int']['output'];
+  /** False means the queue is cleared by hand, exactly as it was before. */
+  cron_enabled: Scalars['Boolean']['output'];
+  cron_frequency: AccountDeletionCronFrequency;
+  /** Wall-clock `HH:mm` in the platform timezone, not the container's UTC. */
+  cron_time_of_day: Scalars['String']['output'];
+  /** 0 = Sunday. Only read when the frequency is WEEKLY. */
+  cron_weekday: Scalars['Int']['output'];
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  /** Null while the sweep is off — there is no next run to name. */
+  next_run_at?: Maybe<Scalars['String']['output']>;
+  /** The grace period, in whole days. 30 is today's default, not a fixed rule. */
+  retention_days: Scalars['Int']['output'];
+};
+
 export type AccountDeletionDetail = {
   __typename?: 'AccountDeletionDetail';
   /** False once the account document itself has been removed. */
@@ -69,6 +99,63 @@ export type AccountDeletionRequestPage = {
   rows: Array<AccountDeletionRequest>;
   total: Scalars['Int']['output'];
 };
+
+/**
+ * One sweep of the deletion queue.
+ *
+ * Written whether or not anything was found: a run that deleted nobody is the
+ * evidence that the job is alive, and a night with no row at all is the thing
+ * worth noticing.
+ */
+export type AccountDeletionRun = {
+  __typename?: 'AccountDeletionRun';
+  /** The moment eligibility was judged against. */
+  cutoff_at: Scalars['String']['output'];
+  /** Due requests found. `purged + failed` may be fewer — the batch has a ceiling. */
+  eligible: Scalars['Int']['output'];
+  error: Scalars['String']['output'];
+  failed: Scalars['Int']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  purged: Scalars['Int']['output'];
+  results: Array<AccountDeletionRunResult>;
+  retention_days: Scalars['Int']['output'];
+  run_id: Scalars['String']['output'];
+  started_at: Scalars['String']['output'];
+  status: AccountDeletionRunStatus;
+  trigger: AccountDeletionRunTrigger;
+};
+
+export type AccountDeletionRunPage = {
+  __typename?: 'AccountDeletionRunPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AccountDeletionRun>;
+  total: Scalars['Int']['output'];
+};
+
+/** One account a sweep acted on, and what became of it. */
+export type AccountDeletionRunResult = {
+  __typename?: 'AccountDeletionRunResult';
+  /** The address as the request recorded it. The account itself is gone. */
+  email: Scalars['String']['output'];
+  error: Scalars['String']['output'];
+  /** PURGED, or FAILED with the reason beside it. */
+  outcome: Scalars['String']['output'];
+  /** Rows removed or redacted across every collection, for scale not detail. */
+  records: Scalars['Int']['output'];
+  request_id: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type AccountDeletionRunStatus =
+  | 'FAILED'
+  | 'RUNNING'
+  | 'SUCCEEDED';
+
+export type AccountDeletionRunTrigger =
+  | 'MANUAL'
+  | 'SCHEDULED';
 
 /** How long an account stays after its owner asks for it to go. */
 export type AccountDeletionSettings = {
@@ -1351,7 +1438,9 @@ export type AttendanceMarkMethod =
   /** The host marked them by hand, after verifying their name and number. */
   | 'HOST_MANUAL'
   /** Their ticket QR was scanned at the door — proof they were there. */
-  | 'HOST_SCAN';
+  | 'HOST_SCAN'
+  /** They opened a virtual pod's meeting link as a joined member, inside the pod window — the online equivalent of the door scan. */
+  | 'VIRTUAL_JOIN';
 
 /** Dropdown values for the audience filters whose options are data, not a fixed list. */
 export type AudienceFilterOptions = {
@@ -8144,7 +8233,13 @@ export type Mutation = {
   cancelFollowRequest: User;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
-  /** Withdraw an open request. The member's own, and only while it is open. */
+  /**
+   * Withdraw an open request. The member's own, and only while it is open.
+   *
+   * No longer reachable from the apps: filing a request signs the member out
+   * and closes the account, so nobody holding an open request can be signed in
+   * to call this. `rejectAccountDeletionRequest` is the way back now.
+   */
   cancelMyAccountDeletionRequest: AccountDeletionRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
@@ -8569,6 +8664,16 @@ export type Mutation = {
   /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
   joinFreePod: PodMember;
   /**
+   * Open a virtual pod's meeting as a joined member.
+   *
+   * Returns the link, and — inside the pod window (from an hour before the
+   * start to an hour after the end) — marks the booking present through the
+   * same write every other attendance path uses, as VIRTUAL_JOIN. A host
+   * opening their own pod's link is handed the link and marks nothing: hosts
+   * are never attendees of their own pod.
+   */
+  joinPodMeeting: PodMeetingAccess;
+  /**
    * Add the bot to a PUBLIC channel, which is the fix for not_in_channel.
    *
    * Needs the channels:join scope. Private channels cannot be joined by any API
@@ -8842,6 +8947,14 @@ export type Mutation = {
    */
   rotateTelemetryApiKey: TelemetrySettings;
   /**
+   * Run the sweep now.
+   *
+   * Not gated on `cron_enabled` and does not move `last_run_at`: this is a
+   * human clearing the queue, and it must neither require switching the
+   * schedule on nor make tonight's run look like it already happened.
+   */
+  runAccountDeletionPurgeNow: AccountDeletionRun;
+  /**
    * Take a backup now and return the row immediately. The archive is written on
    * the server, so closing the browser cannot interrupt it. SUPER_ADMIN only.
    */
@@ -9026,9 +9139,14 @@ export type Mutation = {
   /**
    * Ask for the account to be removed.
    *
-   * This does NOT delete anything. It files a request for the Tech portal and
-   * leaves the account fully usable, so a mis-tap costs nothing and the member
-   * can withdraw it. Asking twice returns the request already open.
+   * This does NOT delete anything yet — the request is queued, and the account
+   * survives until the grace period is up. What it DOES do immediately is end
+   * the account: every token it has handed out stops being accepted, the live
+   * surfaces are told to sign out, and no door will mint it another one. The
+   * window is time for the decision to be reversed from the console, not time
+   * to keep using the account.
+   *
+   * Asking twice returns the request already open.
    */
   submitAccountDeletionRequest: AccountDeletionRequest;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
@@ -9147,6 +9265,8 @@ export type Mutation = {
   unfollowUser: User;
   unsubscribeAllByToken: MailPreference;
   unsubscribeNewsletter: Scalars['Boolean']['output'];
+  /** Change when the sweep runs, and whether it runs at all. */
+  updateAccountDeletionCron: AccountDeletionCronSettings;
   /**
    * Change the retention window, in whole days (1–365).
    *
@@ -10862,6 +10982,11 @@ export type MutationJoinFreePodArgs = {
 };
 
 
+export type MutationJoinPodMeetingArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationJoinSlackChannelArgs = {
   channel: Scalars['ID']['input'];
 };
@@ -12143,6 +12268,11 @@ export type MutationUnsubscribeAllByTokenArgs = {
 
 export type MutationUnsubscribeNewsletterArgs = {
   email: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateAccountDeletionCronArgs = {
+  input: UpdateAccountDeletionCronInput;
 };
 
 
@@ -13762,6 +13892,7 @@ export type Pod = {
   pod_attendees: Array<Scalars['ID']['output']>;
   pod_date_time: Scalars['String']['output'];
   pod_description: Scalars['String']['output'];
+  /** Required for a VIRTUAL pod — its window is the only thing that says when the meeting is over. A physical pod takes its end from the booked slot. */
   pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_hashtag: Array<Scalars['String']['output']>;
   pod_hits: Scalars['Int']['output'];
@@ -13817,6 +13948,8 @@ export type PodAttendanceBoard = {
   pod_date_time?: Maybe<Scalars['String']['output']>;
   pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_id: Scalars['ID']['output'];
+  /** PHYSICAL or VIRTUAL. A virtual pod has no door to scan at: a member is marked when they open the meeting link. */
+  pod_mode: PodMode;
   pod_title: Scalars['String']['output'];
   rows: Array<PodAttendanceRow>;
   total_count: Scalars['Int']['output'];
@@ -14151,6 +14284,12 @@ export type PodDashboardTotals = {
 export type PodDraft = {
   __typename?: 'PodDraft';
   created_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * When the retention sweep deletes this draft: created_at plus the
+   * admin-configured draft_retention_days. Null when the draft carries no
+   * usable creation date.
+   */
+  expires_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   payload: Scalars['String']['output'];
   pod_mode: Scalars['String']['output'];
@@ -14484,6 +14623,21 @@ export type PodMediaViewer =
   | 'GUEST'
   | 'HOST'
   | 'NONE';
+
+/**
+ * What a joined member gets back when they open a virtual pod's meeting.
+ *
+ * The link itself is also readable on the Pod (gated to joined members), so
+ * this is not the only way to see it — it is the way that COUNTS: opening it
+ * through here, inside the pod window, marks the booking present.
+ */
+export type PodMeetingAccess = {
+  __typename?: 'PodMeetingAccess';
+  /** True when this open marked the booking present (or it already was). */
+  attendance_marked: Scalars['Boolean']['output'];
+  meeting_notes?: Maybe<Scalars['String']['output']>;
+  meeting_url: Scalars['String']['output'];
+};
 
 export type PodMember = {
   __typename?: 'PodMember';
@@ -15773,10 +15927,16 @@ export type PushSubscriptionInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Admin Panel: the window, the schedule, and when it last ran. */
+  accountDeletionCronSettings: AccountDeletionCronSettings;
+  /** How many requests are past their date right now — the console's preview. */
+  accountDeletionDueCount: Scalars['Int']['output'];
   /** One request plus a live count of where that member still appears. */
   accountDeletionRequest: AccountDeletionDetail;
   /** Tech console queue. */
   accountDeletionRequestsTable: AccountDeletionRequestPage;
+  /** The audit log: every sweep, newest first. */
+  accountDeletionRuns: AccountDeletionRunPage;
   /**
    * The retention window. Readable by any signed-in member, because both apps
    * warn with the number BEFORE anyone confirms — a promise the product makes
@@ -16985,6 +17145,11 @@ export type QueryAccountDeletionRequestArgs = {
 
 
 export type QueryAccountDeletionRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAccountDeletionRunsArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -21692,6 +21857,19 @@ export type UnitType =
   | 'OTHER'
   | 'PACKET'
   | 'PIECE';
+
+/**
+ * Every field is optional: the console saves the one card the operator touched
+ * rather than rewriting the whole schedule from a form it may have half-loaded.
+ */
+export type UpdateAccountDeletionCronInput = {
+  cron_batch_size?: InputMaybe<Scalars['Int']['input']>;
+  cron_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  cron_frequency?: InputMaybe<AccountDeletionCronFrequency>;
+  /** `HH:mm`. Refused if it cannot be parsed — a schedule nothing can read never fires. */
+  cron_time_of_day?: InputMaybe<Scalars['String']['input']>;
+  cron_weekday?: InputMaybe<Scalars['Int']['input']>;
+};
 
 export type UpdateAdPricingInput = {
   auto_per_day?: InputMaybe<Scalars['Float']['input']>;

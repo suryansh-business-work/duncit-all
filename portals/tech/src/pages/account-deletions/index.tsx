@@ -41,7 +41,7 @@ export default function AccountDeletionsPage() {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            {t('tech.accountDeletions.intro')}
+            {t('tech.accountDeletions.introSealed')}
           </Typography>
         </Box>
         <Button

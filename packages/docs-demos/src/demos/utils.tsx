@@ -14,7 +14,9 @@ import {
   badgeProgressPercent,
   buildCommPreferenceLabels,
   buildPodFeedbackInput,
+  canCompletePod,
   canFollowBack,
+  canScanTickets,
   canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
@@ -22,12 +24,17 @@ import {
   contactDraftIsUnchanged,
   contactDraftValue,
   currentContactValue,
+  draftHoursLeft,
+  earningsBodyFor,
   followBackLabelKey,
+  isDraftExpiringSoon,
   followButtonLabelKey,
   followOutcomeLabelKey,
   followRequestRowState,
   formatMoney,
   hostPodSection,
+  mwebAttendanceLabels,
+  needsOtp,
   normalizeUsername,
   offersFollowBack,
   orderedAspects,
@@ -37,6 +44,7 @@ import {
   podPhase,
   podRefundState,
   sortBadgeProgress,
+  splitDraftsByExpiry,
   splitHostPods,
   splitPodsByPhase,
   usernameBlocksSave,
@@ -47,6 +55,8 @@ import {
   type CommChannelState,
   type ContactChannel,
   type ContactSnapshot,
+  type PodAttendanceMode,
+  type PodAttendanceViewer,
   type PodFeedbackReminderChoice,
   type PodFeedbackScores,
   type PodParticipationFields,
@@ -101,6 +111,15 @@ interface HandleMock {
   reason: UsernameRejection | null;
 }
 
+/** The head of a `podAttendanceBoard` answer — the four fields every attendance rule reads. */
+interface AttendanceBoardMock {
+  pod_id: string;
+  viewer: PodAttendanceViewer;
+  can_mark: boolean;
+  otp_required: boolean;
+  pod_mode: PodAttendanceMode;
+}
+
 /** A slice of the Home feed, plus the instant the rails are drawn at. */
 interface PhaseMock {
   now: string;
@@ -135,6 +154,13 @@ interface FollowRowsMock {
     actorId: string | null;
     followBackStatus: string;
   }>;
+}
+
+/** A host’s Create-Pod drafts as `myPodDrafts` returns them, with the server’s
+ * own deletion date on each, plus the instant to judge them against. */
+interface DraftsMock {
+  now: string;
+  drafts: Array<{ id: string; pod_title: string; expires_at: string | null }>;
 }
 
 /** Profiles as `publicUserProfile` describes them to the viewer: their own
@@ -451,7 +477,9 @@ export default defineDemos('utils', [
     title: 'Which Home rail a pod lands on',
     note:
       "Move `now` past a pod's end and watch it cross from Ongoing to Previous. " +
-      'DUN-POD-5502 has no end set, so it rides the 4h tail instead.',
+      'DUN-POD-5502 has no end set, so it rides the 4h tail instead. That same crossing is ' +
+      "what puts Host Studio's Complete Pod action on a pod: it is offered on a PREVIOUS " +
+      'pod only, never while the door is still open.',
     mock: {
       now: '2026-08-25T19:30:00.000Z',
       pods: [
@@ -489,7 +517,9 @@ export default defineDemos('utils', [
         ...Object.fromEntries(
           mock.pods.map((pod) => [
             pod.pod_id,
-            podPhase(pod.pod_date_time, pod.pod_end_date_time, now),
+            `${podPhase(pod.pod_date_time, pod.pod_end_date_time, now)}   ·   Complete Pod ${
+              canCompletePod(pod, now) ? 'offered' : 'hidden'
+            }`,
           ])
         ),
         'Home rails': counts,
@@ -523,6 +553,39 @@ export default defineDemos('utils', [
           mock.pods.map((pod) => [pod.pod_id, hostPodSection(pod.venue_approval_status)])
         ),
         'Host Studio': counts,
+      };
+    },
+  }),
+  defineDemo<DraftsMock>({
+    id: 'draft-expiry',
+    title: 'Which drafts Host Studio warns about',
+    note:
+      'Push DUN-POD-5502’s expires_at past 2026-08-28T09:00 and it drops out of the info-badge ' +
+      'panel into the plain list. The panel is ordered soonest-deleted first, so the draft the ' +
+      'host must publish today always leads.',
+    mock: {
+      now: '2026-08-27T09:00:00.000Z',
+      drafts: [
+        { id: 'DUN-POD-4821', pod_title: 'Sunday Pottery Jam', expires_at: '2026-08-27T20:00:00.000Z' },
+        { id: 'DUN-POD-4977', pod_title: 'Terrace Chess Club', expires_at: '2026-08-27T09:30:00.000Z' },
+        { id: 'DUN-POD-5502', pod_title: 'Indiranagar Run Club', expires_at: '2026-08-29T06:00:00.000Z' },
+        { id: 'DUN-POD-4310', pod_title: 'Late Night Standup', expires_at: null },
+      ],
+    },
+    compute: (mock) => {
+      const now = new Date(mock.now).getTime();
+      const { expiring, rest } = splitDraftsByExpiry(mock.drafts, now);
+      return {
+        ...Object.fromEntries(
+          mock.drafts.map((draft) => [
+            draft.pod_title,
+            isDraftExpiringSoon(draft, now)
+              ? `warned · ${draftHoursLeft(draft, now)}h left`
+              : 'listed as usual',
+          ])
+        ),
+        'Info badge panel': expiring.map((draft) => draft.pod_title).join('   ·   ') || '(empty)',
+        'Below it': rest.map((draft) => draft.pod_title).join('   ·   ') || '(empty)',
       };
     },
   }),
@@ -688,6 +751,34 @@ export default defineDemos('utils', [
         ),
         'Close offers': POD_FEEDBACK_REMINDER_OPTIONS.map((o) => o.labelKey).join(', '),
         'Close writes': chosen ? chosen.choice : '(not one of the two options)',
+      };
+    },
+  }),
+  defineDemo<AttendanceBoardMock>({
+    id: 'pod-attendance',
+    title: 'What the attendance board offers its host',
+    note:
+      'Flip pod_mode to VIRTUAL: the scanner disappears and the earnings sentence changes. ' +
+      'Set viewer to CLUB_ADMIN and needsOtp answers false whatever otp_required says — the ' +
+      'override exists for the attendee who cannot be reached.',
+    mock: {
+      pod_id: 'DUN-POD-4821',
+      viewer: 'HOST',
+      can_mark: true,
+      otp_required: true,
+      pod_mode: 'PHYSICAL',
+    },
+    compute: (mock) => {
+      // Keys rather than copy, so the demo names WHICH sentence each surface renders.
+      const labels = mwebAttendanceLabels((key) => key);
+      const door = mock.pod_mode === 'VIRTUAL' ? 'VIRTUAL_JOIN' : 'HOST_SCAN';
+      const scanCta = canScanTickets(mock) ? labels.scanCta : '(hidden)';
+      return {
+        'needsOtp(board)': needsOtp(mock),
+        'canScanTickets(board)': canScanTickets(mock),
+        'earningsBodyFor(board, labels)': earningsBodyFor(mock, labels),
+        'Scan CTA': scanCta,
+        'How a member gets marked': labels.methodLabel(door),
       };
     },
   }),

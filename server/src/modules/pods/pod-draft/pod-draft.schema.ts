@@ -9,6 +9,12 @@ export const podDraftTypeDefs = gql`
     payload: String!
     created_at: String
     updated_at: String
+    """
+    When the retention sweep deletes this draft: created_at plus the
+    admin-configured draft_retention_days. Null when the draft carries no
+    usable creation date.
+    """
+    expires_at: String
   }
 
   input PodDraftInput {

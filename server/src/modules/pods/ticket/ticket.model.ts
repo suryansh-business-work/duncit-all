@@ -14,6 +14,10 @@ export const ATTENDANCE_METHODS = [
   'HOST_MANUAL',
   'CLUB_ADMIN_FORCE',
   'ADMIN',
+  // A virtual pod has no door. A JOINED member opening the meeting link from
+  // the pod page, inside the pod's window, is the online equivalent of the
+  // scan — and without it a paid virtual pod settled its host at zero.
+  'VIRTUAL_JOIN',
 ] as const;
 export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
 

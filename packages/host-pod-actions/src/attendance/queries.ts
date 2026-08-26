@@ -9,6 +9,7 @@ export const POD_ATTENDANCE_BOARD = gql`
       pod_title
       pod_date_time
       pod_end_date_time
+      pod_mode
       viewer
       lock
       can_mark

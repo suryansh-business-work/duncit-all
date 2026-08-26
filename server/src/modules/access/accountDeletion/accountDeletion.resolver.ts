@@ -7,10 +7,23 @@ import type { TableQueryInput } from '@utils/table-query';
 // role alongside the web terminal and the data clone rather than beside a
 // table nobody can break.
 import { TECH_EXEC } from '@modules/platform/tech/tech.resolver';
-import { accountDeletionService } from './accountDeletion.service';
+import { accountDeletionService, type CronSettingsInput } from './accountDeletion.service';
+import { accountDeletionCron } from './accountDeletion.cron';
 import type { DeletionRequestSurface } from './accountDeletion.model';
 
 const TECH_REVIEW = ['SUPER_ADMIN', 'TECH_MANAGER'];
+
+/*
+  The sweep is configured from the Admin Panel and read from both consoles.
+
+  Reading is TECH_REVIEW, the same rung that already reads the queue itself —
+  an operator who can see who asked to be deleted can see whether the job that
+  removes them is alive. CHANGING it is SUPER_ADMIN alone: switching the
+  schedule on hands irreversible deletions to a timer, and pressing Run now
+  carries them out on the spot. Both sit beside the manual purge in
+  TECH_EXEC rather than beside a setting somebody can undo.
+*/
+const CRON_ADMIN = ['SUPER_ADMIN'];
 
 interface SubmitArgs {
   input: { otp: string; reason?: string | null; surface?: DeletionRequestSurface | null };
@@ -41,6 +54,22 @@ export const accountDeletionResolvers = {
     ) => {
       requireRole(ctx, TECH_REVIEW);
       return accountDeletionService.detail(args.request_doc_id);
+    },
+    accountDeletionCronSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_REVIEW);
+      return accountDeletionService.adminSettings();
+    },
+    accountDeletionDueCount: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_REVIEW);
+      return accountDeletionCron.dueCount();
+    },
+    accountDeletionRuns: (
+      _p: unknown,
+      args: { query?: TableQueryInput | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_REVIEW);
+      return accountDeletionCron.runsTable(args.query);
     },
   },
   Mutation: {
@@ -87,6 +116,18 @@ export const accountDeletionResolvers = {
     ) => {
       const actor = requireRole(ctx, TECH_REVIEW);
       return accountDeletionService.updateSettings(args.retention_days, actor.id);
+    },
+    updateAccountDeletionCron: (
+      _p: unknown,
+      args: { input: CronSettingsInput },
+      ctx: GraphQLContext
+    ) => {
+      const actor = requireRole(ctx, CRON_ADMIN);
+      return accountDeletionService.updateCronSettings(args.input, actor.id);
+    },
+    runAccountDeletionPurgeNow: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const actor = requireRole(ctx, CRON_ADMIN);
+      return accountDeletionCron.runNow(actor.id);
     },
   },
 };

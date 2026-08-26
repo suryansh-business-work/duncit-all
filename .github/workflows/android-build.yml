@@ -477,6 +477,23 @@ jobs:
             echo "ARTIFACTS_EOF"
           } >> "$GITHUB_ENV"
 
+      - name: Keep a copy on the run
+        # Until the next step stores them, this runner holds the ONLY copy of a
+        # signed release APK and AAB, and reaching the server from here is not
+        # something the build controls: runs have died with every request to
+        # server.duncit.com timing out at the TCP connect, for the whole life of
+        # the job, while the same host answered everyone else — a source-address
+        # block, which no amount of retrying inside the job can outlast. Half an
+        # hour of compute and a versionCode that can never be minted again is far
+        # too much to lose to that, so the artifacts are kept here BEFORE the
+        # upload is attempted and survive it either way.
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/duncit-android-*
+          if-no-files-found: error
+          retention-days: 14
+
       - name: 'Stage: upload and record'
         uses: ./.github/actions/build-stage
         with:

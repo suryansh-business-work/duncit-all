@@ -327,7 +327,7 @@ export const BACKOUT = gql`
 
 export const CANCEL_BACKOUT = gql`
   mutation CancelBackoutPod($id: ID!) {
-    cancelBackoutPod(pod_doc_id: $id) { id status refund_status }
+    cancelBackoutPod(pod_doc_id: $id) { id status seats refund_status }
   }
 `;
 

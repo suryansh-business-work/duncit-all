@@ -482,6 +482,7 @@ export function PodDetailsScreen() {
             }
             onBackout={() => actions.setBackoutOpen(true)}
             onKeepSpot={actions.openKeepSpot}
+            restoringSpot={actions.restoringSpot}
             onGoToDashboard={() => {
               useStudioModeStore.getState().setMode('HOST');
               navigation.navigate('HostManage');

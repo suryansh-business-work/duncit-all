@@ -110,7 +110,11 @@ export default function PodActionPanel({
         canBackout={!!ms?.can_backout}
         backingOut={backingOut}
         deductionPct={ms?.backout_deduction_pct ?? 0}
+        releasedSeats={Number(ms?.released_seats_pending ?? 0)}
+        canTakeSeatsBack={!!ms?.can_cancel_backout}
+        restoringSpot={restoringSpot}
         onBackout={onBackout}
+        onKeepSpot={onKeepSpot}
       />
     );
   }

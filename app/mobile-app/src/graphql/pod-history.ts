@@ -134,6 +134,7 @@ export const CancelBackoutPodDocument = gql(`
     cancelBackoutPod(pod_doc_id: $pod_doc_id) {
       id
       status
+      seats
       backed_out_at
       refund_status
     }

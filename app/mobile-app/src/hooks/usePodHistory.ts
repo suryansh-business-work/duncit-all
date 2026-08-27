@@ -95,6 +95,19 @@ export function usePodBackoutDeduction() {
 export function usePodBackoutAttempts(podDocId?: string | null) {
   const [state, setState] = useState<PodBackoutAttempts>();
 
+  // Exposed so the screen can re-read after a backout: the request the user
+  // just made is one of the attempts this counts, and a counter frozen at its
+  // pre-request value keeps offering a control the server will refuse.
+  const refetch = useCallback(async () => {
+    if (!podDocId) return;
+    const data = await graphqlRequest(
+      PodBackoutStateDocument,
+      { pod_doc_id: podDocId },
+      { auth: true },
+    );
+    setState(data.podMembershipState);
+  }, [podDocId]);
+
   useEffect(() => {
     if (!podDocId) return undefined;
     let active = true;
@@ -108,7 +121,7 @@ export function usePodBackoutAttempts(podDocId?: string | null) {
     };
   }, [podDocId]);
 
-  return state;
+  return { state, refetch };
 }
 
 /** Backout mutation with a busy flag — mWeb's BACKOUT_POD_HISTORY. */

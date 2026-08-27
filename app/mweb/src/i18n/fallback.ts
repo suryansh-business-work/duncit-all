@@ -10,6 +10,7 @@ import {
   SESSION_BUNDLE,
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
+  FULFILMENT_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
@@ -45,6 +46,7 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...SESSION_BUNDLE,
   ...WHATSAPP_BUNDLE,
   ...WITHDRAW_BUNDLE,
+  ...FULFILMENT_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

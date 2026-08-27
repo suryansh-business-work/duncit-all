@@ -15,6 +15,16 @@ consumers:
   - 'packages/media-picker'
   - 'packages/ad-request-form'
 exports:
+  - 'buildOrderTimeline'
+  - 'statusLabel'
+  - 'fulfilmentLabel'
+  - 'fulfilmentFlow'
+  - 'isTerminalFulfilment'
+  - 'trackingUrl'
+  - 'ALL_FULFILMENT_STATUSES'
+  - 'SHIP_FLOW'
+  - 'PICKUP_FLOW'
+  - 'FULFILMENT_TONE'
   - 'buildPodsOverTime'
   - 'buildParticipantTrend'
   - 'buildStatusSlices'
@@ -1358,3 +1368,40 @@ test run on 31 December does not disagree with one run on 1 January.
 `buildParticipantTrend` counts **seats**, not people: it sits beside money, and the settlement
 it has to agree with is priced per seat. It also copies before sorting — the caller's array is
 usually the Apollo cache's, and sorting that in place is a render-loop bug waiting to happen.
+
+## Product-order fulfilment
+
+`product-orders.ts` is the status vocabulary for an add-on product order. Three surfaces render
+the same order — the buyer in mWeb's Pod History and in the app, the seller in the Products
+portal — and they held three copies of the list. The two the buyer saw **disagreed with the one
+the seller drives**:
+
+| | seller (Products portal) | buyer (mWeb + app), before |
+| --- | --- | --- |
+| SHIP flow | starts at `PENDING` | started at `AWAITING_SHIPMENT` |
+| PICKUP flow | has `PICKUP_SCHEDULED` | had no such rung |
+
+`buildOrderTimeline` falls back to the first rung for a status its flow does not contain, which
+is right — the timeline is never empty or broken — but it is also what hid both bugs. A
+just-placed shipped order read "Preparing shipment" before anyone had touched it, and an order
+the seller had scheduled for collection read back to the buyer as "Order placed".
+
+The flows here are the seller's, because that is what the server moves through.
+
+```ts
+fulfilmentFlow('SHIP'); // PENDING → AWAITING_SHIPMENT → AWB_ASSIGNED → SHIPPED → OUT_FOR_DELIVERY → DELIVERED
+fulfilmentFlow('PICKUP'); // PENDING → PICKUP_SCHEDULED → READY_FOR_PICKUP → PICKED_UP
+buildOrderTimeline(order, t); // the flow with `done` / `current` marked
+isTerminalFulfilment('RTO'); // true — the timeline collapses to one step
+statusLabel('AWB_ASSIGNED', t); // 'Courier assigned'
+trackingUrl(awb); // '' until an AWB exists, so the caller shows no link
+```
+
+Labels are `fulfilment.*` keys (rule 38). The portal previously ran a `humaniseStatus` that
+title-cased the raw code — it rendered "Awb Assigned" and "Rto", and reached no translator at
+all. An **unknown** code still renders as itself: the server can add a state before any client
+knows about it, and a visible `AWAITING_QUANTUM_TUNNEL` beats a blank chip.
+
+`FULFILMENT_TONE` names the chip weight by meaning (`pending` / `moving` / `done` / `failed` /
+`neutral`) and `TONE_CHIP_COLOR` maps it onto MUI's palette, so no surface picks its own
+colours — the same shape [@duncit/verification](/packages/verification) uses.

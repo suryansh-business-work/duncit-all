@@ -10,8 +10,8 @@ import {
   fulfilmentLabel,
   statusLabel,
   trackingUrl,
-  type ProductOrder,
-} from './productOrders';
+} from '@duncit/utils';
+import type { ProductOrder } from './productOrders';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** One product order: fulfilment/status chips, line items, the ship/pickup
@@ -64,7 +64,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
             <Typography variant="body2" sx={{
               fontWeight: 700
             }}>
-              {formatMoney(order.currency_symbol, li.gross)}
+              {formatMoney(li.gross, { symbol: order.currency_symbol })}
             </Typography>
           </Stack>
         ))}

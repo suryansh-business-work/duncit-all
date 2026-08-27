@@ -12,8 +12,8 @@ import {
   fulfilmentLabel,
   statusLabel,
   trackingUrl,
-  type ProductOrder,
-} from '@/utils/product-orders';
+} from '@duncit/utils';
+import type { ProductOrder } from '@/utils/product-orders';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) {
@@ -85,7 +85,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             {li.variant_label ? ` — ${li.variant_label}` : ''} × {li.qty}
           </Text>
           <Text fontSize={13} fontWeight="600" color="$color">
-            {formatMoney(order.currency_symbol, li.gross)}
+            {formatMoney(li.gross, { symbol: order.currency_symbol })}
           </Text>
         </XStack>
       ))}

@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
+import type { FulfilmentTranslate } from '@duncit/utils';
 import { ALL_STATUSES, STATUS_COLOR, humaniseStatus } from './constants';
 import { useDateFormat } from '@duncit/app-settings';
 import type { ProductOrderRow } from './queries';
@@ -17,8 +18,6 @@ const METHOD_OPTIONS = [
   { value: 'SHIP', label: 'SHIP' },
   { value: 'PICKUP', label: 'PICKUP' },
 ];
-
-const STATUS_OPTIONS = ALL_STATUSES.map((value) => ({ value, label: humaniseStatus(value) }));
 
 const getRowId = (o: ProductOrderRow) => o.id;
 
@@ -39,16 +38,25 @@ const renderMethod = (o: ProductOrderRow) => (
   <Chip size="small" variant="outlined" label={o.fulfilment_method} />
 );
 
-const renderStatus = (o: ProductOrderRow) => (
+/** Takes the translator rather than closing over one: the labels are localized
+ * and this renderer sits at module scope. */
+const renderStatus = (o: ProductOrderRow, t: FulfilmentTranslate) => (
   <StatusChip
     status={o.fulfilment_status}
-    label={humaniseStatus(o.fulfilment_status)}
+    label={humaniseStatus(o.fulfilment_status, t)}
     colorMap={STATUS_COLOR}
   />
 );
 
 export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Readonly<Props>) {
   const { t } = useTranslation();
+  // Built here rather than at module scope: the labels are localized, so they
+  // need the reader's translator (rule 38). Memoised so it is a stable
+  // dependency of the columns below.
+  const statusOptions = useMemo(
+    () => ALL_STATUSES.map((value) => ({ value, label: humaniseStatus(value, t) })),
+    [t],
+  );
   const { formatDateTime } = useDateFormat();
   const columns = useMemo<DuncitColumn<ProductOrderRow>[]>(() => {
     const renderOrder = (o: ProductOrderRow) => (
@@ -100,10 +108,10 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       {
         field: 'fulfilment_status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        filter: { type: 'select', options: statusOptions },
         minWidth: 160,
-        cellRenderer: renderStatus,
-        valueGetter: (o) => humaniseStatus(o.fulfilment_status),
+        cellRenderer: (o: ProductOrderRow) => renderStatus(o, t),
+        valueGetter: (o) => humaniseStatus(o.fulfilment_status, t),
       },
       {
         field: 'awb',
@@ -134,7 +142,10 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
         valueGetter: (o) => (o.created_at ? formatDateTime(o.created_at) : '—'),
       },
     ];
-  }, [formatDateTime]);
+    // `t` and the options built from it belong here: the column headers, the
+    // status filter and the status cells are all localized now, so a language
+    // change has to rebuild them.
+  }, [formatDateTime, t, statusOptions]);
 
   return (
     <DuncitTable<ProductOrderRow>

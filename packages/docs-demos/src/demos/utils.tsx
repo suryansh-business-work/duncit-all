@@ -1,10 +1,3 @@
-import type {
-  HostChartRange,
-  MonthlyEarning,
-  ParticipantPod,
-  StatusCounts,
-  StatusPalette,
-} from '@duncit/utils';
 import {
   AUTO_POD_ROLES,
   BADGE_GOAL_KEY,
@@ -13,6 +6,12 @@ import {
   HOST_FREE_SPOT_NOTE,
   POD_FEEDBACK_REMINDER_OPTIONS,
   allZero,
+  buildOrderTimeline,
+  fulfilmentFlow,
+  fulfilmentLabel,
+  isTerminalFulfilment,
+  statusLabel,
+  trackingUrl,
   authMessageCardState,
   autoPodActionable,
   autoPodCityLabel,
@@ -64,6 +63,11 @@ import {
   usernameFieldState,
   videoSourceUrl,
   type AutoPodRow,
+  type HostChartRange,
+  type MonthlyEarning,
+  type ParticipantPod,
+  type StatusCounts,
+  type StatusPalette,
   type BadgeCondition,
   type CommChannelState,
   type ContactChannel,
@@ -184,6 +188,14 @@ interface FollowButtonMock {
     status: 'NONE' | 'REQUESTED' | 'FOLLOWING';
     followsViewer: boolean;
   }>;
+}
+
+/** One product order, as every surface holds it while deciding what to show. */
+interface OrderMock {
+  fulfilment_method: string;
+  fulfilment_status: string;
+  /** ShipRocket's airway bill; empty until a courier is assigned. */
+  awb: string;
 }
 
 interface HostInsightsMock {
@@ -853,6 +865,33 @@ export default defineDemos('utils', [
         'Chart is empty': allZero(podsByMonth),
         'Why seats, not people':
           'This sits beside the money the host is shown, and the settlement it has to agree with is priced per seat.',
+      };
+    },
+  }),
+
+  defineDemo<OrderMock>({
+    id: 'product-orders',
+    title: 'Where a product order actually is',
+    note: 'Set fulfilment_method to PICKUP and fulfilment_status to PICKUP_SCHEDULED — the buyer now sees that rung. Their old ladder had no such step, so this order read back to them as "Order placed" while the seller had already scheduled it. Try CANCELLED and the whole ladder collapses to one step.',
+    mock: {
+      fulfilment_method: 'SHIP',
+      fulfilment_status: 'AWB_ASSIGNED',
+      awb: 'SR784512396',
+    },
+    compute: (mock) => {
+      const t = (key: string) => key;
+      const order = {
+        fulfilment_method: mock.fulfilment_method,
+        fulfilment_status: mock.fulfilment_status,
+      };
+      return {
+        'Reads as': statusLabel(mock.fulfilment_status, t),
+        'Fulfilled by': fulfilmentLabel(mock.fulfilment_method, t),
+        'The flow for this method': fulfilmentFlow(mock.fulfilment_method),
+        Timeline: buildOrderTimeline(order, t),
+        'Order has stopped moving': isTerminalFulfilment(mock.fulfilment_status),
+        'Track it at': trackingUrl(mock.awb) || '(no AWB yet — the caller shows no link)',
+        'An unknown status': statusLabel('AWAITING_QUANTUM_TUNNEL', t),
       };
     },
   }),

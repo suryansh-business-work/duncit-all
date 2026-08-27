@@ -109,7 +109,7 @@ export default function ProductOrderDetailPage() {
         <StatusChip
           size="medium"
           status={order.fulfilment_status}
-          label={humaniseStatus(order.fulfilment_status)}
+          label={humaniseStatus(order.fulfilment_status, t)}
           colorMap={STATUS_COLOR}
         />
       </Stack>

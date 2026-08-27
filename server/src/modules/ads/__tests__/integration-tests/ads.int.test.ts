@@ -130,9 +130,9 @@ describe('ads integration', () => {
       });
     });
 
-    it('rejects durations outside 1..30 days', async () => {
+    it('rejects durations outside the configured 1..30 day window', async () => {
       const expected = {
-        message: 'Duration must be between 1 day and 1 month',
+        message: 'Duration must be between 1 and 30 days',
         extensions: { code: 'BAD_USER_INPUT' },
       };
       await expect(
@@ -159,7 +159,7 @@ describe('ads integration', () => {
   describe('pricing', () => {
     it('creates the singleton with defaults on first read and reuses it after', async () => {
       const pricing = await adsService.pricing();
-      expect(pricing).toEqual({
+      expect(pricing).toMatchObject({
         auto_per_day: 500,
         home_bottom_per_day: 500,
         sidebar_per_day: 500,
@@ -170,6 +170,16 @@ describe('ads integration', () => {
         pod_list_per_day: 500,
         pod_details_per_day: 500,
         currency_symbol: '₹',
+        min_days: 1,
+        max_days: 30,
+      });
+      // Every placement arrives carrying the shipped copy, so the public rate
+      // card is never blank for a placement Marketing has not renamed.
+      expect(pricing.placements).toHaveLength(9);
+      expect(pricing.placements).toContainEqual({
+        position: 'SIDEBAR',
+        label: 'Sidebar',
+        note: 'Beside the content, on every screen that has one.',
       });
       await adsService.pricing();
       expect(await AdPricingModel.countDocuments()).toBe(1);

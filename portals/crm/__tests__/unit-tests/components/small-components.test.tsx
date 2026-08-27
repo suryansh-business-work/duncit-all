@@ -88,15 +88,19 @@ describe('MapEmbed', () => {
   });
 });
 
+// LeadTabs holds its selection in `?selectedtab=` through `useTabParam`, so it
+// only mounts inside the Router the portal really gives it.
 describe('LeadTabs', () => {
   it('renders the first tab by default and switches on click', () => {
     render(
-      <LeadTabs
-        tabs={[
-          { value: 'a', label: 'Alpha', render: () => <div data-testid="panel-a">A panel</div> },
-          { value: 'b', label: 'Beta', render: () => <div data-testid="panel-b">B panel</div> },
-        ]}
-      />
+      <MemoryRouter>
+        <LeadTabs
+          tabs={[
+            { value: 'a', label: 'Alpha', render: () => <div data-testid="panel-a">A panel</div> },
+            { value: 'b', label: 'Beta', render: () => <div data-testid="panel-b">B panel</div> },
+          ]}
+        />
+      </MemoryRouter>
     );
     expect(screen.getByTestId('panel-a')).toBeTruthy();
     fireEvent.click(screen.getByText('Beta'));
@@ -104,13 +108,15 @@ describe('LeadTabs', () => {
   });
   it('honours defaultValue', () => {
     render(
-      <LeadTabs
-        defaultValue="b"
-        tabs={[
-          { value: 'a', label: 'Alpha', render: () => <div data-testid="panel-a" /> },
-          { value: 'b', label: 'Beta', render: () => <div data-testid="panel-b" /> },
-        ]}
-      />
+      <MemoryRouter>
+        <LeadTabs
+          defaultValue="b"
+          tabs={[
+            { value: 'a', label: 'Alpha', render: () => <div data-testid="panel-a" /> },
+            { value: 'b', label: 'Beta', render: () => <div data-testid="panel-b" /> },
+          ]}
+        />
+      </MemoryRouter>
     );
     expect(screen.getByTestId('panel-b')).toBeTruthy();
   });

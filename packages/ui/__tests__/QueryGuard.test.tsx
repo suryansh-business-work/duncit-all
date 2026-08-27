@@ -17,7 +17,7 @@ describe('QueryGuard', () => {
     render(<QueryGuard error={{ message: 'Boom happened' }}>ok</QueryGuard>);
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Boom happened');
-    expect(alert).toHaveClass('MuiAlert-standardError');
+    expect(alert).toHaveClass('MuiAlert-standard', 'MuiAlert-colorError');
   });
 
   it('prefers an explicit errorText over parseApiError', () => {
@@ -33,7 +33,7 @@ describe('QueryGuard', () => {
     render(<QueryGuard notFound>ok</QueryGuard>);
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Not found.');
-    expect(alert).toHaveClass('MuiAlert-standardInfo');
+    expect(alert).toHaveClass('MuiAlert-standard', 'MuiAlert-colorInfo');
   });
 
   it('supports a custom not-found severity and text', () => {
@@ -44,7 +44,7 @@ describe('QueryGuard', () => {
     );
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('No venue');
-    expect(alert).toHaveClass('MuiAlert-standardWarning');
+    expect(alert).toHaveClass('MuiAlert-standard', 'MuiAlert-colorWarning');
   });
 
   it('renders node children once all guards pass', () => {

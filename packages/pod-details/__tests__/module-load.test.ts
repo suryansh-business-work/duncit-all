@@ -31,9 +31,15 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  // 30s: the first import of a module pays vite's transform cost for its whole
+  // dependency graph, which on a cold Windows run can exceed the 5s default.
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    30_000,
+  );
 });

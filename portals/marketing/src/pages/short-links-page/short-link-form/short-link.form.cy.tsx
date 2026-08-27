@@ -14,7 +14,11 @@ const valid = {
   medium: 'SOCIAL',
 };
 
-const messages = (result: ReturnType<typeof shortLinkSchema.safeParse>) =>
+// The schema is built per-render from the surface's translator, so every call
+// site asks for one rather than importing a ready-made object.
+const schema = shortLinkSchema();
+
+const messages = (result: ReturnType<typeof schema.safeParse>) =>
   result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
 
 describe('isAllowedDestination', () => {
@@ -38,37 +42,37 @@ describe('isAllowedDestination', () => {
 
 describe('shortLinkSchema', () => {
   it('accepts a fully filled link', () => {
-    expect(shortLinkSchema.safeParse(valid).success).toBe(true);
+    expect(schema.safeParse(valid).success).toBe(true);
   });
 
   it('requires a label with something in it', () => {
-    expect(messages(shortLinkSchema.safeParse({ ...valid, label: 'ab' }))).toMatch(/at least 3/i);
+    expect(messages(schema.safeParse({ ...valid, label: 'ab' }))).toMatch(/at least 3/i);
   });
 
   it('explains an unusable destination', () => {
-    expect(messages(shortLinkSchema.safeParse({ ...valid, destination_url: 'evil.example' }))).toMatch(
+    expect(messages(schema.safeParse({ ...valid, destination_url: 'evil.example' }))).toMatch(
       /Duncit site or an app store/i,
     );
-    expect(messages(shortLinkSchema.safeParse({ ...valid, destination_url: '' }))).toMatch(
+    expect(messages(schema.safeParse({ ...valid, destination_url: '' }))).toMatch(
       /required/i,
     );
   });
 
   it('needs a channel and a medium chosen', () => {
-    expect(messages(shortLinkSchema.safeParse({ ...valid, source: '' }))).toMatch(/where this link/i);
-    expect(messages(shortLinkSchema.safeParse({ ...valid, medium: '' }))).toMatch(/Pick a medium/i);
+    expect(messages(schema.safeParse({ ...valid, source: '' }))).toMatch(/where this link/i);
+    expect(messages(schema.safeParse({ ...valid, medium: '' }))).toMatch(/Pick a medium/i);
   });
 
   // An untagged link silently loses the attribution it was created for.
   it('makes Other say what it means', () => {
-    expect(messages(shortLinkSchema.safeParse({ ...valid, source: 'OTHER' }))).toMatch(
+    expect(messages(schema.safeParse({ ...valid, source: 'OTHER' }))).toMatch(
       /what the channel is/i,
     );
-    expect(messages(shortLinkSchema.safeParse({ ...valid, medium: 'OTHER' }))).toMatch(
+    expect(messages(schema.safeParse({ ...valid, medium: 'OTHER' }))).toMatch(
       /what the medium is/i,
     );
     expect(
-      shortLinkSchema.safeParse({
+      schema.safeParse({
         ...valid,
         source: 'OTHER',
         source_other: 'Campus Ambassador',

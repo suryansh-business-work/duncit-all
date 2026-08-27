@@ -27,7 +27,7 @@ vi.mock('ag-grid-react', async () => {
       captured.onSortChanged = props.onSortChanged;
       captured.onRowClicked = props.onRowClicked;
       captured.getRowStyle = props.getRowStyle;
-      react.useImperativeHandle(ref, () => ({ api: { exportDataAsCsv: mockExport } }));
+      react.useImperativeHandle(ref, () => ({ api: { exportDataAsCsv: mockExport, refreshCells: () => undefined } }));
       return react.createElement('div', { 'data-testid': 'ag-grid-stub' });
     }),
   };

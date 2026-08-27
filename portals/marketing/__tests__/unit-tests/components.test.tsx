@@ -9,7 +9,8 @@ import { aiMjmlMock } from '../mocks';
 // Shared module mocks for heavy / external dependencies. GraphQL (the MjmlAi
 // mutation) flows through the real Apollo `MockedProvider` via renderWithProviders.
 // ---------------------------------------------------------------------------
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ dateFormat: 'dd/MM/yyyy', timeFormat: 'HH:mm' }),
 }));
 

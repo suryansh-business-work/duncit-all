@@ -31,9 +31,15 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    // The MUI-heavy modules (DeviceUploadTab, AttachmentUploadField) can take
+    // longer than the 5s default to transform on a cold Windows run.
+    30_000
+  );
 });

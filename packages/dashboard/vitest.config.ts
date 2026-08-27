@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
+    setupFiles: ['./vitest.setup.ts'],
     include: ['__tests__/**/*.test.{ts,tsx}'],
     // Tests are paused repo-wide (CLAUDE.md preamble); the suite lands with the
     // first spec rather than red-flagging every CI run until then.

@@ -6,6 +6,7 @@ import {
   filtersToDraft,
   type FilterDraftMap,
 } from '../src/toolbar/filterState';
+import { fallbackT } from '../src/i18n';
 import type { DuncitColumn, TableFilterValue } from '../src/types';
 
 type Row = Record<string, unknown>;
@@ -150,30 +151,30 @@ describe('filtersToDraft (round trip)', () => {
 
 describe('filterChipLabel', () => {
   it('labels every op shape with the column header', () => {
-    expect(filterChipLabel(columns, { field: 'name', op: 'contains', value: 'ab' })).toBe(
+    expect(filterChipLabel(columns, { field: 'name', op: 'contains', value: 'ab' }, fallbackT)).toBe(
       'Name contains ab',
     );
-    expect(filterChipLabel(columns, { field: 'status', op: 'in', values: ['A', 'I'] })).toBe(
+    expect(filterChipLabel(columns, { field: 'status', op: 'in', values: ['A', 'I'] }, fallbackT)).toBe(
       'Status: A, I',
     );
-    expect(filterChipLabel(columns, { field: 'age', op: 'between', values: ['1', '9'] })).toBe(
+    expect(filterChipLabel(columns, { field: 'age', op: 'between', values: ['1', '9'] }, fallbackT)).toBe(
       'Age: 1 – 9',
     );
-    expect(filterChipLabel(columns, { field: 'age', op: 'gte', value: '1' })).toBe('Age ≥ 1');
-    expect(filterChipLabel(columns, { field: 'active', op: 'is_true' })).toBe('Active: Yes');
-    expect(filterChipLabel(columns, { field: 'active', op: 'is_false' })).toBe('Active: No');
-    expect(filterChipLabel(columns, { field: 'unknown', op: 'eq', value: '1' })).toBe(
+    expect(filterChipLabel(columns, { field: 'age', op: 'gte', value: '1' }, fallbackT)).toBe('Age ≥ 1');
+    expect(filterChipLabel(columns, { field: 'active', op: 'is_true' }, fallbackT)).toBe('Active: Yes');
+    expect(filterChipLabel(columns, { field: 'active', op: 'is_false' }, fallbackT)).toBe('Active: No');
+    expect(filterChipLabel(columns, { field: 'unknown', op: 'eq', value: '1' }, fallbackT)).toBe(
       'unknown = 1',
     );
   });
 
   it('falls back to empty value list and raw op when values/labels are missing', () => {
     // `in` / `between` with no `values` array exercise the `?? []` fallbacks.
-    expect(filterChipLabel(columns, { field: 'status', op: 'in' })).toBe('Status: ');
-    expect(filterChipLabel(columns, { field: 'age', op: 'between' })).toBe('Age: ');
-    // An op outside OP_LABELS falls through to the raw op; missing value -> '' (trimmed).
+    expect(filterChipLabel(columns, { field: 'status', op: 'in' }, fallbackT)).toBe('Status: ');
+    expect(filterChipLabel(columns, { field: 'age', op: 'between' }, fallbackT)).toBe('Age: ');
+    // An op outside OP_SYMBOLS renders the localized contains word; missing value -> '' (trimmed).
     expect(
-      filterChipLabel(columns, { field: 'age', op: 'starts_with' as TableFilterValue['op'] }),
-    ).toBe('Age starts_with');
+      filterChipLabel(columns, { field: 'age', op: 'starts_with' as TableFilterValue['op'] }, fallbackT),
+    ).toBe('Age contains');
   });
 });

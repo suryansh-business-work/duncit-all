@@ -22,8 +22,8 @@ describe('couponFormSchema', () => {
   });
 
   it('rejects discount outside 1-100', () => {
-    expect(messages({ ...base, discount_pct: 0 })).toMatch(/minimum/i);
-    expect(messages({ ...base, discount_pct: 101 })).toMatch(/maximum/i);
+    expect(messages({ ...base, discount_pct: 0 })).toMatch(/discountMin/);
+    expect(messages({ ...base, discount_pct: 101 })).toMatch(/discountMax/);
   });
 
   it('requires a pod for POD scope', () => {

@@ -41,13 +41,17 @@ describe('RangeFilter', () => {
 
   it('shows the From/To pickers only when the range is "custom"', () => {
     const { rerender } = wrap('today');
-    expect(screen.queryByLabelText('From')).toBeNull();
+    expect(screen.queryByRole('group', { name: 'From' })).toBeNull();
     rerender(
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <RangeFilter range="custom" custom={{}} onRangeChange={vi.fn()} onCustomChange={vi.fn()} />
       </LocalizationProvider>
     );
-    expect(screen.getByLabelText('From')).toBeTruthy();
-    expect(screen.getByLabelText('To')).toBeTruthy();
+    // MUI X labels a date field twice — the visible <label> is tied to the
+    // hidden input, and the editable sections sit in a role="group" that points
+    // at the same label — so the field is queried by its group, not by a
+    // label lookup that now matches both nodes.
+    expect(screen.getByRole('group', { name: 'From' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'To' })).toBeTruthy();
   });
 });

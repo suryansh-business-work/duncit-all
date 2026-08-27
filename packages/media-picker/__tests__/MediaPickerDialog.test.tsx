@@ -11,6 +11,12 @@
 import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+// Deep import through @duncit/tabs' own node_modules on purpose: this package
+// only PEER-depends on react-router-dom, and pnpm's auto-installed peer here
+// (6.30.3) is a DIFFERENT instance than the one tabs resolves (6.30.6) — a
+// Router from the wrong instance is invisible to useTabParam's useSearchParams.
+// @ts-expect-error -- untyped deep path; the shape is react-router-dom's own
+import { MemoryRouter } from '../../tabs/node_modules/react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import MediaPickerDialog from '../src/MediaPickerDialog';
@@ -35,12 +41,16 @@ const settle = async () => {
 const mount = (props: Partial<MediaPickerDialogProps> = {}) => {
   const onClose = vi.fn();
   const onPicked = vi.fn();
+  // The dialog keeps its open tab in the URL (`useTabParam`), so it must
+  // mount inside a Router exactly as it does on every surface.
   const result = render(
-    <MockedProvider mocks={[]}>
-      <ThemeProvider theme={testTheme}>
-      <MediaPickerDialog open onClose={onClose} onPicked={onPicked} {...props} />
-      </ThemeProvider>
-    </MockedProvider>
+    <MemoryRouter>
+      <MockedProvider mocks={[]}>
+        <ThemeProvider theme={testTheme}>
+          <MediaPickerDialog open onClose={onClose} onPicked={onPicked} {...props} />
+        </ThemeProvider>
+      </MockedProvider>
+    </MemoryRouter>
   );
   return { ...result, onClose, onPicked };
 };

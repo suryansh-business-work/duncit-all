@@ -31,9 +31,12 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
+  // 30s: a cold import transforms the module graph (MUI + Apollo) on first
+  // touch, which on a slow Windows disk overruns the 5s default long before
+  // anything is actually wrong.
   it.each(paths)('loads %s', async (modulePath) => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+  }, 30_000);
 });

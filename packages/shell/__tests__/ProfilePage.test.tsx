@@ -12,13 +12,17 @@ vi.mock('../src/hooks/useBranding', () => ({
   useBranding: () => ({ appName: branding.appName, logoUrl: '', loading: false }),
 }));
 
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { ProfilePage } from '../src/chrome/ProfilePage';
 
 const mockMutation = vi.mocked(useMutation);
+const mockQuery = vi.mocked(useQuery);
 
 beforeEach(() => {
   branding.appName = 'Acme';
+  mockQuery.mockReset();
+  // The connected-accounts query answers empty unless a test says otherwise.
+  mockQuery.mockReturnValue({ data: undefined } as never);
   userCtx.refetch = vi.fn().mockResolvedValue(null);
   userCtx.logout = vi.fn();
 });
@@ -28,6 +32,7 @@ describe('ProfilePage', () => {
     const u = userEvent.setup();
     const save = vi.fn().mockResolvedValue({});
     userCtx.user = {
+      user_id: 'u1',
       first_name: 'Ada',
       last_name: 'Lovelace',
       full_name: 'Ada Lovelace',
@@ -35,12 +40,17 @@ describe('ProfilePage', () => {
       roles: ['ADMIN'],
     };
     mockMutation.mockReturnValue([save, { loading: false, error: undefined }] as never);
+    mockQuery.mockReturnValue({
+      data: { myConnectedAccounts: { google: { google_email: 'ada@gmail.test' } } },
+    } as never);
 
     render(<ProfilePage />);
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('ada@x.test')).toBeInTheDocument();
     expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Signed in to Acme')).toBeInTheDocument();
+    // The linked Gmail line — read-only, from the connected-accounts query.
+    expect(screen.getByText('ada@gmail.test')).toBeInTheDocument();
 
     await u.click(screen.getByRole('button', { name: 'Edit' }));
     const first = screen.getByLabelText('First name');
@@ -76,7 +86,7 @@ describe('ProfilePage', () => {
 
   it('surfaces a save error and disables the buttons while saving', async () => {
     const u = userEvent.setup();
-    userCtx.user = { first_name: 'Ada', roles: [] };
+    userCtx.user = { user_id: 'u1', first_name: 'Ada', roles: [] };
     mockMutation.mockReturnValue([vi.fn(), { loading: true, error: { message: 'nope' } }] as never);
 
     render(<ProfilePage />);
@@ -87,7 +97,7 @@ describe('ProfilePage', () => {
 
   it('falls back to the Duncit brand name when branding has no app name', () => {
     branding.appName = '';
-    userCtx.user = { first_name: 'Ada', roles: [] };
+    userCtx.user = { user_id: 'u1', first_name: 'Ada', roles: [] };
     mockMutation.mockReturnValue([vi.fn(), { loading: false, error: undefined }] as never);
     render(<ProfilePage />);
     expect(screen.getByText('Signed in to Duncit')).toBeInTheDocument();
@@ -95,7 +105,7 @@ describe('ProfilePage', () => {
 
   it('cancels an edit back to the read view', async () => {
     const u = userEvent.setup();
-    userCtx.user = { first_name: 'Ada', roles: [] };
+    userCtx.user = { user_id: 'u1', first_name: 'Ada', roles: [] };
     mockMutation.mockReturnValue([vi.fn(), { loading: false, error: undefined }] as never);
 
     render(<ProfilePage />);

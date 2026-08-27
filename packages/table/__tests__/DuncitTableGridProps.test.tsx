@@ -12,7 +12,12 @@ type GridProps = {
   defaultColDef?: { cellStyle?: CellStyle };
   getRowId?: (params: { data: unknown }) => string;
 };
-type GridHandle = { api?: { exportDataAsCsv: (options: { fileName: string }) => void } };
+type GridHandle = {
+  api?: {
+    exportDataAsCsv: (options: { fileName: string }) => void;
+    refreshCells: (params: { force: boolean }) => void;
+  };
+};
 
 const { captured, gridHandle, mockExport } = vi.hoisted(() => ({
   captured: {} as GridProps,
@@ -47,7 +52,7 @@ function makeFetch() {
 beforeEach(() => {
   window.localStorage.clear();
   mockExport.mockClear();
-  gridHandle.current = { api: { exportDataAsCsv: mockExport } };
+  gridHandle.current = { api: { exportDataAsCsv: mockExport, refreshCells: () => undefined } };
   for (const key of Object.keys(captured)) {
     delete captured[key as keyof GridProps];
   }
@@ -184,5 +189,26 @@ describe('DuncitTable CSV export guard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
     expect(mockExport).toHaveBeenCalledWith({ fileName: 'csv-ready.csv' });
+  });
+});
+
+describe('DuncitTable updateRowRef handoff', () => {
+  it('publishes updateRow on mount and releases it on unmount', async () => {
+    const updateRowRef: { current: ((row: Person) => void) | null } = { current: null };
+    const { unmount } = render(
+      <DuncitTable<Person>
+        tableId="update-row-ref"
+        columns={columns}
+        fetchRows={makeFetch()}
+        getRowId={(row) => row.id}
+        updateRowRef={updateRowRef}
+      />,
+    );
+    await screen.findByTestId('ag-grid-stub');
+    expect(typeof updateRowRef.current).toBe('function');
+
+    unmount();
+    // A parent whose mutation resolves after the table is gone must not reach a dead hook.
+    expect(updateRowRef.current).toBeNull();
   });
 });

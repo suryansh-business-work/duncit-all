@@ -2,6 +2,7 @@ import type React from 'react';
 import type { ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, it } from 'vitest';
 import { buildColDefs, isColumnHidden, TRUNCATE_CELL_CLASS } from '../src/columnDefs';
+import { fallbackT } from '../src/i18n';
 import type { DuncitColumn } from '../src/types';
 
 type Row = { id: string; name: string; score: number };
@@ -98,5 +99,29 @@ describe('buildColDefs', () => {
     expect(tooltipOf(0)({ data: row } as ITooltipParams<Row>)).toBe('42');
     // valueGetter returning an object -> undefined (non-primitive)
     expect(tooltipOf(1)({ data: row } as ITooltipParams<Row>)).toBeUndefined();
+  });
+});
+
+describe('columnHeader through buildColDefs', () => {
+  it('resolves headerKey through t and falls back to the field when nothing names the column', () => {
+    const cols: DuncitColumn<Row>[] = [
+      { field: 'name', headerKey: 'shell.common.created' },
+      { field: 'score' },
+    ];
+    const defs = buildColDefs(cols, {}, null, 'asc', fallbackT);
+    expect(defs[0].headerName).toBe('Created');
+    expect(defs[1].headerName).toBe('score');
+  });
+
+  it('declares renderer cells never-equal so a row update always repaints them', () => {
+    const cols: DuncitColumn<Row>[] = [
+      { field: 'name', headerName: 'Name' },
+      { field: 'score', headerName: 'Score', cellRenderer: (row) => <b>{row.score}</b> },
+    ];
+    const defs = buildColDefs(cols, {}, null, 'asc', fallbackT);
+    // A plain-text cell IS its value, so AG Grid's `===` gate stays.
+    expect(defs[0].equals).toBeUndefined();
+    // A renderer draws from the whole row: identical values must still repaint.
+    expect(defs[1].equals?.(3, 3)).toBe(false);
   });
 });

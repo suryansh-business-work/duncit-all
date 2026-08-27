@@ -93,7 +93,7 @@ describe('JwtExpirySection', () => {
     const onToast = vi.fn();
     m.query = { data: { appSettings: makeJwtSettings({ jwt_expires_in: '7d' }) }, loading: false, error: undefined, refetch: m.query.refetch };
     render(<JwtExpirySection onToast={onToast} />);
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('switch'));
     expect(screen.getByText(/will not expire/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(onToast).toHaveBeenCalledWith('JWT settings saved'));
@@ -115,7 +115,7 @@ describe('JwtExpirySection', () => {
     m.query = { data: { appSettings: makeJwtSettings({ jwt_expires_in: '7d' }) }, loading: false, error: undefined, refetch: m.query.refetch };
     m.save.mockRejectedValue(new Error('save fail'));
     render(<JwtExpirySection onToast={vi.fn()} />);
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('switch'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('save fail')).toBeInTheDocument();
   });

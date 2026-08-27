@@ -71,4 +71,24 @@ describe('InfoRow', () => {
     render(<InfoRow variant="split" label="Grand" value="₹9" bold />);
     expect(screen.getByText('Grand')).toBeInTheDocument();
   });
+
+  it('spreads array labelSx/valueSx on the stacked variant', () => {
+    render(
+      <InfoRow
+        label="Pod"
+        value="DUN-POD-4821"
+        labelSx={[{ letterSpacing: '2px' }]}
+        valueSx={[{ letterSpacing: '3px' }]}
+      />,
+    );
+    expect(screen.getByText('Pod')).toHaveStyle({ letterSpacing: '2px' });
+    expect(screen.getByText('DUN-POD-4821')).toHaveStyle({ letterSpacing: '3px' });
+  });
+
+  it('spreads an array labelSx on the split variant', () => {
+    render(
+      <InfoRow variant="split" label="GST" value="₹18" labelSx={[{ letterSpacing: '1px' }]} />,
+    );
+    expect(screen.getByText('GST')).toHaveStyle({ letterSpacing: '1px' });
+  });
 });

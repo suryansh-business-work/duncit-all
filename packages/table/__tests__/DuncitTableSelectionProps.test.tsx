@@ -11,7 +11,9 @@ type GridProps = {
   onSelectionChanged?: SelectionChanged;
   headerHeight?: number;
 };
-type GridHandle = { api?: { deselectAll: () => void } };
+type GridHandle = {
+  api?: { deselectAll: () => void; refreshCells: (params: { force: boolean }) => void };
+};
 
 const { captured, gridHandle, mockDeselectAll } = vi.hoisted(() => ({
   captured: {} as GridProps,
@@ -50,7 +52,7 @@ function selectionEvent(rows: Person[]) {
 beforeEach(() => {
   window.localStorage.clear();
   mockDeselectAll.mockClear();
-  gridHandle.current = { api: { deselectAll: mockDeselectAll } };
+  gridHandle.current = { api: { deselectAll: mockDeselectAll, refreshCells: () => undefined } };
   for (const key of Object.keys(captured)) {
     delete captured[key as keyof GridProps];
   }

@@ -117,4 +117,20 @@ describe('PodForm', () => {
     expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save as Draft' })).toBeDisabled();
   });
+
+  it('lays out a second column when a preview is supplied', () => {
+    renderForm({ preview: <div data-testid="live-preview">preview</div> });
+    expect(screen.getByTestId('live-preview')).toBeInTheDocument();
+  });
+
+  it('swaps the club filter for the category field and drops Draft in Auto Pod mode', () => {
+    renderForm({
+      config: makeConfig({ autoPod: true }),
+      initialValues: validValues({ pod_type: 'PAID', pod_amount: 500, sub_category_id: 'sub-1' }),
+    });
+    expect(screen.getByTestId('auto-pod-category')).toBeInTheDocument();
+    expect(screen.queryByTestId('pod-category-filter')).not.toBeInTheDocument();
+    // An Auto Pod is either open for enrolment or it is not — no draft state.
+    expect(screen.queryByRole('button', { name: 'Save as Draft' })).not.toBeInTheDocument();
+  });
 });

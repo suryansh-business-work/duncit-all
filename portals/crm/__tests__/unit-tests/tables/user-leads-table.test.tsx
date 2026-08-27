@@ -1,6 +1,7 @@
 import '../helpers/agGridEnv';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { formatDateCell } from '@duncit/table';
 import type { MutableRefObject } from 'react';
 import LeadsTable, { type LeadRow } from '@/pages/user-leads/LeadsTable';
 
@@ -66,16 +67,20 @@ describe('LeadsTable (WhatsApp user leads)', () => {
     expect(screen.getAllByText('—')).toHaveLength(4);
   });
 
-  it('formats the Imported date in the en-IN locale', async () => {
+  it('formats the Imported date in the admin-configured pattern', async () => {
+    // The Imported column is a shared `dateColumn`, whose pattern comes from
+    // the admin display settings — assert through that same formatter.
+    const imported = formatDateCell(lead.imported_at);
     renderTable([lead]);
-    expect(await screen.findByText('2/5/2026')).toBeTruthy();
+    expect(await screen.findByText(imported)).toBeTruthy();
   });
 
   it('shows an em dash in Imported when the lead was never imported', async () => {
+    const imported = formatDateCell(lead.imported_at);
     renderTable([{ ...lead, imported_at: null }]);
     await screen.findByText('Asha Rao');
     expect(screen.getByText('—')).toBeTruthy();
-    expect(screen.queryByText('2/5/2026')).toBeNull();
+    expect(screen.queryByText(imported)).toBeNull();
   });
 
   // Row-click → onRowClick(lead.id) goes through AG Grid's rowClicked event, which

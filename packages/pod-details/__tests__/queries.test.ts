@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { argumentsAt, fieldsAt, operationOf, variablesOf } from '../../../__tests__/gql-contract';
+import { argumentsAt, fieldsAt, operationOf, variablesOf } from './gql-contract';
 import {
   POD_ATTENDEES_ADMIN,
   POD_AUDIT_TRAIL,
@@ -7,7 +7,7 @@ import {
   POD_DETAIL,
   POD_HOST_PROFILE,
   POD_PAYMENTS_TABLE,
-} from '../queries';
+} from '../src/queries';
 
 describe('POD_DETAIL', () => {
   it('opens cancelled pods too (include_deleted) and reads the timeline fields', () => {
@@ -60,7 +60,15 @@ describe('POD_AUDIT_TRAIL', () => {
 
 describe('POD_CLUB_DETAIL / POD_HOST_PROFILE', () => {
   it('reads club admins and the host profile contacts', () => {
-    expect(fieldsAt(POD_CLUB_DETAIL, 'club', 'club_admins')).toEqual(['id', 'name', 'avatar_url']);
+    // e6a3ebe67: the pod page names the club admins AND how to reach them.
+    expect(fieldsAt(POD_CLUB_DETAIL, 'club', 'club_admins')).toEqual([
+      'id',
+      'name',
+      'avatar_url',
+      'email',
+      'phone',
+      'whatsapp',
+    ]);
     expect(fieldsAt(POD_HOST_PROFILE, 'hostByUser')).toEqual(
       expect.arrayContaining(['host_no', 'full_name', 'email', 'phone', 'status']),
     );

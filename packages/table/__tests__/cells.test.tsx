@@ -5,6 +5,7 @@ import {
   actionsColumn,
   activeChipColumn,
   dateColumn,
+  entityIdColumn,
   formatDateCell,
   EM_DASH,
 } from '../src/cells';
@@ -16,7 +17,7 @@ const inactiveRow: Row = { id: '2', name: 'Beta', is_active: false, created_at: 
 
 describe('formatDateCell', () => {
   it('formats with the default pattern and falls back to an em dash', () => {
-    expect(formatDateCell('2026-02-03T10:00:00Z')).toBe('3 Feb 2026');
+    expect(formatDateCell('2026-02-03T10:00:00Z')).toBe('03 Feb 2026');
     expect(formatDateCell(null)).toBe(EM_DASH);
     expect(formatDateCell(undefined)).toBe(EM_DASH);
     expect(formatDateCell('2026-02-03T10:00:00Z', 'yyyy-MM')).toBe('2026-02');
@@ -28,12 +29,12 @@ describe('dateColumn', () => {
     const col = dateColumn<Row>();
     expect(col).toMatchObject({
       field: 'created_at',
-      headerName: 'Created',
+      headerKey: 'shell.common.created',
       hide: true,
       width: 130,
       filter: { type: 'date' },
     });
-    expect(col.valueGetter?.(activeRow)).toBe('3 Feb 2026');
+    expect(col.valueGetter?.(activeRow)).toBe('03 Feb 2026');
     expect(col.valueGetter?.(inactiveRow)).toBe(EM_DASH);
   });
 
@@ -57,7 +58,7 @@ describe('activeChipColumn', () => {
     const col = activeChipColumn<Row>();
     expect(col).toMatchObject({
       field: 'is_active',
-      headerName: 'Status',
+      headerKey: 'shell.common.status',
       width: 110,
       filter: { type: 'boolean' },
     });
@@ -98,7 +99,7 @@ describe('actionsColumn', () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();
     const col = actionsColumn<Row>({ onEdit, onDelete });
-    expect(col).toMatchObject({ field: 'actions', headerName: 'Actions', width: 110, sortable: false });
+    expect(col).toMatchObject({ field: 'actions', headerKey: 'shell.common.actions', width: 110, sortable: false });
 
     render(<>{col.cellRenderer?.(activeRow)}</>);
     await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
@@ -127,5 +128,60 @@ describe('actionsColumn', () => {
     const col = actionsColumn<Row>({ onEdit: vi.fn() });
     render(<>{col.cellRenderer?.(activeRow)}</>);
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+  });
+});
+
+describe('entityIdColumn', () => {
+  type Contract = { contract_no: string | null; owner: string };
+  const numbered: Contract = { contract_no: 'CTR-000042', owner: 'Alpha' };
+  const legacy: Contract = { contract_no: null, owner: 'Beta' };
+
+  it('renders the id monospace with a text filter and a sort value', () => {
+    const col = entityIdColumn<Contract>({ field: 'contract_no', headerName: 'Contract ID' });
+    expect(col).toMatchObject({
+      field: 'contract_no',
+      headerName: 'Contract ID',
+      width: 150,
+      filter: { type: 'text' },
+    });
+    expect(col.valueGetter?.(numbered)).toBe('CTR-000042');
+
+    const { container } = render(<>{col.cellRenderer?.(numbered)}</>);
+    const cell = screen.getByText('CTR-000042');
+    expect(cell).toHaveStyle({ fontFamily: 'monospace', whiteSpace: 'nowrap' });
+    expect(container.querySelector('.MuiTypography-body2')).not.toBeNull();
+  });
+
+  it('falls back to an em dash for a record that predates the id', () => {
+    const col = entityIdColumn<Contract>({ field: 'contract_no', headerName: 'Contract ID' });
+    expect(col.valueGetter?.(legacy)).toBe(EM_DASH);
+    render(<>{col.cellRenderer?.(legacy)}</>);
+    expect(screen.getByText(EM_DASH)).toBeInTheDocument();
+  });
+
+  it('supports getId and an unfilterable column', () => {
+    const col = entityIdColumn<Contract>({
+      field: 'contract_no',
+      headerName: 'Owner',
+      filterable: false,
+      minWidth: 90,
+      getId: (row) => row.owner,
+    });
+    expect(col.filter).toBeUndefined();
+    expect(col.minWidth).toBe(90);
+    expect(col.valueGetter?.(numbered)).toBe('Alpha');
+  });
+});
+
+describe('column factories with a caller-named header', () => {
+  it('carry no headerKey once a headerName is given', () => {
+    expect(activeChipColumn<Row>({ headerName: 'Live' })).toMatchObject({
+      headerName: 'Live',
+      headerKey: undefined,
+    });
+    expect(actionsColumn<Row>({ onEdit: vi.fn(), headerName: 'Manage' })).toMatchObject({
+      headerName: 'Manage',
+      headerKey: undefined,
+    });
   });
 });

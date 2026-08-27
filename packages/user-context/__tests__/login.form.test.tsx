@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import LoginForm, { loginSchema } from '../src/login-screen/login.form';
+import LoginForm, { buildLoginSchema } from '../src/login-screen/login.form';
+import { sessionT } from '../src/i18n';
+
+// The schema is built from the mounting surface's translator (rule 38); the
+// shipped English translator is the form's own default.
+const loginSchema = buildLoginSchema(sessionT);
 
 describe('loginSchema', () => {
   it('accepts a valid email + password', async () => {
@@ -25,7 +30,7 @@ describe('LoginForm', () => {
   it('shows validation errors when submitting empty', async () => {
     const onSubmit = vi.fn();
     render(<LoginForm onSubmit={onSubmit} onForgotPassword={vi.fn()} />);
-    await userEvent.click(screen.getByLabelText('sign in'));
+    await userEvent.click(screen.getByLabelText('Sign in'));
     expect(await screen.findByText('E-mail address is required')).toBeInTheDocument();
     expect(await screen.findByText('Password is required')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -36,7 +41,7 @@ describe('LoginForm', () => {
     render(<LoginForm onSubmit={onSubmit} onForgotPassword={vi.fn()} />);
     await userEvent.type(screen.getByPlaceholderText('e-mail address'), 'a@b.co');
     await userEvent.type(screen.getByPlaceholderText('password'), 'secret');
-    await userEvent.click(screen.getByLabelText('sign in'));
+    await userEvent.click(screen.getByLabelText('Sign in'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ email: 'a@b.co', password: 'secret' }));
   });
 
@@ -44,9 +49,9 @@ describe('LoginForm', () => {
     render(<LoginForm onSubmit={vi.fn()} onForgotPassword={vi.fn()} />);
     const pwd = screen.getByPlaceholderText('password') as HTMLInputElement;
     expect(pwd.type).toBe('password');
-    await userEvent.click(screen.getByLabelText('toggle password visibility'));
+    await userEvent.click(screen.getByLabelText('Toggle password visibility'));
     expect(pwd.type).toBe('text');
-    await userEvent.click(screen.getByLabelText('toggle password visibility'));
+    await userEvent.click(screen.getByLabelText('Toggle password visibility'));
     expect(pwd.type).toBe('password');
   });
 
@@ -59,6 +64,6 @@ describe('LoginForm', () => {
 
   it('disables the submit button while loading', () => {
     render(<LoginForm loading onSubmit={vi.fn()} onForgotPassword={vi.fn()} />);
-    expect(screen.getByLabelText('sign in')).toBeDisabled();
+    expect(screen.getByLabelText('Sign in')).toBeDisabled();
   });
 });

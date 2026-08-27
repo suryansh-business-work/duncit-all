@@ -35,5 +35,7 @@ describe('every module loads', () => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+    // The first module to touch MUI pays for the whole transform, and under a
+    // fully parallel run that alone can blow the 5s default on a cold cache.
+  }, 30_000);
 });

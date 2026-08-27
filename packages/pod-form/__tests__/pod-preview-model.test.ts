@@ -152,3 +152,38 @@ describe('buildPodPreview', () => {
     expect(model.offers).toEqual([]);
   });
 });
+
+describe('buildPodPreview - the edges the card renders around', () => {
+  it('extends the when-line through the end time when one is set', () => {
+    const start = new Date('2030-06-01T10:00:00.000Z');
+    const end = new Date('2030-06-01T12:00:00.000Z');
+    const model = buildPodPreview(values({ pod_date_time: start, pod_end_date_time: end }), data());
+    // start day + start time, then the end time after the dash
+    expect(model.whenText).toBe(`d:${String(start)} · t:${String(start)} – t:${String(end)}`);
+  });
+
+  it('stops the when-line at the start when no end is set', () => {
+    const start = new Date('2030-06-01T10:00:00.000Z');
+    const model = buildPodPreview(values({ pod_date_time: start, pod_end_date_time: null }), data());
+    expect(model.whenText).toBe(`d:${String(start)} · t:${String(start)}`);
+  });
+
+  it('falls back to a host email when the profile carries no name', () => {
+    const model = buildPodPreview(
+      values({ pod_hosts_id: ['u-3', 'u-4', 'u-missing'] }),
+      data({
+        users: [
+          { user_id: 'u-3', email: 'host@duncit.com' },
+          { user_id: 'u-4', full_name: '', email: '' },
+        ],
+      }),
+    );
+    // No name -> email; nothing at all -> the host is left out, never a blank line.
+    expect(model.hostNames).toEqual(['host@duncit.com']);
+  });
+
+  it('prices in rupees when no currency symbol is configured', () => {
+    const model = buildPodPreview(values({ pod_amount: 250 }), data({ finance: undefined }));
+    expect(model.priceText).toBe('₹250');
+  });
+});

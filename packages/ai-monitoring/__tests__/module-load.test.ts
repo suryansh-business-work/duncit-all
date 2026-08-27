@@ -31,9 +31,16 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  // The MUI/Apollo modules take well over the 5s default to transform cold
+  // (and again under coverage instrumentation), so the smoke test gets a
+  // generous ceiling — it asserts the import RESOLVES, never how fast.
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    60_000
+  );
 });

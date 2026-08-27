@@ -47,6 +47,11 @@ async function makeSubCategoryAndClub(over: { allow_co_hosts?: boolean; max_co_h
   return { sub, club };
 }
 
+// A VIRTUAL pod books no venue slot, so nothing else supplies its end: the
+// service requires the window's end instant on the input itself
+// (pod.service.ts -> validateFutureDates(..., requireEnd)).
+const VIRTUAL_END_OFFSET_MS = 86_400_000 + 7_200_000;
+
 const podInput = (hostId: string, clubId: string, over: Record<string, unknown> = {}) => ({
   pod_title: `Pod ${Math.random().toString(36).slice(2)}`,
   club_id: clubId,
@@ -56,6 +61,7 @@ const podInput = (hostId: string, clubId: string, over: Record<string, unknown> 
   pod_description: 'desc',
   pod_type: 'FREE',
   pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
+  pod_end_date_time: new Date(Date.now() + VIRTUAL_END_OFFSET_MS).toISOString(),
   pod_images_and_videos: [IMG],
   ...over,
 });

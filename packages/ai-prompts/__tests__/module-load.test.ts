@@ -31,9 +31,11 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
+  // 30s, not the 5s default: the first import pulls the whole MUI tree through
+  // the transform, which blows the default on a cold Windows run (CI is fast).
   it.each(paths)('loads %s', async (modulePath) => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+  }, 30_000);
 });

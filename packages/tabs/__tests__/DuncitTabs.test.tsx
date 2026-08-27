@@ -56,7 +56,13 @@ describe('DuncitTabs', () => {
       />
     );
 
-    await userEvent.click(screen.getByRole('tab', { name: 'Previous' }));
+    const disabledTab = screen.getByRole('tab', { name: 'Previous' });
+    expect(disabledTab).toHaveProperty('disabled', true);
+
+    // MUI styles a disabled tab `pointer-events: none`, which user-event refuses
+    // to click by default — bypass the guard so the click actually dispatches and
+    // proves the disabled tab swallows it.
+    await userEvent.setup({ pointerEventsCheck: 0 }).click(disabledTab);
 
     expect(onChange).not.toHaveBeenCalled();
   });

@@ -227,3 +227,89 @@ describe('useTableQuery', () => {
     );
   });
 });
+
+describe('useTableQuery updateRow', () => {
+  const alice: Row = { id: 'u1', name: 'Alice' };
+  const bob: Row = { id: 'u2', name: 'Bob' };
+
+  it('replaces the one row whose id matches and leaves the rest untouched', async () => {
+    const fetchRows = okFetch([alice, bob], 2);
+    const { result } = renderHook(() =>
+      useTableQuery({ fetchRows, getRowId: (row) => row.id }),
+    );
+    await waitFor(() => expect(result.current.rows).toEqual([alice, bob]));
+
+    act(() => {
+      result.current.updateRow({ id: 'u2', name: 'Robert' });
+    });
+    await waitFor(() => expect(result.current.rows[1]).toEqual({ id: 'u2', name: 'Robert' }));
+    expect(result.current.rows[0]).toBe(alice);
+    // No refetch — the caller already had the answer.
+    expect(fetchRows).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the same rows array when the id is not on this page', async () => {
+    const { result } = renderHook(() =>
+      useTableQuery({ fetchRows: okFetch([alice], 1), getRowId: (row) => row.id }),
+    );
+    await waitFor(() => expect(result.current.rows).toEqual([alice]));
+    const before = result.current.rows;
+
+    act(() => {
+      result.current.updateRow({ id: 'u9', name: 'Nobody' });
+    });
+    expect(result.current.rows).toBe(before);
+  });
+
+  it('is a no-op without a getRowId to find the row by', async () => {
+    const { result } = renderHook(() => useTableQuery({ fetchRows: okFetch([alice], 1) }));
+    await waitFor(() => expect(result.current.rows).toEqual([alice]));
+
+    act(() => {
+      result.current.updateRow({ id: 'u1', name: 'Alicia' });
+    });
+    expect(result.current.rows).toEqual([alice]);
+  });
+
+  it('exposes a referentially stable updateRow across renders', async () => {
+    const { result, rerender } = renderHook(() =>
+      useTableQuery({ fetchRows: okFetch([alice], 1), getRowId: (row) => row.id }),
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const first = result.current.updateRow;
+    rerender();
+    expect(result.current.updateRow).toBe(first);
+  });
+});
+
+describe('useTableQuery empty page recovery', () => {
+  it('goes back to page 1 when a later page comes back empty but the table is not', async () => {
+    // The rows under page 2 were deleted (a bulk delete on the last page): the
+    // server now says 25 in total, none of them here.
+    const fetchRows = vi.fn(async (q: TableQueryState): Promise<TablePage<Row>> => {
+      if (q.page > 1) return { rows: [], total: 25 };
+      return { rows: [{ id: 'u1', name: 'Alice' }], total: 25 };
+    });
+    const { result } = renderHook(() => useTableQuery({ fetchRows }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    act(() => {
+      result.current.setPage(2);
+    });
+    await waitFor(() => expect(fetchRows).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 })));
+    // ...and the hook re-asks for page 1 instead of committing an empty view.
+    await waitFor(() => expect(result.current.query.page).toBe(1));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.rows).toEqual([{ id: 'u1', name: 'Alice' }]);
+    expect(result.current.total).toBe(25);
+    expect(fetchRows).toHaveBeenCalledTimes(3);
+  });
+
+  it('commits an empty first page as-is, even when the total says rows exist elsewhere', async () => {
+    const { result } = renderHook(() => useTableQuery({ fetchRows: okFetch([], 5) }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.rows).toEqual([]);
+    expect(result.current.total).toBe(5);
+    expect(result.current.query.page).toBe(1);
+  });
+});

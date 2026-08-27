@@ -36,6 +36,11 @@ describe('StatCard — default layout', () => {
     expect(screen.getByTestId('icon')).toBeInTheDocument();
   });
 
+  it('spreads an array labelSx into the label styles', () => {
+    render(<StatCard label="Revenue" value="₹1,000" labelSx={[{ letterSpacing: '2px' }]} />);
+    expect(screen.getByText('Revenue')).toHaveStyle({ letterSpacing: '2px' });
+  });
+
   it('renders without an icon (adornment collapses to null)', () => {
     render(<StatCard label="Empty" value="0" />);
     expect(screen.queryByTestId('icon')).not.toBeInTheDocument();

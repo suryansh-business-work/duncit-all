@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -38,10 +39,10 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
       <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1} sx={{
         justifyContent: "flex-end"
       }}>
-        <Button onClick={onCancel} disabled={busy}>
+        <DuncitButton onClick={onCancel} disabled={busy}>
           Keep it pending
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           color="error"
           startIcon={<CancelIcon />}
@@ -49,7 +50,7 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
           onClick={() => onSubmit(trimmed)}
         >
           {busy ? 'Declining…' : 'Decline booking'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

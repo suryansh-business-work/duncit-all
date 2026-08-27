@@ -14,6 +14,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Translate } from '@/i18n/fallback';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 type QuickRoute = 'CreatePod' | 'HostManage' | 'Verification' | 'Wallet';
@@ -73,7 +74,7 @@ function QuickAction({
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={22} color={primary} />
       <Text fontSize={13} fontWeight="700" color="$color">
@@ -163,7 +164,7 @@ export function HostDashboardScreen() {
             borderWidth={1}
             borderColor="$borderColor"
             backgroundColor="$surface"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <YStack
               width={44}

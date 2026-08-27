@@ -1,5 +1,6 @@
-import { Box, Button, Divider, Drawer, IconButton, Link, Stack, Typography } from '@mui/material';
+import { Box, Divider, Drawer, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import { SurveyAnswers } from '../../components/survey-answers';
 import { meetingStatusLabel } from './statusLabel';
@@ -63,7 +64,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
                 {meeting.user_name || meeting.contact_name || 'Applicant'}
               </Typography>
             </Box>
-            <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
+            <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
           </Stack>
 
           <StatusChip status={meeting.status} colorMap={STATUS_COLOR} label={meetingStatusLabel(meeting)} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
@@ -96,8 +97,8 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
             <>
               <Divider />
               <Stack direction="row" spacing={1}>
-                {showEdit && <Button variant="contained" onClick={() => onEdit?.(meeting)}>{t('onboarding.meetings.schedule')}</Button>}
-                {showCancel && <Button color="error" onClick={() => onCancel?.(meeting)}>{t('shell.common.cancel')}</Button>}
+                {showEdit && <DuncitButton variant="contained" onClick={() => onEdit?.(meeting)}>{t('onboarding.meetings.schedule')}</DuncitButton>}
+                {showCancel && <DuncitButton color="error" onClick={() => onCancel?.(meeting)}>{t('shell.common.cancel')}</DuncitButton>}
               </Stack>
             </>
           )}

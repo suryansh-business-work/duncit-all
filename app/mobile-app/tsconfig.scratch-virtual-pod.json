@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/graphql/details.ts",
+    "src/graphql/attendance.ts",
+    "src/components/details/PodSchedule.tsx",
+    "src/components/details/JoinMeetingButton.tsx",
+    "src/screens/PodDetailsScreen.tsx",
+    "src/components/create-pod/create-pod.form.ts",
+    "src/components/create-pod/VirtualMeetingFields.tsx",
+    "src/screens/PodAttendanceScreen/PodAttendanceScreen.tsx",
+    "src/components/attendance/AttendanceNotices.tsx",
+    "src/hooks/useAttendanceBoard.ts",
+    "src/components/details/__tests__/details-sections.test.tsx",
+    "src/components/__tests__/coverage-fill-3.test.tsx"
+  ]
+}

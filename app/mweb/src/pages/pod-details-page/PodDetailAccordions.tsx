@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import PlaceIcon from '@mui/icons-material/Place';
@@ -11,6 +11,7 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { DuncitButton } from '@duncit/buttons';
 import PodAccordion from '../../components/pod-details/PodAccordion';
 import PodClubSection from '../../components/pod-details/PodClubSection';
 import PodAboutSection from '../../components/pod-details/PodAboutSection';
@@ -93,7 +94,7 @@ export default function PodDetailAccordions({
           justifyContent: "flex-end",
           mb: 1
         }}>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={<UnfoldMoreIcon />}
           onClick={expandAll}
@@ -102,8 +103,8 @@ export default function PodDetailAccordions({
           sx={{ minHeight: 36 }}
         >
           {t('mweb.podDetails.expandAll')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           size="small"
           startIcon={<UnfoldLessIcon />}
           onClick={collapseAll}
@@ -112,7 +113,7 @@ export default function PodDetailAccordions({
           sx={{ minHeight: 36 }}
         >
           {t('mweb.podDetails.collapseAll')}
-        </Button>
+        </DuncitButton>
       </Stack>
       {sections.map((sec) => (
         <PodAccordion

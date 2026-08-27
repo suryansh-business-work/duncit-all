@@ -1,0 +1,137 @@
+---
+name: '@duncit/buttons-native'
+summary: 'What a pressed control looks like, as numbers — the six intents every tappable thing in Duncit answers to, shared by the native app and by mWeb.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mobile-app'
+  - 'packages/buttons'
+exports:
+  - 'PRESS'
+  - 'PRESS_STYLE'
+  - 'pressStyle'
+  - 'PRESS_INTENTS'
+  - 'PRESS_RELEASE_MS'
+  - 'DISABLED_OPACITY'
+  - 'TOUCH_TARGET'
+  - 'buttonSpec'
+  - 'BUTTON_SIZES'
+  - 'pressThemeKeys'
+  - 'withAlpha'
+  - 'PressIntent'
+  - 'ButtonVariant'
+  - 'ButtonTone'
+  - 'ButtonSize'
+---
+
+The MUI twin of this package is [`@duncit/buttons`](/packages/buttons), which
+serves mWeb and the 17 portals. This one holds the numbers **both** of them
+spend, and the style builders the native app renders from.
+
+## The problem it was written for
+
+Nothing in mWeb or the portals had a pressed state. Across ~1,800 buttons and
+icon buttons there were exactly **two** `:active` rules in the whole web
+codebase, both in a theme file, both for a contained primary button. Everything
+else — every icon button, every menu item, every list row, every card you tap —
+answered a tap with a ripple that starts slower than a finger lifts.
+
+The native app had the opposite problem: 436 hand-written pressed states across
+400 files, at **six different opacities** (0.6, 0.7, 0.75, 0.8, 0.85, 0.9), plus
+~150 tap targets with no feedback at all.
+
+Those six values are not thrown away here. They are what the intents below are
+named after, which is why adopting the system was opacity-identical at every
+existing call site — the compression is the only thing that changed.
+
+## The six intents
+
+An intent says **what is being pressed**, never how it is painted. It has to,
+because a 4% compression on a 44px chip and on a 380px card read as completely
+different gestures.
+
+| Intent | Dims to | Compresses to | Web state layer | For |
+| --- | --- | --- | --- | --- |
+| `solid` | — (fill darkens) | 0.96 | — | Filled CTAs, FABs, filled chips |
+| `control` | 0.85 | 0.96 | 12% | Outlined and tonal controls, toggles |
+| `ghost` | 0.75 | 0.94 | 12% | Text buttons, icon buttons |
+| `surface` | 0.90 | 0.985 | 6% | Cards, tiles, large tappable blocks |
+| `row` | 0.70 | — | 10% | List rows, menu items, tabs, nav |
+| `inline` | 0.60 | — | — | Text links |
+
+Two of those cells are the design, not an omission:
+
+- **`solid` does not dim.** Dropping the opacity of a red button over a white
+  page makes it *lighter*, which reads as the button going away rather than
+  going down. It darkens its own fill instead.
+- **`row` does not compress.** Scaling a full-width row detaches it from the
+  list it belongs to.
+
+```ts
+import { PRESS_STYLE } from '@duncit/buttons-native';
+
+<XStack onPress={openPod} pressStyle={PRESS_STYLE.surface}>
+```
+
+`PRESS_STYLE` holds frozen objects rather than a function call, because Tamagui
+re-reads `pressStyle` on every render: a fresh object literal is a new style to
+diff on every row of a scrolling list.
+
+Use `pressStyle(intent, disabled)` where the control can be switched off — it
+returns `undefined` when disabled, and a disabled control that still compresses
+under a finger is claiming it did something.
+
+## Press-in is instant
+
+`PRESS_RELEASE_MS` (160) applies to the **release only**. Animating the press
+*in* is the single thing that makes a touch UI feel broken: the finger is
+already lifting by the time the control has finished reacting. On the web side
+`pressCss` clears the transition inside `:active` to get the same behaviour.
+
+## `buttonSpec(...)`
+
+Everything a native button needs to paint itself in every state, from a
+`variant` × `tone` × `size`:
+
+```ts
+const spec = buttonSpec({ variant: 'solid', tone: 'primary', size: 'lg', loading });
+
+spec.backgroundColor;      // '$primary'      — a Tamagui token NAME, never a hex
+spec.pressBackgroundColor; // '$primaryPress'
+spec.intent;               // 'solid'
+spec.interactive;          // false while loading or disabled
+```
+
+The colours are token names on purpose. The app's `tamagui.config.ts` resolves
+them from `@duncit/auth-tokens` — the same file mWeb's MUI palette is built from
+— so a colour written in this package would be a third copy of the brand red.
+
+`disabled` and `loading` are separate inputs and stay separate all the way
+through: a loading button keeps its colour because it is still the thing you
+just pressed; only a disabled one recedes to `DISABLED_OPACITY`.
+
+## `pressThemeKeys(...)`
+
+Native has no `alpha()`, so every tonal surface in the app used to be a
+hand-typed `rgba(255, 87, 87, 0.12)` — which is how it grew four different
+"light reds". This derives the tonal fills and the missing pressed steps from
+the palette the app already has, and `tamagui.config.ts` spreads the result into
+both themes:
+
+```ts
+pressThemeKeys({ primary, primaryActive, danger, success });
+// { primarySoft, dangerSoft, successSoft, dangerPress, successPress }
+```
+
+## Why the view is not in here
+
+The native app is a standalone npm project. Metro resolves a linked package's
+peer imports by walking up from `packages/<name>/`, which holds nothing in the
+Docker build — so a package the app consumes must not import `react`,
+`react-native` or `tamagui`. The Tamagui view, `DuncitButton`, therefore lives in
+`app/mobile-app/src/components/DuncitButton/` and imports its numbers from here.
+
+It is the same split [`@duncit/dialogs-native`](/packages/dialogs-native) and
+[`@duncit/slots`](/packages/slots) use.

@@ -1,12 +1,11 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import HistoryIcon from '@mui/icons-material/History';
 import MailOutlineIcon from '@mui/icons-material/MailOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { Policy } from '../../graphql/policies';
 import { useTranslation } from '@duncit/shell';
@@ -58,21 +57,21 @@ export default function PoliciesTable({
         justifyContent: "flex-end"
       }}>
         <Tooltip title={t('legal.policies.versions.action')}>
-          <IconButton size="small" aria-label={t('legal.policies.versions.action')} onClick={() => onHistory(p)}>
+          <DuncitIconButton size="small" aria-label={t('legal.policies.versions.action')} onClick={() => onHistory(p)}>
             <HistoryIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('legal.policies.notify.sendNowHint')}>
-          <IconButton size="small" aria-label={t('legal.policies.notify.sendNow')} onClick={() => onNotify(p)}>
+          <DuncitIconButton size="small" aria-label={t('legal.policies.notify.sendNow')} onClick={() => onNotify(p)}>
             <MailOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
-        <Button size="small" onClick={() => onEdit(p)}>
+        <DuncitButton size="small" onClick={() => onEdit(p)}>
           {t('shell.common.edit')}
-        </Button>
-        <Button size="small" color="error" onClick={() => onRemove(p)}>
+        </DuncitButton>
+        <DuncitButton size="small" color="error" onClick={() => onRemove(p)}>
           {t('shell.common.delete')}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
     return [

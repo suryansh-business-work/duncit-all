@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react';
 import { Box } from '@mui/material';
-import { tokens } from '@duncit/theme';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 
 export interface UserDetailsTabItem {
@@ -24,9 +23,6 @@ export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTa
         scrollButtons="auto"
         allowScrollButtonsMobile
         sx={{
-          position: 'sticky',
-          top: tokens.size.headerHeight,
-          zIndex: 10,
           bgcolor: 'background.paper',
           minHeight: 40,
           borderBottom: 1,

@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { CircularProgress, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import UndoIcon from '@mui/icons-material/Undo';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
@@ -83,7 +84,7 @@ export default function PaymentsTable({
       <Stack direction="row" spacing={0.5} component="span">
         <Tooltip title={p.invoice_no ? t('finance.payment.downloadInvoice') : t('finance.payment.noInvoiceGenerated')}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               disabled={!p.invoice_no || downloadingId === p.id}
               onClick={(event) => {
@@ -93,12 +94,12 @@ export default function PaymentsTable({
               }}
             >
               {downloadingId === p.id ? <CircularProgress size={16} /> : <DownloadIcon fontSize="small" />}
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={p.status === 'SUCCESS' ? t('finance.payment.refund') : t('finance.payment.refundOnlySuccess')}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               color="warning"
               disabled={p.status !== 'SUCCESS'}
@@ -108,7 +109,7 @@ export default function PaymentsTable({
               }}
             >
               <UndoIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </Stack>

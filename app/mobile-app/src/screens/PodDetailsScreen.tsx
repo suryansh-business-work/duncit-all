@@ -44,6 +44,7 @@ import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Booking, backout and share actions for the loaded pod — the state the
  * booking bar and its dialogs share. RN twin of mWeb's usePodDetailActions. */
@@ -413,6 +414,7 @@ export function PodDetailsScreen() {
           </YStack>
         </Reveal>
         <XStack
+          pressStyle={PRESS_STYLE.surface}
           testID="pod-contact-support"
           role="button"
           aria-label={t('mweb.podDetails.contactSupport')}
@@ -434,7 +436,12 @@ export function PodDetailsScreen() {
         <Text color="$muted" testID="pod-details-error">
           {t('mweb.podDetails.notFound')}
         </Text>
-        <XStack role="button" aria-label={t('mweb.common.goBack')} onPress={goBack}>
+        <XStack
+          pressStyle={PRESS_STYLE.surface}
+          role="button"
+          aria-label={t('mweb.common.goBack')}
+          onPress={goBack}
+        >
           <Text color="$primary" fontWeight="700">
             {t('mweb.common.goBack')}
           </Text>
@@ -482,6 +489,7 @@ export function PodDetailsScreen() {
             }
             onBackout={() => actions.setBackoutOpen(true)}
             onKeepSpot={actions.openKeepSpot}
+            restoringSpot={actions.restoringSpot}
             onGoToDashboard={() => {
               useStudioModeStore.getState().setMode('HOST');
               navigation.navigate('HostManage');

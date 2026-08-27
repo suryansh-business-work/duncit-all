@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, AlertTitle, Button, Stack } from '@mui/material';
+import { Alert, AlertTitle, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notifyError } from '@duncit/dialogs';
 import { JOIN_SLACK_CHANNEL, type SlackChannel } from './queries';
@@ -54,9 +55,9 @@ export default function JoinChannelNotice({ channel, onJoined }: Readonly<Props>
       severity="warning"
       square
       action={
-        <Button color="inherit" size="small" onClick={join} disabled={busy}>
+        <DuncitButton color="inherit" size="small" onClick={join} disabled={busy}>
           {busy ? t('tech.slack.joining') : t('tech.slack.joinChannel')}
-        </Button>
+        </DuncitButton>
       }
     >
       <AlertTitle>{t('tech.slack.notInChannelTitle')}</AlertTitle>

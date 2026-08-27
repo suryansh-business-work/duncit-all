@@ -6,7 +6,6 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlaceIcon from '@mui/icons-material/Place';
 import {
   Box,
-  Button,
   ButtonBase,
   Chip,
   CircularProgress,
@@ -15,6 +14,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useNavigate, useParams } from 'react-router-dom';
 import MomentLightbox from '../components/moments/MomentLightbox';
 import VenueMapPreview from '../components/VenueMapPreview';
@@ -109,9 +109,9 @@ export default function VenueDetailsPage() {
   if (error || !venue) {
     return (
       <Stack spacing={2} sx={{ py: 4 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ alignSelf: 'flex-start' }}>
           Back
-        </Button>
+        </DuncitButton>
         <Typography variant="h5" sx={{
           fontWeight: 700
         }}>{t('mweb.venueDetailsPage.venueNotFound')}</Typography>
@@ -133,8 +133,8 @@ export default function VenueDetailsPage() {
           alignItems: "center",
           justifyContent: "space-between"
         }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>Back</Button>
-        <Button startIcon={<ContentCopyIcon />} onClick={copyLink}>{t('mweb.venueDetailsPage.copyLink')}</Button>
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>Back</DuncitButton>
+        <DuncitButton startIcon={<ContentCopyIcon />} onClick={copyLink}>{t('mweb.venueDetailsPage.copyLink')}</DuncitButton>
       </Stack>
 
       <Box sx={{ borderRadius: '16px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>

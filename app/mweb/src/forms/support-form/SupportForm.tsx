@@ -1,18 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Button,
-  Chip,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Chip, InputAdornment, MenuItem, Stack, TextField } from '@mui/material';
 import SubjectIcon from '@mui/icons-material/Subject';
 import CategoryIcon from '@mui/icons-material/Category';
 import EventIcon from '@mui/icons-material/Event';
+import { DuncitButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import {
   CATEGORIES,
@@ -159,7 +152,7 @@ export default function SupportForm({
 
         {(errorMessage || status) && <Alert severity="error">{errorMessage ?? status}</Alert>}
 
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -167,7 +160,7 @@ export default function SupportForm({
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {loading || isSubmitting ? 'Sending…' : 'Send to support'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </form>
   );

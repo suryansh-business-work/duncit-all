@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { EMAIL_SUPPORT_CHAT_TRANSCRIPT } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -63,11 +56,11 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{done ? 'Done' : 'Cancel'}</Button>
+        <DuncitButton onClick={onClose}>{done ? 'Done' : 'Cancel'}</DuncitButton>
         {!done && (
-          <Button variant="contained" disabled={loading || !email.trim()} onClick={handleSend}>
+          <DuncitButton variant="contained" disabled={loading || !email.trim()} onClick={handleSend}>
             {loading ? 'Sending…' : 'Send'}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

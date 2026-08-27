@@ -1,5 +1,6 @@
-import { Button, Chip } from '@mui/material';
+import { Chip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { dateColumn, type DuncitColumn } from '@duncit/table';
 import { AD_POSITIONS, adPositionLabel, formatAdMoney } from '../../lib/ad-positions';
@@ -41,9 +42,9 @@ interface ColumnDeps {
 
 export function getAdColumns({ onReview }: Readonly<ColumnDeps>, t: Translate): DuncitColumn<AdRequestRow>[] {
   const renderAction = (row: AdRequestRow) => (
-    <Button size="small" startIcon={<VisibilityIcon fontSize="small" />} onClick={() => onReview(row)}>
+    <DuncitButton size="small" startIcon={<VisibilityIcon fontSize="small" />} onClick={() => onReview(row)}>
       Review
-    </Button>
+    </DuncitButton>
   );
   return [
     {

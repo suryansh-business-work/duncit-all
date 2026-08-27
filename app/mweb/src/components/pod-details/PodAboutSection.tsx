@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -29,9 +30,9 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
             {shown}
           </Typography>
           {isLong && (
-            <Button size="small" onClick={() => setExpanded((v) => !v)} sx={{ mt: 0.5, p: 0 }}>
+            <DuncitButton size="small" onClick={() => setExpanded((v) => !v)} sx={{ mt: 0.5, p: 0 }}>
               {expanded ? t('mweb.podDetails.showLess') : t('mweb.podDetails.readMore')}
-            </Button>
+            </DuncitButton>
           )}
         </Box>
       ) : (

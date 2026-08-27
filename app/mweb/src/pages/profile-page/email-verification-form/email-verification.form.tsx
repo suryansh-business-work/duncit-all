@@ -3,15 +3,9 @@ import { gql, useMutation } from '@apollo/client';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import { DuncitButton } from '@duncit/buttons';
 import { OTP_PATTERN } from '../../../forms/validation/rules';
 import type { EmailVerificationFormProps, EmailVerificationValues } from './email-verification.types';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -116,7 +110,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{
           alignItems: { sm: 'flex-start' }
         }}>
-          <Button
+          <DuncitButton
             variant="outlined"
             onClick={sendOtp}
             disabled={!email || requestState.loading}
@@ -125,7 +119,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
             }
           >
             {requested ? 'Resend OTP' : 'Send OTP'}
-          </Button>
+          </DuncitButton>
           <Controller
             control={control}
             name="otp"
@@ -142,7 +136,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
               />
             )}
           />
-          <Button
+          <DuncitButton
             type="submit"
             variant="contained"
             disabled={verifyState.loading}
@@ -151,7 +145,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
             }
           >
             {t('mweb.common.verify')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </form>
     </Stack>

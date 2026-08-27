@@ -1,5 +1,4 @@
 import {
-  Button,
   Chip,
   Paper,
   Stack,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { TraceGroup } from './queries';
 
@@ -151,7 +151,7 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
                   <Typography variant="body2">{group.count}</Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Button
+                  <DuncitButton
                     size="small"
                     color={redacts ? 'info' : 'error'}
                     startIcon={redacts ? <ShieldOutlinedIcon /> : <DeleteOutlineIcon />}
@@ -161,7 +161,7 @@ export default function TraceList({ trace, busyKey, canDelete, onDelete }: Reado
                     sx={{ textTransform: 'none' }}
                   >
                     {actionLabel(group, busy, t)}
-                  </Button>
+                  </DuncitButton>
                 </TableCell>
               </TableRow>
             );

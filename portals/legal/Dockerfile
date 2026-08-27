@@ -61,6 +61,9 @@ COPY packages/communication/package.json ./packages/communication/
 # install stage pnpm never links them, and `tsc -b` fails inside the image on a
 # build that passes locally — the one failure mode local work cannot show you.
 COPY packages/forms/package.json ./packages/forms/
+COPY packages/buttons-native/package.json ./packages/buttons-native/
+COPY packages/buttons/package.json ./packages/buttons/
+COPY packages/verification/package.json ./packages/verification/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

@@ -1,12 +1,6 @@
-import {
-  Divider,
-  IconButton,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Divider, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { CampaignNameForm, type CampaignNameValues } from '../campaign-name-form';
 import type { WaCampaignNameOption } from '../queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -38,14 +32,14 @@ function NameRow({
       </Stack>
       <Tooltip title={t('marketing.whatsappCampaigns.removeFromTheList')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={`Remove ${option.name}`}
             disabled={busy}
             onClick={onDelete}
           >
             <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
     </Stack>

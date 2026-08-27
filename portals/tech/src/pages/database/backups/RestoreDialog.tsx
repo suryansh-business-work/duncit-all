@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Alert,
   AlertTitle,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { formatBytes, formatDateTime } from '../../server/format';
 import { takenAt, type BackupRow } from './queries';
@@ -108,12 +108,12 @@ export default function RestoreDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('tech.dbBackup.cancel')}
-        </Button>
-        <Button color="error" variant="contained" onClick={onConfirm} disabled={!matches || busy}>
+        </DuncitButton>
+        <DuncitButton color="error" variant="contained" onClick={onConfirm} disabled={!matches || busy}>
           {busy ? t('tech.dbBackup.restoreStarting') : t('tech.dbBackup.restoreConfirm')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -6,6 +6,7 @@ import type { AutoPodLabels } from '@duncit/utils';
 import { LocationDialog } from '@/components/LocationDialog';
 import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   labels: AutoPodLabels;
@@ -57,7 +58,7 @@ export function AutoPodLocationRow({ labels }: Readonly<Props>) {
           gap={2}
           paddingHorizontal={6}
           height={32}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={12.5} fontWeight="700" color="$primary">
             {labels.changeLocation}

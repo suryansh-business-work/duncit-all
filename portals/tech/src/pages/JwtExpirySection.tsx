@@ -3,7 +3,6 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
   Divider,
@@ -15,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
@@ -187,9 +187,9 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
               Controls how long access tokens issued at login remain valid.
             </Typography>
           </Box>
-          <Button variant="contained" startIcon={<SaveIcon />} onClick={submit} disabled={busy || !dirty}>
+          <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={submit} disabled={busy || !dirty}>
             {busy ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         {body}

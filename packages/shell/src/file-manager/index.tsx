@@ -2,18 +2,17 @@ import { useState } from 'react';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
-  IconButton,
   LinearProgress,
   Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import FileCard from './FileCard';
 import FileDetailsView from './FileDetailsView';
 import FileManagerToolbar from './FileManagerToolbar';
@@ -111,9 +110,9 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
             Every file uploaded to ImageKit. Upload, find one, copy its link at any size.
           </Typography>
         </Box>
-        <IconButton onClick={onClose} aria-label={t('shell.fileManager.close')}>
+        <DuncitIconButton onClick={onClose} aria-label={t('shell.fileManager.close')}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
 
       <DialogContent dividers sx={{ display: 'flex', gap: 0, p: 0 }}>
@@ -179,13 +178,13 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
             justifyContent: "center",
             pt: 3
           }}>
-          <Button
+          <DuncitButton
             size="small"
             disabled={manager.page === 0 || manager.loading}
             onClick={() => manager.setPage(manager.page - 1)}
           >
             Previous
-          </Button>
+          </DuncitButton>
           {/* The spinner sits in the pager, where the click was — a bar at the
               top of a scrolled dialog is somewhere nobody is looking. */}
           {manager.loading ? (
@@ -195,13 +194,13 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
               {manager.page * PAGE_SIZE + 1}–{manager.page * PAGE_SIZE + manager.files.length}
             </Typography>
           )}
-          <Button
+          <DuncitButton
             size="small"
             disabled={!manager.hasMore || manager.loading}
             onClick={() => manager.setPage(manager.page + 1)}
           >
             Next
-          </Button>
+          </DuncitButton>
         </Stack>
         </Box>
 

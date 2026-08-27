@@ -1,10 +1,11 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
@@ -92,26 +93,26 @@ export default function InventoryTable({
           justifyContent: "flex-end"
         }}>
           <Tooltip title={t('shell.common.edit')}>
-            <IconButton size="small" onClick={() => onEdit(p)}>
+            <DuncitIconButton size="small" onClick={() => onEdit(p)}>
               <EditIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
           {p.status !== 'ARCHIVED' && (
             <Tooltip title={pauseLabel}>
-              <IconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(p)}>
+              <DuncitIconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(p)}>
                 {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           )}
           <Tooltip title={t('products.inventory.archive')}>
-            <IconButton size="small" onClick={() => onArchive(p)}>
+            <DuncitIconButton size="small" onClick={() => onArchive(p)}>
               <ArchiveIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
           <Tooltip title={t('products.inventory.deletePermanently')}>
-            <IconButton size="small" color="error" onClick={() => onDelete(p)}>
+            <DuncitIconButton size="small" color="error" onClick={() => onDelete(p)}>
               <DeleteForeverIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         </Stack>
       );

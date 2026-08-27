@@ -6,6 +6,7 @@ import { AppImage } from '@/components/AppImage';
 import { ReelVideo } from '@/components/explore/ReelVideo';
 import { PodShopSliderDocument } from '@/graphql/shop';
 import { graphqlRequest } from '@/services/graphql.client';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface SliderMedia {
   url: string;
@@ -60,7 +61,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
           paddingVertical={9}
           borderRadius={999}
           backgroundColor="#ffffff"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="600" color="#111111">
             {media.cta_label}

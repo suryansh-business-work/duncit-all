@@ -1,6 +1,7 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AppNavItem } from '../../types';
 import type { ShellUser } from '../user-display';
@@ -67,9 +68,9 @@ export function AppSidebar({
         )}
         {onToggleCollapse && (
           <Tooltip title={toggleLabel} placement="right">
-            <IconButton size="small" onClick={onToggleCollapse}>
+            <DuncitIconButton size="small" onClick={onToggleCollapse}>
               {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         )}
       </Box>

@@ -1,7 +1,8 @@
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { DuncitButton } from '@duncit/buttons';
 import { APP_SHELL_MAX_WIDTH } from '../../../app/appLayout';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -60,7 +61,7 @@ export default function StepFooterBar({
         }}
       >
         <Stack direction="row" spacing={1.25}>
-          <Button
+          <DuncitButton
             variant="outlined"
             fullWidth
             disabled={isFirst || busy}
@@ -69,8 +70,8 @@ export default function StepFooterBar({
             sx={{ flex: 1, fontWeight: 600 }}
           >
             {t('mweb.createPod.back')}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             variant="contained"
             fullWidth
             disabled={primaryDisabled}
@@ -79,7 +80,7 @@ export default function StepFooterBar({
             sx={{ flex: 2, fontWeight: 700 }}
           >
             {primaryLabel}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Box>
     </Box>

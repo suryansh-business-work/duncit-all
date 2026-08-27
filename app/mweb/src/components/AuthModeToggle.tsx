@@ -1,6 +1,7 @@
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useColorMode } from '../ColorModeContext';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -19,7 +20,7 @@ export default function AuthModeToggle({ placement = 'fixed' }: Readonly<AuthMod
 
   return (
     <Tooltip title={tooltip}>
-      <IconButton
+      <DuncitIconButton
         onClick={colorMode.toggle}
         size={fixed ? 'medium' : 'small'}
         sx={{
@@ -40,7 +41,7 @@ export default function AuthModeToggle({ placement = 'fixed' }: Readonly<AuthMod
         aria-label={t('mweb.auth.toggleColorMode')}
       >
         {isDark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
-      </IconButton>
+      </DuncitIconButton>
     </Tooltip>
   );
 }

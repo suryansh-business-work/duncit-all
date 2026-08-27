@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import CancellationTierRow from './CancellationTierRow';
 import {
   cancellationPolicySchema,
@@ -98,16 +98,16 @@ export default function CancellationPolicyForm({
       ))}
 
       <Stack direction="row" spacing={1.5}>
-        <Button
+        <DuncitButton
           startIcon={<AddIcon />}
           onClick={() => append(emptyTier)}
           disabled={rescheduleOnly}
         >
           {t('partners.venueSettingsPage.addBand')}
-        </Button>
-        <Button variant="contained" onClick={submit} disabled={saving}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={saving}>
           {saving ? t('partners.venueSettingsPage.saving') : t('partners.venueSettingsPage.save')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error ? <Alert severity="error">{error}</Alert> : null}

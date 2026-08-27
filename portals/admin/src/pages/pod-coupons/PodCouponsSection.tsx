@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { SectionCard } from '@duncit/pod-details';
 import {
@@ -59,7 +59,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
       title={t('admin.pods.offerCodes')}
       tone="info"
       action={
-        <Button
+        <DuncitButton
           size="small"
           variant="contained"
           startIcon={<AddIcon />}
@@ -69,7 +69,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
           }}
         >
           New offer code
-        </Button>
+        </DuncitButton>
       }
     >
       <CouponsTable

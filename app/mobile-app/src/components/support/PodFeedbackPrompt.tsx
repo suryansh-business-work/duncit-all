@@ -14,6 +14,7 @@ import { PodFeedbackReminder } from '@/components/support/PodFeedbackReminder';
 import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Scrim padding — the bottom edge also has to clear the on-screen keyboard. */
 const SCRIM_PADDING = 24;
@@ -137,6 +138,7 @@ export function PodFeedbackPrompt() {
 
           <XStack gap={8} justifyContent="flex-end">
             <XStack
+              pressStyle={PRESS_STYLE.control}
               testID="pod-feedback-skip"
               role="button"
               aria-label={t('mweb.podFeedback.close')}
@@ -154,6 +156,7 @@ export function PodFeedbackPrompt() {
               </Text>
             </XStack>
             <XStack
+              pressStyle={PRESS_STYLE.control}
               testID="pod-feedback-submit"
               role="button"
               aria-label={t('mweb.podFeedback.submit')}

@@ -1,6 +1,7 @@
-import { Box, Button, Chip, Divider, Link, Stack, Typography } from '@mui/material';
+import { Box, Chip, Divider, Link, Stack, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitButton } from '@duncit/buttons';
 import { formatBytes } from '@duncit/media-picker';
 import type { MediaItem } from './queries';
 import { downloadUrl, thumbUrl } from './transform';
@@ -64,7 +65,7 @@ export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
       {/* ImageKit's own attachment flag rather than the `download` attribute,
           which browsers ignore across origins — the file would open in a tab
           instead of saving. */}
-      <Button
+      <DuncitButton
         size="small"
         variant="outlined"
         startIcon={<DownloadIcon />}
@@ -73,7 +74,7 @@ export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
         rel="noreferrer"
       >
         Download
-      </Button>
+      </DuncitButton>
 
       <Divider sx={{ my: 0.5 }} />
 

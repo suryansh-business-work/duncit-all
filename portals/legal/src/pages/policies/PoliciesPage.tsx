@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { notifySuccess } from '@duncit/dialogs';
 import { PageHeader } from '@duncit/ui';
@@ -152,9 +153,9 @@ export default function PoliciesPage() {
         onHistory={setHistoryTarget}
         onNotify={setNotifyTarget}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
             {t('legal.policies.create')}
-          </Button>
+          </DuncitButton>
         }
       />
 

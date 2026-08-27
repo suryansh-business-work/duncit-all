@@ -7,6 +7,7 @@ import type { ActiveSurvey, MeetingSlot } from '@/graphql/onboarding-survey';
 import { SlotPicker } from './SlotPicker';
 import type { Answer } from './useOnboardingFlow';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   survey: ActiveSurvey | null;
@@ -163,7 +164,7 @@ export function MeetingPhase({
               paddingVertical={8}
               borderRadius={999}
               backgroundColor={primary}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color="white">
                 Go To Profile

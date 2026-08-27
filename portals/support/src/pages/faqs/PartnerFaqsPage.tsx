@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Button, Chip, Stack } from '@mui/material';
+import { Chip, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import { useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
@@ -92,9 +93,9 @@ export default function PartnerFaqsPage() {
         refetchRef={crud.refetchRef}
         entityColumn={entityColumn}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={crud.openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={crud.openNew}>
             {t('support.faqs.newFaq')}
-          </Button>
+          </DuncitButton>
         }
         emptyText={t('support.faqs.partnerEmpty')}
         onEdit={crud.openEdit}

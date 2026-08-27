@@ -1,4 +1,5 @@
-import { Alert, Button } from '@mui/material';
+import { Alert } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { PortalLoginPage, type PortalLoginAppConfig } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
@@ -37,9 +38,9 @@ export default function LoginPage() {
           <Alert severity="info" sx={{ mt: 1 }}>
             New users can create an account from mWeb, then return to this partner console.
           </Alert>
-          <Button fullWidth href={`${urlConfigs.mwebUrl}/register`} sx={{ mt: 1.5 }} variant="outlined">
+          <DuncitButton fullWidth href={`${urlConfigs.mwebUrl}/register`} sx={{ mt: 1.5 }} variant="outlined">
             Create Duncit account
-          </Button>
+          </DuncitButton>
         </>
       }
     />

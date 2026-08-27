@@ -1,7 +1,6 @@
 import GoogleIcon from '@mui/icons-material/Google';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -75,12 +75,12 @@ export default function GoogleLinkConsentDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onDeny} disabled={busy}>
+        <DuncitButton onClick={onDeny} disabled={busy}>
           {t('mweb.login.linkConsentDeny')}
-        </Button>
-        <Button variant="contained" onClick={onAllow} disabled={busy}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onAllow} disabled={busy}>
           {t('mweb.login.linkConsentAllow')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

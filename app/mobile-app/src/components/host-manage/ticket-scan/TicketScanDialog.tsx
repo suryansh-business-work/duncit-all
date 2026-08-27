@@ -17,6 +17,7 @@ import { ScanConfirmation } from './ScanConfirmation';
 import { ScannedAttendeeCard } from './ScannedAttendeeCard';
 import { ScannerFrame } from './ScannerFrame';
 import type { HostTicketScanResult } from './scan.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * How a result should read. A ticket that needs the rest of the group is the
@@ -131,6 +132,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
         <KeyboardScreen>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="ticket-scan-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={close}
@@ -241,7 +243,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                     borderRadius={12}
                     borderWidth={1}
                     borderColor="$borderColor"
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
                       Close
@@ -262,7 +264,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                       justifyContent="center"
                       borderRadius={12}
                       backgroundColor="$primary"
-                      pressStyle={{ opacity: 0.85 }}
+                      pressStyle={PRESS_STYLE.control}
                     >
                       <Text fontSize={14} fontWeight="700" color={onPrimary}>
                         Scan next

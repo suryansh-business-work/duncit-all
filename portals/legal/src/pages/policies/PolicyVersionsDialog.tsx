@@ -3,7 +3,6 @@ import { useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Chip,
   CircularProgress,
   Dialog,
@@ -14,6 +13,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -60,9 +60,9 @@ function VersionRow({
         </Typography>
         {version.is_current && <Chip size="small" color="success" label={currentLabel} />}
         <Box sx={{ flex: 1 }} />
-        <Button size="small" onClick={() => onToggle(version.id)}>
+        <DuncitButton size="small" onClick={() => onToggle(version.id)}>
           {readLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
       <Typography
         variant="caption"
@@ -181,7 +181,7 @@ export default function PolicyVersionsDialog({ policy, onClose }: Readonly<Props
       </DialogTitle>
       <DialogContent dividers>{renderBody()}</DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

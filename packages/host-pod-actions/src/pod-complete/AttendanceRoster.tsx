@@ -1,7 +1,8 @@
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import { Alert, Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodSettlementAttendee } from '../types';
 
@@ -128,14 +129,14 @@ export default function AttendanceRoster({
           {/* ONE button, not one per row. Twelve unmarked bookings used to
               render twelve identical Scan buttons that all opened the same
               camera — and the native twin never had them at all (rule 27). */}
-          <Button
+          <DuncitButton
             fullWidth
             startIcon={<QrCodeScannerIcon />}
             onClick={onScan}
             sx={{ fontWeight: 800, borderRadius: 999 }}
           >
             {labels.attendanceScanCta}
-          </Button>
+          </DuncitButton>
         </>
       )}
 

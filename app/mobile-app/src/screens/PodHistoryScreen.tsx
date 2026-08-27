@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -30,11 +30,29 @@ export function PodHistoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
   const { t } = useTranslation();
-  const { uniqueItems, isLoading, error } = usePodHistory();
+  const { uniqueItems, isLoading, error, refetch } = usePodHistory();
   const categories = usePodHistoryCategories();
   const [filters, setFilters] = useState<PodHistoryFilters>(DEFAULT_POD_HISTORY_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  /*
+    Re-read whenever this screen comes back to the front.
+
+    The details screen holds its OWN copy of this list, so a backout made there
+    left this one showing the seats and status the booking had before it — the
+    list only caught up when the app was restarted. The first focus is skipped
+    because the hook has already fetched on mount.
+  */
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      refetch().catch(() => undefined);
+    }, [refetch]),
+  );
 
   const visible = useMemo(
     () => applyPodHistory(uniqueItems, filters, categories),

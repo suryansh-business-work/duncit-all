@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/utils": "workspace:*"
   },

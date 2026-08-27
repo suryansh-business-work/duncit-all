@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.72.43",
+  "version": "1.72.51",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.9",
@@ -48,6 +48,7 @@
   "dependencies": {
     "@duncit/ai-monitoring": "file:../../packages/ai-monitoring",
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
+    "@duncit/buttons-native": "file:../../packages/buttons-native",
     "@duncit/datetime": "file:../../packages/datetime",
     "@duncit/dialogs-native": "file:../../packages/dialogs-native",
     "@duncit/errors": "file:../../packages/errors",
@@ -62,6 +63,7 @@
     "@duncit/tours": "file:../../packages/tours",
     "@duncit/user-core": "file:../../packages/user-core",
     "@duncit/utils": "file:../../packages/utils",
+    "@duncit/verification": "file:../../packages/verification",
     "@duncit/virtual-scroll": "file:../../packages/virtual-scroll",
     "@expo/vector-icons": "^15.0.3",
     "@graphql-typed-document-node/core": "^3.2.0",

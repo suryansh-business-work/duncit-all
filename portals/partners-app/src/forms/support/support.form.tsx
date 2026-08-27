@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, MenuItem, Stack, TextField } from '@mui/material';
+import { Alert, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
 import { supportCategories, supportInitialValues, type SupportFormValues } from './support.types';
 import { useTranslation } from '@duncit/shell';
@@ -67,7 +68,7 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
       <RhfTextField control={control} name="subject" label={t('partners.forms.subject')} required />
       <RhfTextField control={control} name="message" label={t('partners.forms.message')} required multiline minRows={4} hint="At least 10 characters" />
       {(errorMessage ?? rootError) && <Alert severity="error">{errorMessage ?? rootError}</Alert>}
-      <Button type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</Button>
+      <DuncitButton type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</DuncitButton>
     </Stack>
   );
 }

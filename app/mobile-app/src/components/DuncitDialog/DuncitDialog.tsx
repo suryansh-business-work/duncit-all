@@ -7,6 +7,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { DialogHeader } from '@/components/DuncitDialog/DialogHeader';
 import { dialogMetrics, type DuncitDialogVariant } from '@duncit/dialogs-native';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface DuncitDialogProps {
   open: boolean;
@@ -99,6 +100,7 @@ export function DuncitDialog({
           paddingBottom={metrics.bottomLift}
         >
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             testID={`${testID}-backdrop`}
             role="button"
             aria-label={closeLabel}

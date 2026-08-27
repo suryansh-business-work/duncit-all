@@ -1,4 +1,13 @@
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { PAYMENT_FAILURE_KEYS, type PaymentFailure } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -81,10 +90,10 @@ export default function PaymentFailureDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('mweb.payment.close')}</Button>
-        <Button variant="contained" onClick={onRetry}>
+        <DuncitButton onClick={onClose}>{t('mweb.payment.close')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={onRetry}>
           {t('mweb.payment.retry')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

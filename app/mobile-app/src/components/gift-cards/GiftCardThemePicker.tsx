@@ -5,6 +5,7 @@ import { CategoryLevel, GiftCardScopeType } from '@/generated/graphql/graphql';
 import type { GiftCardCategory } from '@/hooks/useGiftCards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GiftCardVisual } from './GiftCardVisual';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** One pickable theme — SHOP, or one category of the group's level. */
 export interface GiftCardThemeChoice {
@@ -98,7 +99,7 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
               borderWidth={1}
               borderColor={isActive ? '$primary' : '$borderColor'}
               backgroundColor={isActive ? '$primary' : 'transparent'}
-              pressStyle={{ opacity: 0.8 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
                 {label}
@@ -133,7 +134,7 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
               borderWidth={2}
               borderColor={isSelected ? '$primary' : 'transparent'}
               padding={2}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <GiftCardVisual
                 compact

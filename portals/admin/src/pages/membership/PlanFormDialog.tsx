@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   Stack,
   Switch,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import {
   membershipPlanFormDefaults,
@@ -152,10 +152,10 @@ export default function PlanFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-          <Button type="submit" variant="contained" disabled={loading}>
+          <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={loading}>
             {editing ? 'Save changes' : 'Create tier'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,7 +10,12 @@ import {
   Typography,
 } from '@mui/material';
 import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
-import { START_CRM_PORTAL_CALL, CRM_CALL_FROM_NUMBER, type CrmAiCallResult } from '../../api/call.gql';
+import { DuncitButton } from '@duncit/buttons';
+import {
+  START_CRM_PORTAL_CALL,
+  CRM_CALL_FROM_NUMBER,
+  type CrmAiCallResult,
+} from '../../api/call.gql';
 import { useCallSocket } from '../../hooks/useCallSocket';
 import { useCallReconcile } from '../../hooks/useCallReconcile';
 import { isTerminalCallStatus, type CallStatus } from '../../lib/callSocket';
@@ -115,11 +119,11 @@ export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props
         <CallStage fromNumber={fromNumber} toNumber={lead?.to ?? ''} statusLabel={view.label} tone={view.tone} active={placed && !ended} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</Button>
+        <DuncitButton onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</DuncitButton>
         {!placed && (
-          <Button variant="contained" startIcon={<PhoneInTalkIcon />} onClick={placeCall} disabled={loading || !lead}>
+          <DuncitButton variant="contained" startIcon={<PhoneInTalkIcon />} onClick={placeCall} disabled={loading || !lead}>
             {loading ? 'Starting…' : 'Start Call'}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

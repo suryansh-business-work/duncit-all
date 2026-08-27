@@ -13,6 +13,7 @@ import {
 } from '@/utils/host-pods-filters';
 import { HostPodsList } from '@/components/host-manage/HostPodsList';
 import { HostPodsFilterSheet } from '@/components/host-manage/HostPodsFilterSheet';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Pods the venue has already cleared — the requested and rejected ones are
@@ -59,7 +60,7 @@ export function YourPodsSection({ pods, isLoading, notice, onOpen, onActions }: 
           borderWidth={1}
           borderColor={filterActive ? '$primary' : '$borderColor'}
           backgroundColor={filterActive ? '$primary' : '$surface'}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="filter-list" size={16} color={filterActive ? onPrimary : ink} />
           <Text fontSize={13} fontWeight="600" color={filterActive ? '$onPrimary' : '$color'}>

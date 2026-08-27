@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Bordered Follow / Following pill used on pod + club details. Filled when
  * followed, outlined otherwise — matching the public-profile follow button. */
@@ -34,7 +35,7 @@ export function FollowPillButton({
       borderColor={following ? '$primary' : '$borderColor'}
       backgroundColor={following ? '$primary' : 'transparent'}
       opacity={busy ? 0.7 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons
         name={following ? 'how-to-reg' : 'person-add-alt'}

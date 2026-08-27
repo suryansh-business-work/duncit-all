@@ -1,7 +1,8 @@
-import { Button, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Tooltip, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AskBotLink } from './queries';
 
@@ -49,7 +50,7 @@ function LinkRow({ link }: Readonly<RowProps>) {
   }
 
   return (
-    <Button
+    <DuncitButton
       href={link.url}
       target="_blank"
       rel="noreferrer"
@@ -70,7 +71,7 @@ function LinkRow({ link }: Readonly<RowProps>) {
           {caption}
         </Typography>
       </Stack>
-    </Button>
+    </DuncitButton>
   );
 }
 

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { FEEDBACK_OPTIONS, FEEDBACK_THANK_YOU, feedbackOptionFor } from './feedbackScale';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -126,15 +126,15 @@ export default function EmojiFeedbackDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{submitted ? 'Close' : 'Skip'}</Button>
+        <DuncitButton onClick={onClose}>{submitted ? 'Close' : 'Skip'}</DuncitButton>
         {!submitted && (
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={!rating || busy}
             onClick={() => onSubmit(rating, comment.trim())}
           >
             {busy ? 'Sending…' : 'Submit'}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

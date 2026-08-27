@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
+import { DuncitButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useTranslation } from '../i18n/useTranslation';
 import MediaPickerDialog from '../MediaPickerDialog';
@@ -69,9 +70,9 @@ export default function MediaListField({
           alignItems: "center"
         }}>
           <AiMonitoringChip />
-          <Button size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
+          <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
             {addLabel}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
       {helperText && (

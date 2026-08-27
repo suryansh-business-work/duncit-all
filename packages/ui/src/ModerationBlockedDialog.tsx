@@ -1,5 +1,4 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
 } from '@mui/material';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from './i18n/useTranslation';
 
 /** One flagged issue, resolved to the wizard step the user must fix it on. */
@@ -84,9 +84,9 @@ export function ModerationBlockedDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} data-testid="moderation-blocked-close">
+        <DuncitButton onClick={onClose} data-testid="moderation-blocked-close">
           Close
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

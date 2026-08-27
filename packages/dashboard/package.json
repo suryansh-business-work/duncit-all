@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "gridstack": "^13.2.0"
   },

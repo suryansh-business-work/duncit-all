@@ -11,13 +11,13 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  IconButton,
   List,
   Stack,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { MY_PORTAL_ACCESS, REQUEST_PORTAL_ACCESS, type PortalAccessEntry } from './queries';
 import { PortalLinkRow, PortalRequestRow } from './PortalRows';
@@ -69,13 +69,13 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
         }}>
           {t('shell.jumpToPortal.subtitle')}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           onClick={onClose}
           aria-label={t('shell.jumpToPortal.close')}
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent sx={{ pb: 3 }}>
         {loading && !data && (

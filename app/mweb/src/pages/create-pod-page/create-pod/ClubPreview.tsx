@@ -2,18 +2,17 @@ import { useState } from 'react';
 import {
   Avatar,
   Box,
-  Button,
   Chip,
   Dialog,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
 
@@ -69,9 +68,9 @@ export default function ClubPreview({ club }: Readonly<Props>) {
             icon={<StorefrontOutlinedIcon />}
             label={venueLabel}
           />
-          <Button size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 700 }}>
+          <DuncitButton size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 700 }}>
             {t('mweb.createPod.viewClubDetails')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Box>
 
@@ -80,9 +79,9 @@ export default function ClubPreview({ club }: Readonly<Props>) {
           <Typography component="span" sx={{ flex: 1, fontWeight: 700 }} noWrap>
             {club.club_name}
           </Typography>
-          <IconButton size="small" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
+          <DuncitIconButton size="small" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1.5}>

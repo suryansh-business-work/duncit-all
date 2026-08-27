@@ -1,5 +1,6 @@
-import { Avatar, Box, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatDateTime } from '../../../utils/dateFormat';
 
 interface PostCommentListProps {
@@ -82,9 +83,9 @@ export default function PostCommentList({
                   </Typography>
                 </Box>
                 {canRemove && (
-                  <IconButton size="small" onClick={() => onDeleteComment(c.id)}>
+                  <DuncitIconButton size="small" onClick={() => onDeleteComment(c.id)}>
                     <DeleteOutlineIcon fontSize="inherit" />
-                  </IconButton>
+                  </DuncitIconButton>
                 )}
               </Stack>
             );

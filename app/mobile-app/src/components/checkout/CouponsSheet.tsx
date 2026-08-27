@@ -9,6 +9,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AvailableCoupon } from '@/hooks/useCheckout';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The coupon's minimum order as the sheet has always printed it — symbol then
  * amount, hoisted so the row below never nests one template inside another. */
@@ -34,6 +35,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
         <KeyboardScreen>
           <YStack flex={1} justifyContent="flex-end" testID="coupons-sheet">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.checkout.close')}
               onPress={onClose}
@@ -61,7 +63,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                     role="button"
                     aria-label={t('mweb.checkout.couponsClose')}
                     onPress={onClose}
-                    pressStyle={{ opacity: 0.6 }}
+                    pressStyle={PRESS_STYLE.inline}
                   >
                     <MaterialIcons name="close" size={22} color={color} />
                   </XStack>
@@ -88,7 +90,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                         borderWidth={1}
                         borderColor="$primary"
                         borderStyle="dashed"
-                        pressStyle={{ opacity: 0.85 }}
+                        pressStyle={PRESS_STYLE.control}
                       >
                         <MaterialIcons name="local-offer" size={20} color={success} />
                         <YStack flex={1}>

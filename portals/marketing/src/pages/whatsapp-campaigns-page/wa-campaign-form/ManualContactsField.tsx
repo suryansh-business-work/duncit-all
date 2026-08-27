@@ -1,7 +1,8 @@
 import { useFieldArray, type Control } from 'react-hook-form';
-import { Alert, Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { MANUAL_VARIABLE_NOTE } from '../helpers';
 import type { WaCampaignValues } from './wa-campaign.types';
@@ -52,13 +53,13 @@ function ContactRow({
         hint=" "
       />
       <Tooltip title={t('marketing.whatsappCampaigns.removeContact')}>
-        <IconButton
+        <DuncitIconButton
           aria-label={`Remove contact ${index + 1}`}
           onClick={onRemove}
           sx={{ mt: 0.5 }}
         >
           <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );
@@ -86,13 +87,13 @@ export default function ManualContactsField({ control }: Readonly<Props>) {
         />
       ))}
       <Box>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={<AddIcon />}
           onClick={() => append({ name: '', extension: '', number: '' })}
         >
           Add contact
-        </Button>
+        </DuncitButton>
       </Box>
     </Stack>
   );

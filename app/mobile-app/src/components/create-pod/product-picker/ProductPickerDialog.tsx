@@ -18,6 +18,7 @@ import {
 import { ProductPickerCard } from './ProductPickerCard';
 import { ProductPickerFilters } from './ProductPickerFilters';
 import { ProductQuantityBar } from './ProductQuantityBar';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -139,7 +140,7 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
                 height={34}
                 alignItems="center"
                 justifyContent="center"
-                pressStyle={{ opacity: 0.6 }}
+                pressStyle={PRESS_STYLE.inline}
               >
                 <MaterialIcons name="close" size={22} color={muted} />
               </XStack>

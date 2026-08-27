@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -8,6 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import UpdateTypeChip from './UpdateTypeChip';
@@ -131,7 +131,7 @@ export default function PackageDepsDialog({ pkg, onClose }: Readonly<Props>) {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

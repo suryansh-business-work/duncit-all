@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -27,7 +28,7 @@ function ActionRow({ icon, label, color, testID, onPress }: Readonly<ActionRowPr
       gap={14}
       height={52}
       paddingHorizontal={4}
-      pressStyle={{ opacity: 0.6 }}
+      pressStyle={PRESS_STYLE.inline}
     >
       <MaterialIcons name={icon} size={22} color={color} />
       <Text fontSize={15} fontWeight="600" color={color}>

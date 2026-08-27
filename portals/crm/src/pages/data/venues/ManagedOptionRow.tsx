@@ -1,6 +1,7 @@
-import { Chip, IconButton, Stack, Switch, TableCell, TableRow, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Switch, TableCell, TableRow, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { CrmManagedOption } from '../../../api/data.gql';
 import { useTranslation } from '@duncit/shell';
 
@@ -35,16 +36,16 @@ export default function ManagedOptionRow({ row, busy, disableActions, onToggleAc
       <TableCell align="right">
         <Tooltip title={t('shell.common.edit')}>
           <span>
-            <IconButton size="small" onClick={onEdit} disabled={disableActions}>
+            <DuncitIconButton size="small" onClick={onEdit} disabled={disableActions}>
               <EditIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={t('shell.common.delete')}>
           <span>
-            <IconButton size="small" color="error" onClick={onDelete} disabled={disableActions}>
+            <DuncitIconButton size="small" color="error" onClick={onDelete} disabled={disableActions}>
               <DeleteIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </TableCell>

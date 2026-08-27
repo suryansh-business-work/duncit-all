@@ -1,7 +1,8 @@
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ArticleIcon from '@mui/icons-material/Article';
+import { DuncitButton } from '@duncit/buttons';
 import PartnerPolicyArticle from './PartnerPolicyArticle';
 import { PUBLIC_POLICIES } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -34,7 +35,7 @@ export default function PartnerPoliciesPage() {
               {policies.length === 0 && !loading && <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>{t('partners.policiesPage.noActivePoliciesYet')}</Typography>}
-              {policies.map((policy: any) => <Button key={policy.id} component={RouterLink} to={`/policies/${policy.slug}`} startIcon={<ArticleIcon />} variant={policy.slug === slug ? 'contained' : 'text'} sx={{ justifyContent: 'flex-start', borderRadius: 1.25 }}>{policy.title}</Button>)}
+              {policies.map((policy: any) => <DuncitButton key={policy.id} component={RouterLink} to={`/policies/${policy.slug}`} startIcon={<ArticleIcon />} variant={policy.slug === slug ? 'contained' : 'text'} sx={{ justifyContent: 'flex-start', borderRadius: 1.25 }}>{policy.title}</DuncitButton>)}
             </Stack>
           </CardContent>
         </Card>

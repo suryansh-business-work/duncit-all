@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -41,22 +42,22 @@ export default function FaqSubmissionsPage() {
       <Stack direction="row" spacing={1} component="span" sx={{
         justifyContent: "flex-end"
       }}>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           disabled={row.status === 'CONVERTED'}
           onClick={() => setStatus(row, 'CONVERTED')}
         >
           Mark Converted
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           size="small"
           color="warning"
           disabled={row.status === 'IGNORED'}
           onClick={() => setStatus(row, 'IGNORED')}
         >
           Ignore
-        </Button>
+        </DuncitButton>
       </Stack>
     );
     return [

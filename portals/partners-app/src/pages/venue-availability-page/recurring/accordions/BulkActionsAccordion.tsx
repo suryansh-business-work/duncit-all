@@ -5,7 +5,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,6 +17,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitButton } from '@duncit/buttons';
 import DayOfWeekPicker from '../DayOfWeekPicker';
 import { BULK_DELETE_VENUE_SLOTS, BULK_UPDATE_VENUE_SLOTS } from '../recurring.queries';
 import { useTranslation } from '@duncit/shell';
@@ -107,15 +107,15 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
               rowGap: 1,
               alignItems: "center"
             }}>
-            <Button color="error" variant="outlined" onClick={() => setConfirm({ text: 'Delete all matching upcoming slots? This cannot be undone.', run: runDelete })}>
+            <DuncitButton color="error" variant="outlined" onClick={() => setConfirm({ text: 'Delete all matching upcoming slots? This cannot be undone.', run: runDelete })}>
               Delete matching
-            </Button>
-            <Button color="error" variant="text" onClick={() => setConfirm({ text: 'Disable (block) all matching slots?', run: () => runUpdate({ block: true }, 'Disabled') })}>
+            </DuncitButton>
+            <DuncitButton color="error" variant="text" onClick={() => setConfirm({ text: 'Disable (block) all matching slots?', run: () => runUpdate({ block: true }, 'Disabled') })}>
               Disable
-            </Button>
-            <Button variant="text" onClick={() => setConfirm({ text: 'Enable (unblock) all matching slots?', run: () => runUpdate({ block: false }, 'Enabled') })}>
+            </DuncitButton>
+            <DuncitButton variant="text" onClick={() => setConfirm({ text: 'Enable (unblock) all matching slots?', run: () => runUpdate({ block: false }, 'Enabled') })}>
               Enable
-            </Button>
+            </DuncitButton>
           </Stack>
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
@@ -123,7 +123,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             <TextField size="small" type="number" label={t('partners.venueAvailabilityPage.newPrice')} value={price} onChange={(e) => setPrice(e.target.value)} sx={{ maxWidth: 160 }} slotProps={{
               htmlInput: { min: 0 }
             }} />
-            <Button
+            <DuncitButton
               variant="outlined"
               disabled={price === ''}
               onClick={() =>
@@ -134,7 +134,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
               }
             >
               Set price
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </AccordionDetails>
@@ -145,8 +145,8 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
           <DialogContentText>{confirm?.text}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirm(null)}>{t('shell.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setConfirm(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton
             color="error"
             variant="contained"
             onClick={async () => {
@@ -156,7 +156,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             }}
           >
             Confirm
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Accordion>

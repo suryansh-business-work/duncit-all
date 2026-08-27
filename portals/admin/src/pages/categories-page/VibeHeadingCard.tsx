@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton } from '@duncit/buttons';
 import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -102,9 +103,9 @@ export default function VibeHeadingCard() {
           justifyContent: "flex-end",
           mt: 1.5
         }}>
-        <Button variant="contained" onClick={save} disabled={busy || !dirty}>
+        <DuncitButton variant="contained" onClick={save} disabled={busy || !dirty}>
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Snackbar

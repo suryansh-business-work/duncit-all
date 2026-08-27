@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import TranscriptMenu from '../../../components/TranscriptMenu';
 import type { SupportChatSession, TranscriptFormat } from '../../../graphql/supportChat';
@@ -49,11 +50,11 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
       </Box>
 
       {isResolved ? (
-        <Button size="small" startIcon={<ReplayIcon />} disabled={busy} onClick={onReopen}>
+        <DuncitButton size="small" startIcon={<ReplayIcon />} disabled={busy} onClick={onReopen}>
           Re-open
-        </Button>
+        </DuncitButton>
       ) : (
-        <Button
+        <DuncitButton
           size="small"
           color="success"
           startIcon={<CheckCircleIcon />}
@@ -61,7 +62,7 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
           onClick={() => setConfirmResolve(true)}
         >
           Resolve
-        </Button>
+        </DuncitButton>
       )}
 
       <TranscriptMenu onDownload={onDownload} onEmail={onEmail} busy={busy} />

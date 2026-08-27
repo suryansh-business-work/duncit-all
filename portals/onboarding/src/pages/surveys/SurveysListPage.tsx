@@ -2,10 +2,19 @@ import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, Stack, Typography,
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Stack,
+  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { BackButton } from '@duncit/ui';
 import { useAdminCategories } from '@duncit/category';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
@@ -89,7 +98,7 @@ export default function SurveysListPage() {
           </Typography>
         </Box>
         <DefaultSurveyButton kind={meta.kind} />
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)}>{t('onboarding.surveys.newSurvey')}</Button>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)}>{t('onboarding.surveys.newSurvey')}</DuncitButton>
       </Stack>
 
       <ScopePicker value={scope} onChange={setScope} />
@@ -118,8 +127,8 @@ export default function SurveysListPage() {
         <DialogTitle>{t('onboarding.surveys.deleteSurvey')}</DialogTitle>
         <DialogContent><DialogContentText>{t('onboarding.surveys.thisRemovesTheSurveyDefinitionExisting')}</DialogContentText></DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmId(null)}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" onClick={onDelete} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete'}</Button>
+          <DuncitButton onClick={() => setConfirmId(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" onClick={onDelete} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete'}</DuncitButton>
         </DialogActions>
       </Dialog>
     </Stack>

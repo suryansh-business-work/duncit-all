@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { QueryGuard } from '@duncit/ui';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
@@ -107,12 +108,12 @@ export default function PodWithdrawalDetailPage() {
                 alignItems: "center",
                 mb: 3
               }}>
-              <IconButton
+              <DuncitIconButton
                 aria-label={t('finance.withdrawals.back')}
                 onClick={() => navigate('/withdrawals')}
               >
                 <ArrowBackIcon />
-              </IconButton>
+              </DuncitIconButton>
               <Box sx={{ flex: 1 }}>
                 <Stack
                   direction="row"

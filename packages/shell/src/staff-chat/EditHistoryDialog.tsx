@@ -1,7 +1,6 @@
 import { useQuery } from '@apollo/client';
 import {
   Alert,
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -11,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import { STAFF_MESSAGE_EDITS, type StaffMessageEdit } from './queries';
 import type { ChatFormats } from './useChatSettings';
@@ -93,7 +93,7 @@ export default function EditHistoryDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.chat.history.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.chat.history.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

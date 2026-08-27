@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -8,6 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { HostRequest } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -84,10 +84,10 @@ export default function DecisionDialog({ mode, request, busy, onClose, onConfirm
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={close}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" color={dialogCopy.color} onClick={confirm} disabled={disabled}>
+        <DuncitButton onClick={close}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" color={dialogCopy.color} onClick={confirm} disabled={disabled}>
           {dialogCopy.cta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

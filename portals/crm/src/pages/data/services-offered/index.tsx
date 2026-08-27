@@ -3,7 +3,6 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HandymanIcon from '@mui/icons-material/Handyman';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import {
   CRM_SERVICES_OFFERED_TABLE,
@@ -108,9 +108,9 @@ export default function ServicesOfferedPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => { setDraft(EMPTY); setFormError(null); setOpen(true); }}>
+          <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={() => { setDraft(EMPTY); setFormError(null); setOpen(true); }}>
             {t('crm.data.addServiceOffered')}
-          </Button>
+          </DuncitButton>
         }
         onEdit={setToEdit}
         onDelete={setToDelete}
@@ -123,10 +123,10 @@ export default function ServicesOfferedPage() {
           <ServiceOfferedForm value={draft} onChange={setDraft} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
-          <Button variant="contained" onClick={submit} disabled={creating || !draft.super_category_id || draft.titles.length === 0 || !targetValid}>
+          <DuncitButton onClick={() => setOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton variant="contained" onClick={submit} disabled={creating || !draft.super_category_id || draft.titles.length === 0 || !targetValid}>
             {creating ? 'Adding…' : 'Add'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
 

@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
 import PhonelinkEraseOutlinedIcon from '@mui/icons-material/PhonelinkEraseOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 /**
@@ -32,14 +33,14 @@ export default function NoWhatsAppNumberCard() {
             }}>
               {t('whatsappPreference.noNumberBody')}
             </Typography>
-            <Button
+            <DuncitButton
               component={RouterLink}
               to="/account"
               variant="contained"
               sx={{ alignSelf: 'flex-start' }}
             >
               {t('whatsappPreference.addNumber')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </CardContent>

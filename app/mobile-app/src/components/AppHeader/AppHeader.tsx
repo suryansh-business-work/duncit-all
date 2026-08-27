@@ -21,6 +21,7 @@ import { STUDIO_LABEL, resolveMode, studioSwitchRoute } from '@/utils/studio-mod
 import { HeaderGreeting } from './HeaderGreeting';
 import { HeaderLocationRow } from './HeaderLocationRow';
 import { QuickAction } from './QuickAction';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * In-app header — the admin-configurable tagline plus the tappable location on
@@ -83,7 +84,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
               paddingVertical={5}
               borderRadius={999}
               backgroundColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={11.5} fontWeight="700" color="$onPrimary">
                 {STUDIO_LABEL[effectiveStudio]}
@@ -121,7 +122,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
                 backgroundColor="$surface"
                 borderWidth={1}
                 borderColor="$borderColor"
-                pressStyle={{ opacity: 0.7 }}
+                pressStyle={PRESS_STYLE.row}
               >
                 <MaterialIcons name="search" size={22} color={ink} />
               </XStack>

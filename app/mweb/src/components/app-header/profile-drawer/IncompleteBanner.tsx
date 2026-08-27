@@ -1,4 +1,5 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 
 interface IncompleteBannerProps {
   percent: number;
@@ -43,14 +44,14 @@ export default function IncompleteBanner({ percent, onComplete }: Readonly<Incom
             </Typography>
           </Box>
         </Stack>
-        <Button
+        <DuncitButton
           onClick={onComplete}
           variant="contained"
           size="small"
           sx={{ borderRadius: 999, fontWeight: 600, flexShrink: 0, bgcolor: 'text.primary', color: 'background.paper', '&:hover': { bgcolor: 'text.secondary' } }}
         >
           Complete
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

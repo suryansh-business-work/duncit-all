@@ -6,6 +6,7 @@ import { AttachmentView } from '@/components/AttachmentView';
 import { useSupportUpload } from '@/hooks/useSupportUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const MAX_ATTACHMENTS = 5;
 
@@ -39,6 +40,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
         </Text>
         <AiMonitoringChip testID="ticket-attach-ai-monitoring" />
         <XStack
+          pressStyle={PRESS_STYLE.control}
           testID="ticket-attach-add"
           role="button"
           aria-label={t('mweb.support.addFiles')}
@@ -65,6 +67,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
             <YStack key={url} testID={`ticket-attach-${i}`}>
               <AttachmentView urls={[url]} size={64} />
               <XStack
+                pressStyle={PRESS_STYLE.surface}
                 testID={`ticket-attach-remove-${i}`}
                 role="button"
                 aria-label={t('mweb.common.removeAttachment')}

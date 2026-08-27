@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -61,10 +61,10 @@ export default function ScrapeDialog({ open, website, loading, onClose, onConfir
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={() => onConfirm(parsed)} disabled={!valid || loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={() => onConfirm(parsed)} disabled={!valid || loading}>
           {loading ? 'Scraping…' : 'Scrape pages'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

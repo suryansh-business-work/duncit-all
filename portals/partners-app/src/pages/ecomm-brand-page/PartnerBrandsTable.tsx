@@ -1,11 +1,12 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EcommBrandRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
@@ -92,27 +93,27 @@ export default function PartnerBrandsTable({
         }}>
           {brand.status === 'APPROVED' && (
             <Tooltip title={t('partners.common.productManagement')}>
-              <IconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>
+              <DuncitIconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>
                 <Inventory2Icon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           )}
           {brand.status === 'APPROVED' && (
             <Tooltip title={paused ? 'Reactivate' : 'Temporarily deactivate'}>
-              <IconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(brand)}>
+              <DuncitIconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(brand)}>
                 {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           )}
           <Tooltip title={locked ? 'View' : 'Edit'}>
-            <IconButton size="small" onClick={() => onOpen(brand)}>
+            <DuncitIconButton size="small" onClick={() => onOpen(brand)}>
               {locked ? <VisibilityIcon fontSize="small" /> : <EditIcon fontSize="small" />}
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
           <Tooltip title={t('partners.ecommBrandPage.brandSettings')}>
-            <IconButton size="small" onClick={() => onSettings(brand)}>
+            <DuncitIconButton size="small" onClick={() => onSettings(brand)}>
               <SettingsIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         </Stack>
       );

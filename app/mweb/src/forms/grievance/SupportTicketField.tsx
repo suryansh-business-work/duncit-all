@@ -1,7 +1,8 @@
 import { Link as RouterLink } from 'react-router-dom';
 import type { Control } from 'react-hook-form';
-import { Alert, AlertTitle, Button, MenuItem } from '@mui/material';
+import { Alert, AlertTitle, MenuItem } from '@mui/material';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import { DuncitButton } from '@duncit/buttons';
 import { grievanceTicketFieldCopy } from '@duncit/i18n';
 import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import RhfTextField from '../components/RhfTextField';
@@ -39,7 +40,7 @@ export default function SupportTicketField({ control, options, loading }: Readon
       <Alert
         severity="warning"
         action={
-          <Button
+          <DuncitButton
             component={RouterLink}
             to={CREATE_TICKET_PATH}
             size="small"
@@ -47,7 +48,7 @@ export default function SupportTicketField({ control, options, loading }: Readon
             startIcon={<ConfirmationNumberIcon fontSize="small" />}
           >
             {copy.emptyCta}
-          </Button>
+          </DuncitButton>
         }
       >
         <AlertTitle>{copy.emptyTitle}</AlertTitle>

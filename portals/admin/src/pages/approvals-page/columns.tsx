@@ -1,5 +1,6 @@
-import { Box, Button, Chip, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { humanizeType, type ApprovalRequest } from './helpers';
@@ -42,9 +43,9 @@ interface ColumnDeps {
 
 export function getApprovalColumns({ formatDateTime, onReview, t }: Readonly<ColumnDeps>): DuncitColumn<ApprovalRequest>[] {
   const renderAction = (row: ApprovalRequest) => (
-    <Button size="small" startIcon={<VisibilityIcon fontSize="small" />} onClick={() => onReview(row)}>
+    <DuncitButton size="small" startIcon={<VisibilityIcon fontSize="small" />} onClick={() => onReview(row)}>
       {t('admin.verification.review')}
-    </Button>
+    </DuncitButton>
   );
   return [
     {

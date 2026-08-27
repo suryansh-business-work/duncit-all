@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -26,7 +27,7 @@ function Control({ icon, label, testID, onPress }: Readonly<ControlProps>) {
         justifyContent="center"
         borderRadius={26}
         backgroundColor="rgba(255,255,255,0.16)"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name={icon} size={24} color="#ffffff" />
       </XStack>

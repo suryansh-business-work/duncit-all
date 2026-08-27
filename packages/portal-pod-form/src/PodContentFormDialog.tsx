@@ -4,18 +4,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import {
   buildPodContentSchema,
@@ -144,9 +143,9 @@ export default function PodContentFormDialog({
                   {t('shell.podContent.images')}
                 </Typography>
                 {!imagesDisabled && onPickImage && (
-                  <Button size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addImage}>
+                  <DuncitButton size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addImage}>
                     {t('shell.podContent.addImage')}
-                  </Button>
+                  </DuncitButton>
                 )}
               </Stack>
               {fields.length > 0 ? (
@@ -160,13 +159,13 @@ export default function PodContentFormDialog({
                         sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 1 }}
                       />
                       {!imagesDisabled && (
-                        <IconButton
+                        <DuncitIconButton
                           size="small"
                           onClick={() => remove(index)}
                           sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'background.paper' }}
                         >
                           <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        </DuncitIconButton>
                       )}
                     </Box>
                   ))}
@@ -190,10 +189,10 @@ export default function PodContentFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-          <Button type="submit" variant="contained" disabled={busy}>
+          <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy}>
             {busy ? t('shell.common.saving') : t('shell.common.save')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

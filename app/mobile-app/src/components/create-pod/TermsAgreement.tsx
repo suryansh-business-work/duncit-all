@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const TERMS_URL = 'https://duncit.com/policies/terms-of-service';
 
@@ -28,7 +29,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
             onPress={() => field.onChange(!field.value)}
             gap={10}
             alignItems="flex-start"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons
               name={field.value ? 'check-box' : 'check-box-outline-blank'}
@@ -38,6 +39,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
             <Text flex={1} fontSize={13} color="$muted">
               {t('mweb.createPod.termsLeadIn')}{' '}
               <Text
+                pressStyle={PRESS_STYLE.inline}
                 testID="terms-link"
                 color="$primary"
                 fontWeight="600"

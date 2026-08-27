@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import CampaignPreview from './CampaignPreview';
@@ -113,9 +114,9 @@ export default function CreateCampaignPage() {
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={handleBack}>
           Campaigns
-        </Button>
+        </DuncitButton>
         <Stack spacing={0.25}>
           <Typography variant="h5" sx={{
             fontWeight: 700

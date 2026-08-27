@@ -8,6 +8,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChipArrayField } from './ChipArrayField';
 import type { CreatePodForm } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type PanelKey = 'info' | 'perks';
 type IconName = keyof typeof MaterialIcons.glyphMap;
@@ -101,7 +102,7 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
               padding={12}
               gap={10}
               alignItems="center"
-              pressStyle={{ opacity: 0.7 }}
+              pressStyle={PRESS_STYLE.row}
             >
               <YStack
                 width={36}

@@ -1,7 +1,8 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import { venueUrl } from '../../utils/seoUrls';
 
 interface VenueListBodyProps {
@@ -32,9 +33,9 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
       <Alert severity="info">
         You haven't registered a venue yet.
         <Box sx={{ mt: 1.5 }}>
-          <Button component={RouterLink} to="/register-venue" variant="contained" size="small">
+          <DuncitButton component={RouterLink} to="/register-venue" variant="contained" size="small">
             Register a venue
-          </Button>
+          </DuncitButton>
         </Box>
       </Alert>
     );
@@ -104,13 +105,13 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
         </Stack>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
-        <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
+        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
           Edit
-        </Button>
+        </DuncitButton>
         {venue?.status === 'APPROVED' && (
-          <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
+          <DuncitButton component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
             Public link
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     </Box>

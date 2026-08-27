@@ -1,13 +1,18 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitButton } from '@duncit/buttons';
 import type { TableQueryState } from '@duncit/table';
-import { WA_EXPORT_USER_LEADS, WA_IMPORT_USER_LEADS, WA_USER_LEADS } from '../tools/whatsapp/whatsappQueries';
+import {
+  WA_EXPORT_USER_LEADS,
+  WA_IMPORT_USER_LEADS,
+  WA_USER_LEADS,
+} from '../tools/whatsapp/whatsappQueries';
 import CreateLeadDialog from './CreateLeadDialog';
 import EditLeadDialog from './EditLeadDialog';
 import DeleteLeadsDialog from './DeleteLeadsDialog';
@@ -115,9 +120,9 @@ export default function UserLeadsPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <>
-            <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>New</Button>
-            <Button size="small" startIcon={<UploadFileIcon />} disabled={importState.loading} onClick={() => fileRef.current?.click()}>{t('crm.userLeads.import')}</Button>
-            <Button size="small" startIcon={<DownloadIcon />} onClick={onExport}>{t('crm.userLeads.export')}</Button>
+            <DuncitButton size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>New</DuncitButton>
+            <DuncitButton size="small" startIcon={<UploadFileIcon />} disabled={importState.loading} onClick={() => fileRef.current?.click()}>{t('crm.userLeads.import')}</DuncitButton>
+            <DuncitButton size="small" startIcon={<DownloadIcon />} onClick={onExport}>{t('crm.userLeads.export')}</DuncitButton>
             <CleanDataButton onCleaned={bumpAll} />
           </>
         }

@@ -1,6 +1,7 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -41,9 +42,9 @@ export default function VoiceRecorderBar({
         py: 0.5
       }}>
       <Tooltip title={t('shell.chat.voice.discard')}>
-        <IconButton size="small" color="error" onClick={onCancel} aria-label={t('shell.chat.voice.discardLabel')}>
+        <DuncitIconButton size="small" color="error" onClick={onCancel} aria-label={t('shell.chat.voice.discardLabel')}>
           <DeleteIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
 
       <Box
@@ -91,9 +92,9 @@ export default function VoiceRecorderBar({
       </Stack>
 
       <Tooltip title={t('shell.chat.voice.send')}>
-        <IconButton size="small" color="primary" onClick={onSend} aria-label={t('shell.chat.voice.sendLabel')}>
+        <DuncitIconButton size="small" color="primary" onClick={onSend} aria-label={t('shell.chat.voice.sendLabel')}>
           <SendIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

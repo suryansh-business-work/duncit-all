@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import { RETRY_ALL } from './useRetrySteps';
@@ -32,7 +32,7 @@ export default function RetryAllButton({ detail, busyKey, onRetryAll }: Readonly
 
   return (
     <>
-      <Button
+      <DuncitButton
         variant="contained"
         color="warning"
         startIcon={<ReplayIcon />}
@@ -40,7 +40,7 @@ export default function RetryAllButton({ detail, busyKey, onRetryAll }: Readonly
         onClick={() => setOpen(true)}
       >
         {busyKey === RETRY_ALL ? t('finance.payment.retrying') : t('finance.payment.retryAll')}
-      </Button>
+      </DuncitButton>
       <ConfirmDialog
         open={open}
         title={t(titleKey)}

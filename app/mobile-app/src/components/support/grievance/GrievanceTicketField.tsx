@@ -11,6 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { GrievanceTicketEmpty } from './GrievanceTicketEmpty';
 import { GrievanceTicketOptions } from './GrievanceTicketOptions';
 import type { GrievanceValues } from './grievance.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   control: Control<GrievanceValues>;
@@ -60,6 +61,7 @@ export function GrievanceTicketField({ control, options, loading }: Readonly<Pro
               <RequiredMark required testID="grievance-support_ticket_ref" />
             </Text>
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               testID="grievance-support_ticket_ref"
               role="button"
               aria-label={copy.label}

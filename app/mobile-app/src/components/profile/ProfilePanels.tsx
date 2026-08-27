@@ -7,6 +7,7 @@ import { Accordion } from '@/components/details/Accordion';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function NavRow({
   icon,
@@ -34,7 +35,7 @@ function NavRow({
       borderColor="$borderColor"
       backgroundColor="$surface"
       marginBottom={10}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={20} color={primary} />
       <Text flex={1} fontSize={14.5} fontWeight="600" color="$color">
@@ -82,6 +83,7 @@ export function ProfilePanels({
         >
           {me.profile_links.map((link) => (
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               key={link.url}
               role="button"
               aria-label={link.label}

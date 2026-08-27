@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CRM_CALL_PROMPTS,
   CRM_CALL_FROM_NUMBER,
@@ -183,11 +183,11 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</Button>
+        <DuncitButton onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</DuncitButton>
         {!placed && (
-          <Button variant="contained" onClick={placeCall} disabled={!promptId || starting}>
+          <DuncitButton variant="contained" onClick={placeCall} disabled={!promptId || starting}>
             {starting ? 'Placing…' : 'Start AI call'}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

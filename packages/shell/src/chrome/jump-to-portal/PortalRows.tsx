@@ -1,6 +1,14 @@
-import { Button, Chip, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import {
+  Chip,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { PortalAccessEntry } from './queries';
 
@@ -33,9 +41,9 @@ export function PortalRequestRow({ portal, busy, onRequest }: Readonly<RequestRo
     action = <Chip size="small" color="warning" variant="outlined" label={t('shell.jumpToPortal.requested')} />;
   } else if (portal.can_request) {
     action = (
-      <Button size="small" variant="outlined" disabled={busy} onClick={() => onRequest(portal.key)}>
+      <DuncitButton size="small" variant="outlined" disabled={busy} onClick={() => onRequest(portal.key)}>
         {t('shell.jumpToPortal.requestAccess')}
-      </Button>
+      </DuncitButton>
     );
   } else {
     action = (

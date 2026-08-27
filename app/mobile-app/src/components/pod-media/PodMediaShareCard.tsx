@@ -4,6 +4,7 @@ import type { PodMediaLabels } from '@duncit/utils';
 
 import { usePodMediaLinkActions } from '@/hooks/usePodLinkActions';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   pod: { pod_id: string; pod_title: string };
@@ -38,6 +39,7 @@ export function PodMediaShareCard({ pod, labels }: Readonly<Props>) {
       </Text>
       <XStack gap={8}>
         <XStack
+          pressStyle={PRESS_STYLE.control}
           testID="pod-media-share"
           alignItems="center"
           gap={6}
@@ -55,6 +57,7 @@ export function PodMediaShareCard({ pod, labels }: Readonly<Props>) {
           </Text>
         </XStack>
         <XStack
+          pressStyle={PRESS_STYLE.control}
           testID="pod-media-copy"
           alignItems="center"
           gap={6}

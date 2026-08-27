@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Button, Link, Stack, Typography } from '@mui/material';
+import { Alert, Link, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitButton } from '@duncit/buttons';
 import ProfileAboutEditForm from './ProfileAboutEditForm';
 
 export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any; onSaved: () => void }>) {
@@ -36,9 +37,9 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
         }}>
           Description and links
         </Typography>
-        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>
+        <DuncitButton size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>
           Edit
-        </Button>
+        </DuncitButton>
       </Stack>
       {me.bio ? (
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

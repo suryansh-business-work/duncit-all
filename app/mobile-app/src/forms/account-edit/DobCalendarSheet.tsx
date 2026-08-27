@@ -6,6 +6,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { buildMonthDays } from '@/components/create-pod/DateTimeSheet';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const YEAR_SPAN = 120;
 
@@ -42,6 +43,7 @@ function DayCell({
   const ink = selected ? '$onPrimary' : '$color';
   return (
     <YStack
+      pressStyle={PRESS_STYLE.surface}
       testID={testID}
       role="button"
       aria-label={`Day ${day}`}
@@ -138,6 +140,7 @@ export function DobCalendarSheet({
             const selected = y === view.getFullYear();
             return (
               <YStack
+                pressStyle={PRESS_STYLE.control}
                 key={y}
                 testID={`${testID}-year-${y}`}
                 role="button"
@@ -171,7 +174,7 @@ export function DobCalendarSheet({
           aria-label={t('mweb.accountEdit.previousMonth')}
           onPress={() => setView((v) => addMonths(v, -1))}
           padding={8}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="chevron-left" size={22} color={muted} />
         </XStack>
@@ -184,7 +187,7 @@ export function DobCalendarSheet({
           aria-label={t('mweb.accountEdit.nextMonth')}
           onPress={() => setView((v) => addMonths(v, 1))}
           padding={8}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="chevron-right" size={22} color={muted} />
         </XStack>
@@ -216,7 +219,7 @@ export function DobCalendarSheet({
         justifyContent="center"
         borderRadius={12}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">
           Done

@@ -25,6 +25,7 @@
   "dependencies": {
     "@duncit/ai-monitoring": "workspace:*",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/tabs": "workspace:*",
     "@duncit/utils": "workspace:*",

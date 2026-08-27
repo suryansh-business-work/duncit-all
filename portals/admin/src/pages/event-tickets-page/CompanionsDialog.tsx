@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 /** Same rule the server enforces on a companion's number (6-15 digits). */
@@ -127,12 +127,12 @@ export default function CompanionsDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button variant="contained" onClick={submit} disabled={busy}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={busy}>
           {busy ? 'Marking…' : 'Mark attendance'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

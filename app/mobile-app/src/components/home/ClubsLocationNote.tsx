@@ -5,6 +5,7 @@ import { Text, XStack } from 'tamagui';
 import { LocationDialog } from '@/components/LocationDialog';
 import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Info banner above the Clubs search telling the user which location's clubs are
  * shown, with a tappable "here" link that opens the location picker. Renders
@@ -39,6 +40,7 @@ export function ClubsLocationNote() {
           </Text>
           . Want clubs from another location?{' '}
           <Text
+            pressStyle={PRESS_STYLE.inline}
             testID="clubs-location-note-change"
             color="$primary"
             fontWeight="600"

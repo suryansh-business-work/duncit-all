@@ -1,6 +1,7 @@
 import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 import '@fortawesome/fontawesome-free/css/solid.min.css';
-import { Box, IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, Stack, Tooltip } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface SurveyHeaderActionsProps {
@@ -14,7 +15,7 @@ export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderA
       alignItems: "center"
     }}>
       <Tooltip title={t('mweb.common.logout')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={onLogout}
           aria-label={t('mweb.common.logout')}
@@ -29,7 +30,7 @@ export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderA
           }}
         >
           <Box component="i" className="fa-solid fa-right-from-bracket" sx={{ fontSize: 16, lineHeight: 1 }} />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

@@ -7,6 +7,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useUnifiedTickets, type UnifiedTicket } from '@/hooks/useUnifiedTickets';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const SOURCE_LABEL: Record<string, string> = {
   TICKET: 'Support Ticket',
@@ -64,7 +65,7 @@ export function AllSupportTicketsScreen() {
         borderColor="$borderColor"
         backgroundColor="$surface"
         alignItems="center"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <YStack flex={1} gap={2}>
           <XStack gap={8} alignItems="center">

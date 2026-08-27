@@ -4,6 +4,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Zone {
   zone_name: string;
@@ -54,7 +55,7 @@ function Row({
       borderWidth={active ? 1.5 : 1}
       borderColor={active ? '$primary' : '$borderColor'}
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={18} color={active ? primary : muted} />
       <YStack flex={1}>

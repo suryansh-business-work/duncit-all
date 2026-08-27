@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import BrandPickupRow from './BrandPickupRow';
 import {
@@ -101,9 +102,9 @@ export default function PickupLocationsPanel({
         }}>
           {heading}
         </Typography>
-        <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+        <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
           Add location
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}

@@ -6,7 +6,6 @@ import {
   Chip,
   CircularProgress,
   Divider,
-  IconButton,
   Link,
   Popover,
   Stack,
@@ -17,6 +16,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { SLACK_PERMISSIONS, type SlackPermissions, type SlackScope } from './queries';
 
@@ -133,9 +133,9 @@ export default function SlackPermissionsButton() {
   return (
     <>
       <Tooltip title={t('tech.slack.permissionsTitle')}>
-        <IconButton size="small" onClick={open} aria-label={t('tech.slack.permissionsTitle')}>
+        <DuncitIconButton size="small" onClick={open} aria-label={t('tech.slack.permissionsTitle')}>
           <InfoOutlinedIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Popover
         open={!!anchor}

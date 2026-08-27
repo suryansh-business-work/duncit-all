@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Chip,
   Dialog,
   DialogActions,
@@ -10,6 +9,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   ACTION_COLORS,
   ACTION_LABELS,
@@ -87,7 +87,7 @@ export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) 
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>{t('shell.common.close')}</Button>
+            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

@@ -1,10 +1,10 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import DrawIcon from '@mui/icons-material/Draw';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';
 import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
@@ -131,7 +131,7 @@ export default function DocumentsTable({
       <>
         <Tooltip title={editTooltip(d)}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               disabled={d.is_locked}
               aria-label={t('shell.common.edit')}
@@ -141,11 +141,11 @@ export default function DocumentsTable({
               }}
             >
               <EditIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={signTooltip(d)}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={t('legal.documents.sign')}
             onClick={(event) => {
@@ -154,7 +154,7 @@ export default function DocumentsTable({
             }}
           >
             <DrawIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </>
     );

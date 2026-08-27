@@ -1,13 +1,14 @@
 import { gql, useLazyQuery } from '@apollo/client';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import AppleIcon from '@mui/icons-material/Apple';
 import DownloadIcon from '@mui/icons-material/Download';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import GoogleIcon from '@mui/icons-material/Google';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import PaymentLottie from '../../components/PaymentLottie';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
 import { notify } from '../../components/notify';
@@ -158,12 +159,12 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
                   </Box>
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#171717' } }}>
+                  <DuncitButton fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#171717' } }}>
                     {t('mweb.checkout.appleWallet')}
-                  </Button>
-                  <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#111827' } }}>
+                  </DuncitButton>
+                  <DuncitButton fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#111827' } }}>
                     {t('mweb.checkout.googleWallet')}
-                  </Button>
+                  </DuncitButton>
                 </Stack>
                 {venueTotal > 0 && (
                   <Stack direction="row" spacing={1} sx={{
@@ -185,11 +186,11 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           {invoiceError && <Alert severity="error" sx={{ mt: 2 }}>{invoiceError}</Alert>}
           <Stack direction="row" spacing={1.5} sx={{ mt: 4, justifyContent: 'center' }}>
             {pod?.id && (
-              <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{t('mweb.ticket.download')}</Button>
+              <DuncitButton variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{t('mweb.ticket.download')}</DuncitButton>
             )}
-            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>{t('mweb.checkout.downloadInvoice')}</Button>
-            <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>{t('mweb.checkout.home')}</Button>
-            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileAction}</Button>
+            <DuncitButton variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>{t('mweb.checkout.downloadInvoice')}</DuncitButton>
+            <DuncitButton variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>{t('mweb.checkout.home')}</DuncitButton>
+            <DuncitButton variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileAction}</DuncitButton>
           </Stack>
         </CardContent>
       </Card>

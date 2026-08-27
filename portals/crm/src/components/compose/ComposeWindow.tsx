@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react';
-import { Box, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import FilterNoneIcon from '@mui/icons-material/FilterNone';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useDraggable } from './useDraggable';
 import { useTranslation } from '@duncit/shell';
 
@@ -88,19 +89,19 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
           {title}
         </Typography>
         <Tooltip title={minimized ? 'Expand' : 'Minimize'}>
-          <IconButton size="small" sx={{ color: 'inherit' }} onClick={() => setMinimized((m) => !m)} aria-label="minimize">
+          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={() => setMinimized((m) => !m)} aria-label="minimize">
             <MinimizeIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={maximized ? 'Restore' : 'Maximize'}>
-          <IconButton size="small" sx={{ color: 'inherit' }} onClick={toggleMax} aria-label="maximize">
+          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={toggleMax} aria-label="maximize">
             {maximized ? <FilterNoneIcon fontSize="small" /> : <CropSquareIcon fontSize="small" />}
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.common.close')}>
-          <IconButton size="small" sx={{ color: 'inherit' }} onClick={onClose} aria-label="close">
+          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={onClose} aria-label="close">
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
 

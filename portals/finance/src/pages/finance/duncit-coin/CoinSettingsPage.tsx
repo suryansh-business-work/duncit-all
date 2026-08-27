@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import CoinRatesCard from './CoinRatesCard';
 import CoinGrantCard from './CoinGrantCard';
@@ -102,7 +103,7 @@ export default function CoinSettingsPage() {
         />
 
         <Box>
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={!formState.isDirty || saving}
             onClick={() => {
@@ -110,7 +111,7 @@ export default function CoinSettingsPage() {
             }}
           >
             {saving ? 'Saving…' : 'Save settings'}
-          </Button>
+          </DuncitButton>
         </Box>
 
         <CoinGrantCard

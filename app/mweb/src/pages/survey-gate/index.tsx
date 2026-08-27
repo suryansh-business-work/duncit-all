@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import {
   ACTIVE_SURVEY_FOR,
   REQUEST_MEETING,
@@ -160,9 +161,9 @@ export default function SurveyGatePage() {
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
       <Box sx={{ mb: 1 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={goBackStep} size="small">
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={goBackStep} size="small">
           Back
-        </Button>
+        </DuncitButton>
       </Box>
       <Card
         variant="outlined"
@@ -211,14 +212,14 @@ export default function SurveyGatePage() {
                 <strong>{slotLabel}</strong>. Our onboarding team will meet you at your selected
                 slot — please join 5 minutes early.
               </Alert>
-              <Button
+              <DuncitButton
                 variant="contained"
                 size="large"
                 onClick={() => navigate('/', { replace: true })}
                 sx={{ borderRadius: 999, fontWeight: 700 }}
               >
                 Back to Home
-              </Button>
+              </DuncitButton>
             </Stack>
           )}
         </CardContent>

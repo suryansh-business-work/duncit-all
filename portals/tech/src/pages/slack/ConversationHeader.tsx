@@ -1,7 +1,8 @@
-import { Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import LockIcon from '@mui/icons-material/Lock';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notifySuccess } from '@duncit/dialogs';
 import type { SlackChannel } from './queries';
@@ -64,17 +65,17 @@ export default function ConversationHeader({ channel }: Readonly<{ channel: Slac
         </Typography>
       </Stack>
       <Tooltip title={t('tech.slack.copyId')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('tech.slack.copyId')}
           onClick={() => copy(channel.id, t('tech.slack.copiedId'))}
         >
           <ContentCopyIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('tech.slack.openInSlack')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             component="a"
             href={channel.link}
@@ -84,7 +85,7 @@ export default function ConversationHeader({ channel }: Readonly<{ channel: Slac
             aria-label={t('tech.slack.openInSlack')}
           >
             <OpenInNewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
     </Stack>

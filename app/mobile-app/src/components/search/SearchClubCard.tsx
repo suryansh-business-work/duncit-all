@@ -9,6 +9,7 @@ import { PodCard } from '@/components/home/PodCard';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { SearchClubResult } from '@/hooks/useSearch';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type SearchPod = SearchClubResult['upcoming_pods'][number];
 
@@ -141,7 +142,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             borderWidth={1.5}
             borderColor="$primary"
             justifyContent="center"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="add" size={15} color={primary} />
             <Text fontSize={12.5} fontWeight="700" color="$primary">

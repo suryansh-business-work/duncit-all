@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { CircularProgress, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -20,15 +21,15 @@ export default function PodPendingHeader({ refreshing, onRefresh }: Readonly<Pro
     <Stack direction="row" spacing={0.5} sx={{
       alignItems: "center"
     }}>
-      <IconButton size="small" aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)}>
+      <DuncitIconButton size="small" aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)}>
         <ArrowBackIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <Typography variant="h6" sx={{ flex: 1, fontWeight: 800 }}>
         {t('mweb.podPending.title')}
       </Typography>
       <Tooltip title={t('mweb.podPending.refresh')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             disabled={refreshing}
             aria-label={t('mweb.podPending.refresh')}
@@ -36,7 +37,7 @@ export default function PodPendingHeader({ refreshing, onRefresh }: Readonly<Pro
             onClick={onRefresh}
           >
             {refreshing ? <CircularProgress size={18} /> : <RefreshIcon fontSize="small" />}
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
     </Stack>

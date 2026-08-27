@@ -7,6 +7,7 @@ import {
 
 import { PodFeedbackFields } from '@/components/support/PodFeedbackFields';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   podTitle: string;
@@ -81,6 +82,7 @@ export function PodFeedbackCard({
 
       <XStack gap={8} justifyContent="flex-end">
         <XStack
+          pressStyle={PRESS_STYLE.control}
           testID="pod-feedback-skip"
           role="button"
           aria-label={leaveLabel}
@@ -98,6 +100,7 @@ export function PodFeedbackCard({
           </Text>
         </XStack>
         <XStack
+          pressStyle={PRESS_STYLE.control}
           testID="pod-feedback-submit"
           role="button"
           aria-label={submitLabel}

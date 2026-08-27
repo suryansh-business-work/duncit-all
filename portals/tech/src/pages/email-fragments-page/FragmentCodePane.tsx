@@ -1,7 +1,8 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import { formatMjml } from '@duncit/utils';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -49,9 +50,9 @@ export default function FragmentCodePane({ title, hint, value, onChange }: Reado
           {hint}
         </Typography>
         <Tooltip title={t('tech.common.formatMjml')}>
-          <IconButton size="small" onClick={() => onChange(formatMjml(value))}>
+          <DuncitIconButton size="small" onClick={() => onChange(formatMjml(value))}>
             <FormatAlignLeftIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
       <Box sx={{ flex: 1, minHeight: 0 }}>

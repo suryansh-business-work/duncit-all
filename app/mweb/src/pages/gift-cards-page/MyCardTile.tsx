@@ -1,6 +1,7 @@
-import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import { notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -99,12 +100,12 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
           }}>
           {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
         </Typography>
-        <IconButton size="small" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')}>
+        <DuncitIconButton size="small" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')}>
           <ContentCopyIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" onClick={shareCard} aria-label={t('mweb.giftCards.shareCard')}>
+        </DuncitIconButton>
+        <DuncitIconButton size="small" onClick={shareCard} aria-label={t('mweb.giftCards.shareCard')}>
           <ShareIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       {showRecipient && (
         <Typography

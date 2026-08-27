@@ -1,6 +1,7 @@
-import { Avatar, Box, ButtonBase, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface ChatRoomHeaderProps {
   title?: string;
@@ -29,9 +30,9 @@ export default function ChatRoomHeader({
         bgcolor: 'rgba(0,0,0,0.08)',
         backdropFilter: 'blur(14px)'
       }}>
-      <IconButton onClick={onBack} sx={{ bgcolor: 'action.hover' }}>
+      <DuncitIconButton onClick={onBack} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
-      </IconButton>
+      </DuncitIconButton>
       <ButtonBase
         data-testid="chat-room-open-pod"
         onClick={onOpenPod}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import AddSlotFields from './AddSlotFields';
@@ -134,9 +135,9 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
 
   // Hoisted out of the Alert's props so the conditionals sit at nesting 0.
   const overwriteAction = clashing ? (
-    <Button color="inherit" size="small" onClick={() => setConfirmOverwrite(true)}>
+    <DuncitButton color="inherit" size="small" onClick={() => setConfirmOverwrite(true)}>
       {t('shell.availability.overwriteAction')}
-    </Button>
+    </DuncitButton>
   ) : undefined;
   // A submit/server failure outranks the live hint, and only it is dismissable
   // — a live issue would simply come straight back.
@@ -172,9 +173,9 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
             {message}
           </Alert>
         )}
-        <Button variant="contained" disabled={creating || !!liveIssue} onClick={handleAdd}>
+        <DuncitButton variant="contained" disabled={creating || !!liveIssue} onClick={handleAdd}>
           {creating ? 'Adding…' : 'Add slot'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <ConfirmDialog

@@ -10,6 +10,7 @@ import { useMe } from '@/hooks/useMe';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import type { GiftCardSelection } from '@/utils/gift-cards';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type TabKey = 'buy' | 'cards';
 
@@ -106,7 +107,7 @@ export function GiftCardsScreen() {
                   borderWidth={1}
                   borderColor={isActive ? '$primary' : '$borderColor'}
                   backgroundColor={isActive ? '$primary' : 'transparent'}
-                  pressStyle={{ opacity: 0.8 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
                     {label}

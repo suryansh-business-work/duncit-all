@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import type { SignatureMethod } from '../graphql/documents';
 import { useTranslation } from '@duncit/shell';
@@ -198,9 +192,9 @@ export default function SignaturePad({
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <Button size="small" onClick={clearCanvas}>
+            <DuncitButton size="small" onClick={clearCanvas}>
               Clear
-            </Button>
+            </DuncitButton>
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>
@@ -243,7 +237,7 @@ export default function SignaturePad({
         <Stack spacing={1} sx={{
           alignItems: "flex-start"
         }}>
-          <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
+          <DuncitButton component="label" variant="outlined" startIcon={<UploadFileIcon />}>
             Choose image{' '}
             <input
               hidden
@@ -251,7 +245,7 @@ export default function SignaturePad({
               accept="image/*"
               onChange={(e) => upload(e.target.files?.[0])}
             />
-          </Button>
+          </DuncitButton>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>

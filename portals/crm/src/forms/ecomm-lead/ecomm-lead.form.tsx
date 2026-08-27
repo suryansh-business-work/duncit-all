@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, AlertTitle, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { flattenErrors } from '../flattenErrors';
 import FormAccordion from '../../components/FormAccordion';
 import { ecommLeadSchema } from './ecomm-lead.schema';
@@ -89,13 +90,13 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
               pt: 1
             }}>
             {onCancel && (
-              <Button onClick={onCancel} disabled={submitting}>
+              <DuncitButton onClick={onCancel} disabled={submitting}>
                 {t('shell.common.cancel')}
-              </Button>
+              </DuncitButton>
             )}
-            <Button type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>
+            <DuncitButton type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>
               {submitting ? 'Saving…' : submitLabelText}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </form>

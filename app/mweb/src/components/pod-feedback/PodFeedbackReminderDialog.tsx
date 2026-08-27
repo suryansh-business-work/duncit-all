@@ -1,5 +1,4 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -7,6 +6,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   POD_FEEDBACK_REMINDER_OPTIONS,
   type PodFeedbackReminderChoice,
@@ -46,14 +46,14 @@ export default function PodFeedbackReminderDialog({ open, title, onChoose }: Rea
       <DialogActions>
         <Stack spacing={1} sx={{ width: '100%', p: 1 }}>
           {POD_FEEDBACK_REMINDER_OPTIONS.map((option) => (
-            <Button
+            <DuncitButton
               key={option.choice}
               fullWidth
               variant={option.choice === 'LATER' ? 'contained' : 'outlined'}
               onClick={() => onChoose(option.choice)}
             >
               {t(option.labelKey)}
-            </Button>
+            </DuncitButton>
           ))}
         </Stack>
       </DialogActions>

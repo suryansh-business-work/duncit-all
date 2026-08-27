@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 const MAX_REASON = 500; // WalletWithdrawal.reject_reason maxlength
@@ -86,12 +86,12 @@ export default function RejectWithdrawalDialog({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           Cancel
-        </Button>
-        <Button color="error" variant="contained" disabled={busy} onClick={submit}>
+        </DuncitButton>
+        <DuncitButton color="error" variant="contained" disabled={busy} onClick={submit}>
           Reject &amp; refund
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

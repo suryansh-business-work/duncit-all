@@ -1,7 +1,6 @@
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import ContractDateField from './ContractDateField';
 import { CONTRACT_STATUS_OPTIONS, type ContractStatus } from '../../graphql/contracts';
@@ -167,13 +167,13 @@ export default function ContractFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>
+        <DuncitButton onClick={onClose} disabled={saving}>
           {readOnly ? 'Close' : 'Cancel'}
-        </Button>
+        </DuncitButton>
         {!readOnly && (
-          <Button variant="contained" disabled={saving || !form.title.trim()} onClick={onSubmit}>
+          <DuncitButton variant="contained" disabled={saving || !form.title.trim()} onClick={onSubmit}>
             {saving ? 'Saving…' : saveLabel}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

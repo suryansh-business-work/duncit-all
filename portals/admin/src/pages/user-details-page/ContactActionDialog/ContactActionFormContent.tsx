@@ -1,6 +1,16 @@
-import { Alert, Button, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitButton } from '@duncit/buttons';
 import type { Control } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ContactActionValues, ContactType } from '../contact-action.form';
@@ -81,23 +91,23 @@ export default function ContactActionFormContent({
       </DialogContent>
       <DialogActions>
         {type === 'CALL' && (
-          <Button onClick={() => onStartRecorded(values.notes)} startIcon={<CallIcon />} disabled={busy || !target}>
+          <DuncitButton onClick={() => onStartRecorded(values.notes)} startIcon={<CallIcon />} disabled={busy || !target}>
             Start Recorded Call
-          </Button>
+          </DuncitButton>
         )}
-        <Button
+        <DuncitButton
           onClick={() => onOpenNativeAction(values.subject)}
           startIcon={type === 'CALL' ? <CallIcon /> : <EmailIcon />}
           disabled={!target}
         >
           {type === 'CALL' ? 'Open Dialer' : 'Open Email'}
-        </Button>
-        <Button onClick={onClose} disabled={busy}>
+        </DuncitButton>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button variant="contained" onClick={onSubmit} disabled={busy || !target}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onSubmit} disabled={busy || !target}>
           {busy ? 'Saving...' : 'Save Log'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </>
   );

@@ -1,18 +1,10 @@
 import { useRef, useState } from 'react';
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { describeAttachment, isVideoUpload, typeLabel } from '../../utils/attachment';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -37,7 +29,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
   const info = describeAttachment(url);
   const removeButton = (
-    <IconButton
+    <DuncitIconButton
       size="small"
       aria-label={t('mweb.common.removeAttachment')}
       onClick={onRemove}
@@ -53,7 +45,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
       }}
     >
       <CloseIcon sx={{ fontSize: 14 }} />
-    </IconButton>
+    </DuncitIconButton>
   );
 
   if (info.kind === 'image') {
@@ -144,7 +136,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
           }}>
           Attach files ({attachments.length}/5)
         </Typography>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={uploading ? <CircularProgress size={16} /> : <AttachFileIcon />}
           disabled={uploading || attachments.length >= 5}
@@ -152,7 +144,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
           sx={{ minHeight: 40 }}
         >
           Add files
-        </Button>
+        </DuncitButton>
       </Stack>
       <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={pickFile} />
       {error && (

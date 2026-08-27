@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Chip,
   Dialog,
   DialogActions,
@@ -15,6 +14,7 @@ import {
   Stepper,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
@@ -196,30 +196,30 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
       </DialogContent>
 
       <DialogActions>
-        <Button startIcon={<DownloadIcon />} onClick={download} disabled={!pdfUrl}>
+        <DuncitButton startIcon={<DownloadIcon />} onClick={download} disabled={!pdfUrl}>
           {downloadLabel}
-        </Button>
+        </DuncitButton>
         <Box sx={{ flex: 1 }} />
-        <Button onClick={onClose} disabled={signing}>
+        <DuncitButton onClick={onClose} disabled={signing}>
           {t('shell.common.close')}
-        </Button>
+        </DuncitButton>
         {step === 0 && !alreadySigned && (
-          <Button variant="contained" onClick={() => setStep(1)}>
+          <DuncitButton variant="contained" onClick={() => setStep(1)}>
             {t('legal.sign.toSignature')}
-          </Button>
+          </DuncitButton>
         )}
         {step === 1 && (
           <>
-            <Button onClick={() => setStep(0)} disabled={signing}>
+            <DuncitButton onClick={() => setStep(0)} disabled={signing}>
               {t('legal.sign.back')}
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               variant="contained"
               disabled={!signatureReady(draft) || signing}
               onClick={submitSignature}
             >
               {signing ? t('legal.sign.signing') : t('legal.sign.signAction')}
-            </Button>
+            </DuncitButton>
           </>
         )}
       </DialogActions>

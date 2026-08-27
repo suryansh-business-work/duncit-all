@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { isBackoutMaxed } from '@duncit/utils';
-import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import BackoutConfirmDialog from '../pod-details-page/BackoutConfirmDialog';
 import RejoinConfirmDialog from './RejoinConfirmDialog';
 import { notify } from '../../components/notify';
@@ -33,12 +34,23 @@ export default function PodHistoryDetailsPage() {
   const selected = items.find((item) => item.id === membershipId) ?? null;
   // Attempts left, from the state the backout mutation itself guards on — the
   // button was offered on a pod that had none, and every press of it failed.
-  const { data: stateData } = useQuery(POD_HISTORY_BACKOUT_STATE, {
+  const { data: stateData, refetch: refetchState } = useQuery(POD_HISTORY_BACKOUT_STATE, {
     variables: { pod_doc_id: selected?.pod?.id ?? '' },
     skip: !selected?.pod?.id,
     fetchPolicy: 'cache-and-network',
   });
   const backoutMaxed = isBackoutMaxed(stateData?.podMembershipState);
+
+  /*
+    Both reads, every time — a backout changes the booking AND the attempts.
+
+    Refetching only the memberships left the seat count and the timeline fresh
+    beside an attempt counter frozen at what it was before the request, so the
+    page had to be reloaded before it agreed with itself.
+  */
+  const refresh = async () => {
+    await Promise.all([refetch(), refetchState()]).catch(() => undefined);
+  };
 
   const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
@@ -46,10 +58,12 @@ export default function PodHistoryDetailsPage() {
       await backoutPod({ variables: { pod_doc_id: selected.pod.id, seats: seats ?? null } });
       notify(t('mweb.podHistory.backoutRecorded'), 'success');
       setBackoutOpen(false);
-      await refetch();
     } catch (backoutError) {
       notify(parseApiError(backoutError), 'error');
     }
+    // Either way: a refusal is decided against server-side state (the attempt
+    // limit), so the page re-reads rather than keeping the copy it guessed on.
+    await refresh();
   };
 
   const confirmRejoin = async () => {
@@ -58,7 +72,7 @@ export default function PodHistoryDetailsPage() {
       await rejoinPod({ variables: { pod_doc_id: selected.pod.id } });
       notify(t('mweb.podHistory.rejoinedSuccess'), 'success');
       setRejoinOpen(false);
-      await refetch();
+      await refresh();
     } catch (rejoinError) {
       notify(parseApiError(rejoinError), 'error');
     }
@@ -79,9 +93,9 @@ export default function PodHistoryDetailsPage() {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <IconButton size="small" onClick={() => navigate('/pod-history')} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.podHistory.backToPodHistory')}>
+        <DuncitIconButton size="small" onClick={() => navigate('/pod-history')} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.podHistory.backToPodHistory')}>
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Box sx={{ minWidth: 0 }}>
           <Typography
             variant="overline"

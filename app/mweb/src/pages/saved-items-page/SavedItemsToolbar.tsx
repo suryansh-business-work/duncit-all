@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import {
   Badge,
-  Button,
-  IconButton,
   InputAdornment,
   Menu,
   MenuItem,
@@ -14,6 +12,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import TuneIcon from '@mui/icons-material/Tune';
 import SortIcon from '@mui/icons-material/Sort';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { SavedCategory } from './queries';
 import {
   SAVED_SORTS,
@@ -100,13 +99,13 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
           htmlInput: { 'aria-label': 'Search saved pods' }
         }} />
       <Badge color="primary" badgeContent={filterCount} overlap="circular">
-        <IconButton aria-label={t('mweb.savedItems.filterByCategory')} onClick={(event) => setFilterAnchor(event.currentTarget)}>
+        <DuncitIconButton aria-label={t('mweb.savedItems.filterByCategory')} onClick={(event) => setFilterAnchor(event.currentTarget)}>
           <TuneIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Badge>
-      <IconButton aria-label={t('mweb.savedItems.sortSavedPods')} onClick={(event) => setSortAnchor(event.currentTarget)}>
+      <DuncitIconButton aria-label={t('mweb.savedItems.sortSavedPods')} onClick={(event) => setSortAnchor(event.currentTarget)}>
         <SortIcon />
-      </IconButton>
+      </DuncitIconButton>
 
       <Popover
         open={Boolean(filterAnchor)}
@@ -136,9 +135,9 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
             helper={filters.categoryId ? undefined : 'Select a category first'}
             onChange={setSub}
           />
-          <Button onClick={resetCategory} disabled={!filterCount}>
+          <DuncitButton onClick={resetCategory} disabled={!filterCount}>
             Reset
-          </Button>
+          </DuncitButton>
         </Stack>
       </Popover>
 

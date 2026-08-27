@@ -1,14 +1,23 @@
 import './agGridSetup';
-import { JSX, type MutableRefObject, type ReactNode, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import {
+  JSX,
+  type MutableRefObject,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { ambientDateSettings, subscribeAmbientDateSettings } from '@duncit/datetime';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import GlobalStyles from '@mui/material/GlobalStyles';
 import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import { useTheme } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import type {
   GetRowIdParams,
   RowClassParams,
@@ -378,9 +387,9 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
           severity="error"
           sx={{ m: 1.5 }}
           action={
-            <Button color="inherit" size="small" onClick={refetch}>
+            <DuncitButton color="inherit" size="small" onClick={refetch}>
               Retry
-            </Button>
+            </DuncitButton>
           }
         >
           {table.error}

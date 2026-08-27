@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   urls: string[];
@@ -85,7 +86,7 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
                 justifyContent="center"
                 borderRadius={10}
                 backgroundColor="rgba(0,0,0,0.55)"
-                pressStyle={{ opacity: 0.8 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <MaterialIcons name="close" size={12} color="#ffffff" />
               </XStack>

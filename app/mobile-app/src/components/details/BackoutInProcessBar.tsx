@@ -4,6 +4,7 @@ import { semantic } from '@duncit/auth-tokens';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** "Backout in process": replacement search running — offer Keep My Spot.
  * Once a replacement is confirmed the backout is locked (no restore). */
@@ -46,7 +47,7 @@ export function BackoutInProcessBar({
         height={48}
         borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <KeepSpotLabel />
       </XStack>

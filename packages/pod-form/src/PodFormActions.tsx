@@ -1,4 +1,5 @@
-import { Button, DialogActions } from '@mui/material';
+import { DialogActions } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from './i18n/useTranslation';
 
 interface Props {
@@ -24,15 +25,15 @@ export default function PodFormActions({
   const { t } = useTranslation();
   return (
     <DialogActions sx={{ p: 0 }}>
-      <Button onClick={onCancel}>{t('podForm.common.cancel')}</Button>
+      <DuncitButton onClick={onCancel}>{t('podForm.common.cancel')}</DuncitButton>
       {showDraft && (
-        <Button variant="outlined" type="button" disabled={disabled} onClick={onDraft}>
+        <DuncitButton variant="outlined" type="button" disabled={disabled} onClick={onDraft}>
           Save as Draft
-        </Button>
+        </DuncitButton>
       )}
-      <Button variant="contained" type="submit" disabled={disabled} onClick={onPublish}>
+      <DuncitButton variant="contained" type="submit" disabled={disabled} onClick={onPublish}>
         {busy ? 'Saving…' : 'Save'}
-      </Button>
+      </DuncitButton>
     </DialogActions>
   );
 }

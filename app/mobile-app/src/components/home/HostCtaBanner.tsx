@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   isHost: boolean;
@@ -35,7 +36,7 @@ export function HostCtaBanner({ isHost, onCreatePod, onBecomeHost }: Readonly<Pr
       alignItems="center"
       gap={12}
       padding={14}
-      pressStyle={{ opacity: 0.9 }}
+      pressStyle={PRESS_STYLE.surface}
     >
       <LinearGradient
         colors={['#ff4f73', '#f5337a', '#ff8b5f']}

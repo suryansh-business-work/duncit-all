@@ -1,16 +1,8 @@
 import { useQuery } from '@apollo/client';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  Drawer,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, CircularProgress, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { notify } from '@duncit/dialogs';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import EmailLogMeta from './EmailLogMeta';
@@ -86,9 +78,9 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
         <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
           {row?.subject || 'Email'}
         </Typography>
-        <IconButton onClick={onClose} aria-label={t('shell.common.close')}>
+        <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Divider />
 
@@ -151,9 +143,9 @@ function HtmlPane({ html, onCopy }: Readonly<{ html: string; onCopy: () => void 
           justifyContent: "flex-end",
           mb: 1
         }}>
-        <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>
+        <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>
           Copy
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box
         component="pre"

@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import {
   Avatar,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import { DuncitButton } from '@duncit/buttons';
 import { ADD_CLUB_RATING, CLUB_RATINGS } from '../ClubDetailsPage/clubDetailsQueries';
 import { notify } from '../../components/notify';
 import { formatDate } from '../../utils/dateFormat';
@@ -75,14 +75,14 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
         }}>
           Ratings & Reviews
         </Typography>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           sx={{ borderRadius: '16px', fontWeight: 600 }}
           onClick={() => setDialogOpen(true)}
         >
           Rate Club
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {ratingsCount > 0 ? (
@@ -180,15 +180,15 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)}>{t('mweb.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setDialogOpen(false)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             onClick={handleSubmit}
             disabled={!stars || submitting}
             sx={{ borderRadius: '16px', fontWeight: 700 }}
           >
             {submitting ? 'Submitting…' : 'Submit'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Box>

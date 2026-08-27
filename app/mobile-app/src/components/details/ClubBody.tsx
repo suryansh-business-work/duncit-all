@@ -18,6 +18,7 @@ import { pickPodMoments } from '@/utils/club-detail';
 import { isClubAdminOf } from '@duncit/utils';
 import { useMeStore } from '@/stores/me.store';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The club-details body — summary, stats, WhatsApp chat, members and the
  * tabbed segments (pods schedule, moments, content sections, hosts). */
@@ -144,7 +145,7 @@ export function ClubBody({
               height={48}
               borderRadius={14}
               backgroundColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <MaterialIcons name="chat" size={18} color={onPrimary} />
               <Text fontSize={14} fontWeight="700" color="$onPrimary">

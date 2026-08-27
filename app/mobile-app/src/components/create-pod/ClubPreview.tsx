@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   club: CreatePodClub | null;
@@ -69,6 +70,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
           </Text>
         </XStack>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="club-preview-details"
           role="button"
           aria-label={t('mweb.createPod.viewClubDetails')}
@@ -85,6 +87,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
         <ModalThemeScope>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="club-preview-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.auth.close')}
               onPress={close}
@@ -119,7 +122,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
                     justifyContent="center"
                     borderRadius={17}
                     backgroundColor="$surface"
-                    pressStyle={{ opacity: 0.7 }}
+                    pressStyle={PRESS_STYLE.row}
                   >
                     <MaterialIcons name="close" size={18} color={ink} />
                   </XStack>

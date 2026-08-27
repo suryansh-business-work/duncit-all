@@ -1,15 +1,19 @@
 import type { ReactNode } from 'react';
 import { Pressable } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
+import { PRESS } from '@duncit/buttons-native';
 
-const PRESSED_OPACITY = 0.85;
-
-/** Press feedback style: the caller's style plus a dim while pressed. Extracted
- * so both pressed states are unit-testable (RTL can't drive Pressable state). */
+/** Press feedback style: the caller's style plus the shared pressed treatment.
+ * Extracted so both states stay unit-testable (RTL cannot drive Pressable state). */
 export const pressedOpacityStyle = (
   style: StyleProp<ViewStyle>,
   pressed: boolean,
-): StyleProp<ViewStyle> => [style, { opacity: pressed ? PRESSED_OPACITY : 1 }];
+): StyleProp<ViewStyle> => [
+  style,
+  pressed
+    ? { opacity: PRESS.control.opacity, transform: [{ scale: PRESS.control.scale }] }
+    : { opacity: 1 },
+];
 
 interface PressScaleProps {
   children: ReactNode;
@@ -21,9 +25,11 @@ interface PressScaleProps {
 }
 
 /**
- * App-wide press feedback: dims to 0.85 while pressed. The former spring
- * scale-down animation was removed app-wide for performance — the feedback is
- * now an instant opacity change on a plain Pressable.
+ * App-wide press feedback for anything wrapping a plain `Pressable`.
+ *
+ * The values are `PRESS.control` from `@duncit/buttons-native` — the same
+ * dim and compression an outlined button gets in mWeb, rather than the 0.85
+ * that used to be written here and in 203 other places.
  */
 export function PressScale({
   children,

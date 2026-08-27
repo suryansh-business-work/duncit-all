@@ -3,6 +3,7 @@ import { XStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface RatingStarsProps {
   value: number;
@@ -23,7 +24,7 @@ export function RatingStars({ value, onChange, max = 5 }: Readonly<RatingStarsPr
           aria-label={`${star} star`}
           aria-pressed={star <= value}
           onPress={() => onChange(star)}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons
             name={star <= value ? 'star' : 'star-border'}

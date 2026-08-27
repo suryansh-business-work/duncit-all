@@ -1,6 +1,7 @@
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EventIcon from '@mui/icons-material/Event';
+import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router-dom';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
@@ -119,9 +120,9 @@ export default function PodMapSection({ pod, location, venue, onJoinMeeting }: R
           </Stack>
           {venue ? (
             <Stack spacing={1}>
-              <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ alignSelf: 'flex-start' }}>
+              <DuncitButton component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ alignSelf: 'flex-start' }}>
                 {t('mweb.podDetails.venueDetails')}
-              </Button>
+              </DuncitButton>
               <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
             </Stack>
           ) : (

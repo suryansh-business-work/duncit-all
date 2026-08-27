@@ -2,17 +2,16 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { UPDATE_LEGAL_DOCUMENT, type LegalDocumentListItem } from '../../graphql/documents';
 import DocumentActiveSwitch from './DocumentActiveSwitch';
 import { useTranslation } from '@duncit/shell';
@@ -75,13 +74,13 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
         }}>
           {doc?.document_no}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           onClick={onClose}
           aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
 
       <DialogContent dividers>
@@ -129,10 +128,10 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
-        <Button variant="contained" onClick={apply} disabled={loading || locked || !trimmed}>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={apply} disabled={loading || locked || !trimmed}>
           Apply
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -1,8 +1,9 @@
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 
 export type DashboardToolbarProps = Readonly<{
   editing: boolean;
@@ -46,9 +47,9 @@ export function DashboardToolbar({
       <Stack direction="row" sx={{
         justifyContent: "flex-end"
       }}>
-        <Button size="small" startIcon={<TuneIcon />} onClick={onStart}>
+        <DuncitButton size="small" startIcon={<TuneIcon />} onClick={onStart}>
           {labels.customise}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -72,13 +73,13 @@ export function DashboardToolbar({
       <Stack direction="row" spacing={1} sx={{
         justifyContent: "flex-end"
       }}>
-        <Button size="small" color="inherit" startIcon={<RestartAltIcon />} onClick={onReset} disabled={saving}>
+        <DuncitButton size="small" color="inherit" startIcon={<RestartAltIcon />} onClick={onReset} disabled={saving}>
           {labels.reset}
-        </Button>
-        <Button size="small" color="inherit" startIcon={<CloseIcon />} onClick={onCancel} disabled={saving}>
+        </DuncitButton>
+        <DuncitButton size="small" color="inherit" startIcon={<CloseIcon />} onClick={onCancel} disabled={saving}>
           {labels.cancel}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           size="small"
           variant="contained"
           startIcon={<SaveIcon />}
@@ -86,7 +87,7 @@ export function DashboardToolbar({
           disabled={saving || !dirty}
         >
           {saving ? labels.saving : labels.save}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

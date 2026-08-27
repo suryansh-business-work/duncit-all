@@ -1,8 +1,9 @@
 import type { KeyboardEvent } from 'react';
-import { Avatar, Box, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
+import { Avatar, Box, List, ListItem, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatRelative } from './helpers';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -77,7 +78,7 @@ export default function CommentsList({
                 alignItems: "center",
                 flex: '0 0 auto'
               }}>
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 aria-label={t('mweb.podDetails.likeComment')}
                 onClick={() => onToggleLike(c.id)}
@@ -87,14 +88,14 @@ export default function CommentsList({
                 ) : (
                   <FavoriteBorderIcon fontSize="small" />
                 )}
-              </IconButton>
+              </DuncitIconButton>
               {c.like_count > 0 && (
                 <Typography variant="caption" color={liked ? 'primary.main' : 'text.secondary'}>
                   {c.like_count}
                 </Typography>
               )}
               {mine && (
-                <IconButton
+                <DuncitIconButton
                   className="ph-del"
                   size="small"
                   aria-label={t('mweb.podDetails.deleteComment')}
@@ -102,7 +103,7 @@ export default function CommentsList({
                   sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity 150ms' }}
                 >
                   <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               )}
             </Stack>
           </ListItem>

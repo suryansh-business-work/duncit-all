@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { StepButton } from './PodShopProductRow';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   quantity: number;
@@ -39,7 +40,7 @@ function AddToSelection({
       justifyContent="center"
       gap={8}
       opacity={outOfStock ? 0.6 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="add-shopping-cart" size={18} color={iconColor} />
       <Text fontSize={14} fontWeight="700" color={textColor}>
@@ -94,7 +95,7 @@ function QuantityStepper({
         paddingVertical={6}
         paddingHorizontal={10}
         borderRadius={999}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         <MaterialIcons name="delete-outline" size={18} color={danger} />
         <Text fontSize={13} fontWeight="600" color="$danger">

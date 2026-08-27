@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { formatBytes } from '../../server/format';
 import { useBackupUpload } from './useBackupUpload';
@@ -75,7 +75,7 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
             {t('tech.dbBackup.uploadIntro')}
           </Typography>
 
-          <Button
+          <DuncitButton
             component="label"
             variant="outlined"
             startIcon={<UploadFileIcon />}
@@ -89,7 +89,7 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
               accept={ARCHIVE_EXTENSION}
               onChange={(e) => onPick(e.target.files?.[0] ?? null)}
             />
-          </Button>
+          </DuncitButton>
 
           {file && (
             <Typography variant="body2">
@@ -129,12 +129,12 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('tech.dbBackup.cancel')}
-        </Button>
-        <Button variant="contained" onClick={onConfirm} disabled={!file || busy}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onConfirm} disabled={!file || busy}>
           {t('tech.dbBackup.uploadAction')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

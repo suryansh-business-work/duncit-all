@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
-import { Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { DuncitButton } from '@duncit/buttons';
 import { MY_MEETING, type SurveyKind } from '../survey-gate/queries';
 import { useDateFormat } from '../../utils/dateFormat';
 
@@ -73,9 +74,9 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
               </Typography>
             )}
             {meeting.meeting_link && (
-              <Button variant="contained" size="small" href={meeting.meeting_link} target="_blank" rel="noopener">
+              <DuncitButton variant="contained" size="small" href={meeting.meeting_link} target="_blank" rel="noopener">
                 Join meeting
-              </Button>
+              </DuncitButton>
             )}
           </Stack>
         ) : (

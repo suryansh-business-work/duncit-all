@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   DuncitTable,
   actionsColumn,
@@ -151,20 +152,20 @@ export default function CampaignTable({
           return (
             <>
               <Tooltip title={t('marketing.marketingCampaigns.viewCampaign')}>
-                <IconButton size="small" aria-label={t('marketing.marketingCampaigns.viewCampaign')} onClick={() => onView(row)}>
+                <DuncitIconButton size="small" aria-label={t('marketing.marketingCampaigns.viewCampaign')} onClick={() => onView(row)}>
                   <VisibilityOutlinedIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
               <Tooltip title={sendLabel}>
                 <span>
-                  <IconButton
+                  <DuncitIconButton
                     size="small"
                     aria-label={sendLabel}
                     disabled={busy || !canSend(row.status)}
                     onClick={() => onSend(row)}
                   >
                     <SendIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </span>
               </Tooltip>
             </>

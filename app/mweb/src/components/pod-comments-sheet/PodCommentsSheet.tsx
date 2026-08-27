@@ -1,16 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  Drawer,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   POD_COMMENTS,
   ADD_POD_COMMENT,
@@ -122,9 +115,9 @@ export default function PodCommentsSheet({
           borderColor: 'divider'
         }}>
         <Typography variant="h6">{t('mweb.podDetails.comments')}</Typography>
-        <IconButton onClick={onClose}>
+        <DuncitIconButton onClick={onClose}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
 
       <Box sx={{ flex: 1, overflowY: 'auto' }}>

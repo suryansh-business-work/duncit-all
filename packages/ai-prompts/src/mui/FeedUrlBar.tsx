@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Alert, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitIconButton } from '@duncit/buttons';
 import { usePromptCopy } from '../i18n/useCopy';
 
 interface Props {
@@ -67,12 +68,12 @@ export function FeedUrlBar({ url, label }: Readonly<Props>) {
           {url}
         </Box>
         <Tooltip title={copied ? copy.apiCopied : label}>
-          <IconButton size="small" aria-label={label} onClick={copyUrl}>
+          <DuncitIconButton size="small" aria-label={label} onClick={copyUrl}>
             <ContentCopyIcon fontSize="small" color={copied ? 'success' : 'inherit'} />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={copy.apiOpenInNewTab}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={copy.apiOpenFeed}
             component="a"
@@ -81,7 +82,7 @@ export function FeedUrlBar({ url, label }: Readonly<Props>) {
             rel="noreferrer"
           >
             <OpenInNewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     </Alert>

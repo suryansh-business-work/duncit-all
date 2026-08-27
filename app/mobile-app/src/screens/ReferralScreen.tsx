@@ -13,6 +13,7 @@ import { POD_WEB_BASE } from '@/utils/pod-format';
 import { useShareUrl } from '@/hooks/useShareUrl';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type ReferredEntry = MyReferral['referred'][number];
 
@@ -44,7 +45,7 @@ function ShareAction({ testID, label, icon, tint, filled, onPress }: Readonly<Ac
       borderWidth={filled ? 0 : 1}
       borderColor="$borderColor"
       backgroundColor={filled ? '$primary' : 'transparent'}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={15} color={tint} />
       <Text fontSize={12.5} fontWeight="700" color={filled ? '$onPrimary' : '$color'}>

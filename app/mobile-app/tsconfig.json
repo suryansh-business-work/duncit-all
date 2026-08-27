@@ -14,7 +14,12 @@
       "date-fns": ["./node_modules/date-fns"],
       "date-fns/*": ["./node_modules/date-fns/*"],
       "date-fns-tz": ["./node_modules/date-fns-tz"],
-      "date-fns-tz/*": ["./node_modules/date-fns-tz/*"]
+      "date-fns-tz/*": ["./node_modules/date-fns-tz/*"],
+      // @duncit/verification re-exports a zod address schema from its ROOT
+      // entry, so the app compiles that file and has to resolve zod from
+      // packages/verification/ — empty in CI. Safe as a Metro alias too: zod
+      // ships its own types, so tsc and Metro both want this same module.
+      "zod": ["./node_modules/zod"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

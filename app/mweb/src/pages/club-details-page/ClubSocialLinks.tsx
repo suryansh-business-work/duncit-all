@@ -1,6 +1,7 @@
 import ChatIcon from '@mui/icons-material/Chat';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -19,7 +20,7 @@ export default function ClubSocialLinks({ club }: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
       {social.map((item) => (
-        <Button
+        <DuncitButton
           key={item.label}
           variant="outlined"
           startIcon={item.icon}
@@ -31,7 +32,7 @@ export default function ClubSocialLinks({ club }: Readonly<Props>) {
           sx={{ textTransform: 'none' }}
         >
           {item.label}
-        </Button>
+        </DuncitButton>
       ))}
     </Stack>
   );

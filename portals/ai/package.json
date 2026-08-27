@@ -25,6 +25,7 @@
     "@apollo/client": "^3.14.1",
     "@duncit/ai-prompts": "workspace:*",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/forms": "workspace:*",

@@ -1,8 +1,9 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import CodeIcon from '@mui/icons-material/Code';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import { DuncitIconButton } from '@duncit/buttons';
 import MjmlAiButton from '../../components/MjmlAiButton';
 import { formatMjml } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
@@ -42,14 +43,14 @@ export default function MjmlEditorPane({ value, onChange, onValidate }: Readonly
           MJML source
         </Typography>
         <Tooltip title={t('tech.common.formatMjml')}>
-          <IconButton size="small" onClick={() => onChange(formatMjml(value))}>
+          <DuncitIconButton size="small" onClick={() => onChange(formatMjml(value))}>
             <FormatAlignLeftIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('tech.emailTemplates.verifyMjml')}>
-          <IconButton size="small" onClick={onValidate}>
+          <DuncitIconButton size="small" onClick={onValidate}>
             <FactCheckIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <MjmlAiButton iconOnly currentMjml={value} onApply={onChange} />
       </Stack>

@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -62,10 +56,10 @@ export function LinkDialog({ currentUrl, open, onApply, onClose }: Readonly<Prop
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.richText.cancel')}</Button>
-        <Button variant="contained" onClick={apply}>
+        <DuncitButton onClick={onClose}>{t('shell.richText.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={apply}>
           {t('shell.richText.applyLink')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

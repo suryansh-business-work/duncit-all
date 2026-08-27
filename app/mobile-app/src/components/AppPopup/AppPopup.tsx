@@ -19,6 +19,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { navigationRef } from '@/navigation/navigationRef';
 import { resolveNotificationLink } from '@/utils/notification-link';
 import { AppPopupCard } from './AppPopupCard';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Send the guest where the CTA points, reusing the notification link rules so
  * a marketer writes one kind of link for pushes and popups alike. */
@@ -96,6 +97,7 @@ export function AppPopup() {
 
   return (
     <YStack
+      pressStyle={PRESS_STYLE.surface}
       testID="app-popup"
       position="absolute"
       top={0}

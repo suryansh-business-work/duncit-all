@@ -7,9 +7,10 @@ import {
 } from '@duncit/utils';
 import PodHistoryActions from './PodHistoryActions';
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import RuleIcon from '@mui/icons-material/Rule';
+import { DuncitButton } from '@duncit/buttons';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
 import { parseApiError } from '../../utils/parseApiError';
@@ -274,12 +275,12 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
       <Stack direction="row" spacing={1} useFlexGap sx={{
         flexWrap: "wrap"
       }}>
-        <Button component={RouterLink} to="/policies/backout-terms" size="small" startIcon={<RuleIcon />}>
+        <DuncitButton component={RouterLink} to="/policies/backout-terms" size="small" startIcon={<RuleIcon />}>
           {t('mweb.podHistory.backoutTerms')}
-        </Button>
-        <Button href="https://duncit.com/terms" target="_blank" rel="noopener" size="small">
+        </DuncitButton>
+        <DuncitButton href="https://duncit.com/terms" target="_blank" rel="noopener" size="small">
           {t('mweb.podHistory.generalTerms')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

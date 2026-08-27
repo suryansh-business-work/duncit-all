@@ -1,5 +1,6 @@
-import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -28,13 +29,13 @@ export default function RolesSection({ user, roleByKey, onManageRoles }: Readonl
               Roles determine what this user can do.
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<ManageAccountsIcon />}
             onClick={onManageRoles}
           >
             Manage Roles
-          </Button>
+          </DuncitButton>
         </Stack>
         {(user.roles ?? []).length === 0 ? (
           <Alert severity="warning">{t('admin.roles.empty')}</Alert>

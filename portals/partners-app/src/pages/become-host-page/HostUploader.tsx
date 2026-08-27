@@ -1,5 +1,6 @@
-import { Button, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -18,7 +19,7 @@ export default function HostUploader({ label, value, onPick }: Readonly<Props>) 
       {value ? (
         <Chip label={t('partners.common.uploaded')} color="success" size="small" onClick={() => window.open(value, '_blank')} />
       ) : (
-        <Button startIcon={<UploadFileIcon />} variant="outlined" size="small" onClick={onPick}>{t('partners.becomeHostPage.upload')}</Button>
+        <DuncitButton startIcon={<UploadFileIcon />} variant="outlined" size="small" onClick={onPick}>{t('partners.becomeHostPage.upload')}</DuncitButton>
       )}
     </Stack>
   );

@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { useApolloTableFetch, type TableQueryState } from '@duncit/table';
 import { referralLink, renderReferralMessage } from '@duncit/utils';
@@ -139,7 +140,7 @@ export default function ReferralsPage() {
         />
 
         <Box>
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={!formState.isDirty || saving}
             onClick={() => {
@@ -147,7 +148,7 @@ export default function ReferralsPage() {
             }}
           >
             {saving ? 'Saving…' : 'Save settings'}
-          </Button>
+          </DuncitButton>
         </Box>
 
         <ReferralsTable fetchRows={fetchRows} />

@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import { logs } from '@duncit/logs';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   buildPodFeedbackInput,
   canSubmitPodFeedback,
@@ -116,14 +116,14 @@ export default function PodFeedbackPrompt() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAsking(true)}>{t('mweb.podFeedback.close')}</Button>
-          <Button
+          <DuncitButton onClick={() => setAsking(true)}>{t('mweb.podFeedback.close')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             disabled={!canSubmitPodFeedback(scores) || loading}
             onClick={handleSubmit}
           >
             {loading ? t('mweb.podFeedback.submitting') : t('mweb.podFeedback.submit')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
       <PodFeedbackReminderDialog open={asking} title={pod.title} onChoose={handleRemind} />

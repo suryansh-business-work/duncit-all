@@ -3,6 +3,7 @@ import { Input, Slider, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -58,7 +59,7 @@ function StepButton({ testID, label, icon, onPress, color }: Readonly<StepButton
       borderColor="$borderColor"
       alignItems="center"
       justifyContent="center"
-      pressStyle={{ opacity: 0.6 }}
+      pressStyle={PRESS_STYLE.inline}
     >
       <MaterialIcons name={icon} size={18} color={color} />
     </XStack>

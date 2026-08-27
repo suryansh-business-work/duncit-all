@@ -19,6 +19,7 @@ import {
   type HostTypeFilter,
 } from '@/utils/host-pods-filters';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -44,6 +45,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="host-pods-filter-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
@@ -66,6 +68,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   Filter pods
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="host-filter-close"
                   role="button"
                   aria-label={t('mweb.common.close')}
@@ -121,7 +124,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   borderRadius={12}
                   borderWidth={1}
                   borderColor="$borderColor"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
                     Reset
@@ -138,7 +141,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   justifyContent="center"
                   borderRadius={12}
                   backgroundColor="$primary"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     Apply

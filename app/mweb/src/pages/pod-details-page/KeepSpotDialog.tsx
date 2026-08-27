@@ -1,12 +1,12 @@
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -48,12 +48,12 @@ export default function KeepSpotDialog({
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('mweb.podDetails.close')}
-        </Button>
-        <Button variant="contained" onClick={onConfirm} disabled={busy}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onConfirm} disabled={busy}>
           {busy ? t('mweb.podDetails.restoring') : t('mweb.podDetails.keepMySpot')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

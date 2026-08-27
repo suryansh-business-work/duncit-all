@@ -1,5 +1,6 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { DuncitButton } from '@duncit/buttons';
 import { glass, inkCta } from './glass';
 import { sessionT, type SessionTranslate } from '../i18n';
 
@@ -87,7 +88,7 @@ export default function PromoCard({ title, text, brandName, t = sessionT }: Read
         }}>
           {t('session.promo.by', { vars: { brand: brandName } })}
         </Typography>
-        <Button
+        <DuncitButton
           size="small"
           endIcon={<ArrowForwardIcon />}
           sx={{
@@ -99,7 +100,7 @@ export default function PromoCard({ title, text, brandName, t = sessionT }: Read
           }}
         >
           {t('session.promo.explore')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

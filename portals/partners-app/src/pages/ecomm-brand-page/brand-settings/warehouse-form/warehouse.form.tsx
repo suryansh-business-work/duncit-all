@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, FormControlLabel, Stack, Switch } from '@mui/material';
+import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
 import { emptyWarehouseValues, type WarehouseFormValues } from './warehouse.types';
 import { useTranslation } from '@duncit/shell';
@@ -94,12 +95,12 @@ export default function WarehouseForm({ defaultValues, busy, apiError = null, on
       <Stack direction="row" spacing={1} sx={{
         justifyContent: "flex-end"
       }}>
-        <Button onClick={onCancel} disabled={busy}>
+        <DuncitButton onClick={onCancel} disabled={busy}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button type="submit" variant="contained" disabled={busy}>
+        </DuncitButton>
+        <DuncitButton type="submit" variant="contained" disabled={busy}>
           {busy ? 'Saving...' : 'Save warehouse'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
+import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -7,6 +7,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 export interface ProductRowAction {
@@ -35,9 +36,9 @@ export default function ProductRowActions({ actions }: Readonly<{ actions: Produ
   const close = () => setAnchor(null);
   return (
     <>
-      <IconButton size="small" aria-label={t('partners.listProductsPage.productActions')} onClick={(event) => setAnchor(event.currentTarget)}>
+      <DuncitIconButton size="small" aria-label={t('partners.listProductsPage.productActions')} onClick={(event) => setAnchor(event.currentTarget)}>
         <MoreVertIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
         {actions.map((action) => (
           <MenuItem

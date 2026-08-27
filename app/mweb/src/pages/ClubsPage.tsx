@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   InputAdornment,
   Link,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import ClubsGrid from './clubs-page/ClubsGrid';
 import ClubCategoryChips from './clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
@@ -219,13 +219,13 @@ export default function ClubsPage({
           }}>
             No Clubs operating at the selected location,
           </Typography>
-          <Button
+          <DuncitButton
             variant="contained"
             onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
             sx={{ borderRadius: 999, fontWeight: 600 }}
           >
             Reset Location
-          </Button>
+          </DuncitButton>
         </Stack>
       ) : (
         clubsBody

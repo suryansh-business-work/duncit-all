@@ -1,5 +1,6 @@
-import { Badge, IconButton, Stack, Typography } from '@mui/material';
+import { Badge, Stack, Typography } from '@mui/material';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CART_BADGE_MAX, deriveCartEntry } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -30,7 +31,7 @@ export default function HeaderCartButton({ label }: Readonly<{ label?: string }>
         alignItems: "center",
         flex: '0 0 auto'
       }}>
-      <IconButton
+      <DuncitIconButton
         aria-label={t('mweb.cart.open', { count: entry.count })}
         onClick={() => navigate('/cart')}
         sx={{ bgcolor: 'action.hover' }}
@@ -38,7 +39,7 @@ export default function HeaderCartButton({ label }: Readonly<{ label?: string }>
         <Badge badgeContent={entry.count} color="error" max={CART_BADGE_MAX}>
           <ShoppingCartRoundedIcon />
         </Badge>
-      </IconButton>
+      </DuncitIconButton>
       {label && (
         <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', lineHeight: 1 }}>
           {label}

@@ -1,7 +1,8 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import RuleIcon from '@mui/icons-material/Rule';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { BRAND_STATUS_COLOR } from '../ecomm/brandStatus';
 import type { CatalogBrandDetail } from './queries';
@@ -78,14 +79,14 @@ export default function BrandSummaryCard({ brand, productsTo }: Readonly<Props>)
                 {locationLine(brand)}
               </Typography>
             </Box>
-            <Button
+            <DuncitButton
               component={RouterLink}
               to={productsTo}
               variant="contained"
               startIcon={<InventoryIcon />}
             >
               Products
-            </Button>
+            </DuncitButton>
           </Stack>
 
           <Typography variant="caption" sx={{
@@ -98,14 +99,14 @@ export default function BrandSummaryCard({ brand, productsTo }: Readonly<Props>)
             <Alert
               severity="info"
               action={
-                <Button
+                <DuncitButton
                   component={RouterLink}
                   to="/ecomm/brands"
                   size="small"
                   startIcon={<RuleIcon />}
                 >
                   Brands Review
-                </Button>
+                </DuncitButton>
               }
             >
               {notice}

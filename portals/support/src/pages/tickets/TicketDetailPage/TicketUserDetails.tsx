@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Avatar, Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PlaceIcon from '@mui/icons-material/Place';
@@ -7,6 +7,7 @@ import EventIcon from '@mui/icons-material/Event';
 import BadgeIcon from '@mui/icons-material/Badge';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import type { Ticket } from '../../../graphql/tickets';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -116,7 +117,7 @@ export default function TicketUserDetails({
       {/* Below the details rather than beside the name: in the sidebar column
           there is no width to share with a heading, and a full-width button is
           the easier target either way. */}
-      <Button
+      <DuncitButton
         size="small"
         variant="outlined"
         fullWidth
@@ -128,7 +129,7 @@ export default function TicketUserDetails({
         sx={{ mt: 2 }}
       >
         View in Admin
-      </Button>
+      </DuncitButton>
     </Paper>
   );
 }

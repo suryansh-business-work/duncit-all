@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Alert, Button, CardContent, Grid, MenuItem, Stack, Typography } from '@mui/material';
+import { Alert, CardContent, Grid, MenuItem, Stack, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import MediaPickerField from '../../components/MediaPickerField';
 import AddressFields from './AddressFields';
@@ -49,7 +50,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             mb: 2
           }}>
           <Typography variant="subtitle1">{t('admin.profile.tab')}</Typography>
-          <Button
+          <DuncitButton
             type="submit"
             variant="contained"
             size="small"
@@ -57,7 +58,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             disabled={busy || !formState.isDirty || !formState.isValid}
           >
             {busy ? 'Saving…' : 'Save Changes'}
-          </Button>
+          </DuncitButton>
         </Stack>
         <Grid container spacing={2}>
           <Grid

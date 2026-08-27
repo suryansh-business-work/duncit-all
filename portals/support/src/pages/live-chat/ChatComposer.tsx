@@ -1,6 +1,7 @@
 import { useRef } from 'react';
-import { Button, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 
@@ -55,14 +56,14 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
             }
           }}
         />
-        <Button
+        <DuncitButton
           variant="contained"
           endIcon={<SendIcon />}
           disabled={sending || (!text.trim() && attachments.length === 0)}
           onClick={onSend}
         >
           Send
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

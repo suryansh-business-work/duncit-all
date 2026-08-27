@@ -1,5 +1,6 @@
-import { Avatar, Box, CircularProgress, IconButton, Tooltip } from '@mui/material';
+import { Avatar, Box, CircularProgress, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -66,7 +67,7 @@ export default function AvatarButton({
       </Tooltip>
 
       <Tooltip title={t('mweb.profileAvatar.changeProfilePhoto')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           data-testid="avatar-edit"
           aria-label={t('mweb.common.editPhoto')}
@@ -83,7 +84,7 @@ export default function AvatarButton({
           }}
         >
           {saving ? <CircularProgress size={16} /> : <EditIcon fontSize="small" />}
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Box>
   );

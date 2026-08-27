@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Box, Button, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 
 /** Contextual next-step action shown beside the "Already enabled" chip for a
  * role the user already holds (e.g. host more, register another venue). */
@@ -87,14 +88,14 @@ export default function EarnBox({
               flexWrap: "wrap"
             }}>
             <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
-            <Button
+            <DuncitButton
               size="small"
               variant="contained"
               onClick={cta.onClick}
               sx={{ borderRadius: 999, fontWeight: 600, textTransform: 'none' }}
             >
               {cta.label}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Box>
       )}

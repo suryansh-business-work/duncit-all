@@ -1,12 +1,10 @@
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   Typography,
   useMediaQuery,
@@ -14,6 +12,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import BasicSection from './BasicSection';
 import PreviewBar from './PreviewBar';
 import VenueRulesAccordion from './accordions/VenueRulesAccordion';
@@ -85,9 +84,9 @@ export default function RecurringAvailabilityDialog({
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={close} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <DuncitIconButton onClick={close} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
 
       <DialogContent dividers sx={{ py: 3 }}>
@@ -126,10 +125,10 @@ export default function RecurringAvailabilityDialog({
       </Box>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={close}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" disabled={!canCreate} onClick={handleCreate}>
+        <DuncitButton onClick={close}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={!canCreate} onClick={handleCreate}>
           {submitting ? 'Creating…' : `Create ${result.summary.total} slot${slotPlural}`}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

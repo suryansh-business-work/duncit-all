@@ -1,5 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { apiKeyService } from '@modules/platform/apiKey/apiKey.service';
+import { evaluate } from '@modules/platform/rateLimit/rateLimit.enforcer';
+import { describeRequest } from '@modules/platform/rateLimit/rateLimit.guard';
 import { logs } from '@observability/log';
 
 export interface ApiKeyAuth {
@@ -13,28 +15,17 @@ export interface ApiKeyedRequest extends Request {
   apiKey?: ApiKeyAuth;
 }
 
-// Tiny in-memory per-key limiter: sliding 60s window, 120 requests per key.
-// Timestamps are pruned on access so the map never grows past active keys.
-const RATE_WINDOW_MS = 60_000;
-const RATE_MAX_REQUESTS = 120;
-const rateUsage = new Map<string, number[]>();
-
-function isRateLimited(keyId: string): boolean {
-  const now = Date.now();
-  const stamps = (rateUsage.get(keyId) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (stamps.length >= RATE_MAX_REQUESTS) {
-    rateUsage.set(keyId, stamps);
-    return true;
-  }
-  stamps.push(now);
-  rateUsage.set(keyId, stamps);
-  return false;
-}
-
 /**
  * Authenticates a public-API request via the `x-api-key` header. Rejects with
  * 401 (unknown/revoked key), 403 (key lacks a required scope) or 429 (rate
  * limited), otherwise attaches `req.apiKey` and continues.
+ *
+ * The 429 is decided by the platform limiter (Tech > Rate Limiting), keyed on
+ * API_KEY — not by a window written here. This file used to carry its own
+ * 120-per-minute map, which meant the one limit an integrator ever asked about
+ * was the one nobody could change without a deploy, and it counted separately
+ * from every other ceiling. The shipped "Public API keys" rule is that same
+ * 120/60s, now editable.
  */
 export function requireApiKey(...requiredScopes: string[]): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -48,8 +39,14 @@ export function requireApiKey(...requiredScopes: string[]): RequestHandler {
       if (requiredScopes.some((s) => !scopes.includes(s))) {
         return res.status(403).json({ error: 'insufficient_scope' });
       }
-      if (isRateLimited(String(doc._id))) {
-        return res.status(429).json({ error: 'rate_limited' });
+      // Asked HERE rather than by the global middleware because the key's id
+      // is what an API_KEY rule counts per, and it does not exist until the
+      // line above has verified it.
+      const { request, info } = describeRequest(req, 'REST');
+      const decision = await evaluate({ ...request, apiKeyId: String(doc._id) }, info);
+      if (!decision.allowed) {
+        if (decision.retry_after) res.set('Retry-After', String(decision.retry_after));
+        return res.status(429).json({ error: 'rate_limited', message: decision.message });
       }
       (req as ApiKeyedRequest).apiKey = {
         id: String(doc._id),

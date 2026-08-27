@@ -2,11 +2,9 @@ import { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Box,
-  Button,
   Card,
   CardContent,
   CircularProgress,
-  IconButton,
   MenuItem,
   Stack,
   TextField,
@@ -18,11 +16,22 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
 import EventIcon from '@mui/icons-material/Event';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   addDays, addMonths, addWeeks, addYears, eachDayOfInterval, endOfWeek, endOfYear, format, startOfDay, startOfWeek, startOfYear,
 } from 'date-fns';
-import { useCalendarEvents, type CalEvent, type EntityFilter, type StatusFilter } from './useCalendarEvents';
-import { CRM_REMINDERS, DELETE_CRM_REMINDER, TOGGLE_CRM_REMINDER, type CrmReminder } from '../../api/reminders.gql';
+import {
+  useCalendarEvents,
+  type CalEvent,
+  type EntityFilter,
+  type StatusFilter,
+} from './useCalendarEvents';
+import {
+  CRM_REMINDERS,
+  DELETE_CRM_REMINDER,
+  TOGGLE_CRM_REMINDER,
+  type CrmReminder,
+} from '../../api/reminders.gql';
 import CalendarMonth from './CalendarMonth';
 import CalendarList from './CalendarList';
 import EventDrawer from './EventDrawer';
@@ -112,9 +121,9 @@ export default function CalendarSection() {
             <Stack direction="row" sx={{
               alignItems: "center"
             }}>
-              <IconButton size="small" onClick={() => step(-1)}><ChevronLeftIcon /></IconButton>
-              <Button size="small" onClick={() => setCursor(new Date())}>{t('crm.components.today')}</Button>
-              <IconButton size="small" onClick={() => step(1)}><ChevronRightIcon /></IconButton>
+              <DuncitIconButton size="small" onClick={() => step(-1)}><ChevronLeftIcon /></DuncitIconButton>
+              <DuncitButton size="small" onClick={() => setCursor(new Date())}>{t('crm.components.today')}</DuncitButton>
+              <DuncitIconButton size="small" onClick={() => step(1)}><ChevronRightIcon /></DuncitIconButton>
             </Stack>
           )}
           <Typography
@@ -134,7 +143,7 @@ export default function CalendarSection() {
             <MenuItem value="PENDING">{t('crm.components.pending')}</MenuItem>
             <MenuItem value="DONE">Done</MenuItem>
           </TextField>
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setFormOpen(true); }}>Add</Button>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setFormOpen(true); }}>Add</DuncitButton>
         </Stack>
 
         <ToggleButtonGroup size="small" exclusive value={view} onChange={(_e, v) => v && setView(v)} sx={{ mb: 1.5, flexWrap: 'wrap' }}>

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
+import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
 import CopyGetApiButton from '../../components/CopyGetApiButton';
@@ -101,17 +102,17 @@ export default function LogImportExport({ level, onImported }: Readonly<Props>) 
     <Stack direction="row" spacing={0.5} sx={{
       alignItems: "center"
     }}>
-      <Button size="small" startIcon={<DownloadIcon />} disabled={exporting} onClick={runExport}>
+      <DuncitButton size="small" startIcon={<DownloadIcon />} disabled={exporting} onClick={runExport}>
         {exporting ? 'Exporting…' : 'Export'}
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         size="small"
         startIcon={<UploadIcon />}
         disabled={importing}
         onClick={() => fileRef.current?.click()}
       >
         {importing ? 'Importing…' : 'Import'}
-      </Button>
+      </DuncitButton>
       <CopyGetApiButton path="/telemetry/logs.json" params={{ level }} />
       <input
         ref={fileRef}

@@ -990,6 +990,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — the native bar has no room for a footnote.
       changedYourMind:
         'Changed your mind? Keep your spot to stop the replacement search and restore your booking.',
+      // Partial backout. The member is still going with fewer seats, so they
+      // are never in "Backout in process" — the seats they gave back are the
+      // only thing on sale, and this is the only way to take them back.
+      releasedSeatsOne: 'You released 1 seat — we are finding someone to fill it.',
+      releasedSeatsMany: 'You released {count} seats — we are finding someone to fill them.',
+      takeSeatsBack: 'Take Seats Back',
       // Member state. mWeb states the membership as a disabled button; native
       // pairs a caption with a badge, so each names what it actually shows.
       joined: 'Joined',
@@ -3313,6 +3319,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     sidebar: {
       completeYourProfile: 'Complete your profile',
+      refreshing: 'Refreshing your menu',
       toggleDarkMode: 'Toggle dark mode',
     },
     sos: {

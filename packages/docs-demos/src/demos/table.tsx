@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { Button, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   DuncitTable,
   EM_DASH,
@@ -83,7 +84,7 @@ function RowUpdateDemo({ rows, update }: Readonly<{ rows: MeetingRowMock[]; upda
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
-        <Button
+        <DuncitButton
           variant="contained"
           size="small"
           onClick={() => {
@@ -92,7 +93,7 @@ function RowUpdateDemo({ rows, update }: Readonly<{ rows: MeetingRowMock[]; upda
           }}
         >
           Apply the mutation result
-        </Button>
+        </DuncitButton>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

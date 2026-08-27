@@ -1,4 +1,5 @@
-import { Alert, Button, Chip, Stack, TextField, ThemeProvider, Tooltip } from '@mui/material';
+import { Alert, Chip, Stack, TextField, ThemeProvider, Tooltip } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { createDuncitTheme } from '@duncit/theme';
 
 /** The Finance portal's brand accent — the ONLY thing a portal passes in. */
@@ -15,8 +16,8 @@ export function ThemedControls() {
     <ThemeProvider theme={createDuncitTheme('light', financeAccent)}>
       <Stack sx={{ gap: 2, maxWidth: 460 }}>
         <Stack direction="row" sx={{ gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Button variant="contained">Approve payout</Button>
-          <Button variant="outlined">Preview</Button>
+          <DuncitButton variant="contained">Approve payout</DuncitButton>
+          <DuncitButton variant="outlined">Preview</DuncitButton>
           <Tooltip title="Settlement DUN-STL-2291">
             <Chip label="₹13,211.18" />
           </Tooltip>

@@ -1,8 +1,13 @@
-import { Box, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import { cartLineKey, lineQualifiesFreeDelivery, type CartLine } from '../../components/cart/CartContext';
+import { DuncitIconButton } from '@duncit/buttons';
+import {
+  cartLineKey,
+  lineQualifiesFreeDelivery,
+  type CartLine,
+} from '../../components/cart/CartContext';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -77,34 +82,34 @@ export default function CartPodGroup({
           <Stack direction="row" spacing={0.5} sx={{
             alignItems: "center"
           }}>
-            <IconButton
+            <DuncitIconButton
               size="small"
               aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
               onClick={() => onSetQuantity(line, line.quantity - 1)}
             >
               <RemoveIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
             <Typography variant="body2" sx={{
               fontWeight: 700
             }}>
               {line.quantity}
             </Typography>
-            <IconButton
+            <DuncitIconButton
               size="small"
               aria-label={t('mweb.cart.increase', { vars: { name: line.product_name } })}
               disabled={line.quantity >= line.max_quantity}
               onClick={() => onSetQuantity(line, Math.min(line.max_quantity, line.quantity + 1))}
             >
               <AddIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={t('mweb.cart.removeItem', { vars: { name: line.product_name } })}
             onClick={() => onRemove(line)}
           >
             <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       ))}
       <Divider />

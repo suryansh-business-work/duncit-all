@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -55,7 +56,7 @@ export function ConfirmDialog({
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           {cancelLabelText}
@@ -72,7 +73,7 @@ export function ConfirmDialog({
         justifyContent="center"
         borderRadius={12}
         backgroundColor={destructive ? '$danger' : '$primary'}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
           {confirmLabelText}

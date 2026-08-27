@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
@@ -132,14 +133,14 @@ export default function AutoPodsPage() {
         refetchRef={refetchRef}
         formatDateTime={formatDateTime}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate(`${AUTO_PODS_PATH}/new`)}
           >
             {t('admin.autoPods.newCta')}
-          </Button>
+          </DuncitButton>
         }
         onEdit={handleEdit}
         onCancel={handleCancel}

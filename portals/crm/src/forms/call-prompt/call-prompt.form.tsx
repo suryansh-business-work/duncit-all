@@ -1,8 +1,13 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
+import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { callPromptSchema, callPromptDefaults } from './call-prompt.schema';
-import { languageOptions, type CallPromptFormProps, type CallPromptFormValues } from './call-prompt.types';
+import {
+  languageOptions,
+  type CallPromptFormProps,
+  type CallPromptFormValues,
+} from './call-prompt.types';
 import { useTranslation } from '@duncit/shell';
 
 /**
@@ -107,13 +112,13 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
           justifyContent: "flex-end"
         }}>
           {onCancel && (
-            <Button onClick={onCancel} disabled={submitting}>
+            <DuncitButton onClick={onCancel} disabled={submitting}>
               {t('shell.common.cancel')}
-            </Button>
+            </DuncitButton>
           )}
-          <Button type="submit" variant="contained" disabled={submitting || !isValid}>
+          <DuncitButton type="submit" variant="contained" disabled={submitting || !isValid}>
             {submitting ? 'Saving…' : submitLabelText}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

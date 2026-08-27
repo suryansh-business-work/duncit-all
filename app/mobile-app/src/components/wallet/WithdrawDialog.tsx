@@ -22,6 +22,7 @@ import {
   type WithdrawMethod,
   type WithdrawValues,
 } from './withdraw.form';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -89,6 +90,7 @@ export function WithdrawDialog({
         <KeyboardScreen>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="withdraw-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={dismiss}
@@ -138,7 +140,7 @@ export function WithdrawDialog({
                           borderWidth={1}
                           borderColor={method === m ? '$primary' : '$borderColor'}
                           backgroundColor={method === m ? '$primary' : 'transparent'}
-                          pressStyle={{ opacity: 0.8 }}
+                          pressStyle={PRESS_STYLE.control}
                         >
                           <Text
                             fontSize={13}
@@ -204,7 +206,7 @@ export function WithdrawDialog({
                     borderWidth={1}
                     borderColor="$borderColor"
                     opacity={busy ? 0.6 : 1}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
                       Cancel
@@ -224,7 +226,7 @@ export function WithdrawDialog({
                     borderRadius={12}
                     backgroundColor="$primary"
                     opacity={busy ? 0.7 : 1}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     {busy ? <Spinner size="small" color={onPrimary} /> : null}
                     <Text fontSize={14} fontWeight="700" color="$onPrimary">

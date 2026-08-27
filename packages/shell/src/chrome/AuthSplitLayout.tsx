@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import { alpha, styled } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import { DuncitIconButton } from '@duncit/buttons';
 import { tokens, useColorMode } from '@duncit/theme';
 import { useBranding } from '../hooks/useBranding';
 
@@ -93,9 +94,9 @@ export function AuthSplitLayout({
       <FormPane>
         <TopRight>
           <Tooltip title={mode === 'dark' ? 'Switch to light' : 'Switch to dark'}>
-            <IconButton onClick={toggle} aria-label={t('shell.chrome.toggleColorMode')} size="small">
+            <DuncitIconButton onClick={toggle} aria-label={t('shell.chrome.toggleColorMode')} size="small">
               {mode === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         </TopRight>
         <FormInner>

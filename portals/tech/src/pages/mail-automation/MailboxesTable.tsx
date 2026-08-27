@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Chip, Typography } from '@mui/material';
+import { Chip, Typography } from '@mui/material';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '../server/format';
@@ -82,7 +83,7 @@ export default function MailboxesTable({
     };
 
     const renderActions = (row: MailAutomationAccount) => (
-      <Button
+      <DuncitButton
         size="small"
         color="error"
         variant="outlined"
@@ -91,7 +92,7 @@ export default function MailboxesTable({
         onClick={() => onDisconnect(row)}
       >
         {t('tech.mailAutomation.disconnect')}
-      </Button>
+      </DuncitButton>
     );
 
     return [

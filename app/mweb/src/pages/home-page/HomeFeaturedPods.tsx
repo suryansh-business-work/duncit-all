@@ -1,9 +1,10 @@
-import { Box, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import EventIcon from '@mui/icons-material/Event';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import SeeAllCard from './SeeAllCard';
 import PodCardMedia from './PodCardMedia';
@@ -123,7 +124,7 @@ export default function HomeFeaturedPods({
                 />
               )}
               {onToggleSave && (
-                <IconButton
+                <DuncitIconButton
                   aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
                   aria-pressed={saved}
                   disabled={saving}
@@ -145,7 +146,7 @@ export default function HomeFeaturedPods({
                   }}
                 >
                   {saveButtonContent}
-                </IconButton>
+                </DuncitIconButton>
               )}
               {/* Semi-transparent info panel (mock) — the image reads through. */}
               <Stack

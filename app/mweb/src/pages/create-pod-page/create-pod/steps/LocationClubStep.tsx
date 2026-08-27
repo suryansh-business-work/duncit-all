@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import {
-  Autocomplete, Box, Button, Card, FormHelperText, Stack, TextField,
-  ToggleButton, ToggleButtonGroup, Typography,
+  Autocomplete,
+  Box,
+  Card,
+  FormHelperText,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
+import { DuncitButton } from '@duncit/buttons';
 import LocationDialog from '../../../../components/app-header/LocationDialog';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
@@ -86,9 +94,9 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
               </Typography>
             )}
           </Box>
-          <Button size="small" variant="outlined" startIcon={<EditLocationAltIcon />} onClick={openPicker} data-testid="create-pod-change-location">
+          <DuncitButton size="small" variant="outlined" startIcon={<EditLocationAltIcon />} onClick={openPicker} data-testid="create-pod-change-location">
             {t('mweb.createPod.change')}
-          </Button>
+          </DuncitButton>
         </Stack>
         {errors.location_id && <FormHelperText error>{errors.location_id.message}</FormHelperText>}
       </Card>

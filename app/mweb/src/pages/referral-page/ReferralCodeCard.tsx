@@ -1,9 +1,10 @@
-import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import LinkIcon from '@mui/icons-material/Link';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { MyReferral } from './queries';
 
@@ -44,7 +45,7 @@ export default function ReferralCodeCard({
           share sheet carries the message Finance wrote around both.
         */}
         <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<IosShareIcon />}
@@ -52,23 +53,23 @@ export default function ReferralCodeCard({
             data-testid="referral-share"
           >
             {t('mweb.referral.share')}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             startIcon={<ContentCopyIcon />}
             onClick={onCopyCode}
             data-testid="referral-copy-code"
           >
             {t('mweb.referral.copyCode')}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             startIcon={<LinkIcon />}
             onClick={onCopyLink}
             data-testid="referral-copy-link"
           >
             {t('mweb.referral.copyLink')}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         {referral.coins_per_referral > 0 && (

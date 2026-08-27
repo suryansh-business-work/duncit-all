@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { PodKindChooser, type PodKind } from '@duncit/auto-pods';
 import { useFeatureFlag, useTranslation } from '@duncit/app-settings';
 import { shellPodKindLabels } from '@duncit/utils';
@@ -53,9 +53,9 @@ export default function CreatePodLauncher({ onNormal }: Readonly<Props>) {
 
   return (
     <>
-      <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={start}>
+      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={start}>
         {podKindLabels.newPodCta}
-      </Button>
+      </DuncitButton>
 
       <PodKindChooser
         open={choosing}

@@ -1,5 +1,4 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -7,6 +6,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import PolicyAcceptanceList from './PolicyAcceptanceList';
 import { toggleAccepted } from './acceptance';
@@ -103,10 +103,10 @@ export default function PolicyAcceptanceDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={finish}>{t('policyAcceptance.close')}</Button>
-        <Button variant="contained" onClick={acceptAll} disabled={!ready}>
+        <DuncitButton onClick={finish}>{t('policyAcceptance.close')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={acceptAll} disabled={!ready}>
           {t('policyAcceptance.acceptAll')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

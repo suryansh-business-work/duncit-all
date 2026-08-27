@@ -1,7 +1,8 @@
 import { useMutation } from '@apollo/client';
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { DELETE_ALL_EMAIL_LOGS, DELETE_EMAIL_LOGS, type EmailLogRow } from './queries';
@@ -65,10 +66,10 @@ export default function EmailLogBulkBar({ selected, onClear, onDeleted }: Readon
         <Typography variant="body2" sx={{ flex: 1 }}>
           {count} selected on this page
         </Typography>
-        <Button size="small" onClick={onClear} disabled={loading}>
+        <DuncitButton size="small" onClick={onClear} disabled={loading}>
           Clear
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           size="small"
           color="error"
           variant="contained"
@@ -77,7 +78,7 @@ export default function EmailLogBulkBar({ selected, onClear, onDeleted }: Readon
           disabled={loading}
         >
           Delete
-        </Button>
+        </DuncitButton>
       </Stack>
     </Paper>
   );
@@ -109,7 +110,7 @@ export function EmailLogDeleteAllButton({ total, onDeleted }: Readonly<DeleteAll
   };
 
   return (
-    <Button
+    <DuncitButton
       size="small"
       color="error"
       startIcon={<DeleteSweepIcon />}
@@ -117,6 +118,6 @@ export function EmailLogDeleteAllButton({ total, onDeleted }: Readonly<DeleteAll
       disabled={loading}
     >
       Delete all
-    </Button>
+    </DuncitButton>
   );
 }

@@ -1,5 +1,6 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { SignupPolicy } from './useSignupPolicies';
 
@@ -46,7 +47,7 @@ export default function PolicyBodyDialog({ policy, onClose }: Readonly<Props>) {
         <Box sx={BODY_SX} dangerouslySetInnerHTML={{ __html: policy?.content ?? '' }} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('policyAcceptance.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('policyAcceptance.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

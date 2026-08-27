@@ -1,4 +1,5 @@
-import { Alert, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import StudioPodRow from './StudioPodRow';
 import StudioPodsFigures from './StudioPodsFigures';
@@ -39,9 +40,9 @@ function StudioPodsBody({
       <Alert
         severity="error"
         action={
-          <Button color="inherit" size="small" onClick={onRetry}>
+          <DuncitButton color="inherit" size="small" onClick={onRetry}>
             {t('mweb.studioPods.retry')}
-          </Button>
+          </DuncitButton>
         }
       >
         {t('mweb.studioPods.error')}

@@ -42,6 +42,7 @@ import { AiMonitorOverlay } from './AiMonitorOverlay';
 import { StepHeader } from './StepHeader';
 import { ModerationBlockedDialog, type BlockedViolation } from './ModerationBlockedDialog';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
 
@@ -314,7 +315,7 @@ export function CreatePodStepper({
             justifyContent="center"
             borderWidth={1}
             borderColor="$borderColor"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <Text fontSize={15} fontWeight="700" color="$color">
               {t('mweb.createPod.back')}

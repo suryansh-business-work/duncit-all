@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -8,6 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { WaMediaRef } from '@duncit/communication';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
@@ -96,7 +96,7 @@ export default function RecipientMessageDialog({
         </>
       )}
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

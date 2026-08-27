@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Chip, Typography } from '@mui/material';
+import { Chip, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import type { MailAutomationAccount } from '../../graphql/mail-automation';
@@ -69,9 +70,9 @@ export default function MailboxRulesTable({
     );
 
     const renderActions = (row: MailAutomationAccount) => (
-      <Button size="small" variant="outlined" startIcon={<TuneIcon />} onClick={() => onConfigure(row)}>
+      <DuncitButton size="small" variant="outlined" startIcon={<TuneIcon />} onClick={() => onConfigure(row)}>
         {t('support.mailAutomation.configure')}
-      </Button>
+      </DuncitButton>
     );
 
     return [

@@ -1,15 +1,9 @@
-import {
-  Box,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PostActionsProps {
@@ -35,12 +29,12 @@ export default function PostActions({
       <Stack direction="row" spacing={0.5} sx={{
         alignItems: "center"
       }}>
-        <IconButton onClick={onLike} color={post.liked_by_me ? 'error' : 'default'}>
+        <DuncitIconButton onClick={onLike} color={post.liked_by_me ? 'error' : 'default'}>
           {post.liked_by_me ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </IconButton>
-        <IconButton>
+        </DuncitIconButton>
+        <DuncitIconButton>
           <ChatBubbleOutlineIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Typography
         variant="subtitle2"
@@ -69,13 +63,13 @@ export default function PostActions({
             disableUnderline: true,
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton
+                <DuncitIconButton
                   onClick={onSend}
                   disabled={!comment.trim() || submitting}
                   color="primary"
                 >
                   <SendIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </InputAdornment>
             ),
           }

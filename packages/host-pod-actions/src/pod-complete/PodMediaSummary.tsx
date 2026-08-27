@@ -1,5 +1,6 @@
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import PhotoCameraBackIcon from '@mui/icons-material/PhotoCameraBack';
+import { DuncitButton } from '@duncit/buttons';
 import { useQuery } from '@apollo/client';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import PodMediaGrid from '../pod-media/PodMediaGrid';
@@ -33,13 +34,13 @@ export default function PodMediaSummary({ podId }: Readonly<Props>) {
           {labels.podMedia}
         </Typography>
         {onOpenPodMedia && (
-          <Button
+          <DuncitButton
             size="small"
             startIcon={<PhotoCameraBackIcon fontSize="small" />}
             onClick={() => onOpenPodMedia(podId)}
           >
             {podMediaLabels.pageTitle}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
       <PodMediaGrid items={board?.items ?? []} labels={podMediaLabels} />

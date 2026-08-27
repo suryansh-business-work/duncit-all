@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   CircularProgress,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import OrderSummaryCard from './OrderSummaryCard';
 import OrderFulfilmentPanel from './OrderFulfilmentPanel';
@@ -85,18 +85,18 @@ export default function ProductOrderDetailPage() {
     return (
       <Stack spacing={2} sx={{ py: 4 }}>
         <Alert severity="warning">{t('products.orders.notFound')}</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/orders')} sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate('/orders')} sx={{ alignSelf: 'flex-start' }}>
           Back to orders
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
 
   return (
     <Stack spacing={2.5}>
-      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/orders')} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate('/orders')} sx={{ alignSelf: 'flex-start' }}>
         Back to orders
-      </Button>
+      </DuncitButton>
 
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"

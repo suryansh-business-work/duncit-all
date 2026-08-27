@@ -1,14 +1,30 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Card,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
 import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';
 import ProductRowActions from './ProductRowActions';
 import ListingPauseDialog from './ListingPauseDialog';
 import RunAdDialog, { type AdKind } from './RunAdDialog';
-import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
+import {
+  DELETE_LISTING,
+  MY_PRODUCT_LISTINGS_TABLE,
+  UPDATE_QUANTITY,
+  type ProductListingRow,
+} from './queries';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -185,8 +201,8 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         <DialogTitle>{t('partners.listProductsPage.deleteProductListing')}</DialogTitle>
         <DialogContent><Typography>{deleteTarget?.product_name} will be archived and removed from active listing.</Typography></DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>{t('shell.common.delete')}</Button>
+          <DuncitButton onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>{t('shell.common.delete')}</DuncitButton>
         </DialogActions>
       </Dialog>
       <ListingPauseDialog target={pauseTarget} onClose={() => setPauseTarget(null)} onDone={(text) => { setMessage(text); refetchRef.current?.(); }} />

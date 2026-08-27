@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   DuncitTable,
   dateColumn,
@@ -82,9 +83,9 @@ export default function UserReportsTable({
 
     const renderActions = (r: ContentReport) => (
       <Tooltip title={t('reportLogs.open')}>
-        <IconButton size="small" aria-label={t('reportLogs.open')} onClick={() => onOpen(r)}>
+        <DuncitIconButton size="small" aria-label={t('reportLogs.open')} onClick={() => onOpen(r)}>
           <VisibilityIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     );
 

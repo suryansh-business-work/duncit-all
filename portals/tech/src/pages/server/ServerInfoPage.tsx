@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import DnsIcon from '@mui/icons-material/Dns';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitButton } from '@duncit/buttons';
 import { StatCard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ServerInfoDetails from './ServerInfoDetails';
@@ -106,7 +107,7 @@ export default function ServerInfoPage() {
           Live metrics for the host running the API — CPU, memory, storage, uptime, SSH and SSL.
         </Typography>
       </Box>
-      <Button
+      <DuncitButton
         size="small"
         variant="outlined"
         startIcon={<RefreshIcon />}
@@ -114,7 +115,7 @@ export default function ServerInfoPage() {
         disabled={loading}
       >
         Refresh
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 

@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import DevicePicker from './DevicePicker';
 import { useDeviceTest } from './useDeviceTest';
@@ -97,13 +97,13 @@ export default function DeviceSettingsDialog({
       </DialogContent>
       <DialogActions>
         {testing ? (
-          <Button onClick={stop}>{t('shell.chat.devices.stopTest')}</Button>
+          <DuncitButton onClick={stop}>{t('shell.chat.devices.stopTest')}</DuncitButton>
         ) : (
-          <Button onClick={() => start(showCamera).catch(() => undefined)}>{t('shell.chat.devices.test')}</Button>
+          <DuncitButton onClick={() => start(showCamera).catch(() => undefined)}>{t('shell.chat.devices.test')}</DuncitButton>
         )}
-        <Button variant="contained" onClick={onClose}>
+        <DuncitButton variant="contained" onClick={onClose}>
           {t('shell.chat.devices.done')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

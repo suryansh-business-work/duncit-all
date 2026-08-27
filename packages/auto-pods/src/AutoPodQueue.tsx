@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { splitAutoPods, type AutoPodRole, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
+import { DuncitButton } from '@duncit/buttons';
+import {
+  splitAutoPods,
+  type AutoPodRole,
+  type AutoPodRow,
+  type AutoPodLabels,
+} from '@duncit/utils';
 import { AutoPodCard } from './AutoPodCard';
 
 export interface AutoPodQueueProps {
@@ -104,9 +109,9 @@ export function AutoPodQueue({
       <Alert
         severity="error"
         action={
-          <Button color="inherit" size="small" onClick={onRetry}>
+          <DuncitButton color="inherit" size="small" onClick={onRetry}>
             {labels.retry}
-          </Button>
+          </DuncitButton>
         }
       >
         {labels.loadFailed}

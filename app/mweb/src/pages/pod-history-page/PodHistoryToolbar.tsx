@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Box,
-  Button,
   Divider,
   FormControl,
   InputLabel,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SortIcon from '@mui/icons-material/SwapVert';
+import { DuncitButton } from '@duncit/buttons';
 import {
   POD_HISTORY_SORTS,
   activePodHistoryFilterCount,
@@ -51,7 +51,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
 
   return (
     <Stack direction="row" spacing={1} sx={{ flex: '0 0 auto' }}>
-      <Button
+      <DuncitButton
         size="small"
         variant={count ? 'contained' : 'outlined'}
         color={count ? 'primary' : 'inherit'}
@@ -60,8 +60,8 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         sx={{ fontWeight: 600, borderRadius: 999 }}
       >
         {filterLabel}
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         size="small"
         variant="outlined"
         color="inherit"
@@ -70,7 +70,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         sx={{ fontWeight: 600, borderRadius: 999 }}
       >
         {t('mweb.podHistory.sort')}
-      </Button>
+      </DuncitButton>
 
       <Popover
         open={Boolean(filterAnchor)}
@@ -123,9 +123,9 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
             </Typography>
           )}
           <Divider sx={{ my: 1.5 }} />
-          <Button fullWidth size="small" onClick={onReset} disabled={count === 0}>
+          <DuncitButton fullWidth size="small" onClick={onReset} disabled={count === 0}>
             {t('mweb.podHistory.reset')}
-          </Button>
+          </DuncitButton>
         </Box>
       </Popover>
 

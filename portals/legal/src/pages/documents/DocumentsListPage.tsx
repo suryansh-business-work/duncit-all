@@ -3,7 +3,6 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { PageHeader } from '@duncit/ui';
 import { DuncitRichTextInput } from '@duncit/rich-text';
@@ -80,9 +80,9 @@ export default function DocumentsListPage() {
         onEdit={setEditing}
         onSign={setSigning}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
             New Document
-          </Button>
+          </DuncitButton>
         }
       />
 
@@ -131,10 +131,10 @@ export default function DocumentsListPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
-          <Button variant="contained" disabled={creating || !name.trim() || !docType.trim()} onClick={submit}>
+          <DuncitButton onClick={() => setOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton variant="contained" disabled={creating || !name.trim() || !docType.trim()} onClick={submit}>
             Create
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Stack>

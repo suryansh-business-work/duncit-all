@@ -7,11 +7,11 @@ import {
   Dialog,
   Divider,
   Grid,
-  IconButton,
   Stack,
   Toolbar,
   Typography,
 } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   BLANK_POD_PRODUCT_CRITERIA,
   clampPodProductQty,
@@ -111,9 +111,9 @@ export default function PodProductDialog({
               {t('podProduct.dialogSubtitle')}
             </Typography>
           </Stack>
-          <IconButton edge="end" aria-label={t('podProduct.close')} onClick={close}>
+          <DuncitIconButton edge="end" aria-label={t('podProduct.close')} onClick={close}>
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Toolbar>
       </AppBar>
 

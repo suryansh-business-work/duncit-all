@@ -1,11 +1,16 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { ListProductsForm } from './list-products';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import {
+  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_LISTING_ACCESS,
+  canManageProductListings,
+} from './productAccess';
 import { useTranslation } from '@duncit/shell';
 
 export default function ProductListingEditorPage() {
@@ -43,9 +48,9 @@ export default function ProductListingEditorPage() {
         <Stack direction="row" spacing={1.25} sx={{
           alignItems: "center"
         }}>
-          <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
+          <DuncitButton onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
             {t('partners.venueAvailabilityPage.back')}
-          </Button>
+          </DuncitButton>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>{editing ? 'Edit product' : 'New product'}</Typography>
             <Typography variant="h4" sx={{

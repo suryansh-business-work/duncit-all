@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -84,17 +84,17 @@ export default function HardDeleteDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={loading}>
+        <DuncitButton onClick={close} disabled={loading}>
           Cancel
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           color="error"
           variant="contained"
           onClick={() => onConfirm(email.trim(), password)}
           disabled={!canSubmit}
         >
           {loading ? 'Deleting…' : 'Delete permanently'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

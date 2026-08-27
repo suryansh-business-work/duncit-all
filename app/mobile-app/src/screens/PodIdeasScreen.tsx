@@ -22,6 +22,7 @@ import { ideaMatchesScope } from '@/utils/idea-category';
 import { shareUrl } from '@/services/share-link';
 import { POD_WEB_BASE } from '@/utils/pod-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Pod Ideas board — searchable community ideas with submit, like, share and a
  * comment thread. RN port of mWeb's PodIdeasPage. */
@@ -102,7 +103,7 @@ export function PodIdeasScreen() {
       height={36}
       borderRadius={999}
       backgroundColor="$primary"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="add" size={16} color={onPrimary} />
       <Text fontSize={13} fontWeight="700" color={onPrimary}>

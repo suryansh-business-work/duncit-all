@@ -26,7 +26,7 @@ export function VerificationScreen() {
 
   if (isLoading && items.length === 0) {
     return (
-      <StackScreen header title={t('mweb.common.verification')} testID="verification-screen">
+      <StackScreen header title={t('verification.title')} testID="verification-screen">
         <DetailSkeleton testID="verification-loading" />
       </StackScreen>
     );
@@ -65,10 +65,10 @@ export function VerificationScreen() {
   };
 
   return (
-    <StackScreen header title={t('mweb.common.verification')} testID="verification-screen">
+    <StackScreen header title={t('verification.title')} testID="verification-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}>
         <Text fontSize={13} color="$muted">
-          Verify your account. Identity and address are reviewed by our team.
+          {t('verification.subtitle')}
         </Text>
         {items.map(renderCard)}
       </ScrollView>

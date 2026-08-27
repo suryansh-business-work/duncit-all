@@ -3,7 +3,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link as RouterLink } from 'react-router-dom';
-import { Chip, IconButton, Link, Tooltip, Typography } from '@mui/material';
+import { Chip, Link, Tooltip, Typography } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { nationalPhoneDigits } from '@duncit/utils';
 import { categoryPath } from '../../utils/categoryPath';
@@ -130,19 +131,19 @@ export default function HostsTable({
     const renderActions = (h: HostRow) => (
       <>
         <Tooltip title={t('onboarding.hosts.hostDetails')}>
-          <IconButton size="small" component={RouterLink} to={`/hosts/${h.id}`}>
+          <DuncitIconButton size="small" component={RouterLink} to={`/hosts/${h.id}`}>
             <VisibilityIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(h)}>
+          <DuncitIconButton size="small" onClick={() => onEdit(h)}>
             <EditIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <IconButton size="small" onClick={() => onReview(h)}>
+          <DuncitIconButton size="small" onClick={() => onReview(h)}>
             <RateReviewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <LifecycleActions
           active={h.is_active !== false}

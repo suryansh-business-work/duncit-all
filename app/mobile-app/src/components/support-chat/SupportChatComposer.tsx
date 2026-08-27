@@ -6,6 +6,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { describeAttachment } from '@/utils/attachment';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ChipProps {
   url: string;
@@ -44,7 +45,7 @@ function AttachmentChip({ url, index, tint, onRemove }: Readonly<ChipProps>) {
         height={22}
         alignItems="center"
         justifyContent="center"
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         <MaterialIcons name="close" size={15} color={tint} />
       </XStack>
@@ -125,7 +126,7 @@ export function SupportChatComposer({
           borderWidth={1}
           borderColor="$borderColor"
           opacity={busy ? 0.6 : 1}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           {busy ? (
             <Spinner testID="support-chat-attach-busy" />
@@ -146,7 +147,7 @@ export function SupportChatComposer({
           borderWidth={1}
           borderColor="$borderColor"
           opacity={busy ? 0.6 : 1}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="description" size={20} color={muted} />
         </XStack>
@@ -180,7 +181,7 @@ export function SupportChatComposer({
           justifyContent="center"
           borderRadius={21}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="send" size={18} color={onPrimary} />
         </XStack>

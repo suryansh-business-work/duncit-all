@@ -1,4 +1,5 @@
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -24,9 +25,9 @@ export default function BackoutInProcessPanel({ canCancel, busy, onKeepSpot }: R
         <b>{t('mweb.podDetails.backoutInProcessLead')}</b>{' '}
         {t('mweb.podDetails.backoutSearchingNote')}
       </Alert>
-      <Button variant="contained" onClick={onKeepSpot} disabled={busy} sx={{ fontWeight: 700 }}>
+      <DuncitButton variant="contained" onClick={onKeepSpot} disabled={busy} sx={{ fontWeight: 700 }}>
         {t('mweb.podDetails.keepMySpot')}
-      </Button>
+      </DuncitButton>
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>

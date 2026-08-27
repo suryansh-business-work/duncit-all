@@ -1,6 +1,7 @@
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -17,15 +18,15 @@ export default function LifecycleActions({ active, onToggleActive, canHardDelete
   return (
     <>
       <Tooltip title={active ? 'Deactivate' : 'Activate'}>
-        <IconButton size="small" color={active ? 'default' : 'success'} onClick={onToggleActive}>
+        <DuncitIconButton size="small" color={active ? 'default' : 'success'} onClick={onToggleActive}>
           <PowerSettingsNewIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       {canHardDelete && (
         <Tooltip title={t('onboarding.lifecycleActions.deletePermanentlyDeveloper')}>
-          <IconButton size="small" color="error" onClick={onDelete}>
+          <DuncitIconButton size="small" color="error" onClick={onDelete}>
             <DeleteForeverIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
     </>

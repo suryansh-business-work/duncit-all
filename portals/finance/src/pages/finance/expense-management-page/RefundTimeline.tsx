@@ -1,17 +1,8 @@
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Divider, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { formatDate, useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -50,9 +41,9 @@ function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string;
         {credit ? '+' : '−'}₹{Math.abs(amount).toFixed(2)}
       </Typography>
       {onRemove && (
-        <IconButton size="small" color="error" aria-label={t('finance.expenseManagement.removeRefund')} onClick={onRemove}>
+        <DuncitIconButton size="small" color="error" aria-label={t('finance.expenseManagement.removeRefund')} onClick={onRemove}>
           <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       )}
     </Stack>
   );
@@ -113,9 +104,9 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
         }} />
       </Stack>
       <TextField label={t('finance.expenseManagement.note')} size="small" value={note} onChange={(e) => setNote(e.target.value)} fullWidth />
-      <Button variant="outlined" onClick={add} disabled={busy || remaining <= 0}>
+      <DuncitButton variant="outlined" onClick={add} disabled={busy || remaining <= 0}>
         Add refund
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

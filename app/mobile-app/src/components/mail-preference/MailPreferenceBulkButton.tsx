@@ -1,6 +1,7 @@
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   label: string;
@@ -40,7 +41,7 @@ export function MailPreferenceBulkButton({
       borderWidth={1}
       borderColor={ink}
       opacity={disabled ? 0.5 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="700" color={ink}>
         {label}

@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Chip, FormControlLabel, Stack, Switch } from '@mui/material';
+import { Chip, FormControlLabel, Stack, Switch } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { usePromptCopy } from '../i18n/useCopy';
 import { estimateTokens } from '../render';
@@ -147,13 +148,13 @@ export function PromptForm({
           justifyContent: "flex-end"
         }}>
           {onCancel && (
-            <Button onClick={onCancel} disabled={submitting}>
+            <DuncitButton onClick={onCancel} disabled={submitting}>
               {copy.cancel}
-            </Button>
+            </DuncitButton>
           )}
-          <Button type="submit" variant="contained" disabled={submitting || !formState.isValid}>
+          <DuncitButton type="submit" variant="contained" disabled={submitting || !formState.isValid}>
             {submitting ? copy.saving : (submitLabel ?? copy.saveChanges)}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

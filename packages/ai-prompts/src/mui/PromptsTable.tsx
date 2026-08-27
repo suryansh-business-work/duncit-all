@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   DuncitTable,
   actionsColumn,
@@ -74,13 +75,13 @@ function ResetAction({
   const { t } = useTranslation();
   return (
     <Tooltip title={copy.resetHint}>
-      <IconButton
+      <DuncitIconButton
         size="small"
         aria-label={t('ai.library.resetAria', { vars: { name: prompt.name } })}
         onClick={() => onReset(prompt)}
       >
         <RestartAltIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Tooltip>
   );
 }

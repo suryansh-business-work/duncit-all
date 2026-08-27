@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,6 +12,7 @@ import {
   Switch,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { LocaleRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -146,10 +146,10 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

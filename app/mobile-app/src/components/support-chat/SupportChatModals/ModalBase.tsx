@@ -3,6 +3,7 @@ import { ScrollView, useWindowDimensions } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ButtonProps {
   testID: string;
@@ -30,7 +31,7 @@ export function ModalButton({ testID, label, primary, disabled, onPress }: Reado
       borderColor="$borderColor"
       backgroundColor={primary ? '$primary' : 'transparent'}
       opacity={disabled ? 0.5 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="600" color={primary ? '$onPrimary' : '$color'}>
         {label}

@@ -7,6 +7,7 @@ import { lineQualifiesFreeDelivery } from '@/services/cart';
 import { cartLineKey, type CartLine } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   podId: string;
@@ -40,7 +41,7 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
         borderRadius={999}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="remove" size={18} color={muted} />
       </XStack>
@@ -61,7 +62,7 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
         borderWidth={1}
         borderColor="$borderColor"
         opacity={atMax ? 0.4 : 1}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="add" size={18} color={muted} />
       </XStack>
@@ -125,7 +126,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
             aria-label={t('mweb.cart.removeItem', { vars: { name: line.product_name } })}
             onPress={() => onRemove(line)}
             padding={4}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="delete-outline" size={20} color={muted} />
           </XStack>

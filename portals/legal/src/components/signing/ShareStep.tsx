@@ -1,5 +1,6 @@
-import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { isEmail } from '@duncit/regex';
 
@@ -48,7 +49,7 @@ export default function ShareStep({
           placeholder={t('legal.sign.sharePlaceholder')}
           fullWidth
         />
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<SendIcon />}
           disabled={sending || !canShareTo(to)}
@@ -56,7 +57,7 @@ export default function ShareStep({
           sx={{ flexShrink: 0 }}
         >
           {sending ? t('legal.sign.sending') : t('legal.sign.sendEmail')}
-        </Button>
+        </DuncitButton>
       </Stack>
       <TextField
         label={t('legal.sign.message')}

@@ -1,6 +1,7 @@
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Divider, Grid, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Grid, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import {
@@ -107,12 +108,12 @@ export default function AppPopupForm({
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button onClick={onCancel} disabled={busy}>
+            <DuncitButton onClick={onCancel} disabled={busy}>
               Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={busy || !formState.isValid}>
+            </DuncitButton>
+            <DuncitButton type="submit" variant="contained" disabled={busy || !formState.isValid}>
               {busy ? 'Saving…' : submitLabel}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Grid>
       </Grid>

@@ -2,11 +2,22 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  Alert, Box, Button, Card, CardContent, CircularProgress, FormControlLabel,
-  MenuItem, Snackbar, Stack, Switch, TextField, Typography,
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  FormControlLabel,
+  MenuItem,
+  Snackbar,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { BackButton } from '@duncit/ui';
 import {
   CREATE_SURVEY, SURVEY_BY_ID, UPDATE_SURVEY,
@@ -128,7 +139,7 @@ export default function SurveyBuilderPage() {
             color: "text.secondary"
           }}>{subtitle}</Typography>
         </Box>
-        <Button variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save survey'}</Button>
+        <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save survey'}</DuncitButton>
       </Stack>
 
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
@@ -188,7 +199,7 @@ export default function SurveyBuilderPage() {
               <MenuItem value="TEXT">{t('onboarding.surveys.shortText')}</MenuItem>
               <MenuItem value="TEXTAREA">{t('onboarding.surveys.longText')}</MenuItem>
             </TextField>
-            <Button startIcon={<AddIcon />} onClick={() => setQuestions([...questions, blankByType(addType)])}>{t('onboarding.surveys.addQuestion')}</Button>
+            <DuncitButton startIcon={<AddIcon />} onClick={() => setQuestions([...questions, blankByType(addType)])}>{t('onboarding.surveys.addQuestion')}</DuncitButton>
           </Stack>
         </>
       )}

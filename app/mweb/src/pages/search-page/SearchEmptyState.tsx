@@ -1,9 +1,10 @@
 import type { JSX } from 'react';
-import { Box, Button, Card, Stack, Typography } from '@mui/material';
+import { Box, Card, Stack, Typography } from '@mui/material';
 import LightbulbIcon from '@mui/icons-material/LightbulbOutlined';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExploreIcon from '@mui/icons-material/ExploreOutlined';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface CtaBlockProps {
@@ -34,9 +35,9 @@ function CtaBlock({ icon, title, description, cta, onClick }: Readonly<CtaBlockP
         }}>
           {description}
         </Typography>
-        <Button variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start', fontWeight: 700, borderRadius: 999 }}>
+        <DuncitButton variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start', fontWeight: 700, borderRadius: 999 }}>
           {cta}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Card>
   );

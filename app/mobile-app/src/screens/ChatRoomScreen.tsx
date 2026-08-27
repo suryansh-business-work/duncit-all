@@ -23,6 +23,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 
@@ -97,7 +98,7 @@ export function ChatRoomScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
@@ -109,7 +110,7 @@ export function ChatRoomScreen() {
             flex={1}
             alignItems="center"
             gap={4}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <Text fontSize={18} fontWeight="600" color="$color" numberOfLines={1} flex={1}>
               {title}
@@ -130,6 +131,7 @@ export function ChatRoomScreen() {
         <KeyboardScreen>
           {error ? (
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               testID="chat-room-error"
               role="button"
               aria-label={t('mweb.chatRoom.dismissError')}

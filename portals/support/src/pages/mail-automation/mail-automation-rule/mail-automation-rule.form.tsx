@@ -1,4 +1,5 @@
-import { Button, Stack, Step, StepLabel, Stepper } from '@mui/material';
+import { Stack, Step, StepLabel, Stepper } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { MailAutomationAccount } from '../../../graphql/mail-automation';
 import MailboxStep from '../MailboxStep';
 import ReplyMessageStep from '../ReplyMessageStep';
@@ -83,17 +84,17 @@ export default function MailAutomationRuleForm({ account, onSaved }: Readonly<Pr
             Next button into the Save button — a shared DOM node that changes
             its type mid-interaction is exactly the ambiguity above. */}
         <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
-          <Button type="button" disabled={step === 0} onClick={goBack}>
+          <DuncitButton type="button" disabled={step === 0} onClick={goBack}>
             {t('support.mailAutomation.back')}
-          </Button>
+          </DuncitButton>
           {isLastStep ? (
-            <Button key="save" type="submit" variant="contained" disabled={savingRule}>
+            <DuncitButton key="save" type="submit" variant="contained" disabled={savingRule}>
               {savingRule ? t('support.mailAutomation.saving') : t('support.mailAutomation.save')}
-            </Button>
+            </DuncitButton>
           ) : (
-            <Button key="next" type="button" variant="contained" onClick={goNext}>
+            <DuncitButton key="next" type="button" variant="contained" onClick={goNext}>
               {t('support.mailAutomation.next')}
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       </form>

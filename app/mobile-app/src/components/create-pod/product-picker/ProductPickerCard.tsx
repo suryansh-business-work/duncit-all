@@ -11,6 +11,7 @@ import {
   podProductStock,
   type PodPickerProduct,
 } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   product: PodPickerProduct;
@@ -95,7 +96,7 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
       borderRadius={12}
       {...frame}
       opacity={disabled ? 0.55 : 1}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <ProductThumb image={image} muted={muted} />
 

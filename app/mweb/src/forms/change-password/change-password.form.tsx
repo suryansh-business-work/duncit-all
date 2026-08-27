@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, IconButton, InputAdornment, Stack } from '@mui/material';
+import { Alert, InputAdornment, Stack } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import {
   currentPasswordDefaults,
@@ -31,7 +32,7 @@ const passwordAdornments = (visible: boolean, onToggle: () => void) => ({
   ),
   endAdornment: (
     <InputAdornment position="end">
-      <IconButton
+      <DuncitIconButton
         size="small"
         onClick={onToggle}
         edge="end"
@@ -42,7 +43,7 @@ const passwordAdornments = (visible: boolean, onToggle: () => void) => ({
         ) : (
           <VisibilityOutlinedIcon fontSize="small" />
         )}
-      </IconButton>
+      </DuncitIconButton>
     </InputAdornment>
   ),
 });
@@ -85,7 +86,7 @@ export function CurrentPasswordForm({
           size="small"
           slotProps={{ input: passwordAdornments(show, () => setShow((v) => !v)) }}
         />
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -94,7 +95,7 @@ export function CurrentPasswordForm({
           sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Sending OTP…' : 'Send OTP'}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && (
           <Alert severity="error">{submitError || errorMessage}</Alert>
         )}
@@ -171,7 +172,7 @@ export function NewPasswordForm({
           size="small"
           slotProps={{ input: passwordAdornments(showConfirm, () => setShowConfirm((v) => !v)) }}
         />
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -180,7 +181,7 @@ export function NewPasswordForm({
           sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Updating…' : 'Update password'}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && (
           <Alert severity="error">{submitError || errorMessage}</Alert>
         )}

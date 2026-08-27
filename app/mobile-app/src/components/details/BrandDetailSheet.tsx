@@ -12,6 +12,7 @@ import { PublicEcommBrandDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Brand = NonNullable<ResultOf<typeof PublicEcommBrandDocument>['publicEcommBrand']>;
 
@@ -107,6 +108,7 @@ export function BrandDetailSheet({
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="brand-detail-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.details.closeBrand')}
             onPress={onClose}
@@ -129,6 +131,7 @@ export function BrandDetailSheet({
                   Brand
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="brand-detail-close"
                   role="button"
                   aria-label={t('mweb.common.close')}

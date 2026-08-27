@@ -9,6 +9,7 @@ import { attendeeSeatCount } from '@duncit/utils';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface AttendeePerson {
   user_id: string;
@@ -199,6 +200,7 @@ export function AttendeesDialog({
       <ModalThemeScope>
         <YStack flex={1} alignItems="center" justifyContent="center" testID="attendees-dialog">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.podDetails.close')}
             onPress={onClose}
@@ -233,7 +235,7 @@ export function AttendeesDialog({
                   justifyContent="center"
                   borderRadius={17}
                   backgroundColor="$surface"
-                  pressStyle={{ opacity: 0.7 }}
+                  pressStyle={PRESS_STYLE.row}
                 >
                   <MaterialIcons name="close" size={18} color={ink} />
                 </XStack>

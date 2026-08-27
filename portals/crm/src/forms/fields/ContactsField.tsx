@@ -1,7 +1,8 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Box, Button, Card, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Card, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { FormField } from '@duncit/forms';
 import PhoneField from './PhoneField';
 import type { CrmContact } from '../../api/crm.types';
@@ -45,9 +46,9 @@ export default function ContactsField({ name }: Readonly<Props>) {
                 {isPrimary ? 'Primary Contact' : `Contact ${index + 1}`}
               </Typography>
               {!isPrimary && (
-                <IconButton size="small" color="error" aria-label={t('crm.forms.removeContact')} onClick={() => remove(index)}>
+                <DuncitIconButton size="small" color="error" aria-label={t('crm.forms.removeContact')} onClick={() => remove(index)}>
                   <DeleteIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               )}
             </Stack>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
@@ -60,7 +61,7 @@ export default function ContactsField({ name }: Readonly<Props>) {
           </Card>
         );
       })}
-      <Button
+      <DuncitButton
         startIcon={<AddIcon />}
         variant="outlined"
         size="small"
@@ -68,7 +69,7 @@ export default function ContactsField({ name }: Readonly<Props>) {
         onClick={() => append({ ...emptyContact })}
       >
         Add Another Contact
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

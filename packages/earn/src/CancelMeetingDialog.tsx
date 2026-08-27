@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   DialogTitle,
   Stack,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { CANCEL_MY_MEETING } from './queries';
 import { useEarnSurface } from './EarnSurfaceProvider';
 import { MeetingReasonForm } from './meeting-reason';
@@ -54,10 +54,10 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={cancelling}>
+        <DuncitButton onClick={onClose} disabled={cancelling}>
           {labels.keepMeeting}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="cancel-reason-form"
           color="error"
@@ -66,7 +66,7 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {cancelling ? labels.cancelling : labels.cancelCta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

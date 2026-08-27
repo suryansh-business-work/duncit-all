@@ -5,11 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 import { isBackoutMaxed } from '@duncit/utils';
 
-import {
-  BackoutConfirmDialog,
-  PodHistoryDetails,
-  RejoinConfirmDialog,
-} from '@/components/pod-history';
+import { PodHistoryDetails, PodHistoryDialogs } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import {
@@ -52,8 +48,21 @@ export function PodHistoryDetailsScreen() {
   const { orders: productOrders, isLoading: ordersLoading } = useProductOrders(selected?.pod?.id);
   // Attempts left, from the state the backout mutation itself guards on — the
   // button was offered on a pod that had none, and every press of it failed.
-  const backoutAttempts = usePodBackoutAttempts(selected?.pod?.id);
+  const { state: backoutAttempts, refetch: refetchAttempts } = usePodBackoutAttempts(
+    selected?.pod?.id,
+  );
   const backoutMaxed = isBackoutMaxed(backoutAttempts);
+
+  /*
+    Both reads, every time — a backout changes the booking AND the attempts.
+
+    Refetching only the memberships left the seat count and the timeline fresh
+    beside an attempt counter frozen at what it was before the request, so the
+    screen had to be reopened before it agreed with itself.
+  */
+  const refresh = async () => {
+    await Promise.all([refetch(), refetchAttempts()]).catch(() => undefined);
+  };
 
   const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
@@ -61,10 +70,12 @@ export function PodHistoryDetailsScreen() {
       await backout(selected.pod.id, seats);
       setNotice(t('mweb.podHistory.backoutRecorded'));
       setBackoutOpen(false);
-      await refetch();
     } catch (backoutError) {
       setNotice(toErrorMessage(backoutError));
     }
+    // Either way: a refusal is decided against server-side state (the attempt
+    // limit), so the screen re-reads rather than keeping the copy it guessed on.
+    await refresh();
   };
 
   const confirmRejoin = async () => {
@@ -74,7 +85,7 @@ export function PodHistoryDetailsScreen() {
       await rejoin(selected.pod.id);
       setNotice(t('mweb.podHistory.rejoinedSuccess'));
       setRejoinOpen(false);
-      await refetch();
+      await refresh();
     } catch (rejoinError) {
       setNotice(toErrorMessage(rejoinError));
     }
@@ -165,23 +176,20 @@ export function PodHistoryDetailsScreen() {
     <StackScreen title={title} testID="pod-history-details-screen">
       {body}
 
-      <BackoutConfirmDialog
-        open={backoutOpen}
-        busy={backingOut}
-        onClose={() => setBackoutOpen(false)}
-        onConfirm={confirmBackout}
+      <PodHistoryDialogs
+        backoutOpen={backoutOpen}
+        rejoinOpen={rejoinOpen}
+        backingOut={backingOut}
+        rejoining={rejoining}
         mySeats={selected?.seats ?? 1}
-        onViewTerms={() => {
+        onCloseBackout={() => setBackoutOpen(false)}
+        onCloseRejoin={() => setRejoinOpen(false)}
+        onConfirmBackout={confirmBackout}
+        onConfirmRejoin={confirmRejoin}
+        onViewBackoutTerms={() => {
           setBackoutOpen(false);
           navigation.navigate('Policy', { slug: 'backout-terms' });
         }}
-      />
-
-      <RejoinConfirmDialog
-        open={rejoinOpen}
-        busy={rejoining}
-        onClose={() => setRejoinOpen(false)}
-        onConfirm={confirmRejoin}
       />
     </StackScreen>
   );

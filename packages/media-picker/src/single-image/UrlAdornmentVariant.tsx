@@ -3,7 +3,6 @@ import { useTranslation } from '../i18n/useTranslation';
 import {
   Box,
   CircularProgress,
-  IconButton,
   InputAdornment,
   Stack,
   TextField,
@@ -12,6 +11,7 @@ import {
 } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { SingleImageState } from './types';
 
 interface Props extends SingleImageState {
@@ -60,9 +60,9 @@ export default function UrlAdornmentVariant({
               <InputAdornment position="start">
                 <Tooltip title={t('media.picker.fromDevice')}>
                   <span>
-                    <IconButton size="small" onClick={openPicker} disabled={disabled || busy}>
+                    <DuncitIconButton size="small" onClick={openPicker} disabled={disabled || busy}>
                       {busy ? <CircularProgress size={18} /> : <ImageIcon fontSize="small" />}
-                    </IconButton>
+                    </DuncitIconButton>
                   </span>
                 </Tooltip>
               </InputAdornment>
@@ -70,9 +70,9 @@ export default function UrlAdornmentVariant({
             endAdornment: value ? (
               <InputAdornment position="end">
                 <Tooltip title={t('media.picker.open')}>
-                  <IconButton size="small" onClick={() => window.open(value, '_blank')}>
+                  <DuncitIconButton size="small" onClick={() => window.open(value, '_blank')}>
                     <OpenInNewIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Tooltip>
               </InputAdornment>
             ) : null,

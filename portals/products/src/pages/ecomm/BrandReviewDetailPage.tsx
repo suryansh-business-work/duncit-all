@@ -4,7 +4,6 @@ import {
   Alert,
   Avatar,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
@@ -14,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import BrandProductsTable from './BrandProductsTable';
 import BrandPickupPanel from './BrandPickupPanel';
@@ -49,13 +49,13 @@ export default function BrandReviewDetailPage() {
 
   return (
     <Stack spacing={3}>
-      <Button
+      <DuncitButton
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate('/ecomm/brands')}
         sx={{ alignSelf: 'flex-start' }}
       >
         Back to Brands Review
-      </Button>
+      </DuncitButton>
 
       {brand ? (
         <>

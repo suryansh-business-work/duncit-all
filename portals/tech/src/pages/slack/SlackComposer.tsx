@@ -1,8 +1,9 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, IconButton, Stack, TextField, Tooltip } from '@mui/material';
+import { Box, Stack, TextField, Tooltip } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import CodeIcon from '@mui/icons-material/Code';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notifyError } from '@duncit/dialogs';
 import { SEND_SLACK_MESSAGE } from './queries';
@@ -75,18 +76,18 @@ export default function SlackComposer({ channelId, onSent }: Readonly<Props>) {
           aria-label={t('tech.slack.composerPlaceholder')}
         />
         <Tooltip title={t('tech.slack.blockKitToggle')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             color={showBlocks ? 'primary' : 'default'}
             aria-label={t('tech.slack.blockKitToggle')}
             onClick={() => setShowBlocks((open) => !open)}
           >
             <CodeIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('tech.slack.send')}>
           <span>
-            <IconButton
+            <DuncitIconButton
               color="primary"
               disabled={!canSend}
               aria-label={t('tech.slack.send')}
@@ -95,7 +96,7 @@ export default function SlackComposer({ channelId, onSent }: Readonly<Props>) {
               }}
             >
               <SendIcon />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </Stack>

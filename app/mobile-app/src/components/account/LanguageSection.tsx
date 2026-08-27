@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useLocaleStore } from '@/stores/locale.store';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Language preference. Switching re-renders the app immediately and persists to
@@ -67,7 +68,7 @@ export function LanguageSection() {
               borderWidth={1}
               borderColor={selected ? '$primary' : '$borderColor'}
               backgroundColor="$background"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <YStack>
                 {/* The endonym leads, so someone who switched into a script they

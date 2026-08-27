@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { fmt } from './helpers';
 
@@ -61,15 +61,15 @@ export default function RefundDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('finance.payment.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('finance.payment.cancel')}</DuncitButton>
+        <DuncitButton
           color="warning"
           variant="contained"
           disabled={refundLoading}
           onClick={onConfirm}
         >
           {refundLoading ? t('finance.payment.refunding') : t('finance.payment.confirmRefund')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

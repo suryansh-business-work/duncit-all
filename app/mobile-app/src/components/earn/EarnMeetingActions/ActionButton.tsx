@@ -1,4 +1,5 @@
 import { Text, XStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ActionButtonProps {
   label: string;
@@ -25,7 +26,7 @@ export function ActionButton({
       borderRadius={999}
       borderWidth={1}
       borderColor={danger ? '$danger' : '$primary'}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <Text fontSize={12.5} fontWeight="600" color={danger ? '$danger' : '$primary'}>
         {label}

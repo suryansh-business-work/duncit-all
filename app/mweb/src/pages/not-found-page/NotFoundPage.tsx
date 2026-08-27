@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
+import { DuncitButton } from '@duncit/buttons';
 
 /** 404 — shown for unknown routes. mWeb twin of the mobile NotFoundScreen. */
 export default function NotFoundPage() {
@@ -34,9 +35,9 @@ export default function NotFoundPage() {
           }}>
           The page you’re looking for doesn’t exist or has moved.
         </Typography>
-        <Button component={RouterLink} to="/" variant="contained" sx={{ mt: 1, borderRadius: '16px', textTransform: 'none', fontWeight: 700 }}>
+        <DuncitButton component={RouterLink} to="/" variant="contained" sx={{ mt: 1, borderRadius: '16px', textTransform: 'none', fontWeight: 700 }}>
           Go to Home
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

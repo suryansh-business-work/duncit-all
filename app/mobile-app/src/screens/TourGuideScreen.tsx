@@ -11,6 +11,7 @@ import { useToursStore } from '@/stores/tours.store';
 import type { TabParamList } from '@/navigation/tabs';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Tour Guide centre — every guided walkthrough, restartable at any time. The
@@ -63,7 +64,7 @@ export function TourGuideScreen() {
                 borderWidth={1}
                 borderColor="$borderColor"
                 backgroundColor="$surface"
-                pressStyle={{ opacity: 0.85 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={22} color={primary} />
                 <YStack flex={1} gap={2}>

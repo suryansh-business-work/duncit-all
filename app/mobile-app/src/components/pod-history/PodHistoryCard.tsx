@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodMembership } from '@/utils/pod-history';
 import { formatDateTime } from '@/utils/date-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** A joined-pod row in the history list — RN twin of mWeb's PodHistoryPage card. */
 export function PodHistoryCard({
@@ -31,7 +32,7 @@ export function PodHistoryCard({
       borderColor="$borderColor"
       backgroundColor="$surface"
       alignItems="center"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack
         width={48}

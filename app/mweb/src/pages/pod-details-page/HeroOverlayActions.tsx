@@ -1,8 +1,9 @@
-import { CircularProgress, Stack, IconButton } from '@mui/material';
+import { CircularProgress, Stack } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -42,11 +43,11 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggl
         pointerEvents: 'none',
         '& > *': { pointerEvents: 'auto' }
       }}>
-      <IconButton size="small" onClick={onBack} aria-label={t('mweb.podDetails.back')} sx={overlayBtn}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('mweb.podDetails.back')} sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <Stack direction="row" spacing={0.75}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={saveLabel}
           onClick={onToggleSave}
@@ -54,10 +55,10 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggl
           sx={overlayBtn}
         >
           {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
-        </IconButton>
-        <IconButton size="small" aria-label={t('mweb.podDetails.share')} onClick={onShare} sx={overlayBtn}>
+        </DuncitIconButton>
+        <DuncitIconButton size="small" aria-label={t('mweb.podDetails.share')} onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     </Stack>
   );

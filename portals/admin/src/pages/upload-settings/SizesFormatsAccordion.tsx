@@ -4,13 +4,13 @@ import {
   AccordionDetails,
   AccordionSummary,
   Autocomplete,
-  Button,
   Chip,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitButton } from '@duncit/buttons';
 import type { UploadSettings } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -110,14 +110,14 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
               <TextField {...params} label={t('admin.uploads.videoFormats')} helperText={t('admin.uploads.videoFormatsHint')} />
             )}
           />
-          <Button
+          <DuncitButton
             variant="contained"
             sx={{ alignSelf: 'flex-start' }}
             disabled={saving || imageInvalid || videoInvalid || !imageFormats.length || !videoFormats.length}
             onClick={save}
           >
             Save sizes & formats
-          </Button>
+          </DuncitButton>
         </Stack>
       </AccordionDetails>
     </Accordion>

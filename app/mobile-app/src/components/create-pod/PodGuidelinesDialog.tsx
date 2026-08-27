@@ -5,6 +5,7 @@ import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { POD_GUIDELINE_RULE_KEYS } from './create-pod.form';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -32,7 +33,7 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
       alignItems="center"
       justifyContent="center"
       backgroundColor="$primary"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="600" color="$onPrimary">
         {t('mweb.createPod.gotIt')}

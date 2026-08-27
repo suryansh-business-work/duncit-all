@@ -1,14 +1,8 @@
-import {
-  Box,
-  Button,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface PodIdeasHeaderProps {
@@ -41,9 +35,9 @@ export default function PodIdeasHeader({ search, setSearch, onShare }: Readonly<
             Suggest a pod, vote on community ideas, and join the conversation.
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={onShare}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={onShare}>
           Share idea
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <TextField

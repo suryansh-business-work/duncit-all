@@ -11,6 +11,7 @@ import {
   podProductStock,
   type PodPickerProduct,
 } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   product: PodPickerProduct;
@@ -28,7 +29,7 @@ const stepperBox = {
   borderRadius: 8,
   borderWidth: 1,
   borderColor: '$borderColor',
-  pressStyle: { opacity: 0.7 },
+  pressStyle: PRESS_STYLE.row,
 } as const;
 
 /** One attached product on Step 4: thumbnail, name, quantity stepper and line
@@ -131,7 +132,7 @@ export function AttachedProductRow({
         role="button"
         aria-label={t('podProduct.removeProduct')}
         onPress={onRemove}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="delete-outline" size={20} color={danger} />
       </XStack>

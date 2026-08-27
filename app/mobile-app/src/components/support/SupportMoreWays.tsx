@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SUPPORT_MORE_WAYS, type SupportSection } from './supportSections';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface MoreWayCardProps {
   section: SupportSection;
@@ -30,7 +31,7 @@ function MoreWayCard({ section, onPress }: Readonly<MoreWayCardProps>) {
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack
         width={44}

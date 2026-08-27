@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
@@ -98,18 +99,18 @@ export default function DefaultMediaForm({
         )}
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
           {savedUrl && (
-            <Button
+            <DuncitButton
               type="button"
               color="error"
               disabled={busy}
               onClick={() => onSubmit({ url: '', filename: '' })}
             >
               {t('marketingWhatsapp.defaultMedia.clear')}
-            </Button>
+            </DuncitButton>
           )}
-          <Button type="submit" variant="contained" disabled={busy || !dirty || !url || !isValid}>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !dirty || !url || !isValid}>
             {t('marketingWhatsapp.defaultMedia.save')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

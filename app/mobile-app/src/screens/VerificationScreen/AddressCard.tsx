@@ -1,19 +1,22 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  addressValuesFrom,
+  buildAddressInput,
+  isVerificationLocked,
+  makeAddressSchema,
+  type AddressValues,
+} from '@duncit/verification';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import type { AddressInput, Verification } from '@/hooks/useVerifications';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { VerificationCard } from './VerificationCard';
-import {
-  addressSchema,
-  blankAddressValues,
-  buildAddressInput,
-  type AddressValues,
-} from './address.form';
-import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   item: Verification;
@@ -21,83 +24,76 @@ interface Props {
   onSubmit: (values: AddressInput) => void;
 }
 
-function prefill(address: Verification['address']): AddressValues {
-  if (!address) return blankAddressValues;
-  return {
-    line1: address.line1 ?? '',
-    line2: address.line2 ?? '',
-    city: address.city ?? '',
-    state: address.state ?? '',
-    pincode: address.pincode ?? '',
-    country: address.country ?? '',
-  };
-}
-
 /** Address verification — structured manual form (State / City / Pincode / line)
- * instead of a document upload. Approved rows are read-only. */
+ * instead of a document upload. Approved and under-review rows are read-only.
+ *
+ * The schema, the prefill and the input builder come from @duncit/verification,
+ * so this form and mWeb's MUI card accept exactly the same addresses. */
 export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
+  const schema = useMemo(() => makeAddressSchema(t), [t]);
   const { control, handleSubmit } = useForm<AddressValues>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: prefill(item.address),
+    resolver: zodResolver(schema),
+    defaultValues: addressValuesFrom(item),
   });
-  // Approved is finished; under review is somebody else's turn. Editing the
-  // address mid-review means the admin approves one address having read
-  // another. The server refuses the submission either way. mWeb twin.
-  const done = item.status === 'APPROVED' || item.status === 'PENDING';
+  const locked = isVerificationLocked(item.status);
 
   const submit = handleSubmit((values) => onSubmit(buildAddressInput(values)));
+  const submitLabel =
+    item.status === 'NOT_SUBMITTED'
+      ? t('verification.submitAddress')
+      : t('verification.updateAddress');
 
   return (
     <VerificationCard item={item}>
-      {done ? null : (
+      {locked ? null : (
         <YStack gap={12}>
           <FormTextField
             control={control}
             name="state"
-            label={t('mweb.common.state')}
-            placeholder={t('mweb.verification.eGMaharashtra')}
+            label={t('verification.state')}
+            placeholder={t('verification.statePlaceholder')}
             required
           />
           <FormTextField
             control={control}
             name="city"
-            label={t('mweb.common.city')}
-            placeholder={t('mweb.verification.eGMumbai')}
+            label={t('verification.city')}
+            placeholder={t('verification.cityPlaceholder')}
             required
           />
           <FormTextField
             control={control}
             name="pincode"
-            label={t('mweb.common.pincode')}
-            placeholder={t('mweb.verification.eG400001')}
+            label={t('verification.pincode')}
+            placeholder={t('verification.pincodePlaceholder')}
             keyboardType="number-pad"
             required
           />
           <FormTextField
             control={control}
             name="line1"
-            label={t('mweb.common.addressLine1')}
-            placeholder={t('mweb.verification.houseStreet')}
+            label={t('verification.line1')}
+            placeholder={t('verification.line1Placeholder')}
             required
           />
           <FormTextField
             control={control}
             name="line2"
-            label={t('mweb.verification.addressLine2Optional')}
-            placeholder={t('mweb.verification.apartmentLandmark')}
+            label={t('verification.line2')}
+            placeholder={t('verification.line2Placeholder')}
           />
           <FormTextField
             control={control}
             name="country"
-            label={t('mweb.verification.countryOptional')}
-            placeholder={t('mweb.verification.eGIndia')}
+            label={t('verification.country')}
+            placeholder={t('verification.countryPlaceholder')}
           />
           <XStack
             testID="verification-submit-address"
             role="button"
-            aria-label={t('mweb.verification.submitAddress')}
+            aria-label={t('verification.submitAddress')}
             aria-disabled={busy}
             onPress={busy ? undefined : submit}
             alignItems="center"
@@ -107,11 +103,11 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
             borderRadius={12}
             backgroundColor="$primary"
             opacity={busy ? 0.6 : 1}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             {busy ? <Spinner testID="address-busy" size="small" color={onPrimary} /> : null}
             <Text fontSize={14} fontWeight="700" color={onPrimary}>
-              {item.status === 'NOT_SUBMITTED' ? 'Submit address' : 'Update address'}
+              {submitLabel}
             </Text>
           </XStack>
         </YStack>

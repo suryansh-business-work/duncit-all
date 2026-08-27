@@ -13,6 +13,7 @@ import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** One line of money taken off the bill — a coupon, redeemed coins. */
 export interface CheckoutDiscount {
@@ -186,7 +187,7 @@ export function OrderSummary({
                   role="button"
                   aria-label={t('mweb.checkout.venueChargesAbout')}
                   onPress={() => setVenueInfoOpen(true)}
-                  pressStyle={{ opacity: 0.6 }}
+                  pressStyle={PRESS_STYLE.inline}
                 >
                   <MaterialIcons name="info-outline" size={16} color={muted} />
                 </XStack>

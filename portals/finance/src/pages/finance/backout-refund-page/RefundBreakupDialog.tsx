@@ -1,7 +1,6 @@
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { buildRefundBreakup, type BackoutRefundRequest } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -68,10 +68,10 @@ export default function RefundBreakupDialog({
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
-            <Button color="warning" variant="contained" onClick={() => onConfirm(refundFor)} disabled={busy}>
+            <DuncitButton onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
+            <DuncitButton color="warning" variant="contained" onClick={() => onConfirm(refundFor)} disabled={busy}>
               {busy ? 'Processing…' : 'Refund now'}
-            </Button>
+            </DuncitButton>
           </DialogActions>
         </>
       )}

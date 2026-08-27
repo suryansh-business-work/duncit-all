@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { TicketAttachments } from '@/components/support/TicketAttachments';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Locked (reply hidden) once the ticket is resolved/closed (B7). */
@@ -82,7 +83,7 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
           borderRadius={21}
           backgroundColor="$primary"
           opacity={busy ? 0.6 : 1}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="send" size={18} color={onPrimary} />
         </XStack>

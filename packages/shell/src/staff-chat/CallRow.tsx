@@ -1,9 +1,10 @@
-import { Box, Chip, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Link, Stack, Tooltip, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import CallMissedIcon from '@mui/icons-material/CallMissed';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import { callDuration } from './timeline';
 import type { StaffCall } from './queries';
@@ -116,7 +117,7 @@ export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>
         )}
         {call.recording_url && (
           <Tooltip title={t('shell.chat.callRow.download')}>
-            <IconButton
+            <DuncitIconButton
               size="small"
               component={Link}
               href={call.recording_url}
@@ -126,7 +127,7 @@ export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>
               aria-label={t('shell.chat.callRow.download')}
             >
               <DownloadIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         )}
       </Stack>

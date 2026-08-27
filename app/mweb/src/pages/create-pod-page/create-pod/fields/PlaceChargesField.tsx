@@ -1,7 +1,8 @@
 import { useRef } from 'react';
-import { Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { PodPlaceCharge } from '../create-pod.types';
 
@@ -83,14 +84,14 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
               onChange={(e) => update(idx, { note: e.target.value })}
               sx={{ flex: 2 }}
             />
-            <IconButton aria-label={t('mweb.createPod.removeCharge')} onClick={() => remove(idx)} size="small">
+            <DuncitIconButton aria-label={t('mweb.createPod.removeCharge')} onClick={() => remove(idx)} size="small">
               <DeleteOutlineIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         ))}
-        <Button startIcon={<AddIcon />} onClick={add} size="small" sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton startIcon={<AddIcon />} onClick={add} size="small" sx={{ alignSelf: 'flex-start' }}>
           {t('mweb.createPod.addCharge')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

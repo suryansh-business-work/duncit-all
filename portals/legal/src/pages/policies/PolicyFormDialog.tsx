@@ -1,7 +1,6 @@
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,6 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import PolicyTypeSelect from '../../components/PolicyTypeSelect';
 import type { Policy } from '../../graphql/policies';
@@ -172,10 +172,10 @@ export default function PolicyFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={saving}>
+        <DuncitButton onClick={onClose} disabled={saving}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={onSubmit} disabled={saving}>
           {t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

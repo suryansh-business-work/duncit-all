@@ -1,7 +1,8 @@
-import { Box, Button, FormHelperText, Stack, Typography } from '@mui/material';
+import { Box, FormHelperText, Stack, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import { DuncitButton } from '@duncit/buttons';
 import MjmlAiButton from '../../../components/MjmlAiButton';
 import { formatMjml } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
@@ -31,8 +32,8 @@ export default function CampaignMjmlEditor({ value, error, helperText, onChange,
         <Stack direction="row" spacing={1} useFlexGap sx={{
           flexWrap: "wrap"
         }}>
-          <Button size="small" variant="outlined" startIcon={<FormatAlignLeftIcon />} onClick={() => onChange(formatMjml(value))}>{t('marketing.marketingCampaigns.format')}</Button>
-          <Button size="small" variant="outlined" startIcon={<FactCheckIcon />} onClick={onVerify}>{t('marketing.marketingCampaigns.verify')}</Button>
+          <DuncitButton size="small" variant="outlined" startIcon={<FormatAlignLeftIcon />} onClick={() => onChange(formatMjml(value))}>{t('marketing.marketingCampaigns.format')}</DuncitButton>
+          <DuncitButton size="small" variant="outlined" startIcon={<FactCheckIcon />} onClick={onVerify}>{t('marketing.marketingCampaigns.verify')}</DuncitButton>
           <MjmlAiButton currentMjml={value} onApply={onChange} />
         </Stack>
       </Stack>

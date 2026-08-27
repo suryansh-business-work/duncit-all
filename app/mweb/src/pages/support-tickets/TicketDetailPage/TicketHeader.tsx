@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Chip, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Chip, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { TicketStatus, TranscriptFormat } from '../queries';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -49,16 +50,16 @@ export default function TicketHeader({
     <Stack direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
-      </IconButton>
+      </DuncitIconButton>
       <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }} noWrap>
         {subject || 'Ticket'}
       </Typography>
       {status && <Chip size="small" color={STATUS_COLOR[status]} label={status} />}
-      <IconButton aria-label={t('mweb.supportTickets.ticketOptions')} disabled={!status} onClick={(e) => setAnchor(e.currentTarget)}>
+      <DuncitIconButton aria-label={t('mweb.supportTickets.ticketOptions')} disabled={!status} onClick={(e) => setAnchor(e.currentTarget)}>
         <MoreVertIcon />
-      </IconButton>
+      </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={close}>
         {canResolve && (
           <MenuItem onClick={run(onResolve)}>

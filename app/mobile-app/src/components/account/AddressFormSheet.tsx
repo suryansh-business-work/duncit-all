@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Validation for a saved address — RN twin of mWeb's addressSchema. */
 export const addressSchema = z.object({
@@ -128,6 +129,7 @@ export function AddressFormSheet({
         <KeyboardScreen>
           <YStack flex={1} justifyContent="flex-end" testID="address-form-sheet">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={onCancel}
@@ -177,7 +179,7 @@ export function AddressFormSheet({
                   borderRadius={12}
                   borderWidth={1}
                   borderColor="$borderColor"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
                     Cancel
@@ -196,7 +198,7 @@ export function AddressFormSheet({
                   borderRadius={12}
                   backgroundColor="$primary"
                   opacity={saving ? 0.6 : 1}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     Save address

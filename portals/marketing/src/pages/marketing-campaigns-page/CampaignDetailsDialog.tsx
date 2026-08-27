@@ -2,7 +2,6 @@ import { useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import CampaignHtmlFrame from './CampaignHtmlFrame';
@@ -122,28 +122,28 @@ export default function CampaignDetailsDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           Close
-        </Button>
+        </DuncitButton>
         {campaign && canDelete(campaign.status) && (
-          <Button
+          <DuncitButton
             color="error"
             startIcon={<DeleteOutlineIcon />}
             disabled={busy}
             onClick={() => onDelete(campaign)}
           >
             Delete
-          </Button>
+          </DuncitButton>
         )}
         {campaign && canSend(campaign.status) && (
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<SendIcon />}
             disabled={busy}
             onClick={() => onSend(campaign)}
           >
             Send now
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

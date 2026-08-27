@@ -3,13 +3,11 @@ import { useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   Switch,
   TextField,
@@ -18,6 +16,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';
 import LocationHierarchyFields from './LocationHierarchyFields';
 import { AI_FILL_LOCATION_AREAS } from './queries';
@@ -154,7 +153,7 @@ export default function LocationFormDialog({
               }}>
               <Typography variant="subtitle2">{t('admin.locations.localities')}</Typography>
               <Stack direction="row" spacing={1}>
-                <Button
+                <DuncitButton
                   size="small"
                   color="secondary"
                   variant="outlined"
@@ -165,10 +164,10 @@ export default function LocationFormDialog({
                   disabled={busy || fillingAreas}
                 >
                   {fillingAreas ? 'Filling…' : 'Fill with AI'}
-                </Button>
-                <Button size="small" startIcon={<AddIcon />} onClick={handleAddZone}>
+                </DuncitButton>
+                <DuncitButton size="small" startIcon={<AddIcon />} onClick={handleAddZone}>
                   Add Area
-                </Button>
+                </DuncitButton>
               </Stack>
             </Stack>
             {aiError && <Alert severity="error" sx={{ mb: 1 }}>{aiError}</Alert>}
@@ -197,13 +196,13 @@ export default function LocationFormDialog({
                     onChange={(e) => updateZone(index, { pincode: e.target.value })}
                     sx={{ width: { xs: '100%', sm: 140 } }}
                   />
-                  <IconButton
+                  <DuncitIconButton
                     size="small"
                     onClick={() => removeZone(index)}
                     disabled={form.zones.length === 1}
                   >
                     <RemoveCircleOutlineIcon />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Stack>
               ))}
             </Stack>
@@ -213,14 +212,14 @@ export default function LocationFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={onSubmit}
           disabled={busy || !form.location_name.trim()}
         >
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

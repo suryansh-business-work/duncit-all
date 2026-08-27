@@ -7,6 +7,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useReferral } from '@/hooks/useReferral';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/stores/auth.store';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * The referral question for accounts Google finished on its own. mWeb's twin.
@@ -73,6 +74,7 @@ export function ReferralPromptScreen() {
           onPress={() => void apply()}
         />
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="referral-prompt-skip"
           role="button"
           aria-label={t('mweb.referral.skip')}

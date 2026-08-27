@@ -1,21 +1,12 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Chip,
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Autocomplete, Box, Chip, Divider, Stack, TextField, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import FileInfoPanel from './FileInfoPanel';
 import { RENAME_MEDIA_FILE, UPDATE_MEDIA_FILE, type MediaItem } from './queries';
@@ -140,27 +131,27 @@ export default function FileDetailsView({
             justifyContent: "space-between",
             mb: 0.5
           }}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={() => step(-1)}
             disabled={at === 0}
             aria-label={t('shell.fileManager.prevFile')}
           >
             <ChevronLeftIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
             {at + 1} of {list.length} selected
           </Typography>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={() => step(1)}
             disabled={at === list.length - 1}
             aria-label={t('shell.fileManager.nextFile')}
           >
             <ChevronRightIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       )}
 
@@ -174,24 +165,24 @@ export default function FileDetailsView({
         <Typography variant="subtitle2" noWrap sx={{ flex: 1, minWidth: 0 }} title={file.name}>
           {file.name}
         </Typography>
-        <IconButton size="small" onClick={onBack} aria-label={t('shell.fileManager.closeDetails')}>
+        <DuncitIconButton size="small" onClick={onBack} aria-label={t('shell.fileManager.closeDetails')}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
 
       <Stack direction="row" spacing={0.5} sx={{ mb: 1 }}>
-        <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => onCopy(file.url)}>
+        <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={() => onCopy(file.url)}>
           Copy
-        </Button>
+        </DuncitButton>
         {canWrite && (
-          <Button
+          <DuncitButton
             size="small"
             color="error"
             startIcon={<DeleteOutlineIcon />}
             onClick={() => onDelete(file)}
           >
             Delete
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
 
@@ -212,9 +203,9 @@ export default function FileDetailsView({
               onChange={(event) => setName(event.target.value)}
               helperText={t('shell.fileManager.renameHint')}
             />
-            <Button size="small" onClick={saveName} disabled={busy || name === file.name}>
+            <DuncitButton size="small" onClick={saveName} disabled={busy || name === file.name}>
               Save
-            </Button>
+            </DuncitButton>
           </Stack>
           <Stack spacing={1} sx={{
             alignItems: "flex-start"
@@ -243,9 +234,9 @@ export default function FileDetailsView({
                 />
               )}
             />
-            <Button size="small" onClick={saveTags} disabled={busy}>
+            <DuncitButton size="small" onClick={saveTags} disabled={busy}>
               Save
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       )}

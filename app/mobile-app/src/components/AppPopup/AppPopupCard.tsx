@@ -4,6 +4,7 @@ import type { AppPopupSize } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface AppPopupCardProps {
   imageUrl: string;
@@ -67,6 +68,7 @@ export function AppPopupCard({
         />
         {showClose ? (
           <XStack
+            pressStyle={PRESS_STYLE.surface}
             testID="app-popup-close"
             role="button"
             aria-label={closeLabel}

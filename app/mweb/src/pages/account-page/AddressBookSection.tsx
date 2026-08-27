@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AddressForm, type AddressFormValues, type UserAddress } from './address-book-form';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -114,9 +115,9 @@ export default function AddressBookSection() {
             Address Book
           </Typography>
         </Stack>
-        <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={openAdd} sx={{ borderRadius: 999, fontWeight: 600 }}>
+        <DuncitButton size="small" variant="outlined" startIcon={<AddIcon />} onClick={openAdd} sx={{ borderRadius: 999, fontWeight: 600 }}>
           Add address
-        </Button>
+        </DuncitButton>
       </Stack>
       {error && <Alert severity="error">{error.message}</Alert>}
       {notice && <Alert severity="error" onClose={() => setNotice(null)}>{notice}</Alert>}
@@ -159,12 +160,12 @@ export default function AddressBookSection() {
                 {oneLine(address)}
               </Typography>
             </Box>
-            <IconButton size="small" aria-label={`Edit ${address.label}`} onClick={() => openEdit(address)}>
+            <DuncitIconButton size="small" aria-label={`Edit ${address.label}`} onClick={() => openEdit(address)}>
               <EditOutlinedIcon fontSize="small" />
-            </IconButton>
-            <IconButton size="small" aria-label={`Delete ${address.label}`} onClick={() => remove(address)}>
+            </DuncitIconButton>
+            <DuncitIconButton size="small" aria-label={`Delete ${address.label}`} onClick={() => remove(address)}>
               <DeleteOutlineIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         ))}
       </Stack>

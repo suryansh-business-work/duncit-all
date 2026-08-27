@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,6 +12,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
@@ -123,15 +123,15 @@ export default function CompletePodDialog({
                 <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} hostUserId={selectedHostId} />
               )}
               <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={2} />
-              <Button type="submit" variant="contained" disabled={busy}>
+              <DuncitButton type="submit" variant="contained" disabled={busy}>
                 {busy ? 'Completing…' : 'Complete pod'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </form>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose} disabled={busy}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

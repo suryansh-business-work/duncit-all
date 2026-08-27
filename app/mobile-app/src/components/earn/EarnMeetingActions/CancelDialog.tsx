@@ -4,6 +4,7 @@ import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ReasonField } from './ReasonField';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -50,7 +51,7 @@ export function CancelDialog({
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           Keep meeting
@@ -69,7 +70,7 @@ export function CancelDialog({
         borderRadius={12}
         backgroundColor="$danger"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
           {busy ? 'Cancelling…' : 'Cancel meeting'}

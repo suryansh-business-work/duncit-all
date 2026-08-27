@@ -3,10 +3,8 @@ import { useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
-  IconButton,
   InputAdornment,
   Stack,
   TextField,
@@ -15,6 +13,7 @@ import {
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import KeyIcon from '@mui/icons-material/Key';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notify, notifyError } from '@duncit/dialogs';
 import { copyToClipboard } from '@duncit/utils';
@@ -42,9 +41,9 @@ function CopyAdornment({ value, label }: Readonly<{ value: string; label: string
   return (
     <InputAdornment position="end">
       <Tooltip title={label}>
-        <IconButton onClick={onCopy} edge="end" aria-label={label}>
+        <DuncitIconButton onClick={onCopy} edge="end" aria-label={label}>
           <ContentCopyIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </InputAdornment>
   );
@@ -160,14 +159,14 @@ export default function CiCredentialsCard({ settings }: Readonly<{ settings: App
             <IssuedToken issued={issued} />
           ) : (
             <Stack direction="row">
-              <Button
+              <DuncitButton
                 variant="outlined"
                 startIcon={<KeyIcon />}
                 onClick={onIssue}
                 disabled={issuing.loading}
               >
                 {issuing.loading ? t('tech.appBuilds.ciIssuing') : t('tech.appBuilds.ciIssue')}
-              </Button>
+              </DuncitButton>
             </Stack>
           )}
         </Stack>

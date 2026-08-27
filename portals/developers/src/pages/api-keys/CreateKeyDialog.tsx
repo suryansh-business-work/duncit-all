@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   InputAdornment,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -72,9 +71,9 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
                   sx: { fontFamily: 'monospace' },
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton aria-label={t('developers.createKey.copyAria')} onClick={copy}>
+                      <DuncitIconButton aria-label={t('developers.createKey.copyAria')} onClick={copy}>
                         <ContentCopyIcon fontSize="small" />
-                      </IconButton>
+                      </DuncitIconButton>
                     </InputAdornment>
                   ),
                 }
@@ -107,15 +106,15 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>{closeLabel}</Button>
+        <DuncitButton onClick={close}>{closeLabel}</DuncitButton>
         {!rawKey && (
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={!name.trim() || busy}
             onClick={() => onCreate(name.trim())}
           >
             {submitLabel}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExplore';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Horizontal Super-category chip rail — "All" clears the filter. */
 function CategoryChips({
@@ -33,6 +34,7 @@ function CategoryChips({
           const selected = selectedId === c.id;
           return (
             <YStack
+              pressStyle={PRESS_STYLE.control}
               key={c.id || 'all'}
               testID={`venues-cat-${c.id || 'all'}`}
               role="button"

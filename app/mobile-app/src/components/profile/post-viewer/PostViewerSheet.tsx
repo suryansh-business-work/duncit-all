@@ -13,6 +13,7 @@ import { sharePost } from '@/utils/share';
 import { PostMedia } from './PostMedia';
 import { PostViewerBody } from './PostViewerBody';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   postId: string;
@@ -86,7 +87,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                     height={36}
                     alignItems="center"
                     justifyContent="center"
-                    pressStyle={{ opacity: 0.6 }}
+                    pressStyle={PRESS_STYLE.inline}
                   >
                     <MaterialIcons name="share" size={20} color={color} />
                   </XStack>
@@ -102,7 +103,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                     height={36}
                     alignItems="center"
                     justifyContent="center"
-                    pressStyle={{ opacity: 0.6 }}
+                    pressStyle={PRESS_STYLE.inline}
                   >
                     <MaterialIcons name="delete-outline" size={20} color={color} />
                   </XStack>
@@ -116,7 +117,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                   height={36}
                   alignItems="center"
                   justifyContent="center"
-                  pressStyle={{ opacity: 0.6 }}
+                  pressStyle={PRESS_STYLE.inline}
                 >
                   <MaterialIcons name="close" size={20} color={color} />
                 </XStack>

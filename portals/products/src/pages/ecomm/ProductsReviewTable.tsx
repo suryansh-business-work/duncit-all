@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Button, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Chip, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -74,9 +75,9 @@ export default function ProductsReviewTable({
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<ProductListingRow>[]>(() => {
     const renderReview = (r: ProductListingRow) => (
-      <Button size="small" variant="outlined" onClick={() => onReview(r)}>
+      <DuncitButton size="small" variant="outlined" onClick={() => onReview(r)}>
         {t('products.review.action')}
-      </Button>
+      </DuncitButton>
     );
     return [
       {

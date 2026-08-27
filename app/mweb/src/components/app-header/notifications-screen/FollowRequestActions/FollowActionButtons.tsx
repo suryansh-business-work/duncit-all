@@ -1,5 +1,6 @@
-import { Button, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import { DuncitButton } from '@duncit/buttons';
 
 /** Shared sx for the row's text buttons: the row is already a large tappable
  * card (and an unread one carries a gradient), so a solid button fights it. */
@@ -41,7 +42,7 @@ export function AnswerButtons({
 }: Readonly<AnswerButtonsProps>) {
   return (
     <>
-      <Button
+      <DuncitButton
         size="small"
         variant="text"
         disabled={busy}
@@ -50,8 +51,8 @@ export function AnswerButtons({
         sx={{ ...TEXT_BUTTON, color: accentInk }}
       >
         {acceptLabel}
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         size="small"
         variant="text"
         disabled={busy}
@@ -59,7 +60,7 @@ export function AnswerButtons({
         sx={{ ...TEXT_BUTTON, color: quietInk, opacity: dimQuiet ? 0.75 : 1 }}
       >
         {denyLabel}
-      </Button>
+      </DuncitButton>
     </>
   );
 }
@@ -88,7 +89,7 @@ export function FollowBackButton({
   onFollowBack,
 }: Readonly<FollowBackButtonProps>) {
   return (
-    <Button
+    <DuncitButton
       size="small"
       variant="text"
       disabled={busy || pending}
@@ -103,6 +104,6 @@ export function FollowBackButton({
       sx={{ ...TEXT_BUTTON, color: accentInk }}
     >
       {label}
-    </Button>
+    </DuncitButton>
   );
 }

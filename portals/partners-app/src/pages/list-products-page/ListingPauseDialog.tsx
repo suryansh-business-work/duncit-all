@@ -1,5 +1,6 @@
 import { useMutation } from '@apollo/client';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import { SET_LISTING_ACTIVE, type ProductListingRow } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -41,15 +42,15 @@ export default function ListingPauseDialog({ target, onClose, onDone }: Readonly
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           color={activating ? 'success' : 'warning'}
           variant="contained"
           disabled={activeState.loading}
           onClick={confirm}
         >
           {activating ? 'Reactivate' : 'Deactivate'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -1,5 +1,6 @@
-import { Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Chip, Paper, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import HostCategoryPicker from '../../../components/host-form/HostCategoryPicker';
 import { categoryPath } from '../../../utils/categoryPath';
 import type { HostCategoryValue } from '../../../forms/host';
@@ -108,7 +109,7 @@ export default function HostReviewCategories({
             Applied with: <strong>{categoryPath(surveyCategory)}</strong>
           </Typography>
           {surveyPending && (
-            <Button
+            <DuncitButton
               size="small"
               variant="text"
               startIcon={<AddIcon />}
@@ -116,7 +117,7 @@ export default function HostReviewCategories({
               onClick={() => add(surveyCategory)}
             >
               Add
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       )}

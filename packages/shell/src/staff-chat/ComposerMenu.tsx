@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
+import { ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PlaceIcon from '@mui/icons-material/Place';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   /** Opens the place search. */
@@ -27,9 +28,9 @@ export default function ComposerMenu({ onShareLocation, onShareCurrentLocation }
   return (
     <>
       <Tooltip title={t('shell.chat.composer.more')}>
-        <IconButton size="small" aria-label={t('shell.chat.composer.moreOptions')} onClick={(e) => setAnchor(e.currentTarget)}>
+        <DuncitIconButton size="small" aria-label={t('shell.chat.composer.moreOptions')} onClick={(e) => setAnchor(e.currentTarget)}>
           <MoreVertIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
         <MenuItem

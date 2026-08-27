@@ -3,13 +3,11 @@ import { useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   Tooltip,
   Typography,
@@ -18,9 +16,14 @@ import UploadIcon from '@mui/icons-material/Upload';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
-import { ADD_TEMPLATE_IMAGE, REMOVE_TEMPLATE_IMAGE, type EmailAsset } from '../../api/emailTemplates.gql';
+import {
+  ADD_TEMPLATE_IMAGE,
+  REMOVE_TEMPLATE_IMAGE,
+  type EmailAsset,
+} from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 
@@ -100,9 +103,9 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
             }}>
             Uploaded images for this template. Use <b>{t('crm.emailTemplates.insert')}</b> to add an <code>&lt;mj-image&gt;</code>, or <b>Copy</b> the URL.
           </Typography>
-          <Button variant="contained" size="small" startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
+          <DuncitButton variant="contained" size="small" startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
             {busy ? 'Uploading…' : 'Upload'}
-          </Button>
+          </DuncitButton>
         </Stack>
         {error && <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setError(null)}>{error}</Alert>}
         {images.length === 0 ? (
@@ -125,14 +128,14 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
                     p: 0.5
                   }}>
                   <Tooltip title="Insert <mj-image>">
-                    <IconButton size="small" color="primary" onClick={() => onInsert(img.url)}><AddPhotoAlternateIcon fontSize="small" /></IconButton>
+                    <DuncitIconButton size="small" color="primary" onClick={() => onInsert(img.url)}><AddPhotoAlternateIcon fontSize="small" /></DuncitIconButton>
                   </Tooltip>
                   <Tooltip title={copied === img.url ? 'Copied!' : 'Copy URL'}>
-                    <IconButton size="small" onClick={() => copy(img.url)}><ContentCopyIcon fontSize="small" /></IconButton>
+                    <DuncitIconButton size="small" onClick={() => copy(img.url)}><ContentCopyIcon fontSize="small" /></DuncitIconButton>
                   </Tooltip>
                   <Box sx={{ flex: 1 }} />
                   <Tooltip title={t('crm.emailTemplates.removeFromLibrary')}>
-                    <IconButton size="small" color="error" onClick={() => remove(img.url)}><DeleteIcon fontSize="small" /></IconButton>
+                    <DuncitIconButton size="small" color="error" onClick={() => remove(img.url)}><DeleteIcon fontSize="small" /></DuncitIconButton>
                   </Tooltip>
                 </Stack>
               </Box>
@@ -142,7 +145,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
         <input ref={inputRef} type="file" accept="image/*" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

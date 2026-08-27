@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
@@ -20,6 +19,7 @@ import {
 } from '@mui/material';
 import SyncIcon from '@mui/icons-material/Sync';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import { DuncitButton } from '@duncit/buttons';
 import {
   ALL_STATUSES,
   PICKUP_FLOW,
@@ -107,13 +107,13 @@ export default function OrderFulfilmentPanel({
             value={note}
             onChange={(event) => setNote(event.target.value)}
           />
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={busy || target === order.fulfilment_status}
             onClick={() => onAdvance(target, note)}
           >
             Update status
-          </Button>
+          </DuncitButton>
         </Stack>
 
         {isShip && (
@@ -123,7 +123,7 @@ export default function OrderFulfilmentPanel({
               <Stack direction="row" spacing={1} useFlexGap sx={{
                 flexWrap: "wrap"
               }}>
-                <Button
+                <DuncitButton
                   size="small"
                   variant="outlined"
                   startIcon={<LocalShippingIcon />}
@@ -131,10 +131,10 @@ export default function OrderFulfilmentPanel({
                   onClick={onCreateShipment}
                 >
                   {shiprocket.awb ? 'Recreate shipment' : 'Create shipment'}
-                </Button>
-                <Button size="small" startIcon={<SyncIcon />} disabled={busy || !shiprocket.awb} onClick={onRefreshTracking}>
+                </DuncitButton>
+                <DuncitButton size="small" startIcon={<SyncIcon />} disabled={busy || !shiprocket.awb} onClick={onRefreshTracking}>
                   Sync tracking
-                </Button>
+                </DuncitButton>
               </Stack>
               {shiprocket.awb ? (
                 <Box>

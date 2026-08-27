@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, CircularProgress, Tooltip } from '@mui/material';
+import { CircularProgress, Tooltip } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton } from '@duncit/buttons';
 import { AI_DESCRIBE_PRODUCT } from './productQueries';
 import type { InventoryProductFormValues } from './types';
 
@@ -58,7 +59,7 @@ export default function AiDescribeButton({ values, onApply, onError }: Readonly<
       }
     >
       <span>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           color="secondary"
@@ -67,7 +68,7 @@ export default function AiDescribeButton({ values, onApply, onError }: Readonly<
           onClick={run}
         >
           {busy ? 'Generating…' : 'Generate with AI'}
-        </Button>
+        </DuncitButton>
       </span>
     </Tooltip>
   );

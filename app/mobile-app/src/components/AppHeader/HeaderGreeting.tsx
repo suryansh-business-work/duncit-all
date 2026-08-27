@@ -3,6 +3,7 @@ import { Text, YStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { HeaderLocationRow } from './HeaderLocationRow';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const DEFAULT_TAGLINE = 'It All Starts Here!';
 
@@ -25,6 +26,7 @@ export function HeaderGreeting({ tagline, onOpenLocation }: Readonly<Props>) {
       {/* The title also opens the location picker — a bigger tap target than
        * the small city row alone (user ask). */}
       <Text
+        pressStyle={PRESS_STYLE.inline}
         testID="header-greeting-title"
         fontSize={16.5}
         fontWeight="700"

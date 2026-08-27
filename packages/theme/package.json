@@ -8,6 +8,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@duncit/buttons": "workspace:*"
+  },
   "peerDependencies": {
     "@mui/material": ">=5",
     "react": ">=18",

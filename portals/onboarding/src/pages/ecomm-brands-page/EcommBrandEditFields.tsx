@@ -1,5 +1,6 @@
-import { Box, Button, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';
 import { DOC_TYPES } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -158,12 +159,12 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
                 folder="/ecomm/brands/docs"
               />
             </Box>
-            <IconButton onClick={() => setDocs(docs.filter((x) => x.id !== doc.id))}>
+            <DuncitIconButton onClick={() => setDocs(docs.filter((x) => x.id !== doc.id))}>
               <DeleteIcon />
-            </IconButton>
+            </DuncitIconButton>
           </Box>
         ))}
-        <Button onClick={addDoc} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.ecommBrands.addDocument')}</Button>
+        <DuncitButton onClick={addDoc} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.ecommBrands.addDocument')}</DuncitButton>
       </Stack>
     </Stack>
   );

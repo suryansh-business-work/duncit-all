@@ -1,4 +1,4 @@
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import VideocamIcon from '@mui/icons-material/Videocam';
@@ -8,6 +8,7 @@ import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import CallToggle from './CallToggle';
 
@@ -70,14 +71,14 @@ export default function LiveControls({
 
       {video && (
         <Tooltip title={t('shell.chat.call.fullscreen')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             color="inherit"
             aria-label={t('shell.chat.call.fullscreenVideo')}
             onClick={onToggleFullscreen}
           >
             <FullscreenIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
 

@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   DialogTitle,
   Stack,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { PUBLIC_URL_PATTERN, RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import type { WaScenario } from './queries';
@@ -94,14 +94,14 @@ export default function MediaDialog({ scenario, saving, onClose, onSave }: Reado
       </DialogContent>
       <DialogActions>
         {Boolean(scenario?.override_media_url) && (
-          <Button color="error" disabled={saving} onClick={clear} sx={{ mr: 'auto' }}>
+          <DuncitButton color="error" disabled={saving} onClick={clear} sx={{ mr: 'auto' }}>
             {t('adminWhatsapp.clearMedia')}
-          </Button>
+          </DuncitButton>
         )}
-        <Button onClick={onClose}>{t('marketingWhatsapp.cancel')}</Button>
-        <Button variant="contained" disabled={saving} onClick={submit}>
+        <DuncitButton onClick={onClose}>{t('marketingWhatsapp.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={saving} onClick={submit}>
           {saving ? t('marketingWhatsapp.submitting') : t('adminWhatsapp.setMedia')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

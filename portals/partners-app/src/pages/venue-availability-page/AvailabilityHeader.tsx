@@ -1,5 +1,6 @@
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -15,9 +16,9 @@ export default function AvailabilityHeader({ venueName, onBack }: Readonly<Props
     <Stack direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <IconButton size="small" onClick={onBack} aria-label={t('partners.venueAvailabilityPage.back')}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('partners.venueAvailabilityPage.back')}>
         <ArrowBackIcon />
-      </IconButton>
+      </DuncitIconButton>
       <Box>
         <Typography
           variant="overline"

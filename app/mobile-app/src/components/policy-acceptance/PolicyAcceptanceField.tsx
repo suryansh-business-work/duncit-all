@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { PolicyAcceptanceSheet } from './PolicyAcceptanceSheet';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PolicyAcceptanceFieldProps {
   acceptedIds: string[];
@@ -51,7 +52,7 @@ export function PolicyAcceptanceField({
         onPress={openSheet}
         gap={10}
         alignItems="flex-start"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons
           name={accepted ? 'check-box' : 'check-box-outline-blank'}

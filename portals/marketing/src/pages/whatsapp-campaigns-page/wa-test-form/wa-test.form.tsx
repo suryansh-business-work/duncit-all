@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import TemplateInputs from '../wa-campaign-form/TemplateInputs';
@@ -18,7 +18,13 @@ import { useTemplateFields } from '../wa-campaign-form/useTemplateFields';
 import TemplateSample from '../wa-aisensy/TemplateSample';
 import { campaignFor, templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
 import type { WaCampaignNameOption } from '../queries';
-import { emptyValues, toTestInput, waTestSchema, type WaTestInput, type WaTestValues } from './wa-test.types';
+import {
+  emptyValues,
+  toTestInput,
+  waTestSchema,
+  type WaTestInput,
+  type WaTestValues,
+} from './wa-test.types';
 
 interface Props {
   open: boolean;
@@ -152,12 +158,12 @@ export default function WaTestForm({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>
+          <DuncitButton type="button" onClick={onClose} disabled={busy}>
             Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy || !isValid}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
             {busy ? 'Sending…' : 'Send test'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

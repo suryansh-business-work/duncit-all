@@ -1,11 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -25,10 +19,10 @@ export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Readonl
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button color="error" variant="contained" onClick={onConfirm}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton color="error" variant="contained" onClick={onConfirm}>
           {t('shell.common.delete')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

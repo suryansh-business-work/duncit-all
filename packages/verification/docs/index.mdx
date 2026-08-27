@@ -1,0 +1,186 @@
+---
+name: '@duncit/verification'
+summary: 'One account-verification experience for every surface: the status, document and address rules at the root, the MUI cards behind /mui; the native app renders the same rules through its own Tamagui view.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/partners-app'
+exports:
+  - 'STATUS_META'
+  - 'TONE_CHIP_COLOR'
+  - 'TONE_HEX'
+  - 'VERIFICATION_LABEL_KEYS'
+  - 'isVerificationSettled'
+  - 'isVerificationLocked'
+  - 'rejectReasonOf'
+  - 'uploadLabelKey'
+  - 'MAX_DOC_BYTES'
+  - 'DOCUMENT_ACCEPT'
+  - 'base64ByteSize'
+  - 'isDocumentTooLarge'
+  - 'submissionErrorMessage'
+  - 'ADDRESS_FIELDS'
+  - 'ADDRESS_ROWS'
+  - 'addressValuesFrom'
+  - 'blankAddressValues'
+  - 'buildAddressInput'
+  - 'isAddressComplete'
+  - 'makeAddressSchema'
+  - 'VerificationCards'
+  - 'VerificationCardShell'
+  - 'IdentityCard'
+  - 'AddressCard'
+  - 'EmailCard'
+  - 'MY_VERIFICATIONS'
+  - 'SUBMIT_VERIFICATION'
+  - 'SUBMIT_ADDRESS_VERIFICATION'
+---
+
+## Why this exists
+
+Account verification was written three times — the partner console, mWeb and the native app —
+and by the time anyone measured it, the copies had drifted 89 lines apart while carrying the
+**same filenames**: `VerificationCardShell.tsx`, `AddressCard.tsx`, `IdentityCard.tsx`,
+`queries.ts`. Two MUI copies of one screen is what rule 40 exists to stop.
+
+The drift was not cosmetic:
+
+| | partner console | mWeb | native app |
+| --- | --- | --- | --- |
+| Type and status labels | resolved through the catalogue | English literals | English literals |
+| Upload button copy | localized | `'Upload document'` in the JSX | localized, different namespace |
+| Identity upload | `useImagekitBase64Upload` | its own `FileReader` + a fourth gql document | its own picker |
+| Email row | bare card, no explanation | bare card, no explanation | a sentence saying why there is nothing to do |
+| Address validation | four `.trim()` checks on submit | the same four checks, re-typed | a Zod schema |
+
+So mWeb shipped a screen no translator could ever reach (rule 38), and the address form could
+accept a value on one surface that the next one rejected.
+
+## Where each piece lives
+
+| Import | Contains | Used by |
+| --- | --- | --- |
+| `@duncit/verification` | Types, the status table, the document cap, the address schema. No React, no toolkit. | everything, including Node and tests |
+| `@duncit/verification/mui` | `VerificationCards` and the three cards, on MUI | mWeb and the partner console |
+| — | the app renders the same rules through its own Tamagui view in `app/mobile-app/src/screens/VerificationScreen/` | the app |
+
+The Tamagui view stays in the app rather than moving here, for the same reason
+[@duncit/slots](/packages/slots) keeps its own: the native app typechecks and bundles linked
+packages from their **source**, so a `react-native` or `tamagui` import inside this package
+resolves by walking up from `packages/verification/` and finds nothing in CI or Docker. Share
+the logic, never the UI.
+
+## The status table is the whole point
+
+Every surface asks the same two questions about a row, and they are **not** the same question:
+
+```ts
+isVerificationSettled('PENDING'); // false — nothing is decided yet
+isVerificationLocked('PENDING'); // true  — but the user may not submit again
+
+isVerificationSettled('REJECTED'); // false
+isVerificationLocked('REJECTED'); // false — a rejection is an invitation to retry
+```
+
+`settled` turns the tick green. `locked` takes the upload button or the address form away —
+because replacing a document mid-review means an admin approves one file having looked at
+another. The server refuses the second submission either way; the rule here is what stops the
+user wasting the attempt.
+
+Colour is named by meaning rather than by palette, which is what lets one table drive both
+toolkits:
+
+```ts
+STATUS_META.PENDING; // { labelKey: 'verification.statusPending', tone: 'pending' }
+TONE_CHIP_COLOR.pending; // 'warning'  → MUI <Chip color>
+TONE_HEX.pending; // '#fb8c00' → the Tamagui chip's fill
+```
+
+## Copy
+
+Every string is a `verification.*` key in `@duncit/i18n`, never a literal — a namespace of its
+own rather than `mweb.*` or `partners.*`, because all three surfaces render it (rule 38). The
+MUI half layers that bundle over the host surface's through `createBundleTranslation`, so a
+portal that has never heard of `verification.*` still renders real English offline.
+
+```tsx
+import { VerificationCards, useTranslation } from '@duncit/verification/mui';
+
+const { t } = useTranslation();
+t('verification.statusPending'); // 'Under review'
+```
+
+## Rendering the screen
+
+A page is now the query, the header and the list:
+
+```tsx
+import { useQuery } from '@apollo/client';
+import { MY_VERIFICATIONS, VerificationCards, useTranslation } from '@duncit/verification/mui';
+import type { Verification } from '@duncit/verification';
+
+const { data, refetch } = useQuery(MY_VERIFICATIONS, { fetchPolicy: 'cache-and-network' });
+const items: Verification[] = data?.myVerifications ?? [];
+
+<VerificationCards
+  items={items}
+  onChanged={() => refetch()}
+  onError={(message) => setSnack(message)}
+/>;
+```
+
+`VerificationCards` routes each type to the card that can act on it — Identity to the file
+picker, Address to the form, Email to the terminal note. That switch used to live in both
+pages, and Email is exactly where one of them fell behind.
+
+## The address form
+
+The field set is data, so the two forms cannot disagree about which input is optional or which
+label sits above which box:
+
+```ts
+ADDRESS_FIELDS; // every field, in order, with its label + placeholder key
+ADDRESS_ROWS; // the same fields grouped: [line1] [line2] [state city] [pincode country]
+```
+
+Validation has one source and two readers. The MUI card checks on submit; the native form runs
+the Zod schema through `zodResolver`. Both answer the same for the same values:
+
+```ts
+isAddressComplete(values); // the on-submit check
+makeAddressSchema(t).safeParse(values); // the resolver's check
+buildAddressInput(values); // trims, and DROPS blank line2/country
+```
+
+`makeAddressSchema` is a factory rather than a constant because Zod schemas are built outside
+React: the form that renders passes its own `t`, so one schema follows whichever language the
+surface resolved.
+
+## The 4 MB cap
+
+The server stores the uploaded URL only, so the limit is entirely a client-side policy — which
+is why three copies of it was three chances to accept a file the next surface refused.
+
+```ts
+isDocumentTooLarge({ size: file.size }); // web: the File's own size
+isDocumentTooLarge({ base64 }); // native: the picker often reports no size
+```
+
+The reported size wins when there is one; otherwise the base64 payload is measured at 3 bytes
+per 4 characters. A document with neither is let through — that is the picker failing, not the
+user.
+
+## Gotchas
+
+- **The root must stay framework-free.** The native app imports it, so a `react` or `@mui/*`
+  import at the root breaks the Metro build and nothing else — a failure that only shows in
+  deploy. `__tests__/module-load.test.ts` imports both entrypoints to catch it early.
+- **A new `@duncit/*` dependency on the app needs `COPY` lines in BOTH
+  `app/mobile-app/Dockerfile` and `Dockerfile.android`.** Same failure mode.
+- **`partners.verification.*` still exists in the partners bundle** and nothing reads it. It
+  stays until the `verification.*` rows are seeded through Admin → Localization → *Import app
+  keys*; deleting it first would leave translated portals rendering keys.

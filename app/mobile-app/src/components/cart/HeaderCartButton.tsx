@@ -7,6 +7,7 @@ import { navigationRef } from '@/navigation/navigationRef';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The active screen's route name, or '' before the container has settled. */
 function currentRouteName(): string {
@@ -54,7 +55,7 @@ export function HeaderCartButton({ label }: Readonly<{ label?: string }> = {}) {
         alignItems="center"
         justifyContent="center"
         borderRadius={20}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="shopping-cart" size={22} color={ink} />
         <YStack

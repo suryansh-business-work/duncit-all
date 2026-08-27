@@ -10,6 +10,7 @@ import { sortClubResults, type SearchSort } from '@/utils/search-sort';
 import type { SearchCategory, SearchClubResult } from '@/hooks/useSearch';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type SearchPod = SearchClubResult['upcoming_pods'][number];
 
@@ -71,7 +72,7 @@ export function SearchResults({
           borderWidth={1.5}
           borderColor="$borderColor"
           backgroundColor="$surface"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="swap-vert" size={16} color={color} />
           <Text fontSize={13.5} fontWeight="600" color="$color">
@@ -91,7 +92,7 @@ export function SearchResults({
           borderWidth={1.5}
           borderColor={filterActive ? '$primary' : '$borderColor'}
           backgroundColor={filterActive ? '$primary' : '$surface'}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="tune" size={16} color={filterActive ? onPrimary : color} />
           <Text fontSize={13.5} fontWeight="600" color={filterActive ? '$onPrimary' : '$color'}>

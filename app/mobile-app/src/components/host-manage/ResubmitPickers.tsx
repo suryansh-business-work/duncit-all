@@ -10,6 +10,7 @@ import {
   type ResubmitSlotOption,
   type ResubmitVenueOption,
 } from './pod-resubmit.form';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface OptionRowProps {
   testID: string;
@@ -32,7 +33,7 @@ function OptionRow({ testID, label, selected, onPress }: Readonly<OptionRowProps
       borderWidth={1}
       borderColor={selected ? '$primary' : '$borderColor'}
       backgroundColor={selected ? '$primary' : '$surface'}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text
         fontSize={13}

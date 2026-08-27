@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,6 +11,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import {
@@ -68,9 +68,9 @@ export default function ChallengesPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
             {t('challenge.list.create')}
-          </Button>
+          </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={setDeleting}
@@ -91,10 +91,10 @@ export default function ChallengesPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleting(null)} disabled={deleteState.loading}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" onClick={confirmDelete} disabled={deleteState.loading}>
+          <DuncitButton onClick={() => setDeleting(null)} disabled={deleteState.loading}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" onClick={confirmDelete} disabled={deleteState.loading}>
             {deleteState.loading ? t('shell.common.deleting') : t('shell.common.delete')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Stack>

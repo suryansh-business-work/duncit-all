@@ -1,13 +1,11 @@
 import { useEffect } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
-  IconButton,
   InputAdornment,
   MenuItem,
   TextField,
@@ -18,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CasinoIcon from '@mui/icons-material/Casino';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
 import DateField from '../../components/DateField';
@@ -64,13 +63,13 @@ export default function CreateUserDialog({
   const pwdAdornment = (
     <InputAdornment position="end">
       <Tooltip title={t('admin.users.generate')}>
-        <IconButton size="small" onClick={() => setValue('password', genPassword(), { shouldValidate: true })}>
+        <DuncitIconButton size="small" onClick={() => setValue('password', genPassword(), { shouldValidate: true })}>
           <CasinoIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
-      <IconButton size="small" onClick={() => setShowPwd((show) => !show)}>
+      <DuncitIconButton size="small" onClick={() => setShowPwd((show) => !show)}>
         {showPwd ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-      </IconButton>
+      </DuncitIconButton>
     </InputAdornment>
   );
 
@@ -159,8 +158,8 @@ export default function CreateUserDialog({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
-          <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Creating…' : t('admin.users.create')}</Button>
+          <DuncitButton type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Creating…' : t('admin.users.create')}</DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

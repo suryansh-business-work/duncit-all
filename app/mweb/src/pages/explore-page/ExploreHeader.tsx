@@ -1,6 +1,7 @@
-import { Box, Badge, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Badge, Chip, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { ExploreFilters } from './exploreFilters';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -41,14 +42,14 @@ export default function ExploreHeader({
             />
           </Stack>
         </Box>
-        <IconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
+        <DuncitIconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
           <RefreshIcon fontSize="small" />
-        </IconButton>
-        <IconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.openFilters')}>
+        </DuncitIconButton>
+        <DuncitIconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.openFilters')}>
           <Badge badgeContent={activeCount} color="primary" overlap="circular">
             <TuneIcon fontSize="small" />
           </Badge>
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     </Stack>
   );

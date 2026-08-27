@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import { ACCOUNT_DELETION_SETTINGS, UPDATE_ACCOUNT_DELETION_SETTINGS } from './queries';
@@ -101,8 +101,8 @@ export default function DeletionSettingsDialog({ open, onClose }: Readonly<Props
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('tech.accountDeletions.close')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('tech.accountDeletions.close')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           disabled={loading}
           onClick={() => {
@@ -111,7 +111,7 @@ export default function DeletionSettingsDialog({ open, onClose }: Readonly<Props
           data-testid="save-retention"
         >
           {t('tech.accountDeletions.settingsSave')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

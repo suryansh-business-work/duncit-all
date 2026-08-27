@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Paper, Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
+import { DuncitButton } from '@duncit/buttons';
 import type { SupportPodOption } from './queries';
 import { SUPPORT_CALL_TARGET, REQUEST_CALLBACK, MY_CALLBACK_REQUESTS } from './queries';
 import CallbackHistory from './CallbackHistory';
@@ -61,7 +62,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
               ? `Dial ${target.phone}. We will answer in seconds.`
               : 'Support phone is not configured yet — please request a callback below.'}
           </Typography>
-          <Button
+          <DuncitButton
             variant="contained"
             color="primary"
             size="large"
@@ -71,7 +72,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             sx={{ borderRadius: 99, fontWeight: 600 }}
           >
             Call Now
-          </Button>
+          </DuncitButton>
         </Stack>
       </Paper>
 
@@ -111,7 +112,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
               Callback requested. We will reach you shortly.
             </Alert>
           )}
-          <Button
+          <DuncitButton
             variant="outlined"
             size="large"
             startIcon={<PhoneCallbackIcon />}
@@ -120,7 +121,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             sx={{ borderRadius: 99, fontWeight: 600 }}
           >
             {loading ? 'Requesting…' : 'Request callback'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Paper>
 

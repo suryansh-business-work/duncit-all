@@ -1,5 +1,6 @@
-import { Box, Button, CircularProgress, Stack } from '@mui/material';
+import { Box, CircularProgress, Stack } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 
 interface StickyFooterProps {
   busy: boolean;
@@ -44,20 +45,20 @@ export default function StickyFooter({
         <Box sx={{ flex: 1, color: 'text.secondary', fontSize: 13 }}>
           {dirty ? 'You have unsaved changes' : 'All changes saved'}
         </Box>
-        <Button onClick={onCancel} disabled={busy}>
+        <DuncitButton onClick={onCancel} disabled={busy}>
           Cancel
-        </Button>
-        <Button onClick={onSaveAndContinue} disabled={busy || !dirty}>
+        </DuncitButton>
+        <DuncitButton onClick={onSaveAndContinue} disabled={busy || !dirty}>
           Save & continue
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           startIcon={busy ? <CircularProgress size={16} /> : <SaveIcon />}
           onClick={onSave}
           disabled={busy}
         >
           {saveLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

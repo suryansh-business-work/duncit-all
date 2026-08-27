@@ -1,5 +1,6 @@
 import type { MouseEvent, ReactNode } from 'react';
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   active?: boolean;
@@ -19,7 +20,7 @@ export function ToolbarButton({
   return (
     <Tooltip title={label} enterDelay={500}>
       <span>
-        <IconButton
+        <DuncitIconButton
           aria-label={label}
           aria-pressed={active}
           color={active ? 'primary' : 'default'}
@@ -35,7 +36,7 @@ export function ToolbarButton({
           }}
         >
           {children}
-        </IconButton>
+        </DuncitIconButton>
       </span>
     </Tooltip>
   );

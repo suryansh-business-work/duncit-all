@@ -5,6 +5,7 @@ import { Text, XStack } from 'tamagui';
 import { AI_MONITOR_GRADIENT } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   onPress: () => void;
@@ -21,7 +22,7 @@ export function AiMonitorChip({ onPress, testID = 'create-pod-ai-chip' }: Readon
       role="button"
       aria-label={t('mweb.createPod.aiMonitors')}
       onPress={onPress}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
       borderRadius={999}
       overflow="hidden"
     >

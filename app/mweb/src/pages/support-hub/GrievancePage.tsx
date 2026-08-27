@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import GavelIcon from '@mui/icons-material/Gavel';
+import { DuncitButton } from '@duncit/buttons';
 import {
   GRIEVANCE_OFFICER_SDL,
   SUBMIT_GRIEVANCE_SDL,
@@ -76,9 +77,9 @@ export default function GrievancePage() {
                 {t('grievance.referenceLabel')}: <strong>{sent.grievance_no}</strong>
               </div>
             </Alert>
-            <Button variant="outlined" onClick={() => setSent(null)}>
+            <DuncitButton variant="outlined" onClick={() => setSent(null)}>
               {t('grievance.raiseAnother')}
-            </Button>
+            </DuncitButton>
           </>
         ) : (
           <>

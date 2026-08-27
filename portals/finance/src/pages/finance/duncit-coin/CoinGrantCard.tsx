@@ -4,7 +4,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   Grid,
@@ -14,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import CoinUserPicker from './CoinUserPicker';
 import { ADJUST_USER_COINS, type CoinUserOption } from './queries';
@@ -177,7 +177,7 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
         </Grid>
 
         <Stack direction="row" sx={{ mt: 2 }}>
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={loading}
             onClick={() => {
@@ -185,7 +185,7 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
             }}
           >
             {loading ? 'Applying…' : 'Apply adjustment'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

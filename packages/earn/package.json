@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/onboarding": "workspace:*",
     "@duncit/slots": "workspace:*"
   },

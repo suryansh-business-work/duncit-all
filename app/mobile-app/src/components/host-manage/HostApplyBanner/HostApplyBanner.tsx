@@ -9,6 +9,7 @@ import { applyButtonState } from '@/graphql/host-request';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Host Studio CTA inviting an approved host to apply to host in another
@@ -72,7 +73,7 @@ export function HostApplyBanner() {
           paddingVertical={10}
           borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="700" color="$onPrimary">
             {label}

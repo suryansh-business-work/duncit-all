@@ -1,5 +1,5 @@
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Button, Link, Stack, Typography } from '@mui/material';
+import { Link, Stack, Typography } from '@mui/material';
 import { BackHeader } from '@duncit/ui';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -7,6 +7,7 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CallIcon from '@mui/icons-material/Call';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitButton } from '@duncit/buttons';
 import type { EditForm } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -49,14 +50,14 @@ export default function UserHeader({
       title={user.full_name || user.email || user.user_id}
       actions={
         <Stack direction="row" spacing={1}>
-        <Button size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick}>
+        <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick}>
           {t('admin.contact.call')}
-        </Button>
-        <Button size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick}>
+        </DuncitButton>
+        <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick}>
           {t('shell.common.email')}
-        </Button>
+        </DuncitButton>
         {status !== 'ACTIVE' && (
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             color="success"
@@ -65,10 +66,10 @@ export default function UserHeader({
             onClick={() => setStatus('ACTIVE')}
           >
             Activate
-          </Button>
+          </DuncitButton>
         )}
         {status !== 'INACTIVE' && (
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             startIcon={<PauseCircleIcon />}
@@ -76,10 +77,10 @@ export default function UserHeader({
             onClick={() => setStatus('INACTIVE')}
           >
             Deactivate
-          </Button>
+          </DuncitButton>
         )}
         {status === 'SUSPENDED' ? (
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             color="success"
@@ -88,9 +89,9 @@ export default function UserHeader({
             onClick={() => setStatus('ACTIVE')}
           >
             Unblock
-          </Button>
+          </DuncitButton>
         ) : (
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             color="error"
@@ -99,9 +100,9 @@ export default function UserHeader({
             onClick={() => setStatus('SUSPENDED')}
           >
             Block
-          </Button>
+          </DuncitButton>
         )}
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           color="error"
@@ -110,7 +111,7 @@ export default function UserHeader({
           onClick={onDeleteClick}
         >
           {t('shell.common.delete')}
-        </Button>
+        </DuncitButton>
         </Stack>
       }
     />

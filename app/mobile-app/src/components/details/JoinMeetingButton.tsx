@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Asks the server for the link. The call is what marks the booking present
@@ -51,7 +52,7 @@ export function JoinMeetingButton({ onJoinMeeting }: Readonly<Props>) {
         borderRadius={999}
         backgroundColor="$primary"
         opacity={pending ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="videocam" size={18} color={onPrimary} />
         <Text fontSize={14} fontWeight="700" color={onPrimary}>

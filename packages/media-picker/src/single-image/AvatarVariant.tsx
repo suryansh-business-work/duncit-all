@@ -1,18 +1,9 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { AvatarShape, SingleImageState } from './types';
 
 interface Props extends SingleImageState {
@@ -96,7 +87,7 @@ export default function AvatarVariant({
             {label}
           </Typography>
           <Stack direction="row" spacing={1}>
-            <Button
+            <DuncitButton
               size="small"
               variant="outlined"
               startIcon={busy ? <CircularProgress size={14} /> : <UploadIcon />}
@@ -105,10 +96,10 @@ export default function AvatarVariant({
               data-testid={uploadTestId}
             >
               {busy ? 'Uploading…' : idleLabel}
-            </Button>
+            </DuncitButton>
             {value && (
               <Tooltip title={t('media.picker.removeImage')}>
-                <IconButton
+                <DuncitIconButton
                   size="small"
                   color="error"
                   onClick={remove}
@@ -116,7 +107,7 @@ export default function AvatarVariant({
                   aria-label={t('media.picker.removeImage')}
                 >
                   <DeleteIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             )}
           </Stack>

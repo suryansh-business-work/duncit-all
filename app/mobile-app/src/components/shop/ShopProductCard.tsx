@@ -5,6 +5,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import type { ShopProduct } from '@/screens/ShopScreen';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   product: ShopProduct;
@@ -39,7 +40,7 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
       borderColor="$borderColor"
       backgroundColor="$background"
       overflow="hidden"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack aspectRatio={1} backgroundColor="$surface">
         {imageUrl ? (
@@ -79,7 +80,7 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
             alignItems="center"
             justifyContent="center"
             backgroundColor="$primary"
-            pressStyle={{ opacity: 0.8 }}
+            pressStyle={PRESS_STYLE.control}
           >
             {adding ? (
               <Spinner size="small" color="$onPrimary" />

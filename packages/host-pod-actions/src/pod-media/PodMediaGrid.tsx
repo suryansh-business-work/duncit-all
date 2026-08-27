@@ -1,5 +1,6 @@
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { PodMediaLabels } from '@duncit/utils';
 import type { PodMediaBoardItem } from './queries';
 
@@ -58,7 +59,7 @@ export default function PodMediaGrid({ items, labels, onRemove, busy = false }: 
             {onRemove && item.can_remove && (
               <Tooltip title={labels.remove}>
                 <span style={{ position: 'absolute', top: 4, right: 4 }}>
-                  <IconButton
+                  <DuncitIconButton
                     size="small"
                     aria-label={labels.remove}
                     disabled={busy}
@@ -66,7 +67,7 @@ export default function PodMediaGrid({ items, labels, onRemove, busy = false }: 
                     sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
                   >
                     <DeleteOutlinedIcon fontSize="small" color="error" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </span>
               </Tooltip>
             )}

@@ -1,19 +1,10 @@
 import { useState } from 'react';
-import {
-  Avatar,
-  Chip,
-  Divider,
-  IconButton,
-  Link,
-  Popover,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Avatar, Chip, Divider, Link, Popover, Stack, Tooltip, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useTranslation } from '../i18n/useTranslation';
 import { ROLE_LABEL, type Coworker } from './queries';
@@ -76,7 +67,7 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
   return (
     <>
       <Tooltip title={t('shell.chat.list.about', { vars: { name: person.name } })}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           edge="end"
           aria-label={t('shell.chat.list.about', { vars: { name: person.name } })}
@@ -87,7 +78,7 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
           }}
         >
           <InfoOutlinedIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Popover
         open={Boolean(anchor)}

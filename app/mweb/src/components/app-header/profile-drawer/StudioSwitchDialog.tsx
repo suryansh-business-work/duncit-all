@@ -1,11 +1,12 @@
 import { JSX, useEffect, useState } from 'react';
-import { Box, Button, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { DuncitButton } from '@duncit/buttons';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '../../../studio-mode';
 
 const ICONS: Record<StudioMode, JSX.Element> = {
@@ -115,7 +116,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
           </Box>
           <CheckCircleIcon />
         </Box>
-        <Button
+        <DuncitButton
           fullWidth
           size="large"
           variant="contained"
@@ -124,7 +125,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
           sx={{ mt: 2, borderRadius: 999, fontWeight: 700, height: 52 }}
         >
           {switchButtonLabel(changed, pending)}
-        </Button>
+        </DuncitButton>
         <Typography
           variant="caption"
           sx={{

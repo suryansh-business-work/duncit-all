@@ -1,8 +1,14 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxOpen, faBuilding, faUserTie, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBoxOpen,
+  faBuilding,
+  faUserTie,
+  type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { useTranslation } from '@duncit/shell';
 
@@ -68,7 +74,7 @@ function ActionTile({ action }: Readonly<{ action: PartnerAction }>) {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>{action.text}</Typography>
-          <Button component={RouterLink} to={action.path} variant="contained">{t('partners.page.start')}</Button>
+          <DuncitButton component={RouterLink} to={action.path} variant="contained">{t('partners.page.start')}</DuncitButton>
         </Stack>
       </CardContent>
     </Card>

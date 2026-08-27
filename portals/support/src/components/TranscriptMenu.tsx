@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   ListItemIcon,
   ListItemText,
   Menu,
@@ -17,6 +15,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ArticleIcon from '@mui/icons-material/Article';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { TranscriptFormat } from '../graphql/supportChat';
 import { useTranslation } from '@duncit/shell';
 
@@ -52,7 +51,7 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
       <Tooltip title={t('support.transcript.export')}>
         {/* Guard the open instead of `disabled` so the Tooltip keeps a non-disabled
             child (MUI can't attach listeners to a disabled element). */}
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('support.transcript.export')}
           onClick={(e) => {
@@ -60,7 +59,7 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
           }}
         >
           <MoreVertIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
         <MenuItem onClick={() => download('TXT')}>
@@ -104,10 +103,10 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEmailOpen(false)}>{t('shell.common.cancel')}</Button>
-          <Button variant="contained" disabled={!email.trim()} onClick={sendEmail}>
+          <DuncitButton onClick={() => setEmailOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton variant="contained" disabled={!email.trim()} onClick={sendEmail}>
             Send
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </>

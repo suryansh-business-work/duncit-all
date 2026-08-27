@@ -10,6 +10,7 @@ import { useBouncer, type ActiveSos } from '@/hooks/useBouncer';
 import { useSupportPods } from '@/hooks/useSupportPods';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Danger SOS button with a busy spinner; disabled until a pod is selected. */
 function SosSendButton({
@@ -32,7 +33,7 @@ function SosSendButton({
       borderRadius={999}
       backgroundColor="$danger"
       opacity={disabled ? 0.6 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {busy ? <Spinner color="$onPrimary" /> : null}
       <Text fontSize={15} fontWeight="700" color="$onPrimary" letterSpacing={1}>

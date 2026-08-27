@@ -38,6 +38,7 @@
     "vitest": "^2.1.9"
   },
   "dependencies": {
-    "@duncit/app-settings": "workspace:*"
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*"
   }
 }

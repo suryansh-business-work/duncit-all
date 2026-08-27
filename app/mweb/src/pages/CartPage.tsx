@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import { useCart, cartLineKey, type CartLine } from '../components/cart/CartContext';
 import { usePricing } from '../hooks/usePricing';
@@ -51,9 +52,9 @@ export default function CartPage() {
         }}>
           {t('mweb.cart.emptyBody')}
         </Typography>
-        <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
+        <DuncitButton variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
           {t('mweb.cart.exploreShop')}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -92,16 +93,16 @@ export default function CartPage() {
       </Stack>
       {/* The whole cart pays in ONE product payment — delivery is quoted per
           warehouse on the checkout, but there is a single Pay. */}
-      <Button
+      <DuncitButton
         variant="contained"
         onClick={() => navigate('/product-checkout')}
         sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {t('mweb.cart.checkout')}
-      </Button>
-      <Button variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 600 }}>
+      </DuncitButton>
+      <DuncitButton variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 600 }}>
         {t('mweb.cart.clear')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import {
@@ -88,9 +89,9 @@ export default function BadgesPage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           {t('admin.badgesPage.title')}
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
           {t('admin.badgesPage.newBadge')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && (

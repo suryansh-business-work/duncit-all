@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, Button, MenuItem, Select, Stack, Typography } from '@mui/material';
+import { Box, MenuItem, Select, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import { ADD_CRM_MANUAL_LOG, ECOMM_LEAD, HOST_LEAD, VENUE_LEAD } from '../../api/crm.gql';
 import { groupLogs } from './logUtils';
@@ -101,14 +102,14 @@ export default function ManualLogsTab({
           <MenuItem value="month">{t('crm.components.last30Days')}</MenuItem>
         </Select>
         {openComposer ? null : (
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setOpenComposer(true)}
             data-testid="manual-log-add"
           >
             New log
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
       {openComposer ? (

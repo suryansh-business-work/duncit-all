@@ -1,6 +1,7 @@
-import { IconButton, Stack, Tooltip } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
 import ScienceIcon from '@mui/icons-material/Science';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { CampaignRow } from './helpers';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -22,7 +23,7 @@ export default function CampaignRowActions({ campaign, onSend, onTest }: Readonl
     <Stack direction="row" spacing={0.5}>
       <Tooltip title={sendLabel}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             color="primary"
             aria-label={sendLabel}
@@ -30,19 +31,19 @@ export default function CampaignRowActions({ campaign, onSend, onTest }: Readonl
             onClick={() => onSend(campaign)}
           >
             <SendIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
       <Tooltip title={t('marketing.whatsappCampaigns.sendOneTestMessage')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={t('marketing.whatsappCampaigns.sendOneTestMessage')}
             disabled={!campaign.sendable}
             onClick={() => onTest(campaign)}
           >
             <ScienceIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
     </Stack>

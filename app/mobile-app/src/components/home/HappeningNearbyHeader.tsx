@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface HappeningNearbyHeaderProps {
   totalPods: number;
@@ -37,7 +38,7 @@ export function HappeningNearbyHeader({
         alignItems="center"
         gap={10}
         flex={1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <LinearGradient
           colors={['#ff4f73', '#ff7a59']}
@@ -74,7 +75,7 @@ export function HappeningNearbyHeader({
         borderColor="$primary"
         paddingHorizontal={12}
         paddingVertical={6}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={12} fontWeight="700" color="$primary">
           {t('mweb.home.seeAll')}

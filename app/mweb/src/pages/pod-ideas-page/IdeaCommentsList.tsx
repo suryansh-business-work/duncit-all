@@ -1,5 +1,6 @@
-import { Avatar, Box, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatRelative } from './queries';
 
 interface Props {
@@ -53,9 +54,9 @@ export default function IdeaCommentsList({
               </Typography>
             </Box>
             {canDelete && (
-              <IconButton size="small" onClick={() => onDelete(c.id)}>
+              <DuncitIconButton size="small" onClick={() => onDelete(c.id)}>
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             )}
           </Stack>
         );

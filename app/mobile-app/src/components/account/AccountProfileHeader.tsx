@@ -8,6 +8,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { AccountMe } from '@/hooks/useAccount';
 import { shareProfile } from '@/utils/share';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface AccountProfileHeaderProps {
   me: AccountMe;
@@ -75,7 +76,7 @@ export function AccountProfileHeader({
           borderRadius={999}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="edit" size={16} color={color} />
           <Text fontSize={14} fontWeight="600" color="$color">
@@ -95,7 +96,7 @@ export function AccountProfileHeader({
           borderRadius={999}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="share" size={16} color={color} />
           <Text fontSize={14} fontWeight="600" color="$color">
@@ -115,7 +116,7 @@ export function AccountProfileHeader({
           borderRadius={999}
           borderWidth={1}
           borderColor="$danger"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="logout" size={16} color={semantic.error} />
           <Text fontSize={14} fontWeight="600" color="$danger">

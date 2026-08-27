@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Button, Dialog, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, Dialog, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -9,6 +9,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
@@ -307,14 +308,14 @@ export default function HomeStatusViewer({
               )}
             </Box>
             {isVideo && (
-              <IconButton
+              <DuncitIconButton
                 onClick={() => setMuted((value) => !value)}
                 aria-label={muted ? t('mweb.status.unmuteVideo') : t('mweb.status.muteVideo')}
                 data-testid="status-mute"
                 sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
                 {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
-              </IconButton>
+              </DuncitIconButton>
             )}
             {onToggleLike && currentId && (
               <Stack
@@ -324,14 +325,14 @@ export default function HomeStatusViewer({
                   alignItems: "center",
                   color: '#fff'
                 }}>
-                <IconButton
+                <DuncitIconButton
                   onClick={toggleLike}
                   aria-label={liked ? 'Unlike story' : 'Like story'}
                   data-testid="status-like"
                   sx={{ color: liked ? '#ff4f73' : '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
                 >
                   {liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
-                </IconButton>
+                </DuncitIconButton>
                 {likeCount > 0 && (
                   <Typography variant="caption" sx={{ fontWeight: 700, minWidth: 12 }}>
                     {likeCount}
@@ -340,24 +341,24 @@ export default function HomeStatusViewer({
               </Stack>
             )}
             {onViewers && currentId && (
-              <IconButton
+              <DuncitIconButton
                 onClick={() => onViewers(currentId)}
                 aria-label={t('mweb.common.seeWhoViewedThisStory')}
                 data-testid="status-viewers"
                 sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
                 <VisibilityIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             )}
             {onDelete && currentId && (
-              <IconButton
+              <DuncitIconButton
                 onClick={(event) => setMenuAnchor(event.currentTarget)}
                 aria-label={t('mweb.home.storyOptions')}
                 data-testid="status-kebab"
                 sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
                 <MoreVertIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             )}
             {onDelete && currentId && (
               <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
@@ -374,9 +375,9 @@ export default function HomeStatusViewer({
                 </MenuItem>
               </Menu>
             )}
-            <IconButton onClick={onClose} aria-label={t('mweb.common.closeStatus')} sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
+            <DuncitIconButton onClick={onClose} aria-label={t('mweb.common.closeStatus')} sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
               <CloseIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         </Stack>
 
@@ -390,14 +391,14 @@ export default function HomeStatusViewer({
           hasOpenButton={!!item.targetUrl}
         />
         {item.targetUrl && (
-          <Button
+          <DuncitButton
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={openTarget}
             sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))', borderRadius: 999, fontWeight: 700 }}
           >
             Open details
-          </Button>
+          </DuncitButton>
         )}
       </Box>
     </Dialog>

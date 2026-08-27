@@ -1,5 +1,12 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -19,12 +26,12 @@ export default function RejoinConfirmDialog({ open, busy, onClose, onConfirm }: 
         <DialogContentText>{t('mweb.podHistory.rejoinBody')}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('mweb.podHistory.cancel')}
-        </Button>
-        <Button onClick={onConfirm} disabled={busy} variant="contained" color="success" startIcon={<ReplayIcon />}>
+        </DuncitButton>
+        <DuncitButton onClick={onConfirm} disabled={busy} variant="contained" color="success" startIcon={<ReplayIcon />}>
           {busy ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinFree')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

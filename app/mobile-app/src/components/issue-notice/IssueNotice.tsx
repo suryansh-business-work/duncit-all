@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { ISSUE_REPORT_CATEGORY, buildIssueReportMessage, type ParsedIssue } from '@duncit/errors';
 import { submitAppFeedback } from '@/hooks/useFeedback';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * A server-operation failure, said properly, with a way to tell somebody.
@@ -58,7 +59,7 @@ export function IssueNotice({ issue, page }: Readonly<{ issue: ParsedIssue; page
           onPress={() => {
             if (!sending) report().catch(() => undefined);
           }}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <Text fontSize={13} fontWeight="700" color="$primary">
             {reportLabel}

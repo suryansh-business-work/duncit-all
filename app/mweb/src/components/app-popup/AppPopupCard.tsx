@@ -1,5 +1,6 @@
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 
 export interface AppPopupCardProps {
   imageUrl: string;
@@ -63,7 +64,7 @@ export default function AppPopupCard({
           }}
         />
         {showClose && (
-          <IconButton
+          <DuncitIconButton
             aria-label={closeLabel}
             onClick={onClose}
             size="small"
@@ -79,16 +80,16 @@ export default function AppPopupCard({
             }}
           >
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         )}
       </Box>
 
       {(showCta || showHint) && (
         <Stack spacing={1} sx={{ p: 1.75 }}>
           {showCta && (
-            <Button variant="contained" fullWidth onClick={onCta}>
+            <DuncitButton variant="contained" fullWidth onClick={onCta}>
               {ctaLabel}
-            </Button>
+            </DuncitButton>
           )}
           {showHint && (
             <Typography

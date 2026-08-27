@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   Typography,
 } from '@mui/material';
@@ -16,6 +15,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import EventIcon from '@mui/icons-material/Event';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { DuncitIconButton } from '@duncit/buttons';
 import { PUBLIC_BRAND } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -106,9 +106,9 @@ export default function BrandDetailDialog({
     <Dialog open={Boolean(brandId)} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
         Brand
-        <IconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
+        <DuncitIconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent>
         {loading && !brand ? (

@@ -1,18 +1,10 @@
 import { useState } from 'react';
 import { useLazyQuery } from '@apollo/client';
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, CircularProgress, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import SearchResultRow from './SearchResultRow';
 import { SEARCH_STAFF_MESSAGES, type StaffMessage } from './queries';
@@ -102,14 +94,14 @@ export default function ChatSearchPanel({
           onKeyDown={(event) => event.key === 'Enter' && search()}
         />
         <Tooltip title={t('shell.chat.header.search')}>
-          <IconButton size="small" onClick={search} aria-label={t('shell.chat.search.run')}>
+          <DuncitIconButton size="small" onClick={search} aria-label={t('shell.chat.search.run')}>
             <SearchIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.chat.search.close')}>
-          <IconButton size="small" onClick={onClose} aria-label={t('shell.chat.search.close')}>
+          <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.chat.search.close')}>
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
 

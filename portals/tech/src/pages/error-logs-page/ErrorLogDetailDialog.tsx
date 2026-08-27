@@ -1,4 +1,5 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DetailBlock as Mono, DetailField as Field } from '../../components/DetailField';
 import { userLabel } from '../../components/telemetry-identity';
 import { parseIssueData, type ErrorLogRow } from './queries';
@@ -41,7 +42,7 @@ export default function ErrorLogDetailDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

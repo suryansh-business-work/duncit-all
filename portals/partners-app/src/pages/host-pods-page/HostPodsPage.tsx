@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { HostPodActionsMenu, useHostPodActions } from '@duncit/host-pod-actions';
 import { buildPodInput, type PodFormValues } from '@duncit/pod-form';
@@ -97,7 +98,7 @@ function HostPodsContent() {
               Manage the pods you host — check guests in, complete them and settle your share.
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<AddIcon />}
             disabled={!approvedHost}
@@ -105,7 +106,7 @@ function HostPodsContent() {
             sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
           >
             {t('partners.common.newPod')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Box>
 

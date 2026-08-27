@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -10,6 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { DuncitButton } from '@duncit/buttons';
 import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import { CLUB_CLAIM_AUTO_POD, MY_ADMIN_CLUBS_FOR_AUTO_POD } from '../queries';
 
@@ -135,10 +135,10 @@ export function ClubClaimDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{labels.dismiss}</Button>
-        <Button variant="contained" onClick={handleClaim} disabled={!clubId || claimState.loading}>
+        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton variant="contained" onClick={handleClaim} disabled={!clubId || claimState.loading}>
           {labels.claimForClubCta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

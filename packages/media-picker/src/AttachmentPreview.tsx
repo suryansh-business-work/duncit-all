@@ -1,8 +1,9 @@
-import { Avatar, Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from './i18n/useTranslation';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
+import { DuncitIconButton } from '@duncit/buttons';
 import { describeAttachment, typeLabel } from './attachment';
 
 export type AttachmentDocVariant = 'chip' | 'card';
@@ -28,7 +29,7 @@ export default function AttachmentPreview({
   const badgeSize = size >= 72 ? 24 : 22;
   const badgeFont = size >= 72 ? 14 : 13;
   const removeButton = (
-    <IconButton
+    <DuncitIconButton
       size="small"
       aria-label={t('media.picker.removeAttachment')}
       onClick={onRemove}
@@ -44,7 +45,7 @@ export default function AttachmentPreview({
       }}
     >
       <CloseIcon sx={{ fontSize: badgeFont }} />
-    </IconButton>
+    </DuncitIconButton>
   );
 
   if (info.kind === 'image') {

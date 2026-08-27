@@ -12,6 +12,7 @@ import { ClubFaqsSection } from './ClubFaqsSection';
 import { ClubHostsRail } from './ClubHostsRail';
 import { ClubMomentsRail } from './ClubMomentsRail';
 import { ClubPodsSchedule } from './ClubPodsSchedule';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type SegmentKey =
   'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS' | 'ADMINS';
@@ -84,6 +85,7 @@ export function ClubSegments(props: Readonly<Props>) {
           const isActive = active === key;
           return (
             <XStack
+              pressStyle={PRESS_STYLE.control}
               key={key}
               testID={`club-tab-${key}`}
               role="button"

@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
-import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import {
   EXPENSES_TABLE,
@@ -140,9 +141,9 @@ export default function ExpenseManagementPage() {
           currency={CURRENCY}
           onRowClick={openRow}
           toolbarActions={
-            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
               New expense
-            </Button>
+            </DuncitButton>
           }
         />
       </Stack>

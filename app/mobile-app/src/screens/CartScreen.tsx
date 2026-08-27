@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cartLineKey, groupLinesByPod, selectCartTotal, useCartStore } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The cart — every product added from any Pod Shop, grouped by pod for
  * display, paid together as ONE product payment (delivery is still quoted per
@@ -51,7 +52,7 @@ export function CartScreen() {
           justifyContent="center"
           borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {exploreShopLabel}
@@ -91,7 +92,7 @@ export function CartScreen() {
           justifyContent="center"
           borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {checkoutLabel}
@@ -104,7 +105,7 @@ export function CartScreen() {
           onPress={clearAll}
           alignSelf="center"
           padding={8}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={13} fontWeight="600" color="$danger">
             {clearLabel}

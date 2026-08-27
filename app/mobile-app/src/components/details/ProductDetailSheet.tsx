@@ -24,6 +24,7 @@ import { formatRupees, productSpecs, type ProductSpec } from '@/utils/product-sp
 import { toErrorMessage } from '@/utils/errors';
 import { selectionKey } from '@/utils/product-selection';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Product = NonNullable<
   ResultOf<typeof PublicInventoryProductDocument>['publicInventoryProduct']
@@ -104,6 +105,7 @@ function VariantChips({
           const selected = v.id === selectedVariantId;
           return (
             <YStack
+              pressStyle={PRESS_STYLE.control}
               key={v.id}
               testID={`variant-${v.id}`}
               role="button"
@@ -137,6 +139,7 @@ function ImageStrip({
       <XStack gap={10}>
         {images.map((url, imageIndex) => (
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             key={url}
             testID={`product-detail-image-${imageIndex}`}
             role="button"
@@ -422,6 +425,7 @@ export function ProductDetailSheet({
                     Product details
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID="product-detail-close"
                     role="button"
                     aria-label={t('mweb.common.close')}

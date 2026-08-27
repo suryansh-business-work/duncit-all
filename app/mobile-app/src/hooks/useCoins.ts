@@ -16,13 +16,14 @@ export function useCoinGold(): string {
  */
 export function useCoinBalance() {
   const data = useCoinBalanceStore((s) => s.data);
+  const isLoading = useCoinBalanceStore((s) => s.isLoading);
   const refetch = useCoinBalanceStore((s) => s.refetch);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  return { balance: data?.myCoinBalance ?? null };
+  return { balance: data?.myCoinBalance ?? null, isLoading };
 }
 
 /** Balance + the full coin ledger for the Duncit Coin screen. */

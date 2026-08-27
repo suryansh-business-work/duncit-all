@@ -4,7 +4,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import { Link as RouterLink } from 'react-router-dom';
-import { Button, Chip, IconButton, Link, Tooltip, Typography } from '@mui/material';
+import { Chip, Link, Tooltip, Typography } from '@mui/material';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
@@ -98,7 +99,7 @@ const renderActive = (v: VenueRow) => (
 
 const renderPods = (v: VenueRow, t: Translate) => (
   <Tooltip title={t('onboarding.venues.viewPodsHostedAtThisVenue')}>
-    <Button
+    <DuncitButton
       size="small"
       variant="outlined"
       color="inherit"
@@ -107,7 +108,7 @@ const renderPods = (v: VenueRow, t: Translate) => (
       to={`/venues/${v.id}?selectedtab=pods`}
     >
       {v.pod_count ?? 0}
-    </Button>
+    </DuncitButton>
   </Tooltip>
 );
 
@@ -129,19 +130,19 @@ export default function VenuesTable({
     const renderActions = (v: VenueRow) => (
       <>
         <Tooltip title={t('onboarding.common.venueDetails')}>
-          <IconButton size="small" component={RouterLink} to={`/venues/${v.id}`}>
+          <DuncitIconButton size="small" component={RouterLink} to={`/venues/${v.id}`}>
             <VisibilityIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(v)}>
+          <DuncitIconButton size="small" onClick={() => onEdit(v)}>
             <EditIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <IconButton size="small" onClick={() => onReview(v)}>
+          <DuncitIconButton size="small" onClick={() => onReview(v)}>
             <RateReviewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <LifecycleActions
           active={v.is_active !== false}

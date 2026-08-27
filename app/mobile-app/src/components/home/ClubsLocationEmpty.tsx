@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { LocationDialog } from '@/components/LocationDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Empty state shown on the Clubs tab when the selected locality has no active
  * clubs. Offers a "Reset Location" action that re-opens the location picker so
@@ -37,7 +38,7 @@ export function ClubsLocationEmpty() {
         height={44}
         borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="my-location" size={16} color={onPrimary} />
         <Text fontSize={14} fontWeight="700" color="$onPrimary">

@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   CircularProgress,
-  IconButton,
   Popover,
   Stack,
   TextField,
@@ -12,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 const AI_MJML = gql`
@@ -57,14 +56,14 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
     <>
       {iconOnly ? (
         <Tooltip title={t('marketing.mjmlAiButton.createUpdateWithAi')}>
-          <IconButton size="small" color="secondary" onClick={(event) => setAnchorEl(event.currentTarget)}>
+          <DuncitIconButton size="small" color="secondary" onClick={(event) => setAnchorEl(event.currentTarget)}>
             <AutoAwesomeIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       ) : (
-        <Button size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(event) => setAnchorEl(event.currentTarget)}>
+        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(event) => setAnchorEl(event.currentTarget)}>
           {label || 'Create/Update with AI'}
-        </Button>
+        </DuncitButton>
       )}
       <Popover
         open={open}
@@ -93,10 +92,10 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</Button>
-            <Button size="small" variant="contained" onClick={generate} disabled={loading || !prompt.trim()} startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}>
+            <DuncitButton size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+            <DuncitButton size="small" variant="contained" onClick={generate} disabled={loading || !prompt.trim()} startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}>
               {loading ? 'Working...' : 'Apply'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </Popover>

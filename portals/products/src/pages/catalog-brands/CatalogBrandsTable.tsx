@@ -1,7 +1,8 @@
 import { useMemo, type MouseEvent } from 'react';
-import { Avatar, Button, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Chip, Stack, Typography } from '@mui/material';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -79,17 +80,17 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       <Stack direction="row" spacing={1} component="span" sx={{
         justifyContent: "flex-end"
       }}>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           startIcon={<Inventory2Icon />}
           onClick={(event) => openProducts(event, b)}
         >
           Products
-        </Button>
-        <Button size="small" startIcon={<TuneIcon />} onClick={(event) => openManage(event, b)}>
+        </DuncitButton>
+        <DuncitButton size="small" startIcon={<TuneIcon />} onClick={(event) => openManage(event, b)}>
           Manage
-        </Button>
+        </DuncitButton>
       </Stack>
     );
     return [

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { SUPPORT_CREATE_USER } from '../../graphql/supportChat';
 import { useTranslation } from '@duncit/shell';
 
@@ -75,14 +75,14 @@ export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>{t('shell.common.close')}</Button>
-        <Button
+        <DuncitButton onClick={close}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={submit}
           disabled={loading || !form.first_name.trim() || !form.email.trim() || form.password.length < 8}
         >
           Create account
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

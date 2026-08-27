@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { valueFor, type LocaleRow, type TranslationRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -117,14 +117,14 @@ export default function TranslationDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={submit}
           disabled={saving || !trimmedKey || !keyLooksNamespaced || locales.length === 0}
         >
           {saving ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

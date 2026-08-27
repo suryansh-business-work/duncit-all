@@ -1,8 +1,9 @@
 import { useRef } from 'react';
-import { IconButton, Stack, TextField, Tooltip } from '@mui/material';
+import { Stack, TextField, Tooltip } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import MicIcon from '@mui/icons-material/Mic';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import EmojiPicker from './EmojiPicker';
 import { useTranslation } from '../i18n/useTranslation';
 import ComposerMenu from './ComposerMenu';
@@ -52,14 +53,14 @@ export default function ComposerRow({
     }}>
       <Tooltip title={t('shell.chat.composer.attach')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
             aria-label={t('shell.chat.composer.attach')}
           >
             <AttachFileIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
       {/* Any file, not only images — a chat where you cannot send a PDF is a
@@ -105,14 +106,14 @@ export default function ComposerRow({
           every messenger makes, because the two are never both wanted. */}
       <Tooltip title={hasText ? t('shell.chat.composer.send') : t('shell.chat.composer.recordVoice')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             color="primary"
             onClick={hasText ? onSend : onRecord}
             disabled={sending || (!hasText && uploading)}
             aria-label={hasText ? t('shell.chat.composer.sendMessage') : t('shell.chat.composer.recordVoice')}
           >
             {hasText ? <SendIcon /> : <MicIcon />}
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
     </Stack>

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import CreateKeyDialog from './CreateKeyDialog';
@@ -62,14 +63,14 @@ export default function ApiKeysPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setDialogOpen(true)}
           >
             {t('developers.apiKeys.create')}
-          </Button>
+          </DuncitButton>
         }
         onRevoke={onRevoke}
       />

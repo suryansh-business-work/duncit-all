@@ -1,5 +1,6 @@
-import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { AisensyTemplate } from '../queries';
 import { templateRowId } from './helpers';
@@ -25,9 +26,9 @@ export default function TemplatesWithoutCampaign({ templates, onCreate }: Readon
     <Alert
       severity="warning"
       action={
-        <Button size="small" startIcon={<AddIcon />} onClick={onCreate}>
+        <DuncitButton size="small" startIcon={<AddIcon />} onClick={onCreate}>
           {t('marketingWhatsapp.createCampaign')}
-        </Button>
+        </DuncitButton>
       }
     >
       <AlertTitle>{t('marketingWhatsapp.needsCampaignTitle')}</AlertTitle>

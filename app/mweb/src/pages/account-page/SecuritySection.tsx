@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
 import LockResetIcon from '@mui/icons-material/LockReset';
+import { DuncitButton } from '@duncit/buttons';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import DeletionRequestPanel from './DeletionRequestPanel';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -41,7 +34,7 @@ export default function SecuritySection() {
                 Change your password with an email verification code.
               </Typography>
             </Stack>
-            <Button
+            <DuncitButton
               variant="outlined"
               startIcon={<LockResetIcon />}
               onClick={() => setChangeOpen(true)}
@@ -49,7 +42,7 @@ export default function SecuritySection() {
               sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '16px' }}
             >
               Change password
-            </Button>
+            </DuncitButton>
           </Stack>
 
           <DeletionRequestPanel onToast={setToast} />

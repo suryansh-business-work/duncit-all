@@ -4,7 +4,6 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   LinearProgress,
   ImageList,
@@ -16,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import { IMPORT_REMOTE_MEDIA, PEXELS_VIDEO_SEARCH } from './queries';
 import { pickBestVideoFile } from './utils';
 import PexelsVideoCard from './PexelsVideoCard';
@@ -169,13 +169,13 @@ export default function PexelsVideosTab({
           <ToggleButton value="portrait">{t('media.pexels.portrait')}</ToggleButton>
           <ToggleButton value="square">{t('media.pexels.square')}</ToggleButton>
         </ToggleButtonGroup>
-        <Button
+        <DuncitButton
           variant="contained" onClick={() => runPexelsVideos(vquery, 1, false)}
           disabled={vsearching}
           startIcon={vsearching ? <CircularProgress size={14} color="inherit" /> : null}
         >
           Search
-        </Button>
+        </DuncitButton>
       </Stack>
       {vsearching && videos.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 6 }}>
@@ -186,13 +186,13 @@ export default function PexelsVideosTab({
       )}
       {vhasMore && (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Button
+          <DuncitButton
             onClick={() => runPexelsVideos(vquery, vpage + 1, true)}
             disabled={vsearching}
             startIcon={vsearching ? <CircularProgress size={14} /> : null}
           >
             Load more
-          </Button>
+          </DuncitButton>
         </Box>
       )}
       <Typography

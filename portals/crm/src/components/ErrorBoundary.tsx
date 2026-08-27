@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Alert, AlertTitle, Box, Button, Stack } from '@mui/material';
+import { Alert, AlertTitle, Box, Stack } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
 
@@ -51,12 +52,12 @@ function ErrorPanel({ error, onRetry }: Readonly<{ error: Error; onRetry: () => 
         severity="error"
         action={
           <Stack direction="row" spacing={1}>
-            <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={onRetry}>
+            <DuncitButton color="inherit" size="small" startIcon={<RefreshIcon />} onClick={onRetry}>
               {t('crm.components.tryAgain')}
-            </Button>
-            <Button color="inherit" size="small" onClick={() => globalThis.location.reload()}>
+            </DuncitButton>
+            <DuncitButton color="inherit" size="small" onClick={() => globalThis.location.reload()}>
               {t('crm.components.reload')}
-            </Button>
+            </DuncitButton>
           </Stack>
         }
       >

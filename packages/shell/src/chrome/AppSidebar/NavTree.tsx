@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, InputAdornment, List, TextField, Typography } from '@mui/material';
+import { Box, InputAdornment, List, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { DuncitButton } from '@duncit/buttons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AppNavItem } from '../../types';
@@ -50,7 +51,7 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
             }
           }}
         />
-        <Button
+        <DuncitButton
           size="small"
           fullWidth
           onClick={toggleAll}
@@ -58,7 +59,7 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
           sx={{ mt: 0.75, justifyContent: 'flex-start', color: 'text.secondary', fontWeight: 700 }}
         >
           {toggleAllLabel}
-        </Button>
+        </DuncitButton>
       </Box>
       <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto' }}>
         {nav.length === 0 ? (

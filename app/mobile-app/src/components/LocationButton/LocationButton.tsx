@@ -9,6 +9,7 @@ import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { countryFlagUrl } from '@/utils/location-tree';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Header chip showing the selected country flag + city; opens the picker. */
 export function LocationButton() {
@@ -34,7 +35,7 @@ export function LocationButton() {
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         {flag ? (
           <AppImage source={{ uri: flag }} style={{ width: 18, height: 13, borderRadius: 2 }} />

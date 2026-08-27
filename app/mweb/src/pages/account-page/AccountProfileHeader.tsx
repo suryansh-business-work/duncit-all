@@ -1,7 +1,8 @@
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ShareIcon from '@mui/icons-material/Share';
+import { DuncitButton } from '@duncit/buttons';
 import ProfileAvatar from '../../components/profile-avatar';
 import { useRoleLabels } from '../../hooks/useRoleLabels';
 import { shareProfile } from '../../utils/share';
@@ -60,10 +61,10 @@ export default function AccountProfileHeader({
         </Stack>
       </Box>
       <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1}>
-        <Button variant="outlined" startIcon={<EditIcon />} onClick={onEdit}>
+        <DuncitButton variant="outlined" startIcon={<EditIcon />} onClick={onEdit}>
           Edit
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="outlined"
           startIcon={<ShareIcon />}
           onClick={() =>
@@ -75,10 +76,10 @@ export default function AccountProfileHeader({
           }
         >
           Share
-        </Button>
-        <Button variant="outlined" color="error" startIcon={<LogoutIcon />} onClick={onLogout}>
+        </DuncitButton>
+        <DuncitButton variant="outlined" color="error" startIcon={<LogoutIcon />} onClick={onLogout}>
           Logout
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

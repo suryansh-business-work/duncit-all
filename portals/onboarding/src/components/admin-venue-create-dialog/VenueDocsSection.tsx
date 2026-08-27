@@ -1,14 +1,7 @@
 import { useRef } from 'react';
-import {
-  Box,
-  Button,
-  IconButton,
-  FormHelperText,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Box, FormHelperText, MenuItem, Stack, TextField } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerField from '../MediaPickerField';
 import { DOC_TYPES, type DocEntry } from './queries';
 import { getVenueError, type VenueValidationErrors } from './venue.form';
@@ -77,15 +70,15 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: R
                 folder="/venues/docs"
               />
             </Box>
-            <IconButton onClick={() => setDocs(docs.filter((_, j) => j !== i))}>
+            <DuncitIconButton onClick={() => setDocs(docs.filter((_, j) => j !== i))}>
               <DeleteIcon />
-            </IconButton>
+            </DuncitIconButton>
           </Box>
           );
         })}
-        <Button onClick={() => setDocs([...docs, { type: 'GST Certificate', url: '' }])}>
+        <DuncitButton onClick={() => setDocs([...docs, { type: 'GST Certificate', url: '' }])}>
           Add document
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box sx={{ display: 'grid', columnGap: 1.5, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
         <TextField

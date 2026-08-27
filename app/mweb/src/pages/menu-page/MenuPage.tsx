@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, CircularProgress } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
 import MenuPanel from '../../components/app-header/profile-drawer/MenuPanel';
 import { HEADER_DATA, PUBLIC_POLICIES } from '../../components/app-header/queries';
@@ -19,7 +18,15 @@ export default function MenuPage() {
   // Both are already in the cache from the header — cache-and-network keeps the
   // menu fresh after a profile edit without blocking the first paint.
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
-  const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
+  const { data: policiesData, loading: policiesLoading } = useQuery(PUBLIC_POLICIES, {
+    fetchPolicy: 'cache-first',
+  });
+
+  // Nothing cached at all — the panel skeletons its body. On a warm cache the
+  // answer is already there, so the read still happening shows as the thin bar
+  // instead of flashing a skeleton over content that is already correct.
+  const pending = loading && !data;
+  const refreshing = !pending && (loading || policiesLoading);
 
   const close = () => {
     // A deep-linked /menu has nothing to go back to — land on Home instead of
@@ -34,18 +41,14 @@ export default function MenuPage() {
 
   // On a refresh or a deep link the cache is empty, and rendering `me` as
   // undefined would paint a stranger's menu for a beat — an anonymous "User"
-  // avatar at 0% profile completion.
-  if (loading && !data) {
-    return (
-      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60dvh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
+  // avatar at 0% profile completion. The panel skeletons its body instead of
+  // the page swapping to a bare spinner, so the ✕ is there to leave with.
   return (
     <MenuPanel
       onClose={close}
+      loading={pending}
+      refreshing={refreshing}
+      policiesLoading={policiesLoading}
       me={data?.me}
       publicPolicies={policiesData?.publicPolicies ?? []}
       policiesOpen={policiesOpen}

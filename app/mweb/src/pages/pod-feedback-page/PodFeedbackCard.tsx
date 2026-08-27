@@ -1,4 +1,5 @@
-import { Alert, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   canSubmitPodFeedback,
   type PodFeedbackAspect,
@@ -73,16 +74,16 @@ export default function PodFeedbackCard({
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button onClick={onLeave}>
+            <DuncitButton onClick={onLeave}>
               {saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.close')}
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               variant="contained"
               disabled={!canSubmitPodFeedback(scores) || saving}
               onClick={onSubmit}
             >
               {saving ? busyLabel : submitLabel}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </CardContent>

@@ -3,9 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Chip,
-  IconButton,
   Paper,
   Snackbar,
   Stack,
@@ -21,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import TranslateIcon from '@mui/icons-material/Translate';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import LocaleDialog, { type LocaleFormValues } from './LocaleDialog';
 import { DELETE_LOCALE, LOCALES, UPSERT_LOCALE, type LocaleRow } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -90,7 +89,7 @@ export default function LocalesPage() {
             </Typography>
           </Box>
         </Stack>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
@@ -99,7 +98,7 @@ export default function LocalesPage() {
           }}
         >
           Add locale
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}
@@ -138,7 +137,7 @@ export default function LocalesPage() {
                     </Stack>
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton
+                    <DuncitIconButton
                       size="small"
                       onClick={() => {
                         setEditing(row);
@@ -146,19 +145,19 @@ export default function LocalesPage() {
                       }}
                     >
                       <EditIcon fontSize="small" />
-                    </IconButton>
+                    </DuncitIconButton>
                     <Tooltip
                       title={row.is_default ? 'The default locale cannot be removed' : 'Remove'}
                     >
                       <span>
-                        <IconButton
+                        <DuncitIconButton
                           size="small"
                           color="error"
                           disabled={row.is_default}
                           onClick={() => del(row)}
                         >
                           <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
+                        </DuncitIconButton>
                       </span>
                     </Tooltip>
                   </TableCell>

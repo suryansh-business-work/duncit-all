@@ -1,14 +1,8 @@
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Autocomplete,
-  Button,
-  Grid,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Autocomplete, Grid, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { PET_SPECIES_OPTIONS, breedsForSpecies } from '../../../utils/petBreeds';
 import PetPhotoField from './PetPhotoField';
 import { PetFormValues, PetProfile, UPDATE_PET, petSchema } from './petQueries';
@@ -207,12 +201,12 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
           justifyContent: "flex-end",
           mt: 2
         }}>
-        <Button onClick={onCancel} disabled={loading}>
+        <DuncitButton onClick={onCancel} disabled={loading}>
           Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={loading || formState.isSubmitting}>
+        </DuncitButton>
+        <DuncitButton type="submit" variant="contained" disabled={loading || formState.isSubmitting}>
           {loading ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </form>
   );

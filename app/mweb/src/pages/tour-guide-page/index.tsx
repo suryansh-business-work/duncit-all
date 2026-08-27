@@ -1,16 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 import { gql, useQuery } from '@apollo/client';
 import { isTourCompleted, toursForRoles } from '@duncit/tours';
 import { useTours } from '../../tours/useTours';
@@ -48,9 +41,9 @@ export default function TourGuidePage() {
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
       <Box>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
           Back
-        </Button>
+        </DuncitButton>
       </Box>
       <Stack spacing={0.5}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -93,7 +86,7 @@ export default function TourGuidePage() {
                       {tour.caption}
                     </Typography>
                   </Stack>
-                  <Button
+                  <DuncitButton
                     variant="contained"
                     size="small"
                     data-testid={`tour-start-${tour.id}`}
@@ -105,7 +98,7 @@ export default function TourGuidePage() {
                     sx={{ flexShrink: 0 }}
                   >
                     {done ? 'Restart' : 'Start'}
-                  </Button>
+                  </DuncitButton>
                 </Stack>
               </CardContent>
             </Card>

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { notifyError, useConfirm } from '@duncit/dialogs';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import {
   CREATE_FLAG,
@@ -154,9 +155,9 @@ export default function FeatureFlagsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             New Flag
-          </Button>
+          </DuncitButton>
         }
         onToggle={toggle}
         onEdit={openEdit}

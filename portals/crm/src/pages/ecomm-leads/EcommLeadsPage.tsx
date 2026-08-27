@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Snackbar, Stack } from '@mui/material';
+import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_ECOMM_LEAD, ECOMM_LEADS_TABLE } from '../../api/crm.gql';
 import type { EcommLead } from '../../api/crm.types';
@@ -74,9 +75,9 @@ export default function EcommLeadsPage() {
         priorityOptions={priorityOptions}
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/ecomm-leads/new')}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/ecomm-leads/new')}>
             New Ecomm Lead
-          </Button>
+          </DuncitButton>
         }
         onView={(lead) => navigate(`/ecomm-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/ecomm-leads/${lead.id}`)}

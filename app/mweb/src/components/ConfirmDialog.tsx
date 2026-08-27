@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import {
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -8,6 +7,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -58,10 +58,10 @@ export default function ConfirmDialog({
         </DialogContent>
       )}
       <DialogActions>
-        <Button onClick={onClose} disabled={busy} sx={{ minHeight: 40 }}>
+        <DuncitButton onClick={onClose} disabled={busy} sx={{ minHeight: 40 }}>
           {cancelText}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           onClick={onConfirm}
           variant="contained"
           color={destructive ? 'error' : 'primary'}
@@ -71,7 +71,7 @@ export default function ConfirmDialog({
           autoFocus
         >
           {confirmText}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

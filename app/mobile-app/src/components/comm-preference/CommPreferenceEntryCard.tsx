@@ -4,6 +4,7 @@ import { buildCommPreferenceLabels } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   onPress: () => void;
@@ -37,7 +38,7 @@ export function CommPreferenceEntryCard({ onPress }: Readonly<Props>) {
       borderColor="$borderColor"
       alignItems="center"
       gap={12}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="forum" size={20} color={color} />
       <YStack flex={1}>

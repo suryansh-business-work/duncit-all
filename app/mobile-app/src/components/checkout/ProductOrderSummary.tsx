@@ -13,6 +13,7 @@ import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
 import type { CoinCheckoutSummary } from '@duncit/utils';
 import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type QuoteLine = NonNullable<ProductShippingQuote>['lines'][number];
 
@@ -62,7 +63,7 @@ function LineThumb({
       role="button"
       aria-label={t('mweb.checkout.viewProduct', { vars: { name: line.product_name } })}
       onPress={() => onInfo(line.product_id)}
-      pressStyle={{ opacity: 0.6 }}
+      pressStyle={PRESS_STYLE.inline}
       width={40}
       height={40}
       borderRadius={8}

@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ChipOption {
   value: string;
@@ -66,7 +67,7 @@ export function ChipSelectField({
                 borderWidth={1}
                 borderColor={selected ? '$primary' : '$borderColor'}
                 backgroundColor={selected ? '$primary' : 'transparent'}
-                pressStyle={{ opacity: 0.85 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {option.label}

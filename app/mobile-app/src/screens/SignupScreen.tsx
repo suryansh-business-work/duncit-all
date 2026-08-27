@@ -17,6 +17,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { toErrorMessage } from '@/utils/errors';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export function SignupScreen() {
   const { t } = useTranslation();
@@ -109,6 +110,7 @@ export function SignupScreen() {
           {t('mweb.signup.haveAccount')}
         </Text>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="go-login"
           fontSize={14}
           fontWeight="600"

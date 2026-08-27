@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Alert, AlertTitle, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { CHECKOUT_REQUIREMENT_KEYS, type CheckoutRequirement } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -28,9 +29,9 @@ export default function CheckoutRequirementsCard({
         ))}
       </Box>
       <Stack direction="row">
-        <Button size="small" variant="outlined" color="inherit" onClick={() => navigate('/profile')}>
+        <DuncitButton size="small" variant="outlined" color="inherit" onClick={() => navigate('/profile')}>
           {t('mweb.checkout.needAction')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Alert>
   );

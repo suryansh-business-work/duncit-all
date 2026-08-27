@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Button,
   CircularProgress,
   Divider,
   Link,
@@ -12,6 +11,7 @@ import {
 import MailOutlineIcon from '@mui/icons-material/MailOutlined';
 import { useTranslation } from '../i18n/useTranslation';
 import LoginIcon from '@mui/icons-material/Login';
+import { DuncitButton } from '@duncit/buttons';
 
 const OTP_LENGTH = 6;
 const pillSx = {
@@ -61,7 +61,7 @@ export default function OtpLoginPanel({
             or
           </Typography>
         </Divider>
-        <Button
+        <DuncitButton
           type="button"
           onClick={() => setOpen(true)}
           variant="outlined"
@@ -70,7 +70,7 @@ export default function OtpLoginPanel({
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           Login with OTP
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -132,7 +132,7 @@ export default function OtpLoginPanel({
               }
             }}
           />
-          <Button
+          <DuncitButton
             type="button"
             onClick={submitCode}
             variant="contained"
@@ -142,7 +142,7 @@ export default function OtpLoginPanel({
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {busy ? 'Signing in…' : 'Sign in'}
-          </Button>
+          </DuncitButton>
           <Link
             component="button"
             type="button"
@@ -161,7 +161,7 @@ export default function OtpLoginPanel({
           </Link>
         </>
       ) : (
-        <Button
+        <DuncitButton
           type="button"
           onClick={requestCode}
           variant="contained"
@@ -171,7 +171,7 @@ export default function OtpLoginPanel({
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? 'Sending…' : 'Email me a code'}
-        </Button>
+        </DuncitButton>
       )}
 
       <Link

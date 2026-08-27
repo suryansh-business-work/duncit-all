@@ -8,6 +8,7 @@ import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerShee
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfilePost } from '@/hooks/useProfile';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Header "Add post" pill; shows an uploading state while a post is in flight. */
 function AddPostButton({
@@ -30,7 +31,7 @@ function AddPostButton({
       borderRadius={999}
       backgroundColor="$primary"
       opacity={uploading ? 0.6 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color={onPrimary} />
       <Text fontSize={13} fontWeight="700" color={onPrimary}>
@@ -90,7 +91,7 @@ export function ProfilePostsGrid({
               borderRadius={999}
               borderWidth={1}
               borderColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <MaterialIcons name="add-a-photo" size={16} color={primary} />
               <Text fontSize={13} fontWeight="700" color="$primary">
@@ -115,7 +116,7 @@ export function ProfilePostsGrid({
               backgroundColor="$muted"
               alignItems="center"
               justifyContent="center"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               {post.image_url ? (
                 <AppImage

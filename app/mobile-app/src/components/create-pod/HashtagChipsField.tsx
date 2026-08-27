@@ -6,6 +6,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Splits the stored hashtag text into clean tags (no #, no blanks). */
 export const parseHashtags = (text: string): string[] =>
@@ -78,7 +79,7 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
                       role="button"
                       aria-label={t('mweb.createPod.removeTag', { vars: { tag } })}
                       onPress={() => removeTag(tag)}
-                      pressStyle={{ opacity: 0.7 }}
+                      pressStyle={PRESS_STYLE.row}
                     >
                       <MaterialIcons name="close" size={13} color={onPrimary} />
                     </XStack>

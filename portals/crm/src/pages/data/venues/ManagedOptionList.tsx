@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   CircularProgress,
@@ -18,6 +17,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CRM_MANAGED_OPTIONS,
   CREATE_CRM_MANAGED_OPTION,
@@ -127,9 +127,9 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
               input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }
             }}
           />
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={startCreate} disabled={busy || !!draft}>
+          <DuncitButton variant="outlined" startIcon={<AddIcon />} onClick={startCreate} disabled={busy || !!draft}>
             {addLabel}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         {error && <Alert severity="error" sx={{ mb: 1 }}>{parseApiError(error)}</Alert>}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { useQrScanner } from './useQrScanner';
 
@@ -70,14 +71,14 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
           value={manual}
           onChange={(e) => setManual(e.target.value)}
         />
-        <Button
+        <DuncitButton
           variant="outlined"
           disabled={!manual.trim()}
           onClick={() => onManualCode(manual.trim())}
           sx={{ borderRadius: 999, fontWeight: 700, flex: '0 0 auto' }}
         >
           {labels.checkCode}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

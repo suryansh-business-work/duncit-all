@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { Box, Chip, IconButton, Popover, Stack, Tooltip } from '@mui/material';
+import { Box, Chip, Popover, Stack, Tooltip } from '@mui/material';
 import AddReactionOutlinedIcon from '@mui/icons-material/AddReactionOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { QUICK_REACTIONS, type StaffReaction } from './queries';
 
 /** Anything past the six, for when the six do not cover it. */
@@ -73,7 +74,7 @@ export default function MessageReactions({ reactions, meId, nameOf, onReact }: R
       {/* Revealed by the bubble's hover rule, so a quiet thread stays quiet. */}
       <Box className="staff-reaction-picker" sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
         {QUICK_REACTIONS.map((emoji) => (
-          <IconButton
+          <DuncitIconButton
             key={emoji}
             size="small"
             onClick={() => onReact(emoji)}
@@ -81,17 +82,17 @@ export default function MessageReactions({ reactions, meId, nameOf, onReact }: R
             sx={{ p: 0.25, fontSize: 15, lineHeight: 1 }}
           >
             {emoji}
-          </IconButton>
+          </DuncitIconButton>
         ))}
         <Tooltip title={t('shell.chat.actions.more')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={(event) => setAnchor(event.currentTarget)}
             aria-label={t('shell.chat.actions.moreReactions')}
             sx={{ p: 0.25 }}
           >
             <AddReactionOutlinedIcon sx={{ fontSize: 15 }} />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Box>
 
@@ -104,7 +105,7 @@ export default function MessageReactions({ reactions, meId, nameOf, onReact }: R
       >
         <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', gap: 0.25, width: 216 }}>
           {MORE_EMOJI.map((emoji) => (
-            <IconButton
+            <DuncitIconButton
               key={emoji}
               size="small"
               aria-label={`React ${emoji}`}
@@ -115,7 +116,7 @@ export default function MessageReactions({ reactions, meId, nameOf, onReact }: R
               sx={{ fontSize: 17, width: 30, height: 30, borderRadius: 1 }}
             >
               {emoji}
-            </IconButton>
+            </DuncitIconButton>
           ))}
         </Box>
       </Popover>

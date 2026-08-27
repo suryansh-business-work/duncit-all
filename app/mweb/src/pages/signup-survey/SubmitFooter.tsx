@@ -1,4 +1,5 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 
 interface Props {
   count: number;
@@ -47,7 +48,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
             </Box>
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           variant="contained"
           color="primary"
           size="large"
@@ -56,7 +57,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           sx={{ minWidth: 160, fontWeight: 600 }}
         >
           {saving ? 'Saving…' : 'Find my crew'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

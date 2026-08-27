@@ -1,11 +1,11 @@
 import type { JSX, ReactNode } from 'react';
 import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitIconButton } from '@duncit/buttons';
 import { format as formatWithDateFns } from 'date-fns';
 import { ambientDateFormat } from '@duncit/datetime';
 import { fallbackT, useTranslation } from './i18n';
@@ -256,7 +256,7 @@ function RowActionButton<T>(props: Readonly<RowActionButtonProps<T>>): JSX.Eleme
     <Tooltip title={title}>
       {/* span keeps the Tooltip working when the button is disabled */}
       <span>
-        <IconButton
+        <DuncitIconButton
           size="small"
           color={config?.color ?? color}
           disabled={disabled}
@@ -264,7 +264,7 @@ function RowActionButton<T>(props: Readonly<RowActionButtonProps<T>>): JSX.Eleme
           aria-label={resolveLabel(config?.ariaLabel, row, title)}
         >
           {config?.icon ?? icon}
-        </IconButton>
+        </DuncitIconButton>
       </span>
     </Tooltip>
   );

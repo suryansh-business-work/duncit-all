@@ -1,5 +1,6 @@
-import { IconButton, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
+import { MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type {
   LeaderboardCategory,
@@ -112,13 +113,13 @@ export default function RewardRowFields({ row, index, onChange, onRemove }: Read
           <Typography variant="body2">{t('admin.leaderboard.rewardActive')}</Typography>
         </Stack>
         <Tooltip title={t('admin.leaderboard.removeReward')}>
-          <IconButton
+          <DuncitIconButton
             aria-label={t('admin.leaderboard.removeReward')}
             color="error"
             onClick={() => onRemove(index)}
           >
             <DeleteOutlineIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     </Stack>

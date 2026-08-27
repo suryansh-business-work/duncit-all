@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import {
   FileDetails,
@@ -71,13 +72,13 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
         {file && <FileDetails file={file} dims={dims} />}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>{t('mweb.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onCancel}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={() => onConfirm(croppable ? cropRect : null, croppable ? selectedKey : null)}
         >
           Upload
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

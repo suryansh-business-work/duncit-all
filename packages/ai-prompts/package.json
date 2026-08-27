@@ -81,6 +81,7 @@
     "zod": "^3.25.76"
   },
   "dependencies": {
-    "@duncit/app-settings": "workspace:*"
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*"
   }
 }

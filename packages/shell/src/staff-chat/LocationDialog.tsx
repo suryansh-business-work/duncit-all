@@ -3,7 +3,6 @@ import { useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import { PUBLIC_CLIENT_CONFIG } from './queries';
 
@@ -129,12 +129,12 @@ export default function LocationDialog({ open, onClose, onSend }: Readonly<Props
                 }
               }}
             />
-            <Button onClick={preview} disabled={!query.trim()}>
+            <DuncitButton onClick={preview} disabled={!query.trim()}>
               {t('shell.chat.location.search')}
-            </Button>
+            </DuncitButton>
           </Stack>
 
-          <Button
+          <DuncitButton
             size="small"
             startIcon={<MyLocationIcon />}
             onClick={useHere}
@@ -142,16 +142,16 @@ export default function LocationDialog({ open, onClose, onSend }: Readonly<Props
             sx={{ alignSelf: 'flex-start' }}
           >
             {t(locating ? 'shell.chat.location.searching' : 'shell.chat.location.useMyLocation')}
-          </Button>
+          </DuncitButton>
 
           <LocationPreview mapsKey={mapsKey} shown={shown} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.chat.location.cancel')}</Button>
-        <Button variant="contained" onClick={send} disabled={!shown}>
+        <DuncitButton onClick={onClose}>{t('shell.chat.location.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={send} disabled={!shown}>
           {t('shell.chat.location.send')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

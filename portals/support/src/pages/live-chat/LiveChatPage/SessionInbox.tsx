@@ -1,5 +1,6 @@
-import { Box, IconButton, Stack, TablePagination, TextField, Typography } from '@mui/material';
+import { Box, Stack, TablePagination, TextField, Typography } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { SupportChatSession, SupportChatStatus } from '../../../graphql/supportChat';
 import SessionList from '../SessionList';
 import SessionFilter from './SessionFilter';
@@ -67,9 +68,9 @@ export default function SessionInbox({
         <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
           Chat with Us
         </Typography>
-        <IconButton size="small" aria-label={t('support.createUser.title')} onClick={onCreateUser}>
+        <DuncitIconButton size="small" aria-label={t('support.createUser.title')} onClick={onCreateUser}>
           <PersonAddAlt1Icon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <SessionFilter value={statusFilter} onChange={onStatusChange} />
       <Box sx={{ px: 1, pb: 0.5 }}>

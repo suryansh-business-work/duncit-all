@@ -1,5 +1,6 @@
-import { Dialog, DialogContent, DialogTitle, IconButton, Stack } from '@mui/material';
+import { Dialog, DialogContent, DialogTitle, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { InfoRow } from '@duncit/ui';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting } from './queries';
@@ -23,9 +24,9 @@ export default function RequesterDialog({ meeting, onClose }: Readonly<Props>) {
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ pr: 6, fontWeight: 800 }}>
         Requester details
-        <IconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>

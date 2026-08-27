@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWatch } from 'react-hook-form';
-import { Box, Button, IconButton, Skeleton, Stack, Typography } from '@mui/material';
+import { Box, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useCart } from '../../components/cart/CartContext';
 import { buildBreakup } from '../checkout-page/checkoutMath';
 import CheckoutSuccess from '../checkout-page/CheckoutSuccess';
@@ -112,7 +113,7 @@ export default function ProductCheckoutPage() {
             alignItems: "center",
             mb: 2
           }}>
-          <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
+          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></DuncitIconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.productTitle')}</Typography>
             <Typography
@@ -205,7 +206,7 @@ function EmptyProductCheckout({
       <Typography variant="body2" sx={{
         color: "text.secondary"
       }}>{body}</Typography>
-      <Button variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 600 }}>{action}</Button>
+      <DuncitButton variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 600 }}>{action}</DuncitButton>
     </Stack>
   );
 }

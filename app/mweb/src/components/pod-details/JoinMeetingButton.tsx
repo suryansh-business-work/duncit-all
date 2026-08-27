@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { notifyError } from '../notify';
 
@@ -35,7 +35,7 @@ export default function JoinMeetingButton({ onJoin }: Readonly<Props>) {
   const label = pending ? t('mweb.podDetails.joiningMeeting') : t('mweb.podDetails.joinMeeting');
 
   return (
-    <Button
+    <DuncitButton
       variant="contained"
       startIcon={<VideocamIcon />}
       onClick={handleClick}
@@ -43,6 +43,6 @@ export default function JoinMeetingButton({ onJoin }: Readonly<Props>) {
       sx={{ alignSelf: 'flex-start' }}
     >
       {label}
-    </Button>
+    </DuncitButton>
   );
 }

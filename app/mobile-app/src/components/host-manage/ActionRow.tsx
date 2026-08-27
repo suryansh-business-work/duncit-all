@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type ActionIconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -41,7 +42,7 @@ export function ActionRow({
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={20} color={tint} />
       <Text flex={1} fontSize={14.5} fontWeight="600" color={danger ? '$danger' : '$color'}>
@@ -80,7 +81,7 @@ export function RowIconButton({
       alignItems="center"
       justifyContent="center"
       borderRadius={20}
-      pressStyle={{ opacity: 0.6 }}
+      pressStyle={PRESS_STYLE.inline}
     >
       <MaterialIcons name={icon} size={19} color={tint} />
     </XStack>

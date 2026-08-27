@@ -16,6 +16,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useUploadSettings, type MobileUploadSettings } from '@/hooks/useUploadSettings';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Review {
   id: string;
@@ -43,6 +44,7 @@ function Stars({
     <XStack gap={2}>
       {[1, 2, 3, 4, 5].map((n) => (
         <YStack
+          pressStyle={PRESS_STYLE.surface}
           key={n}
           testID={onChange ? `star-${n}` : undefined}
           role={onChange ? 'button' : undefined}
@@ -85,6 +87,7 @@ function ReviewPhotos({
         </XStack>
       ) : null}
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         testID="review-add-photo"
         role="button"
         onPress={uploadBusy ? undefined : () => void upload.pick()}
@@ -167,6 +170,7 @@ function ReviewCard({
       ) : null}
       <XStack gap={4} alignItems="center">
         <YStack
+          pressStyle={PRESS_STYLE.surface}
           testID={`review-up-${review.id}`}
           role="button"
           onPress={() => onVote(review.id, 1, review.my_vote)}
@@ -177,6 +181,7 @@ function ReviewCard({
           {review.up_votes}
         </Text>
         <YStack
+          pressStyle={PRESS_STYLE.surface}
           testID={`review-down-${review.id}`}
           role="button"
           onPress={() => onVote(review.id, -1, review.my_vote)}

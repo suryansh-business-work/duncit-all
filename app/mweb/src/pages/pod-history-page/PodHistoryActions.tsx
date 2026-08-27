@@ -1,11 +1,12 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Button, Stack, Tooltip } from '@mui/material';
+import { Alert, Stack, Tooltip } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ReplayIcon from '@mui/icons-material/Replay';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { PodHistoryItem } from './queries';
 
@@ -49,7 +50,7 @@ function BackoutButton({
 }: Readonly<{ disabled: boolean; maxed: boolean; label: string; onBackout: () => void }>) {
   const { t } = useTranslation();
   const button = (
-    <Button
+    <DuncitButton
       data-tour="booking-backout"
       onClick={onBackout}
       disabled={disabled || maxed}
@@ -58,7 +59,7 @@ function BackoutButton({
       startIcon={<RestartAltIcon />}
     >
       {label}
-    </Button>
+    </DuncitButton>
   );
   if (!maxed) return button;
   return (
@@ -114,7 +115,7 @@ export default function PodHistoryActions({
       }}>
         {!isDeleted && (
           <>
-            <Button
+            <DuncitButton
               component={RouterLink}
               to={podDetailsPath || '#'}
               disabled={!podDetailsPath}
@@ -122,7 +123,7 @@ export default function PodHistoryActions({
               endIcon={<ArrowForwardIcon />}
             >
               {t('mweb.podHistory.goToPodDetails')}
-            </Button>
+            </DuncitButton>
             {canBackout && (
               <BackoutButton
                 disabled={item.status !== 'JOINED' || backingOut}
@@ -134,7 +135,7 @@ export default function PodHistoryActions({
               />
             )}
             {canRejoin && (
-              <Button
+              <DuncitButton
                 onClick={onRejoin}
                 disabled={rejoining}
                 color="success"
@@ -142,17 +143,17 @@ export default function PodHistoryActions({
                 startIcon={<ReplayIcon />}
               >
                 {rejoining ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinPod')}
-              </Button>
+              </DuncitButton>
             )}
             {showRefundState && (
-              <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={onShowRefundStatus}>
+              <DuncitButton variant="outlined" startIcon={<ReceiptLongIcon />} onClick={onShowRefundStatus}>
                 {t('mweb.podHistory.refundChip', { vars: { status: refundLabel } })}
-              </Button>
+              </DuncitButton>
             )}
             {/* Shown-and-disabled rather than hidden, matching native: the same
                 booking used to offer this control on one surface and not the
                 other, which also made the tour one step shorter on mWeb. */}
-            <Button
+            <DuncitButton
               data-tour="booking-ticket"
               onClick={onDownloadTicket}
               disabled={item.status !== 'JOINED' || ticketLoading}
@@ -164,25 +165,25 @@ export default function PodHistoryActions({
               }}
             >
               {ticketLoading ? t('mweb.ticket.downloading') : t('mweb.ticket.download')}
-            </Button>
+            </DuncitButton>
           </>
         )}
-        <Button
+        <DuncitButton
           onClick={onDownloadInvoice}
           disabled={!item.payment_id || invoiceLoading}
           variant="outlined"
           startIcon={<ReceiptLongIcon />}
         >
           {invoiceLoading ? t('mweb.podHistory.downloading') : t('mweb.podHistory.invoice')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           component={RouterLink}
           to={supportPath}
           variant="outlined"
           startIcon={<ContactSupportIcon />}
         >
           {t('mweb.podHistory.contactSupport')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </>
   );

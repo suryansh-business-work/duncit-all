@@ -1,8 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { useQuery } from '@apollo/client';
-import { Badge, IconButton, Tooltip } from '@mui/material';
+import { Badge, Tooltip } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { readToken, useShellRuntime } from '../lib/runtime';
 import { STAFF_UNREAD } from './queries';
 import { useStaffSocket } from './useStaffSocket';
@@ -51,7 +52,7 @@ export function StaffChatButton({
 
   return (
     <Tooltip title={t('shell.chat.panel.open')}>
-      <IconButton
+      <DuncitIconButton
         size="small"
         onClick={onToggle}
         color={open ? 'primary' : 'default'}
@@ -60,7 +61,7 @@ export function StaffChatButton({
         <Badge color="error" badgeContent={unread} max={99}>
           <ChatBubbleOutlineIcon fontSize="small" />
         </Badge>
-      </IconButton>
+      </DuncitIconButton>
     </Tooltip>
   );
 }

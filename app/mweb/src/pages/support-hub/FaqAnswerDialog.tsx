@@ -1,6 +1,7 @@
-import { Box, Button, Dialog, DialogContent, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Dialog, DialogContent, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import type { FaqItem } from './faqQueries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -30,9 +31,9 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
             <Typography variant="h6" sx={{ fontWeight: 700, pr: 1 }}>
               {faq.question}
             </Typography>
-            <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.common.close')}>
+            <DuncitIconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.common.close')}>
               <CloseIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
           <Typography
             variant="body2"
@@ -52,7 +53,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
               }}>
               Still need help?
             </Typography>
-            <Button
+            <DuncitButton
               fullWidth
               variant="contained"
               startIcon={<ChatBubbleOutlineIcon />}
@@ -63,7 +64,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
               sx={{ mt: 1, borderRadius: 999, fontWeight: 700 }}
             >
               Start a conversation
-            </Button>
+            </DuncitButton>
           </Box>
         </DialogContent>
       )}

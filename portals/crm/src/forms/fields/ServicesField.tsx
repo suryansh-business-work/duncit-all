@@ -1,16 +1,8 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import {
-  Autocomplete,
-  Box,
-  Card,
-  Chip,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Autocomplete, Box, Card, Chip, Stack, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import { FormField } from '@duncit/forms';
 import type { CrmServiceOffered } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
@@ -141,9 +133,9 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
                   <Chip label={label} color="primary" variant="outlined" size="small" sx={{ fontWeight: 600 }} />
                   {current.service === 'Other' && <Chip label={t('crm.common.custom')} size="small" variant="outlined" />}
                   <Box sx={{ flex: 1 }} />
-                  <IconButton size="small" color="error" aria-label={t('crm.forms.removeService')} onClick={() => remove(index)}>
+                  <DuncitIconButton size="small" color="error" aria-label={t('crm.forms.removeService')} onClick={() => remove(index)}>
                     <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Stack>
                 {current.service === 'Other' && (
                   <Box sx={{ mb: 1 }}>

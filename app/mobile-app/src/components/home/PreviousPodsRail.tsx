@@ -7,6 +7,7 @@ import { PodCard } from '@/components/home/PodCard';
 import { SeeAllCard } from '@/components/home/SeeAllCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Max entries shown on the home rail before the See-all card takes over. */
 const RAIL_CAP = 10;
@@ -49,7 +50,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
           onPress={() => onSeeAll()}
           alignItems="center"
           gap={2}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
             See all

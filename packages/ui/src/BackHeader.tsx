@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from './i18n/useTranslation';
 import { mergeSx } from './mergeSx';
 
@@ -18,15 +19,15 @@ export interface BackButtonProps {
 export function BackButton({ children, to, onClick, sx }: Readonly<BackButtonProps>) {
   if (to) {
     return (
-      <Button component={RouterLink} to={to} size="small" startIcon={<ArrowBackIcon />} sx={sx}>
+      <DuncitButton component={RouterLink} to={to} size="small" startIcon={<ArrowBackIcon />} sx={sx}>
         {children}
-      </Button>
+      </DuncitButton>
     );
   }
   return (
-    <Button size="small" startIcon={<ArrowBackIcon />} onClick={onClick} sx={sx}>
+    <DuncitButton size="small" startIcon={<ArrowBackIcon />} onClick={onClick} sx={sx}>
       {children}
-    </Button>
+    </DuncitButton>
   );
 }
 
@@ -60,15 +61,15 @@ type BackIconProps = Pick<BackHeaderProps, 'onBack' | 'backTo' | 'backSize' | 'b
 function BackIcon({ onBack, backTo, backSize, backSx, ariaLabel }: Readonly<BackIconProps>) {
   if (backTo) {
     return (
-      <IconButton size={backSize} component={RouterLink} to={backTo} aria-label={ariaLabel} sx={backSx}>
+      <DuncitIconButton size={backSize} component={RouterLink} to={backTo} aria-label={ariaLabel} sx={backSx}>
         <ArrowBackIcon />
-      </IconButton>
+      </DuncitIconButton>
     );
   }
   return (
-    <IconButton size={backSize} onClick={onBack} aria-label={ariaLabel} sx={backSx}>
+    <DuncitIconButton size={backSize} onClick={onBack} aria-label={ariaLabel} sx={backSx}>
       <ArrowBackIcon />
-    </IconButton>
+    </DuncitIconButton>
   );
 }
 

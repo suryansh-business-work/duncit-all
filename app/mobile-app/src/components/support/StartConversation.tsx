@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { START_CONVERSATION_GRADIENT } from './gradients';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Primary "Start a conversation" CTA → real-time agent chat. RN twin of mWeb's
  * StartConversation. */
@@ -21,7 +22,7 @@ export function StartConversation({ onPress }: Readonly<{ onPress: () => void }>
       padding={16}
       borderRadius={18}
       overflow="hidden"
-      pressStyle={{ opacity: 0.9 }}
+      pressStyle={PRESS_STYLE.surface}
     >
       <LinearGradient
         colors={START_CONVERSATION_GRADIENT}

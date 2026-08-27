@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import { useTranslation } from '@duncit/app-settings';
-import { MY_VERIFICATIONS, type Verification } from './queries';
-import VerificationCardShell from './VerificationCardShell';
-import IdentityCard from './IdentityCard';
-import AddressCard from './AddressCard';
+import {
+  MY_VERIFICATIONS,
+  useTranslation,
+  VerificationCards,
+} from '@duncit/verification/mui';
+import type { Verification } from '@duncit/verification';
 
 /**
  * Verification — Identity (one document ≤4 MB), Address (manual residential
  * address) and Email (verified by the app). An admin approves/rejects Identity
- * & Address. Partners twin of mWeb's verification-page and the native
- * VerificationScreen — same server operations, same flow.
+ * & Address.
+ *
+ * The cards themselves come from @duncit/verification/mui, so this page, mWeb's
+ * and the native screen render one implementation of the same three rows.
  */
 export default function VerificationPage() {
   const { t } = useTranslation();
@@ -22,17 +25,13 @@ export default function VerificationPage() {
   const [snack, setSnack] = useState<string | null>(null);
 
   const onChanged = () => {
-    setSnack(t('partners.verification.submitted'));
+    setSnack(t('verification.submitted'));
     refetch().catch(() => undefined);
   };
 
   if (loading && !data) {
     return (
-      <Stack
-        sx={{
-          alignItems: "center",
-          py: 8
-        }}>
+      <Stack sx={{ alignItems: 'center', py: 8 }}>
         <CircularProgress />
       </Stack>
     );
@@ -43,39 +42,19 @@ export default function VerificationPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <VerifiedUserIcon color="primary" />
         <Box>
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 700,
-              lineHeight: 1
-            }}>
-            {t('partners.verification.title')}
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
+            {t('verification.title')}
           </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            {t('partners.verification.subtitle')}
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+            {t('verification.subtitle')}
           </Typography>
         </Box>
       </Stack>
 
-      {verifications.map((item) => {
-        if (item.type === 'IDENTITY') {
-          return <IdentityCard key={item.type} item={item} onChanged={onChanged} onError={setSnack} />;
-        }
-        if (item.type === 'ADDRESS') {
-          return <AddressCard key={item.type} item={item} onChanged={onChanged} onError={setSnack} />;
-        }
-        return <VerificationCardShell key={item.type} item={item} />;
-      })}
+      <VerificationCards items={verifications} onChanged={onChanged} onError={setSnack} />
 
       {snack && (
         <Alert severity="info" onClose={() => setSnack(null)}>

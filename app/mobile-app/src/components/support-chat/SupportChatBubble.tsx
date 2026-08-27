@@ -6,6 +6,7 @@ import type { SupportChatMessage } from '@/hooks/useSupportChat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatTime, tickState } from '@/utils/support-chat';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
 
@@ -103,7 +104,7 @@ export function SupportChatBubble({
             alignItems="center"
             gap={4}
             alignSelf="flex-end"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="error-outline" size={13} color={onPrimary} />
             <Text fontSize={11} fontWeight="600" color="$onPrimary">

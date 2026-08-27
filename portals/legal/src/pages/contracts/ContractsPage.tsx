@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
@@ -134,9 +135,9 @@ export default function ContractsPage() {
         onArchive={setArchiveTarget}
         onSign={setSignTarget}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
             {t('legal.contracts.add')}
-          </Button>
+          </DuncitButton>
         }
       />
 

@@ -1,6 +1,7 @@
-import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import ChatSettingsMenu from './ChatSettingsMenu';
 import StatusMenu from './StatusMenu';
@@ -63,13 +64,13 @@ export default function PanelHeader({
           conversation exactly where it is and hands the page back its width. */}
       {onMinimise && (
         <Tooltip title={t('shell.chat.window.minimise')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={onMinimise}
             aria-label={t('shell.chat.panel.minimiseLabel')}
           >
             <MinimizeIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
       {/*
@@ -87,9 +88,9 @@ export default function PanelHeader({
         close button that does not close is the bug, whatever it was guarding.
       */}
       <Tooltip title={busy ? t('shell.chat.panel.closeBusy') : t('shell.chat.panel.close')}>
-        <IconButton size="small" onClick={onClose} aria-label={t('shell.chat.panel.close')}>
+        <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.chat.panel.close')}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

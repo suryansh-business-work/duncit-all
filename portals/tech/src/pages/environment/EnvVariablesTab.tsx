@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, LinearProgress, Stack } from '@mui/material';
+import { Alert, LinearProgress, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import {
   CREATE_ENV_ENTRY,
@@ -142,9 +143,9 @@ export default function EnvVariablesTab() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
+          <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
             Add {def.label}
-          </Button>
+          </DuncitButton>
         }
         onEdit={setEditing}
         onDelete={handleDelete}

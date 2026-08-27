@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Faq {
   question: string;
@@ -31,6 +32,7 @@ export function ClubFaqsSection({ faqs }: Readonly<{ faqs: Faq[] }>) {
             backgroundColor="$surface"
           >
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               testID={`club-faq-${faq.question}`}
               role="button"
               aria-label={faq.question}

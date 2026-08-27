@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Button, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { DuncitTable, formatDateCell, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ApiKeyRow } from './queries';
@@ -57,9 +58,9 @@ export default function ApiKeysTable({
   const columns = useMemo<DuncitColumn<ApiKeyRow>[]>(() => {
     const renderActions = (k: ApiKeyRow) =>
       k.revoked_at ? null : (
-        <Button size="small" color="error" onClick={() => onRevoke(k)}>
+        <DuncitButton size="small" color="error" onClick={() => onRevoke(k)}>
           {t('developers.apiKeys.revoke')}
-        </Button>
+        </DuncitButton>
       );
     const renderStatus = (k: ApiKeyRow) => (
       <Chip size="small" color={k.revoked_at ? 'default' : 'success'} label={statusValue(k, t)} />

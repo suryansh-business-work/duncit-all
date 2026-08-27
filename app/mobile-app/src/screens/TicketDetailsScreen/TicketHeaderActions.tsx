@@ -3,6 +3,7 @@ import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Show the resolve action (ticket is OPEN/PENDING). */
@@ -23,7 +24,14 @@ interface IconButtonProps {
 
 function IconButton({ testID, label, icon, color, onPress }: Readonly<IconButtonProps>) {
   return (
-    <XStack testID={testID} role="button" aria-label={label} onPress={onPress} padding={6}>
+    <XStack
+      pressStyle={PRESS_STYLE.surface}
+      testID={testID}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      padding={6}
+    >
       <MaterialIcons name={icon} size={20} color={color} />
     </XStack>
   );

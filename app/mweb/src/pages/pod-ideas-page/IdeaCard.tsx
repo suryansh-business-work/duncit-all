@@ -1,12 +1,10 @@
 import {
   Avatar,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
   Divider,
-  IconButton,
   Stack,
   Tooltip,
   Typography,
@@ -17,6 +15,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { formatRelative } from './queries';
 import { categoryPathLabel } from '../../utils/ideaCategory';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -76,9 +75,9 @@ export default function IdeaCard({
           )}
           {isMine && (
             <Tooltip title={t('mweb.common.delete')}>
-              <IconButton size="small" color="error" onClick={onDelete}>
+              <DuncitIconButton size="small" color="error" onClick={onDelete}>
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           )}
         </Stack>
@@ -136,7 +135,7 @@ export default function IdeaCard({
         <Stack direction="row" spacing={2} sx={{
           alignItems: "center"
         }}>
-          <Button
+          <DuncitButton
             size="small"
             startIcon={
               idea.liked_by_me ? (
@@ -149,23 +148,23 @@ export default function IdeaCard({
             sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
           >
             {idea.likes_count}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
             onClick={onOpen}
             sx={{ color: 'text.secondary' }}
           >
             {idea.comments_count}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             startIcon={<ShareIcon fontSize="small" />}
             onClick={onShare}
             sx={{ color: 'text.secondary' }}
           >
             {idea.shares_count}
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

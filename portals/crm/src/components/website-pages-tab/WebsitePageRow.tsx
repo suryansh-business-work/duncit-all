@@ -1,10 +1,11 @@
 import { useMutation } from '@apollo/client';
-import { Chip, IconButton, Stack, TableCell, TableRow, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, TableCell, TableRow, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ArticleIcon from '@mui/icons-material/Article';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CircularProgress from '@mui/material/CircularProgress';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   FETCH_CRM_WEBSITE_PAGE_CONTENT,
   type CrmWebsitePage,
@@ -83,23 +84,23 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
           }}>
           <Tooltip title={fetched ? 'Re-fetch content' : 'Fetch content'}>
             <span>
-              <IconButton size="small" color="primary" onClick={run} disabled={loading} aria-label={t('crm.components.fetchContent')}>
+              <DuncitIconButton size="small" color="primary" onClick={run} disabled={loading} aria-label={t('crm.components.fetchContent')}>
                 {loading ? <CircularProgress size={16} /> : fetchIcon}
-              </IconButton>
+              </DuncitIconButton>
             </span>
           </Tooltip>
           <Tooltip title={t('crm.components.viewContent')}>
             <span>
-              <IconButton size="small" onClick={() => onView(page)} disabled={!page.content_text} aria-label={t('crm.components.viewContent')}>
+              <DuncitIconButton size="small" onClick={() => onView(page)} disabled={!page.content_text} aria-label={t('crm.components.viewContent')}>
                 <ArticleIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </span>
           </Tooltip>
           <Tooltip title={t('crm.components.deletePage')}>
             <span>
-              <IconButton size="small" color="error" onClick={() => onDelete(page)} aria-label={t('crm.components.deletePage')}>
+              <DuncitIconButton size="small" color="error" onClick={() => onDelete(page)} aria-label={t('crm.components.deletePage')}>
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </span>
           </Tooltip>
         </Stack>

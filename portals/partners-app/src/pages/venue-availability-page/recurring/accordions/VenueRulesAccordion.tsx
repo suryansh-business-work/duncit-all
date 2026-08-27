@@ -6,7 +6,6 @@ import {
   AccordionSummary,
   Alert,
   Box,
-  Button,
   FormControlLabel,
   Stack,
   Switch,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RuleIcon from '@mui/icons-material/Rule';
+import { DuncitButton } from '@duncit/buttons';
 import { UPDATE_VENUE_SETTINGS } from '../recurring.queries';
 import type { VenueRulesForm } from '../settings-map';
 import { useTranslation } from '@duncit/shell';
@@ -117,9 +117,9 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
           {error && <Alert severity="error">{error.message}</Alert>}
           {saved && !loading && <Alert severity="success">{t('partners.venueAvailabilityPage.venueRulesSaved')}</Alert>}
           <Box>
-            <Button variant="outlined" onClick={onSave} disabled={loading}>
+            <DuncitButton variant="outlined" onClick={onSave} disabled={loading}>
               {loading ? 'Saving…' : 'Save rules'}
-            </Button>
+            </DuncitButton>
           </Box>
         </Stack>
       </AccordionDetails>

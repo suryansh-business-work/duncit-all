@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Box, Button, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Stack, Typography, useTheme } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import { DuncitButton } from '@duncit/buttons';
 import { COIN_GOLD_TINT, coinGold } from '../../theme/coinGold';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { CoinRedemption } from './useCoinRedemption';
@@ -69,16 +70,16 @@ export default function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedempt
   if (coins.applied > 0) {
     return (
       <CoinRow gold={gold} caption={t('mweb.coin.checkoutApplied', { vars: { coins: coins.applied } })}>
-        <Button size="small" onClick={coins.onRemove} sx={{ color: gold, fontWeight: 700, flexShrink: 0 }}>
+        <DuncitButton size="small" onClick={coins.onRemove} sx={{ color: gold, fontWeight: 700, flexShrink: 0 }}>
           {t('mweb.coin.checkoutRemove')}
-        </Button>
+        </DuncitButton>
       </CoinRow>
     );
   }
 
   return (
     <CoinRow gold={gold} caption={t('mweb.coin.checkoutAvailable', { vars: { coins: coins.balance } })}>
-      <Button
+      <DuncitButton
         size="small"
         variant="outlined"
         onClick={coins.onApply}
@@ -86,7 +87,7 @@ export default function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedempt
         sx={{ borderColor: gold, color: gold, fontWeight: 700, borderRadius: 999, flexShrink: 0 }}
       >
         {t('mweb.coin.checkoutApply')}
-      </Button>
+      </DuncitButton>
     </CoinRow>
   );
 }

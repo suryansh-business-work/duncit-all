@@ -1,6 +1,7 @@
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import CallEndIcon from '@mui/icons-material/CallEnd';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import CallSettingsMenu from '../CallSettingsMenu';
 import LiveControls, { type LiveControlsProps } from './LiveControls';
@@ -48,7 +49,7 @@ export default function CallControls({
     }}>
       {phase === 'incoming' ? (
         <>
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             color="success"
@@ -56,8 +57,8 @@ export default function CallControls({
             onClick={onAnswer}
           >
             {t('shell.chat.call.answer')}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             variant="outlined"
             color="error"
@@ -65,10 +66,10 @@ export default function CallControls({
             onClick={onDecline}
           >
             {t('shell.chat.call.decline')}
-          </Button>
+          </DuncitButton>
         </>
       ) : (
-        <Button
+        <DuncitButton
           size="small"
           variant="contained"
           color="error"
@@ -76,7 +77,7 @@ export default function CallControls({
           onClick={onHangUp}
         >
           {hangUpLabel}
-        </Button>
+        </DuncitButton>
       )}
 
       {connected && <LiveControls video={video} {...live} />}

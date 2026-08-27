@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   Dialog,
@@ -10,6 +9,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip } from '@duncit/ui';
 import { fmtDate, KIND_COLORS, KIND_LABELS, money, type PodCancellationRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -114,7 +114,7 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>{t('shell.common.close')}</Button>
+            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

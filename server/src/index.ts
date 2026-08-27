@@ -12,6 +12,10 @@ import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
+import { seedRateLimitDefaults } from '@modules/platform/rateLimit/rateLimit.seed';
+import { startRateLimitCleanupScheduler } from '@modules/platform/rateLimit/rateLimit.scheduler';
+import { startRateLimitFlush } from '@modules/platform/rateLimit/rateLimit.enforcer';
+import { rateLimitMiddleware, rateLimitPlugin } from '@modules/platform/rateLimit/rateLimit.guard';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
@@ -167,6 +171,13 @@ async function bootstrap() {
   // the DB-persist handler so selected-level logs start recording.
   await safeSeed('telemetry', () => telemetryService.seedDefaults());
   telemetryService.enableIngestion();
+  // Rate limiting: the master switch, the shipped rules and the catalogue of
+  // systems, so the Tech console has something to show on a fresh database.
+  // The flush timer is what carries the per-rule and per-system counters from
+  // memory (where the hot path writes them) into Mongo (where the console
+  // reads them).
+  await safeSeed('rateLimit', () => seedRateLimitDefaults());
+  startRateLimitFlush();
   // Sync the latest mobile app version into the DB from the APP_VERSION env
   // (set by the deploy workflow from app.json) — updates on every push/boot.
   await safeSeed('appVersion', () => settingsService.applyEnvVersion());
@@ -347,6 +358,9 @@ async function bootstrap() {
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();
 
+  // The same, for recorded rate-limit breaches.
+  startRateLimitCleanupScheduler();
+
   // Mail automation: read each connected Gmail mailbox forward from its cursor,
   // open a ticket for every new conversation and acknowledge it once.
   startMailAutomationScheduler();
@@ -408,6 +422,12 @@ async function bootstrap() {
   // first: req.ip is only the real client because of it.
   app.use(requestIdentityMiddleware);
 
+  // Rate limiting for every NON-GraphQL route (uploads, webhooks, the public
+  // API, the feeds). /graphql is governed by rateLimitPlugin instead, which is
+  // the only place that can see which fields a document selects. Mounted here
+  // so a route added below is covered without anyone remembering to add it.
+  app.use(rateLimitMiddleware);
+
   // Surface GraphQL errors as logs. console.error is forwarded to SignOz by
   // ./otel when telemetry is on. The LEVEL is not uniform: a refusal the caller
   // has to fix (not signed in, no billing address, wrong portal) is a warn, and
@@ -462,6 +482,8 @@ async function bootstrap() {
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       graphqlErrorLogger,
+      // Before the cache: a refused request must not be answered from Redis.
+      rateLimitPlugin,
       redisResponseCachePlugin,
     ],
   });

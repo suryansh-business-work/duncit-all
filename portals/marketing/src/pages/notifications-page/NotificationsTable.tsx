@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { scopes } from './helpers';
 import type { NotificationRow } from './queries';
@@ -95,9 +96,9 @@ export default function NotificationsTable({
     const renderScope = (n: NotificationRow) => <ScopeChip notification={n} locName={locName} />;
     const renderActions = (n: NotificationRow) => (
       <Tooltip title={t('shell.common.delete')}>
-        <IconButton size="small" onClick={() => onDelete(n)}>
+        <DuncitIconButton size="small" onClick={() => onDelete(n)}>
           <DeleteIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     );
     return [

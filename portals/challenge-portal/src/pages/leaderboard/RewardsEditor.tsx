@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Button, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Paper, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import RewardRowFields from './RewardRowFields';
@@ -99,15 +100,15 @@ export default function RewardsEditor({ savedRewards }: Readonly<Props>) {
         <Stack direction="row" sx={{
           justifyContent: "space-between"
         }}>
-          <Button
+          <DuncitButton
             startIcon={<AddIcon />}
             onClick={() => setRows((current) => [...current, blankReward()])}
           >
             {t('admin.leaderboard.addReward')}
-          </Button>
-          <Button variant="contained" onClick={submit} disabled={busy}>
+          </DuncitButton>
+          <DuncitButton variant="contained" onClick={submit} disabled={busy}>
             {busy ? t('admin.leaderboard.saving') : t('admin.leaderboard.save')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Paper>

@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Chip, Typography } from '@mui/material';
+import { Chip, Typography } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { formatDateTime } from './format';
 import type { DockerContainer } from './queries';
@@ -82,7 +83,7 @@ function RestartCell({
   onRestart,
 }: Readonly<{ container: DockerContainer; onRestart: (name: string) => void }>) {
   return (
-    <Button
+    <DuncitButton
       size="small"
       variant="outlined"
       color="warning"
@@ -91,7 +92,7 @@ function RestartCell({
       sx={{ whiteSpace: 'nowrap' }}
     >
       Restart
-    </Button>
+    </DuncitButton>
   );
 }
 

@@ -1,10 +1,15 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
-import { CRM_CALL_PROMPTS_TABLE, DELETE_CRM_CALL_PROMPT, type CrmCallPrompt } from '../../api/call.gql';
+import {
+  CRM_CALL_PROMPTS_TABLE,
+  DELETE_CRM_CALL_PROMPT,
+  type CrmCallPrompt,
+} from '../../api/call.gql';
 import { ConfirmDialog } from '@duncit/dialogs';
 import CallPromptsTable from './CallPromptsTable';
 import CallPromptDialog from './CallPromptDialog';
@@ -65,9 +70,9 @@ export default function CallPromptsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
+          <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
             Add Static Content
-          </Button>
+          </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={setToDelete}

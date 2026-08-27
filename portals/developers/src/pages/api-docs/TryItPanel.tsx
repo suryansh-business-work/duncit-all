@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { API_BASE, buildPath, type ApiEndpoint } from './apiReference';
 
@@ -67,7 +68,7 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
           required={param.required}
         />
       ))}
-      <Button
+      <DuncitButton
         variant="contained"
         startIcon={<PlayArrowIcon />}
         onClick={run}
@@ -75,7 +76,7 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
         sx={{ alignSelf: 'flex-start' }}
       >
         {busy ? t('developers.tryIt.sending') : t('developers.tryIt.send')}
-      </Button>
+      </DuncitButton>
       {!apiKey.trim() && (
         <Typography variant="caption" sx={{
           color: "text.secondary"

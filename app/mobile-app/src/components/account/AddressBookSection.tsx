@@ -17,6 +17,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -110,7 +111,7 @@ export function AddressBookSection() {
           borderRadius={999}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="add" size={16} color={muted} />
           <Text fontSize={12.5} fontWeight="600" color="$color">
@@ -162,7 +163,7 @@ export function AddressBookSection() {
               setFormOpen(true);
             }}
             padding={6}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="edit" size={18} color={muted} />
           </XStack>
@@ -172,7 +173,7 @@ export function AddressBookSection() {
             aria-label={`Delete ${address.label}`}
             onPress={() => remove(address)}
             padding={6}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="delete-outline" size={18} color={muted} />
           </XStack>

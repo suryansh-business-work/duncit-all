@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { AppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
+import { AppBar, Box, Toolbar, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import AppsIcon from '@mui/icons-material/Apps';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -8,6 +8,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitIconButton } from '@duncit/buttons';
 import { tokens, useColorMode } from '@duncit/theme';
 import type { AppNavItem, SearchItem } from '../types';
 import { StaffChatButton } from '../staff-chat/StaffChatButton';
@@ -71,9 +72,9 @@ export function AppHeader({
       <Toolbar sx={{ minHeight: `${tokens.size.headerHeight}px !important`, gap: 1, px: { xs: 1.25, sm: 2 } }}>
         {mobileSearchOpen ? (
           <>
-            <IconButton size="small" edge="start" onClick={() => setMobileSearchOpen(false)} aria-label={t('shell.chrome.closeSearch')}>
+            <DuncitIconButton size="small" edge="start" onClick={() => setMobileSearchOpen(false)} aria-label={t('shell.chrome.closeSearch')}>
               <ArrowBackIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <HeaderSearch
                 items={searchItems}
@@ -86,7 +87,7 @@ export function AppHeader({
           </>
         ) : (
           <>
-            <IconButton
+            <DuncitIconButton
               size="small"
               edge="start"
               onClick={onOpenMobileNav}
@@ -94,7 +95,7 @@ export function AppHeader({
               sx={{ display: { md: 'none' } }}
             >
               <MenuIcon />
-            </IconButton>
+            </DuncitIconButton>
             <Box component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0 }}>
               <Typography variant="subtitle2" noWrap sx={{
                 fontWeight: 800
@@ -106,28 +107,28 @@ export function AppHeader({
               <HeaderSearch items={searchItems} nav={nav} />
             </Box>
             <Box sx={{ flex: 1, display: { xs: 'block', sm: 'none' } }} />
-            <IconButton
+            <DuncitIconButton
               size="small"
               onClick={() => setMobileSearchOpen(true)}
               aria-label={t('shell.chrome.openSearch')}
               sx={{ display: { sm: 'none' } }}
             >
               <SearchIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
             {showChat && onToggleChat && (
               <StaffChatButton meId={user?.user_id} open={chatOpen} onToggle={onToggleChat} />
             )}
             {appsEnabled && (
               <Tooltip title={t('shell.chrome.apps')}>
-                <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label={t('shell.chrome.openApps')}>
+                <DuncitIconButton size="small" onClick={() => setAppsOpen(true)} aria-label={t('shell.chrome.openApps')}>
                   <AppsIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             )}
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
-              <IconButton size="small" onClick={colorMode.toggle} aria-label={t('shell.chrome.toggleColorMode')}>
+              <DuncitIconButton size="small" onClick={colorMode.toggle} aria-label={t('shell.chrome.toggleColorMode')}>
                 {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
             <UserMenu user={user} fallbackName={name} profileTo={profileTo} onLogout={onLogout} />
           </>

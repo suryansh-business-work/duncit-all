@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { ExploreDateFilter, ExploreFilters, ExplorePreset, ExplorePriceFilter, ExploreSort } from './exploreFilters';
@@ -77,12 +78,12 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
       sheetMaxHeight="88dvh"
       actions={
         <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
-          <Button startIcon={<CloseIcon />} onClick={reset} color="inherit" disabled={activeCount === 0}>
+          <DuncitButton startIcon={<CloseIcon />} onClick={reset} color="inherit" disabled={activeCount === 0}>
             {t('mweb.explore.reset')}
-          </Button>
-          <Button variant="contained" onClick={onClose} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
+          </DuncitButton>
+          <DuncitButton variant="contained" onClick={onClose} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
             {t('mweb.explore.showResults', { vars: { count: resultCount } })}
-          </Button>
+          </DuncitButton>
         </Stack>
       }
       paperSx={{ bgcolor: 'background.default' }}

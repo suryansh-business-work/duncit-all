@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   onOpen: () => void;
@@ -27,7 +28,7 @@ export function HeaderLocationRow({ onOpen }: Readonly<Props>) {
       alignItems="center"
       gap={2}
       minWidth={0}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <MaterialIcons name="location-on" size={13} color={primary} />
       <Text fontSize={12} fontWeight="600" color="$primary" numberOfLines={1}>

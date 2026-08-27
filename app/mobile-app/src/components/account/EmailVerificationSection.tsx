@@ -11,6 +11,7 @@ import {
   verifyEmailVerificationOtp,
 } from '@/services/email-verification.service';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   email?: string | null;
@@ -160,7 +161,7 @@ export function EmailVerificationSection({
           borderColor="$borderColor"
           backgroundColor="$surface"
           opacity={sending || !email ? 0.5 : 1}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="600" color={muted}>
             {sendLabel}

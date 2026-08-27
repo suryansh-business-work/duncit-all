@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmProvider, NotifyProvider, useConfirm, useNotify } from '@duncit/dialogs';
 import { defineDemo, defineDemos } from '../types';
 
@@ -34,9 +35,9 @@ function ConfirmStage({ mock }: Readonly<{ mock: ConfirmMock }>) {
     <Stack direction="row" spacing={2} sx={{
       alignItems: "center"
     }}>
-      <Button variant="contained" color={mock.destructive ? 'error' : 'primary'} onClick={ask}>
+      <DuncitButton variant="contained" color={mock.destructive ? 'error' : 'primary'} onClick={ask}>
         {mock.title}
-      </Button>
+      </DuncitButton>
       <Typography variant="body2" sx={{
         color: "text.secondary"
       }}>

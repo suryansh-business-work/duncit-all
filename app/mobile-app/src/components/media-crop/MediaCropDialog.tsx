@@ -24,6 +24,7 @@ import { FileDetails } from './FileDetails';
 import type { MediaDetails } from './format';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fallbackT, type Translate } from '@/i18n/fallback';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type UploadStage = 'processing' | 'uploading' | 'compressing';
 
@@ -101,7 +102,7 @@ function CropPresetChips({ options, selectedKey, suggestedKey, onSelect }: Reado
             borderWidth={1}
             borderColor={selected ? '$primary' : 'rgba(255,255,255,0.3)'}
             backgroundColor={selected ? '$primary' : 'transparent'}
-            pressStyle={{ opacity: 0.8 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={12} fontWeight="700" color="#ffffff">
               {preset.label}
@@ -332,6 +333,7 @@ function CropHeader({
         {isImage ? 'Crop & upload' : 'Upload video'}
       </Text>
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         testID="crop-close"
         role="button"
         aria-label={t('mweb.common.cancel')}
@@ -380,7 +382,7 @@ function CropActions({
         borderWidth={1}
         borderColor="rgba(255,255,255,0.4)"
         opacity={uploading ? 0.6 : 1}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color="#ffffff">
           Cancel
@@ -400,7 +402,7 @@ function CropActions({
         borderRadius={999}
         backgroundColor="$primary"
         opacity={uploading ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {uploading ? <Spinner size="small" color={onPrimary} /> : null}
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
@@ -433,7 +435,7 @@ function ZoomButton({ icon, label, testID, onPress }: Readonly<ZoomButtonProps>)
       justifyContent="center"
       borderRadius={24}
       backgroundColor="rgba(255,255,255,0.16)"
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <MaterialIcons name={icon} size={22} color="#ffffff" />
     </XStack>

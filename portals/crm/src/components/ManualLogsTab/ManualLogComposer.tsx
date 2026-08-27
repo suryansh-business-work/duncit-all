@@ -1,7 +1,8 @@
-import { Alert, Button, Card, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Card, Stack, TextField, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import type { LogBody } from './types';
 import { useTranslation } from '@duncit/shell';
@@ -44,9 +45,9 @@ export function ManualLogComposer(props: Readonly<Props>) {
           }}>
           New manual log
         </Typography>
-        <IconButton size="small" aria-label={t('shell.common.cancel')} onClick={onCancel} disabled={saving}>
+        <DuncitIconButton size="small" aria-label={t('shell.common.cancel')} onClick={onCancel} disabled={saving}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <TextField
         fullWidth
@@ -76,10 +77,10 @@ export function ManualLogComposer(props: Readonly<Props>) {
           justifyContent: "flex-end",
           mt: 1.5
         }}>
-        <Button onClick={onCancel} disabled={saving}>
+        <DuncitButton onClick={onCancel} disabled={saving}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           startIcon={<SendIcon />}
           onClick={onSubmit}
@@ -87,7 +88,7 @@ export function ManualLogComposer(props: Readonly<Props>) {
           data-testid="manual-log-save"
         >
           {saving ? 'Saving…' : 'Save log'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Card>
   );

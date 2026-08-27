@@ -9,6 +9,7 @@ import type { UserNotification } from '@/hooks/useNotifications';
 import { formatRelative } from '@/utils/date-format';
 import { notificationIconName } from '@/utils/notification-icon';
 import { FollowRequestActions } from './FollowRequestActions';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** A single notification card — chat-style row (avatar · title + preview ·
  * time), with unread cards highlighted by the primary gradient (B3-4).
@@ -138,7 +139,7 @@ export function NotificationRow({
         opacity={rowOpacity}
         borderRadius={16}
         overflow="hidden"
-        pressStyle={{ opacity: 0.9 }}
+        pressStyle={PRESS_STYLE.surface}
       >
         <LinearGradient
           colors={['#ff4f73', '#ff7a59']}
@@ -164,7 +165,7 @@ export function NotificationRow({
       borderColor="$borderColor"
       backgroundColor="$surface"
       overflow="hidden"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {body}
     </XStack>

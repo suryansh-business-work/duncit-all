@@ -1,8 +1,9 @@
-import { IconButton, Stack, Tooltip } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -24,26 +25,26 @@ export default function PodActionButtons({ pod, onEdit, onQuickEdit, onDelete, o
     }}>
       {!cancelled && (
         <Tooltip title={t('admin.completePod.title')}>
-          <IconButton size="small" color="success" onClick={() => onComplete(pod)}>
+          <DuncitIconButton size="small" color="success" onClick={() => onComplete(pod)}>
             <TaskAltIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
       <Tooltip title={t('admin.pods.quickEditHint')}>
-        <IconButton size="small" onClick={() => onQuickEdit(pod)}>
+        <DuncitIconButton size="small" onClick={() => onQuickEdit(pod)}>
           <EditNoteIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.common.edit')}>
-        <IconButton size="small" onClick={() => onEdit(pod)}>
+        <DuncitIconButton size="small" onClick={() => onEdit(pod)}>
           <EditIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       {!cancelled && (
         <Tooltip title={t('shell.common.delete')}>
-          <IconButton size="small" onClick={() => onDelete(pod)}>
+          <DuncitIconButton size="small" onClick={() => onDelete(pod)}>
             <DeleteIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
     </Stack>

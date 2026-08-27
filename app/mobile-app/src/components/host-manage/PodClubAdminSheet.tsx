@@ -9,6 +9,7 @@ import { ClubAdminCard } from '@/components/pod-pending';
 import { useClubAdmins } from '@/hooks/useClubAdmins';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PodClubAdminTarget {
   id: string;
@@ -72,6 +73,7 @@ export function PodClubAdminSheet({
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="pod-club-admin-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.podClubAdmin.close')}
             onPress={onClose}

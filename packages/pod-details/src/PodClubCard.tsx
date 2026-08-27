@@ -1,8 +1,9 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import SectionCard from './SectionCard';
 import { POD_CLUB_DETAIL } from './queries';
 import { useTranslation } from './i18n/useTranslation';
@@ -32,9 +33,9 @@ export default function PodClubCard({ clubId }: Readonly<Props>) {
       empty={!error && !loading && !club ? t('podDetailsPanel.common.noClubLinked') : null}
       action={
         club && (
-          <Button size="small" endIcon={<OpenInNewIcon />} onClick={() => navigate(`/clubs/${club.id}`)}>
+          <DuncitButton size="small" endIcon={<OpenInNewIcon />} onClick={() => navigate(`/clubs/${club.id}`)}>
             {t('podDetailsPanel.podClubCard.viewClub')}
-          </Button>
+          </DuncitButton>
         )
       }
     >

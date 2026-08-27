@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import AttachmentsField from '../../forms/support-form/AttachmentsField';
 import { CREATE_TICKET, type TicketCategory } from '../support-tickets/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -86,14 +86,14 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('mweb.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           disabled={loading || !subject.trim() || !message.trim()}
           onClick={submit}
         >
           Create
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

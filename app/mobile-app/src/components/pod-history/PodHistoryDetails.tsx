@@ -21,6 +21,7 @@ import { PodHistoryActions } from './PodHistoryActions';
 import { PodHistoryTimeline } from './PodHistoryTimeline';
 import { PodProductOrdersCard } from './PodProductOrdersCard';
 import { ReplacementNotice } from './ReplacementNotice';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PodHistoryDetailsProps {
   item: PodMembership;
@@ -213,6 +214,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
 
       <XStack flexWrap="wrap" gap={16} paddingHorizontal={4}>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="ph-backout-terms"
           role="button"
           aria-label={t('mweb.podHistory.backoutTerms')}
@@ -224,6 +226,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           {t('mweb.podHistory.backoutTerms')}
         </Text>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="ph-general-terms"
           role="button"
           aria-label={t('mweb.podHistory.generalTerms')}

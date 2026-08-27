@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import { Box, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Paper, Skeleton, Stack, Typography, useTheme } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { COIN_TILE } from './profileSections';
@@ -13,7 +13,10 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
   const { t } = useTranslation();
   const theme = useTheme();
   const gold = coinGold(theme.palette.mode);
-  const { data } = useQuery(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
+  const { data, loading } = useQuery(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
+  // A balance of 0 is a real answer, so it must not be what the card shows
+  // while the query is still deciding — it would tick up a beat later.
+  const pending = loading && !data;
   const balance = data?.myCoinBalance?.balance ?? 0;
   const earnPct = data?.myCoinBalance?.earn_pct ?? 0;
 
@@ -59,20 +62,21 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
             }}>
               {t('mweb.coin.title')}
             </Typography>
-            <Typography variant="body2" noWrap sx={{
-              color: "text.secondary"
-            }}>
-              {t('mweb.coin.sidebarCaption', { vars: { pct: earnPct } })}
-            </Typography>
+            {pending ? (
+              <Skeleton width="65%" height={20} />
+            ) : (
+              <Typography variant="body2" noWrap sx={{ color: 'text.secondary' }}>
+                {t('mweb.coin.sidebarCaption', { vars: { pct: earnPct } })}
+              </Typography>
+            )}
           </Box>
-          <Typography
-            noWrap
-            sx={{
-              fontWeight: 700,
-              color: gold
-            }}>
-            {balance}
-          </Typography>
+          {pending ? (
+            <Skeleton width={28} height={24} />
+          ) : (
+            <Typography noWrap sx={{ fontWeight: 700, color: gold }}>
+              {balance}
+            </Typography>
+          )}
           <ChevronRightIcon color="disabled" />
         </Stack>
       </Paper>

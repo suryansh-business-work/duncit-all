@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import BackoutRefundInfoCards from './BackoutRefundInfoCards';
 import BackoutTimeline from './BackoutTimeline';
@@ -46,9 +47,9 @@ export default function BackoutRefundDetailPage() {
                 alignItems: "center",
                 mb: 3
               }}>
-              <IconButton aria-label={t('finance.backoutRefund.backToBackoutRefunds')} onClick={() => navigate('/backout-refunds')}>
+              <DuncitIconButton aria-label={t('finance.backoutRefund.backToBackoutRefunds')} onClick={() => navigate('/backout-refunds')}>
                 <ArrowBackIcon />
-              </IconButton>
+              </DuncitIconButton>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" sx={{
                   fontWeight: 700

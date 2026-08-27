@@ -5,6 +5,7 @@ import type { PostComment, PostDetail } from '@/hooks/usePostViewer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   post: PostDetail;
@@ -59,7 +60,7 @@ function PostCommentRow({
           aria-label={t('mweb.common.deleteComment')}
           onPress={onDelete}
           padding={4}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="delete-outline" size={18} color={muted} />
         </XStack>
@@ -89,7 +90,7 @@ export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Re
           onPress={onToggleLike}
           alignItems="center"
           gap={6}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons
             name={post.liked_by_me ? 'favorite' : 'favorite-border'}

@@ -3,7 +3,6 @@ import { useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Checkbox,
   CircularProgress,
   List,
@@ -13,6 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { MATCHING_CLUBS, categoryPath, type ClubAdminRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -88,14 +88,14 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
             Clubs matching {categoryPath(row)}
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           size="small"
           variant="contained"
           disabled={saving}
           onClick={() => onSave([...selected])}
         >
           {saving ? 'Saving…' : 'Save clubs'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {!hasTaxonomy && (

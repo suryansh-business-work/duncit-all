@@ -5,6 +5,7 @@ import type { PodMediaLabels } from '@duncit/utils';
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PodMediaItem } from '@/hooks/usePodMediaBoard';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   items: readonly PodMediaItem[];
@@ -46,6 +47,7 @@ export function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly
             />
             {onRemove && item.can_remove ? (
               <XStack
+                pressStyle={PRESS_STYLE.control}
                 testID={`pod-media-remove-${item.url}`}
                 position="absolute"
                 top={6}

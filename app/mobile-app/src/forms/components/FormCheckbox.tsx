@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface FormCheckboxProps<T extends FieldValues> {
   control: Control<T>;
@@ -34,7 +35,7 @@ export function FormCheckbox<T extends FieldValues>({
       onPress={() => field.onChange(!checked)}
       alignItems="center"
       gap={10}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons
         name={checked ? 'check-box' : 'check-box-outline-blank'}

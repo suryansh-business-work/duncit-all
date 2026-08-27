@@ -1,18 +1,10 @@
 import { useMemo } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForwardIos';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { Slot, TIME_OPTIONS, buildMonth, isPastDay, isSameDay, slotKey } from './slotHelpers';
 import { formatDate, formatDateTime } from '../../utils/dateFormat';
 
@@ -71,12 +63,12 @@ export default function InterviewCalendar({
           }}>
           <Typography variant="h6">{monthLabel}</Typography>
           <Stack direction="row" spacing={0.5}>
-            <IconButton size="small" onClick={goPrevMonth}>
+            <DuncitIconButton size="small" onClick={goPrevMonth}>
               <ArrowBackIcon fontSize="inherit" />
-            </IconButton>
-            <IconButton size="small" onClick={goNextMonth}>
+            </DuncitIconButton>
+            <DuncitIconButton size="small" onClick={goNextMonth}>
               <ArrowForwardIcon fontSize="inherit" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         </Stack>
         <Box
@@ -105,7 +97,7 @@ export default function InterviewCalendar({
             const active = selectedDate && isSameDay(d, selectedDate);
             const inactiveColor = past ? 'text.disabled' : 'text.primary';
             return (
-              <Button
+              <DuncitButton
                 key={key}
                 onClick={() => !past && setSelectedDate(d)}
                 disabled={past}
@@ -121,7 +113,7 @@ export default function InterviewCalendar({
                 }}
               >
                 {d.getDate()}
-              </Button>
+              </DuncitButton>
             );
           })}
         </Box>

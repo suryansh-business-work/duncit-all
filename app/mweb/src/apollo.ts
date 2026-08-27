@@ -3,6 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
 import { getMainDefinition } from '@apollo/client/utilities';
 import {
+  APP_HEADER,
   NO_REDIS_HEADER,
   SURFACE_HEADER,
   getOrCreateDuid,
@@ -31,6 +32,9 @@ const authLink = setContext((_op, { headers }) => {
       // Names this surface on the server, which stamps it onto the admin user
       // change log — mWeb and the native app are otherwise indistinguishable.
       [SURFACE_HEADER]: 'MWEB',
+      // The app key the platform rate limiter counts against, so mWeb carries
+      // its own ceiling rather than one shared with the native twin.
+      [APP_HEADER]: 'mweb',
       // `?noRedis=true` in the URL: skip the server's Redis response cache
       // for every request from this tab (sticky until ?noRedis=false).
       ...(resolveNoRedisFlag() ? { [NO_REDIS_HEADER]: 'true' } : {}),
@@ -84,9 +88,18 @@ export const apolloClient = new ApolloClient({
       // warns about possible data loss when two queries return different Branding
       // shapes. Replace the whole field on each fetch (no normalization needed).
       Branding: { keyFields: false },
+      // PodMembershipState carries no `id`, so Apollo cannot normalize it:
+      // every query selecting it writes the SAME ROOT_QUERY field, keyed by
+      // pod_doc_id, and the default there is to REPLACE. Pod History asks for
+      // three of its fields and Pod Details for twenty, so visiting one page
+      // truncated the other's cached copy (Apollo error #15) and the seat
+      // count, refund estimate and attempt counter went missing until the
+      // network answered again. Merge the two selections instead.
+      PodMembershipState: { keyFields: false },
       Query: {
         fields: {
           branding: { merge: (_existing, incoming) => incoming },
+          podMembershipState: { merge: true },
         },
       },
     },

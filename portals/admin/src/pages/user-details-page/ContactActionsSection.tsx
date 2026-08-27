@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Chip, IconButton, Link, Stack, Typography } from '@mui/material';
+import { Chip, Link, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   DuncitTable,
   useApolloTableFetch,
@@ -100,9 +101,9 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       <Stack direction="row" component="span" sx={{
         justifyContent: "flex-end"
       }}>
-        <IconButton size="small" color="error" onClick={() => remove(a)} aria-label={t('admin.contact.deleteLog')}>
+        <DuncitIconButton size="small" color="error" onClick={() => remove(a)} aria-label={t('admin.contact.deleteLog')}>
           <DeleteIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     );
     return [

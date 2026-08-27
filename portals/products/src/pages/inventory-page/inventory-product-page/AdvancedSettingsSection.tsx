@@ -1,14 +1,7 @@
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  Grid,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-} from '@mui/material';
+import { Grid, InputAdornment, MenuItem, Stack, TextField, Tooltip } from '@mui/material';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
+import { DuncitButton } from '@duncit/buttons';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import QrPreview from './QrPreview';
@@ -68,9 +61,9 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
                   endAdornment: (
                     <InputAdornment position="end">
                       <Tooltip title={t('products.advanced.generateSku')}>
-                        <Button size="small" onClick={onGenerate} disabled={generating}>
+                        <DuncitButton size="small" onClick={onGenerate} disabled={generating}>
                           <AutorenewIcon fontSize="small" />
-                        </Button>
+                        </DuncitButton>
                       </Tooltip>
                     </InputAdornment>
                   ),

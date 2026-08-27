@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   payment: NonNullable<GiftCardPayment>;
@@ -103,7 +104,7 @@ export function GiftCardPurchaseSuccess({
         borderWidth={1}
         borderColor="$primary"
         opacity={busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {busy ? (
           <Spinner size="small" color="$primary" />
@@ -126,7 +127,7 @@ export function GiftCardPurchaseSuccess({
           justifyContent="center"
           borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {t('mweb.checkout.home')}
@@ -144,7 +145,7 @@ export function GiftCardPurchaseSuccess({
           borderRadius={999}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color="$color">
             {t('mweb.giftCards.viewMyCards')}

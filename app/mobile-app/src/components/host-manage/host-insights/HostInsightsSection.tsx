@@ -19,6 +19,7 @@ import { InsightCard } from './InsightCard';
 import { InsightsBars, InsightsDonut, InsightsLine } from './InsightCharts';
 import { HostInsightsFilterSheet } from './HostInsightsFilterSheet';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const PRIMARY = '#ff5757';
 const INFO = '#3b82f6';
@@ -110,7 +111,7 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
             borderRadius={10}
             borderWidth={1}
             borderColor="$borderColor"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="filter-list" size={18} color={ink} />
           </XStack>

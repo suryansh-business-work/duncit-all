@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Chip,
   FormControlLabel,
   Paper,
@@ -10,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitButton } from '@duncit/buttons';
 import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { useTranslation } from '@duncit/shell';
 import {
@@ -97,7 +97,7 @@ export default function ReplyMessageStep({
       />
 
       <Stack direction="row">
-        <Button
+        <DuncitButton
           type="button"
           variant="outlined"
           startIcon={<VisibilityIcon />}
@@ -105,7 +105,7 @@ export default function ReplyMessageStep({
           onClick={onPreview}
         >
           {t('support.mailAutomation.preview')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {preview && (

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { usernameBlocksSave, type ContactSnapshot, type UsernameStatus } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
@@ -173,7 +174,7 @@ export default function AccountEditForm({
           pincodeHint="6-digit PIN code"
         />
         <Stack direction="row" spacing={1}>
-          <Button
+          <DuncitButton
             type="button"
             variant="outlined"
             color="inherit"
@@ -182,14 +183,14 @@ export default function AccountEditForm({
             data-testid="account-edit-discard"
           >
             Discard changes
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             type="submit"
             variant="contained"
             disabled={loading || !isDirty || !isValid || handleBlocked}
           >
             {loading ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

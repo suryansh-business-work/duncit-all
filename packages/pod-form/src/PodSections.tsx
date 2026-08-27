@@ -1,15 +1,9 @@
 import { JSX, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Button,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import { DuncitButton } from '@duncit/buttons';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { usePodFormData } from './context';
 import MediaField from './components/MediaField';
@@ -92,12 +86,12 @@ export default function PodSections() {
         sx={{
           justifyContent: "flex-end"
         }}>
-        <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
+        <DuncitButton size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
           Expand all
-        </Button>
-        <Button size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0} aria-label={t('podForm.podSections.collapseAllSections')}>
+        </DuncitButton>
+        <DuncitButton size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0} aria-label={t('podForm.podSections.collapseAllSections')}>
           Collapse all
-        </Button>
+        </DuncitButton>
       </Stack>
       <Controller
         control={control}

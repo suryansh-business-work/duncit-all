@@ -1,6 +1,7 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SpellcheckIcon from '@mui/icons-material/Spellcheck';
+import { DuncitButton } from '@duncit/buttons';
 import ImportKeysButton from './ImportKeysButton';
 
 interface Props {
@@ -56,9 +57,9 @@ export default function TranslationsHeader({
           onDone={onImported}
           onError={onError}
         />
-        <Button variant="contained" startIcon={<AddIcon />} disabled={!canAdd} onClick={onAdd}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} disabled={!canAdd} onClick={onAdd}>
           Add translation
-        </Button>
+        </DuncitButton>
       </Stack>
     </Stack>
   );

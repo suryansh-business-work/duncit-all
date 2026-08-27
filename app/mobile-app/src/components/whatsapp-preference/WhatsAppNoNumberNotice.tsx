@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Shown when the account carries no sendable WhatsApp number. Tamagui twin of
@@ -46,7 +47,7 @@ export function WhatsAppNoNumberNotice({ onAddNumber }: Readonly<{ onAddNumber: 
         borderRadius={12}
         borderWidth={1}
         borderColor={primary}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color={primary}>
           {t('whatsappPreference.addNumber')}

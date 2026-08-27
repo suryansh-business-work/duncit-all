@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Box, CircularProgress, Dialog, IconButton, Stack, Typography } from '@mui/material';
+import { Box, CircularProgress, Dialog, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   matchesNotificationFilter,
   notificationChips,
@@ -104,13 +105,13 @@ export default function NotificationsScreen({
             py: 1.25,
             flexShrink: 0
           }}>
-          <IconButton
+          <DuncitIconButton
             onClick={onClose}
             aria-label={t('mweb.common.closeNotifications')}
             sx={{ bgcolor: 'action.hover' }}
           >
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
               Notifications
@@ -124,7 +125,7 @@ export default function NotificationsScreen({
               {headerSubtitle}
             </Typography>
           </Box>
-          <IconButton
+          <DuncitIconButton
             onClick={onMarkAll}
             disabled={liveUnread === 0 || markAllBusy}
             aria-label={t('mweb.common.markAllAsRead')}
@@ -132,7 +133,7 @@ export default function NotificationsScreen({
             sx={{ bgcolor: 'action.hover' }}
           >
             {markAllBusy ? <CircularProgress size={20} color="inherit" /> : <DoneAllIcon />}
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
 
         <NotificationsHero

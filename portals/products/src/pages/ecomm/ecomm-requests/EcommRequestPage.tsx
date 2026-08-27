@@ -3,7 +3,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery, type DocumentNode } from '@apollo/client';
-import { Button, Divider, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Divider, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import ChangeRequestList from './ChangeRequestList';
 import { MY_ECOMM_CHANGE_REQUESTS, SUBMIT_ECOMM_CHANGE } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -157,9 +158,9 @@ export default function EcommRequestPage({ config }: Readonly<{ config: EcommReq
                 )}
               />
             ))}
-            <Button variant="contained" onClick={onSubmit} disabled={loading} sx={{ alignSelf: 'flex-start' }}>
+            <DuncitButton variant="contained" onClick={onSubmit} disabled={loading} sx={{ alignSelf: 'flex-start' }}>
               Submit change request
-            </Button>
+            </DuncitButton>
           </>
         )}
       </Stack>

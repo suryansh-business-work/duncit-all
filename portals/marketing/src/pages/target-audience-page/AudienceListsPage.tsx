@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
@@ -77,13 +78,13 @@ export default function AudienceListsPage() {
             join and change.
           </Typography>
         </Stack>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/audience/new')}
         >
           Create list
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <DuncitTable<AudienceListRow>

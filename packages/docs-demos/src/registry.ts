@@ -20,6 +20,8 @@ const DEMOS: Record<string, DemoLoader> = {
   'availability-calendar': () => import('./demos/availability-calendar'),
   'brand': () => import('./demos/brand'),
   'breadcrumb': () => import('./demos/breadcrumb'),
+  'buttons': () => import('./demos/buttons'),
+  'buttons-native': () => import('./demos/buttons-native'),
   'captcha': () => import('./demos/captcha'),
   'category': () => import('./demos/category'),
   'club-form': () => import('./demos/club-form'),
@@ -59,6 +61,7 @@ const DEMOS: Record<string, DemoLoader> = {
   'user-context': () => import('./demos/user-context'),
   'user-core': () => import('./demos/user-core'),
   'utils': () => import('./demos/utils'),
+  'verification': () => import('./demos/verification'),
   'virtual-scroll': () => import('./demos/virtual-scroll'),
 };
 
@@ -79,6 +82,8 @@ const SOURCES: Record<string, SourceLoader> = {
   'availability-calendar': () => import('./demos/availability-calendar.tsx?raw'),
   'brand': () => import('./demos/brand.tsx?raw'),
   'breadcrumb': () => import('./demos/breadcrumb.tsx?raw'),
+  'buttons': () => import('./demos/buttons.tsx?raw'),
+  'buttons-native': () => import('./demos/buttons-native.tsx?raw'),
   'captcha': () => import('./demos/captcha.tsx?raw'),
   'category': () => import('./demos/category.tsx?raw'),
   'club-form': () => import('./demos/club-form.tsx?raw'),
@@ -118,6 +123,7 @@ const SOURCES: Record<string, SourceLoader> = {
   'user-context': () => import('./demos/user-context.tsx?raw'),
   'user-core': () => import('./demos/user-core.tsx?raw'),
   'utils': () => import('./demos/utils.tsx?raw'),
+  'verification': () => import('./demos/verification.tsx?raw'),
   'virtual-scroll': () => import('./demos/virtual-scroll.tsx?raw'),
 };
 

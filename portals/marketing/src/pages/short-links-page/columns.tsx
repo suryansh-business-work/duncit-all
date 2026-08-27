@@ -1,5 +1,6 @@
-import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { EM_DASH, actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import type { CampaignChoice, ShortLinkOption, ShortLinkRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -133,9 +134,9 @@ export function getShortLinkColumns({
       delete: { title: t('marketing.shortLinks.deleteLink') },
       renderExtra: (row) => (
         <Tooltip title={t('marketing.shortLinks.openLinkDetails')}>
-          <IconButton size="small" aria-label={t('marketing.shortLinks.openLinkDetails')} onClick={() => onView(row)}>
+          <DuncitIconButton size="small" aria-label={t('marketing.shortLinks.openLinkDetails')} onClick={() => onView(row)}>
             <VisibilityOutlinedIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       ),
     }),

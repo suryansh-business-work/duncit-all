@@ -2,6 +2,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ProcessingOverlayProps {
   open: boolean;
@@ -28,6 +29,7 @@ export function ProcessingOverlay({ open, message }: Readonly<ProcessingOverlayP
 
   return (
     <YStack
+      pressStyle={PRESS_STYLE.surface}
       testID="checkout-processing"
       position="absolute"
       top={0}

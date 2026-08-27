@@ -4,6 +4,7 @@ import { Separator, Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { MenuRoute } from '@/navigation/types';
 import type { ProfileTile } from './profileSections';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function ManageRow({
   item,
@@ -22,7 +23,7 @@ function ManageRow({
         gap={12}
         paddingHorizontal={14}
         paddingVertical={9}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name={item.icon} size={20} color={muted} />
         <Text flex={1} fontSize={14} fontWeight="700" color="$color">

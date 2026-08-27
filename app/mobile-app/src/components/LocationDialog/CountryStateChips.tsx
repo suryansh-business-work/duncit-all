@@ -7,6 +7,7 @@ import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { countryFlagUrl, type CountryNode } from '@/utils/location-tree';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   tree: CountryNode[];
@@ -44,7 +45,7 @@ function Chip({
       borderColor={active ? '$primary' : '$borderColor'}
       borderWidth={active ? 1.5 : 1}
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {flag ? (
         <AppImage source={{ uri: flag }} style={{ width: 22, height: 16, borderRadius: 2 }} />

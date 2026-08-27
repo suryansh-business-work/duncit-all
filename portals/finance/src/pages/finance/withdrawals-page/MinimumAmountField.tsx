@@ -1,13 +1,6 @@
 import { Controller, type Control } from 'react-hook-form';
-import {
-  Button,
-  Card,
-  CardContent,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Card, CardContent, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ROLE_HINTS, ROLE_LABELS, ROLE_MINIMUM_FIELD, type WithdrawerRole } from './roles';
 import type { WithdrawalMinimumsForm } from './withdrawal-minimums.schema';
 import { useTranslation } from '@duncit/app-settings';
@@ -78,14 +71,14 @@ export default function MinimumAmountField({
               />
             )}
           />
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={!dirty || saving}
             onClick={() => onSave(role)}
             sx={{ mt: { xs: 0, sm: 0.25 } }}
           >
             Save
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

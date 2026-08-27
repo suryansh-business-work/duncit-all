@@ -3,7 +3,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import PolicyRenderer from '../../components/PolicyRenderer';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -144,17 +144,17 @@ export default function BackoutConfirmDialog({
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('mweb.podDetails.close')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           color="error"
           onClick={() => onConfirm(releasing)}
           disabled={busy}
         >
           {busy ? t('mweb.podDetails.backingOut') : t('mweb.podDetails.confirmBackout')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

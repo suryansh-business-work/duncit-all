@@ -8,6 +8,7 @@ import { PressScale } from '@/animations/PressScale';
 import type { PodComment } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function relativeTime(iso: string): string {
   const date = new Date(iso);
@@ -71,6 +72,7 @@ export function CommentRow({
       <YStack flex={1} gap={2}>
         <XStack gap={8} alignItems="center">
           <Text
+            pressStyle={PRESS_STYLE.inline}
             testID={`comment-name-${comment.id}`}
             role="button"
             aria-label={t('mweb.podDetails.openProfileOf', { vars: { name: authorName } })}
@@ -98,7 +100,7 @@ export function CommentRow({
         gap={3}
         paddingHorizontal={4}
         paddingVertical={2}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         <MaterialIcons
           name={liked ? 'favorite' : 'favorite-border'}

@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { clientTableFetch, type TableQueryState } from '@duncit/table';
@@ -151,9 +152,9 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
         refetchRef={refetchRef}
         toolbarActions={
           kind === 'AI' ? (
-            <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
+            <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
               {copy.addPrompt}
-            </Button>
+            </DuncitButton>
           ) : undefined
         }
         onEdit={openEdit}

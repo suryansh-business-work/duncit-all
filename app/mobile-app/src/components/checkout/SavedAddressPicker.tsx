@@ -11,6 +11,7 @@ import { MyAddressesDocument } from '@/graphql/address-book';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -84,7 +85,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$background"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="home-work" size={18} color={primary} />
         <Text
@@ -104,6 +105,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
         <ModalThemeScope>
           <YStack flex={1} justifyContent="flex-end">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               testID="checkout-address-backdrop"
               role="button"
               aria-label={t('mweb.checkout.close')}
@@ -143,7 +145,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
                         borderRadius={12}
                         borderWidth={1}
                         borderColor={address.id === selectedId ? primary : '$borderColor'}
-                        pressStyle={{ opacity: 0.85 }}
+                        pressStyle={PRESS_STYLE.control}
                       >
                         <MaterialIcons
                           name={

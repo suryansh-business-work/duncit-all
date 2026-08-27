@@ -1,15 +1,7 @@
-import {
-  Box,
-  Card,
-  CardActionArea,
-  Checkbox,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardActionArea, Checkbox, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatBytes } from '@duncit/media-picker';
 import type { MediaItem } from './queries';
 import { thumbUrl } from './transform';
@@ -54,14 +46,14 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
         }}
       />
       <Tooltip title={t('shell.fileManager.copyLink')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={() => onCopy(file)}
           aria-label={`Copy link to ${file.name}`}
           sx={{ position: 'absolute', top: 2, right: 2, zIndex: 1, bgcolor: 'background.paper' }}
         >
           <ContentCopyIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
 
       <CardActionArea onClick={() => onOpen(file)} sx={{ height: '100%' }}>

@@ -1,7 +1,8 @@
-import { Alert, AlertTitle, Avatar, Button, Chip, Link, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Avatar, Chip, Link, Stack, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { DuncitButton } from '@duncit/buttons';
 import type {
   PodAttendanceClubAdmin,
   PodAttendanceLabels,
@@ -147,7 +148,7 @@ export function ScanCta({
   icon,
 }: Readonly<{ labels: PodAttendanceLabels; onScan: () => void; icon: React.ReactElement }>) {
   return (
-    <Button
+    <DuncitButton
       fullWidth
       size="large"
       variant="contained"
@@ -157,6 +158,6 @@ export function ScanCta({
       sx={{ borderRadius: 999, fontWeight: 800, py: 1.25 }}
     >
       {labels.scanCta}
-    </Button>
+    </DuncitButton>
   );
 }

@@ -1,4 +1,5 @@
-import { Alert, Button, Chip, Paper, Stack, TextField, ThemeProvider } from '@mui/material';
+import { Alert, Chip, Paper, Stack, TextField, ThemeProvider } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { createDuncitTheme, tokens } from '@duncit/theme';
 import { defineDemo, defineDemos } from '../types';
 
@@ -38,9 +39,9 @@ export default defineDemos('theme', [
             <Stack direction="row" spacing={1} useFlexGap sx={{
               flexWrap: "wrap"
             }}>
-              <Button variant="contained">Create pod</Button>
-              <Button variant="outlined">Cancel</Button>
-              <Button variant="text">Learn more</Button>
+              <DuncitButton variant="contained">Create pod</DuncitButton>
+              <DuncitButton variant="outlined">Cancel</DuncitButton>
+              <DuncitButton variant="text">Learn more</DuncitButton>
               <Chip label="HOST" color="primary" />
               <Chip label="PENDING" color="warning" variant="outlined" />
             </Stack>

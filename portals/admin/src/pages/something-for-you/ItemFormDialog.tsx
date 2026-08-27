@@ -1,5 +1,4 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   Switch,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';
 import CallToActionSection from './CallToActionSection';
 import { TITLE_MAX, type SomethingForYouForm } from './queries';
@@ -91,16 +91,16 @@ export default function ItemFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={onSave}
           disabled={busy || !form.title.trim() || tooLong}
         >
           Save
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,6 +11,7 @@ import {
   Stack,
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import TemplateSample from '../wa-aisensy/TemplateSample';
@@ -171,12 +171,12 @@ export default function WaCampaignForm({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>
+          <DuncitButton type="button" onClick={onClose} disabled={busy}>
             Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
             {submitLabel}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

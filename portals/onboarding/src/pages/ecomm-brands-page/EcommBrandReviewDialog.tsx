@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Box,
-  Button,
   Chip,
   Dialog,
   DialogActions,
@@ -15,6 +14,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -231,7 +231,7 @@ export default function EcommBrandReviewDialog({
                   input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
                   htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Product sales commission percentage' }
                 }} />
-              <Button
+              <DuncitButton
                 variant="outlined"
                 size="small"
                 onClick={saveCommission}
@@ -239,20 +239,20 @@ export default function EcommBrandReviewDialog({
                 sx={{ whiteSpace: 'nowrap', mb: 2.5 }}
               >
                 {savingCommission ? 'Saving…' : 'Save commission'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </Paper>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
         <Box sx={{ flex: 1 }} />
-        <Button color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
+        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
           Reject
-        </Button>
-        <Button variant="contained" color="success" onClick={onApprove}>
+        </DuncitButton>
+        <DuncitButton variant="contained" color="success" onClick={onApprove}>
           Approve
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

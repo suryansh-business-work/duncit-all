@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Box,
-  Button,
   Checkbox,
   Chip,
   CircularProgress,
@@ -17,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import { ENV_ENTRIES, type EnvEntry } from './queries';
 import { SET_PORTAL_ENV_ENTRIES, type PortalListItem } from './portal-env-queries';
 import { notify } from '@duncit/dialogs';
@@ -153,10 +153,10 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
             justifyContent: "flex-end",
             p: 2
           }}>
-          <Button onClick={onClose} disabled={setState.loading}>{t('shell.common.cancel')}</Button>
-          <Button variant="contained" onClick={save} disabled={setState.loading}>
+          <DuncitButton onClick={onClose} disabled={setState.loading}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton variant="contained" onClick={save} disabled={setState.loading}>
             {setState.loading ? 'Saving…' : `Save (${selected.size})`}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Drawer>

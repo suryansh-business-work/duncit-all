@@ -14,6 +14,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { CommentComposer } from './CommentComposer';
 import { CommentRow } from './CommentRow';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   podId: string;
@@ -117,6 +118,7 @@ export function PodCommentsSheet({
         <KeyboardScreen>
           <YStack flex={1} testID="pod-comments-sheet">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.podDetails.close')}
               onPress={onClose}
@@ -149,6 +151,7 @@ export function PodCommentsSheet({
                     {t('mweb.podDetails.comments')}
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID="pod-comments-close"
                     role="button"
                     aria-label={t('mweb.podDetails.close')}
@@ -204,6 +207,7 @@ export function PodCommentsSheet({
                   </Text>
                   <XStack gap={10} marginTop={12} justifyContent="flex-end">
                     <XStack
+                      pressStyle={PRESS_STYLE.surface}
                       testID="comment-delete-cancel"
                       role="button"
                       aria-label={t('mweb.podDetails.cancel')}
@@ -221,6 +225,7 @@ export function PodCommentsSheet({
                       </Text>
                     </XStack>
                     <XStack
+                      pressStyle={PRESS_STYLE.surface}
                       testID="comment-delete-confirm-btn"
                       role="button"
                       aria-label={t('mweb.podDetails.delete')}

@@ -7,7 +7,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
   CircularProgress,
@@ -17,11 +16,16 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { parseApiError } from '@duncit/utils';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { UPDATE_PRODUCT_SETTINGS } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import {
+  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_LISTING_ACCESS,
+  canManageProductListings,
+} from './productAccess';
 import { useTranslation } from '@duncit/shell';
 
 const settingsSchema = z.object({
@@ -101,9 +105,9 @@ export default function ProductSettingsPage() {
           background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
         }}
       >
-        <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
+        <DuncitButton onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
           {t('partners.venueAvailabilityPage.back')}
-        </Button>
+        </DuncitButton>
         <Typography
           variant="h4"
           sx={{
@@ -145,9 +149,9 @@ export default function ProductSettingsPage() {
                   />
                 )}
               />
-              <Button type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
+              <DuncitButton type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
                 {saving ? 'Saving...' : 'Save settings'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </CardContent>
         </Card>

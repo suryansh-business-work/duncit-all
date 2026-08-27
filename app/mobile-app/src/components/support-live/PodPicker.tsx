@@ -6,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDateTime } from '@/utils/date-format';
 import type { SupportPodOption } from '@/utils/support-pods';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PodPickerProps {
   options: SupportPodOption[];
@@ -46,6 +47,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
   return (
     <YStack gap={6}>
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         testID="pod-picker"
         role="button"
         aria-label={t('mweb.common.pod')}
@@ -103,7 +105,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
                 paddingHorizontal={12}
                 paddingVertical={10}
                 backgroundColor={isSelected ? '$primary' : 'transparent'}
-                pressStyle={{ opacity: 0.8 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <YStack flex={1}>
                   <Text

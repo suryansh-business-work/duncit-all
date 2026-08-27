@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { QueryGuard } from '@duncit/ui';
 import { CLUB_ADMIN_POD_LOOKUPS } from '../club-admin-club-pods-page/queries';
@@ -31,9 +32,9 @@ export default function ClubAdminAutoPodEditorPage() {
         <Alert severity="error" sx={{ width: '100%' }}>
           {t('admin.autoPods.clubCategoryMissing')}
         </Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
           {t('admin.autoPods.backToClubPods')}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   };

@@ -1,6 +1,4 @@
-import { Spinner, Text, XStack } from 'tamagui';
-
-import { PressScale } from '@/animations/PressScale';
+import { DuncitButton } from '@/components/DuncitButton';
 
 export interface PrimaryButtonProps {
   label: string;
@@ -10,8 +8,15 @@ export interface PrimaryButtonProps {
   testID?: string;
 }
 
-/** Primary call-to-action button with disabled and loading states. Presses
- * scale down and spring back via the shared PressScale wrapper. */
+/**
+ * The app's full-width call to action.
+ *
+ * Now a `DuncitButton` at `lg`: it used to carry its own height, radius,
+ * pressed opacity and disabled dim, which is exactly the drift the press system
+ * exists to remove. The API is unchanged — 24 call sites keep working — and the
+ * numbers now come from `@duncit/buttons-native`, the same ones mWeb's MUI
+ * theme reads.
+ */
 export function PrimaryButton({
   label,
   onPress,
@@ -19,39 +24,16 @@ export function PrimaryButton({
   loading = false,
   testID,
 }: Readonly<PrimaryButtonProps>) {
-  const isDisabled = disabled || loading;
-
   return (
-    <PressScale
-      testID={testID}
-      accessibilityLabel={label}
-      disabled={isDisabled}
+    <DuncitButton
+      testID={testID ?? 'primary-button'}
+      label={label}
       onPress={onPress}
-      style={{ width: '100%' }}
-    >
-      <XStack
-        aria-busy={loading}
-        alignItems="center"
-        justifyContent="center"
-        width="100%"
-        height={52}
-        borderRadius={999}
-        paddingHorizontal={20}
-        backgroundColor="$primary"
-        opacity={isDisabled ? 0.5 : 1}
-        shadowColor="$primary"
-        shadowOpacity={isDisabled ? 0 : 0.35}
-        shadowRadius={14}
-        shadowOffset={{ width: 0, height: 8 }}
-      >
-        {loading ? (
-          <Spinner color="$onPrimary" testID={`${testID ?? 'primary-button'}-spinner`} />
-        ) : (
-          <Text color="$onPrimary" fontSize={16} fontWeight="600">
-            {label}
-          </Text>
-        )}
-      </XStack>
-    </PressScale>
+      size="lg"
+      fullWidth
+      elevated
+      disabled={disabled}
+      loading={loading}
+    />
   );
 }

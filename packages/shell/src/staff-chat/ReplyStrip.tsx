@@ -1,5 +1,6 @@
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import type { StaffMessage } from './queries';
 
@@ -45,9 +46,9 @@ export default function ReplyStrip({ replyTo, nameOf, onCancel }: Readonly<Props
           {replyTo.text || replyTo.attachment_name || t('shell.chat.composer.attachment')}
         </Typography>
       </Box>
-      <IconButton size="small" onClick={onCancel} aria-label={t('shell.chat.composer.cancelReply')}>
+      <DuncitIconButton size="small" onClick={onCancel} aria-label={t('shell.chat.composer.cancelReply')}>
         <CloseIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }

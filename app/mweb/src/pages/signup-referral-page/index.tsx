@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { REFERRAL_CODE } from '@duncit/regex';
 import AuthBackground from '../../components/AuthBackground';
 import AuthLogo from '../../components/AuthLogo';
@@ -95,7 +96,7 @@ export default function SignupReferralPage() {
 
           {error && <Alert severity="error">{error}</Alert>}
 
-          <Button
+          <DuncitButton
             variant="contained"
             fullWidth
             disabled={loading || !trimmed || malformed}
@@ -104,10 +105,10 @@ export default function SignupReferralPage() {
             }}
           >
             {loading ? t('mweb.referral.applying') : t('mweb.referral.apply')}
-          </Button>
-          <Button variant="text" fullWidth onClick={() => navigate('/signup-survey')}>
+          </DuncitButton>
+          <DuncitButton variant="text" fullWidth onClick={() => navigate('/signup-survey')}>
             {t('mweb.referral.skip')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </AuthScreenFrame>
     </AuthBackground>

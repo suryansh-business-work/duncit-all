@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, IconButton, InputAdornment, Stack, keyframes } from '@mui/material';
+import { Alert, InputAdornment, Stack, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import { useTranslation } from '../../i18n/useTranslation';
 import { loginDefaults, makeLoginSchema, type LoginFormValues } from './login.types';
@@ -96,7 +97,7 @@ export default function LoginForm({
             ),
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton
+                <DuncitIconButton
                   size="small"
                   onClick={() => setShowPwd((v) => !v)}
                   edge="end"
@@ -107,12 +108,12 @@ export default function LoginForm({
                   ) : (
                     <VisibilityOutlinedIcon fontSize="small" />
                   )}
-                </IconButton>
+                </DuncitIconButton>
               </InputAdornment>
             ),
           } }}
         />
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -129,7 +130,7 @@ export default function LoginForm({
           }}
         >
           {loading ? t('mweb.login.submitting') : (submitLabel ?? t('mweb.login.submit'))}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>
     </form>

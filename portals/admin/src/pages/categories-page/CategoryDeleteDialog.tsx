@@ -1,5 +1,4 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -7,6 +6,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { CatItem, Level } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -51,12 +51,12 @@ export default function CategoryDeleteDialog({ target, busy, error, onClose, onC
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button onClick={onConfirm} color="error" variant="contained" disabled={busy}>
+        </DuncitButton>
+        <DuncitButton onClick={onConfirm} color="error" variant="contained" disabled={busy}>
           {busy ? 'Deleting…' : t('shell.common.delete')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

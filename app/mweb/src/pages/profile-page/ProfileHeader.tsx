@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ShareIcon from '@mui/icons-material/Share';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import FollowListDialog from '../../components/FollowListDialog';
 import ProfileAvatar from '../../components/profile-avatar';
 import ProfileHandleLink from './ProfileHandleLink';
@@ -81,9 +82,9 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
         }}
       >
         <Tooltip title={t('mweb.profile.accountSettings')}>
-          <IconButton onClick={onSettings} sx={{ position: 'absolute', top: 12, right: 12, color: '#fff', bgcolor: 'rgba(0,0,0,0.32)' }}>
+          <DuncitIconButton onClick={onSettings} sx={{ position: 'absolute', top: 12, right: 12, color: '#fff', bgcolor: 'rgba(0,0,0,0.32)' }}>
             <SettingsIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Box>
       <Stack
@@ -151,13 +152,13 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           />
         </Stack>
         <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
-          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
+          <DuncitButton fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
             New Post
-          </Button>
-          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
+          </DuncitButton>
+          <DuncitButton fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
             Edit profile
-          </Button>
-          <IconButton
+          </DuncitButton>
+          <DuncitIconButton
             onClick={() => shareProfile(me.user_id, displayName, me.username)}
             sx={{
               width: 44,
@@ -170,8 +171,8 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
             aria-label={t('mweb.common.shareProfile')}
           >
             <ShareIcon />
-          </IconButton>
-          <IconButton
+          </DuncitIconButton>
+          <DuncitIconButton
             onClick={onSettings}
             sx={{
               width: 44,
@@ -184,7 +185,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
             aria-label={t('mweb.profile.accountSettings')}
           >
             <SettingsIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       </Stack>
       <FollowListDialog

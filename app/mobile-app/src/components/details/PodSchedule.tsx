@@ -8,6 +8,7 @@ import type { PodDetail, PodLocation, PodVenue } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatMeetingPlatform, podScheduleLabel } from '@/utils/pod-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   pod: PodDetail;
@@ -127,7 +128,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }
               alignItems="center"
               gap={6}
               alignSelf="flex-start"
-              pressStyle={{ opacity: 0.7 }}
+              pressStyle={PRESS_STYLE.row}
             >
               <Text fontSize={14} fontWeight="600" color="$primary">
                 {t('mweb.podDetails.venueDetails')}

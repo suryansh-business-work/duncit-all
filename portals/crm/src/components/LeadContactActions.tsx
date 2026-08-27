@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import {
-  Button,
   ButtonGroup,
   ClickAwayListener,
   Grow,
@@ -17,6 +16,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitButton } from '@duncit/buttons';
 import ContactComposeDialog from './ContactComposeDialog';
 import { PortalCallDialog, AiCallDialog } from './call';
 import { useTranslation } from '@duncit/shell';
@@ -71,12 +71,12 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
       <Tooltip title={mobile ? `Call ${mobile}` : 'No phone number on file'}>
         <span>
           <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label={t('crm.components.callOptions')} sx={{ height: CALL_HEIGHT }}>
-            <Button startIcon={<PhoneIcon />} onClick={() => setPortalOpen(true)} sx={BTN_SX}>
+            <DuncitButton startIcon={<PhoneIcon />} onClick={() => setPortalOpen(true)} sx={BTN_SX}>
               Call
-            </Button>
-            <Button size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
+            </DuncitButton>
+            <DuncitButton size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
               <ArrowDropDownIcon fontSize="small" />
-            </Button>
+            </DuncitButton>
           </ButtonGroup>
         </span>
       </Tooltip>
@@ -101,7 +101,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
 
       <Tooltip title={waNumber ? 'Open WhatsApp chat' : 'No WhatsApp number on file'}>
         <span>
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             startIcon={<WhatsAppIcon />}
@@ -110,14 +110,14 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
             sx={BTN_SX}
           >
             WhatsApp
-          </Button>
+          </DuncitButton>
         </span>
       </Tooltip>
       <Tooltip title={email ? `Email ${email}` : 'No email on file'}>
         <span>
-          <Button size="small" variant="outlined" startIcon={<EmailIcon />} disabled={!email} onClick={() => setEmailOpen(true)} sx={BTN_SX}>
+          <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} disabled={!email} onClick={() => setEmailOpen(true)} sx={BTN_SX}>
             {t('shell.common.email')}
-          </Button>
+          </DuncitButton>
         </span>
       </Tooltip>
 

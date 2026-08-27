@@ -5,6 +5,7 @@ import type { AiMonitoringCopy } from '@duncit/ai-monitoring';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -39,7 +40,7 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<Props>) {
       alignItems="center"
       justifyContent="center"
       backgroundColor="$primary"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="600" color="$onPrimary">
         {copy.dismissLabel}

@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface AnswerActionsProps {
   acceptLabel: string;
@@ -38,7 +39,7 @@ export function AnswerActions({
         fontSize={13.5}
         fontWeight="800"
         color={accentInk}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         {acceptLabel}
       </Text>
@@ -51,7 +52,7 @@ export function AnswerActions({
         fontWeight="800"
         color={quietInk}
         opacity={dimQuiet ? 0.75 : 1}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         {denyLabel}
       </Text>
@@ -87,7 +88,7 @@ export function FollowBackAction({
       alignItems="center"
       opacity={pending ? 0.6 : 1}
       onPress={onPress}
-      pressStyle={{ opacity: 0.6 }}
+      pressStyle={PRESS_STYLE.inline}
     >
       <MaterialIcons name="person-add-alt-1" size={15} color={accentInk} />
       <Text fontSize={13.5} fontWeight="800" color={accentInk}>

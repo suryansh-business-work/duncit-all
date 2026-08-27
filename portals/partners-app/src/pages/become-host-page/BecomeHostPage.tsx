@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+  Step,
+  StepLabel,
+  Stepper,
+  Typography,
+} from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router-dom';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import HostStepContent from './HostStepContent';
@@ -113,8 +125,8 @@ export default function BecomeHostPage() {
                   mt: 3,
                   justifyContent: "space-between"
                 }}>
-                <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
-                <Button variant="contained" onClick={next} disabled={busy || locked}>{step === 3 ? 'Submit' : 'Next'}</Button>
+                <DuncitButton disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</DuncitButton>
+                <DuncitButton variant="contained" onClick={next} disabled={busy || locked}>{step === 3 ? 'Submit' : 'Next'}</DuncitButton>
               </Stack>
             </CardContent>
           </Card>
@@ -126,9 +138,9 @@ export default function BecomeHostPage() {
         <Alert
           severity="success"
           action={
-            <Button component={RouterLink} to="/host/pods" size="small">
+            <DuncitButton component={RouterLink} to="/host/pods" size="small">
               Your Pods
-            </Button>
+            </DuncitButton>
           }
         >
           Your host profile is approved. Create and manage your pods from the Host section.

@@ -1,5 +1,6 @@
-import { IconButton, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
+import { MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
 import { toLocalDateTimeInput } from '@duncit/datetime';
 import LocalDateTimeField from '../../components/LocalDateTimeField';
@@ -129,9 +130,9 @@ export default function OccasionalIconRowFields({
           />
         </Stack>
         <Tooltip title={t('admin.branding.removeOccasion')}>
-          <IconButton onClick={() => onRemove(index)} color="error">
+          <DuncitIconButton onClick={() => onRemove(index)} color="error">
             <DeleteOutlineIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     </Stack>

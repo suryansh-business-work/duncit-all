@@ -1,5 +1,6 @@
-import { Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { formatDate, useTranslation } from '@duncit/app-settings';
 import { formatMoney } from '@duncit/utils';
@@ -38,9 +39,9 @@ export default function PodExpensePodHeader({ pod, currency, onClose }: Readonly
             {pod.pod_code} · {formatDate(pod.pod_date_time)}
           </Typography>
         </Stack>
-        <IconButton aria-label={t('shell.common.close')} onClick={onClose}>
+        <DuncitIconButton aria-label={t('shell.common.close')} onClick={onClose}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
 
       <Stack

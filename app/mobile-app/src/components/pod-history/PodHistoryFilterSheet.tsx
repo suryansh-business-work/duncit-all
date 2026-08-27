@@ -16,6 +16,7 @@ import {
 } from '@/utils/pod-history';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -57,6 +58,7 @@ export function PodHistoryFilterSheet({
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="pod-history-filter-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.podHistory.closeFilters')}
             onPress={onClose}
@@ -79,6 +81,7 @@ export function PodHistoryFilterSheet({
                   {t('mweb.podHistory.filterByCategory')}
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="pod-history-filter-close"
                   role="button"
                   aria-label={t('mweb.podHistory.close')}
@@ -133,7 +136,7 @@ export function PodHistoryFilterSheet({
                   borderWidth={1}
                   borderColor="$borderColor"
                   opacity={count === 0 ? 0.5 : 1}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
                     {t('mweb.podHistory.reset')}
@@ -150,7 +153,7 @@ export function PodHistoryFilterSheet({
                   justifyContent="center"
                   borderRadius={12}
                   backgroundColor="$primary"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     {t('mweb.podHistory.done')}

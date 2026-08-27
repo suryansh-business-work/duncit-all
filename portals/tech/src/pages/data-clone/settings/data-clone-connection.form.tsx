@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Tooltip,
-} from '@mui/material';
+import { InputAdornment, Stack, TextField, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { CloneConnection } from '../queries';
-import { dataCloneConnectionSchema, type DataCloneConnectionValues } from './data-clone-connection.types';
+import {
+  dataCloneConnectionSchema,
+  type DataCloneConnectionValues,
+} from './data-clone-connection.types';
 
 interface Props {
   connection: CloneConnection;
@@ -78,7 +75,7 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
                   endAdornment: (
                     <InputAdornment position="end">
                       <Tooltip title={revealLabel}>
-                        <IconButton
+                        <DuncitIconButton
                           aria-label={revealLabel}
                           edge="end"
                           size="small"
@@ -89,7 +86,7 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
                           ) : (
                             <VisibilityIcon fontSize="small" />
                           )}
-                        </IconButton>
+                        </DuncitIconButton>
                       </Tooltip>
                     </InputAdornment>
                   ),
@@ -124,9 +121,9 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <Button type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" disabled={busy}>
             {busy ? t('tech.dataClone.connecting') : t('tech.dataClone.connect')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { HostPodActionLabels } from '../labels';
 
@@ -113,9 +114,9 @@ export default function CompanionsForm({ seats, required, busy, onSubmit }: Read
         <Alert severity="warning">{labels.companionsIncomplete}</Alert>
       )}
 
-      <Button type="submit" variant="contained" disabled={busy}>
+      <DuncitButton type="submit" variant="contained" disabled={busy}>
         {labels.companionsSubmit}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

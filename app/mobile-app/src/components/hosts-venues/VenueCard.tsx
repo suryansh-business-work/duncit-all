@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicVenue } from '@/hooks/useHostsVenues';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Compact venue label "City · State" from the optional location fields. */
 export function venueLocation(venue: PublicVenue): string {
@@ -33,7 +34,7 @@ export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
       borderColor="$borderColor"
       backgroundColor="$surface"
       overflow="hidden"
-      pressStyle={{ opacity: 0.9 }}
+      pressStyle={PRESS_STYLE.surface}
     >
       <YStack height={120} backgroundColor="$primary" alignItems="center" justifyContent="center">
         {venue.cover_image_url ? (

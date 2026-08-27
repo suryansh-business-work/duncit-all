@@ -2,7 +2,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import CheckIcon from '@mui/icons-material/Check';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
-import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 
 interface Props {
@@ -80,7 +81,7 @@ export default function ClubSummaryHeader({
         </Box>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-        <Button
+        <DuncitButton
           fullWidth
           data-tour="club-follow"
           variant={following ? 'outlined' : 'contained'}
@@ -89,8 +90,8 @@ export default function ClubSummaryHeader({
           sx={{ borderRadius: '16px', fontWeight: 700 }}
         >
           {following ? 'Following' : 'Follow Club'}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           fullWidth
           variant="outlined"
           startIcon={<ChatBubbleOutlineIcon />}
@@ -102,7 +103,7 @@ export default function ClubSummaryHeader({
           sx={{ borderRadius: '16px', fontWeight: 700 }}
         >
           Chat
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

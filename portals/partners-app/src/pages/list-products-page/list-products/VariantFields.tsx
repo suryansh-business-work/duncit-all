@@ -1,7 +1,8 @@
-import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
+import { Box, Chip, Stack } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues, VariantOptionValue } from './list-products.types';
@@ -23,20 +24,20 @@ function VariantImages({ images, onAdd, onRemove }: Readonly<VariantImagesProps>
           {images.map((url) => (
             <Box key={url} sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
               <Box component="img" src={url} alt={t('partners.listProductsPage.variant')} sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 onClick={() => onRemove(url)}
                 sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
               >
                 <CloseIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Box>
           ))}
         </Box>
       )}
-      <Button variant="outlined" startIcon={<AddPhotoAlternateIcon />} onClick={onAdd}>
+      <DuncitButton variant="outlined" startIcon={<AddPhotoAlternateIcon />} onClick={onAdd}>
         Add variant image
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }
@@ -101,9 +102,9 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
         {numberField(control, nm('unit_cost'), 'Price (₹)')}
         {numberField(control, nm('inventory_count'), t('partners.listProductsPage.stock'))}
       </Stack>
-      <Button color="error" size="small" startIcon={<DeleteOutlineIcon />} onClick={onRemove} disabled={!canRemove} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton color="error" size="small" startIcon={<DeleteOutlineIcon />} onClick={onRemove} disabled={!canRemove} sx={{ alignSelf: 'flex-start' }}>
         Remove this variant
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

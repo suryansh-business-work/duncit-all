@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
+import { DuncitButton } from '@duncit/buttons';
 import type { EnvEntry } from '../queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -53,9 +54,9 @@ export default function GoogleMapsTest({ entry }: Readonly<{ entry: EnvEntry }>)
       }}>
         Renders a live Google map using this entry's saved Maps API Key.
       </Typography>
-      <Button startIcon={<MapIcon />} variant="contained" onClick={() => setLoad(true)} disabled={load}>
+      <DuncitButton startIcon={<MapIcon />} variant="contained" onClick={() => setLoad(true)} disabled={load}>
         {load ? 'Loaded' : 'Load map'}
-      </Button>
+      </DuncitButton>
       {mapError && <Alert severity="error">{mapError}</Alert>}
       <Box ref={mapRef} sx={{ height: 280, borderRadius: 1, border: 1, borderColor: 'divider', bgcolor: 'action.hover' }} />
     </Stack>

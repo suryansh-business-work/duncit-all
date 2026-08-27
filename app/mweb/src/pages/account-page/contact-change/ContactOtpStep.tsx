@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { ContactChangeLabels } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import { contactOtpSchema, type ContactOtpValues } from './contact-change.types';
@@ -61,12 +62,12 @@ export default function ContactOtpStep({
           slotProps={{ inputLabel: { shrink: true }, htmlInput: otpInput }}
         />
         <Stack direction="row" spacing={1}>
-          <Button type="button" variant="outlined" color="inherit" onClick={onEditValue}>
+          <DuncitButton type="button" variant="outlined" color="inherit" onClick={onEditValue}>
             {labels.editValue}
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy || !isValid}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
             {busy ? labels.verifying : labels.verifyAndSave}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

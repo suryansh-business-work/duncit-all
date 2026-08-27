@@ -12,3 +12,4 @@ export { ReplacementNotice } from './ReplacementNotice';
 export { PodProductOrdersCard } from './PodProductOrdersCard';
 export { PodProductOrderItem } from './PodProductOrderItem';
 export { OrderTrackingTimeline } from './OrderTrackingTimeline';
+export { PodHistoryDialogs } from './PodHistoryDialogs';

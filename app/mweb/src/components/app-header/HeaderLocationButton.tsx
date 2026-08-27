@@ -1,5 +1,6 @@
-import { Box, Button, Chip, Skeleton } from '@mui/material';
+import { Box, Chip, Skeleton } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { DuncitButton } from '@duncit/buttons';
 import { countryFlagUrl } from '../../utils/location-tree';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -26,7 +27,7 @@ export default function HeaderLocationButton({
   }
   const flag = countryFlagUrl(selectedCountryCode);
   return (
-    <Button
+    <DuncitButton
       startIcon={
         flag ? (
           <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: '4px' }} />
@@ -68,6 +69,6 @@ export default function HeaderLocationButton({
       ) : (
         <Box component="span" sx={{ display: 'none' }} />
       )}
-    </Button>
+    </DuncitButton>
   );
 }

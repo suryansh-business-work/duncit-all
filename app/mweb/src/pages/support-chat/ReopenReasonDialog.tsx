@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -64,10 +64,10 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('mweb.common.cancel')}</Button>
-        <Button variant="contained" disabled={loading} onClick={submit}>
+        <DuncitButton onClick={onClose}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={loading} onClick={submit}>
           {loading ? 'Re-opening…' : 'Re-open'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -14,6 +14,7 @@ import { useBranding } from '@/hooks/useBranding';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Host applies to host in a new category: category → survey → request submitted. */
 export function HostApplyScreen() {
@@ -51,7 +52,7 @@ export function HostApplyScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>

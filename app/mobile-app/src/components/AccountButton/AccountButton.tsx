@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Header avatar that opens the account menu — the mobile twin of mWeb's header
@@ -22,6 +23,7 @@ export function AccountButton() {
 
   return (
     <XStack
+      pressStyle={PRESS_STYLE.surface}
       testID="account-button"
       role="button"
       aria-label={t('mweb.common.openAccountMenu')}

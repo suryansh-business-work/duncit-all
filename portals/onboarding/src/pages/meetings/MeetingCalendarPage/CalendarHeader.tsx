@@ -1,7 +1,8 @@
-import { Box, Button, IconButton, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EventIcon from '@mui/icons-material/Event';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import CalendarLegend from './CalendarLegend';
 import type { CalendarView } from './calendarMath';
 import { useTranslation } from '@duncit/app-settings';
@@ -51,9 +52,9 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
         <Stack direction="row" sx={{
           alignItems: "center"
         }}>
-          <IconButton size="small" aria-label={t('onboarding.meetings.previous')} onClick={() => onStep(-1)}><ChevronLeftIcon /></IconButton>
-          <Button size="small" onClick={onToday} sx={{ fontWeight: 700 }}>{t('onboarding.meetings.today')}</Button>
-          <IconButton size="small" aria-label={t('onboarding.meetings.next')} onClick={() => onStep(1)}><ChevronRightIcon /></IconButton>
+          <DuncitIconButton size="small" aria-label={t('onboarding.meetings.previous')} onClick={() => onStep(-1)}><ChevronLeftIcon /></DuncitIconButton>
+          <DuncitButton size="small" onClick={onToday} sx={{ fontWeight: 700 }}>{t('onboarding.meetings.today')}</DuncitButton>
+          <DuncitIconButton size="small" aria-label={t('onboarding.meetings.next')} onClick={() => onStep(1)}><ChevronRightIcon /></DuncitIconButton>
         </Stack>
       </Stack>
       <Stack

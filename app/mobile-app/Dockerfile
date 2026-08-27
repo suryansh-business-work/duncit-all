@@ -29,6 +29,7 @@ COPY packages/errors ./packages/errors
 COPY packages/slack ./packages/slack
 COPY packages/datetime ./packages/datetime
 COPY packages/dialogs-native ./packages/dialogs-native
+COPY packages/buttons-native ./packages/buttons-native
 COPY packages/fallback-icons ./packages/fallback-icons
 COPY packages/i18n ./packages/i18n
 COPY packages/user-core ./packages/user-core
@@ -37,6 +38,7 @@ COPY packages/onboarding ./packages/onboarding
 COPY packages/tours ./packages/tours
 COPY packages/virtual-scroll ./packages/virtual-scroll
 COPY packages/slots ./packages/slots
+COPY packages/verification ./packages/verification
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

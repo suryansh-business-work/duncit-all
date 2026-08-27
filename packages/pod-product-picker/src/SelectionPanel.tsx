@@ -1,16 +1,8 @@
 import AddIcon from '@mui/icons-material/Add';
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import RemoveIcon from '@mui/icons-material/Remove';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Divider,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Chip, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   clampPodProductQty,
   podProductImage,
@@ -141,25 +133,25 @@ export default function SelectionPanel({
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <IconButton
+          <DuncitIconButton
             aria-label={t('podProduct.decreaseQty')}
             onClick={() => step(-1)}
             disabled={!product || quantity <= 1}
             size="small"
           >
             <RemoveIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
           <Typography variant="subtitle1" sx={{ minWidth: 40, textAlign: 'center' }}>
             {quantity}
           </Typography>
-          <IconButton
+          <DuncitIconButton
             aria-label={t('podProduct.increaseQty')}
             onClick={() => step(1)}
             disabled={!product || atMax}
             size="small"
           >
             <AddIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
         {product && atMax && (
           <Typography variant="caption" sx={{
@@ -183,9 +175,9 @@ export default function SelectionPanel({
           refused — the parent's onAdd is a no-op without a product — but a
           disabled button swallows the click, and the flow requires that
           attempting to continue with no selection SAYS so. */}
-      <Button variant="contained" onClick={onAdd} fullWidth>
+      <DuncitButton variant="contained" onClick={onAdd} fullWidth>
         {t('podProduct.addToPod')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

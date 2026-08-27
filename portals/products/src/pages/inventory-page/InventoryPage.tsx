@@ -1,6 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApolloTableFetch } from '@duncit/table';
@@ -71,14 +72,14 @@ export default function InventoryPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/inventory/new')}
           >
             Add product
-          </Button>
+          </DuncitButton>
         }
         onEdit={(p) => navigate(`/inventory/${p.id}/edit`)}
         onArchive={(p) => setActionTarget({ intent: 'archive', product: p })}

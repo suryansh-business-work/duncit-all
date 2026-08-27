@@ -1,9 +1,10 @@
-import { Button, Stack, Tooltip } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { canCancel, canDelete } from '../helpers';
 import type { WaCampaignRow } from '../queries';
@@ -62,28 +63,28 @@ export default function DetailActions({
     }}>
       {/* Only the people it did not reach — the audience is not re-resolved,
           so a retry can never widen who the campaign touched. */}
-      <Button
+      <DuncitButton
         startIcon={<ReplayIcon />}
         disabled={!unreached || retrying}
         onClick={() => campaign && onRetry(campaign)}
       >
         {retryLabel}
-      </Button>
-      <Button startIcon={<DownloadIcon />} disabled={!campaign || exporting} onClick={onExportCsv}>
+      </DuncitButton>
+      <DuncitButton startIcon={<DownloadIcon />} disabled={!campaign || exporting} onClick={onExportCsv}>
         {exporting
           ? t('marketingWhatsapp.logs.building')
           : t('marketingWhatsapp.logs.downloadCsv')}
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         startIcon={<ContentCopyIcon />}
         disabled={!campaign}
         onClick={() => campaign && onDuplicate(campaign)}
       >
         {t('marketingWhatsapp.logs.duplicate')}
-      </Button>
+      </DuncitButton>
       <Tooltip title={cancellable ? '' : t('marketingWhatsapp.logs.cancelOnlyScheduled')}>
         <span>
-          <Button
+          <DuncitButton
             startIcon={<EventBusyIcon />}
             disabled={!cancellable || cancelling}
             onClick={() => campaign && onCancel(campaign)}
@@ -91,19 +92,19 @@ export default function DetailActions({
             {cancelling
               ? t('marketingWhatsapp.logs.cancelling')
               : t('marketingWhatsapp.logs.cancelSend')}
-          </Button>
+          </DuncitButton>
         </span>
       </Tooltip>
       <Tooltip title={deletable ? '' : t('marketingWhatsapp.logs.deleteWhileSending')}>
         <span>
-          <Button
+          <DuncitButton
             color="error"
             startIcon={<DeleteOutlineIcon />}
             disabled={!deletable}
             onClick={() => campaign && onDelete(campaign)}
           >
             {t('shell.common.delete')}
-          </Button>
+          </DuncitButton>
         </span>
       </Tooltip>
     </Stack>

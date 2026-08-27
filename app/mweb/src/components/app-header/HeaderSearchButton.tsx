@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -15,13 +16,13 @@ export default function HeaderSearchButton(_props: Readonly<Props>) {
   const navigate = useNavigate();
   return (
     <Tooltip title={t('mweb.common.search')}>
-      <IconButton
+      <DuncitIconButton
         aria-label={t('mweb.common.search')}
         onClick={() => navigate('/search')}
         sx={{ minWidth: 44, minHeight: 44 }}
       >
         <SearchIcon />
-      </IconButton>
+      </DuncitIconButton>
     </Tooltip>
   );
 }

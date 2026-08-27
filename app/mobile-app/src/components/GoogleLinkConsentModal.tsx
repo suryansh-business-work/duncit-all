@@ -5,6 +5,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -95,7 +96,7 @@ export function GoogleLinkConsentModal({
                 alignItems="center"
                 justifyContent="center"
                 opacity={busy ? 0.6 : 1}
-                pressStyle={{ opacity: 0.75 }}
+                pressStyle={PRESS_STYLE.ghost}
               >
                 <Text fontSize={14} fontWeight="700" color="$color">
                   {t('mweb.login.linkConsentDeny')}
@@ -115,7 +116,7 @@ export function GoogleLinkConsentModal({
                 justifyContent="center"
                 gap={8}
                 opacity={busy ? 0.7 : 1}
-                pressStyle={{ opacity: 0.85 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 {busy ? <Spinner size="small" color="$onPrimary" /> : null}
                 <Text fontSize={14} fontWeight="700" color="$onPrimary">

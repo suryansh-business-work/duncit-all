@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Autocomplete, Button, Stack, TextField } from '@mui/material';
+import { Alert, Autocomplete, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { type CategoryOption } from './queries';
 import { useCategoryLevel } from './useCategoryLevel';
 
@@ -99,7 +100,7 @@ export default function CategoryStep({
       {field(catRequired ? 'Category *' : 'Category', 'category_id', cats.options, cats.loading, !scope.super_category_id)}
       {field(subRequired ? 'Sub-Category *' : 'Sub-Category', 'sub_category_id', subs.options, subs.loading, !scope.category_id)}
       {error && <Alert severity="warning">{error}</Alert>}
-      <Button
+      <DuncitButton
         variant="contained"
         size="large"
         disabled={submitting}
@@ -107,7 +108,7 @@ export default function CategoryStep({
         sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {submitting ? 'Loading…' : 'Continue'}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

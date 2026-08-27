@@ -1,5 +1,6 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** "Your profile is incomplete" nudge — RN port of mWeb's <IncompleteBanner/>.
  * Shown when profile completion < 100%; the dark pill opens Account. */
@@ -42,7 +43,7 @@ export function SidebarIncompleteBanner({
           backgroundColor="$color"
           paddingHorizontal={14}
           paddingVertical={7}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={12.5} fontWeight="600" color="$background">
             Complete

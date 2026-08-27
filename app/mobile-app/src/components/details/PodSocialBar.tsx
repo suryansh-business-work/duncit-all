@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -44,7 +45,7 @@ function SocialButton({
       borderWidth={1}
       borderColor={active ? danger : '$borderColor'}
       backgroundColor={active ? danger : 'transparent'}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={18} color={active ? '#ffffff' : color} />
       <Text fontSize={14} fontWeight="600" color={fg}>

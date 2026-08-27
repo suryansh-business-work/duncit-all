@@ -1,0 +1,130 @@
+---
+name: '@duncit/buttons'
+summary: 'The MUI half of the press system: DuncitButton and DuncitIconButton, plus the theme layer that gives every other MUI pressable the same active, hover, focus, disabled and loading states.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'packages/theme'
+  - 'packages/shell'
+  - 'packages/ui'
+  - 'packages/table'
+  - 'and 34 more workspaces'
+exports:
+  - 'DuncitButton'
+  - 'DuncitIconButton'
+  - 'withPress'
+  - 'pressCss'
+  - 'focusRingCss'
+  - 'pressTransition'
+  - 'pressColorsOf'
+  - 'pressFor'
+  - 'restStatesCss'
+  - 'mergeCss'
+  - 'mergeSlot'
+  - 'PRESS'
+  - 'PressIntent'
+---
+
+The framework-free half is [`@duncit/buttons-native`](/packages/buttons-native),
+which holds the numbers and which the mobile app reads directly. This package
+spends them in MUI, so a tap in mWeb and a tap in the app feel the same
+(CLAUDE.md rule 27).
+
+## Two ways in, and both are needed
+
+### 1. The components — every call site
+
+`DuncitButton` and `DuncitIconButton` replaced `@mui/material`'s `Button` and
+`IconButton` at **1,289 and 512 call sites** across mWeb, the 17 portals and 23
+shared packages.
+
+They take MUI's props unchanged — same `variant`, same `color`, same `size`,
+same `loading`, same polymorphic `component` — which is what made that a swap
+rather than a rewrite. Sizing, radius and palette still come from the surface's
+own theme, so a portal button and an mWeb button keep looking like themselves.
+
+```tsx
+import { DuncitButton } from '@duncit/buttons';
+
+<DuncitButton variant="contained" loading={saving} onClick={save}>
+  Complete pod
+</DuncitButton>;
+
+// The polymorphic form still type-checks — 72 call sites depend on it.
+<DuncitButton component={RouterLink} to="/pods/DUN-POD-4821" variant="text">
+  View pod
+</DuncitButton>;
+```
+
+Each variant answers to a different intent, because a filled button, an outlined
+one and a text one cannot press the same way:
+
+| MUI variant | Intent | What happens on press |
+| --- | --- | --- |
+| `contained` | `solid` | Fill darkens, compresses to 0.96 |
+| `outlined` | `control` | Dims to 0.85, compresses, takes a 12% ink state layer |
+| `text` | `ghost` | Dims to 0.75, compresses to 0.94, takes a 12% ink state layer |
+
+A state layer only ever lands on a part that is **transparent to begin with**.
+`background-color` replaces a fill, it does not layer over one, so tinting a
+filled chip would turn it translucent grey rather than pressing it. Anything
+carrying its own fill darkens with `brightness()` instead.
+
+### 2. `withPress(components, colors)` — the pressables no call site owns
+
+The components above cannot reach the buttons inside MUI X pickers, the DataGrid
+or Autocomplete, and menu items, list rows, tabs, chips, toggles and card action
+areas are not buttons to begin with. The theme layer covers all of them:
+
+```ts
+// packages/theme/src/components/index.ts — all 17 portals
+return withPress({ /* every existing override */ }, { ink: c.ink, accent: c.primary });
+
+// app/mweb/src/theme.ts
+components: withPress({ /* … */ }, { ink: INK, accent: PRIMARY });
+```
+
+It merges rather than replaces: an existing `&:hover` survives, and the press
+block is layered **last** so a portal's own `extend` cannot silently drop the
+pressed state off a component it happened to restyle.
+
+Slots it covers: `MuiButton` (per variant), `MuiIconButton`, `MuiToggleButton`,
+`MuiListItemButton`, `MuiMenuItem`, `MuiTab`, `MuiBottomNavigationAction`,
+`MuiCardActionArea`, `MuiFab`, `MuiChip` (clickable), and a shared transition on
+`MuiButtonBase` so even checkboxes and switches ease back rather than snapping.
+
+## Every state, not just the pressed one
+
+`restStatesCss` is what both components carry beyond the press:
+
+- **`:focus-visible`** — a 2px accent ring at a 2px offset. MUI's default is a
+  faint shadow that vanishes against a coloured fill, so a keyboard user tabbing
+  a form could not see where they were.
+- **`disabled`** — left to MUI on purpose. Its treatment is proven and
+  accessible, and every alternative was worse: an opacity dim on top of MUI's
+  grey wash makes a contained button almost invisible, and forcing the button's
+  own colour back needs a variant per palette colour — a visual change to all
+  ~1,800 buttons for a state that was never broken. What the press system adds
+  is that it does not fire: a disabled control never compresses or tints, so it
+  cannot claim it did something.
+- **`.MuiButton-loading`** — full opacity, `cursor: progress`. Loading and
+  disabled are deliberately not the same thing: collapsing them (which is what
+  `disabled={loading}` does, and what most call sites did) makes a form look like
+  it rejected the submit.
+
+## `pressCss(intent, colors, options)`
+
+The `:active` block for one intent, ready to spread into any `styleOverrides`
+slot or `sx` — for the rare surface that is neither a button nor in the slot
+table above.
+
+```ts
+import { pressCss, pressColorsOf } from '@duncit/buttons';
+
+const sx = pressCss('surface', pressColorsOf(theme), { tint: 'ink' });
+```
+
+`options.tint` must be `'none'` on anything that paints its own background.

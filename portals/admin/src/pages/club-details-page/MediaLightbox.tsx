@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Box, Dialog, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Dialog, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import { isVideoMedia, type ClubMedia } from './types';
 import { useTranslation } from '@duncit/shell';
 
@@ -43,22 +44,22 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
       paper: { sx: { bgcolor: 'common.black' } }
     }}>
       <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 320, md: 520 } }}>
-        <IconButton
+        <DuncitIconButton
           onClick={onClose}
           aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2, color: 'common.white', bgcolor: 'rgba(0,0,0,0.4)' }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
 
         {canNavigate && (
-          <IconButton
+          <DuncitIconButton
             onClick={goPrev}
             aria-label={t('admin.pickers.previous')}
             sx={{ position: 'absolute', left: 8, zIndex: 2, color: 'common.white', bgcolor: 'rgba(0,0,0,0.4)' }}
           >
             <ChevronLeftIcon fontSize="large" />
-          </IconButton>
+          </DuncitIconButton>
         )}
 
         {isVideoMedia(current) ? (
@@ -73,13 +74,13 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
         )}
 
         {canNavigate && (
-          <IconButton
+          <DuncitIconButton
             onClick={goNext}
             aria-label={t('admin.pickers.next')}
             sx={{ position: 'absolute', right: 8, zIndex: 2, color: 'common.white', bgcolor: 'rgba(0,0,0,0.4)' }}
           >
             <ChevronRightIcon fontSize="large" />
-          </IconButton>
+          </DuncitIconButton>
         )}
 
         <Stack

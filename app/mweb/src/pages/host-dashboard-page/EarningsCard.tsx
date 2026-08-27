@@ -1,7 +1,8 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import PaymentsIcon from '@mui/icons-material/Payments';
+import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -77,7 +78,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
           </Stack>
         )}
         <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-          <Button
+          <DuncitButton
             component={RouterLink}
             to="/host/wallet"
             variant="contained"
@@ -86,7 +87,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
             sx={{ borderRadius: 999, fontWeight: 700, bgcolor: 'common.white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
           >
             Wallet
-          </Button>
+          </DuncitButton>
           <Box sx={{ flex: 1 }} />
         </Stack>
       </CardContent>

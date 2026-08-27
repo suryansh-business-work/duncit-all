@@ -1,6 +1,7 @@
-import { IconButton, Switch, TableCell, TableRow, TextField, Tooltip } from '@mui/material';
+import { Switch, TableCell, TableRow, TextField, Tooltip } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 export interface ManagedEditRow {
@@ -51,16 +52,16 @@ export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel
       <TableCell align="right">
         <Tooltip title={t('shell.common.save')}>
           <span>
-            <IconButton size="small" color="primary" onClick={onSave} disabled={busy}>
+            <DuncitIconButton size="small" color="primary" onClick={onSave} disabled={busy}>
               <SaveIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={t('shell.common.cancel')}>
           <span>
-            <IconButton size="small" onClick={onCancel} disabled={busy}>
+            <DuncitIconButton size="small" onClick={onCancel} disabled={busy}>
               <CloseIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </TableCell>

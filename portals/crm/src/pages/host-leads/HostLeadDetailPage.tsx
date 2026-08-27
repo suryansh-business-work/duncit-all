@@ -1,17 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { BackButton, QueryGuard } from '@duncit/ui';
 import EditIcon from '@mui/icons-material/Edit';
@@ -28,6 +18,7 @@ import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import ForumIcon from '@mui/icons-material/Forum';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import { DuncitButton } from '@duncit/buttons';
 import { HOST_LEAD } from '../../api/crm.gql';
 import type { HostLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
@@ -345,12 +336,12 @@ export default function HostLeadDetailPage() {
                 variableValues={hostVariableValues(lead)}
               />
             </Box>
-            <Button startIcon={<SmartToyIcon />} color="secondary" variant="outlined" onClick={() => setAiOpen(true)}>
+            <DuncitButton startIcon={<SmartToyIcon />} color="secondary" variant="outlined" onClick={() => setAiOpen(true)}>
               {t('crm.components.askAi')}
-            </Button>
-            <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
+            </DuncitButton>
+            <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
               {t('shell.common.edit')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </CardContent>
       </Card>

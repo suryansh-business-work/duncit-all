@@ -1,5 +1,6 @@
-import { Button, CircularProgress, InputAdornment, Stack, TextField } from '@mui/material';
+import { CircularProgress, InputAdornment, Stack, TextField } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 
 interface Props {
   value: string;
@@ -46,14 +47,14 @@ export default function PexelsSearchBar({
           }
         }}
       />
-      <Button
+      <DuncitButton
         variant="contained"
         onClick={onSearch}
         disabled={searching}
         startIcon={searching ? <CircularProgress size={14} color="inherit" /> : null}
       >
         Search
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

@@ -9,6 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSuggestedTicketPrices } from '@/hooks/useSuggestedTicketPrices';
 import { SuggestedPricesTable } from './SuggestedPricesTable';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const NOTE_BG = 'rgba(99,102,241,0.10)';
 
@@ -72,6 +73,7 @@ export function SuggestedPricesModal({
           testID="suggested-prices-modal"
         >
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             testID="suggested-prices-backdrop"
             role="button"
             aria-label={close}
@@ -109,7 +111,7 @@ export function SuggestedPricesModal({
                   height={32}
                   alignItems="center"
                   justifyContent="center"
-                  pressStyle={{ opacity: 0.6 }}
+                  pressStyle={PRESS_STYLE.inline}
                 >
                   <MaterialIcons name="close" size={20} color={muted} />
                 </XStack>

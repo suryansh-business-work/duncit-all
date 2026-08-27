@@ -1,5 +1,6 @@
-import { Box, Dialog, IconButton } from '@mui/material';
+import { Box, Dialog } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -22,13 +23,13 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
       }}
     >
       <Box sx={{ position: 'relative' }}>
-        <IconButton
+        <DuncitIconButton
           aria-label={t('mweb.profileAvatar.closePhoto')}
           onClick={onClose}
           sx={{ position: 'absolute', top: 8, right: 8, color: '#fff', bgcolor: 'rgba(0,0,0,0.4)', zIndex: 1 }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
         {src && (
           <Box
             component="img"

@@ -8,6 +8,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Confirmation shown after a host files a request to host in a new category. */
 export function HostRequestSuccess() {
@@ -46,7 +47,7 @@ export function HostRequestSuccess() {
             paddingVertical={12}
             borderRadius={999}
             backgroundColor="$primary"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
               Okay

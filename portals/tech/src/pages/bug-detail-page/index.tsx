@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import { notifyError } from '@duncit/dialogs';
 import BugDetailBody from '../bugs-page/BugDetailBody';
@@ -60,9 +61,9 @@ export default function BugDetailPage() {
         alignItems: "center",
         flexWrap: "wrap"
       }}>
-      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/telemetry/bugs')}>
+      <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate('/telemetry/bugs')}>
         Bugs
-      </Button>
+      </DuncitButton>
       {bug ? <Chip size="small" label={bug.status} color={statusColor(bug.status)} /> : null}
       <Typography
         variant="h6"
@@ -89,14 +90,14 @@ export default function BugDetailPage() {
               flexWrap: "wrap"
             }}>
               {STATUS_OPTIONS.map((opt) => (
-                <Button
+                <DuncitButton
                   key={opt.value}
                   variant={opt.value === bug.status ? 'contained' : 'outlined'}
                   disabled={busy || opt.value === bug.status}
                   onClick={() => changeStatus(opt.value)}
                 >
                   Mark {opt.label}
-                </Button>
+                </DuncitButton>
               ))}
               <Box sx={{ flexGrow: 1 }} />
             </Stack>

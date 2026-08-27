@@ -1,5 +1,6 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
-import { Alert, Button, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Alert, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
 import { splitSections } from './surveySections';
 import type { ActiveSurvey } from './queries';
@@ -70,7 +71,7 @@ export default function SurveyStepper({
   };
 
   if (sections.length === 0) {
-    return <Button variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitLabelText}</Button>;
+    return <DuncitButton variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitLabelText}</DuncitButton>;
   }
   const active = sections[step];
 
@@ -96,11 +97,11 @@ export default function SurveyStepper({
       <Stack direction="row" spacing={1.5} sx={{
         justifyContent: "space-between"
       }}>
-        <Button disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</Button>
+        <DuncitButton disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</DuncitButton>
         {isLast ? (
-          <Button variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitting ? 'Submitting…' : submitLabel}</Button>
+          <DuncitButton variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitting ? 'Submitting…' : submitLabel}</DuncitButton>
         ) : (
-          <Button variant="contained" onClick={next} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>Next</Button>
+          <DuncitButton variant="contained" onClick={next} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>Next</DuncitButton>
         )}
       </Stack>
     </Stack>

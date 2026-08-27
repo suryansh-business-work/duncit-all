@@ -2,11 +2,12 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
-import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ChairIcon from '@mui/icons-material/Chair';
 import InsightsIcon from '@mui/icons-material/Insights';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { DuncitButton } from '@duncit/buttons';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
 import VenueHealthCard from './venue-manage-page/VenueHealthCard';
@@ -58,9 +59,9 @@ export default function VenueManagePage() {
             List your space, run events, get discovered
           </Typography>
         </Box>
-        <Button component={RouterLink} to="/register-venue" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
+        <DuncitButton component={RouterLink} to="/register-venue" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
           New venue
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Stack direction="row" spacing={1}>

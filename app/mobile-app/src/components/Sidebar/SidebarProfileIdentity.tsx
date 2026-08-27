@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SidebarIdentityUser {
   full_name?: string | null;
@@ -37,7 +38,7 @@ export function SidebarProfileIdentity({
       paddingHorizontal={12}
       paddingVertical={8}
       borderRadius={12}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack flex={1} minWidth={0}>
         <XStack alignItems="center" gap={2}>

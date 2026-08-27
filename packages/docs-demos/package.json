@@ -27,6 +27,8 @@
     "@duncit/auto-pods": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
     "@duncit/breadcrumb": "workspace:*",
+    "@duncit/buttons": "workspace:*",
+    "@duncit/buttons-native": "workspace:*",
     "@duncit/captcha": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
@@ -65,6 +67,7 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
+    "@duncit/verification": "workspace:*",
     "@duncit/virtual-scroll": "workspace:*"
   },
   "peerDependencies": {

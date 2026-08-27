@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { addMonths, buildMonthGrid, clampMonth, monthKeyOf, weekdayInitials } from '@duncit/slots';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SlotMonthGridProps {
   monthKey: string;
@@ -61,7 +62,7 @@ export default function SlotMonthGrid({
           alignItems="center"
           justifyContent="center"
           opacity={canGoBack ? 1 : 0.3}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="chevron-left" size={24} color={muted} />
         </XStack>
@@ -81,7 +82,7 @@ export default function SlotMonthGrid({
           alignItems="center"
           justifyContent="center"
           opacity={canGoNext ? 1 : 0.3}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="chevron-right" size={24} color={muted} />
         </XStack>

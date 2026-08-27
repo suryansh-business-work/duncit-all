@@ -1,13 +1,20 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from './i18n';
 import CouponsTable from './CouponsTable';
 import CouponFormDialog from './CouponFormDialog';
-import { COUPON_PODS, COUPONS_TABLE, DELETE_COUPON, type CouponPodOption, type CouponRow } from './queries';
+import {
+  COUPON_PODS,
+  COUPONS_TABLE,
+  DELETE_COUPON,
+  type CouponPodOption,
+  type CouponRow,
+} from './queries';
 
 export default function CouponsPage() {
   const { t } = useTranslation();
@@ -69,9 +76,9 @@ export default function CouponsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             {t('shell.coupons.newCta')}
-          </Button>
+          </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={onDelete}

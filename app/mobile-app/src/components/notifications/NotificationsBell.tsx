@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { resolveNotificationLink } from '@/utils/notification-link';
 import { NotificationsScreen } from './NotificationsScreen';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Header bell with unread badge — RN twin of mWeb's <HeaderNotificationsBell/>.
  * Opens the full-screen notifications list and owns the data + read mutations. */
@@ -59,6 +60,7 @@ export function NotificationsBell() {
   return (
     <>
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         testID="notifications-bell"
         role="button"
         aria-label={`Notifications${unreadSuffix}`}

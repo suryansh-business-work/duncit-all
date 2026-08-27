@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TAB_CONFIG } from '@/navigation/tabs';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Edge-to-edge flat tab bar — full width, no border radius, with the active
  * tab tinted in the primary colour (icon scales in smoothly). Identical to
@@ -58,7 +59,7 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             alignItems="center"
             gap={2}
             paddingVertical={4}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             {/* Active tab = primary tint only, no background shape (user ask). */}
             <YStack width={44} height={30} alignItems="center" justifyContent="center">

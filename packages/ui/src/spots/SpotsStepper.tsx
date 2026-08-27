@@ -1,6 +1,7 @@
-import { Box, FormHelperText, IconButton, Slider, Stack, TextField, Typography } from '@mui/material';
+import { Box, FormHelperText, Slider, Stack, TextField, Typography } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { SpotsStepperLabels } from './types';
 
 export interface SpotsStepperProps {
@@ -114,7 +115,7 @@ export function SpotsStepper({
           </Typography>
         ) : (
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <IconButton
+            <DuncitIconButton
               aria-label={labels.decrease}
               size="small"
               disabled={value <= min}
@@ -122,7 +123,7 @@ export function SpotsStepper({
               sx={{ border: 1, borderColor: 'divider' }}
             >
               <RemoveIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
             <TextField
               type="number"
               size="small"
@@ -131,7 +132,7 @@ export function SpotsStepper({
               sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 700 } }}
               slotProps={{ htmlInput: { 'aria-label': labels.totalSpots, min, max } }}
             />
-            <IconButton
+            <DuncitIconButton
               aria-label={labels.increase}
               size="small"
               disabled={value >= max}
@@ -139,7 +140,7 @@ export function SpotsStepper({
               sx={{ border: 1, borderColor: 'divider' }}
             >
               <AddIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         )}
       </Stack>

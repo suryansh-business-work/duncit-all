@@ -1,7 +1,8 @@
-import { Avatar, Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import OrderTrackingTimeline from './OrderTrackingTimeline';
 import {
   buildOrderTimeline,
@@ -81,7 +82,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
               {order.shiprocket.courier_name ? ` · ${order.shiprocket.courier_name}` : ''}
             </Typography>
           )}
-          <Button
+          <DuncitButton
             component="a"
             size="small"
             variant="outlined"
@@ -93,7 +94,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
             sx={{ alignSelf: 'flex-start' }}
           >
             {t('mweb.podHistory.trackShipment')}
-          </Button>
+          </DuncitButton>
         </Stack>
       ) : (
         <Typography

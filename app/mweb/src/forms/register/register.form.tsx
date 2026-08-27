@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, IconButton, InputAdornment, Link, Stack, Typography } from '@mui/material';
+import { Alert, InputAdornment, Link, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
@@ -9,6 +9,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router-dom';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
@@ -36,13 +37,13 @@ const passwordInputProps = (visible: boolean, onToggle: () => void, toggleLabel:
   ...startIcon(<LockOutlinedIcon fontSize="small" />),
   endAdornment: (
     <InputAdornment position="end">
-      <IconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
+      <DuncitIconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
         {visible ? (
           <VisibilityOffOutlinedIcon fontSize="small" />
         ) : (
           <VisibilityOutlinedIcon fontSize="small" />
         )}
-      </IconButton>
+      </DuncitIconButton>
     </InputAdornment>
   ),
 });
@@ -160,7 +161,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
         />
       </Stack>
       <Stack spacing={2} sx={{ mt: 2 }}>
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           disabled={loading}
@@ -168,7 +169,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           endIcon={<ArrowForwardIcon />}
         >
           {loading ? t('mweb.signup.submitting') : t('mweb.signup.submit')}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
         <Typography
           variant="body2"

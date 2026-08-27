@@ -5,6 +5,7 @@ import { Text, XStack } from 'tamagui';
 import { LocationDialog } from '@/components/LocationDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   cityLabel?: string;
@@ -37,7 +38,7 @@ export function VenuesLocationBar({ cityLabel }: Readonly<Props>) {
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="place" size={16} color={primary} />
         <Text flex={1} fontSize={12.5} fontWeight="700" color="$color" numberOfLines={1}>

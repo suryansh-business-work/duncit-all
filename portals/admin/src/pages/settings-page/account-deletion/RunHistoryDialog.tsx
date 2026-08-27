@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Chip, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import { ACCOUNT_DELETION_RUNS, type DeletionRun } from './queries';
@@ -132,7 +133,7 @@ export default function RunHistoryDialog({ open, onClose }: Readonly<Props>) {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('admin.accountDeletion.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('admin.accountDeletion.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

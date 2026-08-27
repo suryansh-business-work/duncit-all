@@ -4,7 +4,6 @@ import {
   Avatar,
   AvatarGroup,
   Box,
-  Button,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -15,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
+import { DuncitButton } from '@duncit/buttons';
 
 const PUBLIC_USERS_BY_IDS = gql`
   query FriendProfiles($ids: [ID!]!) {
@@ -64,9 +64,9 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
           }}>
             {friends.length === 1 ? friends[0].full_name : `${friends[0].full_name} and ${friends.length - 1} more`}
           </Typography>
-          <Button size="small" sx={{ p: 0, minWidth: 0, fontWeight: 700 }} onClick={() => setOpen(true)}>
+          <DuncitButton size="small" sx={{ p: 0, minWidth: 0, fontWeight: 700 }} onClick={() => setOpen(true)}>
             View all
-          </Button>
+          </DuncitButton>
         </Box>
       </Box>
 

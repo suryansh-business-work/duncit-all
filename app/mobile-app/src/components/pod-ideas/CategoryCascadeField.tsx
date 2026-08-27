@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useCategoryLevel } from '@/hooks/useCategoryLevel';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { type CategoryOption } from '@/graphql/onboarding-survey';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface CategoryScope {
   super_category_id: string;
@@ -78,7 +79,7 @@ export function CategoryCascadeField({
         borderWidth={1}
         borderColor={selected ? primary : '$borderColor'}
         backgroundColor={selected ? primary : 'transparent'}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <Text
           fontSize={12.5}

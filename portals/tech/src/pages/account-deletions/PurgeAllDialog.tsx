@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import PurgeProgressList from './PurgeProgressList';
 import type { PurgeStep } from './useDeletionDetail';
@@ -87,11 +87,11 @@ export default function PurgeAllDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={busy}>
+        <DuncitButton onClick={close} disabled={busy}>
           {t('tech.accountDeletions.close')}
-        </Button>
+        </DuncitButton>
         {!started && (
-          <Button
+          <DuncitButton
             color="error"
             variant="contained"
             onClick={onConfirm}
@@ -99,7 +99,7 @@ export default function PurgeAllDialog({
             data-testid="purge-all-confirm"
           >
             {t('tech.accountDeletions.confirmAllCta')}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

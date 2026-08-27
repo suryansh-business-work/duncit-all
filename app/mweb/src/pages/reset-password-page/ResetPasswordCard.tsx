@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Link, Stack, Typography } from '@mui/material';
+import { Box, Link, Stack, Typography } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import { DuncitButton } from '@duncit/buttons';
 import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
@@ -56,7 +57,7 @@ export default function ResetPasswordCard({
             }}>
             {t('mweb.resetPassword.successSubtitle')}
           </Typography>
-          <Button
+          <DuncitButton
             component={RouterLink}
             to="/login"
             variant="contained"
@@ -64,7 +65,7 @@ export default function ResetPasswordCard({
             sx={{ borderRadius: '16px', py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
           >
             {t('mweb.resetPassword.goToLogin')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </AuthScreenFrame>
     );

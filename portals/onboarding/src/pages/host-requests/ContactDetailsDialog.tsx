@@ -1,13 +1,6 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { InfoRow } from '@duncit/ui';
 import type { HostRequest } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -27,9 +20,9 @@ export default function ContactDetailsDialog({ request, onClose, onApprove, onRe
     <Dialog open={!!request} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ pr: 6 }}>
         Contact Details
-        <IconButton aria-label={t('shell.common.close')} onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <DuncitIconButton aria-label={t('shell.common.close')} onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1}>
@@ -39,8 +32,8 @@ export default function ContactDetailsDialog({ request, onClose, onApprove, onRe
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button color="error" variant="outlined" onClick={() => request && onReject(request)}>{t('onboarding.common.reject')}</Button>
-        <Button variant="contained" color="success" onClick={() => request && onApprove(request)}>{t('onboarding.hostRequests.approve')}</Button>
+        <DuncitButton color="error" variant="outlined" onClick={() => request && onReject(request)}>{t('onboarding.common.reject')}</DuncitButton>
+        <DuncitButton variant="contained" color="success" onClick={() => request && onApprove(request)}>{t('onboarding.hostRequests.approve')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

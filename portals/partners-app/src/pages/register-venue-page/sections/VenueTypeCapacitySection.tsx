@@ -1,17 +1,8 @@
 import { Controller, useFieldArray, type UseFormReturn } from 'react-hook-form';
-import {
-  Alert,
-  Button,
-  Chip,
-  FormHelperText,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Chip, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
 import { useTranslation } from '@duncit/shell';
 
@@ -125,22 +116,22 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
               />
             )}
           />
-          <IconButton size="small" aria-label={t('partners.registerVenuePage.removeCapacityEntry')} onClick={() => remove(index)}>
+          <DuncitIconButton size="small" aria-label={t('partners.registerVenuePage.removeCapacityEntry')} onClick={() => remove(index)}>
             <DeleteIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       ))}
       {atLimit && (
         <Alert severity="info">At most {config.capacity_item_limit} capacity entries are allowed.</Alert>
       )}
-      <Button
+      <DuncitButton
         startIcon={<AddIcon />}
         disabled={atLimit}
         onClick={() => append({ label: '', capacity: '' })}
         sx={{ alignSelf: 'flex-start' }}
       >
         Add capacity entry
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

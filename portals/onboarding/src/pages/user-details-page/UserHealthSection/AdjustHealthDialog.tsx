@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { ADJUST_HEALTH, type AdminHealthScore } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -138,10 +138,10 @@ export default function AdjustHealthDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={submit} disabled={loading}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading}>
           {loading ? 'Saving…' : 'Save adjustment'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

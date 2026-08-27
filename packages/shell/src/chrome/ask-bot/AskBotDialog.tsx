@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import { Dialog, DialogTitle, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Dialog, DialogTitle, Stack, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { BotChat } from './BotChat';
 import { BotList } from './BotList';
@@ -49,9 +50,9 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
         }}>
           {inChat && (
             <Tooltip title={t('shell.askBot.back')}>
-              <IconButton size="small" edge="start" onClick={() => setBotKey(null)} aria-label={t('shell.askBot.back')}>
+              <DuncitIconButton size="small" edge="start" onClick={() => setBotKey(null)} aria-label={t('shell.askBot.back')}>
                 <ArrowBackIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           )}
           <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
@@ -59,18 +60,18 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
           </Typography>
           {inChat && (
             <Tooltip title={t('shell.askBot.restart')}>
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 onClick={() => restartRef.current?.()}
                 aria-label={t('shell.askBot.restart')}
               >
                 <RestartAltIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           )}
-          <IconButton size="small" onClick={close} aria-label={t('shell.askBot.close')}>
+          <DuncitIconButton size="small" onClick={close} aria-label={t('shell.askBot.close')}>
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       </DialogTitle>
 

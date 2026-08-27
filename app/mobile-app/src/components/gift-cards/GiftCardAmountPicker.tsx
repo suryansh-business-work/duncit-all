@@ -3,6 +3,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { Field } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   denominations: readonly number[];
@@ -59,7 +60,7 @@ export function GiftCardAmountPicker({
               borderWidth={1}
               borderColor={isActive ? '$primary' : '$borderColor'}
               backgroundColor={isActive ? '$primary' : 'transparent'}
-              pressStyle={{ opacity: 0.8 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
                 {label}

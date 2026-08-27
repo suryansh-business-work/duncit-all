@@ -2,8 +2,9 @@ import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Controller, type Control, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Card, CardContent, Grid, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Grid, Stack, TextField, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import {
@@ -154,7 +155,7 @@ export default function GiftCardSettingsCard() {
           ))}
         </Grid>
 
-        <Button
+        <DuncitButton
           variant="contained"
           disabled={!formState.isDirty || saving}
           sx={{ mt: 2 }}
@@ -163,7 +164,7 @@ export default function GiftCardSettingsCard() {
           }}
         >
           {t('finance.giftCards.saveSettings')}
-        </Button>
+        </DuncitButton>
       </CardContent>
     </Card>
   );

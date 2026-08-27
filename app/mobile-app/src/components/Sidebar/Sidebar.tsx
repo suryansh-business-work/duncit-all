@@ -22,7 +22,10 @@ import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarPolicies } from './SidebarPolicies';
+import { SidebarRefreshBar } from './SidebarRefreshBar';
+import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Body of the account menu screen (/menu) — the RN twin of mWeb's <MenuPanel/>.
@@ -37,10 +40,18 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const { color: ink, primary } = useThemeColors();
   const { t } = useTranslation();
 
-  const { data } = useMe();
-  const { me: account } = useAccount();
-  const { data: policiesData } = usePublicPolicies();
+  const { data, isLoading } = useMe();
+  const { me: account, isLoading: accountLoading } = useAccount();
+  const { data: policiesData, isLoading: policiesLoading } = usePublicPolicies();
   const me = data?.me;
+  // Rendering `me` as undefined would paint a stranger's menu for a beat — an
+  // anonymous "User" avatar at 0% profile completion. mWeb skeletons the same
+  // block; the header ✕ stays either way, so there is always a way back out.
+  const pending = isLoading && !me;
+  // On a warm store the answer is already there, so the account record — which
+  // is re-read on every open — shows as the thin bar rather than flashing a
+  // skeleton over content that is already correct.
+  const refreshing = !pending && (isLoading || accountLoading || policiesLoading);
   const roles = me?.roles ?? [];
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
@@ -108,11 +119,13 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             justifyContent="center"
             borderRadius={18}
             backgroundColor="$surface"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="close" size={18} color={ink} />
           </XStack>
         </XStack>
+
+        <SidebarRefreshBar active={refreshing} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -120,19 +133,24 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
         >
           {/* One unified card layout for every role — the studio-specific
               menu list was retired so all modes share this design. */}
-          <SidebarUserContent
-            me={me}
-            account={account}
-            roles={roles}
-            mode={effectiveMode}
-            showPodPlans={showPodPlans}
-            showLeaderboard={showLeaderboard}
-            showMembership={showMembership}
-            showGiftCards={showGiftCards}
-            showTourGuide={showTourGuide}
-            showAutoPods={showAutoPods}
-            onNavigate={go}
-          />
+          {pending ? (
+            <SidebarSkeleton />
+          ) : (
+            <SidebarUserContent
+              me={me}
+              account={account}
+              accountLoading={accountLoading}
+              roles={roles}
+              mode={effectiveMode}
+              showPodPlans={showPodPlans}
+              showLeaderboard={showLeaderboard}
+              showMembership={showMembership}
+              showGiftCards={showGiftCards}
+              showTourGuide={showTourGuide}
+              showAutoPods={showAutoPods}
+              onNavigate={go}
+            />
+          )}
 
           {canSwitch ? (
             <XStack
@@ -149,7 +167,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               paddingHorizontal={12}
               paddingVertical={10}
               backgroundColor="$surface"
-              pressStyle={{ opacity: 0.7 }}
+              pressStyle={PRESS_STYLE.row}
             >
               <MaterialIcons name="swap-horiz" size={20} color={primary} />
               <YStack flex={1}>
@@ -192,6 +210,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           <Separator borderColor="$borderColor" />
           <SidebarPolicies
             policies={policiesData?.publicPolicies ?? []}
+            loading={policiesLoading}
             onSelect={(slug) => {
               onClose();
               navigation.navigate('Policy', { slug });

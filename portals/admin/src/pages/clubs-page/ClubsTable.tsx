@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import EventIcon from '@mui/icons-material/Event';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   DuncitTable,
   actionsColumn,
@@ -81,9 +82,9 @@ export default function ClubsTable({
       c.category_id ? <Chip size="small" label={catName(c.category_id)} /> : '—';
     const renderViewPods = (c: ClubRow) => (
       <Tooltip title={t('admin.clubs.viewPods')}>
-        <IconButton size="small" component={RouterLink} to={`/pods?club_id=${c.id}`}>
+        <DuncitIconButton size="small" component={RouterLink} to={`/pods?club_id=${c.id}`}>
           <EventIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     );
     return [

@@ -16,6 +16,7 @@
     "@duncit/captcha": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@fortawesome/fontawesome-free": "^7.3.1",
     "@tailwindcss/vite": "^4.3.3",

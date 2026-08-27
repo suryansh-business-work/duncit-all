@@ -1,7 +1,8 @@
-import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useTranslation } from './i18n/useTranslation';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   urls: string[];
@@ -81,7 +82,7 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
               >
                 {index + 1}
               </Box>
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 aria-label={t('media.picker.remove')}
                 onClick={() => onRemove(url)}
@@ -95,7 +96,7 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
                 }}
               >
                 <CloseIcon sx={{ fontSize: 14 }} />
-              </IconButton>
+              </DuncitIconButton>
             </Box>
           ))}
         </Stack>

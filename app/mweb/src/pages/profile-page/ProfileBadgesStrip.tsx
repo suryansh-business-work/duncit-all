@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { DuncitButton } from '@duncit/buttons';
 import { sortBadgeProgress } from '@duncit/utils';
 import { MY_BADGE_PROGRESS, type MyBadgeProgressData } from '../badges-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -32,9 +33,9 @@ export default function ProfileBadgesStrip() {
           <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }}>
             {t('mweb.profile.badges')}
           </Typography>
-          <Button size="small" onClick={() => navigate('/badges')} sx={{ fontWeight: 700 }}>
+          <DuncitButton size="small" onClick={() => navigate('/badges')} sx={{ fontWeight: 700 }}>
             {t('mweb.badges.viewAll')}
-          </Button>
+          </DuncitButton>
         </Stack>
         {earned.length === 0 ? (
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>

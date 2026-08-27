@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
@@ -132,12 +132,12 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading}>
           {t('mweb.common.cancel')}
-        </Button>
-        <Button type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 700 }}>
+        </DuncitButton>
+        <DuncitButton type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 700 }}>
           {state.loading ? t('mweb.wallet.requesting') : t('mweb.wallet.requestWithdrawal')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

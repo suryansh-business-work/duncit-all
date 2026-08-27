@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader, QueryGuard } from '@duncit/ui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
@@ -76,7 +77,7 @@ export default function PackageUpdatesPage() {
         title={t('tech.packageUpdates.packageUpdates')}
         subtitle={t('tech.packageUpdates.everyManifestAgainstNpm')}
         actions={
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -84,7 +85,7 @@ export default function PackageUpdatesPage() {
             disabled={refreshing}
           >
             {refreshing ? t('tech.packageUpdates.checking') : t('tech.packageUpdates.checkNow')}
-          </Button>
+          </DuncitButton>
         }
       />
 

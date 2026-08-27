@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import {
   Box,
   Drawer,
-  IconButton,
   InputAdornment,
   List,
   ListItemButton,
@@ -14,6 +13,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitIconButton } from '@duncit/buttons';
 import { ABOVE_TASKBAR_HEIGHT } from '../../workspace';
 import { useTranslation } from '../../i18n/useTranslation';
 import { FileManagerDialog } from '../../file-manager';
@@ -89,9 +89,9 @@ export function AppsDrawer({
           <Typography variant="h6" sx={{ flex: 1 }}>
             {t('shell.appsDrawer.title')}
           </Typography>
-          <IconButton onClick={close} aria-label={t('shell.appsDrawer.close')}>
+          <DuncitIconButton onClick={close} aria-label={t('shell.appsDrawer.close')}>
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
 
         <Box sx={{ px: 2, pb: 1 }}>

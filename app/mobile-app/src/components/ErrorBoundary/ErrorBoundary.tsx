@@ -4,6 +4,7 @@ import { semantic } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
 import { logs } from '@duncit/logs';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   children: ReactNode;
@@ -48,7 +49,7 @@ function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
         paddingVertical={12}
         borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">
           {t('mweb.errorBoundary.tryAgain')}

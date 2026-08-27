@@ -1,18 +1,9 @@
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  IconButton,
-  LinearProgress,
-  Link,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, LinearProgress, Link, Stack, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import type { RecordStage } from './useCallRecorder';
 
@@ -145,7 +136,7 @@ export default function CallRecorder({
         {t('shell.chat.recorder.saved')}
       </Typography>
       <Box sx={{ flex: 1 }} />
-      <Button
+      <DuncitButton
         size="small"
         component={Link}
         href={url ?? '#'}
@@ -155,19 +146,19 @@ export default function CallRecorder({
         startIcon={<DownloadIcon />}
       >
         {t('shell.chat.recorder.download')}
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         size="small"
         variant="outlined"
         startIcon={<SendIcon />}
         onClick={() => url && onSendToChat(url)}
       >
         {t('shell.chat.recorder.sendToChat')}
-      </Button>
+      </DuncitButton>
       <Tooltip title={t('shell.chat.recorder.dismiss')}>
-        <IconButton size="small" onClick={onDismiss} aria-label={t('shell.chat.recorder.dismissLabel')}>
+        <DuncitIconButton size="small" onClick={onDismiss} aria-label={t('shell.chat.recorder.dismissLabel')}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

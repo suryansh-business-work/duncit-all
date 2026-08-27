@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   Divider,
@@ -13,6 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import {
   REPORT_PROBLEM_CONFIG,
@@ -159,14 +159,14 @@ export default function FormFieldsCard() {
 
             {saveState.error && <Alert severity="error">{saveState.error.message}</Alert>}
 
-            <Button
+            <DuncitButton
               variant="contained"
               onClick={submit}
               disabled={loading || saveState.loading || categories.length === 0}
               sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
             >
               {saveState.loading ? t('shell.common.saving') : t('shell.common.save')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </CardContent>
       </Card>

@@ -3,7 +3,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import {
   buildBenefitValueFields,
@@ -167,10 +167,10 @@ export default function BenefitFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-          <Button type="submit" variant="contained" disabled={loading || plans.length === 0}>
+          <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={loading || plans.length === 0}>
             {editing ? 'Save changes' : 'Create row'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

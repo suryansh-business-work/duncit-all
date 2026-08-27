@@ -1,15 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { BackButton, QueryGuard } from '@duncit/ui';
 import EditIcon from '@mui/icons-material/Edit';
@@ -18,6 +9,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { DuncitButton } from '@duncit/buttons';
 import { ECOMM_LEAD } from '../../api/crm.gql';
 import type { EcommLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
@@ -118,9 +110,9 @@ export default function EcommLeadDetailPage() {
                 </Stack>
               )}
             </Box>
-            <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`)}>
+            <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`)}>
               {t('shell.common.edit')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </CardContent>
       </Card>

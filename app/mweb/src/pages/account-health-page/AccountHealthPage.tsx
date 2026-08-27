@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import HealthMeter from '../../components/health/HealthMeter';
 import HealthBreakdown from '../../components/health/HealthBreakdown';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../../components/health/queries';
@@ -19,9 +20,9 @@ export default function AccountHealthPage() {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <IconButton size="small" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
+        <DuncitIconButton size="small" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Box>
           <Typography
             variant="overline"

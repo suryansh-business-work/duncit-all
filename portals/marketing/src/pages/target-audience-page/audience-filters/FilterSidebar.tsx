@@ -4,13 +4,13 @@ import {
   AccordionDetails,
   AccordionSummary,
   Badge,
-  Button,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { DuncitButton } from '@duncit/buttons';
 import { activeFilterCount } from './buildFilters';
 import {
   AccountSection,
@@ -72,9 +72,9 @@ export default function FilterSidebar({ state, onChange, options }: Readonly<Pro
           }}>
           {t('marketing.targetAudience.filters')}
         </Typography>
-        <Button size="small" disabled={count === 0} onClick={() => onChange(EMPTY_FILTERS)}>
+        <DuncitButton size="small" disabled={count === 0} onClick={() => onChange(EMPTY_FILTERS)}>
           {t('marketing.common.reset')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {sections(t).map(({ title, Body }, index) => (

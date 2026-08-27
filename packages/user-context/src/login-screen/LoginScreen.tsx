@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert, Box, Chip, Fade, IconButton, Link, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Chip, Fade, Link, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import { DuncitIconButton } from '@duncit/buttons';
 import { glass, inkCta } from './glass';
 import LoginForm from './login.form';
 import PromoCard from './PromoCard';
@@ -64,13 +65,13 @@ export default function LoginScreen({
       />
 
       <Tooltip title={dark ? t('session.login.switchToLight') : t('session.login.switchToDark')}>
-        <IconButton
+        <DuncitIconButton
           onClick={onToggleMode}
           aria-label={t('session.login.toggleColorMode')}
           sx={{ position: 'fixed', top: 16, right: 16, zIndex: 3, color: 'text.primary' }}
         >
           {dark ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
 
       <Fade in timeout={500}>

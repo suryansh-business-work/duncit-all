@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { DuncitIconButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EventTicketRow } from './queries';
@@ -117,13 +118,13 @@ export default function EventTicketsTable({
         justifyContent: "flex-end"
       }}>
         <Tooltip title={t('admin.eventTickets.downloadTicket')}>
-          <IconButton size="small" onClick={() => onDownload(ticket)} aria-label={t('admin.eventTickets.downloadTicket')}>
+          <DuncitIconButton size="small" onClick={() => onDownload(ticket)} aria-label={t('admin.eventTickets.downloadTicket')}>
             <DownloadIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={ticket.status === 'CHECKED_IN' ? t('admin.eventTickets.checkedIn') : t('admin.eventTickets.checkIn')}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               color="success"
               disabled={ticket.status !== 'VALID'}
@@ -131,7 +132,7 @@ export default function EventTicketsTable({
               aria-label={t('admin.eventTickets.checkIn')}
             >
               <CheckCircleIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </Stack>

@@ -2,7 +2,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { Box, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Box, Paper, Stack, Typography } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   clampPodProductQty,
   podProductImage,
@@ -85,39 +86,39 @@ export default function AttachedProductRow({
         <Stack direction="row" spacing={0.5} sx={{
           alignItems: "center"
         }}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={t('podProduct.decreaseQty')}
             onClick={() => step(-1)}
             disabled={disabled || quantity <= 1}
           >
             <RemoveIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
           <Typography variant="body2" sx={{ minWidth: 28, textAlign: 'center' }}>
             {quantity}
           </Typography>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={t('podProduct.increaseQty')}
             onClick={() => step(1)}
             disabled={disabled || (stock > 0 && quantity >= stock)}
           >
             <AddIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
 
         <Typography variant="subtitle2" sx={{ minWidth: 88, textAlign: 'right' }}>
           {formatMoney(podProductLineTotal(product, quantity))}
         </Typography>
 
-        <IconButton
+        <DuncitIconButton
           aria-label={t('podProduct.removeProduct')}
           onClick={onRemove}
           color="error"
           disabled={disabled}
         >
           <DeleteIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     </Paper>
   );

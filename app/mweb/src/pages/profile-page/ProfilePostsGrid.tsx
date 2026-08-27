@@ -1,8 +1,9 @@
-import { Box, Button, ImageList, ImageListItem, Stack, Typography } from '@mui/material';
+import { Box, ImageList, ImageListItem, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -58,7 +59,7 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
           </Box>
           <Typography variant="h6">{t('mweb.profile.sharePhotos')}</Typography>
           <Typography variant="body2">{t('mweb.profile.whenYouSharePhotosTheyWill')}</Typography>
-          <Button onClick={onNewPost}>{t('mweb.profile.shareYourFirstPhoto')}</Button>
+          <DuncitButton onClick={onNewPost}>{t('mweb.profile.shareYourFirstPhoto')}</DuncitButton>
         </Stack>
       ) : (
         <ImageList cols={3} gap={4} sx={{ m: 0 }}>

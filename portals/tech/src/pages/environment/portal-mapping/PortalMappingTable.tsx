@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from '../queries';
 import type { PortalListItem } from '../portal-env-queries';
@@ -71,14 +72,14 @@ export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAs
         }}>
         <Tooltip title={t('tech.environment.showAssignedConfigs')}>
           <span>
-            <IconButton size="small" onClick={() => onInfo(row)} disabled={!row.entries.length}>
+            <DuncitIconButton size="small" onClick={() => onInfo(row)} disabled={!row.entries.length}>
               <InfoOutlinedIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
-        <Button size="small" startIcon={<TuneIcon />} onClick={() => onAssign(row.portal)}>
+        <DuncitButton size="small" startIcon={<TuneIcon />} onClick={() => onAssign(row.portal)}>
           Assign
-        </Button>
+        </DuncitButton>
       </Stack>
     );
     return [

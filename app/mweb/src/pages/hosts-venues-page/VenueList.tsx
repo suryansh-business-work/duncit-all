@@ -1,18 +1,9 @@
 import type { FollowStatus } from '@duncit/utils';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, CardMedia, Chip, Grid, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
+import { DuncitButton } from '@duncit/buttons';
 import FollowButton from '../../components/FollowButton';
 import { venueUrl } from '../../utils/seoUrls';
 
@@ -172,9 +163,9 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                   ))}
                 </Stack>
               )}
-              <Button component={RouterLink} to={venueUrl(v.id)} fullWidth variant="contained" size="small" sx={{ mt: 1.25, borderRadius: 999, fontWeight: 700 }}>
+              <DuncitButton component={RouterLink} to={venueUrl(v.id)} fullWidth variant="contained" size="small" sx={{ mt: 1.25, borderRadius: 999, fontWeight: 700 }}>
                 View venue
-              </Button>
+              </DuncitButton>
             </CardContent>
           </Card>
         </Grid>

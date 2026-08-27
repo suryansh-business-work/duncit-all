@@ -1,5 +1,4 @@
 import {
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -8,6 +7,7 @@ import {
   DialogTitle,
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { ReactNode } from 'react';
 import { useTranslation } from './i18n';
 
@@ -83,10 +83,10 @@ export function ConfirmDialog({
         </DialogContent>
       )}
       <DialogActions>
-        <Button onClick={close} disabled={isBusy}>
+        <DuncitButton onClick={close} disabled={isBusy}>
           {cancelLabel ?? t('shell.common.cancel')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           color={color}
           startIcon={startIcon}
@@ -94,7 +94,7 @@ export function ConfirmDialog({
           disabled={isBusy}
         >
           {confirmContent}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

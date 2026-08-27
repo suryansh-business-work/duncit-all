@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import TemplateEditorPanel from './TemplateEditorPanel';
 import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
@@ -61,9 +62,9 @@ export default function EmailTemplatesPage() {
             looked up by <code>slug</code> from server code.
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
           New template
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>

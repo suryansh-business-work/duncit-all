@@ -6,6 +6,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface RejoinConfirmDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function RejoinConfirmDialog({
       <ModalThemeScope>
         <YStack flex={1} testID="rejoin-dialog">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.podHistory.close')}
             onPress={busy ? undefined : onClose}
@@ -59,6 +61,7 @@ export function RejoinConfirmDialog({
                   {t('mweb.podHistory.rejoinTitle')}
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="rejoin-close"
                   role="button"
                   aria-label={t('mweb.podHistory.close')}
@@ -91,7 +94,7 @@ export function RejoinConfirmDialog({
                   borderWidth={1}
                   borderColor="$borderColor"
                   opacity={busy ? 0.6 : 1}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
                     {t('mweb.podHistory.cancel')}
@@ -111,7 +114,7 @@ export function RejoinConfirmDialog({
                   borderRadius={12}
                   backgroundColor="$primary"
                   opacity={busy ? 0.7 : 1}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
                   <Text fontSize={14} fontWeight="700" color={onPrimary}>

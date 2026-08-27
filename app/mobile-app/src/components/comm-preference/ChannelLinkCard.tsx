@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { CommChannel } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   channel: CommChannel;
@@ -39,7 +40,7 @@ export function ChannelLinkCard({ channel, icon, name, hint, summary, onPress }:
       borderColor="$borderColor"
       alignItems="center"
       gap={12}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={20} color={color} />
       <YStack flex={1} gap={2}>

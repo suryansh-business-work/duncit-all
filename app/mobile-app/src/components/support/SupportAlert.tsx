@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Variant = 'success' | 'error';
 
@@ -50,7 +51,7 @@ export function SupportAlert({ variant, message, onClose, testID }: Readonly<Pro
         aria-label={t('mweb.support.dismiss')}
         onPress={onClose}
         padding={2}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         <MaterialIcons name="close" size={16} color={tone} />
       </XStack>

@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Card, CardContent, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import HostEarningsCard from './HostEarningsCard';
 import SettlementStatusChip, { FrozenBadge } from './SettlementStatusChip';
@@ -23,9 +24,9 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
           alignItems: "center",
           mb: 3
         }}>
-        <IconButton aria-label={t('finance.podFinance.backToPodFinance')} onClick={() => navigate('/pod-finance')}>
+        <DuncitIconButton aria-label={t('finance.podFinance.backToPodFinance')} onClick={() => navigate('/pod-finance')}>
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Box sx={{ flex: 1 }}>
           <Stack
             direction="row"

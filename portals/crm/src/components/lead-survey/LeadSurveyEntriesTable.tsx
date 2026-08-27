@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import {
-  Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, Paper, Stack, Table,
-  TableBody, TableCell, TableHead, TableRow, Tooltip, Typography,
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import BlockIcon from '@mui/icons-material/Block';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { surveyLinkUrl, type LeadSurveyDef, type LeadSurveyEntry } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -86,14 +98,14 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                 <TableCell align="right" onClick={(ev) => ev.stopPropagation()}>
                   {e.source === 'LINK' && !e.token_revoked && e.token && (
                     <>
-                      <Tooltip title={t('crm.components.copyLink')}><IconButton size="small" onClick={() => copy(e.token!)}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
-                      <Tooltip title={t('crm.components.revokeLink')}><span><IconButton size="small" color="warning" disabled={revoking} onClick={() => onRevoke(e.id)}><BlockIcon fontSize="small" /></IconButton></span></Tooltip>
+                      <Tooltip title={t('crm.components.copyLink')}><DuncitIconButton size="small" onClick={() => copy(e.token!)}><ContentCopyIcon fontSize="small" /></DuncitIconButton></Tooltip>
+                      <Tooltip title={t('crm.components.revokeLink')}><span><DuncitIconButton size="small" color="warning" disabled={revoking} onClick={() => onRevoke(e.id)}><BlockIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
                     </>
                   )}
                   {e.filled && (
-                    <Tooltip title={t('crm.components.viewAnswers')}><IconButton size="small" onClick={() => setView(e)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
+                    <Tooltip title={t('crm.components.viewAnswers')}><DuncitIconButton size="small" onClick={() => setView(e)}><VisibilityIcon fontSize="small" /></DuncitIconButton></Tooltip>
                   )}
-                  <Tooltip title={t('shell.common.delete')}><span><IconButton size="small" color="error" disabled={deleting} onClick={() => onDelete(e.id)}><DeleteIcon fontSize="small" /></IconButton></span></Tooltip>
+                  <Tooltip title={t('shell.common.delete')}><span><DuncitIconButton size="small" color="error" disabled={deleting} onClick={() => onDelete(e.id)}><DeleteIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
                 </TableCell>
               </TableRow>
             ))}
@@ -127,7 +139,7 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
             justifyContent: "flex-end",
             p: 1.5
           }}>
-          <Button onClick={() => setView(null)}>{t('shell.common.close')}</Button>
+          <DuncitButton onClick={() => setView(null)}>{t('shell.common.close')}</DuncitButton>
         </Stack>
       </Dialog>
     </>

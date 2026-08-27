@@ -28,6 +28,7 @@ import {
 export function SidebarUserContent({
   me,
   account,
+  accountLoading = false,
   roles,
   mode,
   showPodPlans,
@@ -40,6 +41,13 @@ export function SidebarUserContent({
 }: Readonly<{
   me?: SidebarIdentityUser | null;
   account?: ProfileForCompletion | null;
+  /**
+   * The completion record is its own query, so it is still in flight after the
+   * identity has landed. An unanswered account completes to a low percentage,
+   * which would flash the nudge at a profile that is actually finished — mWeb
+   * reads completion off the same record as the identity and never sees this.
+   */
+  accountLoading?: boolean;
   roles: readonly string[];
   /** Studio mode in effect — decides which partner menu (if any) is shown. */
   mode: StudioMode;
@@ -58,6 +66,7 @@ export function SidebarUserContent({
 }>) {
   const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
+  const showIncomplete = !accountLoading && percent < 100;
   // Each enrolling role reads its own queue, so the row is named for the mode
   // it appears in. Written as literal `t('…')` calls because the translation
   // gate greps source for the literal key (rule 38).
@@ -115,7 +124,7 @@ export function SidebarUserContent({
       <TourAnchor tour="profile" anchor="profile-details">
         <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
       </TourAnchor>
-      {percent < 100 ? (
+      {showIncomplete ? (
         <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
       ) : null}
       <SidebarQuickGrid onNavigate={onNavigate} />

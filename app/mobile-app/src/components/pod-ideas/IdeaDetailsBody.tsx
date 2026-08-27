@@ -6,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { IdeaCommentRow } from './IdeaCommentRow';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   idea: PodIdeaDetail;
@@ -62,7 +63,7 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
           onPress={onToggleLike}
           alignItems="center"
           gap={6}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons
             name={idea.liked_by_me ? 'favorite' : 'favorite-border'}

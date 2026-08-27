@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Box, Button, CircularProgress, Stack } from '@mui/material';
+import { Box, CircularProgress, Stack } from '@mui/material';
 import SortIcon from '@mui/icons-material/SwapVert';
 import FilterIcon from '@mui/icons-material/TuneOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import SearchResultsSection from './SearchResultsSection';
 import SearchSortMenu from './SearchSortMenu';
 import SearchFilterSheet from './SearchFilterSheet';
@@ -83,7 +84,7 @@ export default function SearchResults({
   return (
     <Stack spacing={2.5}>
       <Stack direction="row" spacing={1}>
-        <Button
+        <DuncitButton
           variant="outlined"
           color="inherit"
           startIcon={<SortIcon />}
@@ -91,8 +92,8 @@ export default function SearchResults({
           sx={{ fontWeight: 600, borderRadius: 999 }}
         >
           Sort
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant={categoryId ? 'contained' : 'outlined'}
           color={categoryId ? 'primary' : 'inherit'}
           startIcon={<FilterIcon />}
@@ -100,7 +101,7 @@ export default function SearchResults({
           sx={{ fontWeight: 600, borderRadius: 999 }}
         >
           Filter
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {loading && isEmpty ? (

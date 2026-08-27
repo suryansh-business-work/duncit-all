@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { Box, IconButton, Popover, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Popover, Stack, Tooltip, Typography } from '@mui/material';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
+import { DuncitIconButton } from '@duncit/buttons';
 
 /**
  * A short, hand-picked set rather than a dependency.
@@ -95,14 +96,14 @@ export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
     <>
       <Tooltip title={t('shell.chat.composer.emoji')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             disabled={disabled}
             onClick={(event) => setAnchor(event.currentTarget)}
             aria-label={t('shell.chat.composer.insertEmoji')}
           >
             <SentimentSatisfiedAltIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
       <Popover
@@ -127,7 +128,7 @@ export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.25 }}>
                 {group.emoji.map((emoji) => (
-                  <IconButton
+                  <DuncitIconButton
                     key={emoji}
                     size="small"
                     aria-label={emoji}
@@ -140,7 +141,7 @@ export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
                     sx={{ fontSize: 18, width: 30, height: 30, borderRadius: 1 }}
                   >
                     {emoji}
-                  </IconButton>
+                  </DuncitIconButton>
                 ))}
               </Box>
             </Box>

@@ -5,6 +5,7 @@ import { Field } from '@/components/Field';
 import { Backdrop, ModalButton } from './ModalBase';
 import { FEEDBACK_SCALE, feedbackOption } from './feedback-scale';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const THANK_YOU =
   'Thank you for your feedback. Your feedback helps us improve the Duncit support experience.';
@@ -31,7 +32,7 @@ function EmojiScale({ rating, onPick }: Readonly<ScaleProps>) {
           borderRadius={10}
           borderWidth={1}
           borderColor={o.value === rating ? '$primary' : 'transparent'}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={26}>{o.emoji}</Text>
         </YStack>

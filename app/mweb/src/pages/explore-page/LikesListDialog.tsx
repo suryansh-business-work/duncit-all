@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  IconButton,
   List,
   ListItemAvatar,
   ListItemButton,
@@ -16,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { POD_LIKERS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -99,9 +99,9 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
           pr: 1
         }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.explore.likedBy')}</DialogTitle>
-        <IconButton aria-label={t('mweb.common.close')} onClick={onClose}>
+        <DuncitIconButton aria-label={t('mweb.common.close')} onClick={onClose}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       {/* The LIST is the scroll area, not the paper — otherwise "Liked by" and
           its close button scroll away with it on a popular pod. */}

@@ -6,7 +6,6 @@ import {
   AccordionSummary,
   Alert,
   Box,
-  Button,
   Divider,
   Snackbar,
   Stack,
@@ -14,6 +13,7 @@ import {
 } from '@mui/material';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import IdentitySection from './IdentitySection';
 import PlatformAssetsSection from './PlatformAssetsSection';
@@ -162,9 +162,9 @@ export default function BrandingPage() {
       <Stack direction="row" sx={{
         justifyContent: "flex-end"
       }}>
-        <Button variant="contained" size="large" onClick={submit} disabled={busy}>
+        <DuncitButton variant="contained" size="large" onClick={submit} disabled={busy}>
           {busy ? 'Saving…' : 'Save Branding'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Snackbar

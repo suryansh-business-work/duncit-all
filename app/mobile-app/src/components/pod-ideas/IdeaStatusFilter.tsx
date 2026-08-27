@@ -1,6 +1,7 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { Text, XStack, YStack } from 'tamagui';
 import type { Translate } from '@/i18n/fallback';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The moderation states an idea can sit in, plus the unfiltered default. */
 export type IdeaStatusFilterValue = 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING';
@@ -49,7 +50,7 @@ export function IdeaStatusFilter({ value, onChange }: Readonly<Props>) {
               borderWidth={1}
               borderColor={selected ? '$primary' : '$borderColor'}
               backgroundColor={selected ? '$primary' : 'transparent'}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {option.label}

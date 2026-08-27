@@ -8,6 +8,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import type { FaqItem } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface FaqAnswerModalProps {
   faq: FaqItem | null;
@@ -26,6 +27,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="support-faq-modal">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.support.closeFaq')}
             onPress={onClose}
@@ -50,6 +52,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                       {faq.question}
                     </Text>
                     <XStack
+                      pressStyle={PRESS_STYLE.surface}
                       testID="support-faq-modal-close"
                       role="button"
                       aria-label={t('mweb.common.close')}
@@ -88,7 +91,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                       height={44}
                       borderRadius={999}
                       backgroundColor="$primary"
-                      pressStyle={{ opacity: 0.9 }}
+                      pressStyle={PRESS_STYLE.surface}
                     >
                       <MaterialIcons name="chat-bubble-outline" size={18} color="#ffffff" />
                       <Text fontSize={14} fontWeight="700" color="#ffffff">

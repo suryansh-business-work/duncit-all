@@ -5,6 +5,7 @@ import { WebView } from 'react-native-webview';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Renders one image inside a WebView whose viewport permits pinch-zoom — the
  * browser supplies the pinch/zoom gesture natively (mirrors the MapEmbed/
@@ -43,6 +44,7 @@ export function ZoomableImageModal({
               {images.length > 0 ? `${current + 1} / ${images.length}` : ''}
             </Text>
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               testID="zoom-image-close"
               role="button"
               aria-label={t('mweb.common.closeImage')}
@@ -73,6 +75,7 @@ export function ZoomableImageModal({
               paddingBottom={8}
             >
               <XStack
+                pressStyle={PRESS_STYLE.control}
                 testID="zoom-image-prev"
                 role="button"
                 aria-label={t('mweb.details.previousImage')}
@@ -85,6 +88,7 @@ export function ZoomableImageModal({
                 <MaterialIcons name="chevron-left" size={22} color="#ffffff" />
               </XStack>
               <XStack
+                pressStyle={PRESS_STYLE.control}
                 testID="zoom-image-next"
                 role="button"
                 aria-label={t('mweb.details.nextImage')}

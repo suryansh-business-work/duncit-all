@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Venue partner card — address, a Call Venue / Get Directions action row and
  * the contact shared with the host for slot follow-up. mWeb twin. */
@@ -46,7 +47,7 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
             onPress={() => Linking.openURL(`tel:${venue.owner_phone}`)}
             alignItems="center"
             gap={4}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="phone" size={16} color={primary} />
             <Text fontSize={13} fontWeight="600" color="$primary">
@@ -61,7 +62,7 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           onPress={() => Linking.openURL(directions)}
           alignItems="center"
           gap={4}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="directions" size={16} color={primary} />
           <Text fontSize={13} fontWeight="600" color="$primary">

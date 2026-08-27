@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -85,13 +86,13 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
         sx={{ display: 'none' }}
       />
 
-      <IconButton
+      <DuncitIconButton
         size="small"
         onClick={toggle}
         aria-label={t(playing ? 'shell.chat.voice.pause' : 'shell.chat.voice.play')}
       >
         {playing ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
-      </IconButton>
+      </DuncitIconButton>
 
       <Stack
         direction="row"
@@ -131,14 +132,14 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
         {clock(playing || at > 0 ? total - at : total)}
       </Typography>
 
-      <Button
+      <DuncitButton
         size="small"
         onClick={() => setSpeedIndex((index) => (index + 1) % SPEEDS.length)}
         sx={{ minWidth: 40, px: 0.5 }}
         aria-label={t('shell.chat.voice.speed', { vars: { rate: String(speed) } })}
       >
         {speed}×
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

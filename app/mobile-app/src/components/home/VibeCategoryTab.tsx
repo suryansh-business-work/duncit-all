@@ -6,6 +6,7 @@ import { AppImage } from '@/components/AppImage';
 import type { VibeIconLayout } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useThemeStore } from '@/stores/theme.store';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 type FlexDirection = 'column' | 'column-reverse' | 'row' | 'row-reverse';
@@ -107,7 +108,7 @@ export function VibeCategoryTab({
       borderWidth={1.5}
       borderColor={selected ? '$primary' : '$borderColor'}
       backgroundColor={selected ? selectedFill : '$surface'}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack width={iconWidth} height={iconHeight} alignItems="center" justifyContent="center">
         <TabIcon

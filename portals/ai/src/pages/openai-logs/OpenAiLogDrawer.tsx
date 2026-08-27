@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
-import { Box, Chip, CircularProgress, Divider, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Divider, Drawer, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { usd, tokens } from '../../lib/usd';
 import { OPENAI_LOG_ONE, STATUS_COLOR, type OpenAiLogDetail } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
@@ -103,9 +104,9 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
           OpenAI call
         </Typography>
         {log && <Chip size="small" label={log.status} color={STATUS_COLOR[log.status] ?? 'default'} />}
-        <IconButton onClick={onClose} aria-label={t('ai.openAiLogs.close')}>
+        <DuncitIconButton onClick={onClose} aria-label={t('ai.openAiLogs.close')}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Divider />
       <Box sx={{ p: 2 }}>

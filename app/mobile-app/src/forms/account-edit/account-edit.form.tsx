@@ -21,6 +21,7 @@ import {
   type AccountEditValues,
 } from './account-edit.types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const ADDRESS_NAMES = {
   line1: 'address_line1',
@@ -182,7 +183,7 @@ export function AccountEditForm({
         borderWidth={1}
         borderColor="$borderColor"
         opacity={discardDisabled ? 0.5 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           Discard changes

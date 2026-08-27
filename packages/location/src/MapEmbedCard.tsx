@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import type { TypographyProps } from '@mui/material/Typography';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from './i18n/useTranslation';
 import { buildMapQuery, mapEmbedUrl, mapSearchUrl, type MapQueryPart } from './mapEmbed';
 
@@ -135,7 +136,7 @@ export function MapEmbedCard({
         ) : (
           headingNode
         )}
-        <Button
+        <DuncitButton
           size="small"
           href={mapUrl}
           target="_blank"
@@ -145,7 +146,7 @@ export function MapEmbedCard({
           sx={buttonSx}
         >
           {buttonLabel ?? t('location.map.openInMaps')}
-        </Button>
+        </DuncitButton>
       </Stack>
       {src ? (
         <Box

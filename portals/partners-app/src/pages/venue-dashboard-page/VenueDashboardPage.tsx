@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Button, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { MY_VENUES } from '../register-venue-page/queries';
 import { VENUE_OWNER_STATS, emptyVenueOwnerStats } from './queries';
@@ -61,14 +62,14 @@ export default function VenueDashboardPage() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
           alignItems: { sm: 'center' }
         }}>
-          <Button component={RouterLink} to="/register-venue" size="small" variant="outlined" startIcon={<StorefrontIcon />}>
+          <DuncitButton component={RouterLink} to="/register-venue" size="small" variant="outlined" startIcon={<StorefrontIcon />}>
             Venue Management
-          </Button>
-          <Button component={RouterLink} to="/venues/requests" size="small" variant="outlined" startIcon={<EventAvailableIcon />}>
+          </DuncitButton>
+          <DuncitButton component={RouterLink} to="/venues/requests" size="small" variant="outlined" startIcon={<EventAvailableIcon />}>
             Slot Requests{stats.pending_requests > 0 ? ` (${stats.pending_requests})` : ''}
-          </Button>
+          </DuncitButton>
           {selectedVenue?.status === 'APPROVED' && (
-            <Button
+            <DuncitButton
               component={RouterLink}
               to={`/venues/${selectedVenue.id}/availability`}
               size="small"
@@ -76,7 +77,7 @@ export default function VenueDashboardPage() {
               startIcon={<CalendarMonthIcon />}
             >
               Availability Calendar
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       ),
@@ -123,7 +124,7 @@ export default function VenueDashboardPage() {
           {statsQuery.error && <Alert severity="error">{statsQuery.error.message}</Alert>}
 
           {!venuesQuery.loading && venues.length === 0 && (
-            <Alert severity="info" action={<Button component={RouterLink} to="/register-venue/new" size="small">{t('partners.venueDashboardPage.registerVenue')}</Button>}>
+            <Alert severity="info" action={<DuncitButton component={RouterLink} to="/register-venue/new" size="small">{t('partners.venueDashboardPage.registerVenue')}</DuncitButton>}>
               Register your first venue to start publishing bookable slots.
             </Alert>
           )}

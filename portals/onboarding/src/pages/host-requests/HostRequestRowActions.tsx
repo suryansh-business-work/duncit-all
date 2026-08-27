@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { IconButton, ListItemText, Menu, MenuItem } from '@mui/material';
+import { ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { HostRequest } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -51,9 +52,9 @@ export default function HostRequestRowActions({ request, busy, onAcknowledge, on
   };
   return (
     <>
-      <IconButton size="small" disabled={busy} onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.hostRequests.hostRequestActions')}>
+      <DuncitIconButton size="small" disabled={busy} onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.hostRequests.hostRequestActions')}>
         <MoreVertIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
         {actions.map((action) => (
           <MenuItem key={action.label} onClick={() => run(action)}>

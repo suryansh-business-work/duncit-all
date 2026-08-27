@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { SearchSuggestion } from '@/hooks/useSearch';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   suggestions: SearchSuggestion[];
@@ -43,7 +44,7 @@ export function SearchSuggestions({ suggestions, onPick }: Readonly<Props>) {
           padding={12}
           borderTopWidth={index > 0 ? 1 : 0}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="search" size={16} color={muted} />
           <Text flex={1} fontSize={14} fontWeight="700" color="$color" numberOfLines={1}>

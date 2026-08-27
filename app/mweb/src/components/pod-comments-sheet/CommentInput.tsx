@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { IconButton, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { makeCommentSchema } from './helpers';
@@ -60,13 +61,13 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
             />
           )}
         />
-        <IconButton
+        <DuncitIconButton
           color="primary"
           type="submit"
           disabled={!viewerId || posting || !text.trim()}
         >
           <SendIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     </form>
   );

@@ -1,7 +1,8 @@
 import { useApolloClient } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
-import { Avatar, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { MY_VENUES_TABLE, type VenueListingRow } from './queries';
@@ -57,18 +58,18 @@ const renderActions = (venue: VenueListingRow) => (
     justifyContent: "flex-end"
   }}>
     {venue.status === 'APPROVED' && (
-      <Button
+      <DuncitButton
         size="small"
         component={RouterLink}
         to={`/venues/${venue.id}/availability`}
         startIcon={<EventAvailableIcon />}
       >
         Availability
-      </Button>
+      </DuncitButton>
     )}
-    <Button size="small" component={RouterLink} to={`/register-venue/${venue.id}`}>
+    <DuncitButton size="small" component={RouterLink} to={`/register-venue/${venue.id}`}>
       {rowAction(venue.status)}
-    </Button>
+    </DuncitButton>
   </Stack>
 );
 

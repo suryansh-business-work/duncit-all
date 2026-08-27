@@ -3,9 +3,10 @@ import { withAttribution } from '@duncit/utils';
 import { gql, useQuery } from '@apollo/client';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from '../i18n/useTranslation';
-import { Box, Button, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Box, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 
 const APP_VERSION_INFO = gql`
   query AppVersionInfoBanner {
@@ -156,16 +157,16 @@ export default function OpenInAppBanner() {
             {t('mweb.openInApp.subtitle')}
           </Typography>
         </Box>
-        <IconButton size="small" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss} sx={{ mt: -0.5, mr: -0.5 }}>
+        <DuncitIconButton size="small" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss} sx={{ mt: -0.5, mr: -0.5 }}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
-        <Button size="small" variant="outlined" onClick={openInApp} sx={ACTION_SX}>
+        <DuncitButton size="small" variant="outlined" onClick={openInApp} sx={ACTION_SX}>
           {t('mweb.openInApp.open')}
-        </Button>
+        </DuncitButton>
         {storeUrl && (
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             href={storeUrl}
@@ -174,7 +175,7 @@ export default function OpenInAppBanner() {
             sx={ACTION_SX}
           >
             {t('mweb.openInApp.getApp')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     </Paper>

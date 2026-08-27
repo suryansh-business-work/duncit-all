@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
+import { DuncitButton } from '@duncit/buttons';
 import { TOGGLE_POD_LIKE } from './queries';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -59,22 +60,22 @@ export default function PodSocialBar({
   return (
     <>
       <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
-        <Button
+        <DuncitButton
           variant={liked ? 'contained' : 'outlined'}
           color={liked ? 'error' : 'inherit'}
           startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
           onClick={onLike}
         >
           {likeLabel}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="outlined"
           color="inherit"
           startIcon={<CommentIcon />}
           onClick={() => setCommentsOpen(true)}
         >
           {t('mweb.podDetails.commentCount', { vars: { count: commentCount } })}
-        </Button>
+        </DuncitButton>
       </Stack>
       <PodCommentsSheet
         podId={podId}

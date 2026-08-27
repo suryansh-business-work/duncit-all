@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Box, Button, Card, Stack, Typography } from '@mui/material';
+import { Box, Card, Stack, Typography } from '@mui/material';
 import AddBusinessRoundedIcon from '@mui/icons-material/AddBusinessRounded';
+import { DuncitButton } from '@duncit/buttons';
 import { MY_HOST_REQUEST, applyButtonState, type MyHostRequest } from './queries';
 
 /**
@@ -53,7 +54,7 @@ export default function HostApplyBanner() {
             journey, showcase another skill, and start hosting experiences in a new category.
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           variant="contained"
           size="large"
           disabled={disabled}
@@ -69,7 +70,7 @@ export default function HostApplyBanner() {
           }}
         >
           {label}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Card>
   );

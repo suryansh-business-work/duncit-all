@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { stripHtml } from '@/utils/html';
 import { ReleaseSeatsPicker } from './ReleaseSeatsPicker';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface BackoutConfirmDialogProps {
   open: boolean;
@@ -58,7 +59,7 @@ function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<Backou
         borderWidth={1}
         borderColor="$borderColor"
         opacity={busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           {t('mweb.podDetails.close')}
@@ -78,7 +79,7 @@ function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<Backou
         borderRadius={12}
         backgroundColor="$danger"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {busy ? <Spinner size="small" color={onPrimary} /> : null}
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
@@ -137,6 +138,7 @@ export function BackoutConfirmDialog({
       <ModalThemeScope>
         <YStack flex={1} testID="backout-dialog">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.podDetails.close')}
             onPress={closeIfIdle}
@@ -163,6 +165,7 @@ export function BackoutConfirmDialog({
                   {t('mweb.podDetails.backoutTitle')}
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="backout-close"
                   role="button"
                   aria-label={t('mweb.podDetails.close')}
@@ -220,6 +223,7 @@ export function BackoutConfirmDialog({
 
               <XStack paddingHorizontal={16} paddingTop={8}>
                 <Text
+                  pressStyle={PRESS_STYLE.inline}
                   testID="backout-view-terms"
                   role="button"
                   aria-label={t('mweb.podDetails.viewBackoutTerms')}

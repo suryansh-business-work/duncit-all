@@ -1,20 +1,10 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 /** The partner-facing gate, decided on the Warehouse Approval page. Distinct
@@ -93,20 +83,20 @@ export default function BrandPickupRow({
           <Stack direction="row" spacing={0.5}>
             <Tooltip title={location.is_default ? 'Default location' : 'Set as default'}>
               <span>
-                <IconButton size="small" disabled={busy || location.is_default} onClick={onSetDefault}>
+                <DuncitIconButton size="small" disabled={busy || location.is_default} onClick={onSetDefault}>
                   {location.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}
-                </IconButton>
+                </DuncitIconButton>
               </span>
             </Tooltip>
             <Tooltip title={t('shell.common.edit')}>
-              <IconButton size="small" disabled={busy} onClick={onEdit}>
+              <DuncitIconButton size="small" disabled={busy} onClick={onEdit}>
                 <EditIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
             <Tooltip title={t('shell.common.delete')}>
-              <IconButton size="small" color="error" disabled={busy} onClick={onDelete}>
+              <DuncitIconButton size="small" color="error" disabled={busy} onClick={onDelete}>
                 <DeleteOutlineIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           </Stack>
         </Stack>
@@ -120,7 +110,7 @@ export default function BrandPickupRow({
                 {location.shiprocket_error}
               </Alert>
             )}
-            <Button
+            <DuncitButton
               size="small"
               variant="outlined"
               startIcon={<LocalShippingIcon />}
@@ -128,7 +118,7 @@ export default function BrandPickupRow({
               onClick={onRegister}
             >
               Register with ShipRocket
-            </Button>
+            </DuncitButton>
           </Box>
         )}
       </CardContent>

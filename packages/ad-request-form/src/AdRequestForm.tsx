@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Button, Grid, MenuItem, Slider, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Grid, MenuItem, Slider, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { adMediaTypeOptions, adPositionOptions } from './ad-options';
 import AdMediaField from './AdMediaField';
@@ -245,9 +246,9 @@ export default function AdRequestForm({
           <Stack direction="row" sx={{
             justifyContent: "flex-end"
           }}>
-            <Button type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || !formState.isValid}>
+            <DuncitButton type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || !formState.isValid}>
               {submitLabel ?? t('adRequest.form.submit')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Grid>
       </Grid>

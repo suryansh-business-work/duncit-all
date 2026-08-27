@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 import FlipIcon from '@mui/icons-material/Flip';
+import { DuncitIconButton } from '@duncit/buttons';
 import { canFlipGiftCard, giftCardArtwork } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardFace from './GiftCardFace';
@@ -92,7 +93,7 @@ export default function GiftCardVisual({
         )}
       </Box>
       {canFlip && (
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={() => setFlipped((was) => !was)}
           aria-label={t('mweb.giftCards.flipCard')}
@@ -107,7 +108,7 @@ export default function GiftCardVisual({
           }}
         >
           <FlipIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       )}
     </Box>
   );

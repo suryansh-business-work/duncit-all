@@ -24,6 +24,10 @@ import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
 import AccountDeletionsPage from './pages/account-deletions';
 import DbBackupsPage from './pages/database/backups';
+import RateLimitSystemsPage from './pages/rate-limiting/systems';
+import RateLimitRulesPage from './pages/rate-limiting/rules';
+import RateLimitBlockedPage from './pages/rate-limiting/blocked';
+import RateLimitSettingsPage from './pages/rate-limiting/settings';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
@@ -81,6 +85,13 @@ export default function App() {
         <Route path="/database/backups" element={authed(<DbBackupsPage />)} />
         <Route path="/database/data-clone" element={authed(<DataClonePage />)} />
         <Route path="/server/data-clone" element={<Navigate to="/database/data-clone" replace />} />
+        {/* Rate limiting. Systems is the landing page: which callers exist and
+            what they spend is what a limit has to be written against. */}
+        <Route path="/rate-limiting" element={<Navigate to="/rate-limiting/systems" replace />} />
+        <Route path="/rate-limiting/systems" element={authed(<RateLimitSystemsPage />)} />
+        <Route path="/rate-limiting/rules" element={authed(<RateLimitRulesPage />)} />
+        <Route path="/rate-limiting/blocked" element={authed(<RateLimitBlockedPage />)} />
+        <Route path="/rate-limiting/settings" element={authed(<RateLimitSettingsPage />)} />
         <Route path="/slack" element={authed(<SlackSettingsPage />)} />
         {/* What people reported by hand on status.duncit.com — the breakage the
             probes on that page cannot see. */}

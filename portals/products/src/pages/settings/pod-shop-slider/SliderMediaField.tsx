@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { describeAttachment } from '@duncit/media-picker';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import type { SliderMedia } from './queries';
@@ -60,13 +61,13 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
           mb: 1
         }}>
         <Typography variant="subtitle2">{t('products.settings.sliderMedia')}</Typography>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={<AddPhotoAlternateIcon />}
           onClick={() => setPickerOpen(true)}
         >
           Add media
-        </Button>
+        </DuncitButton>
       </Stack>
       {media.length === 0 ? (
         <Box
@@ -126,32 +127,32 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
               </Typography>
               <Tooltip title={t('products.settings.moveUp')}>
                 <span>
-                  <IconButton
+                  <DuncitIconButton
                     size="small"
                     aria-label={t('products.settings.moveUp')}
                     disabled={index === 0}
                     onClick={() => move(index, -1)}
                   >
                     <ArrowUpwardIcon fontSize="inherit" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </span>
               </Tooltip>
               <Tooltip title={t('products.settings.moveDown')}>
                 <span>
-                  <IconButton
+                  <DuncitIconButton
                     size="small"
                     aria-label={t('products.settings.moveDown')}
                     disabled={index === media.length - 1}
                     onClick={() => move(index, 1)}
                   >
                     <ArrowDownwardIcon fontSize="inherit" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </span>
               </Tooltip>
               <Tooltip title={t('products.settings.remove')}>
-                <IconButton size="small" aria-label={t('products.settings.remove')} onClick={() => remove(item.url)}>
+                <DuncitIconButton size="small" aria-label={t('products.settings.remove')} onClick={() => remove(item.url)}>
                   <DeleteOutlineIcon fontSize="inherit" />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>

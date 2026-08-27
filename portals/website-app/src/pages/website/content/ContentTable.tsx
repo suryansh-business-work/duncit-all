@@ -1,8 +1,9 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ImageIcon from '@mui/icons-material/Image';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import type { WebsiteContentItem } from './queries';
@@ -65,12 +66,12 @@ export default function ContentTable({
       <Stack direction="row" component="span" sx={{
         justifyContent: "flex-end"
       }}>
-        <IconButton size="small" onClick={() => onEdit(item)} aria-label={t('shell.common.edit')}>
+        <DuncitIconButton size="small" onClick={() => onEdit(item)} aria-label={t('shell.common.edit')}>
           <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" color="error" onClick={() => onDelete(item)} aria-label={t('shell.common.delete')}>
+        </DuncitIconButton>
+        <DuncitIconButton size="small" color="error" onClick={() => onDelete(item)} aria-label={t('shell.common.delete')}>
           <DeleteIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     );
     return [

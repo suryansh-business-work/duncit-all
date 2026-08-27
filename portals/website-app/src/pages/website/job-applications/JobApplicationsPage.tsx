@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { IconButton, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -41,9 +42,9 @@ export default function JobApplicationsPage() {
 
   const columns = useMemo<DuncitColumn<JobApplication>[]>(() => {
     const renderActions = (row: JobApplication) => (
-      <IconButton size="small" onClick={() => setOpen(row)} aria-label={t('shell.common.view')}>
+      <DuncitIconButton size="small" onClick={() => setOpen(row)} aria-label={t('shell.common.view')}>
         <VisibilityIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     );
     return [
       {

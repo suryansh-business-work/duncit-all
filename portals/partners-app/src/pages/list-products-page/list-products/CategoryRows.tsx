@@ -1,6 +1,7 @@
-import { Box, Button, IconButton, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
 import { EMPTY_CATEGORY, Fieldset, RhfAdminCategory } from '@duncit/category';
 import type { ProductListingValues } from './list-products.types';
@@ -30,7 +31,7 @@ export default function CategoryRows({ control }: Readonly<{ control: Control<Pr
                 size="medium"
               />
             </Box>
-            <IconButton
+            <DuncitIconButton
               aria-label={t('partners.listProductsPage.removeCategory')}
               color="error"
               disabled={fields.length <= 1}
@@ -38,17 +39,17 @@ export default function CategoryRows({ control }: Readonly<{ control: Control<Pr
               sx={{ mt: 1 }}
             >
               <DeleteOutlineIcon />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         ))}
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<AddIcon />}
           onClick={() => append({ ...EMPTY_CATEGORY })}
           sx={{ alignSelf: 'flex-start' }}
         >
           Add category
-        </Button>
+        </DuncitButton>
       </Stack>
     </Fieldset>
   );

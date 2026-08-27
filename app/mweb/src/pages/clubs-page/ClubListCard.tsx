@@ -1,6 +1,7 @@
-import { Avatar, Box, Button, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { DuncitButton } from '@duncit/buttons';
 
 interface ClubListCardProps {
   club: any;
@@ -72,9 +73,9 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
             {club.club_description}
           </Typography>
         )}
-        <Button fullWidth variant="contained" endIcon={<ArrowForwardIcon />} onClick={(event) => { event.stopPropagation(); onOpen(); }} sx={{ mt: 1.5, borderRadius: 999, fontWeight: 700 }}>
+        <DuncitButton fullWidth variant="contained" endIcon={<ArrowForwardIcon />} onClick={(event) => { event.stopPropagation(); onOpen(); }} sx={{ mt: 1.5, borderRadius: 999, fontWeight: 700 }}>
           Open Club
-        </Button>
+        </DuncitButton>
       </CardContent>
     </Card>
   );

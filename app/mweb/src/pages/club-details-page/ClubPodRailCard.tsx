@@ -1,5 +1,6 @@
 import EventIcon from '@mui/icons-material/Event';
-import { Box, Button, Card, CardMedia, Typography } from '@mui/material';
+import { Box, Card, CardMedia, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { formatDate } from '../../utils/dateFormat';
 
 interface Props {
@@ -48,7 +49,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
           }}>
           {pod.pod_title}
         </Typography>
-        <Button
+        <DuncitButton
           fullWidth
           size="small"
           variant="contained"
@@ -62,7 +63,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
           }}
         >
           {isFree ? 'Free' : priceFormat(pod.pod_amount)}
-        </Button>
+        </DuncitButton>
       </Box>
     </Card>
   );

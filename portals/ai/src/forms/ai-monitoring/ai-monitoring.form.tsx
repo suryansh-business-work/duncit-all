@@ -3,7 +3,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   Chip,
@@ -12,6 +11,7 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import { estimateTokens } from '@duncit/ai-prompts';
@@ -181,9 +181,9 @@ export default function AiMonitoringForm({
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <Button type="submit" variant="contained" disabled={submitting || !formState.isValid}>
+          <DuncitButton type="submit" variant="contained" disabled={submitting || !formState.isValid}>
             {submitting ? t('shell.common.saving') : t('ai.settings.submit')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

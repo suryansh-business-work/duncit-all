@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import { DuncitButton } from '@duncit/buttons';
 
 /** Post-submit confirmation for a Host Request — mirrors the native success screen. */
 export default function SuccessScreen() {
@@ -41,14 +42,14 @@ export default function SuccessScreen() {
         your request for the new category and get in touch with you shortly. You&apos;ll receive
         updates through Notifications and Email.
       </Typography>
-      <Button
+      <DuncitButton
         variant="contained"
         size="large"
         onClick={() => navigate('/host/manage')}
         sx={{ borderRadius: 999, fontWeight: 700, px: 4 }}
       >
         Okay
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

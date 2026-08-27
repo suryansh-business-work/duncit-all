@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Chip, Paper, Stack, TextField, Typography } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { DuncitButton } from '@duncit/buttons';
 import type { SupportPodOption } from './queries';
 import { MY_ACTIVE_SOS, RAISE_SOS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -159,7 +160,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
       )}
       {success && !error && <Alert severity="success">{t('mweb.supportHub.sosSentHangTight')}</Alert>}
 
-      <Button
+      <DuncitButton
         variant="contained"
         color="error"
         size="large"
@@ -168,7 +169,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         sx={{ py: 1.75, borderRadius: 99, fontWeight: 700, letterSpacing: 1 }}
       >
         {loading ? 'Sending SOS…' : 'SEND SOS'}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

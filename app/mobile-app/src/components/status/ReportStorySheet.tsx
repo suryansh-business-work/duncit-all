@@ -15,6 +15,7 @@ import {
   REPORT_REASON_KEY,
   type ReportReason,
 } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** The story being reported; null keeps the sheet closed. */
@@ -104,7 +105,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
             alignItems="center"
             gap={10}
             paddingVertical={8}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons
               name={reason === value ? 'radio-button-checked' : 'radio-button-unchecked'}

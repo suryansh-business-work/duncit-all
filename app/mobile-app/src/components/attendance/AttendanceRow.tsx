@@ -10,6 +10,7 @@ import {
 
 import { AttendeeAvatar } from '@/components/attendance/AttendeeAvatar';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** What the second line says — how they were marked, or how to reach them. */
 function captionFor(
@@ -62,7 +63,7 @@ function MarkButton({ row, labels, state, busy, onMark }: Readonly<MarkButtonPro
       borderRadius={999}
       backgroundColor={ready ? primary : muted}
       opacity={ready ? 1 : 0.55}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={12.5} fontWeight="800" color={onPrimary}>
         {busy ? labels.marking : labels.markButton}

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import {
   CHALLENGE_STATS,
@@ -101,12 +101,12 @@ export default function ChallengeFormDialog({ open, editing, onClose, onSaved }:
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button variant="contained" onClick={submit} disabled={loading || !name.trim()}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading || !name.trim()}>
           {loading ? t('shell.common.saving') : t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

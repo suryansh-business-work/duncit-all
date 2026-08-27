@@ -11,6 +11,7 @@ import { useThemeStore } from '@/stores/theme.store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
 import { podSeatsTaken } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface PodCardProps {
   pod: HomePod;
@@ -64,7 +65,7 @@ function PodSaveButton({ podId, saved, saving, label, onPress }: Readonly<PodSav
       alignItems="center"
       justifyContent="center"
       backgroundColor="rgba(9,7,18,0.35)"
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       {saving ? <Spinner size="small" color="#ffffff" /> : icon}
     </XStack>

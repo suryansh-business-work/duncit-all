@@ -3,6 +3,7 @@ import { formatMoney } from '@duncit/utils';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Role-wise Minimum Withdrawal Amount as sent by the server. 0 = no floor. */
@@ -48,7 +49,7 @@ export function WithdrawCta({ minAmount, symbol, eligible, disabled, onPress }: 
         borderRadius={999}
         backgroundColor="$primary"
         opacity={disabled ? 0.5 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">
           Withdraw

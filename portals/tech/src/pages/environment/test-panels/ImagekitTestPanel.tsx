@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, Button, Link, Stack, Typography } from '@mui/material';
+import { Box, Link, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
+import { DuncitButton } from '@duncit/buttons';
 import { TEST_ENV_IMAGEKIT, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { fileToDataUrl, parseApiError } from '@duncit/utils';
@@ -38,13 +39,13 @@ export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry 
       }}>
         Uploads a file to this ImageKit account and returns the CDN path.
       </Typography>
-      <Button variant="outlined" component="label">
+      <DuncitButton variant="outlined" component="label">
         {fileName || 'Choose image'}
         <input hidden type="file" accept="image/*" onChange={(e) => onPick(e.target.files?.[0])} />
-      </Button>
-      <Button startIcon={<UploadIcon />} variant="contained" onClick={upload} disabled={loading || !base64}>
+      </DuncitButton>
+      <DuncitButton startIcon={<UploadIcon />} variant="contained" onClick={upload} disabled={loading || !base64}>
         {loading ? 'Uploading…' : 'Upload & get path'}
-      </Button>
+      </DuncitButton>
       <ResultAlert result={result} />
       {result?.url && (
         <Box>

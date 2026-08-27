@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import CategoryStep, { type CategoryScope } from '../survey-gate/CategoryStep';
 import SurveyStepper, { type SurveyAnswerInput } from '../survey-gate/SurveyStepper';
 import AuthLogo from '../../components/AuthLogo';
@@ -86,9 +87,9 @@ export default function HostApplyPage() {
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
       <Box sx={{ mb: 1 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/host/manage')} size="small">
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate('/host/manage')} size="small">
           Back
-        </Button>
+        </DuncitButton>
       </Box>
       <Card variant="outlined" sx={{ borderRadius: '16px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
         <CardContent>

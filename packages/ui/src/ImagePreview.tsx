@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Box, ButtonBase, Dialog, IconButton, Link, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Dialog, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+import { DuncitIconButton } from '@duncit/buttons';
 
 export interface ImagePreviewProps {
   /** Remote image URL. */
@@ -103,7 +104,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
         }}
       >
         <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', p: 1 }}>
-          <IconButton
+          <DuncitIconButton
             onClick={() => setOpen(false)}
             aria-label={`Close ${label}`}
             sx={{
@@ -116,7 +117,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
             }}
           >
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
           <Box
             component="img"
             src={src}

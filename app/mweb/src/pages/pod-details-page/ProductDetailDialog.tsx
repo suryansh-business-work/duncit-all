@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  IconButton,
   Link,
   Stack,
   Typography,
@@ -19,6 +18,7 @@ import Chip from '@mui/material/Chip';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import BrandDetailDialog from './BrandDetailDialog';
 import ProductQuantityBar from './ProductQuantityBar';
@@ -286,9 +286,9 @@ export default function ProductDetailDialog({
       <Dialog open={Boolean(productId)} onClose={onClose} fullScreen>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           Product details
-          <IconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
+          <DuncitIconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </DialogTitle>
         <DialogContent>{body}</DialogContent>
         {product && !viewOnly && onUpdateLine ? (

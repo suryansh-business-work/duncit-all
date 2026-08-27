@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Button, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { BRAND_STATUS_COLOR } from './brandStatus';
@@ -69,7 +70,7 @@ export default function BrandsReviewTable({
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     // Rows open the brand, so the action must not also trigger the row click.
     const renderReview = (b: EcommBrandRow) => (
-      <Button
+      <DuncitButton
         size="small"
         variant="outlined"
         onClick={(event) => {
@@ -78,7 +79,7 @@ export default function BrandsReviewTable({
         }}
       >
         {t('products.review.action')}
-      </Button>
+      </DuncitButton>
     );
     return [
       { field: 'logo', headerName: '', sortable: false, width: 64, cellRenderer: renderLogo },

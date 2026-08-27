@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Chip,
   Dialog,
   DialogActions,
@@ -9,6 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { EM_DASH } from '@duncit/table';
 import { InfoRow } from '@duncit/ui';
 import { formatINR } from '@duncit/utils';
@@ -153,7 +153,7 @@ export default function JourneyTimelineDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

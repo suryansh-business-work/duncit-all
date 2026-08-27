@@ -1,5 +1,6 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -41,9 +42,9 @@ export default function GoogleMapPreview({ title, parts, lat, lng }: Readonly<Pr
           mb: 1
         }}>
         <Typography variant="subtitle2">{heading}</Typography>
-        <Button size="small" href={mapUrl} target="_blank" rel="noreferrer" startIcon={<OpenInNewIcon />}>
+        <DuncitButton size="small" href={mapUrl} target="_blank" rel="noreferrer" startIcon={<OpenInNewIcon />}>
           {t('podForm.mapPreview.openMap')}
-        </Button>
+        </DuncitButton>
       </Stack>
       {src ? (
         <Box

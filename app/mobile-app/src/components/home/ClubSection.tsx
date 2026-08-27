@@ -7,6 +7,7 @@ import type { ClubWithPods, HomeClub, HomePod } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ClubSectionProps extends ClubWithPods {
   onOpenPod: (pod: HomePod) => void;
@@ -45,7 +46,7 @@ export function ClubSection({
         alignItems="center"
         gap={12}
         paddingHorizontal={16}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <YStack
           width={46}

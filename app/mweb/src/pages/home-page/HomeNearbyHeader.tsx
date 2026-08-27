@@ -1,6 +1,7 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -70,14 +71,14 @@ export default function HomeNearbyHeader({
           </Typography>
         </Box>
       </Stack>
-      <Button
+      <DuncitButton
         size="small"
         endIcon={<ArrowForwardIcon />}
         onClick={onOpen}
         sx={{ fontWeight: 600, flex: '0 0 auto' }}
       >
         {t('mweb.home.seeAll')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

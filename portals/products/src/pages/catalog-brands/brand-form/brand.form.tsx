@@ -1,7 +1,8 @@
 import { useMemo, useEffect } from 'react';
 import { useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import {
   brandInitialValues,
@@ -165,9 +166,9 @@ export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<
             </Box>
           </Stack>
         ))}
-        <Button type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
           {saving ? 'Saving…' : 'Save brand details'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </form>
   );

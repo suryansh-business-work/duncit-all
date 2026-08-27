@@ -3,18 +3,17 @@ import { useTranslation } from './i18n/useTranslation';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   useMediaQuery,
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import DeviceUploadTab from './DeviceUploadTab';
@@ -133,14 +132,14 @@ export default function MediaPickerDialog({
       <DialogTitle sx={{ pr: 6, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         {heading}
         <AiMonitoringChip />
-        <IconButton
+        <DuncitIconButton
           onClick={onClose}
           disabled={device.uploading}
           sx={{ position: 'absolute', right: 8, top: 8 }}
           size="small"
         >
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DuncitTabs {...tabs} sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }} />
       {/* Free to SHRINK. A hard minHeight here is a floor on a flex child of the
@@ -203,21 +202,21 @@ export default function MediaPickerDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={device.uploading}>
+        <DuncitButton onClick={onClose} disabled={device.uploading}>
           Cancel
-        </Button>
+        </DuncitButton>
         {tab === 'device' && (
-          <Button
+          <DuncitButton
             variant={multi ? 'outlined' : 'contained'}
             disabled={!device.picked || device.uploading || (multi && selection.atLimit)}
             onClick={device.uploadFromDevice}
             startIcon={device.uploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
           >
             {device.uploading ? t('media.picker.uploading') : t('media.picker.uploadToImagekit')}
-          </Button>
+          </DuncitButton>
         )}
         {multi && (
-          <Button
+          <DuncitButton
             variant="contained"
             onClick={done}
             disabled={selection.urls.length === 0 || device.uploading}
@@ -225,7 +224,7 @@ export default function MediaPickerDialog({
             {selection.urls.length > 1
               ? `Use these ${selection.urls.length}`
               : t('media.picker.useThis')}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

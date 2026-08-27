@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { AutoPodQueue, VenueAcceptDialog, VENUE_AUTO_PODS } from '@duncit/auto-pods';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { AutoPodRow } from '@duncit/utils';
@@ -24,9 +25,9 @@ export default function VenueAutoPodsPage() {
   });
 
   const renderAction = (row: AutoPodRow) => (
-    <Button fullWidth size="small" variant="contained" onClick={() => setSelected(row)}>
+    <DuncitButton fullWidth size="small" variant="contained" onClick={() => setSelected(row)}>
       {queue.labels.acceptCta}
-    </Button>
+    </DuncitButton>
   );
 
   return (

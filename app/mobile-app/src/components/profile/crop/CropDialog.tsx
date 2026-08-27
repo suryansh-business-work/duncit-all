@@ -12,6 +12,7 @@ import type { CroppedPhoto, PickedPhoto } from '@/hooks/useProfilePhoto';
 import { CropControls } from './CropControls';
 import { cropToAvatar } from './cropImage';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const VIEWPORT = 280;
 const MAX_ZOOM = 3;
@@ -78,6 +79,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 Adjust photo
               </Text>
               <XStack
+                pressStyle={PRESS_STYLE.surface}
                 testID="crop-cancel"
                 role="button"
                 aria-label={t('mweb.common.cancel')}
@@ -130,7 +132,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 borderRadius={999}
                 borderWidth={1}
                 borderColor="rgba(255,255,255,0.4)"
-                pressStyle={{ opacity: 0.8 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <Text fontSize={14} fontWeight="700" color="#ffffff">
                   Discard
@@ -150,7 +152,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 borderRadius={999}
                 backgroundColor="$primary"
                 opacity={busy ? 0.7 : 1}
-                pressStyle={{ opacity: 0.85 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 {busy ? <Spinner size="small" color={onPrimary} /> : null}
                 <Text fontSize={14} fontWeight="700" color={onPrimary}>

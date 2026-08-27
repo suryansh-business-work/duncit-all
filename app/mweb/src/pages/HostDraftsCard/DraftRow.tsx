@@ -1,7 +1,8 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Chip, IconButton, Stack, Typography, alpha } from '@mui/material';
+import { Box, Chip, Stack, Typography, alpha } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { draftHoursLeft } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 import { STEP_TITLES } from '../create-pod-page/create-pod';
@@ -65,7 +66,7 @@ export default function DraftRow({ draft, expiring, onDelete }: Readonly<DraftRo
           />
         ) : null}
       </Box>
-      <Button
+      <DuncitButton
         component={RouterLink}
         to={`/create-pod/${draft.id}`}
         size="small"
@@ -74,15 +75,15 @@ export default function DraftRow({ draft, expiring, onDelete }: Readonly<DraftRo
         sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {t('mweb.common.continue')}
-      </Button>
-      <IconButton
+      </DuncitButton>
+      <DuncitIconButton
         aria-label={t('mweb.common.deleteDraft2')}
         onClick={() => onDelete(draft.id)}
         size="small"
         color="error"
       >
         <DeleteOutlineIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }

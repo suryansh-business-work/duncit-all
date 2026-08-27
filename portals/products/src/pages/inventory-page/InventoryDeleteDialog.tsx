@@ -3,7 +3,6 @@ import { useLazyQuery, useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   Chip,
   CircularProgress,
   Dialog,
@@ -17,6 +16,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   ARCHIVE_INVENTORY_PRODUCT,
   INVENTORY_LINKED_PODS,
@@ -154,10 +154,10 @@ export default function InventoryDeleteDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           Cancel
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           color={isDelete ? 'error' : 'warning'}
           onClick={isDelete ? runDelete : runArchive}
@@ -165,7 +165,7 @@ export default function InventoryDeleteDialog({
           startIcon={busy ? <CircularProgress size={16} /> : undefined}
         >
           {isDelete ? 'Delete permanently' : 'Archive'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

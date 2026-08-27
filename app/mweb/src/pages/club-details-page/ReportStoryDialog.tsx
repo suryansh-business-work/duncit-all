@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   parseApiError,
   reportReasonNeedsDetails,
@@ -119,10 +119,10 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('contentReport.cancel')}</Button>
-        <Button variant="contained" color="error" disabled={loading} onClick={submit}>
+        <DuncitButton onClick={onClose}>{t('contentReport.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" color="error" disabled={loading} onClick={submit}>
           {t('contentReport.submit')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

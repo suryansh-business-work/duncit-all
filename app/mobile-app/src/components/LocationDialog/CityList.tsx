@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { LocationItem } from '@/stores/location.store';
 import { clubCountLabel } from '@/utils/location-tree';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   cities: LocationItem[];
@@ -43,7 +44,7 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
             borderWidth={active ? 1.5 : 1}
             borderColor={active ? '$primary' : '$borderColor'}
             backgroundColor="$surface"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             {loc.location_image ? (
               <AppImage

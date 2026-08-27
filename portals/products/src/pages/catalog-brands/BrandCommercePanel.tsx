@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -92,9 +93,9 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
                 sx={{ maxWidth: 220 }}
                 hint="Duncit's cut on this brand's product sales. 0 inherits the per-product rate."
               />
-              <Button type="submit" variant="outlined" disabled={commissionState.loading}>
+              <DuncitButton type="submit" variant="outlined" disabled={commissionState.loading}>
                 {commissionState.loading ? 'Saving…' : 'Save commission'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </form>
 
@@ -111,9 +112,9 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
               }}>
               {toggleMessage}
             </Typography>
-            <Button color={toggleColor} variant="outlined" onClick={() => setConfirmOpen(true)}>
+            <DuncitButton color={toggleColor} variant="outlined" onClick={() => setConfirmOpen(true)}>
               {toggleLabel}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </CardContent>

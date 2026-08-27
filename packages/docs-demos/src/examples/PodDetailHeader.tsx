@@ -1,4 +1,5 @@
-import { Button, Divider, Stack } from '@mui/material';
+import { Divider, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { BackHeader, InfoRow, STATUS_CHIP_COLORS, StatusChip } from '@duncit/ui';
 import { formatINR } from '@duncit/utils';
 
@@ -10,7 +11,7 @@ export function PodDetailHeader() {
         eyebrow="Pod"
         title="Saturday Supper Club — Indiranagar"
         onBack={() => undefined}
-        actions={<Button size="small" variant="outlined">Edit</Button>}
+        actions={<DuncitButton size="small" variant="outlined">Edit</DuncitButton>}
       />
 
       <Stack

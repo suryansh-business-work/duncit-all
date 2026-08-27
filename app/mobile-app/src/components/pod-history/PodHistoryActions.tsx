@@ -6,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { canRejoin, podHistoryGate, refundLabel, type PodMembership } from '@/utils/pod-history';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -54,7 +55,7 @@ function ActionButton({
       borderColor={variant === 'danger' ? '$danger' : '$borderColor'}
       backgroundColor={contained ? '$primary' : 'transparent'}
       opacity={disabled ? 0.5 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={16} color={variant === 'danger' ? danger : iconTint} />
       <Text fontSize={13} fontWeight="600" color={tint}>

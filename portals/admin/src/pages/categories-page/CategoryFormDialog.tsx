@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,6 +12,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import IconPickerField from '../../components/IconPickerField';
 import MediaPickerField from '../../components/MediaPickerField';
 import IconLayoutSection from './IconLayoutSection';
@@ -255,14 +255,14 @@ export default function CategoryFormDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setDialog(null)}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={() => setDialog(null)}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={onSubmit}
           disabled={busy || !dialog?.form.name?.trim()}
         >
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

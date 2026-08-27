@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Button,
   CircularProgress,
   FormHelperText,
   InputAdornment,
@@ -10,6 +9,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import { DuncitButton } from '@duncit/buttons';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import DateTimeField from '../components/DateTimeField';
 import { usePodFormData } from '../context';
@@ -109,14 +109,14 @@ export default function MeetingSection() {
                   endAdornment: canAutoGenerate ? (
                     <InputAdornment position="end">
                       <Tooltip title={t('podForm.meetingSection.autoGenerateMeetingLink')}>
-                        <Button
+                        <DuncitButton
                           size="small"
                           onClick={handleAutoGenerate}
                           disabled={generating}
                           startIcon={generating ? <CircularProgress size={14} /> : <AutoFixHighIcon fontSize="small" />}
                         >
                           {generating ? 'Generating…' : 'Generate'}
-                        </Button>
+                        </DuncitButton>
                       </Tooltip>
                     </InputAdornment>
                   ) : undefined,

@@ -1,4 +1,5 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean }>) {
@@ -14,9 +15,9 @@ export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean 
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button variant="contained" onClick={() => globalThis.window.location.reload()}>
+        <DuncitButton variant="contained" onClick={() => globalThis.window.location.reload()}>
           Reload application
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

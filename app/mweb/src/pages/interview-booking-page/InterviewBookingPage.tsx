@@ -1,16 +1,10 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Button,
-  Container,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Container, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
+import { DuncitButton } from '@duncit/buttons';
 import { CREATE_INTERVIEW } from './queries';
 import { Slot, slotKey } from './slotHelpers';
 import InterviewCalendar from './InterviewCalendar';
@@ -183,10 +177,10 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
         <Stack direction="row" spacing={2} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button onClick={() => navigate(-1)}>{t('mweb.common.cancel')}</Button>
-          <Button variant="contained" size="large" onClick={submit} disabled={busy}>
+          <DuncitButton onClick={() => navigate(-1)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton variant="contained" size="large" onClick={submit} disabled={busy}>
             {busy ? 'Submitting…' : 'Request Interview'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Container>

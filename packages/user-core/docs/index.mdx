@@ -32,6 +32,7 @@ exports:
   - 'SESSION_REVOKED_EVENT'
   - 'subscribeSessionRevoked'
   - 'SURFACE_HEADER'
+  - 'APP_HEADER'
 ---
 
 Everything about "who is using this, on what" that does not depend on React,
@@ -120,9 +121,10 @@ vanishes from the JSON.
 ## Surface
 
 ```ts
-import { SURFACE_HEADER, type ClientSurface } from '@duncit/user-core';
+import { APP_HEADER, SURFACE_HEADER, type ClientSurface } from '@duncit/user-core';
 
 headers[SURFACE_HEADER] = 'NATIVE'; // 'MWEB' | 'ADMIN_PORTAL' | 'PORTAL'
+headers[APP_HEADER] = 'native'; // 'mweb' | 'tech' | 'finance' | any portal key
 ```
 
 Every transport names itself on every request, and the server reads it into the
@@ -140,7 +142,15 @@ Where it is sent: `graphql.client.ts` (native), `src/apollo.ts` (mWeb), and
 `createApolloClient({ surface })` for the portals — `PORTAL` by default, with
 admin passing `ADMIN_PORTAL`.
 
-**Changing the header name is not a one-file edit.** It is on the nginx
+`APP_HEADER` names **which** app inside that surface, and every portal passes
+`createApolloClient({ app: appConfig.key })`. `PORTAL` is enough to label a
+change log; it is not enough for the platform rate limiter (Tech > Rate
+Limiting), where seventeen consoles sharing one value means seventeen consoles
+sharing one ceiling. The websites send both headers straight from their
+build-time `gqlFetch`. A caller that sends neither is filed as `UNKNOWN` / `-`,
+which is a row on the Systems page rather than an invisible one.
+
+**Changing either header name is not a one-file edit.** Both are on the nginx
 `Access-Control-Allow-Headers` allowlist (`deploy/nginx/duncit.com` and
 `staging.duncit.com`), which is what makes the browser preflight pass — the
 server only mounts `cors()` outside production. A header missing from that list

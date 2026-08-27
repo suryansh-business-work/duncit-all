@@ -1,4 +1,6 @@
 import {
+  APP_HEADER,
+  SURFACE_HEADER,
   accountEmail,
   accountName,
   can,
@@ -9,6 +11,7 @@ import {
   parseUserChangedFrame,
   subscribeSessionRevoked,
   subscribeUserChanged,
+  type ClientSurface,
   type SocketLike,
 } from '@duncit/user-core';
 import { defineDemo, defineDemos } from '../types';
@@ -25,6 +28,13 @@ interface RealtimeMock {
   self_user_id: string;
   user_changed: Record<string, unknown>;
   session_revoked: Record<string, unknown>;
+}
+
+/** What one client declares about itself on every request. */
+interface IdentityMock {
+  surface: ClientSurface;
+  /** The portal key, `mweb`, `native`, or empty for a caller that says nothing. */
+  app: string;
 }
 
 /**
@@ -130,6 +140,30 @@ export default defineDemos('user-core', [
         'subscribeUserChanged delivered': applied,
         'subscribeSessionRevoked delivered': revocations,
         'Sessions ended by this frame': revocations.length,
+      };
+    },
+  }),
+
+  defineDemo<IdentityMock>({
+    id: 'headers',
+    title: 'Two headers, so the server knows who is calling',
+    note:
+      "Blank out app and the caller becomes unidentified: the Tech portal's Rate Limiting console files it under UNKNOWN / -, and only surface-wide rules can reach it. Switch surface to PORTAL and leave app as 'tech' to see the pair a console sends — PORTAL alone covers all seventeen, which is why a per-console ceiling needs the second header.",
+    mock: {
+      surface: 'PORTAL',
+      app: 'tech',
+    },
+    compute: (mock) => {
+      const app = mock.app.trim();
+      const headers: Record<string, string> = {
+        [SURFACE_HEADER]: mock.surface,
+        ...(app ? { [APP_HEADER]: app } : {}),
+      };
+      return {
+        'Header names': [SURFACE_HEADER, APP_HEADER],
+        'Sent on every request': headers,
+        'Rate limiter files this as': `${mock.surface} / ${app || '-'}`,
+        'Reachable by a per-app rule': Boolean(app),
       };
     },
   }),

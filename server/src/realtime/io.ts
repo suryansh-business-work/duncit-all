@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { isAllowedOrigin } from '../config/cors';
 import { isAccountLocked } from '../modules/access/accountDeletion/accountDeletion.lock';
+import { socketAllowed } from '../modules/platform/rateLimit/rateLimit.guard';
 
 export interface AuthedSocket extends Socket {
   userId?: string;
@@ -19,6 +20,27 @@ export function initSocketServer(httpServer: http.Server): Server {
       origin: (origin, cb) => cb(null, isAllowedOrigin(origin)),
       credentials: true,
     },
+  });
+
+  /*
+    How often one address may OPEN a socket, governed by the same rules as
+    every other request (Tech > Rate Limiting, channel SOCKET).
+
+    Ahead of the JWT check on purpose: a reconnect storm from a broken client
+    is exactly the case worth cutting off, and it presents no token at all.
+  */
+  io.use((socket, next) => {
+    const handshake = socket.handshake;
+    socketAllowed({
+      address: handshake.address,
+      token: (handshake.auth?.token as string) || (handshake.query?.token as string) || '',
+      surface: handshake.headers['x-duncit-surface'] as string | undefined,
+      app: handshake.headers['x-duncit-app'] as string | undefined,
+      userAgent: handshake.headers['user-agent'],
+    })
+      .then((decision) => next(decision.allowed ? undefined : new Error('RATE_LIMITED')))
+      // A limiter that cannot answer must never be the reason chat is down.
+      .catch(() => next());
   });
 
   // Every socket must present a JWT. We attach userId/roles once here so each

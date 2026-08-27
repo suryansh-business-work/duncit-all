@@ -10,6 +10,7 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
 import {
+  APP_HEADER,
   NO_REDIS_HEADER,
   SURFACE_HEADER,
   getOrCreateDuid,
@@ -47,6 +48,15 @@ export interface CreateApolloClientOptions {
    * profile edit made there is not filed as one more portal.
    */
   surface?: ClientSurface;
+  /**
+   * WHICH console this is — pass `appConfig.key` (`tech`, `finance`, …).
+   *
+   * Sent as `x-duncit-app`, and it is what lets the platform rate limiter give
+   * one console its own ceiling: seventeen portals all declaring `PORTAL` are
+   * indistinguishable to a rule. A portal that omits it is filed as unknown,
+   * and only the surface-wide rules can reach it.
+   */
+  app?: string;
 }
 
 /**
@@ -55,7 +65,7 @@ export interface CreateApolloClientOptions {
  * transport retry + friendly network-error rewrite.
  */
 export function createApolloClient(options: Readonly<CreateApolloClientOptions>): ApolloClient<NormalizedCacheObject> {
-  const { graphqlUrl, getToken, typePolicies, includeDuid = true, surface = 'PORTAL' } = options;
+  const { graphqlUrl, getToken, typePolicies, includeDuid = true, surface = 'PORTAL', app } = options;
 
   const httpLink = new HttpLink({ uri: graphqlUrl });
 
@@ -68,6 +78,7 @@ export function createApolloClient(options: Readonly<CreateApolloClientOptions>)
         ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(duid ? { 'x-duid': duid } : {}),
         [SURFACE_HEADER]: surface,
+        ...(app ? { [APP_HEADER]: app } : {}),
         // `?noRedis=true` in the portal URL: skip the server's Redis response
         // cache for every request from this tab (sticky until ?noRedis=false).
         ...(resolveNoRedisFlag() ? { [NO_REDIS_HEADER]: 'true' } : {}),

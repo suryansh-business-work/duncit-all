@@ -1,5 +1,6 @@
 import type { FlatCatalogue, Locale } from '@duncit/i18n';
 import type { GraphqlErrorLike } from '@duncit/captcha';
+import { clientIdentityHeaders } from '@duncit/user-core';
 import { SERVER_BASE } from './config/server';
 import type {
   Branding,
@@ -59,6 +60,18 @@ export function fetchHealth(url: string, signal?: AbortSignal): Promise<HealthRe
  * fallback that is better than an exception on a page whose entire job is to
  * still be readable when things are broken.
  */
+/**
+ * What every request to the API carries.
+ *
+ * The identity pair names this site to the server, so its traffic is filed
+ * under a system on the rate limiter's Systems page rather than as an
+ * unidentified caller.
+ */
+const GQL_HEADERS = {
+  'content-type': 'application/json',
+  ...clientIdentityHeaders('WEBSITE', 'status-website'),
+};
+
 async function postGraphql<T>(
   query: string,
   variables?: Record<string, unknown>,
@@ -66,7 +79,7 @@ async function postGraphql<T>(
 ): Promise<GraphqlPayload<T> | null> {
   const res = await fetch(`${SERVER_BASE}/graphql`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: GQL_HEADERS,
     body: JSON.stringify({ query, variables }),
     signal,
   });

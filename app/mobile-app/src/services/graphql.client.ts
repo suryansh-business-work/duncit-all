@@ -2,7 +2,7 @@ import { ClientError, GraphQLClient, type Variables } from 'graphql-request';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { SURFACE_HEADER } from '@duncit/user-core';
+import { APP_HEADER, SURFACE_HEADER } from '@duncit/user-core';
 
 import { config } from '@/constants/config';
 import { ApiError } from '@/utils/errors';
@@ -101,6 +101,8 @@ export async function graphqlRequest<TResult, TVars extends object = Record<stri
   // mWeb without being told. Declaring it is what lets the admin user change
   // log name Native as the source of a profile edit.
   headers[SURFACE_HEADER] = 'NATIVE';
+  // Which app inside that surface, for the platform rate limiter.
+  headers[APP_HEADER] = 'native';
 
   const canRetry = isQuery(document as DocumentNode);
   let lastError: unknown;

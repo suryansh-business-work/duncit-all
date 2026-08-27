@@ -277,7 +277,7 @@ console shut for all non-super users.
 | --- | --- | --- |
 | `createSession` | `(tokenKey, requiredRoles?, fullName?) => PortalSession` | `{ getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage }`. Defaults: `[]`, `'this console'`. |
 | `createAuthed` | `({ getToken, wrap }: CreateAuthedOptions) => (element: JSX.Element) => JSX.Element` | The `authed(element)` route-table helper; `wrap` absorbs per-portal chrome drift. |
-| `createApolloClient` | `(options: CreateApolloClientOptions) => ApolloClient` | Client with `apolloErrorLink` attached. |
+| `createApolloClient` | `(options: CreateApolloClientOptions) => ApolloClient` | Client with `apolloErrorLink` attached. `options.app` names the console (`appConfig.key`) on every request. |
 | `deriveSearchItems` | `(nav: AppNavItem[], section?: string) => SearchItem[]` | Flattened search entries. |
 | `getSafeRedirectPath` | `(value?: string \| null) => string` | The path, or `''` if unsafe. |
 | `redirectPathFromLocation` | `(location: RedirectLocation) => string` | `pathname + search + hash`. |
@@ -387,7 +387,10 @@ never re-implement `roles.includes('SUPER_ADMIN')` in a portal. `setToken` and `
 `authChanged` so the header/sidebar fill in after a client-side login without a refresh.
 
 `createApolloClient` builds the client with `apolloErrorLink` attached; the link is exported
-separately for clients built elsewhere (mWeb). Use `getSafeRedirectPath` / `redirectPathFromLocation`
+separately for clients built elsewhere (mWeb). Pass `app: appConfig.key` — it goes out as
+`x-duncit-app` beside the surface header, and it is the only thing that tells one console from
+another on the server: `surface` says `PORTAL` for all seventeen, so a rate limit written without
+it governs every console at once. Use `getSafeRedirectPath` / `redirectPathFromLocation`
 for any post-login `?redirect=` handling — they reject absolute and off-origin targets, and a
 hand-rolled version is an open redirect. `parseEnvRoles` turns a `VITE_*` roles string into the array
 `createSession` wants.

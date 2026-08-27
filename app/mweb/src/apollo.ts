@@ -3,6 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
 import { getMainDefinition } from '@apollo/client/utilities';
 import {
+  APP_HEADER,
   NO_REDIS_HEADER,
   SURFACE_HEADER,
   getOrCreateDuid,
@@ -31,6 +32,9 @@ const authLink = setContext((_op, { headers }) => {
       // Names this surface on the server, which stamps it onto the admin user
       // change log — mWeb and the native app are otherwise indistinguishable.
       [SURFACE_HEADER]: 'MWEB',
+      // The app key the platform rate limiter counts against, so mWeb carries
+      // its own ceiling rather than one shared with the native twin.
+      [APP_HEADER]: 'mweb',
       // `?noRedis=true` in the URL: skip the server's Redis response cache
       // for every request from this tab (sticky until ?noRedis=false).
       ...(resolveNoRedisFlag() ? { [NO_REDIS_HEADER]: 'true' } : {}),

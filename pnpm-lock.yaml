@@ -5398,6 +5398,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../../packages/user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -5426,6 +5429,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../../packages/user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -5460,6 +5466,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../../packages/user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -5494,6 +5503,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../../packages/user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -5534,6 +5546,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../../packages/user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils

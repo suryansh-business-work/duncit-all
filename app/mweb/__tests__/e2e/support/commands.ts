@@ -86,7 +86,7 @@ beforeEach(() => {
       headers: {
         'access-control-allow-origin': req.headers['origin'] ?? '*',
         'access-control-allow-methods': 'POST, OPTIONS',
-        'access-control-allow-headers': 'authorization,content-type,x-duid,x-duncit-surface',
+        'access-control-allow-headers': 'authorization,content-type,x-duid,x-duncit-surface,x-duncit-app',
         'access-control-allow-credentials': 'true',
       },
     });

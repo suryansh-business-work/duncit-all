@@ -76,6 +76,21 @@ export const appConfig = {
         { label: 'Data Clone', labelKey: 'shell.nav.dataClone', to: '/database/data-clone', icon: 'warehouse' },
       ],
     },
+    {
+      // Beside Server rather than under it: a ceiling is a platform-wide
+      // policy, and the systems it governs are the portals, the two apps and
+      // the websites — not the box any of it happens to run on.
+      label: 'Rate Limiting', labelKey: 'shell.nav.rateLimiting',
+      icon: 'speed',
+      children: [
+        // Systems first: which callers exist and what they spend is the thing
+        // you have to look at before a limit means anything.
+        { label: 'Systems', labelKey: 'shell.nav.systems', to: '/rate-limiting/systems', icon: 'dns' },
+        { label: 'Rules', labelKey: 'shell.nav.rules', to: '/rate-limiting/rules', icon: 'rule' },
+        { label: 'Blocked', labelKey: 'shell.nav.blocked', to: '/rate-limiting/blocked', icon: 'block' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/rate-limiting/settings', icon: 'tune' },
+      ],
+    },
     { label: 'Slack', labelKey: 'shell.nav.slack', to: '/slack', icon: 'chat' },
     // Sits beside Telemetry rather than inside it: those rows are written by
     // machines, these by people, and the triage is a different job.

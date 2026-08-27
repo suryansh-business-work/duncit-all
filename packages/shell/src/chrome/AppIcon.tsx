@@ -10,6 +10,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import BackupIcon from '@mui/icons-material/Backup';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import BlockIcon from '@mui/icons-material/Block';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -53,7 +54,9 @@ import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import RuleIcon from '@mui/icons-material/Rule';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SpeedIcon from '@mui/icons-material/Speed';
 import ShieldIcon from '@mui/icons-material/Shield';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import StarRateIcon from '@mui/icons-material/StarRate';
@@ -81,6 +84,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   apple: AppleIcon,
   installMobile: InstallMobileIcon,
   article: ArticleIcon,
+  block: BlockIcon,
   bug: BugReportIcon,
   calculator: CalculateIcon,
   calendar: CalendarMonthIcon,
@@ -140,7 +144,9 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   receipt: ReceiptLongIcon,
   revenue: PaymentsIcon,
   sales: TimelineIcon,
+  rule: RuleIcon,
   settings: SettingsIcon,
+  speed: SpeedIcon,
   shield: ShieldIcon,
   shipping: LocalShippingIcon,
   sos: WarningAmberIcon,

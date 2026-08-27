@@ -44,6 +44,20 @@ export function redisAvailable(): boolean {
   return connected;
 }
 
+/**
+ * The live connection, or null when there isn't one.
+ *
+ * The JSON helpers below cover caching, which is the only thing that needs a
+ * value round-tripped. The rate limiter needs atomic counters instead — INCR,
+ * sorted sets, a token-bucket script — and those cannot be expressed as
+ * get/set without losing the atomicity that makes them correct under
+ * concurrency. It reaches for the client directly rather than growing five
+ * more wrappers here.
+ */
+export function redisConnection(): Redis | null {
+  return client && connected ? client : null;
+}
+
 /** 'off' (no REDIS_URL) | 'connected' | 'disconnected' — for GET /health. */
 export function redisStatus(): string {
   if (!client) return 'off';

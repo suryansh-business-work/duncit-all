@@ -8250,6 +8250,8 @@ export type Mutation = {
   checkInEventTicket: EventTicket;
   /** Agent picks up an unassigned chat — announced as a SYSTEM bubble. */
   claimSupportChat: SupportChatSession;
+  /** Delete every recorded breach. Returns how many rows went. */
+  clearRateLimitEvents: Scalars['Int']['output'];
   /**
    * Empty this conversation for BOTH people and return how many messages went.
    * Deleted, not blanked: a thread of tombstones is not a cleared thread. The
@@ -8360,6 +8362,7 @@ export type Mutation = {
   createProductOrderShipment: ProductOrder;
   /** Create or update the caller's review of a product. */
   createProductReview: ProductReview;
+  createRateLimitRule: RateLimitRule;
   /** Gift card purchase via Razorpay (step 1; verify with verifyRazorpayPayment). */
   createRazorpayGiftCardOrder: RazorpayOrder;
   createRazorpayOrder: RazorpayOrder;
@@ -8515,6 +8518,7 @@ export type Mutation = {
   deletePost: Scalars['Boolean']['output'];
   deletePostComment: Post;
   deletePushSubscription: Scalars['Boolean']['output'];
+  deleteRateLimitRule: Scalars['Boolean']['output'];
   deleteRole: Scalars['Boolean']['output'];
   deleteShortLink: Scalars['Boolean']['output'];
   deleteSlotTemplate: Scalars['Boolean']['output'];
@@ -8905,6 +8909,15 @@ export type Mutation = {
   /** Restore one of the nine to the header and footer it shipped with. */
   resetEmailFragment: EmailFragment;
   resetPasswordWithOtp: Scalars['Boolean']['output'];
+  /**
+   * Forget every live counter and cool-off.
+   *
+   * The way out of a cool-off somebody is stuck in after a rule was tightened
+   * too far. Rules and settings are untouched.
+   */
+  resetRateLimitCounters: Scalars['Boolean']['output'];
+  /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
+  resetRateLimitRuleCounters: RateLimitRule;
   resolveBouncerSos: BouncerSosAlert;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
   resolveSupportChat: SupportChatSession;
@@ -9081,13 +9094,16 @@ export type Mutation = {
   setPortalMode: PortalMode;
   /** Ops: switch an order between SHIP and PICKUP. */
   setProductOrderFulfilmentMethod: ProductOrder;
+  setRateLimitRuleEnabled: RateLimitRule;
   /** Retire or revive a link without deleting its click history. */
   setShortLinkActive: ShortLink;
   setVenueActive: Venue;
   setVenueDeductions: Venue;
+  /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
+  setWhatsappDefaultMedia: WaScenarioBoard;
   /** Flip one scenario. Pass __global__ as the key for the kill switch. */
   setWhatsappScenarioEnabled: WaScenarioBoard;
-  /** Set the admin's own header asset for one scenario — or the platform default, with __global__ as the key. An empty url clears it. Reconcile never overwrites it. */
+  /** Set the admin's own header asset for one scenario. An empty url clears it. Reconcile never overwrites it. */
   setWhatsappScenarioMedia: WaScenarioBoard;
   /** Email the signed contract, with the PDF attached. */
   shareContract: Scalars['Boolean']['output'];
@@ -9357,6 +9373,8 @@ export type Mutation = {
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
+  updateRateLimitRule: RateLimitRule;
+  updateRateLimitSettings: RateLimitSettings;
   /** Finance: what a referral pays and what a member's share sheet says. */
   updateReferralSettings: ReferralSettings;
   /** Support portal: edit the chips and prompt the app renders. */
@@ -10173,6 +10191,11 @@ export type MutationCreateProductReviewArgs = {
 };
 
 
+export type MutationCreateRateLimitRuleArgs = {
+  input: RateLimitRuleInput;
+};
+
+
 export type MutationCreateRazorpayGiftCardOrderArgs = {
   input: GiftCardCheckoutInput;
 };
@@ -10634,6 +10657,11 @@ export type MutationDeletePostCommentArgs = {
 
 export type MutationDeletePushSubscriptionArgs = {
   endpoint: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteRateLimitRuleArgs = {
+  rule_id: Scalars['ID']['input'];
 };
 
 
@@ -11425,6 +11453,11 @@ export type MutationResetPasswordWithOtpArgs = {
 };
 
 
+export type MutationResetRateLimitRuleCountersArgs = {
+  rule_id: Scalars['ID']['input'];
+};
+
+
 export type MutationResolveBouncerSosArgs = {
   id: Scalars['ID']['input'];
 };
@@ -11867,6 +11900,12 @@ export type MutationSetProductOrderFulfilmentMethodArgs = {
 };
 
 
+export type MutationSetRateLimitRuleEnabledArgs = {
+  enabled: Scalars['Boolean']['input'];
+  rule_id: Scalars['ID']['input'];
+};
+
+
 export type MutationSetShortLinkActiveArgs = {
   id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
@@ -11883,6 +11922,13 @@ export type MutationSetVenueDeductionsArgs = {
   venue_commission_pct: Scalars['Float']['input'];
   venue_doc_id: Scalars['ID']['input'];
   venue_share_pct: Scalars['Float']['input'];
+};
+
+
+export type MutationSetWhatsappDefaultMediaArgs = {
+  filename?: InputMaybe<Scalars['String']['input']>;
+  kind: WaMediaKind;
+  url: Scalars['String']['input'];
 };
 
 
@@ -12660,6 +12706,17 @@ export type MutationUpdatePodShopSliderArgs = {
 export type MutationUpdatePolicyArgs = {
   input: UpdatePolicyInput;
   policy_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateRateLimitRuleArgs = {
+  input: RateLimitRuleInput;
+  rule_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateRateLimitSettingsArgs = {
+  input: RateLimitSettingsInput;
 };
 
 
@@ -16853,6 +16910,21 @@ export type Query = {
   /** Public: a site's active navigation, ordered by group + sort order. */
   publicWebsiteNav: Array<WebsiteNavItem>;
   pushConfig: PushConfig;
+  /** Server-side table page for the blocked-traffic table. */
+  rateLimitEventsTable: RateLimitEventPage;
+  /** The enum lists and the known apps and roles the rule editor renders. */
+  rateLimitOptions: RateLimitOptions;
+  rateLimitRule?: Maybe<RateLimitRule>;
+  /** Every rule, in evaluation order. For the editor's priority preview. */
+  rateLimitRules: Array<RateLimitRule>;
+  /** Server-side table page for the rules table. */
+  rateLimitRulesTable: RateLimitRulePage;
+  /** Master settings plus the live store engine and the current counts. */
+  rateLimitSettings: RateLimitSettings;
+  /** Last 24 hours: refusals, recorded breaches, and who is causing them. */
+  rateLimitStats: RateLimitStats;
+  /** Every system that has called, with what it has spent. */
+  rateLimitSystems: Array<RateLimitSystem>;
   referralLookup?: Maybe<PodMember>;
   referralSettings: ReferralSettings;
   /** Admin: every redeemed referral, newest first. */
@@ -17127,7 +17199,7 @@ export type Query = {
   websiteContentTable: WebsiteContentItemTablePage;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
-  /** The default header asset every media-header scenario falls back to. Cheap: no AiSensy read. */
+  /** The default header assets every media-header scenario falls back to. Cheap: no AiSensy read. */
   whatsappDefaultMedia: WaDefaultMedia;
   /** One send attempt in full — the detail behind a row of the merged WhatsApp log. */
   whatsappMessageLog?: Maybe<WaMessageLogRow>;
@@ -18943,6 +19015,21 @@ export type QueryPublicWebsiteNavArgs = {
 };
 
 
+export type QueryRateLimitEventsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryRateLimitRuleArgs = {
+  rule_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRateLimitRulesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryReferralLookupArgs = {
   token: Scalars['String']['input'];
 };
@@ -19496,6 +19583,237 @@ export type RaiseSosInput = {
   location?: InputMaybe<BouncerGeoInput>;
   message?: InputMaybe<Scalars['String']['input']>;
   pod_id: Scalars['ID']['input'];
+};
+
+/** One selectable app, as the systems collection knows it. */
+export type RateLimitAppOption = {
+  __typename?: 'RateLimitAppOption';
+  app: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+};
+
+/** One breach: a request refused, or one a MONITOR rule recorded and let through. */
+export type RateLimitEvent = {
+  __typename?: 'RateLimitEvent';
+  app: Scalars['String']['output'];
+  channel: Scalars['String']['output'];
+  count: Scalars['Int']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  device_id?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  ip?: Maybe<Scalars['String']['output']>;
+  key_by: Scalars['String']['output'];
+  limit: Scalars['Int']['output'];
+  /** The identity the allowance was counted per, e.g. ip:203.0.113.4 */
+  limit_key: Scalars['String']['output'];
+  method?: Maybe<Scalars['String']['output']>;
+  mode: Scalars['String']['output'];
+  operation?: Maybe<Scalars['String']['output']>;
+  path?: Maybe<Scalars['String']['output']>;
+  retry_after: Scalars['Int']['output'];
+  rule_id: Scalars['ID']['output'];
+  rule_name: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+  user_agent?: Maybe<Scalars['String']['output']>;
+  user_email?: Maybe<Scalars['String']['output']>;
+  user_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type RateLimitEventPage = {
+  __typename?: 'RateLimitEventPage';
+  rows: Array<RateLimitEvent>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * The vocabulary the rule editor renders.
+ *
+ * Served rather than hardcoded in the portal, so a value added on the server
+ * becomes an option in the editor without a portal release.
+ */
+export type RateLimitOptions = {
+  __typename?: 'RateLimitOptions';
+  algorithms: Array<Scalars['String']['output']>;
+  apps: Array<RateLimitAppOption>;
+  audiences: Array<Scalars['String']['output']>;
+  channels: Array<Scalars['String']['output']>;
+  key_by: Array<Scalars['String']['output']>;
+  modes: Array<Scalars['String']['output']>;
+  operation_types: Array<Scalars['String']['output']>;
+  roles: Array<RateLimitRoleOption>;
+  surfaces: Array<Scalars['String']['output']>;
+};
+
+export type RateLimitRoleOption = {
+  __typename?: 'RateLimitRoleOption';
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+/**
+ * One rate limiting rule.
+ *
+ * A rule answers four questions: which traffic it governs (surface / app /
+ * channel / operation), what the allowance is (limit per window, by algorithm),
+ * who the allowance is counted per (key_by), and what happens on a breach
+ * (mode, block_seconds, message).
+ */
+export type RateLimitRule = {
+  __typename?: 'RateLimitRule';
+  /** FIXED_WINDOW | SLIDING_WINDOW | TOKEN_BUCKET. */
+  algorithm: Scalars['String']['output'];
+  /** The app key within that surface (tech, finance, mweb, native), or * for all. */
+  app: Scalars['String']['output'];
+  /** ALL | ANONYMOUS | AUTHENTICATED. */
+  audience: Scalars['String']['output'];
+  /** Cool-off after a breach, in seconds. 0 means the window alone is the penalty. */
+  block_seconds: Scalars['Int']['output'];
+  blocked_count: Scalars['Int']['output'];
+  /** TOKEN_BUCKET only: how far above the limit one burst may go. */
+  burst: Scalars['Int']['output'];
+  /** GRAPHQL | REST | SOCKET | ALL. */
+  channel: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  enabled: Scalars['Boolean']['output'];
+  /** Addresses this rule never applies to. Globs allowed, so a /24 is 10.1.2.* */
+  exempt_ips: Array<Scalars['String']['output']>;
+  exempt_roles: Array<Scalars['String']['output']>;
+  hit_count: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  /** IP | USER | DEVICE | IP_USER | API_KEY | SYSTEM | GLOBAL. */
+  key_by: Scalars['String']['output'];
+  last_blocked_at?: Maybe<Scalars['String']['output']>;
+  last_hit_at?: Maybe<Scalars['String']['output']>;
+  limit: Scalars['Int']['output'];
+  /** What a refused caller is told. Falls back to the platform default. */
+  message?: Maybe<Scalars['String']['output']>;
+  /** HTTP methods. Empty means every method. */
+  methods: Array<Scalars['String']['output']>;
+  /** ENFORCE refuses the request. MONITOR records the breach and lets it through. */
+  mode: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  notify_slack: Scalars['Boolean']['output'];
+  /** ALL | QUERY | MUTATION | SUBSCRIPTION. */
+  operation_type: Scalars['String']['output'];
+  /** GraphQL field names; * wildcards allowed. Empty means every field. */
+  operations: Array<Scalars['String']['output']>;
+  /** REST path globs such as /upload*. Empty means every path. */
+  paths: Array<Scalars['String']['output']>;
+  /** Lower runs first. Every matching rule is still evaluated, so ceilings stack. */
+  priority: Scalars['Int']['output'];
+  /** NATIVE | MWEB | PORTAL | ADMIN_PORTAL | WEBSITE | API | SERVER | UNKNOWN | ALL. */
+  surface: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  window_seconds: Scalars['Int']['output'];
+};
+
+export type RateLimitRuleInput = {
+  algorithm?: InputMaybe<Scalars['String']['input']>;
+  app?: InputMaybe<Scalars['String']['input']>;
+  audience?: InputMaybe<Scalars['String']['input']>;
+  block_seconds?: InputMaybe<Scalars['Int']['input']>;
+  burst?: InputMaybe<Scalars['Int']['input']>;
+  channel?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  exempt_ips?: InputMaybe<Array<Scalars['String']['input']>>;
+  exempt_roles?: InputMaybe<Array<Scalars['String']['input']>>;
+  key_by?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  message?: InputMaybe<Scalars['String']['input']>;
+  methods?: InputMaybe<Array<Scalars['String']['input']>>;
+  mode?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  notify_slack?: InputMaybe<Scalars['Boolean']['input']>;
+  operation_type?: InputMaybe<Scalars['String']['input']>;
+  operations?: InputMaybe<Array<Scalars['String']['input']>>;
+  paths?: InputMaybe<Array<Scalars['String']['input']>>;
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  surface?: InputMaybe<Scalars['String']['input']>;
+  window_seconds?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type RateLimitRulePage = {
+  __typename?: 'RateLimitRulePage';
+  rows: Array<RateLimitRule>;
+  total: Scalars['Int']['output'];
+};
+
+export type RateLimitSettings = {
+  __typename?: 'RateLimitSettings';
+  active_rule_count: Scalars['Int']['output'];
+  allow_ips: Array<Scalars['String']['output']>;
+  block_ips: Array<Scalars['String']['output']>;
+  default_message: Scalars['String']['output'];
+  /** Master switch. Off means every request passes, whatever the rules say. */
+  enabled: Scalars['Boolean']['output'];
+  event_count: Scalars['Int']['output'];
+  event_retention_days: Scalars['Int']['output'];
+  exempt_roles: Array<Scalars['String']['output']>;
+  log_blocks: Scalars['Boolean']['output'];
+  /** Forces every rule to MONITOR without editing any of them. */
+  monitor_only: Scalars['Boolean']['output'];
+  notify_slack: Scalars['Boolean']['output'];
+  rule_count: Scalars['Int']['output'];
+  /** Send X-RateLimit-Limit / -Remaining / -Reset and Retry-After. */
+  send_headers: Scalars['Boolean']['output'];
+  /**
+   * REDIS or MEMORY — where the counters actually live right now.
+   *
+   * Not a setting: it is read from the live connection. MEMORY means the count
+   * is per server process, which is the right answer for one container and the
+   * wrong one the moment there are two.
+   */
+  store: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type RateLimitSettingsInput = {
+  allow_ips?: InputMaybe<Array<Scalars['String']['input']>>;
+  block_ips?: InputMaybe<Array<Scalars['String']['input']>>;
+  default_message?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  event_retention_days?: InputMaybe<Scalars['Int']['input']>;
+  exempt_roles?: InputMaybe<Array<Scalars['String']['input']>>;
+  log_blocks?: InputMaybe<Scalars['Boolean']['input']>;
+  monitor_only?: InputMaybe<Scalars['Boolean']['input']>;
+  notify_slack?: InputMaybe<Scalars['Boolean']['input']>;
+  send_headers?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type RateLimitStats = {
+  __typename?: 'RateLimitStats';
+  blocked_24h: Scalars['Int']['output'];
+  monitored_24h: Scalars['Int']['output'];
+  store: Scalars['String']['output'];
+  top_rules: Array<RateLimitTally>;
+  top_systems: Array<RateLimitTally>;
+};
+
+/**
+ * One system the server has been called by: a portal, mWeb, the app, a website,
+ * an API-key integration. Written by the traffic itself, so a surface added
+ * later appears here the first time it calls.
+ */
+export type RateLimitSystem = {
+  __typename?: 'RateLimitSystem';
+  app: Scalars['String']['output'];
+  blocked: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  requests: Scalars['Int']['output'];
+  /** How many enabled rules could govern this system today. */
+  rule_count: Scalars['Int']['output'];
+  surface: Scalars['String']['output'];
+};
+
+export type RateLimitTally = {
+  __typename?: 'RateLimitTally';
+  count: Scalars['Int']['output'];
+  label: Scalars['String']['output'];
 };
 
 /**
@@ -23711,11 +24029,14 @@ export type WaDashboardCategory = {
   skipped: Scalars['Int']['output'];
 };
 
-/** The platform default header asset, alone — for the Settings tab. */
+/** The platform default header assets, alone — for the Settings tab. */
 export type WaDefaultMedia = {
   __typename?: 'WaDefaultMedia';
+  document_filename: Scalars['String']['output'];
+  /** The default DOCUMENT, for a FILE header. Empty when no default is set. */
+  document_url: Scalars['String']['output'];
   filename: Scalars['String']['output'];
-  /** Empty when no default is set. */
+  /** The default IMAGE. Empty when no default is set. */
   url: Scalars['String']['output'];
 };
 
@@ -23833,6 +24154,16 @@ export type WaManualContactInput = {
   name: Scalars['String']['input'];
   number: Scalars['String']['input'];
 };
+
+/**
+ * Which platform default an asset is. One per header kind an operator can set:
+ * a single picture cannot stand in for a document header. There is no VIDEO —
+ * no template here carries a video header, and one would need an asset on its
+ * own scenario.
+ */
+export type WaMediaKind =
+  | 'DOCUMENT'
+  | 'IMAGE';
 
 export type WaMember = {
   __typename?: 'WaMember';
@@ -23962,6 +24293,12 @@ export type WaScenarioBoard = {
   catalogue_error: Scalars['String']['output'];
   /** False when AiSensy could not be read; the rows still render without live state. */
   catalogue_ok: Scalars['Boolean']['output'];
+  default_document_filename: Scalars['String']['output'];
+  /**
+   * The platform default header DOCUMENT, for the FILE-header templates one
+   * picture cannot stand in for — the payment and booking messages.
+   */
+  default_document_url: Scalars['String']['output'];
   default_media_filename: Scalars['String']['output'];
   /**
    * The platform default header asset: what every media-header scenario sends

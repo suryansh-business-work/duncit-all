@@ -1,3 +1,4 @@
+import { clientIdentityHeaders } from '@duncit/user-core';
 import { GRIEVANCE_OFFICER_SDL } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
 
@@ -25,6 +26,18 @@ const FETCH_TIMEOUT_MS = 10_000;
  */
 const inFlight = new Map<string, Promise<unknown>>();
 
+/**
+ * What every request to the API carries.
+ *
+ * The identity pair names this site to the server, so its traffic is filed
+ * under a system on the rate limiter's Systems page rather than as an
+ * unidentified caller.
+ */
+const GQL_HEADERS = {
+  'Content-Type': 'application/json',
+  ...clientIdentityHeaders('WEBSITE', 'main-website'),
+};
+
 async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
   const key = query + JSON.stringify(variables ?? {});
   const cached = inFlight.get(key);
@@ -34,7 +47,7 @@ async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): 
     try {
       const res = await fetch(urlConfigs.graphqlUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: GQL_HEADERS,
         body: JSON.stringify({ query, variables }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });

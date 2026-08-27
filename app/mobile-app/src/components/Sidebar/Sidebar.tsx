@@ -22,6 +22,7 @@ import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarPolicies } from './SidebarPolicies';
+import { SidebarRefreshBar } from './SidebarRefreshBar';
 import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
 
@@ -46,6 +47,10 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   // anonymous "User" avatar at 0% profile completion. mWeb skeletons the same
   // block; the header ✕ stays either way, so there is always a way back out.
   const pending = isLoading && !me;
+  // On a warm store the answer is already there, so the account record — which
+  // is re-read on every open — shows as the thin bar rather than flashing a
+  // skeleton over content that is already correct.
+  const refreshing = !pending && (isLoading || accountLoading || policiesLoading);
   const roles = me?.roles ?? [];
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
@@ -118,6 +123,8 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             <MaterialIcons name="close" size={18} color={ink} />
           </XStack>
         </XStack>
+
+        <SidebarRefreshBar active={refreshing} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}

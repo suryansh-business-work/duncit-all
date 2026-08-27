@@ -3313,6 +3313,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     sidebar: {
       completeYourProfile: 'Complete your profile',
+      refreshing: 'Refreshing your menu',
       toggleDarkMode: 'Toggle dark mode',
     },
     sos: {

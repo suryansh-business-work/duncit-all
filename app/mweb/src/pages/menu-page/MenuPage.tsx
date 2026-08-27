@@ -22,6 +22,12 @@ export default function MenuPage() {
     fetchPolicy: 'cache-first',
   });
 
+  // Nothing cached at all — the panel skeletons its body. On a warm cache the
+  // answer is already there, so the read still happening shows as the thin bar
+  // instead of flashing a skeleton over content that is already correct.
+  const pending = loading && !data;
+  const refreshing = !pending && (loading || policiesLoading);
+
   const close = () => {
     // A deep-linked /menu has nothing to go back to — land on Home instead of
     // leaving the app.
@@ -40,7 +46,8 @@ export default function MenuPage() {
   return (
     <MenuPanel
       onClose={close}
-      loading={loading && !data}
+      loading={pending}
+      refreshing={refreshing}
       policiesLoading={policiesLoading}
       me={data?.me}
       publicPolicies={policiesData?.publicPolicies ?? []}

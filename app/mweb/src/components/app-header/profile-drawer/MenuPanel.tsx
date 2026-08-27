@@ -24,6 +24,7 @@ import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../
 import DrawerFooter from './DrawerFooter';
 import PoliciesSection from './PoliciesSection';
 import StudioSwitchDialog from './StudioSwitchDialog';
+import MenuRefreshBar from './MenuRefreshBar';
 import MenuSkeleton from './MenuSkeleton';
 import UserModeContent from './UserModeContent';
 
@@ -32,6 +33,8 @@ interface Props {
   onClose: () => void;
   /** The account query is still in flight with nothing cached — body skeletons. */
   loading?: boolean;
+  /** A read is in flight over content already on screen — the top bar runs. */
+  refreshing?: boolean;
   /** The policy links are still in flight — that group skeletons its own row. */
   policiesLoading?: boolean;
   me: any;
@@ -48,6 +51,7 @@ interface Props {
 export default function MenuPanel({
   onClose,
   loading = false,
+  refreshing = false,
   policiesLoading = false,
   me,
   publicPolicies,
@@ -104,6 +108,8 @@ export default function MenuPanel({
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
+
+      <MenuRefreshBar active={refreshing} />
 
       <Box sx={{ flex: 1 }}>
         {/* One unified card layout for every role — the studio-specific menu

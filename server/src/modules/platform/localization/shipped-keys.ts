@@ -5161,6 +5161,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.shop.title": "Pod Shop",
   "mweb.shop.trustedPods": "Trusted Pods",
   "mweb.sidebar.completeYourProfile": "Complete your profile",
+  "mweb.sidebar.refreshing": "Refreshing your menu",
   "mweb.sidebar.toggleDarkMode": "Toggle dark mode",
   "mweb.signup.confirmPasswordLabel": "Confirm Password",
   "mweb.signup.confirmPasswordPlaceholder": "Re-enter password",

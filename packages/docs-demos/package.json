@@ -67,6 +67,7 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
+    "@duncit/verification": "workspace:*",
     "@duncit/virtual-scroll": "workspace:*"
   },
   "peerDependencies": {

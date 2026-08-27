@@ -1,0 +1,79 @@
+{
+  "name": "@duncit/verification",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "One account-verification experience for every surface: framework-free status, label and document rules at the root, the MUI cards behind ./mui; the native app renders the same rules through its own Tamagui view.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "react-native": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mui": "./src/mui/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/verification"
+  },
+  "peerDependencies": {
+    "@apollo/client": ">=3",
+    "@duncit/ai-monitoring": "workspace:*",
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "react": ">=18",
+    "zod": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    },
+    "@duncit/ai-monitoring": {
+      "optional": true
+    },
+    "@duncit/app-settings": {
+      "optional": true
+    },
+    "@duncit/buttons": {
+      "optional": true
+    },
+    "@duncit/media-picker": {
+      "optional": true
+    },
+    "@mui/icons-material": {
+      "optional": true
+    },
+    "@mui/material": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.14.1",
+    "@duncit/ai-monitoring": "workspace:*",
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
+    "@mui/icons-material": "^9.3.1",
+    "@mui/material": "^9.3.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.10.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitest/coverage-v8": "^2.1.9",
+    "jsdom": "^25.0.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9",
+    "zod": "^3.25.76"
+  }
+}

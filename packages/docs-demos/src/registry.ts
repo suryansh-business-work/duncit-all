@@ -61,6 +61,7 @@ const DEMOS: Record<string, DemoLoader> = {
   'user-context': () => import('./demos/user-context'),
   'user-core': () => import('./demos/user-core'),
   'utils': () => import('./demos/utils'),
+  'verification': () => import('./demos/verification'),
   'virtual-scroll': () => import('./demos/virtual-scroll'),
 };
 
@@ -122,6 +123,7 @@ const SOURCES: Record<string, SourceLoader> = {
   'user-context': () => import('./demos/user-context.tsx?raw'),
   'user-core': () => import('./demos/user-core.tsx?raw'),
   'utils': () => import('./demos/utils.tsx?raw'),
+  'verification': () => import('./demos/verification.tsx?raw'),
   'virtual-scroll': () => import('./demos/virtual-scroll.tsx?raw'),
 };
 

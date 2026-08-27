@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.72.48",
+  "version": "1.72.49",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.9",
@@ -63,6 +63,7 @@
     "@duncit/tours": "file:../../packages/tours",
     "@duncit/user-core": "file:../../packages/user-core",
     "@duncit/utils": "file:../../packages/utils",
+    "@duncit/verification": "file:../../packages/verification",
     "@duncit/virtual-scroll": "file:../../packages/virtual-scroll",
     "@expo/vector-icons": "^15.0.3",
     "@graphql-typed-document-node/core": "^3.2.0",

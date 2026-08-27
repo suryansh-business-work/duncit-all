@@ -19,7 +19,13 @@
       // entry, so the app compiles that file and has to resolve zod from
       // packages/verification/ — empty in CI. Safe as a Metro alias too: zod
       // ships its own types, so tsc and Metro both want this same module.
-      "zod": ["./node_modules/zod"]
+      "zod": ["./node_modules/zod"],
+      // Same story one level over: @duncit/forms/schemas imports @duncit/regex
+      // and @duncit/utils, and the app compiles that subpath from source. Both
+      // are already this app's own file: dependencies — Metro finds them, tsc
+      // walking up from packages/forms/ does not.
+      "@duncit/regex": ["./node_modules/@duncit/regex"],
+      "@duncit/utils": ["./node_modules/@duncit/utils"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

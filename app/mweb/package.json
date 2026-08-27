@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.72.52",
+  "version": "1.72.53",
   "private": true,
   "type": "module",
   "scripts": {

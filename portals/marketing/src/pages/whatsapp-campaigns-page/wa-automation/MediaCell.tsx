@@ -1,6 +1,12 @@
 import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
-import { MEDIA_STATE_COLORS, effectiveMediaUrl, mediaStateFor, type MediaState } from './helpers';
+import {
+  MEDIA_STATE_COLORS,
+  effectiveMediaUrl,
+  mediaStateFor,
+  type MediaState,
+  type WaDefaultUrls,
+} from './helpers';
 import type { WaScenario } from './queries';
 
 interface MediaCellProps {
@@ -8,9 +14,9 @@ interface MediaCellProps {
   /** One localized label per state, computed once by the column builder. */
   stateLabels: Readonly<Record<MediaState, string>>;
   setLabel: string;
-  /** The platform default, so a row with no asset of its own can say what it
+  /** The platform defaults, so a row with no asset of its own can say what it
    * would actually send. */
-  defaultUrl: string;
+  defaults: WaDefaultUrls;
   onOpen: (row: WaScenario) => void;
 }
 
@@ -26,11 +32,11 @@ export function MediaCell({
   row,
   stateLabels,
   setLabel,
-  defaultUrl,
+  defaults,
   onOpen,
 }: Readonly<MediaCellProps>) {
-  const state = mediaStateFor(row, defaultUrl);
-  const effectiveUrl = effectiveMediaUrl(row, defaultUrl);
+  const state = mediaStateFor(row, defaults);
+  const effectiveUrl = effectiveMediaUrl(row, defaults);
   return (
     <Stack
       spacing={0.25}

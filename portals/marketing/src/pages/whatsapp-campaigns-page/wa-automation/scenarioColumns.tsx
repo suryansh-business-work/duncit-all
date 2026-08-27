@@ -13,6 +13,7 @@ import {
   CAMPAIGN_STATUS_COLORS,
   TEMPLATE_STATUS_COLORS,
   mediaStateFor,
+  type WaDefaultUrls,
   type MediaState,
 } from './helpers';
 import type { WaScenario } from './queries';
@@ -25,7 +26,7 @@ interface ColumnDeps {
   /** Opens the header-asset dialog for one row. */
   onSetMedia: (row: WaScenario) => void;
   /** The platform default header asset, off the board. */
-  defaultMediaUrl: string;
+  defaults: WaDefaultUrls;
 }
 
 /**
@@ -39,7 +40,7 @@ export function getScenarioColumns({
   busyKey,
   onToggle,
   onSetMedia,
-  defaultMediaUrl,
+  defaults,
 }: Readonly<ColumnDeps>): DuncitColumn<WaScenario>[] {
   const firesLabel = t('adminWhatsapp.firesLabel');
   const paramsLabel = t('adminWhatsapp.paramsLabel');
@@ -132,11 +133,11 @@ export function getScenarioColumns({
           row={row}
           stateLabels={mediaStateLabels}
           setLabel={setMediaLabel}
-          defaultUrl={defaultMediaUrl}
+          defaults={defaults}
           onOpen={onSetMedia}
         />
       ),
-      valueGetter: (row) => mediaStateLabels[mediaStateFor(row, defaultMediaUrl)],
+      valueGetter: (row) => mediaStateLabels[mediaStateFor(row, defaults)],
     },
     {
       field: 'blocker',

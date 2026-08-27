@@ -3,6 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Stack } from '@mui/material';
 import { SingleImageUploadField } from '@duncit/media-picker';
+import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import {
   defaultMediaSchema,
@@ -14,13 +15,20 @@ import {
 const UPLOAD_FOLDER = '/whatsapp';
 
 /**
- * One field: the image every media-header scenario sends when it has none of
- * its own. Upload a file, or paste a public link; Save writes it, Clear
- * removes it. The field follows the server until the operator types — a
- * refetch after a save resets to the same value, so it never fights an edit.
+ * One platform default header asset: the file every media-header scenario of
+ * that kind sends when it has none of its own. Upload or paste a public link;
+ * Save writes it, Clear removes it. The field follows the server until the
+ * operator types — a refetch after a save resets to the same value, so it never
+ * fights an edit.
+ *
+ * An image gets the uploader; a document is a pasted link, because the
+ * recipient reads its file NAME and only the operator knows what that should
+ * say.
  */
 export default function DefaultMediaForm({
+  kind,
   savedUrl,
+  savedFilename,
   busy,
   onSubmit,
 }: Readonly<DefaultMediaFormProps>) {
@@ -33,47 +41,68 @@ export default function DefaultMediaForm({
     watch,
     formState: { isValid },
   } = useForm<DefaultMediaValues>({
-    defaultValues: { url: savedUrl },
+    defaultValues: { url: savedUrl, filename: savedFilename },
     resolver: zodResolver(schema),
     mode: 'onChange',
   });
 
   useEffect(() => {
-    reset({ url: savedUrl });
-  }, [savedUrl, reset]);
+    reset({ url: savedUrl, filename: savedFilename });
+  }, [savedUrl, savedFilename, reset]);
 
   const url = watch('url').trim();
-  const dirty = url !== savedUrl;
-  const submit = handleSubmit((values) => onSubmit({ url: values.url.trim() }));
+  const filename = watch('filename').trim();
+  const dirty = url !== savedUrl || filename !== savedFilename;
+  const isImage = kind === 'IMAGE';
+  const submit = handleSubmit((values) =>
+    onSubmit({ url: values.url.trim(), filename: values.filename.trim() })
+  );
 
   return (
     <form noValidate onSubmit={submit}>
       <Stack spacing={2}>
-        <Controller
-          control={control}
-          name="url"
-          render={({ field, fieldState }) => (
-            <SingleImageUploadField
-              variant="url-adornment"
-              label={t('marketingWhatsapp.defaultMedia.label')}
-              value={field.value}
-              onChange={field.onChange}
-              folder={UPLOAD_FOLDER}
+        {isImage ? (
+          <Controller
+            control={control}
+            name="url"
+            render={({ field, fieldState }) => (
+              <SingleImageUploadField
+                variant="url-adornment"
+                label={t('marketingWhatsapp.defaultMedia.label')}
+                value={field.value}
+                onChange={field.onChange}
+                folder={UPLOAD_FOLDER}
+                disabled={busy}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message ?? t('marketingWhatsapp.defaultMedia.hint')}
+              />
+            )}
+          />
+        ) : (
+          <>
+            <RhfTextField
+              control={control}
+              name="url"
+              label={t('marketingWhatsapp.defaultMedia.documentLabel')}
               disabled={busy}
-              error={!!fieldState.error}
-              helperText={
-                fieldState.error?.message ?? t('marketingWhatsapp.defaultMedia.hint')
-              }
+              hint={t('marketingWhatsapp.defaultMedia.documentHint')}
             />
-          )}
-        />
+            <RhfTextField
+              control={control}
+              name="filename"
+              label={t('marketingWhatsapp.defaultMedia.documentFilenameLabel')}
+              disabled={busy}
+              hint={t('marketingWhatsapp.defaultMedia.documentFilenameHint')}
+            />
+          </>
+        )}
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
           {savedUrl && (
             <Button
               type="button"
               color="error"
               disabled={busy}
-              onClick={() => onSubmit({ url: '' })}
+              onClick={() => onSubmit({ url: '', filename: '' })}
             >
               {t('marketingWhatsapp.defaultMedia.clear')}
             </Button>

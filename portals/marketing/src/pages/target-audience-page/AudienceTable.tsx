@@ -7,7 +7,8 @@ import { useTranslation } from '@duncit/app-settings';
 interface Props {
   fetchRows: TableFetch<AudienceRow>;
   refetchRef?: MutableRefObject<(() => void) | null>;
-  /** Memoized by the page — the date format for the two date columns. */
+  /** Memoized by the page — the date format for the two date columns, and the
+   * row action, which only a saved list's detail page supplies. */
   columnDeps: AudienceColumnDeps;
   /** Everything the sidebar has selected. Filtering lives there, not in the
    * column popovers, so a change here resets to page 1 and refetches. Omitted

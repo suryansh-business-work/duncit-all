@@ -217,7 +217,8 @@ export const marketingTypeDefs = /* GraphQL */ `
   A saved Target Audience list. It stores the filter CRITERIA, not the people —
   opening it re-runs them, so the membership and the count are always current
   rather than a snapshot of the day it was built. People added by hand are
-  unioned on top of whoever the criteria match.
+  unioned on top of whoever the criteria match, and people removed by hand are
+  subtracted from that union.
   """
   type AudienceList {
     id: ID!
@@ -229,6 +230,8 @@ export const marketingTypeDefs = /* GraphQL */ `
     search: String!
     "How many people were added to this list by hand."
     manual_member_count: Int!
+    "How many people were taken out of this list by hand."
+    excluded_member_count: Int!
     """
     How many people are in the list right now: everyone matching the criteria,
     plus everyone added by hand. Somebody who is both is counted once.
@@ -365,6 +368,12 @@ export const marketingTypeDefs = /* GraphQL */ `
     show a membership that differs from what the next send reaches.
     """
     audienceListMembersTable(list_id: ID!, query: TableQueryInput): AudienceTablePage!
+    """
+    Who may still be ADDED to one saved list — the whole audience minus whoever
+    the list already holds. Derived from the same membership the query above
+    renders, so the Add-user picker cannot offer somebody already in the list.
+    """
+    audienceListCandidatesTable(list_id: ID!, query: TableQueryInput): AudienceTablePage!
     "One saved list, with its member count recomputed."
     audienceList(id: ID!): AudienceList
     "Everybody who can open this portal — the assignable owners for a list."
@@ -389,6 +398,13 @@ export const marketingTypeDefs = /* GraphQL */ `
     dropped rather than stored.
     """
     addAudienceListMembers(id: ID!, user_ids: [ID!]!): AudienceList!
+    """
+    Take one person out of a saved list. A list stores criteria, not people, so
+    this records a removal rather than deleting a row: the person stays out as
+    the criteria re-run, and is offered by the picker again if they should
+    return. Removing somebody the list never held succeeds quietly.
+    """
+    removeAudienceListMember(id: ID!, user_id: ID!): AudienceList!
     deleteAudienceList(id: ID!): Boolean!
     createMarketingCampaign(input: MarketingCampaignInput!): MarketingCampaign!
     sendMarketingCampaign(campaign_id: ID!): MarketingCampaign!

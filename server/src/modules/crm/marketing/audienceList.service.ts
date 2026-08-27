@@ -7,6 +7,7 @@ import {
   audienceTablePage,
   audienceUserIds,
   countAudience,
+  notInAudience,
 } from './audience.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { PORTAL_ROLE_REQUIREMENTS } from '@modules/portals';
@@ -65,6 +66,14 @@ const toQueryInput = (doc: any): TableQueryInput => ({
 /** The people this list holds by hand, as ids the audience filter can use. */
 const manualIds = (doc: any): Types.ObjectId[] => doc.manual_user_ids ?? [];
 
+/** The people taken out of this list by hand, subtracted from the union. */
+const excludedIds = (doc: any): Types.ObjectId[] => doc.excluded_user_ids ?? [];
+
+/** Every id argument `audienceFilter` takes for one list, in one place — the
+ * count, the members page, the send list and the popup check all read the same
+ * membership, so none of them can forget the subtraction. */
+const membershipOf = (doc: any) => [toQueryInput(doc), manualIds(doc), excludedIds(doc)] as const;
+
 const toPub = (doc: any, memberCount: number) => ({
   id: String(doc._id),
   name: doc.name,
@@ -79,6 +88,7 @@ const toPub = (doc: any, memberCount: number) => ({
   })),
   search: doc.search,
   manual_member_count: manualIds(doc).length,
+  excluded_member_count: excludedIds(doc).length,
   member_count: memberCount,
   created_at: doc.created_at.toISOString(),
   updated_at: doc.updated_at.toISOString(),
@@ -93,7 +103,7 @@ function assertInput(input: AudienceListInput) {
  * this is the thing to revisit first if it ever gets big. */
 const withCounts = (docs: any[]) =>
   Promise.all(
-    docs.map(async (doc) => toPub(doc, await countAudience(toQueryInput(doc), manualIds(doc))))
+    docs.map(async (doc) => toPub(doc, await countAudience(...membershipOf(doc))))
   );
 
 /** The list, or a NOT_FOUND. `matchesUser` deliberately does not use it: a
@@ -143,7 +153,7 @@ export const audienceListService = {
    */
   async memberIds(id: string) {
     const doc = await loadList(id);
-    return audienceUserIds(toQueryInput(doc), manualIds(doc));
+    return audienceUserIds(...membershipOf(doc));
   },
 
   /**
@@ -155,7 +165,7 @@ export const audienceListService = {
     if (!Types.ObjectId.isValid(id)) return false;
     const doc = await AudienceListModel.findById(id);
     if (!doc) return false;
-    return audienceMatchesUser(toQueryInput(doc), userId, manualIds(doc));
+    return audienceMatchesUser(toQueryInput(doc), userId, manualIds(doc), excludedIds(doc));
   },
 
   async table(input?: TableQueryInput | null) {
@@ -172,7 +182,7 @@ export const audienceListService = {
     if (!Types.ObjectId.isValid(id)) return null;
     const doc = await AudienceListModel.findById(id);
     if (!doc) return null;
-    return toPub(doc, await countAudience(toQueryInput(doc), manualIds(doc)));
+    return toPub(doc, await countAudience(...membershipOf(doc)));
   },
 
   /**
@@ -183,7 +193,18 @@ export const audienceListService = {
    */
   async membersTable(listId: string, input?: TableQueryInput | null) {
     const doc = await loadList(listId);
-    return audienceTablePage(await audienceFilter(toQueryInput(doc), manualIds(doc)), input);
+    return audienceTablePage(await audienceFilter(...membershipOf(doc)), input);
+  },
+
+  /**
+   * Who the Add-user picker may offer: the whole audience MINUS whoever this
+   * list already holds. Derived from the same membership filter the members
+   * page renders, so the picker cannot offer somebody the list already has —
+   * which is exactly what listing the open audience did.
+   */
+  async candidatesTable(listId: string, input?: TableQueryInput | null) {
+    const doc = await loadList(listId);
+    return audienceTablePage(notInAudience(await audienceFilter(...membershipOf(doc))), input);
   },
 
   async create(input: AudienceListInput, createdBy?: string | null) {
@@ -197,7 +218,7 @@ export const audienceListService = {
       search: input.search?.trim() ?? '',
       created_by: toObjectId(createdBy),
     });
-    return toPub(doc, await countAudience(toQueryInput(doc), manualIds(doc)));
+    return toPub(doc, await countAudience(...membershipOf(doc)));
   },
 
   /**
@@ -205,6 +226,10 @@ export const audienceListService = {
    * to a closed account are dropped before the write — a send list must never
    * carry an id that resolves to nobody — and `$addToSet` makes adding the same
    * person twice a no-op rather than a duplicate row.
+   *
+   * The same write LIFTS a previous removal: somebody taken out by hand is
+   * offered by the picker again, so adding them back has to clear the
+   * exclusion, or the list would accept the add and still not hold them.
    */
   async addMembers(id: string, userIds: string[]) {
     if (!Types.ObjectId.isValid(id)) throw notFound();
@@ -217,13 +242,40 @@ export const audienceListService = {
     }).select('_id');
     if (users.length === 0) throw bad('None of those accounts exist any more');
 
+    const ids = users.map((u: any) => u._id);
     const doc = await AudienceListModel.findByIdAndUpdate(
       id,
-      { $addToSet: { manual_user_ids: { $each: users.map((u: any) => u._id) } } },
+      { $addToSet: { manual_user_ids: { $each: ids } }, $pull: { excluded_user_ids: { $in: ids } } },
       { new: true }
     );
     if (!doc) throw notFound();
-    return toPub(doc, await countAudience(toQueryInput(doc), manualIds(doc)));
+    return toPub(doc, await countAudience(...membershipOf(doc)));
+  },
+
+  /**
+   * Take one person out of a list.
+   *
+   * Both halves of the membership have to be written, because a list can hold
+   * somebody either way: `$pull` drops a hand-picked person, and the exclusion
+   * covers the criteria, which re-run on every read and would otherwise put a
+   * matching person straight back. Doing only one of the two is the bug this
+   * pair exists to prevent.
+   *
+   * Removing somebody the list never held is left as a success: the caller
+   * asked for them to be out, and they are.
+   */
+  async removeMember(id: string, userId: string) {
+    if (!Types.ObjectId.isValid(id)) throw notFound();
+    if (!Types.ObjectId.isValid(userId)) throw bad('That is not a person we can remove');
+
+    const memberId = new Types.ObjectId(userId);
+    const doc = await AudienceListModel.findByIdAndUpdate(
+      id,
+      { $pull: { manual_user_ids: memberId }, $addToSet: { excluded_user_ids: memberId } },
+      { new: true }
+    );
+    if (!doc) throw notFound();
+    return toPub(doc, await countAudience(...membershipOf(doc)));
   },
 
   async remove(id: string) {

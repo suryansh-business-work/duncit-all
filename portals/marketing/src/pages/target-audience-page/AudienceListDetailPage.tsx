@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Chip, Stack, Typography } from '@mui/material';
@@ -8,6 +8,7 @@ import { useApolloTableFetch } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { BackHeader, QueryGuard } from '@duncit/ui';
 import AudienceTable from './AudienceTable';
+import RemoveMemberDialog from './RemoveMemberDialog';
 import { AddUsersDialog } from './add-users-dialog';
 import { AUDIENCE_LIST, AUDIENCE_LIST_MEMBERS_TABLE } from './queries';
 import type { AudienceListRow, AudienceRow } from './helpers';
@@ -18,8 +19,8 @@ const criterionLabel = (f: AudienceListRow['filters'][number]) => {
 };
 
 /** Who is in a saved list right now — the criteria re-run, plus anyone added by
- * hand. The server unions the two, so this page reads one query rather than
- * re-applying the stored filters itself. */
+ * hand, minus anyone removed by hand. The server resolves all three, so this
+ * page reads one query rather than re-applying the stored filters itself. */
 export default function AudienceListDetailPage() {
   const { t } = useTranslation();
   const { listId = '' } = useParams<{ listId: string }>();
@@ -28,6 +29,7 @@ export default function AudienceListDetailPage() {
   const { formatDateTime } = useDateFormat();
   const refetchRef = useRef<(() => void) | null>(null);
   const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState<AudienceRow | null>(null);
 
   const { data, loading, error } = useQuery<{ audienceList: AudienceListRow | null }>(AUDIENCE_LIST, {
     variables: { id: listId },
@@ -43,11 +45,16 @@ export default function AudienceListDetailPage() {
     { extraVariables: { list_id: listId } },
     [listId],
   );
-  const columnDeps = useMemo(() => ({ formatDate: formatDateTime }), [formatDateTime]);
+  // Stable so the memo below — and the columns it builds — survive a repaint.
+  const onRemove = useCallback((row: AudienceRow) => setRemoving(row), []);
+  const columnDeps = useMemo(
+    () => ({ formatDate: formatDateTime, onRemove }),
+    [formatDateTime, onRemove],
+  );
 
-  // Only the rows need asking for again: the mutation returns the list with its
-  // two counts, which Apollo normalises straight into the chips above.
-  const onAdded = () => refetchRef.current?.();
+  // Only the rows need asking for again: both member mutations return the list
+  // with its counts, which Apollo normalises straight into the chips above.
+  const onMembersChanged = () => refetchRef.current?.();
 
   return (
     <QueryGuard
@@ -98,6 +105,17 @@ export default function AudienceListDetailPage() {
                 })}
               />
             )}
+            {/* A removal is otherwise invisible: the count simply drops, and
+                nobody can tell the list is holding people out. */}
+            {list!.excluded_member_count > 0 && (
+              <Chip
+                size="small"
+                variant="outlined"
+                label={t('marketing.targetAudience.nRemovedByHand', {
+                  vars: { count: list!.excluded_member_count },
+                })}
+              />
+            )}
             {list!.filters.length === 0 && <Chip size="small" variant="outlined" label={t('marketing.targetAudience.noFiltersEveryone')} />}
             {list!.filters.map((f) => (
               <Chip key={`${f.field}-${f.op}`} size="small" variant="outlined" label={criterionLabel(f)} />
@@ -122,8 +140,17 @@ export default function AudienceListDetailPage() {
             open={adding}
             listId={listId}
             onClose={() => setAdding(false)}
-            onAdded={onAdded}
+            onAdded={onMembersChanged}
           />
+
+          {removing && (
+            <RemoveMemberDialog
+              listId={listId}
+              member={removing}
+              onClose={() => setRemoving(null)}
+              onRemoved={onMembersChanged}
+            />
+          )}
         </Stack>
       )}
     </QueryGuard>

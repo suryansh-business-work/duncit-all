@@ -213,6 +213,152 @@ describe('audienceListService', () => {
     });
   });
 
+  // A list stores criteria, not people, so taking somebody out cannot be a row
+  // delete: the criteria re-run on every read and would put a matching person
+  // straight back. Every case below is really that one rule.
+  describe('removeMember', () => {
+    it('holds out somebody the criteria still match', async () => {
+      const stays = await seedUser('Pune');
+      const goes = await seedUser('Pune');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      expect(list.member_count).toBe(2);
+
+      const after = await audienceListService.removeMember(list.id, String(goes._id));
+      expect(after.member_count).toBe(1);
+      expect(after.excluded_member_count).toBe(1);
+
+      // The read that matters: re-running the criteria must not bring them back.
+      const rows = await audienceListService.membersTable(list.id, null);
+      expect(rows.rows.map((r: any) => r.id)).toEqual([String(stays._id)]);
+      expect(await audienceListService.memberIds(list.id)).toHaveLength(1);
+      expect(await audienceListService.matchesUser(list.id, String(goes._id))).toBe(false);
+      expect(await audienceListService.matchesUser(list.id, String(stays._id))).toBe(true);
+    });
+
+    it('takes out somebody who was only ever there by hand', async () => {
+      const picked = await seedUser('Delhi');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      await audienceListService.addMembers(list.id, [String(picked._id)]);
+      expect((await audienceListService.get(list.id))?.member_count).toBe(1);
+
+      const after = await audienceListService.removeMember(list.id, String(picked._id));
+      expect(after.member_count).toBe(0);
+      expect(after.manual_member_count).toBe(0);
+      expect((await audienceListService.membersTable(list.id, null)).total).toBe(0);
+    });
+
+    it('holds somebody out of a list that has no criteria at all', async () => {
+      const stays = await seedUser('Pune');
+      const goes = await seedUser('Delhi');
+      const all = await audienceListService.create({ name: 'Everyone', owner: 'Asha' });
+      expect(all.member_count).toBe(2);
+
+      await audienceListService.removeMember(all.id, String(goes._id));
+      const rows = await audienceListService.membersTable(all.id, null);
+      expect(rows.rows.map((r: any) => r.id)).toEqual([String(stays._id)]);
+    });
+
+    // The picker offers a removed person again, so adding them back has to lift
+    // the removal — otherwise the list accepts the add and still holds nobody.
+    it('lets somebody removed be added back', async () => {
+      const person = await seedUser('Pune');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      await audienceListService.removeMember(list.id, String(person._id));
+      expect((await audienceListService.get(list.id))?.member_count).toBe(0);
+
+      const back = await audienceListService.addMembers(list.id, [String(person._id)]);
+      expect(back.member_count).toBe(1);
+      expect(back.excluded_member_count).toBe(0);
+      expect(await audienceListService.matchesUser(list.id, String(person._id))).toBe(true);
+    });
+
+    it('is a quiet success for somebody the list never held', async () => {
+      const outsider = await seedUser('Delhi');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      const after = await audienceListService.removeMember(list.id, String(outsider._id));
+      expect(after.member_count).toBe(0);
+    });
+
+    it('removing the same person twice does not stack up', async () => {
+      const person = await seedUser('Pune');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      await audienceListService.removeMember(list.id, String(person._id));
+      const twice = await audienceListService.removeMember(list.id, String(person._id));
+      expect(twice.excluded_member_count).toBe(1);
+    });
+
+    it('reports a missing list and a malformed person rather than writing', async () => {
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha' });
+      await expect(audienceListService.removeMember('not-an-id', 'x')).rejects.toThrow(/not found/i);
+      await expect(
+        audienceListService.removeMember('64b7f9c2e1a2b3c4d5e6f7a8', '64b7f9c2e1a2b3c4d5e6f7a9')
+      ).rejects.toThrow(/not found/i);
+      await expect(audienceListService.removeMember(list.id, 'not-an-id')).rejects.toThrow(
+        /not a person/i
+      );
+    });
+  });
+
+  // What the "+ Add user" picker reads. Offering somebody already in the list
+  // is the thing this query exists to stop.
+  describe('candidatesTable', () => {
+    it('leaves out whoever the list already holds, by criteria or by hand', async () => {
+      const matches = await seedUser('Pune');
+      const handPicked = await seedUser('Delhi');
+      const outsider = await seedUser('Mumbai');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      await audienceListService.addMembers(list.id, [String(handPicked._id)]);
+
+      const offered = await audienceListService.candidatesTable(list.id, null);
+      expect(offered.rows.map((r: any) => r.id)).toEqual([String(outsider._id)]);
+      expect(offered.total).toBe(1);
+      expect(offered.rows.map((r: any) => r.id)).not.toContain(String(matches._id));
+    });
+
+    it('offers a removed person again, so a mistake can be undone', async () => {
+      const person = await seedUser('Pune');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      expect((await audienceListService.candidatesTable(list.id, null)).total).toBe(0);
+
+      await audienceListService.removeMember(list.id, String(person._id));
+      const offered = await audienceListService.candidatesTable(list.id, null);
+      expect(offered.rows.map((r: any) => r.id)).toEqual([String(person._id)]);
+    });
+
+    it('never offers a closed account', async () => {
+      const gone = await seedUser('Mumbai');
+      await UserModel.updateOne({ _id: gone._id }, { $set: { 'metadata.deleted_at': new Date() } });
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+      expect((await audienceListService.candidatesTable(list.id, null)).total).toBe(0);
+    });
+
+    // A list with no criteria is already everybody, so there is nobody left to
+    // add — an empty picker there is the correct answer, not a bug.
+    it('offers nobody for a list that holds everyone', async () => {
+      await seedUser('Pune');
+      const all = await audienceListService.create({ name: 'Everyone', owner: 'Asha' });
+      expect((await audienceListService.candidatesTable(all.id, null)).total).toBe(0);
+    });
+
+    it('searches and pages the people it offers', async () => {
+      await seedUser('Mumbai');
+      await seedUser('Mumbai');
+      const list = await audienceListService.create({ name: 'Pune', owner: 'Asha', filters: puneOnly });
+
+      expect((await audienceListService.candidatesTable(list.id, { search: 'Ana' })).total).toBe(2);
+      expect((await audienceListService.candidatesTable(list.id, { search: 'Zebediah' })).total).toBe(0);
+      const paged = await audienceListService.candidatesTable(list.id, { page: 1, page_size: 1 });
+      expect(paged.rows).toHaveLength(1);
+      expect(paged.total).toBe(2);
+    });
+
+    it('reports a missing or malformed list id', async () => {
+      await expect(audienceListService.candidatesTable('not-an-id', null)).rejects.toThrow(
+        /not found/i
+      );
+    });
+  });
+
   describe('remove', () => {
     it('deletes a list', async () => {
       const list = await audienceListService.create({ name: 'Bye', owner: 'Asha' });

@@ -19,7 +19,7 @@ import { useDebouncedValue } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
-import { ADD_AUDIENCE_LIST_MEMBERS, AUDIENCE_PICKER_USERS } from '../queries';
+import { ADD_AUDIENCE_LIST_MEMBERS, AUDIENCE_LIST_CANDIDATES } from '../queries';
 import UserPickList from './UserPickList';
 import type { PickableUser, PickerUsersData } from './types';
 
@@ -36,6 +36,10 @@ interface Props {
 /**
  * Hand-pick people into a saved list.
  *
+ * It offers CANDIDATES, not the whole audience: the server subtracts whoever
+ * the list already holds, so nobody in it can be picked again. Doing that here
+ * instead would only hide the members of the page currently loaded.
+ *
  * A tick is kept by id, so somebody selected on page 1 stays selected after a
  * new search — the marketer is building one set, not one page of one search.
  */
@@ -47,8 +51,11 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
   const [error, setError] = useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const { data, loading } = useQuery<PickerUsersData>(AUDIENCE_PICKER_USERS, {
-    variables: { query: { search: debouncedSearch, page, page_size: PAGE_SIZE } },
+  const { data, loading } = useQuery<PickerUsersData>(AUDIENCE_LIST_CANDIDATES, {
+    variables: {
+      list_id: listId,
+      query: { search: debouncedSearch, page, page_size: PAGE_SIZE },
+    },
     fetchPolicy: 'cache-and-network',
     skip: !open,
   });
@@ -59,10 +66,16 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
   // would show an empty list for a search that does have matches.
   useEffect(() => setPage(1), [debouncedSearch]);
 
-  const users = data?.audienceTable?.rows ?? [];
-  const total = data?.audienceTable?.total ?? 0;
+  const users = data?.audienceListCandidatesTable?.rows ?? [];
+  const total = data?.audienceListCandidatesTable?.total ?? 0;
   const pageCount = Math.ceil(total / PAGE_SIZE);
   const selectedIds = useMemo(() => new Set(selected.map((u) => u.id)), [selected]);
+
+  // An empty picker means two different things, and the wrong one reads as a
+  // broken search: with no search typed, everybody eligible is already in.
+  const emptyText = debouncedSearch
+    ? t('marketing.targetAudience.noOneMatchesThatSearch')
+    : t('marketing.targetAudience.everyoneIsAlreadyInThisList');
 
   const toggle = (user: PickableUser) =>
     setSelected((prev) =>
@@ -130,7 +143,7 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
               selected={selectedIds}
               onToggle={toggle}
               loading={loading}
-              emptyText={t('marketing.targetAudience.noOneMatchesThatSearch')}
+              emptyText={emptyText}
             />
           </Box>
 

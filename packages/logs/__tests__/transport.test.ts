@@ -35,6 +35,46 @@ describe('httpTransport', () => {
     });
   });
 
+  it('sends Authorization and x-duid headers when the identity getters supply them', () => {
+    const fetchMock = vi.fn(() => Promise.resolve());
+    vi.stubGlobal('fetch', fetchMock);
+    const rec = record();
+
+    httpTransport('https://server.duncit.com/logs', {
+      getToken: () => 'jwt-eyJhbGciOi.session',
+      getDeviceId: () => 'duid-8f3c2a1b9d7e',
+    })(rec);
+
+    expect(fetchMock).toHaveBeenCalledWith('https://server.duncit.com/logs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer jwt-eyJhbGciOi.session',
+        'x-duid': 'duid-8f3c2a1b9d7e',
+      },
+      body: JSON.stringify(rec),
+      keepalive: true,
+    });
+  });
+
+  it('omits identity headers when the getters return nothing (logs attributed to nobody)', () => {
+    const fetchMock = vi.fn(() => Promise.resolve());
+    vi.stubGlobal('fetch', fetchMock);
+    const rec = record();
+
+    httpTransport('https://server.duncit.com/logs', {
+      getToken: () => null,
+      getDeviceId: () => undefined,
+    })(rec);
+
+    expect(fetchMock).toHaveBeenCalledWith('https://server.duncit.com/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rec),
+      keepalive: true,
+    });
+  });
+
   it('swallows a rejected fetch (fire-and-forget)', () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('network down'))));
     expect(() => httpTransport('https://x/logs')(record())).not.toThrow();

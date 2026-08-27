@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  SESSION_REVOKED_EVENT,
   USER_CHANGED_EVENT,
   parseUserChangedFrame,
+  subscribeSessionRevoked,
   subscribeUserChanged,
   type SocketLike,
 } from '../src/realtime';
@@ -94,5 +96,92 @@ describe('subscribeUserChanged', () => {
 
     expect(socket.off).toHaveBeenCalledWith('user:changed', (socket.on as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]);
     expect(onPatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('subscribeSessionRevoked', () => {
+  const makeSocket = () => {
+    const handlers = new Map<string, (payload: unknown) => void>();
+    const socket: SocketLike = {
+      on: vi.fn((event, handler) => handlers.set(event, handler)),
+      off: vi.fn((event) => handlers.delete(event)),
+    };
+    return { socket, emit: (payload: unknown) => handlers.get(SESSION_REVOKED_EVENT)?.(payload) };
+  };
+
+  it('listens on the frame the server publishes', () => {
+    const { socket } = makeSocket();
+
+    subscribeSessionRevoked(socket, SELF, vi.fn());
+
+    expect(socket.on).toHaveBeenCalledWith('session:revoked', expect.any(Function));
+  });
+
+  it('signs out with the reason when the frame names this account', () => {
+    const { socket, emit } = makeSocket();
+    const onRevoked = vi.fn();
+
+    subscribeSessionRevoked(socket, SELF, onRevoked);
+    emit({ user_id: SELF, reason: 'ACCOUNT_DELETION_REQUESTED' });
+
+    expect(onRevoked).toHaveBeenCalledTimes(1);
+    expect(onRevoked).toHaveBeenCalledWith('ACCOUNT_DELETION_REQUESTED');
+  });
+
+  it('never signs out on a frame addressed to somebody else', () => {
+    const { socket, emit } = makeSocket();
+    const onRevoked = vi.fn();
+
+    subscribeSessionRevoked(socket, SELF, onRevoked);
+    emit({ user_id: 'u-2', reason: 'ACCOUNT_DELETION_REQUESTED' });
+
+    expect(onRevoked).not.toHaveBeenCalled();
+  });
+
+  it('refuses to answer when this surface has no session yet', () => {
+    const { socket, emit } = makeSocket();
+    const onRevoked = vi.fn();
+
+    subscribeSessionRevoked(socket, '', onRevoked);
+    emit({ user_id: '', reason: 'ACCOUNT_DELETION_REQUESTED' });
+
+    expect(onRevoked).not.toHaveBeenCalled();
+  });
+
+  it.each([[null], [undefined], ['frame'], [7], [{}], [{ reason: 'X' }]])(
+    'survives the malformed frame %j',
+    (raw) => {
+      const { socket, emit } = makeSocket();
+      const onRevoked = vi.fn();
+
+      subscribeSessionRevoked(socket, SELF, onRevoked);
+      emit(raw);
+
+      expect(onRevoked).not.toHaveBeenCalled();
+    }
+  );
+
+  it('compares the id as a string and stringifies a missing reason for the log line', () => {
+    const { socket, emit } = makeSocket();
+    const onRevoked = vi.fn();
+
+    subscribeSessionRevoked(socket, '7', onRevoked);
+    emit({ user_id: 7 });
+
+    expect(onRevoked).toHaveBeenCalledWith('');
+  });
+
+  it('unsubscribes the same handler it registered', () => {
+    const { socket, emit } = makeSocket();
+    const onRevoked = vi.fn();
+
+    subscribeSessionRevoked(socket, SELF, onRevoked)();
+    emit({ user_id: SELF, reason: 'ACCOUNT_DELETION_REQUESTED' });
+
+    expect(socket.off).toHaveBeenCalledWith(
+      'session:revoked',
+      (socket.on as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]
+    );
+    expect(onRevoked).not.toHaveBeenCalled();
   });
 });

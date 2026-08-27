@@ -109,6 +109,13 @@ describe('computeRange', () => {
 
     expect(range.trailPad).toBe(0);
   });
+
+  it('answers zero pads, not NaN, when every offset slot is a hole', () => {
+    const holed = [undefined, undefined, undefined, undefined] as unknown as readonly number[];
+    const range = computeRange({ offsets: holed, viewTop: 0, viewBottom: 50, overscanLead: 0, overscanTrail: 0 });
+
+    expect(range).toEqual({ start: 2, end: 2, leadPad: 0, trailPad: 0 });
+  });
 });
 
 describe('makeItemLayout', () => {

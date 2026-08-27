@@ -38,6 +38,7 @@ interface Overrides {
   errorMessage?: string | null;
   onSubmit?: (v: AdRequestFormValues) => void;
   onValuesChange?: (v: AdRequestFormValues) => void;
+  durationWindow?: { min: number; max: number };
 }
 
 const renderForm = (overrides: Overrides = {}) => {
@@ -50,6 +51,7 @@ const renderForm = (overrides: Overrides = {}) => {
       errorMessage={overrides.errorMessage ?? null}
       onValuesChange={onValuesChange}
       onSubmit={onSubmit}
+      durationWindow={overrides.durationWindow}
     />,
   );
   return { ...utils, onSubmit, onValuesChange };
@@ -108,6 +110,16 @@ describe('AdRequestForm', () => {
   it('renders a singular duration label for a one-day campaign', () => {
     renderForm({ initialValues: { ...validValues(), duration_days: 1 } });
     expect(screen.getByText(/Ad Duration: 1 day\b/)).toBeInTheDocument();
+  });
+
+  it('labels a week-multiple window bound in weeks and an uneven one in days', () => {
+    renderForm({ durationWindow: { min: 7, max: 45 } });
+    // Marketing's window drives the sentence: 7 reads as "1 week", 45 is neither
+    // a month nor a week multiple so it stays "45 days".
+    expect(screen.getByText('Ad Duration: 7 days (1 week – 45 days)')).toBeInTheDocument();
+    // The slider end marks derive from the same numbers.
+    expect(screen.getByText('1 week')).toBeInTheDocument();
+    expect(screen.getByText('45 days')).toBeInTheDocument();
   });
 
   it('shows the error alert and disables submit while busy', () => {

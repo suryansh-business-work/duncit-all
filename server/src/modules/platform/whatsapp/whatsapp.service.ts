@@ -1,7 +1,7 @@
 import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
-import { sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
+import { isMediaMissing, sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
 import {
   isProjectApiConfigured,
   listCampaigns,
@@ -47,6 +47,9 @@ export interface WaSendInput {
   media?: { url: string; filename: string } | null;
 }
 
+/** A header image or document, or nothing — the shape AiSensy's `media` takes. */
+type SendMedia = { url: string; filename: string } | null;
+
 export interface WaSendOutcome {
   status: WaMessageStatus;
   reason: string;
@@ -66,7 +69,7 @@ interface Switches {
   category: string;
   /** The header asset this scenario sends: the admin's override when one is
    * set, else the asset cached off the campaign by the console's reconcile. */
-  media: { url: string; filename: string } | null;
+  media: SendMedia;
   /** Whether that cache has ever been filled. A blank asset on a row nobody has
    * synced is not "no asset" — it is "nobody looked", and `bindCampaignMedia`
    * is what looks. */
@@ -77,7 +80,7 @@ interface Switches {
   /** The platform-wide default header asset, off the global row. The last
    * resort in the media order, and — with no campaign at AiSensy carrying an
    * asset of its own — the one that actually sends today. */
-  default_media: { url: string; filename: string } | null;
+  default_media: SendMedia;
 }
 
 /** Both switches in one read: the collection holds a handful of rows. */
@@ -130,7 +133,7 @@ async function switchesFor(eventKey: string): Promise<Switches> {
 
 interface BoundMedia {
   /** The asset the campaign was built with at AiSensy, or null. */
-  media: { url: string; filename: string } | null;
+  media: SendMedia;
   /** Its template's header kind — TEXT, IMAGE, VIDEO, FILE, or '' for none. */
   header_format: string;
 }
@@ -312,7 +315,7 @@ async function resolveMedia(
   event: WaEvent,
   input: WaSendInput,
   switches: Switches
-): Promise<{ url: string; filename: string } | null> {
+): Promise<SendMedia> {
   const own = input.media ?? switches.media;
   if (own) return own;
 
@@ -321,6 +324,137 @@ async function resolveMedia(
 
   const headerFormat = bound?.header_format ?? switches.header_format;
   return headerFormat === DEFAULTABLE_HEADER ? switches.default_media : null;
+}
+
+/**
+ * Header kinds the platform default — one image — must never stand in for. A
+ * VIDEO header wants a video, and the five FILE-header templates are the
+ * payment ones: each wants that send's own invoice, never a shared picture.
+ */
+const OWN_ASSET_HEADERS = new Set(['VIDEO', 'FILE', 'DOCUMENT']);
+
+/**
+ * The two rejections an operator can act on, in the words of the screen that
+ * fixes them. AiSensy's own sentence names no setting anybody can find.
+ */
+const NO_DEFAULT_MEDIA =
+  'This campaign needs a header image and none is set — add the default header image under Marketing > WhatsApp > Settings';
+const headerOfItsOwn = (format: string) =>
+  `This campaign needs its own header ${format.toLowerCase()} — set media on this scenario under Marketing > WhatsApp > Automation`;
+
+/**
+ * Remember that this campaign's template carries an image header, because
+ * AiSensy has just said so by rejecting a send.
+ *
+ * It fills the same reconcile-owned pair `bindCampaignMedia` does, so the NEXT send on
+ * this scenario attaches the default straight away rather than paying for a
+ * rejection first — and it learns it without the Project API, which is a second
+ * credential the send path does not otherwise need.
+ */
+async function rememberImageHeader(eventKey: string): Promise<void> {
+  await WaEventSettingModel.updateOne(
+    { event_key: eventKey },
+    { $set: { template_header_format: DEFAULTABLE_HEADER, media_synced_at: new Date() } },
+    { upsert: true }
+  ).catch((error) => logs.server.warn('whatsapp', 'learnHeader', { error, event: eventKey }));
+}
+
+/**
+ * The asset a rejected send can be tried again with, or null when this
+ * rejection is not one the server can answer.
+ *
+ * Only for a send that carried NOTHING: `Media URL Missing` on a message that
+ * already had an asset is a different problem — an unreachable URL — and
+ * resending the default over it would hide that.
+ */
+function recoveryMedia(error: unknown, carried: SendMedia, switches: Switches): SendMedia {
+  if (carried || !isMediaMissing(error)) return null;
+  if (OWN_ASSET_HEADERS.has(switches.header_format.toUpperCase())) return null;
+  return switches.default_media;
+}
+
+/** What the Logs console shows for a failure. */
+function failureReason(error: unknown, carried: SendMedia, switches: Switches): string {
+  const raw = error instanceof Error ? error.message : 'AiSensy rejected the message';
+  if (carried || !isMediaMissing(error)) return raw;
+  const format = switches.header_format.toUpperCase();
+  return OWN_ASSET_HEADERS.has(format) ? headerOfItsOwn(format) : NO_DEFAULT_MEDIA;
+}
+
+interface PostAttempt {
+  message_id: string;
+  /** null when AiSensy took the message. */
+  error: unknown;
+  /** What actually travelled with it. */
+  media: SendMedia;
+}
+
+/** One POST, with the throw turned into a value so the recovery below reads as
+ * a decision rather than a nest of catches. */
+async function postOnce(
+  event: WaEvent,
+  input: WaSendInput,
+  destination: string,
+  params: string[],
+  media: SendMedia
+): Promise<PostAttempt> {
+  try {
+    const message_id = await sendCampaign({
+      campaign_name: event.campaign,
+      destination,
+      user_name: text(input.name) || 'there',
+      template_params: params,
+      media: media ?? undefined,
+    });
+    return { message_id, error: null, media };
+  } catch (error) {
+    return { message_id: '', error, media };
+  }
+}
+
+interface SendAttempt extends PostAttempt {
+  /** '' when it went through; otherwise what the log row says. */
+  reason: string;
+}
+
+/**
+ * Send — and when AiSensy answers "this campaign's template has a media header
+ * and your message carried none", send once more with the platform default
+ * attached.
+ *
+ * This is what makes the default reach a message at all. Everything upstream
+ * INFERS whether a campaign needs an asset from `template_header_format`, which is
+ * cached off the Project API — unset, unreachable, or unable to resolve a
+ * campaign's template, that cache reads '' and {@link resolveMedia} attaches
+ * nothing, so every media scenario fails forever with a vendor string nobody
+ * can act on. AiSensy's own rejection needs no second credential and cannot be
+ * wrong, so the recovery is keyed on it and the answer is remembered.
+ *
+ * ONE retry, and only for a send that carried nothing — see
+ * {@link recoveryMedia}.
+ */
+async function postWithMediaRecovery(
+  event: WaEvent,
+  input: WaSendInput,
+  destination: string,
+  params: string[],
+  switches: Switches,
+  media: SendMedia
+): Promise<SendAttempt> {
+  const first = await postOnce(event, input, destination, params, media);
+  if (!first.error) return { ...first, reason: '' };
+
+  const fallback = recoveryMedia(first.error, media, switches);
+  if (!fallback) return { ...first, reason: failureReason(first.error, media, switches) };
+
+  const second = await postOnce(event, input, destination, params, fallback);
+  if (second.error) return { ...second, reason: failureReason(second.error, fallback, switches) };
+
+  // Only now: the retry going through is the proof that an image header is what
+  // this template wanted. Stamping it before would teach the row the wrong kind
+  // off a VIDEO or FILE template that rejected the image for its own reason.
+  await rememberImageHeader(event.key);
+  return { ...second, reason: '' };
 }
 
 /** Claim the slot, send, then write what happened onto the same row. */
@@ -341,7 +475,7 @@ async function dispatch(
   //
   // Resolved lazily: a caller that brought its own asset must not pay for two
   // AiSensy reads to learn a header kind this send will never consult.
-  const media = (await resolveMedia(event, input, switches)) ?? undefined;
+  const media = await resolveMedia(event, input, switches);
 
   const claim = {
     event_key: event.key,
@@ -374,33 +508,35 @@ async function dispatch(
   }
 
   const startedAt = Date.now();
-  try {
-    const messageId = await sendCampaign({
-      campaign_name: event.campaign,
-      destination,
-      user_name: text(input.name) || 'there',
-      template_params: params,
-      media,
-    });
-    // Caught here, not left to the outer guard: an update that throws would
-    // reach `send`'s catch and file a SECOND row for a message that already has
-    // one.
+  const attempt = await postWithMediaRecovery(event, input, destination, params, switches, media);
+  // Re-stamped rather than left at the claim's guess: the recovery above can
+  // change what actually travelled, and a header that went out empty is the
+  // whole story behind a `Media URL Missing` row.
+  const wrote = {
+    duration_ms: Date.now() - startedAt,
+    media_url: attempt.media?.url ?? '',
+    media_filename: attempt.media?.filename ?? '',
+  };
+
+  // Every write below is caught rather than left to the outer guard: an update
+  // that throws would reach `send`'s catch and file a SECOND row for a message that
+  // already has one.
+  if (!attempt.reason) {
     await WaMessageLogModel.updateOne(
       { _id: row._id },
-      { $set: { status: 'SENT', submitted_message_id: messageId, duration_ms: Date.now() - startedAt } }
+      { $set: { ...wrote, status: 'SENT', submitted_message_id: attempt.message_id } }
     ).catch((error) => logs.server.warn('whatsapp', 'record', { error, event: event.key }));
-    return sent(messageId);
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : 'AiSensy rejected the message';
-    // The claim is released so a later re-trigger can try again — an AiSensy
-    // outage must not silence this message forever.
-    await WaMessageLogModel.updateOne(
-      { _id: row._id },
-      { $set: { status: 'FAILED', reason, holds_slot: false, duration_ms: Date.now() - startedAt } }
-    ).catch((e) => logs.server.warn('whatsapp', 'record', { error: e, event: event.key }));
-    logs.server.warn('whatsapp', 'send', { error, event: event.key });
-    return failed(reason);
+    return sent(attempt.message_id);
   }
+
+  // The claim is released so a later re-trigger can try again — an AiSensy
+  // outage must not silence this message forever.
+  await WaMessageLogModel.updateOne(
+    { _id: row._id },
+    { $set: { ...wrote, status: 'FAILED', reason: attempt.reason, holds_slot: false } }
+  ).catch((error) => logs.server.warn('whatsapp', 'record', { error, event: event.key }));
+  logs.server.warn('whatsapp', 'send', { error: attempt.error, event: event.key });
+  return failed(attempt.reason);
 }
 
 export const whatsappService = {

@@ -111,7 +111,9 @@ export default function WaAutomation() {
       {board && needsDefaultMedia(rows, defaultMediaUrl) && (
         <Alert severity="warning">{t('adminWhatsapp.defaultMediaMissing')}</Alert>
       )}
-      {boardIsHealthy(rows) && <Alert severity="success">{t('adminWhatsapp.healthy')}</Alert>}
+      {boardIsHealthy(rows, board?.catalogue_ok ?? false) && (
+        <Alert severity="success">{t('adminWhatsapp.healthy')}</Alert>
+      )}
 
       <DuncitTable<WaScenario>
         tableId="wa-automation-scenarios"

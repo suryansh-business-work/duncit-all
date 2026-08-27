@@ -66,6 +66,13 @@ export const statusKey = (status: string) => status.toUpperCase();
 export const scenarioSearchText = (row: WaScenario) =>
   `${row.event_key} ${row.campaign} ${row.template_name} ${row.audience} ${row.category} ${row.blocker}`;
 
-/** True only when every registered scenario could send right now. */
-export const boardIsHealthy = (rows: readonly WaScenario[]) =>
-  rows.length > 0 && rows.every((row) => !row.blocker);
+/**
+ * True only when every registered scenario could send right now.
+ *
+ * A board whose catalogue could not be read is never healthy: the server
+ * computes no blocker at all without AiSensy, so every row comes back clean and
+ * the green banner would sit directly above 52 scenarios failing with
+ * `Media URL Missing`.
+ */
+export const boardIsHealthy = (rows: readonly WaScenario[], catalogueOk: boolean) =>
+  catalogueOk && rows.length > 0 && rows.every((row) => !row.blocker);

@@ -94,6 +94,26 @@ export function campaignErrorReason(body: any, status: number): string {
 }
 
 /**
+ * Is this AiSensy's "your campaign's template has a media header and your
+ * message carried none" rejection?
+ *
+ * It is the ONE rejection the server can answer by itself, and — more useful —
+ * the only authority on whether a campaign needs a header asset that costs no
+ * second credential. The Project API can say so too, but it is a SEPARATE key:
+ * unset, unreachable, or pointed at a campaign whose template it cannot
+ * resolve, every media scenario would otherwise fail forever with a vendor
+ * string nobody can act on. See `resolveMedia` in whatsapp.service.
+ *
+ * Matched on words rather than a pattern: the vendor writes `Media URL
+ * Missing`, and a neighbouring rejection reads `Media URL is not accessible` —
+ * which is a real problem with a real asset and must NOT look like this one.
+ */
+export function isMediaMissing(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : String(error ?? '')).toLowerCase();
+  return message.includes('media') && (message.includes('missing') || message.includes('required'));
+}
+
+/**
  * Did AiSensy take the message? Its own answer is the STRING `"true"` alongside
  * HTTP 200, so an `res.ok` check on its own reports rejections as sends.
  */

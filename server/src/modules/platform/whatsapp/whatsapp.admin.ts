@@ -5,6 +5,7 @@ import {
   isProjectApiConfigured,
   listCampaigns,
   listTemplates,
+  needsMedia,
   type AisensyCampaign,
   type AisensyTemplate,
 } from '@modules/platform/aisensy/aisensy.project';
@@ -112,7 +113,9 @@ export const whatsappAdminService = {
     const [live, settings] = await Promise.all([
       catalogue(),
       WaEventSettingModel.find()
-        .select('event_key enabled template_category media_url media_filename override_media_url override_media_filename')
+        .select(
+          'event_key enabled template_category media_url media_filename template_header_format override_media_url override_media_filename'
+        )
         .lean(),
     ]);
     const byKey = new Map(settings.map((row) => [row.event_key, row]));
@@ -123,6 +126,12 @@ export const whatsappAdminService = {
       const campaign = live.campaigns.get(event.campaign);
       const template = campaign ? live.templates.get(campaign.template_name) : undefined;
       const setting = byKey.get(event.key);
+      // The row's own cached kind stands in when AiSensy cannot be read — the
+      // send path writes it there the moment AiSensy rejects a send for a
+      // missing header. Without it a console that lost the Project API reports
+      // every media scenario as needing nothing, which is the exact state that
+      // hid 52 failing rows behind a green board.
+      const headerFormat = template?.header_format || setting?.template_header_format || '';
       return {
         event_key: event.key,
         campaign: event.campaign,
@@ -138,11 +147,11 @@ export const whatsappAdminService = {
         template_status: template?.status ?? '',
         template_category: template?.category ?? '',
         template_params: template?.param_count ?? 0,
-        template_header_format: template?.header_format ?? '',
+        template_header_format: headerFormat,
         media_url: campaign?.media_url ?? '',
         override_media_url: setting?.override_media_url ?? '',
         override_media_filename: setting?.override_media_filename ?? '',
-        needs_media: template?.needs_media ?? false,
+        needs_media: template?.needs_media ?? needsMedia(headerFormat),
         blocker: live.ok
           ? blockerFor(
               event.campaign,

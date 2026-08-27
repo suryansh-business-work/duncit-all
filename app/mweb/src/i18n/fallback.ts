@@ -9,6 +9,7 @@ import {
   POLICY_ACCEPTANCE_BUNDLE,
   SESSION_BUNDLE,
   WHATSAPP_BUNDLE,
+  WITHDRAW_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
@@ -43,6 +44,7 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...POLICY_ACCEPTANCE_BUNDLE,
   ...SESSION_BUNDLE,
   ...WHATSAPP_BUNDLE,
+  ...WITHDRAW_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

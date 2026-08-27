@@ -10,6 +10,7 @@ import {
   POLICY_ACCEPTANCE_BUNDLE,
   VERIFICATION_BUNDLE,
   WHATSAPP_BUNDLE,
+  WITHDRAW_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
@@ -45,6 +46,7 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...POLICY_ACCEPTANCE_BUNDLE,
   ...VERIFICATION_BUNDLE,
   ...WHATSAPP_BUNDLE,
+  ...WITHDRAW_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

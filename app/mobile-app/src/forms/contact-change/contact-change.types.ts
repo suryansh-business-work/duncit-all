@@ -1,57 +1,17 @@
-import { z } from 'zod';
-import { EMAIL, OTP_6, PHONE_INTL } from '@duncit/regex';
-import { isPhoneChannel, type ContactChannel, type ContactDraft } from '@duncit/utils';
+import type { ContactChannel } from '@duncit/utils';
+import {
+  makeContactOtpSchema,
+  makeContactValueSchema as makeSharedContactValueSchema,
+  type Translate,
+} from '@duncit/forms/schemas';
 
-const EXTENSION_PATTERN = /^\+?\d{1,5}$/;
+import { fallbackT } from '@/i18n/fallback';
 
-/** The sheet's step-one values — the shared draft shape, so nothing converts. */
-export type ContactValueValues = ContactDraft;
+export type { ContactOtpValues, ContactValueValues } from '@duncit/forms/schemas';
 
-const anyString = z.string();
+/** Per-channel rules, defaulted to the app's bundled English so a caller with no
+ * live translator (a test, a module-level parse) still reads real sentences. */
+export const makeContactValueSchema = (channel: ContactChannel, t: Translate = fallbackT) =>
+  makeSharedContactValueSchema(channel, t);
 
-const emailValue = z
-  .string()
-  .trim()
-  .max(254, 'That address is too long')
-  .refine((v) => EMAIL.test(v), 'Enter a valid email address');
-
-const extensionValue = z
-  .string()
-  .trim()
-  .refine((v) => EXTENSION_PATTERN.test(v), 'Pick a country code');
-
-/*
-  The international range the server accepts, not the 10-digit Indian one:
-  there is a country-code picker beside this box, so a rule that only fits +91
-  would refuse numbers the picker itself offers.
-*/
-const numberValue = z
-  .string()
-  .trim()
-  .refine((v) => PHONE_INTL.test(v), 'Enter a valid phone number');
-
-/**
- * The value being asked for, per channel. Mirrors mWeb's
- * `contact-change.types.ts` field for field, so both apps refuse the same input
- * with the same sentence (rule 27).
- *
- * Typed as `z.ZodType<ContactValueValues>` so both branches present ONE type to
- * `useForm` — a raw union of two object schemas gives react-hook-form a union
- * to resolve field paths against, which it cannot do.
- */
-export const makeContactValueSchema = (
-  channel: ContactChannel,
-): z.ZodType<ContactValueValues, z.ZodTypeDef, unknown> =>
-  isPhoneChannel(channel)
-    ? z.object({ email: anyString, extension: extensionValue, number: numberValue })
-    : z.object({ email: emailValue, extension: anyString, number: anyString });
-
-/** The code that proves the value above. Six digits, nothing else. */
-export const contactOtpSchema = z.object({
-  otp: z
-    .string()
-    .trim()
-    .refine((v) => OTP_6.test(v), 'Enter the 6-digit code'),
-});
-
-export type ContactOtpValues = z.infer<typeof contactOtpSchema>;
+export const contactOtpSchema = makeContactOtpSchema(fallbackT);

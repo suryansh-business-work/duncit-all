@@ -52,6 +52,7 @@ COPY packages/tours ./packages/tours
 COPY packages/virtual-scroll ./packages/virtual-scroll
 COPY packages/slots    ./packages/slots
 COPY packages/verification ./packages/verification
+COPY packages/forms ./packages/forms
 
 WORKDIR /repo/app/mobile-app
 # Dependency manifests only → the slow install layer is reused for every build

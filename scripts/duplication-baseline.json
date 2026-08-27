@@ -1,8 +1,8 @@
 {
   "maxPercent": 1.7,
   "areas": {
-    "app/mobile-app": 2831,
-    "app/mweb": 3062,
+    "app/mobile-app": 2713,
+    "app/mweb": 2922,
     "packages/ai-prompts": 15,
     "packages/app-settings": 17,
     "packages/auto-pods": 32,
@@ -27,7 +27,7 @@
     "portals/legal": 49,
     "portals/marketing": 333,
     "portals/onboarding": 1055,
-    "portals/partners-app": 716,
+    "portals/partners-app": 697,
     "portals/products": 198,
     "portals/support": 194,
     "portals/tech": 444,

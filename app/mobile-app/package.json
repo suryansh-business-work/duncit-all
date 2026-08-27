@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.72.51",
+  "version": "1.72.52",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.9",
@@ -53,6 +53,7 @@
     "@duncit/dialogs-native": "file:../../packages/dialogs-native",
     "@duncit/errors": "file:../../packages/errors",
     "@duncit/fallback-icons": "file:../../packages/fallback-icons",
+    "@duncit/forms": "file:../../packages/forms",
     "@duncit/geo": "file:../../packages/geo",
     "@duncit/i18n": "file:../../packages/i18n",
     "@duncit/logs": "file:../../packages/logs",

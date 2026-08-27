@@ -3190,6 +3190,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // account. Rendered by mWeb and the native app from ONE label builder in
     // @duncit/utils, so the two screens cannot say different things (rule 27).
     contactChange: {
+      // The contact-change form refuses input the same way on mWeb and native —
+      // the rules live in @duncit/forms/schemas, so these sentences are shared
+      // rather than hard-coded once per surface (rule 38).
+      validation: {
+        emailTooLong: 'That address is too long',
+        emailInvalid: 'Enter a valid email address',
+        extensionInvalid: 'Pick a country code',
+        phoneInvalid: 'Enter a valid phone number',
+        otpInvalid: 'Enter the 6-digit code',
+      },
       emailName: 'Email',
       emailField: 'New email address',
       emailEmpty: 'No email address yet',

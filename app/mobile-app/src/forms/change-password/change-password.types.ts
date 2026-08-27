@@ -1,39 +1,15 @@
-import { z } from 'zod';
+import { makeCurrentPasswordSchema, makeNewPasswordSchema } from '@duncit/forms/schemas';
 
-/**
- * Change-password contracts — RN twin of mWeb's change-password forms (RHF +
- * Zod). Two steps: verify the current password to request an OTP, then enter
- * the emailed OTP + a new password (confirmed) to commit the change. Mirrors
- * the server's `requestPasswordChangeOtp` / `changePasswordWithOtp` rules.
- */
-export const currentPasswordSchema = z.object({
-  current_password: z.string().min(1, 'Enter your current password'),
-});
+import { fallbackT } from '@/i18n/fallback';
 
-export type CurrentPasswordValues = z.infer<typeof currentPasswordSchema>;
+export {
+  currentPasswordDefaults,
+  makeCurrentPasswordSchema,
+  makeNewPasswordSchema,
+  newPasswordDefaults,
+  type CurrentPasswordValues,
+  type NewPasswordValues,
+} from '@duncit/forms/schemas';
 
-export const currentPasswordDefaults: CurrentPasswordValues = {
-  current_password: '',
-};
-
-export const newPasswordSchema = z
-  .object({
-    otp: z
-      .string()
-      .trim()
-      .regex(/^\d{6}$/, 'Enter the 6 digit OTP'),
-    new_password: z.string().min(8, 'Min 8 characters').max(100, 'Password is too long'),
-    confirm_password: z.string().min(8, 'Min 8 characters'),
-  })
-  .refine((data) => data.new_password === data.confirm_password, {
-    message: 'Passwords do not match',
-    path: ['confirm_password'],
-  });
-
-export type NewPasswordValues = z.infer<typeof newPasswordSchema>;
-
-export const newPasswordDefaults: NewPasswordValues = {
-  otp: '',
-  new_password: '',
-  confirm_password: '',
-};
+export const currentPasswordSchema = makeCurrentPasswordSchema(fallbackT);
+export const newPasswordSchema = makeNewPasswordSchema(fallbackT);

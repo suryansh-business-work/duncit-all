@@ -1,6 +1,6 @@
 ---
 name: '@duncit/forms'
-summary: 'The RHF + Zod scaffold every portal form is built from: MUI text fields wired to react-hook-form, reusable Zod field rules, and the shared validation patterns.'
+summary: 'The RHF + Zod scaffold every portal form is built from: MUI text fields wired to react-hook-form, reusable Zod field rules, the shared validation patterns — and, behind /schemas, the MUI-free form contracts mWeb and the native app both validate against.'
 category: 'forms'
 zeroDeps: true
 frameworkFree: false
@@ -16,6 +16,9 @@ consumers:
   - 'portals/tech'
   - 'portals/website-app'
   - 'packages/ad-request-form'
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/partners-app'
 exports:
   - 'RhfTextField'
   - 'FormField'
@@ -29,6 +32,25 @@ exports:
   - 'PHONE_NUMBER_PATTERN'
   - 'PUBLIC_URL_PATTERN'
   - 'GSTIN_PATTERN'
+  - 'makeLoginSchema'
+  - 'makeForgotPasswordSchema'
+  - 'makeResetPasswordSchema'
+  - 'makeCurrentPasswordSchema'
+  - 'makeNewPasswordSchema'
+  - 'makeDeleteAccountSchema'
+  - 'makeContactValueSchema'
+  - 'makeContactOtpSchema'
+  - 'makeWithdrawSchema'
+  - 'makePasswordWithOtpSchema'
+  - 'buildWithdrawInput'
+  - 'blankWithdrawValues'
+  - 'WITHDRAW_METHODS'
+  - 'loginDefaults'
+  - 'forgotPasswordDefaults'
+  - 'resetPasswordDefaults'
+  - 'currentPasswordDefaults'
+  - 'newPasswordDefaults'
+  - 'deleteAccountDefaults'
 ---
 
 ## Why this exists
@@ -321,3 +343,110 @@ renders empty; keeping RHF a peer is what prevents that.
 
 `vitest.config.ts` enforces 100/100/100/100 over `src/**`. Every option flag above is a branch,
 so adding one means adding its test.
+
+## `/schemas` — the contracts mWeb and the native app share
+
+The package root renders MUI, so it can never reach the native app. The **rules** can, and
+must: mWeb and the app had written each of these form contracts twice, and they had already
+drifted on the things that decide whether a person can sign in.
+
+```ts
+import { makeLoginSchema } from '@duncit/forms/schemas';
+```
+
+`@duncit/forms/schemas` imports no React, no MUI and no toolkit. The app reaches it through
+`file:../../packages/forms` with `COPY packages/forms` in both mobile Dockerfiles; the portals
+never import it, which is why `@duncit/regex` and `@duncit/utils` are OPTIONAL peers.
+
+### What was actually different
+
+| | mWeb | native app |
+| --- | --- | --- |
+| `loginSchema` email | `.min(1)` + `.email()` + `.max(254)` | `.email()` only |
+| empty email box says | "Email is required" | "Enter a valid email" |
+| a 300-character address | refused | accepted, then refused by the server |
+| change-password messages | hard-coded English | hard-coded English |
+| contact-change messages | hard-coded English | hard-coded English |
+
+The login row is the one that mattered: the app validated no length and no presence, so the
+two surfaces refused different input with different sentences for the same account. `/schemas`
+ships mWeb's version, which is what the server enforces.
+
+### Every export is a factory
+
+Messages are localized copy (rule 38), and a Zod schema is built outside React — so the schema
+has to take the translator rather than close over one:
+
+```ts
+export function makeLoginSchema(t: Translate) { … }
+```
+
+A surface binds them **once**, against its own bundled-English fallback, and re-exports under
+the name its call sites already use:
+
+```ts
+// app/mweb/src/forms/login/login.types.ts
+import { makeLoginSchema } from '@duncit/forms/schemas';
+import { fallbackT } from '../../i18n/fallback';
+
+export { loginDefaults, makeLoginSchema, type LoginFormValues } from '@duncit/forms/schemas';
+export const loginSchema = makeLoginSchema(fallbackT);
+```
+
+A form with a live translator passes its own `t` instead, and the messages follow the reader's
+language. The `*Defaults` objects carry no copy, so they are plain constants and are imported
+directly.
+
+### What lives here
+
+| Factory | Covers | Notes |
+| --- | --- | --- |
+| `makeLoginSchema` | sign-in | email required → valid → ≤254, password ≥8 |
+| `makeForgotPasswordSchema` | reset request | the address the code is sent to |
+| `makeResetPasswordSchema` | reset commit | 6-digit code, new password ≤100, confirm match |
+| `makeCurrentPasswordSchema` | change step 1 | proves the current password to request a code |
+| `makeNewPasswordSchema` | change step 2 | same rules as reset, reached from inside the account |
+| `makeDeleteAccountSchema` | deletion request | code + a ≤1000-char reason a human reads |
+| `makeContactValueSchema` | email/phone/WhatsApp change | built PER CHANNEL — see below |
+| `makeContactOtpSchema` | the code proving it | six digits, nothing else |
+| `makeWithdrawSchema` | wallet withdrawal | balance ceiling, role-wise floor, per-method payout details |
+| `makePasswordWithOtpSchema` | both password flows | what reset and change-password each aliased |
+
+`makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
+one schema with every field optional. A schema that accepts a blank number because the caller
+*might* have meant an email is a schema that lets "Send code" through with nothing typed. It is
+typed `z.ZodType<ContactValueValues>` so both branches present ONE type to `useForm` — a raw
+union gives react-hook-form a union to resolve field paths against, which it cannot do.
+
+Phone numbers validate against `PHONE_INTL`, not the 10-digit Indian pattern: there is a
+country-code picker beside the box, and a `+91`-only rule would refuse numbers the picker
+itself offers.
+
+### The withdrawal floor
+
+`makeWithdrawSchema(max, min, t)` is the one rule here worth reading twice. The server enforces
+**two** conditions — the wallet balance must clear the role-wise floor AND the amount requested
+must clear it — so a schema that validated only the balance let somebody with ₹10,000 in the
+wallet submit ₹100 against a ₹500 floor and meet a raw server error instead of a field message.
+
+```ts
+makeWithdrawSchema(10_000, 500, t).safeParse({ amount: '100', … }); // withdraw.minimumAmount
+makeWithdrawSchema(10_000, 0, t).safeParse({ amount: '1', … }); // 0 disables the floor
+```
+
+Which payout details are required depends on the method, and it is a `superRefine` rather than
+a discriminated union so react-hook-form keeps one set of registered fields while the reader
+switches the picker. UPI asks for a UPI id; IMPS and NEFT ask for an account number and an IFSC
+code. Neither asks for the other's.
+
+The messages live in the shared `withdraw.*` namespace rather than `mweb.wallet.*` or
+`partners.walletPage.*`, because all three surfaces render them — it rides into the portals
+through `SHELL_FALLBACK` and into the apps through their own fallback bundles. The partner
+console's amount rules were plain English literals before this moved.
+
+### Still to move
+
+`accountEditSchema` and `checkoutSchema` are the next pair and they have drifted further —
+bio caps at 500 on mWeb and 280 on native, GSTIN at 20 vs 15, and mWeb trims before length
+checks where the app does not (so `"   "` passes as a city there). Those are behaviour changes,
+not a refactor, and want their own review.

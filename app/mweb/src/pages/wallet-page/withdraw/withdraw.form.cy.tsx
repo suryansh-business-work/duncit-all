@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { buildWithdrawInput, buildWithdrawSchema } from './withdraw.form';
-import { blankWithdrawValues, type WithdrawValues } from './withdraw.types';
+import {
+  blankWithdrawValues,
+  buildWithdrawInput,
+  makeWithdrawSchema,
+  type WithdrawValues,
+} from '@duncit/forms/schemas';
+
+/** The shared schema takes the reader's translator; these assert on rules. */
+const buildWithdrawSchema = (max: number, min = 0) =>
+  makeWithdrawSchema(max, min, (key: string) => key);
 
 const valid = (over: Partial<WithdrawValues> = {}): WithdrawValues => ({
   ...blankWithdrawValues,

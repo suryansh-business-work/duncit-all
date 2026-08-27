@@ -4,6 +4,7 @@ import {
   flattenCatalogue,
   SESSION_BUNDLE,
   SHELL_BUNDLE,
+  WITHDRAW_BUNDLE,
   type FlatCatalogue,
   type NestedCatalogue,
   type Translator,
@@ -26,7 +27,13 @@ import {
 // mWeb as well, so it is its own namespace rather than a second copy inside
 // `shell.*` (rule 40); the two are disjoint, so a shallow merge is the whole of
 // it.
-export const SHELL_FALLBACK: NestedCatalogue = { ...SHELL_BUNDLE, ...SESSION_BUNDLE };
+// withdraw.* rides along because the wallet withdrawal rules live in
+// @duncit/forms/schemas and every portal that shows a wallet renders them.
+export const SHELL_FALLBACK: NestedCatalogue = {
+  ...SHELL_BUNDLE,
+  ...SESSION_BUNDLE,
+  ...WITHDRAW_BUNDLE,
+};
 
 /** Flat, runtime-ready form of the bundle above. */
 export const SHELL_FALLBACK_FLAT = flattenCatalogue(SHELL_FALLBACK);

@@ -1,7 +1,8 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HistoryIcon from '@mui/icons-material/History';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { DuncitButton } from '@duncit/buttons';
 import PodCard from './PodCard';
 import SeeAllCard from './SeeAllCard';
 import { podUrl } from '../../utils/seoUrls';
@@ -50,14 +51,14 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
             </Typography>
           </Box>
         </Stack>
-        <Button
+        <DuncitButton
           size="small"
           endIcon={<ArrowForwardIcon />}
           onClick={() => navigate('/previous-pods')}
           sx={{ fontWeight: 600 }}
         >
           See all
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box
         sx={{

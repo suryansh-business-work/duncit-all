@@ -84,6 +84,8 @@ COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/virtual-scroll/package.json ./packages/virtual-scroll/
+COPY packages/buttons-native/package.json ./packages/buttons-native/
+COPY packages/buttons/package.json ./packages/buttons/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

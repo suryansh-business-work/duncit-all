@@ -1,14 +1,9 @@
 import { gql, useQuery } from '@apollo/client';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Alert,
-  IconButton,
-  Skeleton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import ProfileFollowActions from './ProfileFollowActions';
 import PublicProfileHeader from './PublicProfileHeader';
 import PublicProfileOwnerActions from './PublicProfileOwnerActions';
@@ -77,13 +72,13 @@ export default function PublicProfilePage() {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <IconButton
+        <DuncitIconButton
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.goBack')}
           sx={{ minWidth: 44, minHeight: 44 }}
         >
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Typography variant="h6" sx={{
           fontWeight: 700
         }}>

@@ -1,15 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { CreateAisensyTemplateInput } from '../../queries';
 import DraftPreview from './DraftPreview';
@@ -76,12 +69,12 @@ export default function CreateTemplateForm({ open, busy, onClose, onSubmit }: Re
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>
+          <DuncitButton type="button" onClick={onClose} disabled={busy}>
             {t('marketingWhatsapp.cancel')}
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy || !isValid}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
             {busy ? t('marketingWhatsapp.submitting') : t('marketingWhatsapp.submitTemplate')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

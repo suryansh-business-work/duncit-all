@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
-import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { parseApiError } from '@duncit/utils';
@@ -89,7 +90,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
           alignItems: "center"
         }}>
           <AiMonitoringChip />
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             startIcon={busy ? <CircularProgress size={14} /> : <UploadIcon />}
@@ -98,7 +99,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
             data-testid={`upload-${name}`}
           >
             {busy ? 'Uploading…' : addLabel}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
 
@@ -111,14 +112,14 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
               ) : (
                 <Box component="img" src={url} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 onClick={() => removeAt(idx)}
                 aria-label={t('crm.forms.removeMedia')}
                 sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' } }}
               >
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Box>
           ))}
         </Box>

@@ -1,18 +1,9 @@
 import { useRef, useState } from 'react';
 import { gql, useApolloClient, useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { DuncitButton } from '@duncit/buttons';
 import { fileToBase64, parseApiError } from '@duncit/utils';
 import { autoMatch, importFieldsFor } from '../config/importFields';
 import ColumnMappingStep from './import/ColumnMappingStep';
@@ -127,16 +118,16 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
               Multi-value columns accept comma-separated values.
             </Typography>
             {onDownloadTemplate && (
-              <Button size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={onDownloadTemplate}>{t('crm.components.downloadTemplate')}</Button>
+              <DuncitButton size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={onDownloadTemplate}>{t('crm.components.downloadTemplate')}</DuncitButton>
             )}
             <Divider />
             <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
             <Stack direction="row" spacing={1.25} sx={{
               alignItems: "center"
             }}>
-              <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => inputRef.current?.click()} disabled={inspecting}>
+              <DuncitButton variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => inputRef.current?.click()} disabled={inspecting}>
                 {inspecting ? 'Reading…' : 'Choose file'}
-              </Button>
+              </DuncitButton>
               <Typography variant="body2" noWrap sx={{
                 color: "text.secondary"
               }}>{fileName || 'No file selected'}</Typography>
@@ -151,11 +142,11 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
         {step === 'done' && result && <ImportResultView result={result} />}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={inspecting || importing}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={close} disabled={inspecting || importing}>{t('shell.common.close')}</DuncitButton>
         {step === 'map' && (
-          <Button variant="contained" onClick={doImport} disabled={importing || !requiredOk}>
+          <DuncitButton variant="contained" onClick={doImport} disabled={importing || !requiredOk}>
             {importing ? 'Importing…' : t('crm.userLeads.import')}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

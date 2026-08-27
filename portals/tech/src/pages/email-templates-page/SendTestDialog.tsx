@@ -2,17 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { SEND_TEST, type Tpl } from './queries';
 import { emailTemplateTestSchema, type EmailTemplateTestValues } from './email-template-test';
 import TestVariableFields, { type TestVariable } from './TestVariableFields';
@@ -159,17 +150,17 @@ export default function SendTestDialog({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
+          <DuncitButton onClick={onClose} disabled={loading}>
             Cancel
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             type="submit"
             variant="contained"
             disabled={!template || loading || !to || !!formState.errors.to}
             startIcon={loading ? <CircularProgress size={16} /> : undefined}
           >
             {loading ? 'Sending…' : 'Send'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

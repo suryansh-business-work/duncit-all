@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
+import { DuncitButton } from '@duncit/buttons';
 import { TEST_ENV_TWILIO, type EnvEntry, type RichTestResult } from '../queries';
 import { PHONE_RE } from '../env-entry/env-entry.types';
 import ResultAlert from './ResultAlert';
@@ -79,7 +80,7 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
           htmlInput: { autoComplete: 'off', inputMode: 'numeric', 'data-1p-ignore': true, 'data-lpignore': true }
         }}
       />
-      <Button
+      <DuncitButton
         startIcon={<CallIcon />}
         variant="contained"
         color="warning"
@@ -87,7 +88,7 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
         disabled={loading || !phoneValid || !extValid}
       >
         {loading ? 'Calling…' : 'Place test call'}
-      </Button>
+      </DuncitButton>
       <ResultAlert result={result} />
     </Stack>
   );

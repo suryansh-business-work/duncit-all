@@ -1,19 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Box,
-  ClickAwayListener,
-  IconButton,
-  InputAdornment,
-  List,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, ClickAwayListener, InputAdornment, List, ListItemButton, ListItemText, Paper, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { SEARCH_SUGGESTIONS } from './queries';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -74,9 +64,9 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
               ),
               endAdornment: value ? (
                 <InputAdornment position="end">
-                  <IconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
+                  <DuncitIconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
                     <CloseIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </InputAdornment>
               ) : null,
             },

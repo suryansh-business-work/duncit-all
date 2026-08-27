@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
 import { isStaleChunkError, reloadForStaleChunk } from './staleChunkReload';
 
@@ -66,9 +67,9 @@ export default class ErrorBoundary extends Component<Props, State> {
           }}>
             An unexpected error occurred. Please try again.
           </Typography>
-          <Button data-testid="error-boundary-retry" variant="contained" onClick={this.reset}>
+          <DuncitButton data-testid="error-boundary-retry" variant="contained" onClick={this.reset}>
             Try again
-          </Button>
+          </DuncitButton>
         </Stack>
       </Box>
     );

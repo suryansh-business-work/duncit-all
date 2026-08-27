@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
 import type { ChangeEvent } from 'react';
-import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { DuncitButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { parseApiError } from '@duncit/utils';
 import { isVideoUpload } from './attachment';
@@ -160,7 +161,7 @@ export default function AttachmentUploadField({
         </Typography>
         <AiMonitoringChip />
         <input ref={inputRef} type="file" accept={accept} multiple={multiple} hidden onChange={onPick} />
-        <Button
+        <DuncitButton
           size="small"
           startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />}
           disabled={disabled || busy || value.length >= max}
@@ -168,7 +169,7 @@ export default function AttachmentUploadField({
           sx={buttonSx}
         >
           {addLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
       {error && errorVariant === 'chip' && (
         <Chip

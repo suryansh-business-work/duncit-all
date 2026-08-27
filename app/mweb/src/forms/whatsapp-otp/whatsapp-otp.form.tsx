@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import {
   whatsAppOtpRequestDefaults,
@@ -47,12 +48,12 @@ export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<Requ
         />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-        <Button type="submit" variant="contained" fullWidth disabled={loading}>
+        <DuncitButton type="submit" variant="contained" fullWidth disabled={loading}>
           Send OTP
-        </Button>
-        <Button onClick={onSkip} variant="text">
+        </DuncitButton>
+        <DuncitButton onClick={onSkip} variant="text">
           Skip
-        </Button>
+        </DuncitButton>
       </Stack>
     </form>
   );
@@ -90,16 +91,16 @@ export function WhatsAppVerifyForm({
         slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 8 } }}
       />
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-        <Button type="submit" variant="contained" fullWidth disabled={loading}>
+        <DuncitButton type="submit" variant="contained" fullWidth disabled={loading}>
           Verify & continue
-        </Button>
-        <Button onClick={onChangeNumber} variant="text">
+        </DuncitButton>
+        <DuncitButton onClick={onChangeNumber} variant="text">
           Change number
-        </Button>
+        </DuncitButton>
       </Stack>
-      <Button onClick={onSkip} fullWidth sx={{ mt: 1 }}>
+      <DuncitButton onClick={onSkip} fullWidth sx={{ mt: 1 }}>
         Skip for now
-      </Button>
+      </DuncitButton>
     </form>
   );
 }

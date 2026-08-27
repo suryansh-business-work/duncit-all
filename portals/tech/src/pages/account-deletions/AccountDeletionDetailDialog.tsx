@@ -1,18 +1,7 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  LinearProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, LinearProgress, Stack, Typography } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import PurgeAllDialog from './PurgeAllDialog';
@@ -198,14 +187,14 @@ export default function AccountDeletionDetailDialog({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>{t('tech.accountDeletions.close')}</Button>
+          <DuncitButton onClick={onClose}>{t('tech.accountDeletions.close')}</DuncitButton>
           {actionable && (
-            <Button color="inherit" onClick={() => setRejectOpen(true)}>
+            <DuncitButton color="inherit" onClick={() => setRejectOpen(true)}>
               {t('tech.accountDeletions.reject')}
-            </Button>
+            </DuncitButton>
           )}
           {actionable && (
-            <Button
+            <DuncitButton
               variant="contained"
               color="error"
               startIcon={<DeleteForeverIcon />}
@@ -214,7 +203,7 @@ export default function AccountDeletionDetailDialog({
               data-testid="open-purge-all"
             >
               {t('tech.accountDeletions.deleteAll')}
-            </Button>
+            </DuncitButton>
           )}
         </DialogActions>
       </Dialog>

@@ -1,7 +1,8 @@
-import { Button, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import { DuncitButton } from '@duncit/buttons';
 import { followButtonLabelKey, type FollowStatus } from '@duncit/utils';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -33,7 +34,7 @@ export default function FollowButton({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Button
+    <DuncitButton
       size="small"
       variant={status === 'FOLLOWING' ? 'contained' : 'outlined'}
       color={status === 'NONE' ? 'inherit' : 'primary'}
@@ -45,6 +46,6 @@ export default function FollowButton({
       }}
     >
       {t(followButtonLabelKey(status, followsViewer))}
-    </Button>
+    </DuncitButton>
   );
 }

@@ -1,20 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Chip, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   CRM_REMINDERS,
   DELETE_CRM_REMINDER,
@@ -55,7 +47,7 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
     <LeadDetailCard
       title={t('shell.nav.reminders')}
       subtitle={t('crm.components.datedToDosForThisLead')}
-      action={<Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>{t('crm.components.addReminder')}</Button>}
+      action={<DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>{t('crm.components.addReminder')}</DuncitButton>}
     >
       {error && <Alert severity="error" sx={{ mb: 1 }}>{parseApiError(error)}</Alert>}
       {loading && reminders.length === 0 && (
@@ -85,9 +77,9 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
                 p: 1
               }}>
               <Tooltip title={r.status === 'DONE' ? 'Mark pending' : 'Mark done'}>
-                <IconButton size="small" color={r.status === 'DONE' ? 'success' : 'default'} onClick={() => toggleMut({ variables: { id: r.id } })}>
+                <DuncitIconButton size="small" color={r.status === 'DONE' ? 'success' : 'default'} onClick={() => toggleMut({ variables: { id: r.id } })}>
                   {r.status === 'DONE' ? <CheckCircleIcon fontSize="small" /> : <RadioButtonUncheckedIcon fontSize="small" />}
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
               <Stack sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
@@ -106,8 +98,8 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
                 </Typography>
               </Stack>
               {r.status === 'DONE' && <Chip size="small" color="success" label={t('crm.components.done')} />}
-              <IconButton size="small" onClick={() => openEdit(r)} aria-label={t('crm.components.editReminder')}><EditIcon fontSize="small" /></IconButton>
-              <IconButton size="small" color="error" onClick={() => setRemoving(r)} aria-label={t('crm.components.deleteReminder')}><DeleteIcon fontSize="small" /></IconButton>
+              <DuncitIconButton size="small" onClick={() => openEdit(r)} aria-label={t('crm.components.editReminder')}><EditIcon fontSize="small" /></DuncitIconButton>
+              <DuncitIconButton size="small" color="error" onClick={() => setRemoving(r)} aria-label={t('crm.components.deleteReminder')}><DeleteIcon fontSize="small" /></DuncitIconButton>
             </Stack>
           ))}
         </Stack>

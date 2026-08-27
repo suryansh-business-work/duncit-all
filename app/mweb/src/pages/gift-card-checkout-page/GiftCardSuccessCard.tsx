@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import PaymentLottie from '../../components/PaymentLottie';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -62,16 +63,16 @@ export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: R
             </Stack>
           </Box>
           <Stack direction="row" spacing={1.5} sx={{ mt: 3, justifyContent: 'center' }}>
-            <Button variant="outlined" onClick={() => navigate('/')} sx={{ borderRadius: 999 }}>
+            <DuncitButton variant="outlined" onClick={() => navigate('/')} sx={{ borderRadius: 999 }}>
               {t('mweb.checkout.home')}
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               variant="contained"
               onClick={() => navigate('/gift-cards?selectedtab=mycards', { replace: true })}
               sx={{ borderRadius: 999, fontWeight: 700 }}
             >
               {t('mweb.giftCards.viewMyCards')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </CardContent>
       </Card>

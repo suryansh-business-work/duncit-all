@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { WA_CREATE_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
 import { useTranslation } from '@duncit/shell';
 
@@ -61,12 +54,12 @@ export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button variant="contained" onClick={submit} disabled={loading || !phone.trim()}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading || !phone.trim()}>
           {loading ? 'Saving…' : 'Create'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

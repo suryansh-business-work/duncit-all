@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { REVIEW_PRODUCT_LISTING, type ProductListingRow } from './requestsQueries';
 import ListingReviewDetails from './ListingReviewDetails';
 import { useTranslation } from '@duncit/shell';
@@ -88,15 +80,15 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>
           Cancel
-        </Button>
-        <Button color="error" variant="outlined" disabled={loading} onClick={() => submit('DENIED')}>
+        </DuncitButton>
+        <DuncitButton color="error" variant="outlined" disabled={loading} onClick={() => submit('DENIED')}>
           Deny
-        </Button>
-        <Button variant="contained" disabled={loading} onClick={() => submit('APPROVED')}>
+        </DuncitButton>
+        <DuncitButton variant="contained" disabled={loading} onClick={() => submit('APPROVED')}>
           Approve
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

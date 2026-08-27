@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { IconButton, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -53,7 +54,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         borderColor: 'divider',
         opacity: disabled ? 0.6 : 1
       }}>
-      <IconButton
+      <DuncitIconButton
         aria-label={t('mweb.podDetails.oneSeatFewer')}
         onClick={() => step(seats - 1)}
         disabled={disabled || seats <= 1}
@@ -61,7 +62,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         sx={{ width: 38 }}
       >
         <RemoveIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <Typography
         variant="body2"
         sx={{
@@ -71,7 +72,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         }}>
         {seats}
       </Typography>
-      <IconButton
+      <DuncitIconButton
         aria-label={t('mweb.podDetails.oneSeatMore')}
         onClick={() => step(seats + 1)}
         disabled={disabled || seats >= top}
@@ -79,7 +80,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         sx={{ width: 38 }}
       >
         <AddIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }

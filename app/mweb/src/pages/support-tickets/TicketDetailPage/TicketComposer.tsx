@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Paper, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import AttachmentsField from '../../../forms/support-form/AttachmentsField';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -52,14 +53,14 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
             multiline
             maxRows={4}
           />
-          <Button
+          <DuncitButton
             variant="contained"
             endIcon={<SendIcon />}
             disabled={busy || (!message.trim() && attachments.length === 0)}
             onClick={handleSend}
           >
             Send
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Paper>

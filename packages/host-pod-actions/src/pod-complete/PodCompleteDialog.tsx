@@ -3,18 +3,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import SettlementPreview from './SettlementPreview';
 import PodMediaSummary from './PodMediaSummary';
 import TicketScanDialog from '../ticket-scan/TicketScanDialog';
@@ -149,10 +139,10 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={completeState.loading}>
+        <DuncitButton onClick={onClose} disabled={completeState.loading}>
           {labels.cancel}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="pod-complete-form"
           variant="contained"
@@ -160,7 +150,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {completeState.loading ? labels.completing : labels.completePod}
-        </Button>
+        </DuncitButton>
       </DialogActions>
       {/* Attendance is only ever created by scanning a ticket — the same
           check-in dialog the host uses at the door. Closing it re-reads the

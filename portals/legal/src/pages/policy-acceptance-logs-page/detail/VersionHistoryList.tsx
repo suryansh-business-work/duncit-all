@@ -1,4 +1,5 @@
-import { Alert, Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { PolicyVersionRow } from '../../../graphql/policyAcceptance';
 
@@ -48,9 +49,9 @@ function VersionRow({
         {version.is_current && <Chip size="small" color="success" label={currentLabel} />}
         {isAccepted && <Chip size="small" color="primary" label={acceptedLabel} />}
         <Box sx={{ flex: 1 }} />
-        <Button size="small" onClick={() => onRead(version)}>
+        <DuncitButton size="small" onClick={() => onRead(version)}>
           {readLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
       <Typography
         variant="caption"

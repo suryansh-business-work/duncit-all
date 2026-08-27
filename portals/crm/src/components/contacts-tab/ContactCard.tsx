@@ -1,7 +1,8 @@
-import { Box, Card, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Card, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { CrmContact } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
 
@@ -100,16 +101,16 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Tooltip title={contact.mobile_number ? 'Call' : 'No number'}>
           <span>
-            <IconButton size="small" color="primary" disabled={!contact.mobile_number} onClick={() => onCall(contact)} aria-label={t('crm.components.callContact')}>
+            <DuncitIconButton size="small" color="primary" disabled={!contact.mobile_number} onClick={() => onCall(contact)} aria-label={t('crm.components.callContact')}>
               <PhoneIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={contact.email ? 'Email' : 'No email'}>
           <span>
-            <IconButton size="small" color="primary" disabled={!contact.email} onClick={() => onEmail(contact)} aria-label={t('crm.components.emailContact')}>
+            <DuncitIconButton size="small" color="primary" disabled={!contact.email} onClick={() => onEmail(contact)} aria-label={t('crm.components.emailContact')}>
               <EmailIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </Stack>

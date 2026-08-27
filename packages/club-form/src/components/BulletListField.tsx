@@ -1,6 +1,7 @@
-import { Button, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { requiredLabel } from './requiredLabel';
 import type { ClubFormValues } from '../types';
@@ -53,9 +54,9 @@ export default function BulletListField({ name, label, helperText, error, requir
               />
             )}
           />
-          <IconButton aria-label={`Remove point ${index + 1}`} onClick={() => remove(index)}>
+          <DuncitIconButton aria-label={`Remove point ${index + 1}`} onClick={() => remove(index)}>
             <DeleteOutlineIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       ))}
       {error && (
@@ -63,9 +64,9 @@ export default function BulletListField({ name, label, helperText, error, requir
           {error}
         </Typography>
       )}
-      <Button size="small" startIcon={<AddIcon />} onClick={() => append('')} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => append('')} sx={{ alignSelf: 'flex-start' }}>
         Add point
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

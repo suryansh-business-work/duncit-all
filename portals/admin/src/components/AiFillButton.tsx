@@ -1,18 +1,8 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  Popover,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Popover, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 const AI_FILL = gql`
@@ -82,16 +72,16 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
     <>
       {iconOnly ? (
         <Tooltip title={t('admin.ai.fill')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             color="secondary"
             onClick={(e) => setAnchorEl(e.currentTarget)}
           >
             <AutoAwesomeIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       ) : (
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           color="secondary"
@@ -99,7 +89,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           onClick={(e) => setAnchorEl(e.currentTarget)}
         >
           {label || 'Fill with AI'}
-        </Button>
+        </DuncitButton>
       )}
       <Popover
         open={open}
@@ -149,7 +139,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button
+            <DuncitButton
               size="small"
               onClick={() => {
                 setAnchorEl(null);
@@ -158,8 +148,8 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
               disabled={loading}
             >
               {t('shell.common.cancel')}
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               size="small"
               variant="contained"
               color="secondary"
@@ -170,7 +160,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
               }
             >
               {loading ? 'Generating…' : 'Generate'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </Popover>

@@ -1,6 +1,7 @@
-import { Box, Button, Paper, Stack, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, Paper, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import SyncIcon from '@mui/icons-material/Sync';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -54,14 +55,14 @@ export default function GlobalSwitchCard({
         </Box>
         <Tooltip title={t('adminWhatsapp.reconcileHint')}>
           <span>
-            <Button
+            <DuncitButton
               variant="outlined"
               startIcon={<SyncIcon />}
               disabled={reconciling}
               onClick={onReconcile}
             >
               {t('adminWhatsapp.reconcile')}
-            </Button>
+            </DuncitButton>
           </span>
         </Tooltip>
         <Switch

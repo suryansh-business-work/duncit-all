@@ -1,13 +1,7 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Button,
-  Checkbox,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Checkbox, CircularProgress, Stack, Typography } from '@mui/material';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import PolicyBodyDialog from './PolicyBodyDialog';
 import type { SignupPolicy } from './useSignupPolicies';
@@ -46,13 +40,13 @@ function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<R
       <Typography variant="body2" sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
         {policy.title}
       </Typography>
-      <Button
+      <DuncitButton
         size="small"
         onClick={() => onRead(policy)}
         startIcon={<DescriptionOutlinedIcon fontSize="small" />}
       >
         {readLabel}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

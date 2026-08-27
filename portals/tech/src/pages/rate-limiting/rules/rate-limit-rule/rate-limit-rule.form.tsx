@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, FormControlLabel, Stack, Switch } from '@mui/material';
+import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import ScopeSection from './ScopeSection';
@@ -123,7 +124,7 @@ export default function RateLimitRuleFormBody({
       <ResponseSection control={control} options={options} />
 
       {opError && <Alert severity="error">{opError}</Alert>}
-      <Button
+      <DuncitButton
         type="submit"
         variant="contained"
         startIcon={<SaveIcon />}
@@ -131,7 +132,7 @@ export default function RateLimitRuleFormBody({
         sx={{ alignSelf: 'flex-start' }}
       >
         {t('shell.common.save')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

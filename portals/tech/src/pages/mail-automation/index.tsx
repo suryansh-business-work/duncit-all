@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -152,14 +153,14 @@ export default function MailAutomationPage() {
       )}
 
       <Stack direction="row">
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<MarkEmailReadIcon />}
           disabled={connecting.loading}
           onClick={startConnect}
         >
           {connecting.loading ? t('tech.mailAutomation.connecting') : t('tech.mailAutomation.connect')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {accounts.error && <Alert severity="error">{accounts.error.message}</Alert>}

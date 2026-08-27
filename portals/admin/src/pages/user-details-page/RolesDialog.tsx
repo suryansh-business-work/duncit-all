@@ -1,21 +1,6 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  IconButton,
-  Stack,
-  Switch,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { AdminCategoryValue } from '@duncit/category';
 import { PORTAL_ACCESS, type PortalAccess } from '../../constants/portalAccess';
 import HostCategoriesSection, { type HostProfileSummary } from './HostCategoriesSection';
@@ -77,7 +62,7 @@ function PortalCard({
                 {link.label ? `${link.label} · ${cleanHost(link.url)}` : cleanHost(link.url)}
               </Typography>
               <Tooltip title={`Open ${link.url}`}>
-                <IconButton
+                <DuncitIconButton
                   size="small"
                   component="a"
                   href={link.url}
@@ -85,7 +70,7 @@ function PortalCard({
                   rel="noopener"
                 >
                   <OpenInNewIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             </Stack>
           ))}
@@ -174,10 +159,10 @@ export default function RolesDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={saveRoles} disabled={busy}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={saveRoles} disabled={busy}>
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

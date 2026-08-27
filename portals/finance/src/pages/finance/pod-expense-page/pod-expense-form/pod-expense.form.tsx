@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import PodExpenseFields from './PodExpenseFields';
 import { podExpenseSchema, toFormValues } from './pod-expense.schema';
@@ -38,12 +39,12 @@ export default function PodExpenseForm({
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button onClick={onCancel} disabled={busy}>
+          <DuncitButton onClick={onCancel} disabled={busy}>
             {t('shell.common.cancel')}
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy}>
             {busy ? t('shell.common.saving') : submitLabel}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

@@ -1,7 +1,8 @@
-import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import StatusVisual, { TranscriptWave } from './statusVisuals';
 import type { CommunicationLogItem } from '../../api/comms.gql';
 import { formatDateTime } from '@duncit/app-settings';
@@ -123,7 +124,7 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
                   label={transcriptLabel(log)}
                 />
                 {log.recording_url && (
-                  <Button
+                  <DuncitButton
                     size="small"
                     variant="outlined"
                     startIcon={<RefreshIcon />}
@@ -131,15 +132,15 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
                     disabled={refreshing}
                   >
                     {log.transcript_status === 'FAILED' ? 'Retry transcript' : 'Get transcript'}
-                  </Button>
+                  </DuncitButton>
                 )}
               </Stack>
             )}
             {log.recording_url && (
               <Tooltip title={t('crm.components.openRecording')}>
-                <IconButton size="small" component="a" href={log.recording_url} target="_blank" rel="noreferrer">
+                <DuncitIconButton size="small" component="a" href={log.recording_url} target="_blank" rel="noreferrer">
                   <OpenInNewIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             )}
           </Stack>

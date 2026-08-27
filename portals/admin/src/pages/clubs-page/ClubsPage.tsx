@@ -2,8 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 import { useConfirm, notifyError } from '@duncit/dialogs';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Snackbar, Stack } from '@mui/material';
+import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { CLUBS_TABLE, CATEGORIES, DELETE, type ClubRow } from './queries';
 import ClubsTable from './ClubsTable';
@@ -66,14 +67,14 @@ export default function ClubsPage() {
         superCategoryId={superCategoryId}
         catName={catName}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/clubs/new')}
           >
             New Club
-          </Button>
+          </DuncitButton>
         }
         onEdit={(c) => navigate(`/clubs/${c.id}/edit`)}
         onRemove={remove}

@@ -23,6 +23,7 @@
     "@apollo/client": "^3.14.1",
     "@duncit/app-settings": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import CodeIcon from '@mui/icons-material/Code';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import { DuncitIconButton } from '@duncit/buttons';
 import MjmlAiButton from './MjmlAiButton';
 import ImageLibraryDialog from './ImageLibraryDialog';
 import { insertMjmlImage } from './insertMjmlImage';
@@ -39,13 +40,13 @@ export default function MjmlEditorPane({ value, onChange, onValidate, templateId
         <CodeIcon fontSize="small" />
         <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.mjmlSource')}</Typography>
         <Tooltip title={t('crm.emailTemplates.formatAndTidy')}>
-          <IconButton size="small" onClick={() => onChange(formatMjml(value))}><FormatAlignLeftIcon fontSize="small" /></IconButton>
+          <DuncitIconButton size="small" onClick={() => onChange(formatMjml(value))}><FormatAlignLeftIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('crm.emailTemplates.verifyMjml')}>
-          <IconButton size="small" onClick={onValidate}><FactCheckIcon fontSize="small" /></IconButton>
+          <DuncitIconButton size="small" onClick={onValidate}><FactCheckIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('crm.emailTemplates.imageLibrary')}>
-          <IconButton size="small" onClick={() => setLibOpen(true)}><PhotoLibraryIcon fontSize="small" /></IconButton>
+          <DuncitIconButton size="small" onClick={() => setLibOpen(true)}><PhotoLibraryIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
         <MjmlAiButton iconOnly currentMjml={value} onApply={onChange} />
       </Stack>

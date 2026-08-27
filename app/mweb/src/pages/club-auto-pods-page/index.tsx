@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { AutoPodQueue, CLUB_ADMIN_AUTO_PODS, ClubClaimDialog } from '@duncit/auto-pods';
 import type { AutoPodRow } from '@duncit/utils';
 import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
@@ -47,9 +48,9 @@ export default function ClubAutoPodsPage({ locationId }: Readonly<Props>) {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={(row) => (
-          <Button fullWidth variant="contained" onClick={() => setTarget(row)}>
+          <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)}>
             {queue.labels.claimForClubCta}
-          </Button>
+          </DuncitButton>
         )}
       />
 

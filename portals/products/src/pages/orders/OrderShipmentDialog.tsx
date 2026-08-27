@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  MenuItem,
-  TextField,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, MenuItem, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { BRAND_PICKUP_LOCATIONS } from '../ecomm/queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -84,16 +74,16 @@ export default function OrderShipmentDialog({ open, order, submitting, onClose, 
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={submitting}>
+        <DuncitButton onClick={onClose} disabled={submitting}>
           Cancel
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           disabled={submitting || !selected || Boolean(notRegistered)}
           onClick={() => onConfirm(selected)}
         >
           {submitting ? 'Creating…' : 'Create shipment'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

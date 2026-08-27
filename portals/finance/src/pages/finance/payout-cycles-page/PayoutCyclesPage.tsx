@@ -1,20 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { notifySuccess } from '@duncit/dialogs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { DuncitButton } from '@duncit/buttons';
 import { PAYOUT_SETTINGS, PAYOUT_MODES, UPDATE_PAYOUT_SETTINGS, WEEKDAYS } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -157,9 +147,9 @@ export default function PayoutCyclesPage() {
         {error && <Alert severity="error">{error}</Alert>}
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant="contained" size="large" onClick={save} disabled={saving}>
+          <DuncitButton variant="contained" size="large" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save cycle'}
-          </Button>
+          </DuncitButton>
         </Box>
       </Stack>
     </Box>

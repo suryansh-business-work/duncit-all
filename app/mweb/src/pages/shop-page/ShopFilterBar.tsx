@@ -1,20 +1,8 @@
 import { useState } from 'react';
-import {
-  Badge,
-  Box,
-  Checkbox,
-  Chip,
-  Collapse,
-  FormControlLabel,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Badge, Box, Checkbox, Chip, Collapse, FormControlLabel, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
+import { DuncitIconButton } from '@duncit/buttons';
 import { SHOP_SORT_OPTIONS, type ShopSort } from './queries';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from './useShopFilters';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -90,7 +78,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
             }
           }}
         />
-        <IconButton
+        <DuncitIconButton
           aria-label={t('mweb.common.filters')}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -103,7 +91,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           <Badge badgeContent={filters.activeCount} color="error">
             <FilterListRoundedIcon />
           </Badge>
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Collapse in={open}>
         <Stack spacing={1.5} sx={{ pt: 1.5 }}>

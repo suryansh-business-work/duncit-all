@@ -1,8 +1,9 @@
-import { Avatar, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CallIcon from '@mui/icons-material/Call';
 import SearchIcon from '@mui/icons-material/Search';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from '../i18n/useTranslation';
 import ConversationMenu from './ConversationMenu';
@@ -71,9 +72,9 @@ export default function ConversationHeader({
         borderBottom: 1,
         borderColor: 'divider'
       }}>
-      <IconButton size="small" onClick={onBack} aria-label={t('shell.chat.header.back')}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('shell.chat.header.back')}>
         <ArrowBackIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <PresenceDot status={status}>
         <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
       </PresenceDot>
@@ -97,25 +98,25 @@ export default function ConversationHeader({
           flexShrink: 0
         }}>
         <Tooltip title={t('shell.chat.header.audioCall')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={() => onCall('AUDIO')}
             aria-label={t('shell.chat.header.startAudio')}
           >
             <CallIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.chat.header.videoCall')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={() => onCall('VIDEO')}
             aria-label={t('shell.chat.header.startVideo')}
           >
             <VideocamIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.chat.header.searchHint')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             color={searchOpen ? 'primary' : 'default'}
             onClick={onToggleSearch}
@@ -123,7 +124,7 @@ export default function ConversationHeader({
             aria-pressed={searchOpen}
           >
             <SearchIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <ConversationMenu onExport={onExport} onClear={onClear} onSettings={onSettings} />
       </Stack>

@@ -1,22 +1,12 @@
 import { useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, Divider, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import TuneIcon from '@mui/icons-material/Tune';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTabs, type DuncitTabItem } from '@duncit/tabs';
 import type { EmailTemplate } from '../../api/emailTemplates.gql';
 import { HOST_VARIABLES, VENUE_VARIABLES } from '../../config/leadVariables';
@@ -110,7 +100,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
         <DuncitTabs items={paneTabs(t)} value={tab} onChange={setTab} sx={{ flex: 1, minHeight: 40 }} />
         {tab === 'preview' && (
           <Tooltip title={t('crm.emailTemplates.fullScreenPreview')}>
-            <IconButton size="small" sx={{ mr: 0.5 }} onClick={() => setFullscreen(true)}><FullscreenIcon fontSize="small" /></IconButton>
+            <DuncitIconButton size="small" sx={{ mr: 0.5 }} onClick={() => setFullscreen(true)}><FullscreenIcon fontSize="small" /></DuncitIconButton>
           </Tooltip>
         )}
       </Stack>
@@ -134,7 +124,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                   fontWeight: 700,
                   flex: 1
                 }}>Preview · {draft.name}</Typography>
-              <IconButton onClick={() => setFullscreen(false)} aria-label={t('crm.emailTemplates.closeFullScreen')}><CloseIcon /></IconButton>
+              <DuncitIconButton onClick={() => setFullscreen(false)} aria-label={t('crm.emailTemplates.closeFullScreen')}><CloseIcon /></DuncitIconButton>
             </Stack>
             <iframe title="preview-fullscreen" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           </Dialog>
@@ -147,7 +137,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                 alignItems: "center"
               }}>
                 <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.detectedInTemplate')}</Typography>
-                <Button size="small" onClick={onImportDetected} disabled={!detected.length}>{t('crm.emailTemplates.syncAll')}</Button>
+                <DuncitButton size="small" onClick={onImportDetected} disabled={!detected.length}>{t('crm.emailTemplates.syncAll')}</DuncitButton>
               </Stack>
               <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint="No {{ var }} placeholders found." />
               {foreignDetected.length > 0 && (
@@ -209,11 +199,11 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                       sx={{ flex: 1 }}
                     />
                     <Tooltip title={`Copy {{ ${v.key} }}`}>
-                      <IconButton size="small" onClick={() => navigator.clipboard?.writeText(`{{ ${v.key} }}`)}><ContentCopyIcon fontSize="small" /></IconButton>
+                      <DuncitIconButton size="small" onClick={() => navigator.clipboard?.writeText(`{{ ${v.key} }}`)}><ContentCopyIcon fontSize="small" /></DuncitIconButton>
                     </Tooltip>
-                    <IconButton size="small" color="error" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
+                    <DuncitIconButton size="small" color="error" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
                       <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    </DuncitIconButton>
                   </Stack>
                 ))}
               </Stack>

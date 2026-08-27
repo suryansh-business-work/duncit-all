@@ -1,6 +1,7 @@
-import { Box, Card, CardActionArea, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Card, CardActionArea, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { ShopProduct } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -102,7 +103,7 @@ export default function ShopProductCard({
           }}
         />
       ) : (
-        <IconButton
+        <DuncitIconButton
           aria-label={`Add ${product.product_name} to cart`}
           disabled={adding}
           onClick={quickAdd}
@@ -123,7 +124,7 @@ export default function ShopProductCard({
           ) : (
             <AddShoppingCartIcon sx={{ fontSize: 18 }} />
           )}
-        </IconButton>
+        </DuncitIconButton>
       )}
     </Card>
   );

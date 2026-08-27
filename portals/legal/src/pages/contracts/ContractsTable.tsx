@@ -1,9 +1,10 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Chip, Tooltip, Typography } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import DrawIcon from '@mui/icons-material/Draw';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   DuncitTable,
   dateColumn,
@@ -103,39 +104,39 @@ export default function ContractsTable({
     const renderActions = (c: Contract) => (
       <>
         <Tooltip title={t('shell.common.view')}>
-          <IconButton size="small" aria-label={t('shell.common.view')} onClick={() => onView(c)}>
+          <DuncitIconButton size="small" aria-label={t('shell.common.view')} onClick={() => onView(c)}>
             <VisibilityIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         {/* A disabled button fires no events, so the tooltip needs a live
             wrapper to say why it cannot be pressed. */}
         <Tooltip title={editTooltip(c)}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               disabled={c.is_locked}
               aria-label={t('shell.common.edit')}
               onClick={() => onEdit(c)}
             >
               <EditIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={signTooltip(c)}>
-          <IconButton size="small" aria-label={t('legal.sign.action')} onClick={() => onSign(c)}>
+          <DuncitIconButton size="small" aria-label={t('legal.sign.action')} onClick={() => onSign(c)}>
             <DrawIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={archiveTooltip(c)}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               disabled={c.status === 'ARCHIVED'}
               aria-label={t('legal.contracts.archive')}
               onClick={() => onArchive(c)}
             >
               <ArchiveIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </>

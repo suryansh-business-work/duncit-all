@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { podProductRequestsTotal, type PodPickerProduct } from '@duncit/utils';
 import AttachedProductRow from './AttachedProductRow';
 import PodProductDialog from './PodProductDialog';
@@ -91,14 +92,14 @@ export default function PodProductsField({
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
         alignItems: { sm: 'center' }
       }}>
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<AddShoppingCartIcon />}
           onClick={() => setOpen(true)}
           disabled={disabled || products.length === 0}
         >
           {t('podProduct.addButton')}
-        </Button>
+        </DuncitButton>
         {value.length > 0 && (
           <Typography variant="subtitle2">
             {t('podProduct.productTotal', { vars: { amount: formatMoney(total) } })}

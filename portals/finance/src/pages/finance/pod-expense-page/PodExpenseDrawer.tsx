@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Divider, Drawer } from '@mui/material';
+import { Alert, Box, Divider, Drawer } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
@@ -157,9 +158,9 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
                 onEdit={openEdit}
                 onDelete={askDelete}
                 toolbarActions={
-                  <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+                  <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
                     {t('finance.podExpense.addExpense')}
-                  </Button>
+                  </DuncitButton>
                 }
               />
             </Box>

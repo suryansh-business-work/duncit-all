@@ -1,21 +1,10 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Container,
-  Divider,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, Chip, Container, Divider, Paper, Stack, TextField, Typography } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import EditIcon from '@mui/icons-material/Edit';
 import GoogleIcon from '@mui/icons-material/Google';
+import { DuncitButton } from '@duncit/buttons';
 import { useUserData } from '@duncit/user-context';
 import { useBranding } from '../hooks/useBranding';
 import { accountEmail, accountName, initials } from './user-display';
@@ -152,9 +141,9 @@ export function ProfilePage() {
             </Typography>
           </Box>
           {!editing && (
-            <Button size="small" startIcon={<EditIcon />} onClick={startEdit} sx={{ fontWeight: 800 }}>
+            <DuncitButton size="small" startIcon={<EditIcon />} onClick={startEdit} sx={{ fontWeight: 800 }}>
               Edit
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
 
@@ -166,12 +155,12 @@ export function ProfilePage() {
             <TextField label={t('shell.profile.lastName')} value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth size="small" />
             {error && <Alert severity="error">{error.message}</Alert>}
             <Stack direction="row" spacing={1.5}>
-              <Button variant="contained" onClick={submit} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
+              <DuncitButton variant="contained" onClick={submit} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
                 {loading ? 'Saving…' : 'Save changes'}
-              </Button>
-              <Button onClick={() => setEditing(false)} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
+              </DuncitButton>
+              <DuncitButton onClick={() => setEditing(false)} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
                 Cancel
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
         ) : (
@@ -215,7 +204,7 @@ export function ProfilePage() {
 
         <Divider sx={{ my: 2.5 }} />
 
-        <Button
+        <DuncitButton
           variant="outlined"
           color="error"
           startIcon={<LogoutIcon />}
@@ -223,7 +212,7 @@ export function ProfilePage() {
           sx={{ borderRadius: 999, fontWeight: 800 }}
         >
           Log out
-        </Button>
+        </DuncitButton>
       </Paper>
     </Container>
   );

@@ -1,19 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import { DuncitButton } from '@duncit/buttons';
 import {
   WA_CONNECT,
   WA_DISCONNECT,
@@ -105,14 +95,14 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
                 {connection.phone ? `+${connection.phone}` : 'WhatsApp account linked'}
               </Typography>
             </Box>
-            <Button
+            <DuncitButton
               color="error"
               variant="outlined"
               disabled={busy}
               onClick={() => disconnect().then(onChanged)}
             >
               Disconnect
-            </Button>
+            </DuncitButton>
           </Stack>
         </CardContent>
       </Card>
@@ -151,14 +141,14 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
             fullWidth
           />
           <Box>
-            <Button
+            <DuncitButton
               size="small"
               startIcon={<VpnKeyIcon fontSize="small" />}
               disabled={busy || !baseUrl.trim() || !apiKey.trim()}
               onClick={handleGenerate}
             >
               Generate API key
-            </Button>
+            </DuncitButton>
             <Typography
               variant="caption"
               sx={{
@@ -202,14 +192,14 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
               }}>{t('crm.tools.waitingForQr')}</Typography>
             </Stack>
           ) : null}
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<WhatsAppIcon />}
             disabled={busy}
             onClick={handleConnect}
           >
             {connecting ? 'Restart connection' : 'Save & Connect'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

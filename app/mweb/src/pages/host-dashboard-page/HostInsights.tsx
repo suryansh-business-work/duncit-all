@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Box, Card, CardContent, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Tooltip, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
+import { DuncitIconButton } from '@duncit/buttons';
 import { brand, semantic } from '@duncit/auth-tokens';
 import InsightChartCard from './InsightChartCard';
 import HostInsightsFilterSheet from './HostInsightsFilterSheet';
@@ -116,9 +117,9 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
         empty={allZero(overTime)}
         action={
           <Tooltip title={t('mweb.common.filter')}>
-            <IconButton size="small" aria-label={t('mweb.common.filterPodsByMonth')} onClick={() => setFilterOpen(true)}>
+            <DuncitIconButton size="small" aria-label={t('mweb.common.filterPodsByMonth')} onClick={() => setFilterOpen(true)}>
               <FilterListIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         }
       >

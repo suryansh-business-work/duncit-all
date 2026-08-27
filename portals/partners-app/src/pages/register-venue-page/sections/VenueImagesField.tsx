@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Box, Button, FormHelperText, IconButton, Stack, Typography } from '@mui/material';
+import { Box, FormHelperText, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { useTranslation } from '@duncit/shell';
 
@@ -56,14 +57,14 @@ export default function VenueImagesField({
             />
           </Box>
         )}
-        <Button
+        <DuncitButton
           startIcon={<UploadFileIcon />}
           variant="outlined"
           disabled={disabled}
           onClick={() => setCoverPickerOpen(true)}
         >
           {coverImageUrl ? 'Change cover image' : 'Upload cover image'}
-        </Button>
+        </DuncitButton>
         {coverError && <FormHelperText error>{coverError}</FormHelperText>}
       </Stack>
       <Stack spacing={1}>
@@ -79,14 +80,14 @@ export default function VenueImagesField({
           }}>
             Other images
           </Typography>
-          <Button
+          <DuncitButton
             size="small"
             startIcon={<AddPhotoAlternateIcon />}
             disabled={disabled}
             onClick={() => setGalleryPickerOpen(true)}
           >
             Add image
-          </Button>
+          </DuncitButton>
         </Stack>
         {gallery.length ? (
           <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))' }}>
@@ -98,7 +99,7 @@ export default function VenueImagesField({
                   alt={t('partners.registerVenuePage.venueGallery')}
                   sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 1 }}
                 />
-                <IconButton
+                <DuncitIconButton
                   size="small"
                   disabled={disabled}
                   aria-label={t('partners.registerVenuePage.removeImage')}
@@ -106,7 +107,7 @@ export default function VenueImagesField({
                   sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'background.paper' }}
                 >
                   <DeleteIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </Box>
             ))}
           </Box>

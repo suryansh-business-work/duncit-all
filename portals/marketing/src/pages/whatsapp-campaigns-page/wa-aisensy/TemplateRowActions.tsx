@@ -1,5 +1,6 @@
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { AisensyTemplate } from '../queries';
 
@@ -22,7 +23,7 @@ export default function TemplateRowActions({ template, busy, onDelete }: Readonl
   return (
     <Tooltip title={label}>
       <span>
-        <IconButton
+        <DuncitIconButton
           size="small"
           color="error"
           aria-label={label}
@@ -30,7 +31,7 @@ export default function TemplateRowActions({ template, busy, onDelete }: Readonl
           onClick={() => onDelete(template)}
         >
           <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </span>
     </Tooltip>
   );

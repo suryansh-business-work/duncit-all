@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Badge, IconButton, Tooltip } from '@mui/material';
+import { Badge, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import { DuncitIconButton } from '@duncit/buttons';
 import { MARK_ALL, MARK_READ, MY_NOTIFS } from './queries';
 import NotificationsScreen from './notifications-screen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
@@ -82,7 +83,7 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
   return (
     <>
       <Tooltip title={t('mweb.appHeader.notifications')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={() => setNotificationsOpen(true)}
           aria-label={`Notifications${unreadLabel}`}
@@ -98,7 +99,7 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
           <Badge badgeContent={unreadCount} color="error">
             <NotificationsIcon fontSize="small" />
           </Badge>
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <NotificationsScreen
         open={notificationsOpen}

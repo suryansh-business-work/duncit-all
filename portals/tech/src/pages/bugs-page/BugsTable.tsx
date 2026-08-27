@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { UserCell } from '../../components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
@@ -72,13 +73,13 @@ export default function BugsTable({
       <Stack direction="row" spacing={0.5} sx={{
         alignItems: "center"
       }}>
-        <Button size="small" variant="outlined" onClick={() => onOpen(b)}>
+        <DuncitButton size="small" variant="outlined" onClick={() => onOpen(b)}>
           Triage
-        </Button>
+        </DuncitButton>
         <Tooltip title={t('tech.bugs.deleteThisBug2')}>
-          <IconButton size="small" color="error" onClick={() => onDelete(b)}>
+          <DuncitIconButton size="small" color="error" onClick={() => onDelete(b)}>
             <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     );

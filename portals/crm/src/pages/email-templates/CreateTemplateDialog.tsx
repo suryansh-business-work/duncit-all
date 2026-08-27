@@ -1,22 +1,10 @@
 import { JSX, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardActionArea, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import GroupsIcon from '@mui/icons-material/Groups';
 import DescriptionIcon from '@mui/icons-material/Description';
+import { DuncitButton } from '@duncit/buttons';
 import { CREATE, STARTER_MJML, type EmailTemplateTarget } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import MjmlAiButton from './MjmlAiButton';
@@ -85,7 +73,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
               <Typography variant="body2" sx={{
                 fontWeight: 700
               }}>{targets(t).find((t) => t.value === target)?.label}</Typography>
-              <Button size="small" onClick={() => setTarget(null)}>{t('crm.emailTemplates.change')}</Button>
+              <DuncitButton size="small" onClick={() => setTarget(null)}>{t('crm.emailTemplates.change')}</DuncitButton>
             </Stack>
             <TextField size="small" label={t('shell.common.name')} required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
             <TextField size="small" label={t('crm.emailTemplates.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText={t('crm.emailTemplates.stableCodeKeyAutoDerivedFrom')} fullWidth />
@@ -124,10 +112,10 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={loading}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={submit} disabled={loading || !target || !name.trim() || !subject.trim()}>
+        <DuncitButton onClick={close} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading || !target || !name.trim() || !subject.trim()}>
           {loading ? 'Creating…' : 'Create'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

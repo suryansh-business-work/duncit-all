@@ -1,18 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import {
   POLICY_ACCEPTANCE_DETAIL,
@@ -115,7 +104,7 @@ export default function AcceptanceDetailDialog({ acceptanceId, onClose }: Readon
         <DialogContent dividers>{renderBody()}</DialogContent>
         <DialogActions>
           {loading && !!detail && <CircularProgress size={16} sx={{ mr: 1 }} />}
-          <Button onClick={onClose}>{t('shell.common.close')}</Button>
+          <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
         </DialogActions>
       </Dialog>
 

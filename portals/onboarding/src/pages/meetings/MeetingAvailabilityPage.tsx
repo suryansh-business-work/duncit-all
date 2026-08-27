@@ -1,21 +1,10 @@
 import { useEffect, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  CircularProgress,
-  FormControlLabel,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Checkbox, CircularProgress, FormControlLabel, Stack, TextField, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { notifySuccess } from '@duncit/dialogs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { DuncitButton } from '@duncit/buttons';
 import { format, parse } from 'date-fns';
 import MeetingHolidaysCard from './MeetingHolidaysCard';
 import { useTranslation } from '@duncit/app-settings';
@@ -194,9 +183,9 @@ export default function MeetingAvailabilityPage() {
             <Stack direction="row" sx={{
               justifyContent: "flex-end"
             }}>
-              <Button variant="contained" onClick={submit} disabled={saving}>
+              <DuncitButton variant="contained" onClick={submit} disabled={saving}>
                 {saving ? 'Saving…' : 'Save availability'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
         </CardContent>

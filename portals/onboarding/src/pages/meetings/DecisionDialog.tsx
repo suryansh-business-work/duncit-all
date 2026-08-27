@@ -1,16 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { SurveyAnswers } from '../../components/survey-answers';
 import { DECIDE_MEETING, type MeetingDecision, type OnboardingMeeting } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -86,13 +77,13 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>{t('shell.common.cancel')}</Button>
-        <Button color="error" onClick={() => decide('DENIED')} disabled={loading}>
+        <DuncitButton onClick={close}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton color="error" onClick={() => decide('DENIED')} disabled={loading}>
           {loading ? 'Saving…' : 'Deny'}
-        </Button>
-        <Button variant="contained" onClick={() => decide('APPROVED')} disabled={loading}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={() => decide('APPROVED')} disabled={loading}>
           {loading ? 'Saving…' : 'Approve'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

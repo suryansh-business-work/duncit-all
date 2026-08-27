@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -90,14 +91,14 @@ export default function MinAgeSection({ onToast }: Readonly<Props>) {
               on the website and the app.
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={submit}
             disabled={busy || !dirty || loading || invalid}
           >
             {busy ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         <TextField

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Box, Card, CardContent, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
@@ -139,9 +140,9 @@ export default function OrderSummaryCard({
                   <Typography variant="body2" sx={{
                     fontWeight: 600
                   }}>{t('mweb.checkout.venueCharges')}</Typography>
-                  <IconButton size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
+                  <DuncitIconButton size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
                     <InfoOutlinedIcon fontSize="inherit" color="action" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Stack>
                 <Typography variant="body2" sx={{
                   fontWeight: 700

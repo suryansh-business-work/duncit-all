@@ -1,6 +1,7 @@
-import { Button, Card, Link, Stack, Typography } from '@mui/material';
+import { Card, Link, Stack, Typography } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import DirectionsIcon from '@mui/icons-material/Directions';
+import { DuncitButton } from '@duncit/buttons';
 import { mapSearchUrl } from '../../../utils/mapEmbed';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
@@ -29,13 +30,13 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
       )}
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
         {venue.owner_phone && (
-          <Button href={`tel:${venue.owner_phone}`} size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
+          <DuncitButton href={`tel:${venue.owner_phone}`} size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
             {t('mweb.createPod.callVenue')}
-          </Button>
+          </DuncitButton>
         )}
-        <Button href={directions} target="_blank" rel="noreferrer" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
+        <DuncitButton href={directions} target="_blank" rel="noreferrer" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
           {t('mweb.createPod.getDirections')}
-        </Button>
+        </DuncitButton>
       </Stack>
       <Stack spacing={0.25} sx={{ mt: 1 }}>
         <Typography

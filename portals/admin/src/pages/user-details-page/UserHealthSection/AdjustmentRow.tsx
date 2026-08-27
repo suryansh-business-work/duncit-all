@@ -1,6 +1,7 @@
-import { Box, Chip, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { AdminHealthAdjustment } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -35,21 +36,21 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
         </Box>
         <Tooltip title={t('shell.common.edit')}>
           <span>
-            <IconButton size="small" disabled={busy} onClick={() => onEdit(adjustment)}>
+            <DuncitIconButton size="small" disabled={busy} onClick={() => onEdit(adjustment)}>
               <EditIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={t('shell.common.delete')}>
           <span>
-            <IconButton
+            <DuncitIconButton
               size="small"
               color="error"
               disabled={busy}
               onClick={() => onDelete(adjustment)}
             >
               <DeleteIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </span>
         </Tooltip>
       </Stack>

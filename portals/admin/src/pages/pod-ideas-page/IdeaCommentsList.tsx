@@ -1,12 +1,6 @@
-import {
-  Avatar,
-  Box,
-  Divider,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Divider, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -59,9 +53,9 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
                 {c.text}
               </Typography>
             </Box>
-            <IconButton size="small" color="error" onClick={() => onDelete(c.id)}>
+            <DuncitIconButton size="small" color="error" onClick={() => onDelete(c.id)}>
               <DeleteIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         ))}
       </Stack>

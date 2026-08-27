@@ -43,6 +43,7 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/user-context"
   },
   "dependencies": {
+    "@duncit/buttons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*"

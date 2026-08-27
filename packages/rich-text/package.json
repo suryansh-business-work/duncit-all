@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/gql-types": "workspace:*",
     "@tiptap/extension-link": "3.30.3",
     "@tiptap/extension-placeholder": "3.30.3",

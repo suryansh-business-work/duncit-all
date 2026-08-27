@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import MomentLightbox from '../components/moments/MomentLightbox';
 import BrandDetailDialog from './pod-details-page/BrandDetailDialog';
 import ProductReviews from './pod-details-page/ProductReviews';
@@ -120,9 +121,9 @@ export default function ProductDetailPage() {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <IconButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} size="small">
+        <DuncitIconButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} size="small">
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>
           {product.product_name}
         </Typography>

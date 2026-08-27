@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { BackHeader } from '@duncit/ui';
 import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
@@ -122,14 +123,14 @@ export default function CatalogBrandProductsPage() {
         backTo="/catalog/brands"
         backAriaLabel="Back to brands"
         actions={
-          <Button
+          <DuncitButton
             component={RouterLink}
             to={`/catalog/brands/${brandId}`}
             size="small"
             startIcon={<TuneIcon />}
           >
             Manage brand
-          </Button>
+          </DuncitButton>
         }
       />
 

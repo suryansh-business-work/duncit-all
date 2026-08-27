@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { audienceOptions, platformOptions } from './app-popup-form';
 import type { AppPopupRow } from './queries';
@@ -107,14 +108,14 @@ export default function AppPopupsTable({
     const renderActions = (popup: AppPopupRow) => (
       <Stack direction="row" spacing={0.5}>
         <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(popup)}>
+          <DuncitIconButton size="small" onClick={() => onEdit(popup)}>
             <EditIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.common.delete')}>
-          <IconButton size="small" onClick={() => onDelete(popup)}>
+          <DuncitIconButton size="small" onClick={() => onDelete(popup)}>
             <DeleteIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     );

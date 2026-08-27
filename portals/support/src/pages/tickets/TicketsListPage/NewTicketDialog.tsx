@@ -1,17 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { CREATE_TICKET, type TicketCategory } from '../../../graphql/tickets';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
@@ -92,10 +82,10 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" disabled={creating || !subject.trim() || !htmlToText(bodyHtml)} onClick={submit}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={creating || !subject.trim() || !htmlToText(bodyHtml)} onClick={submit}>
           Create
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

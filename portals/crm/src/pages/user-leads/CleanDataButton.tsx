@@ -1,15 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Snackbar,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar } from '@mui/material';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import { DuncitButton } from '@duncit/buttons';
 import { WA_CLEAN_DATA } from '../tools/whatsapp/whatsappQueries';
 import { useTranslation } from '@duncit/shell';
 
@@ -34,7 +27,7 @@ export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () 
 
   return (
     <>
-      <Button
+      <DuncitButton
         size="small"
         color="warning"
         startIcon={<CleaningServicesIcon />}
@@ -42,7 +35,7 @@ export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () 
         onClick={() => setOpen(true)}
       >
         {loading ? 'Cleaning…' : 'Clean'}
-      </Button>
+      </DuncitButton>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>{t('crm.userLeads.cleanLeadData')}</DialogTitle>
         <DialogContent>
@@ -52,10 +45,10 @@ export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () 
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
-          <Button color="warning" variant="contained" onClick={run}>
+          <DuncitButton onClick={() => setOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="warning" variant="contained" onClick={run}>
             Clean now
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
       <Snackbar open={!!toast} autoHideDuration={6000} onClose={() => setToast('')} message={toast} />

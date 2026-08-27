@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { CANCEL_MEETING, type OnboardingMeeting } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -78,10 +70,10 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>{t('onboarding.meetings.keepMeeting')}</Button>
-        <Button color="error" variant="contained" onClick={confirm} disabled={loading}>
+        <DuncitButton onClick={close}>{t('onboarding.meetings.keepMeeting')}</DuncitButton>
+        <DuncitButton color="error" variant="contained" onClick={confirm} disabled={loading}>
           {loading ? 'Cancelling…' : 'Cancel meeting'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

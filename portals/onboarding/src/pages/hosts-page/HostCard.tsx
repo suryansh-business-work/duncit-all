@@ -1,12 +1,5 @@
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 
 // SUBMITTED intentionally stays 'warning' here (documented drift vs the shared default map).
@@ -59,9 +52,9 @@ export default function HostCard({ host, onReview }: Readonly<Props>) {
         <Stack direction="row" spacing={1} sx={{
           mt: 2
         }}>
-          <Button size="small" variant="outlined" onClick={() => onReview(host)}>
+          <DuncitButton size="small" variant="outlined" onClick={() => onReview(host)}>
             Review
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

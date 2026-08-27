@@ -1,15 +1,5 @@
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DetailBlock, DetailField } from '../../components/DetailField';
 import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { type TelemetryLogRow } from './queries';
@@ -143,7 +133,7 @@ export default function LogDetailDialog({ row, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

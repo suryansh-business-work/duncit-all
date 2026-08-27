@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { notifyError, useConfirm } from '@duncit/dialogs';
 import {
@@ -122,9 +123,9 @@ export default function NotificationsPage() {
         locName={locName}
         locationOptions={locationOptions}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             New Notification
-          </Button>
+          </DuncitButton>
         }
         onDelete={remove}
       />

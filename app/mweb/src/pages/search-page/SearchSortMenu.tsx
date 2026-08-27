@@ -1,15 +1,6 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemText,
-  Radio,
-  Stack,
-} from '@mui/material';
+import { Dialog, DialogContent, DialogTitle, List, ListItemButton, ListItemText, Radio, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { SEARCH_SORT_OPTIONS, type SearchSort } from './searchSort';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -34,9 +25,9 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
           pr: 1
         }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.sortResults')}</DialogTitle>
-        <IconButton aria-label={t('mweb.search.closeSort')} onClick={onClose}>
+        <DuncitIconButton aria-label={t('mweb.search.closeSort')} onClick={onClose}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       {/* The option list is the scroll area, so the title row stays pinned. */}
       <DialogContent dividers sx={{ p: 0 }}>

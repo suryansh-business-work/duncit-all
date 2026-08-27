@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitButton } from '@duncit/buttons';
 import VideoMedia from '../../components/media/VideoMedia';
 
 export const POD_SHOP_SLIDER = gql`
@@ -65,7 +66,7 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
         </Typography>
       ) : null}
       {media.cta_label ? (
-        <Button
+        <DuncitButton
           onClick={() => onCta(media.cta_url ?? '')}
           endIcon={<ChevronRightIcon />}
           sx={{
@@ -81,7 +82,7 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
           }}
         >
           {media.cta_label}
-        </Button>
+        </DuncitButton>
       ) : null}
     </Box>
   );

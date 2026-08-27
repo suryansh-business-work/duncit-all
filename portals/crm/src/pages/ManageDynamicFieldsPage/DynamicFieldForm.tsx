@@ -1,17 +1,6 @@
-import {
-  Button,
-  Card,
-  Checkbox,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
+import { Card, Checkbox, FormControlLabel, MenuItem, Stack, Switch, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import type { CrmDynamicFieldKind } from '../../api/crm.types';
 import DynamicFieldOptionsEditor from './DynamicFieldOptionsEditor';
 import { KIND_LABELS, type DraftState } from './dynamicFieldDraft';
@@ -139,12 +128,12 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button onClick={onCancel} disabled={busy}>
+          <DuncitButton onClick={onCancel} disabled={busy}>
             {t('shell.common.cancel')}
-          </Button>
-          <Button variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={busy}>
+          </DuncitButton>
+          <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={busy}>
             {busy ? 'Saving…' : 'Save field'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Card>

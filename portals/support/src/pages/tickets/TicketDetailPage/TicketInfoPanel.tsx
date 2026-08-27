@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Button, Chip, Collapse, Stack, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Chip, Collapse, Stack, useMediaQuery, useTheme } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import type { Ticket } from '../../../graphql/tickets';
@@ -68,7 +69,7 @@ export default function TicketInfoPanel({ ticket }: Readonly<{ ticket: Ticket }>
 
   return (
     <Box sx={{ flexShrink: 0 }}>
-      <Button
+      <DuncitButton
         size="small"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -82,7 +83,7 @@ export default function TicketInfoPanel({ ticket }: Readonly<{ ticket: Ticket }>
         }
       >
         {open ? t('support.ticketDetail.detailsHide') : t('support.ticketDetail.detailsShow')}
-      </Button>
+      </DuncitButton>
       <Collapse in={open}>
         <Box sx={{ pt: 1 }}>{content}</Box>
       </Collapse>

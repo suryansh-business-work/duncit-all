@@ -1,18 +1,9 @@
 import { useMemo, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Autocomplete,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Autocomplete, Box, Stack, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { DuncitButton } from '@duncit/buttons';
 import { useFormContext, useWatch } from 'react-hook-form';
 import DateField from '../DateField';
 import HostBankAccountSection from './HostBankAccountSection';
@@ -97,13 +88,13 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
       <Stack direction="row" sx={{
         justifyContent: "flex-end"
       }}>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={allExpanded ? <UnfoldLessIcon /> : <UnfoldMoreIcon />}
           onClick={allExpanded ? collapseAll : expandAll}
         >
           {allExpanded ? 'Collapse all' : 'Expand all'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Accordion expanded={expanded.has('personal')} onChange={() => toggle('personal')} disableGutters>

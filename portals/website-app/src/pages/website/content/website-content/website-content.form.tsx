@@ -1,6 +1,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
+import { Alert, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import DateTimeField from '../../../../components/DateTimeField';
@@ -97,12 +98,12 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
         />
       </Stack>
       <DialogActions sx={{ px: 0, pt: 2 }}>
-        <Button onClick={onCancel} disabled={submitting}>
+        <DuncitButton onClick={onCancel} disabled={submitting}>
           Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={submitting}>
+        </DuncitButton>
+        <DuncitButton type="submit" variant="contained" disabled={submitting}>
           {submitting ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </form>
   );

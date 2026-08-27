@@ -1,14 +1,7 @@
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Tooltip,
-} from '@mui/material';
+import { Box, CircularProgress, ListItem, ListItemButton, ListItemText, Tooltip } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DoneIcon from '@mui/icons-material/Done';
+import { DuncitIconButton } from '@duncit/buttons';
 
 export interface TerminalSuggestionRowProps {
   command: string;
@@ -82,9 +75,9 @@ export default function TerminalSuggestionRow({
       disablePadding
       secondaryAction={
         <Tooltip title={copyTitle}>
-          <IconButton edge="end" size="small" aria-label={copyTitle} onClick={() => onCopy(command)}>
+          <DuncitIconButton edge="end" size="small" aria-label={copyTitle} onClick={() => onCopy(command)}>
             {copyIcon}
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       }
     >

@@ -1,19 +1,11 @@
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  IconButton,
-  ImageList,
-  ImageListItem,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, ImageList, ImageListItem, Stack, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { useTranslation } from '@duncit/shell';
 
@@ -52,13 +44,13 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
           mb: 1
         }}>
         <Typography variant="subtitle2">{t('products.media.productImages')}</Typography>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={<AddPhotoAlternateIcon />}
           onClick={() => setPickerOpen(true)}
         >
           Add image
-        </Button>
+        </DuncitButton>
       </Stack>
       {images.length === 0 ? (
         <Box
@@ -103,18 +95,18 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
                   }}
                 >
                   <Tooltip title={isCover ? 'Cover image' : 'Set as cover'}>
-                    <IconButton
+                    <DuncitIconButton
                       size="small"
                       sx={{ color: (theme) => theme.palette.common.white }}
                       onClick={() => makeCover(url)}
                     >
                       {isCover ? <StarIcon fontSize="inherit" /> : <StarBorderIcon fontSize="inherit" />}
-                    </IconButton>
+                    </DuncitIconButton>
                   </Tooltip>
                   <Tooltip title={t('products.media.remove')}>
-                    <IconButton size="small" sx={{ color: (theme) => theme.palette.common.white }} onClick={() => remove(url)}>
+                    <DuncitIconButton size="small" sx={{ color: (theme) => theme.palette.common.white }} onClick={() => remove(url)}>
                       <DeleteOutlineIcon fontSize="inherit" />
-                    </IconButton>
+                    </DuncitIconButton>
                   </Tooltip>
                 </Stack>
               </ImageListItem>

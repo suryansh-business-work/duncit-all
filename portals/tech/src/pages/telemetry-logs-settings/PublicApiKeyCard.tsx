@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
+import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { copyToClipboard, parseApiError } from '@duncit/utils';
 import { useUserData } from '@duncit/user-context';
@@ -86,14 +87,14 @@ export default function PublicApiKeyCard() {
           <Stack direction="row" spacing={1} useFlexGap sx={{
             flexWrap: "wrap"
           }}>
-            <Button size="small" startIcon={<ContentCopyIcon />} disabled={!key} onClick={copy}>
+            <DuncitButton size="small" startIcon={<ContentCopyIcon />} disabled={!key} onClick={copy}>
               Copy example URL
-            </Button>
+            </DuncitButton>
             {/* Rotation is SUPER_ADMIN-only on the server (it retires every URL
                 anyone is already polling), so a Tech Manager is not shown a
                 button whose click could only end in Access Denied. */}
             {canRotate ? (
-              <Button
+              <DuncitButton
                 size="small"
                 color="error"
                 startIcon={<AutorenewIcon />}
@@ -101,7 +102,7 @@ export default function PublicApiKeyCard() {
                 onClick={runRotate}
               >
                 {loading ? 'Rotating…' : 'Rotate key'}
-              </Button>
+              </DuncitButton>
             ) : null}
           </Stack>
           <Typography variant="caption" sx={{

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
+import { ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
@@ -10,6 +10,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import PhotoCameraBackIcon from '@mui/icons-material/PhotoCameraBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import PodLinkMenuItem from './PodLinkMenuItem';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
@@ -103,14 +104,14 @@ export default function HostPodActionsMenu({
     <>
       <Tooltip title={labels.menuTooltip}>
         <span>
-          <IconButton
+          <DuncitIconButton
             size="small"
             disabled={disabled}
             aria-label={labels.menuAria(podTitle)}
             onClick={(e) => setAnchorEl(e.currentTarget)}
           >
             <MoreVertIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
       <Menu

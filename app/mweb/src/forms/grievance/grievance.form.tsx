@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import RhfTextField from '../components/RhfTextField';
 import SupportTicketField from './SupportTicketField';
@@ -83,9 +84,9 @@ export default function GrievanceForm({
           minRows={4}
         />
         {submitError && <Alert severity="error">{submitError}</Alert>}
-        <Button type="submit" variant="contained" disabled={loading || noTickets}>
+        <DuncitButton type="submit" variant="contained" disabled={loading || noTickets}>
           {loading ? t('grievance.submitting') : t('grievance.submit')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </form>
   );

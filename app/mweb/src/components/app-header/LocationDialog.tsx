@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import PlaceIcon from '@mui/icons-material/Place';
+import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../ResponsiveDialog';
 import GpsLocationPicker from './GpsLocationPicker';
 import CountryStatePicker from './CountryStatePicker';
@@ -151,18 +152,18 @@ export default function LocationDialog({
             alignItems: "center",
             width: '100%'
           }}>
-          <Button color="error" onClick={onClose} sx={{ fontWeight: 600 }}>
+          <DuncitButton color="error" onClick={onClose} sx={{ fontWeight: 600 }}>
             Cancel
-          </Button>
+          </DuncitButton>
           <Box sx={{ flexGrow: 1 }} />
-          <Button
+          <DuncitButton
             variant="contained"
             onClick={onApply}
             disabled={!draftLocationId}
             sx={{ minWidth: 154, borderRadius: 999, fontWeight: 600 }}
           >
             {applyLabel}
-          </Button>
+          </DuncitButton>
         </Stack>
       }
       sheetMaxHeight="92vh"

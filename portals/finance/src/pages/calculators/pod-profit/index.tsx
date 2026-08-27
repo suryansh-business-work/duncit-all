@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 import PodInputsCard from './PodInputsCard';
 import VenueHostCard from './VenueHostCard';
 import ResultsCard from './ResultsCard';
@@ -33,14 +34,14 @@ export default function PodProfitCalculatorPage() {
             Estimate the venue payout, host payout and Duncit revenue for a pod (ticket × spots) — mirrors the live finance engine.
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           variant="outlined"
           size="small"
           startIcon={<RestartAltIcon />}
           onClick={() => setInputs(DEFAULT_INPUTS)}
         >
           Reset
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{

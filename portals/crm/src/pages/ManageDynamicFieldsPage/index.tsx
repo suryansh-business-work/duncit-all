@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CREATE_CRM_DYNAMIC_FIELD,
   CRM_DYNAMIC_FIELDS,
@@ -109,7 +110,7 @@ export default function ManageDynamicFieldsPage() {
             automatically.
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
@@ -119,7 +120,7 @@ export default function ManageDynamicFieldsPage() {
           disabled={busy || !!draft}
         >
           New field
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error">{parseApiError(error)}</Alert>}

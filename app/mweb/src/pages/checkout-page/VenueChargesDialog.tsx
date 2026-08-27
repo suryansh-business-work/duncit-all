@@ -1,6 +1,7 @@
-import { Box, Dialog, DialogContent, DialogTitle, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 
@@ -29,9 +30,9 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
       <DialogTitle sx={{ pr: 6, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
         <StorefrontIcon color="primary" fontSize="small" />
         {t('mweb.checkout.venueCharges')}
-        <IconButton onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <DuncitIconButton onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>

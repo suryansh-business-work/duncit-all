@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Divider, IconButton, Paper, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Divider, Paper, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import GatewayChip from '../checkout-page/GatewayChip';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
@@ -84,9 +85,9 @@ export default function GiftCardCheckoutPage() {
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ bgcolor: 'action.hover' }}>
+          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ bgcolor: 'action.hover' }}>
             <ArrowBackIcon />
-          </IconButton>
+          </DuncitIconButton>
           <Typography
             variant="h6"
             sx={{
@@ -156,7 +157,7 @@ export default function GiftCardCheckoutPage() {
           </Alert>
         )}
         <CheckoutRequirementsCard missing={eligibility.missing} />
-        <Button
+        <DuncitButton
           variant="contained"
           size="large"
           disabled={
@@ -169,7 +170,7 @@ export default function GiftCardCheckoutPage() {
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {t('mweb.giftCards.payCta', { vars: { amount: amountLabel } })}
-        </Button>
+        </DuncitButton>
       </Stack>
       <PaymentFailureDialog
         failure={failure.failure}

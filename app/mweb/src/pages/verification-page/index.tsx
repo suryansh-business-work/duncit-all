@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import { DuncitIconButton } from '@duncit/buttons';
 import { MY_VERIFICATIONS, type Verification } from './queries';
 import VerificationCardShell from './VerificationCardShell';
 import IdentityCard from './IdentityCard';
@@ -48,9 +49,9 @@ export default function VerificationPage() {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ minWidth: 44, minHeight: 44 }}>
+        <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ minWidth: 44, minHeight: 44 }}>
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <VerifiedUserIcon color="primary" />
         <Box>
           <Typography

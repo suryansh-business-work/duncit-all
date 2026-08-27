@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { useConfirm, notifySuccess, notifyError } from '@duncit/dialogs';
 import { useApolloTableFetch, type TableFetch } from '@duncit/table';
@@ -122,9 +123,9 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
             {subtitle}
           </Typography>
         </Stack>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreating(true)}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setCreating(true)}>
           {t('tech.appBuilds.triggerAction')}
-        </Button>
+        </DuncitButton>
       </Stack>
       <AppBuildsTable
         platform={platform}

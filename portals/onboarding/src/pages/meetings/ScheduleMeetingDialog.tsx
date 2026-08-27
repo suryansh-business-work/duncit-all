@@ -1,19 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import ScheduleSlotPicker from './ScheduleSlotPicker';
 import {
   MEETING_SLOTS,
@@ -120,8 +108,8 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

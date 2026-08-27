@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import AccountDeletionsTable from './AccountDeletionsTable';
@@ -44,14 +45,14 @@ export default function AccountDeletionsPage() {
             {t('tech.accountDeletions.introSealed')}
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           startIcon={<SettingsOutlinedIcon />}
           onClick={() => setSettingsOpen(true)}
           sx={{ textTransform: 'none', flexShrink: 0 }}
           data-testid="open-deletion-settings"
         >
           {t('tech.accountDeletions.settingsTitle')}
-        </Button>
+        </DuncitButton>
       </Stack>
       <AccountDeletionsTable
         fetchRows={fetchRows}

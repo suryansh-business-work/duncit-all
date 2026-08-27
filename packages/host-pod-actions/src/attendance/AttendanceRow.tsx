@@ -1,7 +1,8 @@
-import { Avatar, Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import GroupIcon from '@mui/icons-material/Group';
+import { DuncitButton } from '@duncit/buttons';
 import {
   attendanceRowState,
   joinPhone,
@@ -140,7 +141,7 @@ export default function AttendanceRow({
         }}>
           <RadioButtonUncheckedIcon fontSize="small" color="disabled" />
           {onMark && (
-            <Button
+            <DuncitButton
               size="small"
               variant="contained"
               disabled={busy || state !== 'READY'}
@@ -148,7 +149,7 @@ export default function AttendanceRow({
               sx={{ borderRadius: 999, fontWeight: 800, flexShrink: 0 }}
             >
               {busy ? labels.marking : labels.markButton}
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       )}

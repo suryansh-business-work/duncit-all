@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Chip, Collapse, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Collapse, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -72,14 +73,14 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
           {fmt(payable)}
         </Typography>
         {expandable && (
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={t('mweb.venueEarnings.showPayoutBreakdown')}
             onClick={() => setOpen((v) => !v)}
             sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
           >
             <ExpandMoreIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         )}
       </Stack>
       {expandable && b && (

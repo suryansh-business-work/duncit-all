@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   DuncitTable,
   EM_DASH,
@@ -68,10 +69,10 @@ export default function WithdrawalsTable({
       if (w.status !== 'PENDING') return EM_DASH;
       return (
         <Stack direction="row" spacing={1} component="span">
-          <Button size="small" variant="contained" disabled={reviewing} onClick={() => onMarkPaid(w)}>
+          <DuncitButton size="small" variant="contained" disabled={reviewing} onClick={() => onMarkPaid(w)}>
             Mark Paid
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             color="error"
             variant="outlined"
@@ -79,7 +80,7 @@ export default function WithdrawalsTable({
             onClick={() => onReject(w)}
           >
             Reject
-          </Button>
+          </DuncitButton>
         </Stack>
       );
     };

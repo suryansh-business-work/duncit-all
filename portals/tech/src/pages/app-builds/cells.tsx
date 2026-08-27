@@ -1,8 +1,9 @@
-import { Box, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   isLive,
   isStaleRunning,
@@ -188,9 +189,9 @@ const ArtifactLink = ({
   const label = labels.download(artifact.kind);
   return (
     <Tooltip title={label}>
-      <IconButton size="small" component="a" href={artifact.url} aria-label={label}>
+      <DuncitIconButton size="small" component="a" href={artifact.url} aria-label={label}>
         <DownloadIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Tooltip>
   );
 };
@@ -204,7 +205,7 @@ export const makeRenderLinks = (labels: LinkLabels, onDelete: (row: AppBuildRow)
       ))}
       {row.workflow_run_url && (
         <Tooltip title={labels.run}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             component="a"
             href={row.workflow_run_url}
@@ -213,13 +214,13 @@ export const makeRenderLinks = (labels: LinkLabels, onDelete: (row: AppBuildRow)
             aria-label={labels.run}
           >
             <OpenInNewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
       <Tooltip title={labels.delete}>
-        <IconButton size="small" onClick={() => onDelete(row)} aria-label={labels.delete}>
+        <DuncitIconButton size="small" onClick={() => onDelete(row)} aria-label={labels.delete}>
           <DeleteOutlineIcon fontSize="small" color="error" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Box>
   );

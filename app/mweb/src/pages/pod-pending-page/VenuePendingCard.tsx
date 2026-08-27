@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Button, Card, Chip, Stack, Typography } from '@mui/material';
+import { Card, Chip, Stack, Typography } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EmailIcon from '@mui/icons-material/Email';
@@ -9,6 +9,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import InfoRow, { type InfoRowProps } from './InfoRow';
 import { approvalBadge, type ApprovalIcon, venueMapUrl } from './podPending';
@@ -106,7 +107,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
           <InfoRow key={row.label} {...row} />
         ))}
         {mapUrl && (
-          <Button
+          <DuncitButton
             href={mapUrl}
             target="_blank"
             rel="noopener"
@@ -116,7 +117,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
             sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
           >
             {t('mweb.podPending.actionViewOnMap')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     </Card>

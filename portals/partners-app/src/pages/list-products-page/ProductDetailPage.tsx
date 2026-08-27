@@ -1,8 +1,9 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitButton } from '@duncit/buttons';
 import ProductDetailView from './ProductDetailView';
 import ProductAnalyticsPanel from './ProductAnalyticsPanel';
 import ProductReviewsPanel from './ProductReviewsPanel';
@@ -63,14 +64,14 @@ export default function ProductDetailPage() {
           <Stack direction="row" spacing={1.25} sx={{
             alignItems: "center"
           }}>
-            <Button
+            <DuncitButton
               onClick={() => navigate(productsHome)}
               startIcon={<ArrowBackIcon />}
               variant="outlined"
               sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}
             >
               {t('partners.venueAvailabilityPage.back')}
-            </Button>
+            </DuncitButton>
             <Box>
               <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>
                 Product details
@@ -83,7 +84,7 @@ export default function ProductDetailPage() {
             </Box>
           </Stack>
           {canManageProducts && product && (
-            <Button
+            <DuncitButton
               onClick={editProduct}
               startIcon={<EditIcon />}
               variant="contained"
@@ -91,7 +92,7 @@ export default function ProductDetailPage() {
               sx={{ color: 'primary.main', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
             >
               {t('shell.common.edit')}
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       </Box>

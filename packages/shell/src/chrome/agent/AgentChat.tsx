@@ -1,16 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import {
-  Alert,
-  Box,
-  Chip,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AgentBubble } from './AgentBubble';
 import { useAgent } from './useAgent';
@@ -142,7 +133,7 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
             input: {
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
+                  <DuncitIconButton
                     type="submit"
                     size="small"
                     edge="end"
@@ -150,7 +141,7 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
                     aria-label={t('shell.agent.send')}
                   >
                     <SendIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </InputAdornment>
               ),
             }

@@ -1,18 +1,7 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { DuncitButton } from '@duncit/buttons';
 import type { AiMonitoringCopy } from '../index';
 
 export interface AiMonitoringDialogProps {
@@ -74,9 +63,9 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<AiMonitorin
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="contained">
+        <DuncitButton onClick={onClose} variant="contained">
           {copy.dismissLabel}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

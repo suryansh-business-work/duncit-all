@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { IconButton, MenuItem, TextField, Tooltip, Typography } from '@mui/material';
+import { MenuItem, TextField, Tooltip, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitIconButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { BackHeader } from '@duncit/ui';
 import TranscriptMenu from '../../../components/TranscriptMenu';
@@ -51,15 +52,15 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
           <>
             {isResolved ? (
               <Tooltip title={t('support.tickets.reopen')}>
-                <IconButton size="small" color="primary" aria-label={t('support.tickets.reopen')} onClick={onReopen}>
+                <DuncitIconButton size="small" color="primary" aria-label={t('support.tickets.reopen')} onClick={onReopen}>
                   <ReplayIcon />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             ) : (
               <Tooltip title={t('support.tickets.markResolved')}>
-                <IconButton size="small" color="success" aria-label={t('support.tickets.markResolved')} onClick={() => setConfirmResolve(true)}>
+                <DuncitIconButton size="small" color="success" aria-label={t('support.tickets.markResolved')} onClick={() => setConfirmResolve(true)}>
                   <CheckCircleIcon />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             )}
 

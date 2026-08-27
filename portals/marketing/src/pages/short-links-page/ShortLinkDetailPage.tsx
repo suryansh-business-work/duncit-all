@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { BackHeader } from '@duncit/ui';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
@@ -107,7 +108,7 @@ export default function ShortLinkDetailPage() {
         onBack={goBack}
         actions={
           row && (
-            <Button
+            <DuncitButton
               variant="outlined"
               color={row.is_active ? 'warning' : 'primary'}
               disabled={toggling}
@@ -116,7 +117,7 @@ export default function ShortLinkDetailPage() {
               }}
             >
               {row.is_active ? 'Retire link' : 'Reactivate link'}
-            </Button>
+            </DuncitButton>
           )
         }
       />

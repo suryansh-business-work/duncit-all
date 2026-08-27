@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { AuthMessagesCard } from '../account-page/comm-preference';
@@ -56,7 +57,7 @@ export default function WhatsAppPreferencePage() {
 
   const bulkButton = (
     <Box sx={{ pt: 1.5 }}>
-      <Button
+      <DuncitButton
         fullWidth
         variant="outlined"
         color={allOff ? 'primary' : 'error'}
@@ -64,7 +65,7 @@ export default function WhatsAppPreferencePage() {
         disabled={state.busyCategory !== null || !reachable}
       >
         {bulkLabel}
-      </Button>
+      </DuncitButton>
     </Box>
   );
 

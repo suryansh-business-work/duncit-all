@@ -1,8 +1,9 @@
 import { JSX, useEffect, useState } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Button, Chip, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Chip, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { DuncitButton } from '@duncit/buttons';
 import { useFormContext, useFormState } from 'react-hook-form';
 import { useClubFormData } from './context';
 import BasicSection from './sections/BasicSection';
@@ -72,12 +73,12 @@ export default function ClubSections() {
           justifyContent: "flex-end",
           mb: 1
         }}>
-        <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen}>
+        <DuncitButton size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen}>
           Expand all
-        </Button>
-        <Button size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0}>
+        </DuncitButton>
+        <DuncitButton size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0}>
           Collapse all
-        </Button>
+        </DuncitButton>
       </Stack>
       {sections.map((section) => (
         <Accordion

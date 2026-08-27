@@ -1,6 +1,7 @@
-import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import { DuncitButton } from '@duncit/buttons';
 import PreviewMedia from './PreviewMedia';
 import type { ClubPreviewModel } from './club-preview-model';
 
@@ -57,7 +58,7 @@ export default function ClubPreviewCard({ model }: Readonly<{ model: ClubPreview
             {model.description}
           </Typography>
         )}
-        <Button
+        <DuncitButton
           fullWidth
           disabled
           variant="contained"
@@ -65,7 +66,7 @@ export default function ClubPreviewCard({ model }: Readonly<{ model: ClubPreview
           sx={{ mt: 1.5, borderRadius: 999, fontWeight: 700 }}
         >
           Open Club
-        </Button>
+        </DuncitButton>
       </CardContent>
     </Card>
   );

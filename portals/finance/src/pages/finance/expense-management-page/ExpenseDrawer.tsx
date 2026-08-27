@@ -1,21 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Divider,
-  Drawer,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Divider, Drawer, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import { ADD_REFUND, CREATE_EXPENSE, DELETE_EXPENSE, EXPENSE_CATEGORIES, PAYMENT_METHODS, REMOVE_REFUND, UPDATE_EXPENSE, labelize } from './queries';
 import RefundTimeline from './RefundTimeline';
@@ -109,13 +98,13 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
           {editing ? 'Expense details' : 'New expense'}
         </Typography>
         {editing && (
-          <IconButton color="error" aria-label={t('finance.expenseManagement.deleteExpense')} onClick={remove}>
+          <DuncitIconButton color="error" aria-label={t('finance.expenseManagement.deleteExpense')} onClick={remove}>
             <DeleteOutlineIcon />
-          </IconButton>
+          </DuncitIconButton>
         )}
-        <IconButton aria-label={t('shell.common.close')} onClick={onClose}>
+        <DuncitIconButton aria-label={t('shell.common.close')} onClick={onClose}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
 
@@ -143,9 +132,9 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
           maxBytes={null}
           buttonLabel="Upload"
         />
-        <Button variant="contained" onClick={save} disabled={saving}>
+        <DuncitButton variant="contained" onClick={save} disabled={saving}>
           {saving ? 'Saving…' : saveLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {editing && (

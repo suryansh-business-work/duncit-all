@@ -2,17 +2,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  AlertTitle,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, AlertTitle, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
 import {
   fmtDate,
@@ -137,10 +128,10 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading}>
           Keep the pod
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form={FORM_ID}
           variant="contained"
@@ -149,7 +140,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
           sx={{ borderRadius: 999, fontWeight: 900 }}
         >
           {state.loading ? 'Cancelling…' : 'Cancel this pod'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </>
   );

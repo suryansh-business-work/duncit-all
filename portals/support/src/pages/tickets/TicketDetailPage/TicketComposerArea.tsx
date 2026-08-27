@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Stack } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
@@ -53,9 +54,9 @@ export default function TicketComposerArea({
           This ticket is resolved. Close it once the user has confirmed, or it will reopen
           automatically if they reply within the allowed window.
         </Alert>
-        <Button variant="contained" color="error" fullWidth size="large" onClick={() => setConfirmClose(true)}>
+        <DuncitButton variant="contained" color="error" fullWidth size="large" onClick={() => setConfirmClose(true)}>
           Close
-        </Button>
+        </DuncitButton>
         <ConfirmDialog
           open={confirmClose}
           title={t('support.tickets.closeTitle')}
@@ -97,9 +98,9 @@ export default function TicketComposerArea({
           maxBytes={100 * 1024 * 1024}
           allowDocuments
         />
-        <Button variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={onSend}>
+        <DuncitButton variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={onSend}>
           Send
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

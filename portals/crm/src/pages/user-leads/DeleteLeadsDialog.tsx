@@ -1,12 +1,6 @@
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { WA_DELETE_USER_LEADS } from '../tools/whatsapp/whatsappQueries';
 import { useTranslation } from '@duncit/shell';
 
@@ -39,12 +33,12 @@ export default function DeleteLeadsDialog({ ids, onClose, onDeleted }: Readonly<
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button color="error" variant="contained" onClick={run} disabled={loading}>
+        </DuncitButton>
+        <DuncitButton color="error" variant="contained" onClick={run} disabled={loading}>
           {loading ? 'Deleting…' : t('shell.common.delete')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

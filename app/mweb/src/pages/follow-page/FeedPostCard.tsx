@@ -1,9 +1,10 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Avatar, Box, Card, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, Stack, Typography } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';
 import { getFeedCardHeader } from './feedHeader';
 import type { FeedClub, FeedPost } from './queries';
@@ -116,19 +117,19 @@ export default function FeedPostCard({
           px: 0.75,
           py: 0.25
         }}>
-        <IconButton
+        <DuncitIconButton
           aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
           onClick={() => onToggleLike(post)}
           color={post.liked_by_me ? 'error' : 'default'}
         >
           {post.liked_by_me ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </IconButton>
+        </DuncitIconButton>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {post.likes_count}
         </Typography>
-        <IconButton aria-label={t('mweb.common.comments')} onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
+        <DuncitIconButton aria-label={t('mweb.common.comments')} onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
           <ChatBubbleOutlineIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {post.comments_count}
         </Typography>

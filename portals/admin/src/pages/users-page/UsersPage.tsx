@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import { CREATE_USER, ROLES, USERS_TABLE, type UserRow } from './queries';
@@ -80,9 +81,9 @@ export default function UsersPage() {
         getRowId={getUserRowId}
         onRowClick={(u) => navigate(`/users/${u.user_id}`)}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             {t('admin.users.create')}
-          </Button>
+          </DuncitButton>
         }
         emptyText={t('admin.users.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}

@@ -1,6 +1,7 @@
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import LogoutIcon from '@mui/icons-material/Logout';
+import { DuncitButton } from '@duncit/buttons';
 import { sessionT, type SessionTranslate } from './i18n';
 
 export interface UserDataNotLoadedDialogProps {
@@ -62,12 +63,12 @@ export default function UserDataNotLoadedDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-        <Button onClick={onLogout} startIcon={<LogoutIcon />} color="inherit">
+        <DuncitButton onClick={onLogout} startIcon={<LogoutIcon />} color="inherit">
           {t('session.notLoaded.logout')}
-        </Button>
-        <Button onClick={onReload} startIcon={<RefreshIcon />} variant="contained">
+        </DuncitButton>
+        <DuncitButton onClick={onReload} startIcon={<RefreshIcon />} variant="contained">
           {t('session.notLoaded.reload')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

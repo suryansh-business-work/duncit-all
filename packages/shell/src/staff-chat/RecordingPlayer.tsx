@@ -1,6 +1,7 @@
-import { Backdrop, Box, IconButton, Tooltip } from '@mui/material';
+import { Backdrop, Box, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -40,7 +41,7 @@ export default function RecordingPlayer({ url, onClose }: Readonly<Props>) {
           />
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
             <Tooltip title={t('shell.chat.recorder.download')}>
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 component="a"
                 href={url}
@@ -51,17 +52,17 @@ export default function RecordingPlayer({ url, onClose }: Readonly<Props>) {
                 aria-label={t('shell.chat.callRow.download')}
               >
                 <DownloadIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
             <Tooltip title={t('shell.chat.recorder.close')}>
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 onClick={onClose}
                 sx={{ color: 'common.white', bgcolor: 'rgba(0,0,0,0.5)' }}
                 aria-label={t('shell.chat.recorder.closeRecording')}
               >
                 <CloseIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           </Box>
         </Box>

@@ -1,25 +1,11 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, TextField, Typography } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   POD_IDEA_DETAILS,
   ADD_COMMENT,
@@ -105,7 +91,7 @@ function IdeaDetailsBody({
           alignItems: "center",
           mb: 2
         }}>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={
             idea.liked_by_me ? (
@@ -118,7 +104,7 @@ function IdeaDetailsBody({
           sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
         >
           {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}
-        </Button>
+        </DuncitButton>
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
@@ -182,13 +168,13 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         {idea?.title ?? 'Pod idea'}
-        <IconButton
+        <DuncitIconButton
           onClick={onClose}
           sx={{ position: 'absolute', right: 8, top: 8 }}
           size="small"
         >
           ×
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>
         <IdeaDetailsBody
@@ -216,9 +202,9 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
             }}
             disabled={posting}
           />
-          <IconButton color="primary" onClick={submit} disabled={posting || !text.trim()}>
+          <DuncitIconButton color="primary" onClick={submit} disabled={posting || !text.trim()}>
             <SendIcon />
-          </IconButton>
+          </DuncitIconButton>
         </DialogActions>
       )}
     </Dialog>

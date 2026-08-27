@@ -1,19 +1,7 @@
-import {
-  Avatar,
-  Box,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemAvatar, ListItemText, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useQuery } from '@apollo/client';
 import { STORY_VIEWERS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -70,9 +58,9 @@ export default function StoryViewersDialog({
             {viewers.length === 0 ? 'No views yet' : `Seen by ${viewers.length}`}
           </Typography>
         </Stack>
-        <IconButton onClick={onClose} aria-label={t('mweb.common.closeViewers')} size="small">
+        <DuncitIconButton onClick={onClose} aria-label={t('mweb.common.closeViewers')} size="small">
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>
         {loading && viewers.length === 0 ? (

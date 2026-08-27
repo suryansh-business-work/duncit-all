@@ -1,7 +1,8 @@
 import { useState, type ChangeEvent, type FocusEvent } from 'react';
-import { FormControlLabel, IconButton, InputAdornment, Switch, TextField, Tooltip } from '@mui/material';
+import { FormControlLabel, InputAdornment, Switch, TextField, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { EnvFieldDef } from '../queries';
 
 interface Props {
@@ -57,14 +58,14 @@ export default function ConfigField({ field, value, error, helperText, required,
               endAdornment: (
                 <InputAdornment position="end">
                   <Tooltip title={reveal ? 'Hide' : 'Show'}>
-                    <IconButton
+                    <DuncitIconButton
                       aria-label={reveal ? `Hide ${field.label}` : `Show ${field.label}`}
                       edge="end"
                       size="small"
                       onClick={() => setReveal((v) => !v)}
                     >
                       {reveal ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                    </IconButton>
+                    </DuncitIconButton>
                   </Tooltip>
                 </InputAdornment>
               ),

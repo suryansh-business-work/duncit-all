@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Badge, IconButton, Tooltip } from '@mui/material';
+import { Badge, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import { DuncitIconButton } from '@duncit/buttons';
 import NotificationsScreen from './notifications-screen';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -30,7 +31,7 @@ export default function NotificationsBell({
   return (
     <>
       <Tooltip title={t('mweb.appHeader.notifications')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={() => setOpen(true)}
           aria-label={`Notifications${unreadSuffix}`}
@@ -39,7 +40,7 @@ export default function NotificationsBell({
           <Badge badgeContent={unreadCount} color="error">
             <NotificationsIcon fontSize="small" />
           </Badge>
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <NotificationsScreen
         open={open}

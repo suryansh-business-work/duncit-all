@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -10,6 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { DuncitButton } from '@duncit/buttons';
 import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import {
   MY_VENUES_FOR_AUTO_POD,
@@ -175,9 +175,9 @@ export function VenueAcceptDialog({
               severity="info"
               action={
                 onAddAvailability ? (
-                  <Button color="inherit" size="small" onClick={onAddAvailability}>
+                  <DuncitButton color="inherit" size="small" onClick={onAddAvailability}>
                     {labels.addAvailability}
-                  </Button>
+                  </DuncitButton>
                 ) : undefined
               }
             >
@@ -189,14 +189,14 @@ export function VenueAcceptDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{labels.dismiss}</Button>
-        <Button
+        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={handleAccept}
           disabled={!venueId || !slotId || acceptState.loading}
         >
           {labels.acceptCta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

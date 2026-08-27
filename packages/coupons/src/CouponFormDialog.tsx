@@ -2,18 +2,8 @@ import { useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, Switch } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from './i18n';
 import CouponDateField from './CouponDateField';
@@ -194,10 +184,10 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={submit}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={submit}>
           {initial ? t('shell.common.save') : t('shell.coupons.create')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

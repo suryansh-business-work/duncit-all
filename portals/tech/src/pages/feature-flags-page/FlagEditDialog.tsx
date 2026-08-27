@@ -1,15 +1,5 @@
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Switch, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { type FlagEdit } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -75,14 +65,14 @@ export default function FlagEditDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={onSave}
           disabled={busy || !editing.key || !editing.name}
         >
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

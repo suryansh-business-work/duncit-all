@@ -1,7 +1,8 @@
-import { Box, Button, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import { Box, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -25,11 +26,11 @@ export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive
         alignItems: "center",
         flexWrap: "wrap"
       }}>
-      <Button variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy}>
+      <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy}>
         {busy ? 'Saving…' : t('shell.common.save')}
-      </Button>
-      <Button startIcon={<SendIcon />} onClick={onSendTest}>{t('crm.emailTemplates.sendTest')}</Button>
-      <Button color="error" startIcon={<DeleteIcon />} onClick={onDelete}>{t('shell.common.delete')}</Button>
+      </DuncitButton>
+      <DuncitButton startIcon={<SendIcon />} onClick={onSendTest}>{t('crm.emailTemplates.sendTest')}</DuncitButton>
+      <DuncitButton color="error" startIcon={<DeleteIcon />} onClick={onDelete}>{t('shell.common.delete')}</DuncitButton>
       <FormControlLabel
         control={<Switch checked={isActive} onChange={(e) => onToggleActive(e.target.checked)} />}
         label={t('crm.common.active')}

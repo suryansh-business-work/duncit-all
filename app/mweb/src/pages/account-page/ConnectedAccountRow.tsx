@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 
 interface Props {
   label: string;
@@ -72,7 +73,7 @@ export default function ConnectedAccountRow({
         </Stack>
 
         {onDisconnect && disconnectLabel && (
-          <Button
+          <DuncitButton
             color="error"
             variant="outlined"
             disabled={busy}
@@ -80,7 +81,7 @@ export default function ConnectedAccountRow({
             sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '16px' }}
           >
             {disconnectLabel}
-          </Button>
+          </DuncitButton>
         )}
         {connectControl}
       </Stack>

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { partnerPortalUrl } from '@duncit/onboarding';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
 import {
@@ -46,9 +47,9 @@ export default function EarnPage() {
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
       <Box>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
           {t('mweb.common.back')}
-        </Button>
+        </DuncitButton>
       </Box>
       <Stack spacing={0.5}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>

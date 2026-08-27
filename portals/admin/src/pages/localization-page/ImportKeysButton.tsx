@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import DownloadingIcon from '@mui/icons-material/Downloading';
+import { DuncitButton } from '@duncit/buttons';
 import { allFallbackEntries } from '@duncit/app-settings';
 import { IMPORT_TRANSLATION_KEYS, SERVER_TRANSLATION_SEED } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -52,14 +53,14 @@ export default function ImportKeysButton({ defaultLocale, onDone, onError }: Rea
   return (
     <Tooltip title={t('admin.localization.importHint')}>
       <span>
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<DownloadingIcon />}
           disabled={busy || !defaultLocale}
           onClick={run}
         >
           {busy ? 'Importing…' : 'Import app keys'}
-        </Button>
+        </DuncitButton>
       </span>
     </Tooltip>
   );

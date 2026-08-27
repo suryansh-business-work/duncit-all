@@ -1,17 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { notifyError, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -145,9 +137,9 @@ export default function AppPopupsPage() {
         refetchRef={refetchRef}
         listName={listName}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             New Popup
-          </Button>
+          </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={remove}

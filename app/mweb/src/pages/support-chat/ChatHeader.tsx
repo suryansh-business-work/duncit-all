@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Chip, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Chip, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
@@ -8,6 +8,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { TranscriptFormat } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -45,9 +46,9 @@ export default function ChatHeader({
     <Stack direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
-      </IconButton>
+      </DuncitIconButton>
       <SupportAgentIcon color="primary" />
       <Stack sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
@@ -68,9 +69,9 @@ export default function ChatHeader({
           label={status === 'OPEN' ? 'Open' : 'Resolved'}
         />
       )}
-      <IconButton aria-label={t('mweb.supportChat.chatOptions')} disabled={!ticketNo} onClick={(e) => setAnchor(e.currentTarget)}>
+      <DuncitIconButton aria-label={t('mweb.supportChat.chatOptions')} disabled={!ticketNo} onClick={(e) => setAnchor(e.currentTarget)}>
         <MoreVertIcon />
-      </IconButton>
+      </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={close}>
         {status === 'OPEN' ? (
           <MenuItem onClick={run(onResolve)}>

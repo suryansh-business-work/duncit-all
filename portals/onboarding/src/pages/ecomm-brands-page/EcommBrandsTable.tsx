@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
-import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
@@ -85,14 +86,14 @@ export default function EcommBrandsTable({
     const renderActions = (b: EcommBrandRow) => (
       <>
         <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(b)}>
+          <DuncitIconButton size="small" onClick={() => onEdit(b)}>
             <EditIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <IconButton size="small" onClick={() => onReview(b)}>
+          <DuncitIconButton size="small" onClick={() => onReview(b)}>
             <RateReviewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <LifecycleActions
           active={b.is_active !== false}

@@ -1,17 +1,9 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { SUBSCRIBE_MEMBERSHIP_NEWS } from './queries';
 
@@ -88,13 +80,13 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
           {failed && <Alert severity="error">{t('mweb.membership.notifyError')}</Alert>}
 
           <Box>
-            <Button
+            <DuncitButton
               variant="contained"
               disabled={loading || !email}
               onClick={onSubscribe}
             >
               {loading ? t('mweb.membership.notifySubmitting') : t('mweb.membership.notifyCta')}
-            </Button>
+            </DuncitButton>
           </Box>
         </Stack>
       </CardContent>

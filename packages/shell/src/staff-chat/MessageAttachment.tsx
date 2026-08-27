@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { Backdrop, Box, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
+import { Backdrop, Box, Link, Stack, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -9,6 +9,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { DuncitIconButton } from '@duncit/buttons';
 import VoiceNotePlayer from './voice/VoiceNotePlayer';
 import type { StaffMessage } from './queries';
 
@@ -116,13 +117,13 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
             bgcolor: (theme) => alpha(theme.palette.common.black, 0.9),
           }}
         >
-          <IconButton
+          <DuncitIconButton
             aria-label={t('shell.chat.attachment.closePreview')}
             onClick={() => setLightbox(false)}
             sx={{ position: 'absolute', top: 12, right: 12, color: (theme) => theme.palette.common.white }}
           >
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
           {isImage ? (
             <Box
               component="img"
@@ -173,7 +174,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
         )}
       </Stack>
       <Tooltip title={t('shell.chat.attachment.download')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           component={Link}
           href={url}
@@ -183,7 +184,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           aria-label={t('shell.chat.attachment.downloadNamed', { vars: { name } })}
         >
           <DownloadIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

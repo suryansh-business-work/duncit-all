@@ -1,10 +1,11 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton } from '@duncit/buttons';
 import { BackButton, QueryGuard } from '@duncit/ui';
 import { CLUB_DETAIL } from './queries';
 import ClubOverviewCard from './ClubOverviewCard';
@@ -80,13 +81,13 @@ export default function ClubDetailsPage() {
             </Typography>
           </Box>
         </Stack>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<EditIcon />}
           onClick={() => navigate(`/clubs/${club.id}/edit`)}
         >
           Edit club
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Box sx={{ display: 'grid', gap: 2.5, gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, alignItems: 'start' }}>

@@ -1,20 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Drawer,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { CalEvent } from './useCalendarEvents';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -67,7 +59,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
               }}>
               {isReminder ? 'Reminder' : 'Follow-up'}
             </Typography>
-            <IconButton onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
+            <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
           </Stack>
 
           <Stack spacing={1.5} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
@@ -112,17 +104,17 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
           <Stack spacing={1} sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
             {event.leadId && (
-              <Button variant="contained" startIcon={<OpenInNewIcon />} onClick={openLead}>
+              <DuncitButton variant="contained" startIcon={<OpenInNewIcon />} onClick={openLead}>
                 Open {event.entity === 'VENUE_LEAD' ? 'venue' : 'host'} lead
-              </Button>
+              </DuncitButton>
             )}
             {isReminder && (
               <Stack direction="row" spacing={1}>
-                <Button size="small" startIcon={done ? <RadioButtonUncheckedIcon /> : <CheckCircleIcon />} onClick={() => onToggleDone(event)}>
+                <DuncitButton size="small" startIcon={done ? <RadioButtonUncheckedIcon /> : <CheckCircleIcon />} onClick={() => onToggleDone(event)}>
                   {done ? 'Mark pending' : 'Mark done'}
-                </Button>
-                <Button size="small" startIcon={<EditIcon />} onClick={() => onEdit(event)}>Edit</Button>
-                <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(event)}>{t('shell.common.delete')}</Button>
+                </DuncitButton>
+                <DuncitButton size="small" startIcon={<EditIcon />} onClick={() => onEdit(event)}>Edit</DuncitButton>
+                <DuncitButton size="small" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(event)}>{t('shell.common.delete')}</DuncitButton>
               </Stack>
             )}
           </Stack>

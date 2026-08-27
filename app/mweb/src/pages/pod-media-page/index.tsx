@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IconButton, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { mwebPodMediaLabels } from '@duncit/utils';
 import { PodMediaView } from '@duncit/host-pod-actions';
 import HostPodActionsBridge from '../host-manage-page/HostPodActionsBridge';
@@ -30,9 +31,9 @@ function PodMediaBody({ podId }: Readonly<{ podId: string }>) {
   return (
     <Stack spacing={2} sx={{ p: 1.5, pb: 4 }}>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-        <IconButton aria-label={labels.back} onClick={() => navigate(-1)} size="small">
+        <DuncitIconButton aria-label={labels.back} onClick={() => navigate(-1)} size="small">
           <ArrowBackIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
           {labels.pageTitle}
         </Typography>

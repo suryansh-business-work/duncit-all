@@ -1,7 +1,8 @@
-import { Box, Button, FormControlLabel, Stack, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, FormControlLabel, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
@@ -47,20 +48,20 @@ export default function EditorActionsBar({
 
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-      <Button
+      <DuncitButton
         variant="contained"
         startIcon={<SaveIcon />}
         onClick={onSave}
         disabled={!dirty || busy}
       >
         {busy ? t('shell.common.saving') : t('shell.common.save')}
-      </Button>
-      <Button startIcon={<SendIcon />} onClick={onSendTest}>
+      </DuncitButton>
+      <DuncitButton startIcon={<SendIcon />} onClick={onSendTest}>
         Send test
-      </Button>
-      <Button color="error" startIcon={<DeleteIcon />} onClick={onDelete}>
+      </DuncitButton>
+      <DuncitButton color="error" startIcon={<DeleteIcon />} onClick={onDelete}>
         Delete
-      </Button>
+      </DuncitButton>
       <Tooltip title={t('tech.emailTemplates.autoSaveHint')}>
         <Box component="span" sx={{ display: 'inline-flex' }}>
           <FormControlLabel

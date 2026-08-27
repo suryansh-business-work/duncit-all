@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Box, Dialog, IconButton, Stack } from '@mui/material';
+import { Box, Dialog, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export interface Moment {
@@ -116,7 +117,7 @@ export default function MomentLightbox({
           sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}
         >
           {actions}
-          <IconButton
+          <DuncitIconButton
             onClick={close}
             aria-label={t('mweb.moments.closePreview')}
             sx={{
@@ -128,24 +129,24 @@ export default function MomentLightbox({
             }}
           >
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
         {moments.length > 1 && (
           <>
-            <IconButton
+            <DuncitIconButton
               onClick={prev}
               aria-label={t('mweb.moments.previousMoment')}
               sx={navBtn('left')}
             >
               <ChevronLeftIcon />
-            </IconButton>
-            <IconButton
+            </DuncitIconButton>
+            <DuncitIconButton
               onClick={next}
               aria-label={t('mweb.moments.nextMoment')}
               sx={navBtn('right')}
             >
               <ChevronRightIcon />
-            </IconButton>
+            </DuncitIconButton>
           </>
         )}
         <Stack

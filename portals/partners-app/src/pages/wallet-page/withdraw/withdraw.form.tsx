@@ -3,17 +3,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { REQUEST_WITHDRAWAL } from '../queries';
 import { blankWithdrawValues, type WithdrawValues } from './withdraw.types';
 import { useTranslation } from '@duncit/shell';
@@ -154,10 +145,10 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="withdraw-form"
           variant="contained"
@@ -165,7 +156,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
           sx={{ borderRadius: 999, fontWeight: 900 }}
         >
           {state.loading ? 'Requesting…' : 'Request withdrawal'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

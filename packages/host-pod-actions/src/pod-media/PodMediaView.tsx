@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Box, Button, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { splitMediaLines } from '../media-text';
 import PodMediaGrid from './PodMediaGrid';
@@ -63,9 +64,9 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
       <Alert
         severity="error"
         action={
-          <Button size="small" onClick={refetch}>
+          <DuncitButton size="small" onClick={refetch}>
             {labels.retry}
-          </Button>
+          </DuncitButton>
         }
       >
         {labels.loadFailed}

@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { Controller, useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Autocomplete, Button, Chip, Stack, TextField, Typography } from '@mui/material';
+import { Autocomplete, Chip, Stack, TextField, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import TagIcon from '@mui/icons-material/Tag';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { SlackChannel } from '../../slack/queries';
 import type { AppBuildSettings } from '../queries';
@@ -174,9 +175,9 @@ export default function AppBuildSettingsForm({
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <Button type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" disabled={busy}>
             {busy ? t('tech.appBuilds.saving') : t('tech.appBuilds.save')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

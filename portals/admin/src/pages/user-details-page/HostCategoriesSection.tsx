@@ -1,6 +1,7 @@
-import { Alert, Button, Card, CardContent, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import { useTranslation } from '@duncit/shell';
 
@@ -79,14 +80,14 @@ export default function HostCategoriesSection({ hostProfile, rows, setRows }: Re
                 onChange={(next) => update(index, next)}
                 direction="row"
               />
-              <IconButton
+              <DuncitIconButton
                 aria-label={t('admin.roles.removeCategory')}
                 color="error"
                 onClick={() => remove(index)}
                 sx={{ mt: 1 }}
               >
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Stack>
           ))}
           {rows.length === 0 && (
@@ -96,14 +97,14 @@ export default function HostCategoriesSection({ hostProfile, rows, setRows }: Re
               No categories yet — this host cannot create pods until one is added.
             </Typography>
           )}
-          <Button
+          <DuncitButton
             size="small"
             startIcon={<AddIcon />}
             onClick={() => setRows([...rows, EMPTY_CATEGORY])}
             sx={{ alignSelf: 'flex-start' }}
           >
             Add category
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

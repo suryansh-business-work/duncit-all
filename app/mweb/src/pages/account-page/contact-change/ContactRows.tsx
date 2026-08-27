@@ -1,4 +1,5 @@
-import { Button, Divider, Stack, Typography } from '@mui/material';
+import { Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CONTACT_CHANNELS,
   currentContactValue,
@@ -34,7 +35,7 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
           {value || copy.emptyValue}
         </Typography>
       </Stack>
-      <Button
+      <DuncitButton
         type="button"
         size="small"
         variant="outlined"
@@ -42,7 +43,7 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
         data-testid={`contact-change-${channel}`}
       >
         {value ? labels.changeAction : labels.addAction}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

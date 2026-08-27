@@ -1,9 +1,9 @@
 import type { Control } from 'react-hook-form';
-import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import type { CancellationPolicyValues } from './cancellation-policy.types';
 
@@ -57,14 +57,14 @@ export default function CancellationTierRow({
       />
       <Tooltip title={t('partners.venueSettingsPage.removeTier')}>
         <span>
-          <IconButton
+          <DuncitIconButton
             aria-label={t('partners.venueSettingsPage.removeTier')}
             onClick={onRemove}
             disabled={disabled}
             sx={{ mt: 1 }}
           >
             <DeleteOutlineIcon />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
     </Stack>

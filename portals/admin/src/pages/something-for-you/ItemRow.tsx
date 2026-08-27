@@ -1,6 +1,7 @@
-import { Box, Card, CardContent, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { SomethingForYouForm } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -73,12 +74,12 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
           </Box>
 
           <Stack direction="row" sx={{ flexShrink: 0 }}>
-            <IconButton aria-label={t('admin.somethingForYou.editCard')} onClick={() => onEdit(item)}>
+            <DuncitIconButton aria-label={t('admin.somethingForYou.editCard')} onClick={() => onEdit(item)}>
               <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton aria-label={t('admin.somethingForYou.deleteCard')} onClick={() => onRemove(item)}>
+            </DuncitIconButton>
+            <DuncitIconButton aria-label={t('admin.somethingForYou.deleteCard')} onClick={() => onRemove(item)}>
               <DeleteIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         </Stack>
       </CardContent>

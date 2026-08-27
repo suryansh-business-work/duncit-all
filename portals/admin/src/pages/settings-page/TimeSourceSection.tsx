@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import LocalDateTimeField from '../../components/LocalDateTimeField';
 import { TIME_ZONES, SOURCE_OPTIONS, toLocalInput, useClockPreview } from './time-source';
@@ -115,14 +106,14 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
               decides which occasion icons are active.
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={submit}
             disabled={busy || !dirty || loading}
           >
             {busy ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         <Stack spacing={2}>

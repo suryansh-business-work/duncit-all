@@ -1,18 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  FormControlLabel,
-  Stack,
-  Switch,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { INVOICE_SETTINGS, UPDATE_INVOICE_SETTINGS } from './queries';
 import { EMPTY_INVOICE_SETTINGS, type InvoiceField, type InvoiceSettingsForm } from './types';
@@ -101,9 +91,9 @@ export default function InvoiceManagementPage() {
             Control the branding and text rendered on every tax invoice and event ticket.
           </Typography>
         </Box>
-        <Button variant="contained" size="large" onClick={save} disabled={saving}>
+        <DuncitButton variant="contained" size="large" onClick={save} disabled={saving}>
           {saving ? 'Saving…' : 'Save changes'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

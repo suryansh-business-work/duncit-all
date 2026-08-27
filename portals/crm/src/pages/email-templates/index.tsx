@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { DELETE, TEMPLATES, TEMPLATES_TABLE, type EmailTemplateRow } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
@@ -60,9 +61,9 @@ export default function EmailTemplatesPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
             New template
-          </Button>
+          </DuncitButton>
         }
         onEdit={(t) => navigate(`/email-templates/${t.template_id}`)}
         onDelete={setRemoving}

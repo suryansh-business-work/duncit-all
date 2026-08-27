@@ -1,14 +1,5 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Link,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { CrmWebsitePage } from '../../api/websitePages.gql';
 import { useTranslation } from '@duncit/shell';
 
@@ -66,7 +57,7 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -1,8 +1,9 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import FilterNoneIcon from '@mui/icons-material/FilterNone';
 import MinimizeIcon from '@mui/icons-material/Minimize';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface TitleBarProps {
@@ -83,23 +84,23 @@ export function TitleBar({
         )}
       </Box>
       <Tooltip title={t('shell.chat.window.minimise')}>
-        <IconButton size="small" onClick={onMinimise} aria-label={t('shell.chat.window.minimiseLabel')}>
+        <DuncitIconButton size="small" onClick={onMinimise} aria-label={t('shell.chat.window.minimiseLabel')}>
           <MinimizeIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t(maximised ? 'shell.chat.window.restore' : 'shell.chat.window.maximise')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={onToggleMaximise}
           aria-label={t(maximised ? 'shell.chat.window.restoreLabel' : 'shell.chat.window.maximiseLabel')}
         >
           {maximised ? <FilterNoneIcon fontSize="small" /> : <CropSquareIcon fontSize="small" />}
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.chat.window.close')}>
-        <IconButton size="small" color="error" onClick={onClose} aria-label={t('shell.chat.window.closeLabel')}>
+        <DuncitIconButton size="small" color="error" onClick={onClose} aria-label={t('shell.chat.window.closeLabel')}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

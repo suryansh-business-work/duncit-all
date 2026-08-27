@@ -1,4 +1,5 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Typography } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Paper, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { useTranslation } from '@duncit/app-settings';
 import type { PolicyVersionRow } from '../../../graphql/policyAcceptance';
@@ -46,7 +47,7 @@ export default function WordingDialog({ version, onClose }: Readonly<Props>) {
         </Paper>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

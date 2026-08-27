@@ -1,14 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 export interface ReleaseSummaryRelease {
@@ -64,9 +55,9 @@ export default function ReleaseSummaryDialog({
         </List>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="contained">
+        <DuncitButton onClick={onClose} variant="contained">
           Done
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

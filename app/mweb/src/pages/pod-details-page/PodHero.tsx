@@ -2,10 +2,11 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import HeroOverlayActions from './HeroOverlayActions';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -28,28 +29,28 @@ const arrowBtn = {
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <IconButton
+    <DuncitIconButton
       size="small"
       onClick={onClick}
       aria-label={t('mweb.podDetails.previousImage')}
       sx={{ ...arrowBtn, left: 10 }}
     >
       <ChevronLeftIcon />
-    </IconButton>
+    </DuncitIconButton>
   );
 }
 
 function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <IconButton
+    <DuncitIconButton
       size="small"
       onClick={onClick}
       aria-label={t('mweb.podDetails.nextImage')}
       sx={{ ...arrowBtn, right: 10 }}
     >
       <ChevronRightIcon />
-    </IconButton>
+    </DuncitIconButton>
   );
 }
 

@@ -1,8 +1,9 @@
 import type { MutableRefObject, ChangeEvent } from 'react';
 import { useTranslation } from './i18n/useTranslation';
-import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Box, LinearProgress, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { DuncitButton } from '@duncit/buttons';
 import FileDetails, { useMediaDimensions } from './FileDetails';
 import ImageCropStep from './ImageCropStep';
 import { suggestPresetKey } from './cropUtils';
@@ -186,9 +187,9 @@ export default function DeviceUploadTab({
             width: '100%'
           }}>
           <FileDetails file={picked} dims={dims} />
-          <Button size="small" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          <DuncitButton size="small" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             {t('media.device.change')}
-          </Button>
+          </DuncitButton>
         </Stack>
       )}
       {uploading && (

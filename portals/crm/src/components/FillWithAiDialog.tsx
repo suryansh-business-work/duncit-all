@@ -1,17 +1,8 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import { DuncitButton } from '@duncit/buttons';
 import { CREATE_HOST_LEAD, CREATE_VENUE_LEAD } from '../api/crm.gql';
 import { parseApiError } from '@duncit/utils';
 import AiRecordsTable, { type AiRow } from './ai-records/AiRecordsTable';
@@ -114,17 +105,17 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={parsing || saving}>{t('shell.common.cancel')}</Button>
+        <DuncitButton onClick={close} disabled={parsing || saving}>{t('shell.common.cancel')}</DuncitButton>
         {step === 'input' ? (
-          <Button variant="contained" onClick={parse} disabled={parsing} startIcon={<AutoFixHighIcon />}>
+          <DuncitButton variant="contained" onClick={parse} disabled={parsing} startIcon={<AutoFixHighIcon />}>
             {parsing ? 'Parsing…' : 'Parse'}
-          </Button>
+          </DuncitButton>
         ) : (
           <>
-            <Button onClick={() => setStep('input')} disabled={saving}>Back</Button>
-            <Button variant="contained" onClick={save} disabled={saving || rows.length === 0}>
+            <DuncitButton onClick={() => setStep('input')} disabled={saving}>Back</DuncitButton>
+            <DuncitButton variant="contained" onClick={save} disabled={saving || rows.length === 0}>
               {saving ? 'Saving…' : `Confirm & save ${rows.length}`}
-            </Button>
+            </DuncitButton>
           </>
         )}
       </DialogActions>

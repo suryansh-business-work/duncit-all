@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import { TEST_ENV_PEXELS, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '@duncit/utils';
@@ -38,9 +39,9 @@ export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>
         <TextField label={t('tech.environment.searchQuery')} value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" autoComplete="off" slotProps={{
           htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
         }} />
-        <Button startIcon={<SearchIcon />} variant="contained" onClick={search} disabled={loading}>
+        <DuncitButton startIcon={<SearchIcon />} variant="contained" onClick={search} disabled={loading}>
           {loading ? '…' : 'Load'}
-        </Button>
+        </DuncitButton>
       </Stack>
       <ResultAlert result={result} />
       {photos.length > 0 && (

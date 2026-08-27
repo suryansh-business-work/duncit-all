@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import VenueAccordionForm from '../../components/admin-venue-create-dialog/VenueAccordionForm';
 import {
   blankS1,
@@ -175,17 +165,17 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading}>
           Cancel
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={save}
           disabled={state.loading}
           startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
         >
           Save
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

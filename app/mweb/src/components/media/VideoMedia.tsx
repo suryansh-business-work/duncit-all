@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   src: string;
@@ -76,7 +77,7 @@ export default function VideoMedia({
             zIndex: 3,
           }}
         >
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={togglePlay}
             aria-label={playing ? 'Pause video' : 'Play video'}
@@ -87,8 +88,8 @@ export default function VideoMedia({
             }}
           >
             {playing ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
-          </IconButton>
-          <IconButton
+          </DuncitIconButton>
+          <DuncitIconButton
             size="small"
             onClick={toggleMute}
             aria-label={muted ? 'Unmute video' : 'Mute video'}
@@ -99,7 +100,7 @@ export default function VideoMedia({
             }}
           >
             {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
-          </IconButton>
+          </DuncitIconButton>
         </Box>
       )}
     </Box>

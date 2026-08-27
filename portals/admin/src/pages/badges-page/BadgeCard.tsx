@@ -1,14 +1,7 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { BadgeCondition } from '@duncit/utils';
 import { CONDITION_LABEL_KEY } from './queries';
@@ -79,12 +72,12 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
             </Typography>
           </Box>
           <Stack>
-            <IconButton size="small" onClick={() => onEdit(badge)}>
+            <DuncitIconButton size="small" onClick={() => onEdit(badge)}>
               <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={() => onRemove(badge)} color="error">
+            </DuncitIconButton>
+            <DuncitIconButton size="small" onClick={() => onRemove(badge)} color="error">
               <DeleteIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         </Stack>
       </CardContent>

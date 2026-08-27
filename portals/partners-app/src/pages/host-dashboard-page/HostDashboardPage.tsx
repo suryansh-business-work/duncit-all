@@ -1,10 +1,11 @@
 import { useQuery } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Button, Card, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import WorkIcon from '@mui/icons-material/Work';
+import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import HostStatCards from './HostStatCards';
@@ -37,10 +38,10 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
       alignItems: { sm: 'center' }
     }}>
-      <Button component={RouterLink} to="/host/pods" size="small" variant="outlined" startIcon={<DashboardIcon />}>
+      <DuncitButton component={RouterLink} to="/host/pods" size="small" variant="outlined" startIcon={<DashboardIcon />}>
         Your Pods
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         component={RouterLink}
         to="/wallet"
         size="small"
@@ -48,8 +49,8 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
         startIcon={<AccountBalanceWalletIcon />}
       >
         Wallet
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         component={RouterLink}
         to="/host/pods?new=1"
         size="small"
@@ -58,7 +59,7 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
         disabled={!isHost}
       >
         Create pod
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }
@@ -178,9 +179,9 @@ export default function HostDashboardPage() {
             <Alert
               severity="info"
               action={
-                <Button component={RouterLink} to="/become-host" size="small" startIcon={<WorkIcon />}>
+                <DuncitButton component={RouterLink} to="/become-host" size="small" startIcon={<WorkIcon />}>
                   Apply
-                </Button>
+                </DuncitButton>
               }
             >
               You are not an approved host yet. Submit your host profile to start creating pods.

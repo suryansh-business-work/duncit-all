@@ -1,16 +1,6 @@
 import { useQuery } from '@apollo/client';
-import {
-  Avatar,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip } from '@duncit/ui';
 import {
   BUCKET_COLORS,
@@ -99,7 +89,7 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>{t('shell.common.close')}</Button>
+            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

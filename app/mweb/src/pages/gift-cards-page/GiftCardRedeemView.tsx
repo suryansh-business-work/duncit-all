@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
-import { Alert, Button, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Paper, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useDateFormat } from '../../utils/dateFormat';
 import GiftCardVisual from './GiftCardVisual';
@@ -60,13 +61,13 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
           }}>
           {body}
         </Typography>
-        <Button
+        <DuncitButton
           variant="contained"
           onClick={() => navigate('/duncit-coin')}
           sx={{ mt: 2, borderRadius: 999, fontWeight: 700 }}
         >
           {t('mweb.giftCards.goToCoins')}
-        </Button>
+        </DuncitButton>
       </Paper>
     );
   }
@@ -115,7 +116,7 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
       ) : (
         <>
           {error && <Alert severity="error">{error}</Alert>}
-          <Button
+          <DuncitButton
             variant="contained"
             size="large"
             disabled={loading}
@@ -123,7 +124,7 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {t('mweb.giftCards.redeemCta')}
-          </Button>
+          </DuncitButton>
         </>
       )}
     </Stack>

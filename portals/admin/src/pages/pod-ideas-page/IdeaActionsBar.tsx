@@ -1,4 +1,5 @@
-import { Button, DialogActions } from '@mui/material';
+import { DialogActions } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -12,23 +13,23 @@ export default function IdeaActionsBar({ status, onSetStatus, onClose }: Readonl
   return (
     <DialogActions>
       {status !== 'PENDING' && (
-        <Button onClick={() => onSetStatus('PENDING')}>{t('admin.podIdeas.resetPending')}</Button>
+        <DuncitButton onClick={() => onSetStatus('PENDING')}>{t('admin.podIdeas.resetPending')}</DuncitButton>
       )}
       {status !== 'REJECTED' && (
-        <Button color="warning" onClick={() => onSetStatus('REJECTED')}>
+        <DuncitButton color="warning" onClick={() => onSetStatus('REJECTED')}>
           {t('admin.podIdeas.reject')}
-        </Button>
+        </DuncitButton>
       )}
       {status !== 'APPROVED' && (
-        <Button
+        <DuncitButton
           variant="contained"
           color="success"
           onClick={() => onSetStatus('APPROVED')}
         >
           {t('admin.podIdeas.approve')}
-        </Button>
+        </DuncitButton>
       )}
-      <Button onClick={onClose}>{t('shell.common.close')}</Button>
+      <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
     </DialogActions>
   );
 }

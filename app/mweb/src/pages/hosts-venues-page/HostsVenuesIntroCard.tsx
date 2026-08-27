@@ -1,8 +1,9 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
+import { DuncitButton } from '@duncit/buttons';
 
 export default function HostsVenuesIntroCard() {
   return (
@@ -37,7 +38,7 @@ export default function HostsVenuesIntroCard() {
             </Box>
           </Stack>
           <Stack direction="row" spacing={1} sx={{ '& .MuiButton-root': { borderRadius: 999, fontWeight: 700 } }}>
-            <Button
+            <DuncitButton
               component={RouterLink}
               to="/survey/host"
               variant="contained"
@@ -45,8 +46,8 @@ export default function HostsVenuesIntroCard() {
               startIcon={<GroupAddIcon />}
             >
               Become a Host
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               component={RouterLink}
               to="/survey/venue"
               variant="outlined"
@@ -54,7 +55,7 @@ export default function HostsVenuesIntroCard() {
               startIcon={<AddBusinessIcon />}
             >
               Register Venue
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </CardContent>

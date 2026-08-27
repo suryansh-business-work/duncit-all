@@ -2,17 +2,8 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { PodAttendanceLabels, PodAttendanceRow } from '@duncit/utils';
 import MediumPicker from './MediumPicker';
 import { REQUEST_ATTENDANCE_OTP, VERIFY_ATTENDANCE_OTP } from './queries';
@@ -164,7 +155,7 @@ export default function AttendanceOtpDialog({
             )}
           />
 
-          <Button
+          <DuncitButton
             variant={challengeId ? 'text' : 'contained'}
             onClick={() => {
               send().catch(() => undefined);
@@ -173,7 +164,7 @@ export default function AttendanceOtpDialog({
             sx={{ borderRadius: 999, fontWeight: 800, alignSelf: 'flex-start' }}
           >
             {sendLabel(requestState.loading, !!challengeId, labels)}
-          </Button>
+          </DuncitButton>
           {requestState.error && <Alert severity="error">{requestState.error.message}</Alert>}
 
           {challengeId && (
@@ -202,8 +193,8 @@ export default function AttendanceOtpDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{labels.otpCancel}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{labels.otpCancel}</DuncitButton>
+        <DuncitButton
           variant="contained"
           disabled={!challengeId || verifyState.loading || formState.isSubmitting}
           onClick={() => {
@@ -212,7 +203,7 @@ export default function AttendanceOtpDialog({
           sx={{ borderRadius: 999, fontWeight: 800 }}
         >
           {verifyState.loading ? labels.otpVerifying : labels.otpVerify}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

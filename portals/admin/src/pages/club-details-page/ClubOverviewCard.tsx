@@ -1,10 +1,11 @@
-import { Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import PeopleIcon from '@mui/icons-material/People';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StarIcon from '@mui/icons-material/Star';
 import PlaceIcon from '@mui/icons-material/Place';
+import { DuncitButton } from '@duncit/buttons';
 import type { ClubDetail } from './types';
 import { useTranslation } from '@duncit/shell';
 
@@ -106,7 +107,7 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
           flexWrap: "wrap"
         }}>
           {club.club_whats_app_community_link && (
-            <Button
+            <DuncitButton
               size="small"
               variant="outlined"
               color="success"
@@ -116,10 +117,10 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
               rel="noreferrer"
             >
               {t('admin.hub.community')}
-            </Button>
+            </DuncitButton>
           )}
           {club.club_whats_app_group_link && (
-            <Button
+            <DuncitButton
               size="small"
               variant="outlined"
               color="success"
@@ -129,7 +130,7 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
               rel="noreferrer"
             >
               Group chat
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       </CardContent>

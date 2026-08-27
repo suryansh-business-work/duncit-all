@@ -1,17 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  ListSubheader,
-  MenuItem,
-  Stack,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, ListSubheader, MenuItem, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import type { AisensyTemplate, CreateAisensyCampaignInput } from '../../queries';
@@ -112,12 +103,12 @@ export default function CreateCampaignForm({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>
+          <DuncitButton type="button" onClick={onClose} disabled={busy}>
             {t('marketingWhatsapp.cancel')}
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy || !isValid}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
             {busy ? t('marketingWhatsapp.submitting') : t('marketingWhatsapp.submitCampaign')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

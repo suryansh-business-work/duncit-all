@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, Divider, Paper, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Paper, Snackbar, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton } from '@duncit/buttons';
 import { BackHeader } from '@duncit/ui';
 import { downloadTextFile } from '@duncit/utils';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
@@ -184,12 +184,12 @@ export default function DocumentDetailPage() {
       <Stack direction="row" spacing={0.5} sx={{
         flexWrap: "wrap"
       }}>
-        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>{t('shell.common.edit')}</Button>
-        <Button size="small" startIcon={<PrintIcon />} onClick={onPrint}>{t('legal.documents.print')}</Button>
-        <Button size="small" startIcon={<DownloadIcon />} onClick={onDownload}>{t('legal.documents.download')}</Button>
-        <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>{t('shell.common.copy')}</Button>
-        <Button size="small" startIcon={<FileCopyIcon />} onClick={onClone}>{t('legal.documents.clone')}</Button>
-        <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)}>{t('shell.common.delete')}</Button>
+        <DuncitButton size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>{t('shell.common.edit')}</DuncitButton>
+        <DuncitButton size="small" startIcon={<PrintIcon />} onClick={onPrint}>{t('legal.documents.print')}</DuncitButton>
+        <DuncitButton size="small" startIcon={<DownloadIcon />} onClick={onDownload}>{t('legal.documents.download')}</DuncitButton>
+        <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>{t('shell.common.copy')}</DuncitButton>
+        <DuncitButton size="small" startIcon={<FileCopyIcon />} onClick={onClone}>{t('legal.documents.clone')}</DuncitButton>
+        <DuncitButton size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)}>{t('shell.common.delete')}</DuncitButton>
       </Stack>
     ) : undefined;
 
@@ -214,8 +214,8 @@ export default function DocumentDetailPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>{t('shell.common.delete')}</Button>
+          <DuncitButton onClick={() => setConfirmDelete(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" onClick={doDelete}>{t('shell.common.delete')}</DuncitButton>
         </DialogActions>
       </Dialog>
 

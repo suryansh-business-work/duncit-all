@@ -1,16 +1,8 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Grid,
-} from '@mui/material';
+import { Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Grid } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import {
   pickupLocationInitialValues,
@@ -131,12 +123,12 @@ export default function PickupLocationForm({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} disabled={saving}>
+          <DuncitButton onClick={onClose} disabled={saving}>
             Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={saving}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={saving}>
             {saving ? 'Saving…' : 'Save location'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

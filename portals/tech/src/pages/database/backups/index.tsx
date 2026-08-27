@@ -1,7 +1,8 @@
-import { Alert, Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, LinearProgress, Stack, Typography } from '@mui/material';
 import BackupIcon from '@mui/icons-material/Backup';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import BackupScheduleCard from './BackupScheduleCard';
 import BackupsTable from './BackupsTable';
@@ -51,22 +52,22 @@ export default function DbBackupsPage() {
         </Box>
         {/* Not disabled while a backup walks: an upload writes one file and
             reads it back, so it competes with the walk for nothing. */}
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<UploadFileIcon />}
           onClick={() => page.setUploadOpen(true)}
           disabled={!page.settings}
         >
           {t('tech.dbBackup.upload')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           startIcon={<PlayArrowIcon />}
           onClick={page.onRunNow}
           disabled={page.running || page.starting}
         >
           {page.starting ? t('tech.dbBackup.starting') : t('tech.dbBackup.runNow')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {(page.settingsLoading || page.starting) && <LinearProgress />}

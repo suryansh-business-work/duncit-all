@@ -1,6 +1,7 @@
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
+import { DuncitButton } from '@duncit/buttons';
 import MediaRow from './MediaRow';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -84,9 +85,9 @@ export default function MediaField({ label, value, onChange, helperText, error, 
           {label}
           {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}
         </Typography>
-        <Button size="small" startIcon={<AddIcon />} onClick={() => pickInto('new')}>
+        <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => pickInto('new')}>
           Add image
-        </Button>
+        </DuncitButton>
       </Stack>
       {(error || helperText) && (
         <Typography variant="caption" color={error ? 'error' : 'text.secondary'} sx={{ display: 'block', mb: 1 }}>

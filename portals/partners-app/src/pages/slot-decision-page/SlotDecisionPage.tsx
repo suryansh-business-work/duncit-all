@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CircularProgress, Divider, Stack } from '@mui/material';
+import { Alert, Box, Card, CircularProgress, Divider, Stack } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { DuncitButton } from '@duncit/buttons';
 import { APPROVE_SLOT_REQUEST, DECLINE_SLOT_REQUEST } from '../slot-requests-page/queries';
 import { VENUE_SLOT_DECISION, type SlotDecisionRow } from './queries';
 import DecisionHeader from './DecisionHeader';
@@ -112,7 +113,7 @@ export default function SlotDecisionPage() {
               justifyContent: "flex-end",
               mt: 2.5
             }}>
-            <Button
+            <DuncitButton
               variant="outlined"
               color="error"
               startIcon={<CancelIcon />}
@@ -120,8 +121,8 @@ export default function SlotDecisionPage() {
               onClick={() => setShowDeclineForm(true)}
             >
               Decline
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               variant="contained"
               color="success"
               startIcon={<CheckCircleIcon />}
@@ -129,7 +130,7 @@ export default function SlotDecisionPage() {
               onClick={runApprove}
             >
               {approveState.loading ? 'Approving…' : 'Approve booking'}
-            </Button>
+            </DuncitButton>
           </Stack>
         )}
 
@@ -147,7 +148,7 @@ export default function SlotDecisionPage() {
       <Stack direction="row" sx={{
         justifyContent: "center"
       }}>
-        <Button onClick={() => navigate('/venues/requests')}>{t('partners.slotDecisionPage.seeAllSlotRequests')}</Button>
+        <DuncitButton onClick={() => navigate('/venues/requests')}>{t('partners.slotDecisionPage.seeAllSlotRequests')}</DuncitButton>
       </Stack>
     </Stack>
   );

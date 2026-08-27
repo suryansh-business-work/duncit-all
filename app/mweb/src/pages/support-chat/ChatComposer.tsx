@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
-import { Box, Button, Chip, CircularProgress, IconButton, Stack, TextField } from '@mui/material';
+import { Box, Chip, CircularProgress, Stack, TextField } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { isVideoUpload } from '../../utils/attachment';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -84,13 +85,13 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
         alignItems: "center"
       }}>
         <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={pickFile} />
-        <IconButton
+        <DuncitIconButton
           aria-label={t('mweb.supportChat.attachFile')}
           disabled={disabled || uploading || attachments.length >= 5}
           onClick={() => fileRef.current?.click()}
         >
           {uploading ? <CircularProgress size={20} /> : <AttachFileIcon />}
-        </IconButton>
+        </DuncitIconButton>
         <TextField
           size="small"
           fullWidth
@@ -105,14 +106,14 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
           }}
         />
         <Box>
-          <Button
+          <DuncitButton
             variant="contained"
             endIcon={<SendIcon />}
             disabled={disabled || (!text.trim() && attachments.length === 0)}
             onClick={send}
           >
             Send
-          </Button>
+          </DuncitButton>
         </Box>
       </Stack>
     </Stack>

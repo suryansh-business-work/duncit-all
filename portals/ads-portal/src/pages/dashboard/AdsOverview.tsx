@@ -1,9 +1,10 @@
 import { useQuery } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import StatGrid from './StatGrid';
 import RecentAdsTable from './RecentAdsTable';
@@ -49,14 +50,14 @@ function EmptyState() {
             Submit your first ad request — you get an instant cost estimate, and the Marketing
             team confirms the final price on approval.
           </Typography>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<AddIcon />}
             component={RouterLink}
             to={CREATE_AD_PATH}
           >
             Create your first ad
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>
@@ -78,9 +79,9 @@ function RecentSection() {
         }}>
           Recent requests
         </Typography>
-        <Button component={RouterLink} to="/ads" size="small">
+        <DuncitButton component={RouterLink} to="/ads" size="small">
           View all
-        </Button>
+        </DuncitButton>
       </Stack>
       <RecentAdsTable />
     </Box>
@@ -104,9 +105,9 @@ function OverviewBody({ stats }: Readonly<{ stats: AdsDashboardStats }>) {
         }}>
           Ads overview
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} component={RouterLink} to={CREATE_AD_PATH}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} component={RouterLink} to={CREATE_AD_PATH}>
           Create Ad
-        </Button>
+        </DuncitButton>
       </Stack>
       <NextStartHint stats={stats} />
       <StatGrid stats={stats} />

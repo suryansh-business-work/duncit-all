@@ -1,21 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Box,
-  Button,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitButton } from '@duncit/buttons';
 import { format } from 'date-fns';
 import { MY_SLOT_TEMPLATES, UPDATE_VENUE_SETTINGS } from '../recurring.queries';
 import type { VenueAutoExtendForm } from '../settings-map';
@@ -144,18 +133,18 @@ export default function FutureAvailabilityAccordion({
                 slotProps={{ textField: { fullWidth: true, size: 'small' } }}
               />
               {draft.enabled && draft.until && (
-                <Button size="small" onClick={() => patch({ until: '' })}>
+                <DuncitButton size="small" onClick={() => patch({ until: '' })}>
                   Clear
-                </Button>
+                </DuncitButton>
               )}
             </Stack>
           </Box>
           {error && <Alert severity="error">{t('partners.venueAvailabilityPage.couldNotSaveAutoExtendPlease')}</Alert>}
           {saved && !loading && <Alert severity="success">{t('partners.venueAvailabilityPage.autoExtendSaved')}</Alert>}
           <Box>
-            <Button variant="outlined" onClick={onSave} disabled={loading}>
+            <DuncitButton variant="outlined" onClick={onSave} disabled={loading}>
               {loading ? 'Saving…' : 'Save auto-extend'}
-            </Button>
+            </DuncitButton>
           </Box>
         </Stack>
       </AccordionDetails>

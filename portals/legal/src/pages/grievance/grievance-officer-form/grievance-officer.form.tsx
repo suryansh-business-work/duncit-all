@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import {
   EMPTY_GRIEVANCE_OFFICER,
@@ -86,13 +87,13 @@ export default function GrievanceOfficerForm({
             <Stack direction="row" spacing={2} sx={{
               alignItems: "center"
             }}>
-              <Button
+              <DuncitButton
                 type="submit"
                 variant="contained"
                 disabled={saving || !formState.isDirty}
               >
                 Save
-              </Button>
+              </DuncitButton>
               {updatedAt && (
                 <Typography variant="caption" sx={{
                   color: "text.secondary"

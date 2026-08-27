@@ -1,15 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import NavItemDialog, { type NavItemValues } from './NavItemDialog';
@@ -79,7 +72,7 @@ export default function NavigationPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
@@ -89,7 +82,7 @@ export default function NavigationPage() {
             }}
           >
             Add link
-          </Button>
+          </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={askDelete}
@@ -113,8 +106,8 @@ export default function NavigationPage() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton
             color="error"
             variant="contained"
             onClick={() => {
@@ -125,7 +118,7 @@ export default function NavigationPage() {
             }}
           >
             Delete
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Stack>

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, FormHelperText, InputAdornment, Stack } from '@mui/material';
+import { Alert, FormHelperText, InputAdornment, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
@@ -65,7 +66,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
             {emailError}
           </FormHelperText>
         )}
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -74,7 +75,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
           sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? t('mweb.forgotPassword.submitting') : t('mweb.forgotPassword.submit')}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>
     </form>

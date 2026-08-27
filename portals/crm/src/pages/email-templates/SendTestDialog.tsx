@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { SEND_TEST } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
@@ -74,15 +65,15 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
         {!templateId && <Alert severity="info" sx={{ mt: 1 }}>{t('crm.emailTemplates.saveTheTemplateFirst')}</Alert>}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={submit}
           disabled={!templateId || loading || !valid}
           startIcon={loading ? <CircularProgress size={16} /> : undefined}
         >
           {loading ? 'Sending…' : 'Send'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

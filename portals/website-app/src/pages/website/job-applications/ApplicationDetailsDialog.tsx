@@ -1,14 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Link,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Link, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip } from '@duncit/ui';
 import {
   JOB_APPLICATION_STATUSES,
@@ -100,7 +91,7 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

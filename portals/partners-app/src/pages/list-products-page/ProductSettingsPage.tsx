@@ -4,19 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  FormControlLabel,
-  Stack,
-  Switch,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { parseApiError } from '@duncit/utils';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
@@ -101,9 +91,9 @@ export default function ProductSettingsPage() {
           background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
         }}
       >
-        <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
+        <DuncitButton onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
           {t('partners.venueAvailabilityPage.back')}
-        </Button>
+        </DuncitButton>
         <Typography
           variant="h4"
           sx={{
@@ -145,9 +135,9 @@ export default function ProductSettingsPage() {
                   />
                 )}
               />
-              <Button type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
+              <DuncitButton type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
                 {saving ? 'Saving...' : 'Save settings'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </CardContent>
         </Card>

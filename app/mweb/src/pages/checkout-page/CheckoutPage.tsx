@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, IconButton, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { toCheckoutContact, toCheckoutBilling } from './checkout';
 import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
@@ -228,7 +229,7 @@ export default function CheckoutPage() {
             alignItems: "center",
             mb: 2
           }}>
-          <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
+          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></DuncitIconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.title')}</Typography>
             <Typography
@@ -299,7 +300,7 @@ function EmptyCheckout({ onHome, title, action }: Readonly<{ onHome: () => void;
   return (
     <Box sx={{ p: 4, textAlign: 'center' }}>
       <Alert severity="info" sx={{ mb: 2 }}>{title}</Alert>
-      <Button onClick={onHome} variant="contained">{action}</Button>
+      <DuncitButton onClick={onHome} variant="contained">{action}</DuncitButton>
     </Box>
   );
 }

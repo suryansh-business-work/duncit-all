@@ -1,17 +1,9 @@
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, InputAdornment, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerDialog from './MediaPickerDialog';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -50,13 +42,13 @@ export default function MediaPickerField({
   if (buttonOnly) {
     return (
       <>
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<PhotoCameraIcon />}
           onClick={() => setOpen(true)}
         >
           {buttonLabel}
-        </Button>
+        </DuncitButton>
         <MediaPickerDialog
           open={open}
           onClose={() => setOpen(false)}
@@ -83,18 +75,18 @@ export default function MediaPickerField({
             startAdornment: (
               <InputAdornment position="start">
                 <Tooltip title={t('onboarding.mediaPickerField.pickFromDeviceOrPexels')}>
-                  <IconButton size="small" onClick={() => setOpen(true)}>
+                  <DuncitIconButton size="small" onClick={() => setOpen(true)}>
                     <ImageIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Tooltip>
               </InputAdornment>
             ),
             endAdornment: value ? (
               <InputAdornment position="end">
                 <Tooltip title={t('onboarding.mediaPickerField.open')}>
-                  <IconButton size="small" onClick={() => window.open(value, '_blank')}>
+                  <DuncitIconButton size="small" onClick={() => window.open(value, '_blank')}>
                     <OpenInNewIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Tooltip>
               </InputAdornment>
             ) : null,

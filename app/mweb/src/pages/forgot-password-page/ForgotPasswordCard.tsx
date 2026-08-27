@@ -1,5 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Link, Stack, Typography } from '@mui/material';
+import { Box, Link, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
@@ -64,14 +65,14 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
             }}>
               {t('mweb.forgotPassword.newToDuncit')}
             </Typography>
-            <Button
+            <DuncitButton
               component={RouterLink}
               to="/register"
               variant="contained"
               sx={{ borderRadius: '16px', px: 3, fontWeight: 700, textTransform: 'none' }}
             >
               {t('mweb.forgotPassword.createAccount')}
-            </Button>
+            </DuncitButton>
           </Stack>
         ) : (
           <Typography

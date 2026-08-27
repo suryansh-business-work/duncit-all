@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmProvider, useConfirm } from '@duncit/dialogs';
 
 /** Anything below the provider can `await` a decision — no local open state. */
@@ -19,9 +20,9 @@ function DeleteLocationButton() {
 
   return (
     <Stack sx={{ gap: 1, alignItems: 'flex-start' }}>
-      <Button variant="outlined" color="error" onClick={onDelete}>
+      <DuncitButton variant="outlined" color="error" onClick={onDelete}>
         Delete location
-      </Button>
+      </DuncitButton>
       <Typography variant="body2" sx={{
         color: "text.secondary"
       }}>

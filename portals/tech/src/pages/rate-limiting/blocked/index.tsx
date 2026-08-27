@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import { useApolloTableFetch } from '@duncit/table';
 import { notifyError, useConfirm } from '@duncit/dialogs';
@@ -54,9 +55,9 @@ export default function RateLimitBlockedPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" color="error" startIcon={<DeleteSweepIcon />} onClick={clear}>
+          <DuncitButton size="small" color="error" startIcon={<DeleteSweepIcon />} onClick={clear}>
             {t('tech.rateLimit.blocked.clearTitle')}
-          </Button>
+          </DuncitButton>
         }
       />
     </Stack>

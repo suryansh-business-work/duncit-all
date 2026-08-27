@@ -1,14 +1,6 @@
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogTitle,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Dialog, DialogTitle, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
 import type { SearchCategory } from './useSearchDiscovery';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -35,9 +27,9 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
           pr: 1
         }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
-        <IconButton aria-label={t('mweb.search.closeFilter')} onClick={onClose}>
+        <DuncitIconButton aria-label={t('mweb.search.closeFilter')} onClick={onClose}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Box sx={{ px: 3, pb: 2 }}>
         {categories.length === 0 ? (
@@ -68,9 +60,9 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
         )}
       </Box>
       <Box sx={{ px: 3, pb: 3 }}>
-        <Button fullWidth variant="contained" onClick={onClose} sx={{ fontWeight: 700, borderRadius: 999 }}>
+        <DuncitButton fullWidth variant="contained" onClick={onClose} sx={{ fontWeight: 700, borderRadius: 999 }}>
           Apply
-        </Button>
+        </DuncitButton>
       </Box>
     </Dialog>
   );

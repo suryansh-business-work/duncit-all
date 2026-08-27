@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router-dom';
 import { formatDate } from '../../utils/dateFormat';
 
@@ -32,9 +33,9 @@ export default function UserVenuePanel() {
         }}>
           You have not registered a venue yet.
         </Typography>
-        <Button component={RouterLink} to="/register-venue" variant="outlined" size="small">
+        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small">
           Register Venue
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -86,9 +87,9 @@ export default function UserVenuePanel() {
         </Typography>
       )}
       {venue.reviewer_notes && <Alert severity="info">{venue.reviewer_notes}</Alert>}
-      <Button component={RouterLink} to="/register-venue" variant="contained" size="large" sx={{ borderRadius: 999, fontWeight: 700 }}>
+      <DuncitButton component={RouterLink} to="/register-venue" variant="contained" size="large" sx={{ borderRadius: 999, fontWeight: 700 }}>
         {isApproved ? 'Update venue profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

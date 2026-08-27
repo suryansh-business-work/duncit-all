@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 
 /**
@@ -20,9 +21,9 @@ export function ConfirmDialogDemo() {
 
   return (
     <Stack direction="row" sx={{ gap: 1 }}>
-      <Button variant="contained" color="error" onClick={() => setOpen(true)}>
+      <DuncitButton variant="contained" color="error" onClick={() => setOpen(true)}>
         Cancel pod
-      </Button>
+      </DuncitButton>
       <ConfirmDialog
         open={open}
         title="Cancel this pod?"

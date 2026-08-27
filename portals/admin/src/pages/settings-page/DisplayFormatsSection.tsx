@@ -1,17 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { format } from 'date-fns';
 import { PUBLIC_APP_SETTINGS, unsupportedPickerTokens } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -127,14 +118,14 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
               typed into.
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={submit}
             disabled={busy || !dirty || loading || unusable}
           >
             {busy ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         <Stack spacing={2}>

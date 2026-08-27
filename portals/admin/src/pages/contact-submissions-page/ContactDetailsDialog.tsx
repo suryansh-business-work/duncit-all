@@ -1,16 +1,5 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Link,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Link, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -103,8 +92,8 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={() => {
             onUpdateStatus(submission.id, status);
@@ -112,7 +101,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
           }}
         >
           Save
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

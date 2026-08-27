@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import ProductDetailDialog, { type VariantPick } from './ProductDetailDialog';
 
 interface Props {
@@ -158,7 +159,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                 <Typography variant="caption" sx={{ color: mutedColor }} noWrap>Available {maxQuantity}</Typography>
                 {!readOnly && quantity === 0 && maxQuantity > 0 && (
                   <Box sx={{ mt: 0.75 }}>
-                    <Button
+                    <DuncitButton
                       size="small"
                       variant="outlined"
                       startIcon={<AddShoppingCartIcon />}
@@ -166,7 +167,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                       sx={{ borderRadius: 999, fontWeight: 600, textTransform: 'none' }}
                     >
                       Add to cart
-                    </Button>
+                    </DuncitButton>
                   </Box>
                 )}
                 {selected && <Stack
@@ -176,21 +177,21 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                     alignItems: "center",
                     mt: 0.75
                   }}>
-                  <IconButton size="small" aria-label={`Decrease ${item.product_name}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
+                  <DuncitIconButton size="small" aria-label={`Decrease ${item.product_name}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></DuncitIconButton>
                   <Typography variant="body2" sx={{
                     fontWeight: 700
                   }}>{quantity}</Typography>
-                  <IconButton size="small" aria-label={`Increase ${item.product_name}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
+                  <DuncitIconButton size="small" aria-label={`Increase ${item.product_name}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></DuncitIconButton>
                 </Stack>}
               </Box>
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 aria-label={`View ${item.product_name} details`}
                 onClick={() => setInfoProductId(item.product_id)}
                 sx={{ color: mutedColor }}
               >
                 <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
               <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
                 +{priceFormat(Number(item.unit_cost ?? 0) * Math.max(quantity, 1))}
               </Typography>

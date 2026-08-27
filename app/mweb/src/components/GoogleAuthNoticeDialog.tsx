@@ -1,11 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -38,11 +32,11 @@ export default function GoogleAuthNoticeDialog({
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('mweb.auth.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('mweb.auth.close')}</DuncitButton>
         {actionLabel && onAction && (
-          <Button variant="contained" onClick={onAction}>
+          <DuncitButton variant="contained" onClick={onAction}>
             {actionLabel}
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
     </Dialog>

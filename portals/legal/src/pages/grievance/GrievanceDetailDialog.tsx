@@ -1,20 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import type { GrievanceStatus } from '@duncit/utils';
 import {
@@ -82,13 +70,13 @@ export default function GrievanceDetailDialog({
         }}>
           {ticket?.grievance_no}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           onClick={onClose}
           aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
 
       <DialogContent dividers>
@@ -169,10 +157,10 @@ export default function GrievanceDetailDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
-        <Button variant="contained" onClick={apply} disabled={loading}>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={apply} disabled={loading}>
           Apply
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

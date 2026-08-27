@@ -1,15 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import MediaPickerField from '../../components/MediaPickerField';
 import BadgeScopeFields, {
@@ -117,10 +107,10 @@ export default function BadgeFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button onClick={onSave} variant="contained" disabled={!form.title || busy}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton onClick={onSave} variant="contained" disabled={!form.title || busy}>
           {confirmLabel}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

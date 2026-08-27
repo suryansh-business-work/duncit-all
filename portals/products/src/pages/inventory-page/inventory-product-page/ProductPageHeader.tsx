@@ -1,16 +1,10 @@
 import { useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Breadcrumbs,
-  Button,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Breadcrumbs, Chip, Stack, Typography } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import { DuncitButton } from '@duncit/buttons';
 import { BackButton, StatusChip } from '@duncit/ui';
 import {
   ARCHIVE_INVENTORY_PRODUCT,
@@ -93,7 +87,7 @@ export default function ProductPageHeader({
         </Box>
         {!isNew && product && (
           <Stack direction="row" spacing={1}>
-            <Button
+            <DuncitButton
               size="small"
               startIcon={<ContentCopyIcon />}
               onClick={async () => {
@@ -107,9 +101,9 @@ export default function ProductPageHeader({
               }}
             >
               Duplicate
-            </Button>
+            </DuncitButton>
             {isArchived ? (
-              <Button
+              <DuncitButton
                 size="small"
                 color="success"
                 startIcon={<UnarchiveIcon />}
@@ -124,9 +118,9 @@ export default function ProductPageHeader({
                 }}
               >
                 Restore
-              </Button>
+              </DuncitButton>
             ) : (
-              <Button
+              <DuncitButton
                 size="small"
                 color="warning"
                 startIcon={<ArchiveIcon />}
@@ -141,7 +135,7 @@ export default function ProductPageHeader({
                 }}
               >
                 {t('products.inventory.archive')}
-              </Button>
+              </DuncitButton>
             )}
           </Stack>
         )}

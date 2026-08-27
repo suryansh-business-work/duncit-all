@@ -61,6 +61,8 @@ COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
+COPY packages/buttons-native/package.json ./packages/buttons-native/
+COPY packages/buttons/package.json ./packages/buttons/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

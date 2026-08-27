@@ -1,20 +1,9 @@
 import { useState } from 'react';
-import {
-  Chip,
-  IconButton,
-  Stack,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Chip, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { CrmDynamicField } from '../../api/crm.types';
 import { KIND_LABELS, moveItem } from './dynamicFieldDraft';
 import { useTranslation } from '@duncit/shell';
@@ -125,16 +114,16 @@ export default function DynamicFieldsTable({
             <TableCell align="right">
               <Tooltip title={t('shell.common.edit')}>
                 <span>
-                  <IconButton aria-label={t('shell.common.edit')} size="small" onClick={() => onEdit(row)} disabled={busy || draftOpen}>
+                  <DuncitIconButton aria-label={t('shell.common.edit')} size="small" onClick={() => onEdit(row)} disabled={busy || draftOpen}>
                     <EditIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </span>
               </Tooltip>
               <Tooltip title={t('shell.common.delete')}>
                 <span>
-                  <IconButton aria-label={t('shell.common.delete')} size="small" color="error" onClick={() => onDelete(row)} disabled={busy || draftOpen}>
+                  <DuncitIconButton aria-label={t('shell.common.delete')} size="small" color="error" onClick={() => onDelete(row)} disabled={busy || draftOpen}>
                     <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </span>
               </Tooltip>
             </TableCell>

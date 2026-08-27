@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -10,6 +9,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { DuncitButton } from '@duncit/buttons';
 import type { PodKindLabels } from '@duncit/utils';
 
 /** Which form the New Pod button should open. */
@@ -113,7 +113,7 @@ export function PodKindChooser({ open, labels, onClose, onPick }: Readonly<PodKi
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{labels.dismiss}</Button>
+        <DuncitButton onClick={onClose}>{labels.dismiss}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

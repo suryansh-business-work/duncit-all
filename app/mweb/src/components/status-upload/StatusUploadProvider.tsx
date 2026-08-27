@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react';
-import { Alert, Box, Button, LinearProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, LinearProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { CropRect, VideoTrim } from '@duncit/media-picker';
 import { apolloClient } from '../../apollo';
 import { ADD_POD_STATUS, CREATE_STATUS_POST } from './queries';
@@ -181,7 +182,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
           </Alert>
         </Box>
       )}
-      <Snackbar open={!!notice} autoHideDuration={3200} onClose={() => setNotice(null)} message={notice ?? ''} action={<Button color="inherit" size="small" onClick={() => setNotice(null)}>OK</Button>} />
+      <Snackbar open={!!notice} autoHideDuration={3200} onClose={() => setNotice(null)} message={notice ?? ''} action={<DuncitButton color="inherit" size="small" onClick={() => setNotice(null)}>OK</DuncitButton>} />
     </StatusUploadContext.Provider>
   );
 }

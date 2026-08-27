@@ -1,18 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { MY_WALLET } from './queries';
@@ -109,14 +99,14 @@ export default function WalletPage() {
             </Typography>
           )}
           <Box sx={{ mt: 1.5 }}>
-            <Button
+            <DuncitButton
               variant="contained"
               disabled={!eligible || balance <= 0}
               onClick={() => setOpen(true)}
               sx={{ borderRadius: 999, fontWeight: 700 }}
             >
               Withdraw
-            </Button>
+            </DuncitButton>
           </Box>
         </CardContent>
       </Card>

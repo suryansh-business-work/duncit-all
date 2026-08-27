@@ -1,16 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import {
@@ -101,17 +92,17 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {t('tech.appBuilds.cancel')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form={CREATE_BUILD_FORM_ID}
           variant="contained"
           disabled={busy || !config?.configured}
         >
           {busy ? t('tech.appBuilds.triggering') : t('tech.appBuilds.triggerAction')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

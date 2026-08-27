@@ -1,6 +1,7 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
 import { brand, neutral, semantic, light, dark, radii } from '@duncit/auth-tokens';
+import { withPress } from '@duncit/buttons';
 
 // Design-system tokens now come from the shared @duncit/auth-tokens package so
 // the mobile app (NativeWind) and mWeb (MUI) draw from one source. Re-exported
@@ -81,388 +82,394 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     body2: { fontSize: '0.875rem', lineHeight: 1.4 },
     caption: { fontSize: '0.75rem', lineHeight: 1.35 },
   },
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        html: { width: '100%', overflowX: 'hidden' },
-        body: {
-          '--duncit-app-bg': APP_BG,
-          backgroundColor: BG,
-          backgroundImage: 'var(--duncit-app-bg)',
-          backgroundAttachment: 'fixed',
-          backgroundSize: '180% 180%',
-          animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-          position: 'relative',
-          overflowX: 'hidden',
-          width: '100%',
-        },
-        '#root': { width: '100%', minHeight: '100dvh' },
-        '@keyframes duncit-bg-drift': {
-          '0%': { backgroundPosition: '0% 0%' },
-          '50%': { backgroundPosition: '65% 18%' },
-          '100%': { backgroundPosition: '100% 0%' },
-        },
-        '@keyframes duncit-soft-enter': {
-          '0%': { opacity: 0.72 },
-          '100%': { opacity: 1 },
-        },
-        '.MuiPaper-root, .MuiButtonBase-root, .MuiChip-root': {
-          transitionDuration: '180ms',
-          transitionTimingFunction: 'ease',
-        },
-        '*::-webkit-scrollbar': { width: SCROLLBAR_SIZE, height: SCROLLBAR_SIZE },
-        '*::-webkit-scrollbar-thumb': {
-          background: alpha(INK, 0.18),
-          borderRadius: RADIUS.hairline,
-        },
-        '*::-webkit-scrollbar-thumb:hover': { background: alpha(INK, 0.28) },
-        // Accessibility: visible focus ring for keyboard users.
-        'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex="0"]:focus-visible':
-          {
-            outline: `2px solid ${PRIMARY}`,
-            outlineOffset: 2,
+  // Every pressable answers to the shared press system — the one place that
+  // says what "being touched right now" looks like, and the same numbers the
+  // native app reads through @duncit/buttons-native (rule 27).
+  components: withPress(
+    {
+      MuiCssBaseline: {
+        styleOverrides: {
+          html: { width: '100%', overflowX: 'hidden' },
+          body: {
+            '--duncit-app-bg': APP_BG,
+            backgroundColor: BG,
+            backgroundImage: 'var(--duncit-app-bg)',
+            backgroundAttachment: 'fixed',
+            backgroundSize: '180% 180%',
+            animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
+            position: 'relative',
+            overflowX: 'hidden',
+            width: '100%',
+          },
+          '#root': { width: '100%', minHeight: '100dvh' },
+          '@keyframes duncit-bg-drift': {
+            '0%': { backgroundPosition: '0% 0%' },
+            '50%': { backgroundPosition: '65% 18%' },
+            '100%': { backgroundPosition: '100% 0%' },
+          },
+          '@keyframes duncit-soft-enter': {
+            '0%': { opacity: 0.72 },
+            '100%': { opacity: 1 },
+          },
+          '.MuiPaper-root, .MuiButtonBase-root, .MuiChip-root': {
+            transitionDuration: '180ms',
+            transitionTimingFunction: 'ease',
+          },
+          '*::-webkit-scrollbar': { width: SCROLLBAR_SIZE, height: SCROLLBAR_SIZE },
+          '*::-webkit-scrollbar-thumb': {
+            background: alpha(INK, 0.18),
             borderRadius: RADIUS.hairline,
           },
-        // Touch target minimum (WCAG 2.5.5 / iOS HIG).
-        '@media (pointer: coarse)': {
-          'button, a[role="button"], [role="button"]': {
-            minHeight: 44,
+          '*::-webkit-scrollbar-thumb:hover': { background: alpha(INK, 0.28) },
+          // Accessibility: visible focus ring for keyboard users.
+          'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex="0"]:focus-visible':
+            {
+              outline: `2px solid ${PRIMARY}`,
+              outlineOffset: 2,
+              borderRadius: RADIUS.hairline,
+            },
+          // Touch target minimum (WCAG 2.5.5 / iOS HIG).
+          '@media (pointer: coarse)': {
+            'button, a[role="button"], [role="button"]': {
+              minHeight: 44,
+            },
           },
         },
       },
-    },
-    MuiButtonBase: {
-      defaultProps: { disableTouchRipple: false },
-    },
-    MuiAppBar: {
-      defaultProps: { elevation: 0, color: 'default' },
-      styleOverrides: {
-        root: {
-          backgroundColor: SURFACE,
-          color: INK,
-          borderBottom: `1px solid ${BORDER}`,
-        },
+      MuiButtonBase: {
+        defaultProps: { disableTouchRipple: false },
       },
-    },
-    MuiPaper: {
-      defaultProps: { elevation: 0 },
-      styleOverrides: {
-        rounded: { borderRadius: RADIUS.surface },
-        outlined: { borderColor: BORDER },
-      },
-    },
-    MuiCard: {
-      defaultProps: { elevation: 0 },
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.surface,
-          border: `1px solid ${BORDER}`,
-          backgroundColor: SURFACE,
-          backgroundImage: SURFACE_GRADIENT,
-          boxShadow: `0 14px 34px -22px ${alpha(INK, isDark ? 0.72 : 0.28)}`,
-          transition: 'transform 180ms ease, box-shadow 180ms ease',
-          '&:hover': {
-            boxShadow: `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}`,
+      MuiAppBar: {
+        defaultProps: { elevation: 0, color: 'default' },
+        styleOverrides: {
+          root: {
+            backgroundColor: SURFACE,
+            color: INK,
+            borderBottom: `1px solid ${BORDER}`,
           },
         },
       },
-    },
-    MuiCardActionArea: {
-      styleOverrides: { focusHighlight: { borderRadius: RADIUS.surface } },
-    },
-    MuiButton: {
-      defaultProps: { disableElevation: true },
-      // Was containedPrimary / outlinedPrimary / textPrimary — MUI 9 dropped
-      // those class slots, so the same rules match on props instead.
-      variants: [
-        {
-          props: { variant: 'contained', color: 'primary' },
-          style: {
-            backgroundColor: PRIMARY,
+      MuiPaper: {
+        defaultProps: { elevation: 0 },
+        styleOverrides: {
+          rounded: { borderRadius: RADIUS.surface },
+          outlined: { borderColor: BORDER },
+        },
+      },
+      MuiCard: {
+        defaultProps: { elevation: 0 },
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.surface,
+            border: `1px solid ${BORDER}`,
+            backgroundColor: SURFACE,
+            backgroundImage: SURFACE_GRADIENT,
+            boxShadow: `0 14px 34px -22px ${alpha(INK, isDark ? 0.72 : 0.28)}`,
+            transition: 'transform 180ms ease, box-shadow 180ms ease',
+            '&:hover': {
+              boxShadow: `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}`,
+            },
+          },
+        },
+      },
+      MuiCardActionArea: {
+        styleOverrides: { focusHighlight: { borderRadius: RADIUS.surface } },
+      },
+      MuiButton: {
+        defaultProps: { disableElevation: true },
+        // Was containedPrimary / outlinedPrimary / textPrimary — MUI 9 dropped
+        // those class slots, so the same rules match on props instead.
+        variants: [
+          {
+            props: { variant: 'contained', color: 'primary' },
+            style: {
+              backgroundColor: PRIMARY,
+              color: WHITE,
+              '&:hover': { backgroundColor: PRIMARY_HOVER },
+              '&:active': { backgroundColor: PRIMARY_ACTIVE },
+            },
+          },
+          {
+            props: { variant: 'outlined', color: 'primary' },
+            style: {
+              borderColor: PRIMARY,
+              color: PRIMARY,
+              '&:hover': { borderColor: PRIMARY_HOVER, backgroundColor: alpha(PRIMARY, 0.06) },
+            },
+          },
+          {
+            props: { variant: 'text', color: 'primary' },
+            style: {
+              color: PRIMARY,
+              '&:hover': { backgroundColor: alpha(PRIMARY, 0.06) },
+            },
+          },
+        ],
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.pill,
+            paddingInline: 18,
+            paddingBlock: 9,
+            fontWeight: 600,
+            lineHeight: 1.1,
+            minWidth: 0,
+            whiteSpace: 'nowrap',
+            '& .MuiButton-startIcon, & .MuiButton-endIcon': {
+              flexShrink: 0,
+            },
+          },
+          sizeLarge: { paddingInline: 20, paddingBlock: 11, fontSize: '0.92rem' },
+          sizeSmall: { paddingInline: 12, paddingBlock: 6, fontSize: '0.78rem' },
+          outlined: {
+            borderColor: BORDER,
+            color: INK,
+            '&:hover': { borderColor: alpha(INK, 0.4), backgroundColor: alpha(INK, 0.03) },
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.pill,
+            '&.Mui-focusVisible': { outline: `2px solid ${alpha(PRIMARY, 0.4)}` },
+          },
+        },
+      },
+      MuiChip: {
+        defaultProps: { size: 'small' },
+        variants: [
+          { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: PRIMARY, color: WHITE } },
+          {
+            props: { variant: 'filled', color: 'secondary' },
+            style: { backgroundColor: tokens.semantic.secondary, color: WHITE },
+          },
+        ],
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.pill,
+            fontWeight: 600,
+            height: 32,
+            paddingInline: 6,
+            fontSize: '0.8125rem',
+          },
+          outlined: { borderColor: BORDER, backgroundColor: SURFACE },
+        },
+      },
+      MuiTextField: {
+        defaultProps: { variant: 'outlined', size: 'small' },
+      },
+      MuiInputBase: {
+        styleOverrides: {
+          /**
+           * MUI's default placeholder is `currentColor` at `opacity: .42` — on
+           * our ink that lands around 3:1 against the field, under the 4.5:1
+           * WCAG floor, and on a filled grey field it reads as a disabled
+           * control rather than a hint. The muted ink at full opacity is the
+           * same colour every helper line uses, so a hint now looks like a hint.
+           * `input` covers `<textarea>` too — both carry `.MuiInputBase-input`.
+           */
+          input: {
+            '&::placeholder': { color: MUTED, opacity: 1 },
+          },
+        },
+      },
+      MuiFormControl: {
+        styleOverrides: { root: { minWidth: 0 } },
+      },
+      MuiFormLabel: {
+        // The `required` asterisk is rendered red so every required field carries a
+        // clear `Label *` marker on the label (matches the mobile app's red `*`).
+        styleOverrides: { asterisk: { color: tokens.semantic.error } },
+      },
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: {
+            marginTop: 5,
+            marginBottom: 6,
+            lineHeight: 1.35,
+            minHeight: '1.35em',
+            overflowWrap: 'anywhere',
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.input,
+            backgroundColor: SURFACE,
+            '& fieldset': { borderColor: BORDER },
+            '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
+            '&.Mui-focused fieldset': { borderColor: PRIMARY, borderWidth: 1.5 },
+          },
+        },
+      },
+      MuiAlert: {
+        variants: [
+          {
+            props: { variant: 'standard', severity: 'info' },
+            style: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
+          },
+          {
+            props: { variant: 'standard', severity: 'success' },
+            style: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
+          },
+          {
+            props: { variant: 'standard', severity: 'warning' },
+            style: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
+          },
+          {
+            props: { variant: 'standard', severity: 'error' },
+            style: { backgroundColor: alpha(tokens.semantic.error, 0.12), color: INK },
+          },
+        ],
+        styleOverrides: {
+          root: { borderRadius: RADIUS.input, border: `1px solid ${BORDER}` },
+        },
+      },
+      MuiAvatar: { styleOverrides: { root: { fontWeight: 700 } } },
+      MuiDivider: { styleOverrides: { root: { borderColor: BORDER } } },
+      MuiAccordion: {
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.surface,
+            border: `1px solid ${BORDER}`,
+            backgroundColor: SURFACE,
+            backgroundImage: SURFACE_GRADIENT,
+            boxShadow: 'none',
+            '&:before': { display: 'none' },
+            '&.Mui-expanded': { margin: 0 },
+          },
+        },
+      },
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.input,
+            '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
+          },
+        },
+      },
+      MuiToggleButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: RADIUS.input,
+            textTransform: 'none',
+            fontWeight: 600,
+            paddingInline: 14,
+            border: `1px solid ${BORDER}`,
+            color: INK,
+            '&.Mui-selected': {
+              backgroundColor: PRIMARY,
+              color: WHITE,
+              '&:hover': { backgroundColor: PRIMARY_HOVER },
+            },
+          },
+        },
+      },
+      MuiBottomNavigation: {
+        styleOverrides: {
+          root: { borderTop: `1px solid ${BORDER}`, backgroundColor: SURFACE },
+        },
+      },
+      MuiBottomNavigationAction: {
+        styleOverrides: {
+          root: {
+            color: MUTED,
+            '&.Mui-selected': { color: PRIMARY },
+          },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          // Always a near-black surface regardless of mode — a tooltip needs to
+          // read the same in both, and neutral[900] contrasts with white text
+          // either way (dark mode adds a hairline border since its page bg is
+          // close in tone to this fill).
+          tooltip: {
+            backgroundColor: tokens.neutral[900],
             color: WHITE,
-            '&:hover': { backgroundColor: PRIMARY_HOVER },
-            '&:active': { backgroundColor: PRIMARY_ACTIVE },
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'transparent'}`,
+            borderRadius: RADIUS.tooltip,
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            paddingInline: 8,
+            paddingBlock: 6,
+          },
+          arrow: {
+            color: tokens.neutral[900],
           },
         },
-        {
-          props: { variant: 'outlined', color: 'primary' },
-          style: {
-            borderColor: PRIMARY,
-            color: PRIMARY,
-            '&:hover': { borderColor: PRIMARY_HOVER, backgroundColor: alpha(PRIMARY, 0.06) },
+      },
+      MuiSnackbarContent: { styleOverrides: { root: { borderRadius: RADIUS.input } } },
+      MuiDialog: {
+        styleOverrides: {
+          paper: { borderRadius: RADIUS.dialog, backgroundImage: SURFACE_GRADIENT },
+          // `paper` is composed AFTER MUI's own `paperFullScreen`, so without this
+          // every fullScreen dialog keeps 20px corners against the backdrop — and
+          // since the paper also carries `overflowY: auto`, content is clipped at
+          // those corners.
+          paperFullScreen: { borderRadius: 0 },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            borderRadius: RADIUS.input,
+            border: `1px solid ${BORDER}`,
+            boxShadow: `0 8px 32px -12px ${alpha(INK, 0.18)}`,
+      /**
+       * Every dropdown in the app, capped.
+       *
+       * MUI's own cap is `calc(100% - 96px)` where 100% is the LARGE viewport (the
+       * Menu is a portalled Popover on document.body, so it can never be clipped by
+       * the dialog it was opened from). Below the `sm` breakpoint MenuItem also has
+       * a hard `minHeight: 48` — and mWeb is entirely below `sm`. So a 15-option
+       * select is 15x48+16 = 736px against a 748px cap on a 390x844 phone: the cap
+       * never engages, and the list runs under the browser toolbar and straight
+       * across whatever dialog opened it. `dvh` tracks the collapsible toolbar;
+       * 336px is 7 rows, which reads as a list rather than a takeover.
+       */
+            maxHeight: 'min(calc(100% - 96px), 45dvh, 336px)',
           },
         },
-        {
-          props: { variant: 'text', color: 'primary' },
-          style: {
-            color: PRIMARY,
-            '&:hover': { backgroundColor: alpha(PRIMARY, 0.06) },
-          },
-        },
-      ],
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.pill,
-          paddingInline: 18,
-          paddingBlock: 9,
-          fontWeight: 600,
-          lineHeight: 1.1,
-          minWidth: 0,
-          whiteSpace: 'nowrap',
-          '& .MuiButton-startIcon, & .MuiButton-endIcon': {
-            flexShrink: 0,
-          },
-        },
-        sizeLarge: { paddingInline: 20, paddingBlock: 11, fontSize: '0.92rem' },
-        sizeSmall: { paddingInline: 12, paddingBlock: 6, fontSize: '0.78rem' },
-        outlined: {
-          borderColor: BORDER,
-          color: INK,
-          '&:hover': { borderColor: alpha(INK, 0.4), backgroundColor: alpha(INK, 0.03) },
+      },
+      // The Autocomplete popup is a Popper, not a Menu, so the cap above misses
+      // it. MUI's default is `40vh` — the LARGE viewport, which also does not
+      // shrink when the keyboard opens, and an Autocomplete always has focus.
+      MuiAutocomplete: {
+        styleOverrides: { listbox: { maxHeight: 'min(40dvh, 320px)' } },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: { textTransform: 'none', fontWeight: 600, minHeight: 44 },
         },
       },
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.pill,
-          '&.Mui-focusVisible': { outline: `2px solid ${alpha(PRIMARY, 0.4)}` },
+      MuiTabs: {
+        styleOverrides: {
+          indicator: { backgroundColor: PRIMARY, height: 3, borderRadius: 3 },
         },
       },
-    },
-    MuiChip: {
-      defaultProps: { size: 'small' },
-      variants: [
-        { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: PRIMARY, color: WHITE } },
-        {
-          props: { variant: 'filled', color: 'secondary' },
-          style: { backgroundColor: tokens.semantic.secondary, color: WHITE },
-        },
-      ],
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.pill,
-          fontWeight: 600,
-          height: 32,
-          paddingInline: 6,
-          fontSize: '0.8125rem',
-        },
-        outlined: { borderColor: BORDER, backgroundColor: SURFACE },
-      },
-    },
-    MuiTextField: {
-      defaultProps: { variant: 'outlined', size: 'small' },
-    },
-    MuiInputBase: {
-      styleOverrides: {
-        /**
-         * MUI's default placeholder is `currentColor` at `opacity: .42` — on
-         * our ink that lands around 3:1 against the field, under the 4.5:1
-         * WCAG floor, and on a filled grey field it reads as a disabled
-         * control rather than a hint. The muted ink at full opacity is the
-         * same colour every helper line uses, so a hint now looks like a hint.
-         * `input` covers `<textarea>` too — both carry `.MuiInputBase-input`.
-         */
-        input: {
-          '&::placeholder': { color: MUTED, opacity: 1 },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: { borderRadius: RADIUS.pill, height: 6, backgroundColor: alpha(PRIMARY, 0.12) },
+          bar: { backgroundColor: PRIMARY },
         },
       },
-    },
-    MuiFormControl: {
-      styleOverrides: { root: { minWidth: 0 } },
-    },
-    MuiFormLabel: {
-      // The `required` asterisk is rendered red so every required field carries a
-      // clear `Label *` marker on the label (matches the mobile app's red `*`).
-      styleOverrides: { asterisk: { color: tokens.semantic.error } },
-    },
-    MuiFormHelperText: {
-      styleOverrides: {
-        root: {
-          marginTop: 5,
-          marginBottom: 6,
-          lineHeight: 1.35,
-          minHeight: '1.35em',
-          overflowWrap: 'anywhere',
-        },
-      },
-    },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.input,
-          backgroundColor: SURFACE,
-          '& fieldset': { borderColor: BORDER },
-          '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
-          '&.Mui-focused fieldset': { borderColor: PRIMARY, borderWidth: 1.5 },
-        },
-      },
-    },
-    MuiAlert: {
-      variants: [
-        {
-          props: { variant: 'standard', severity: 'info' },
-          style: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
-        },
-        {
-          props: { variant: 'standard', severity: 'success' },
-          style: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
-        },
-        {
-          props: { variant: 'standard', severity: 'warning' },
-          style: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
-        },
-        {
-          props: { variant: 'standard', severity: 'error' },
-          style: { backgroundColor: alpha(tokens.semantic.error, 0.12), color: INK },
-        },
-      ],
-      styleOverrides: {
-        root: { borderRadius: RADIUS.input, border: `1px solid ${BORDER}` },
-      },
-    },
-    MuiAvatar: { styleOverrides: { root: { fontWeight: 700 } } },
-    MuiDivider: { styleOverrides: { root: { borderColor: BORDER } } },
-    MuiAccordion: {
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.surface,
-          border: `1px solid ${BORDER}`,
-          backgroundColor: SURFACE,
-          backgroundImage: SURFACE_GRADIENT,
-          boxShadow: 'none',
-          '&:before': { display: 'none' },
-          '&.Mui-expanded': { margin: 0 },
-        },
-      },
-    },
-    MuiListItemButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.input,
-          '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
-        },
-      },
-    },
-    MuiToggleButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: RADIUS.input,
-          textTransform: 'none',
-          fontWeight: 600,
-          paddingInline: 14,
-          border: `1px solid ${BORDER}`,
-          color: INK,
-          '&.Mui-selected': {
-            backgroundColor: PRIMARY,
-            color: WHITE,
-            '&:hover': { backgroundColor: PRIMARY_HOVER },
+      MuiSwitch: {
+        styleOverrides: {
+          switchBase: {
+            '&.Mui-checked': {
+              color: WHITE,
+              '& + .MuiSwitch-track': { backgroundColor: PRIMARY, opacity: 1 },
+            },
           },
         },
       },
     },
-    MuiBottomNavigation: {
-      styleOverrides: {
-        root: { borderTop: `1px solid ${BORDER}`, backgroundColor: SURFACE },
-      },
-    },
-    MuiBottomNavigationAction: {
-      styleOverrides: {
-        root: {
-          color: MUTED,
-          '&.Mui-selected': { color: PRIMARY },
-        },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        // Always a near-black surface regardless of mode — a tooltip needs to
-        // read the same in both, and neutral[900] contrasts with white text
-        // either way (dark mode adds a hairline border since its page bg is
-        // close in tone to this fill).
-        tooltip: {
-          backgroundColor: tokens.neutral[900],
-          color: WHITE,
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'transparent'}`,
-          borderRadius: RADIUS.tooltip,
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          paddingInline: 8,
-          paddingBlock: 6,
-        },
-        arrow: {
-          color: tokens.neutral[900],
-        },
-      },
-    },
-    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: RADIUS.input } } },
-    MuiDialog: {
-      styleOverrides: {
-        paper: { borderRadius: RADIUS.dialog, backgroundImage: SURFACE_GRADIENT },
-        // `paper` is composed AFTER MUI's own `paperFullScreen`, so without this
-        // every fullScreen dialog keeps 20px corners against the backdrop — and
-        // since the paper also carries `overflowY: auto`, content is clipped at
-        // those corners.
-        paperFullScreen: { borderRadius: 0 },
-      },
-    },
-    MuiMenu: {
-      styleOverrides: {
-        paper: {
-          borderRadius: RADIUS.input,
-          border: `1px solid ${BORDER}`,
-          boxShadow: `0 8px 32px -12px ${alpha(INK, 0.18)}`,
-    /**
-     * Every dropdown in the app, capped.
-     *
-     * MUI's own cap is `calc(100% - 96px)` where 100% is the LARGE viewport (the
-     * Menu is a portalled Popover on document.body, so it can never be clipped by
-     * the dialog it was opened from). Below the `sm` breakpoint MenuItem also has
-     * a hard `minHeight: 48` — and mWeb is entirely below `sm`. So a 15-option
-     * select is 15x48+16 = 736px against a 748px cap on a 390x844 phone: the cap
-     * never engages, and the list runs under the browser toolbar and straight
-     * across whatever dialog opened it. `dvh` tracks the collapsible toolbar;
-     * 336px is 7 rows, which reads as a list rather than a takeover.
-     */
-          maxHeight: 'min(calc(100% - 96px), 45dvh, 336px)',
-        },
-      },
-    },
-    // The Autocomplete popup is a Popper, not a Menu, so the cap above misses
-    // it. MUI's default is `40vh` — the LARGE viewport, which also does not
-    // shrink when the keyboard opens, and an Autocomplete always has focus.
-    MuiAutocomplete: {
-      styleOverrides: { listbox: { maxHeight: 'min(40dvh, 320px)' } },
-    },
-    MuiTab: {
-      styleOverrides: {
-        root: { textTransform: 'none', fontWeight: 600, minHeight: 44 },
-      },
-    },
-    MuiTabs: {
-      styleOverrides: {
-        indicator: { backgroundColor: PRIMARY, height: 3, borderRadius: 3 },
-      },
-    },
-    MuiLinearProgress: {
-      styleOverrides: {
-        root: { borderRadius: RADIUS.pill, height: 6, backgroundColor: alpha(PRIMARY, 0.12) },
-        bar: { backgroundColor: PRIMARY },
-      },
-    },
-    MuiSwitch: {
-      styleOverrides: {
-        switchBase: {
-          '&.Mui-checked': {
-            color: WHITE,
-            '& + .MuiSwitch-track': { backgroundColor: PRIMARY, opacity: 1 },
-          },
-        },
-      },
-    },
-  },
+    { ink: INK, accent: PRIMARY }
+  ),
   });
 };
 

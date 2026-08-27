@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardContent, Chip, Container, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Chip, Container, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { DuncitButton } from '@duncit/buttons';
 
 interface InterviewSuccessCardProps {
   submittedRef: string;
@@ -38,12 +39,12 @@ export default function InterviewSuccessCard({ submittedRef }: Readonly<Intervie
             </Typography>
             <Chip label={`Reference · ${submittedRef.slice(-8)}`} variant="outlined" />
             <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
-              <Button variant="outlined" onClick={() => navigate('/')}>
+              <DuncitButton variant="outlined" onClick={() => navigate('/')}>
                 Back to home
-              </Button>
-              <Button variant="contained" onClick={() => navigate('/profile')}>
+              </DuncitButton>
+              <DuncitButton variant="contained" onClick={() => navigate('/profile')}>
                 My profile
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
         </CardContent>

@@ -1,16 +1,8 @@
-import {
-  Box,
-  Button,
-  Chip,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { DuncitButton } from '@duncit/buttons';
 import FragmentCodePane from './FragmentCodePane';
 import FragmentUsageStrip from './FragmentUsageStrip';
 import EmailPreviewFrame from '../../components/EmailPreviewFrame';
@@ -134,22 +126,22 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<SaveIcon />}
           disabled={!dirty || busy}
           onClick={onSave}
         >
           Save
-        </Button>
+        </DuncitButton>
         {draft.is_system ? (
-          <Button color="warning" startIcon={<RestartAltIcon />} disabled={busy} onClick={onReset}>
+          <DuncitButton color="warning" startIcon={<RestartAltIcon />} disabled={busy} onClick={onReset}>
             Reset to shipped
-          </Button>
+          </DuncitButton>
         ) : (
-          <Button color="error" startIcon={<DeleteForeverIcon />} disabled={busy} onClick={onDelete}>
+          <DuncitButton color="error" startIcon={<DeleteForeverIcon />} disabled={busy} onClick={onDelete}>
             Delete
-          </Button>
+          </DuncitButton>
         )}
         <Box sx={{ flex: 1 }} />
         <Typography variant="caption" sx={{

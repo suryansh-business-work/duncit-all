@@ -48,6 +48,7 @@
   "dependencies": {
     "@duncit/ai-monitoring": "file:../../packages/ai-monitoring",
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
+    "@duncit/buttons-native": "file:../../packages/buttons-native",
     "@duncit/datetime": "file:../../packages/datetime",
     "@duncit/dialogs-native": "file:../../packages/dialogs-native",
     "@duncit/errors": "file:../../packages/errors",

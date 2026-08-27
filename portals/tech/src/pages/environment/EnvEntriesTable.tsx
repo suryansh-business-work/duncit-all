@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StarIcon from '@mui/icons-material/Star';
@@ -8,6 +8,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
@@ -90,10 +91,10 @@ export default function EnvEntriesTable({
       <Stack direction="row" component="span" sx={{
         justifyContent: "flex-end"
       }}>
-        <Tooltip title={t('tech.environment.testConnection')}><IconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></IconButton></Tooltip>
-        <Tooltip title={t('shell.common.edit')}><IconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-        <Tooltip title={t('tech.environment.setDefault')}><IconButton size="small" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</IconButton></Tooltip>
-        <Tooltip title={t('shell.common.delete')}><IconButton size="small" onClick={() => onDelete(e)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+        <Tooltip title={t('tech.environment.testConnection')}><DuncitIconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></DuncitIconButton></Tooltip>
+        <Tooltip title={t('shell.common.edit')}><DuncitIconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></DuncitIconButton></Tooltip>
+        <Tooltip title={t('tech.environment.setDefault')}><DuncitIconButton size="small" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</DuncitIconButton></Tooltip>
+        <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" onClick={() => onDelete(e)}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
       </Stack>
     );
     return [

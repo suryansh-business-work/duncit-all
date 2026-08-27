@@ -1,8 +1,9 @@
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { newTimeSlot, type TimeSlotRow } from './useRecurringDialog';
 import { useTranslation } from '@duncit/shell';
 
@@ -46,20 +47,20 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
               onChange={(t) => setRow(row.id, { end: t })}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />
-            <IconButton
+            <DuncitIconButton
               size="small"
               aria-label={`Remove time slot ${index + 1}`}
               disabled={timeSlots.length === 1}
               onClick={() => removeRow(row.id)}
             >
               <DeleteOutlineIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         ))}
       </Stack>
-      <Button size="small" startIcon={<AddIcon />} onClick={addRow} sx={{ mt: 1 }}>
+      <DuncitButton size="small" startIcon={<AddIcon />} onClick={addRow} sx={{ mt: 1 }}>
         Add time slot
-      </Button>
+      </DuncitButton>
       <Stack
         direction="row"
         spacing={0.5}

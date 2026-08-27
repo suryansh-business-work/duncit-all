@@ -1,5 +1,6 @@
-import { Button, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -22,7 +23,7 @@ export default function RetryButton({ stepKey, busyKey, onRetry, label }: Readon
   const busy = busyKey === stepKey;
 
   return (
-    <Button
+    <DuncitButton
       size="small"
       variant="outlined"
       color="warning"
@@ -34,6 +35,6 @@ export default function RetryButton({ stepKey, busyKey, onRetry, label }: Readon
       startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <ReplayIcon />}
     >
       {t('finance.payment.retry')}
-    </Button>
+    </DuncitButton>
   );
 }

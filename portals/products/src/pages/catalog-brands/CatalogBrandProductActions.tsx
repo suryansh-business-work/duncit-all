@@ -1,10 +1,11 @@
-import { IconButton, Stack, Tooltip } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { CatalogBrandProductRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -45,7 +46,7 @@ export default function CatalogBrandProductActions({
       justifyContent: "flex-end"
     }}>
       <Tooltip title={t('shell.common.edit')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('shell.common.edit')}
           onClick={(event) => {
@@ -54,11 +55,11 @@ export default function CatalogBrandProductActions({
           }}
         >
           <EditIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       {!archived && (
         <Tooltip title={pauseLabel}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={pauseLabel}
             color={paused ? 'success' : 'warning'}
@@ -68,11 +69,11 @@ export default function CatalogBrandProductActions({
             }}
           >
             {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
       <Tooltip title={lifecycleLabel}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={lifecycleLabel}
           onClick={(event) => {
@@ -81,10 +82,10 @@ export default function CatalogBrandProductActions({
           }}
         >
           {lifecycleIcon}
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('products.brandProducts.duplicate')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('products.brandProducts.duplicate')}
           onClick={(event) => {
@@ -93,7 +94,7 @@ export default function CatalogBrandProductActions({
           }}
         >
           <ContentCopyIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

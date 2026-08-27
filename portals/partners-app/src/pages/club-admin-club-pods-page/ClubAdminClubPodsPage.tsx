@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
-import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import CreatePodLauncher from './CreatePodLauncher';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from './queries';
@@ -83,22 +84,22 @@ export default function ClubAdminClubPodsPage() {
       justifyContent: "flex-end"
     }}>
       <Tooltip title={t('partners.clubAdminClubPodsPage.podDetails')}>
-        <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
+        <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
           <VisibilityIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('partners.clubAdminClubPodsPage.editPod')}>
-        <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
+        <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
           <EditIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       {/* An already-cancelled pod stays editable, but there is nothing left
           to delete. */}
       {!pod.is_deleted && (
         <Tooltip title={t('partners.clubAdminClubPodsPage.deletePod')}>
-          <IconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
+          <DuncitIconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
             <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
     </Stack>
@@ -129,14 +130,14 @@ export default function ClubAdminClubPodsPage() {
                 color: "text.secondary"
               }}>{t('partners.clubAdminClubPodsPage.createEditAndDeletePodsFor')}</Typography>
             </Stack>
-            <Button
+            <DuncitButton
               variant="outlined"
               startIcon={<EditIcon />}
               component={RouterLink}
               to={`/club-admin/clubs/${clubId}/edit`}
             >
               Edit Club Details
-            </Button>
+            </DuncitButton>
           </Stack>
           {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
           {deleteError && <Alert severity="error">{deleteError}</Alert>}

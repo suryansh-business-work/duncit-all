@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import ReleaseBreakdownLines from './ReleaseBreakdownLines';
 import type { PaymentReleaseReviewFormProps, PaymentReleaseReviewValues } from './payment-release-review.types';
 import { useTranslation } from '@duncit/app-settings';
@@ -127,8 +128,8 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
-          <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving...' : 'Submit Review'}</Button>
+          <DuncitButton onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Saving...' : 'Submit Review'}</DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

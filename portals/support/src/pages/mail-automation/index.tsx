@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import type { TableFetch } from '@duncit/table';
@@ -129,7 +121,7 @@ export default function MailAutomationPage() {
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={closeDialog}>{t('support.mailAutomation.close')}</Button>
+              <DuncitButton onClick={closeDialog}>{t('support.mailAutomation.close')}</DuncitButton>
             </DialogActions>
           </>
         )}

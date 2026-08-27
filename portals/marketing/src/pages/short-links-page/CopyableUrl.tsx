@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitIconButton } from '@duncit/buttons';
 import { copyToClipboard } from '@duncit/utils';
 
 interface Props {
@@ -65,7 +66,7 @@ export default function CopyableUrl({ url, label }: Readonly<Props>) {
           {url}
         </Typography>
         <Tooltip title={TITLES[state]}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             aria-label={TITLES[state]}
             sx={{ flexShrink: 0 }}
@@ -74,7 +75,7 @@ export default function CopyableUrl({ url, label }: Readonly<Props>) {
             }}
           >
             <ContentCopyIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     </Stack>

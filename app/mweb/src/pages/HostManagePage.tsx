@@ -1,9 +1,10 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
 import InsightsIcon from '@mui/icons-material/Insights';
+import { DuncitButton } from '@duncit/buttons';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodSections from './host-manage-page/HostPodSections';
@@ -91,12 +92,12 @@ export default function HostManagePage() {
             Manage the pods you host
           </Typography>
         </Box>
-        <Button component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
+        <DuncitButton component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
           Insights
-        </Button>
-        <Button component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
+        </DuncitButton>
+        <DuncitButton component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
           Create
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {isHost && <HostCategoriesCard />}

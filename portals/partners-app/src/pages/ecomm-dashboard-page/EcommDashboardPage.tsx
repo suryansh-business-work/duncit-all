@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import EcommStatCards from './EcommStatCards';
@@ -57,14 +58,14 @@ export default function EcommDashboardPage() {
                   How your brands, products and orders are performing on Duncit.
                 </Typography>
               </Box>
-              <Button
+              <DuncitButton
                 variant="outlined"
                 startIcon={<StorefrontIcon />}
                 onClick={() => navigate('/ecomm-brand')}
                 sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)', alignSelf: { md: 'center' } }}
               >
                 Your Brands
-              </Button>
+              </DuncitButton>
             </Stack>
           </Box>
           {error && <Alert severity="error">{error.message}</Alert>}

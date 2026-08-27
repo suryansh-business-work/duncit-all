@@ -2,16 +2,8 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { SlotField, VenueField } from './VenueSlotFields';
 import {
   buildHostResubmitInput,
@@ -153,10 +145,10 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {labels.cancel}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="pod-resubmit-form"
           variant="contained"
@@ -164,7 +156,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? labels.resubmitting : labels.resubmitCta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

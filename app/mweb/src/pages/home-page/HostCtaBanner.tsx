@@ -1,7 +1,8 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -60,7 +61,7 @@ export default function HostCtaBanner({
             {subtitle}
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           onClick={onPress}
           endIcon={<ArrowForwardIcon />}
           sx={{
@@ -73,7 +74,7 @@ export default function HostCtaBanner({
           }}
         >
           {buttonLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

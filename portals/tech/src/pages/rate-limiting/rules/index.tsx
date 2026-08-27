@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Button, Snackbar, Stack } from '@mui/material';
+import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader, QueryGuard } from '@duncit/ui';
 import { useApolloTableFetch } from '@duncit/table';
 import { notifyError, useConfirm } from '@duncit/dialogs';
@@ -110,14 +111,14 @@ export default function RateLimitRulesPage() {
               fetchRows={fetchRows}
               refetchRef={refetchRef}
               toolbarActions={
-                <Button
+                <DuncitButton
                   size="small"
                   variant="contained"
                   startIcon={<AddIcon />}
                   onClick={openCreate}
                 >
                   {t('tech.rateLimit.rules.newRule')}
-                </Button>
+                </DuncitButton>
               }
               onToggle={toggle}
               onEdit={openEdit}

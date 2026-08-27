@@ -1,4 +1,5 @@
-import { Box, Button, Chip, Drawer, Divider, Stack, Typography } from '@mui/material';
+import { Box, Chip, Drawer, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { InfoRow } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
@@ -103,12 +104,12 @@ export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
             )}
 
             <Stack direction="row" spacing={1}>
-              <Button href={row.url} target="_blank" rel="noopener" variant="outlined" size="small">
+              <DuncitButton href={row.url} target="_blank" rel="noopener" variant="outlined" size="small">
                 Open image
-              </Button>
-              <Button onClick={onClose} size="small">
+              </DuncitButton>
+              <DuncitButton onClick={onClose} size="small">
                 Close
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
         )}

@@ -1,14 +1,7 @@
 import Editor from '@monaco-editor/react';
-import {
-  AppBar,
-  Box,
-  Dialog,
-  IconButton,
-  Toolbar,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { AppBar, Box, Dialog, Toolbar, Typography, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -44,9 +37,9 @@ export default function CodeExpandDialog({
           <Typography variant="subtitle2" sx={{ flex: 1, fontFamily: 'monospace' }}>
             {title}
           </Typography>
-          <IconButton edge="end" onClick={onClose} aria-label={t('tech.packagesDocs.closeEditor')}>
+          <DuncitIconButton edge="end" onClick={onClose} aria-label={t('tech.packagesDocs.closeEditor')}>
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Toolbar>
       </AppBar>
       <Box sx={{ flex: 1, minHeight: 0 }}>

@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { INVOICE_TEMPLATES, KIND_META, UPDATE_INVOICE_TEMPLATE, type InvoiceKind } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -78,9 +69,9 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
             {meta.subtitle}
           </Typography>
         </Box>
-        <Button variant="contained" onClick={save} disabled={saving}>
+        <DuncitButton variant="contained" onClick={save} disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

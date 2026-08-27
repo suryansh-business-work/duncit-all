@@ -1,14 +1,6 @@
 import { useState } from 'react';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -61,10 +53,10 @@ export default function RejectDialog({ open, onConfirm, onClose }: Readonly<Prop
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={busy}>
+        <DuncitButton onClick={close} disabled={busy}>
           {t('tech.accountDeletions.close')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           color="error"
           variant="contained"
           onClick={() => {
@@ -73,7 +65,7 @@ export default function RejectDialog({ open, onConfirm, onClose }: Readonly<Prop
           disabled={!note.trim() || busy}
         >
           {t('tech.accountDeletions.reject')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

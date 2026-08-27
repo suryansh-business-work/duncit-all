@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { EMAIL } from '@duncit/regex';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -134,7 +135,7 @@ export default function BuyTab() {
             message={message}
             onMessage={setMessage}
           />
-          <Button
+          <DuncitButton
             variant="contained"
             size="large"
             disabled={!canContinue}
@@ -142,7 +143,7 @@ export default function BuyTab() {
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {t('mweb.giftCards.continueCta')}
-          </Button>
+          </DuncitButton>
         </>
       )}
       <HowItWorksCard />

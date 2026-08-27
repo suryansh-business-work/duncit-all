@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Stack, Switch, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CRM_SERVICES_OFFERED,
   UPDATE_CRM_SERVICE_OFFERED,
@@ -104,10 +93,10 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={save} disabled={loading || !title.trim() || (!venue && !host)}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={save} disabled={loading || !title.trim() || (!venue && !host)}>
           {loading ? 'Saving…' : t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

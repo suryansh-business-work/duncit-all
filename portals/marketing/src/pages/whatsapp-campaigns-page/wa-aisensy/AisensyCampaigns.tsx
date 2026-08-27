@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
@@ -153,9 +154,9 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
           Campaigns as AiSensy has them right now. A send only works against one whose status is
           Live. Open a row to see the message it sends, or use Send to point it at people.
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
           {t('marketingWhatsapp.createCampaign')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <TemplatesWithoutCampaign templates={groups.orphans} onCreate={() => setFormOpen(true)} />

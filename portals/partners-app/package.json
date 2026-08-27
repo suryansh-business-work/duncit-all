@@ -26,6 +26,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/auto-pods": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
     "@duncit/dashboard": "workspace:*",

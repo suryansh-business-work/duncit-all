@@ -1,4 +1,5 @@
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { formatDate } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -50,14 +51,14 @@ export default function DeletionSubmittedDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button
+        <DuncitButton
           variant="contained"
           onClick={onSignOut}
           data-testid="deletion-sign-out"
           sx={{ textTransform: 'none', fontWeight: 700 }}
         >
           {t('mweb.account.deletion.signOutNow')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

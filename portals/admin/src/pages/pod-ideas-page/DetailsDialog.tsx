@@ -1,21 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import ShareIcon from '@mui/icons-material/Share';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import {
   POD_IDEA_DETAILS,
@@ -151,17 +140,17 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDeleteId(null)} disabled={deletingComment}>
+          <DuncitButton onClick={() => setConfirmDeleteId(null)} disabled={deletingComment}>
             {t('shell.common.cancel')}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             onClick={handleDeleteComment}
             color="error"
             variant="contained"
             disabled={deletingComment}
           >
             {deletingComment ? 'Deleting…' : t('shell.common.delete')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Dialog>

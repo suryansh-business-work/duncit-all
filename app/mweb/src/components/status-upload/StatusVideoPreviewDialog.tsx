@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Slider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Slider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { FileDetails } from '@duncit/media-picker';
 import type { MediaDimensions, VideoTrim } from '@duncit/media-picker';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -118,10 +108,10 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>{t('mweb.common.cancel')}</Button>
-        <Button variant="contained" onClick={confirm} sx={{ fontWeight: 600 }}>
+        <DuncitButton onClick={onCancel}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={confirm} sx={{ fontWeight: 600 }}>
           {needsTrim ? 'Trim & Post' : 'Post story'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

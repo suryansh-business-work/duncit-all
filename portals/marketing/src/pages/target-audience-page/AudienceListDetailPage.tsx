@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { BackHeader, QueryGuard } from '@duncit/ui';
@@ -106,13 +107,13 @@ export default function AudienceListDetailPage() {
           <Stack direction="row" sx={{
             justifyContent: "flex-end"
           }}>
-            <Button
+            <DuncitButton
               variant="contained"
               startIcon={<PersonAddAlt1Icon />}
               onClick={() => setAdding(true)}
             >
               {t('marketing.targetAudience.addUser')}
-            </Button>
+            </DuncitButton>
           </Stack>
 
           <AudienceTable fetchRows={fetchRows} columnDeps={columnDeps} refetchRef={refetchRef} />

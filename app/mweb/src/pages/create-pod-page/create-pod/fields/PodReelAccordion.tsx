@@ -1,20 +1,10 @@
 import { useRef, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  LinearProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Chip, CircularProgress, LinearProgress, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloClient } from '@apollo/client';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { compressUploadedVideo, useImagekitDirectUpload } from '@duncit/media-picker';
@@ -159,7 +149,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
             </Box>
           )}
           <Stack direction="row" spacing={1}>
-            <Button
+            <DuncitButton
               size="small"
               variant="outlined"
               startIcon={busy ? <CircularProgress size={16} /> : <VideocamOutlinedIcon />}
@@ -167,11 +157,11 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               onClick={() => fileRef.current?.click()}
             >
               {uploadLabel}
-            </Button>
+            </DuncitButton>
             {hasReel && !busy && (
-              <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={removeReel}>
+              <DuncitButton size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={removeReel}>
                 {t('mweb.createPod.remove')}
-              </Button>
+              </DuncitButton>
             )}
           </Stack>
           <input ref={fileRef} type="file" accept="video/*" hidden onChange={pickFile} />

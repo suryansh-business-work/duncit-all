@@ -1,4 +1,5 @@
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { AiCheckingIndicator, AiMonitoringChip } from './AiMonitoring';
 import { useTranslation } from '@duncit/shell';
 
@@ -36,20 +37,20 @@ export default function StepActions({
           alignItems: "center",
           flexWrap: "wrap"
         }}>
-        <Button disabled={isFirst || loading} onClick={onBack}>
+        <DuncitButton disabled={isFirst || loading} onClick={onBack}>
           {t('partners.venueAvailabilityPage.back')}
-        </Button>
+        </DuncitButton>
         {isLast ? (
           <>
             <AiMonitoringChip />
-            <Button type="submit" variant="contained" disabled={loading}>
+            <DuncitButton type="submit" variant="contained" disabled={loading}>
               {submitLabel}
-            </Button>
+            </DuncitButton>
           </>
         ) : (
-          <Button variant="contained" onClick={onNext}>
+          <DuncitButton variant="contained" onClick={onNext}>
             {t('partners.venueAvailabilityPage.next')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     </Stack>

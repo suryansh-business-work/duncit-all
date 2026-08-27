@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { gql, useLazyQuery } from '@apollo/client';
-import { Button, Snackbar, Stack } from '@mui/material';
+import { Snackbar, Stack } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 const POLICY_PDF = gql`
@@ -54,12 +55,12 @@ export default function PolicyPdfButton({ slug }: Readonly<{ slug: string }>) {
 
   return (
     <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-      <Button size="small" variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={view} disabled={loading}>
+      <DuncitButton size="small" variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={view} disabled={loading}>
         View PDF
-      </Button>
-      <Button size="small" variant="contained" startIcon={<DownloadIcon />} onClick={download} disabled={loading}>
+      </DuncitButton>
+      <DuncitButton size="small" variant="contained" startIcon={<DownloadIcon />} onClick={download} disabled={loading}>
         Download PDF
-      </Button>
+      </DuncitButton>
       <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError('')} message={error} />
     </Stack>
   );

@@ -1,20 +1,9 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack, Typography } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { isSameDay } from 'date-fns';
 import type { VenueSlotRow } from '../types';
 import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
@@ -186,7 +175,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
               )}
               {!LOCKED_STATUSES.has(slot.status) && (
                 <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                  <Button
+                  <DuncitButton
                     size="small"
                     startIcon={slot.status === 'BLOCKED' ? <CheckIcon /> : <BlockIcon />}
                     onClick={() => handleToggleBlock(slot)}
@@ -194,15 +183,15 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                     {slot.status === 'BLOCKED'
                       ? t('shell.availability.unblock')
                       : t('shell.availability.block')}
-                  </Button>
-                  <Button
+                  </DuncitButton>
+                  <DuncitButton
                     size="small"
                     color="error"
                     startIcon={<DeleteOutlineIcon />}
                     onClick={() => setConfirmDeleteId(slot.id)}
                   >
                     {t('shell.common.delete')}
-                  </Button>
+                  </DuncitButton>
                 </Stack>
               )}
             </Box>
@@ -216,10 +205,10 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
           <DialogContentText>{t('shell.availability.deleteBody')}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDeleteId(null)}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" onClick={handleConfirmDelete}>
+          <DuncitButton onClick={() => setConfirmDeleteId(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" onClick={handleConfirmDelete}>
             {t('shell.common.delete')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Box>

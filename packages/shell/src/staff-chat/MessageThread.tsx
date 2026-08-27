@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import ThreadEntry, { type ThreadEntryHandlers } from './ThreadEntry';
 import { JumpToLatest, ThreadSkeleton } from './ThreadChrome';
@@ -142,9 +143,9 @@ export default function MessageThread({
       >
         {hasMore && (
           <Box sx={{ textAlign: 'center' }}>
-            <Button size="small" onClick={onLoadMore} disabled={loadingMore}>
+            <DuncitButton size="small" onClick={onLoadMore} disabled={loadingMore}>
               {t(loadingMore ? 'shell.chat.thread.loading' : 'shell.chat.thread.earlier')}
-            </Button>
+            </DuncitButton>
           </Box>
         )}
 

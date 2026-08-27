@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import SliderMediaField from './pod-shop-slider/SliderMediaField';
 import {
@@ -87,9 +88,9 @@ export default function PodShopSliderPage() {
             <Stack spacing={2}>
               <SliderMediaField media={media} onChange={setMedia} />
               <Box>
-                <Button variant="contained" onClick={onSave} disabled={saving}>
+                <DuncitButton variant="contained" onClick={onSave} disabled={saving}>
                   {saving ? 'Saving…' : 'Save slider'}
-                </Button>
+                </DuncitButton>
               </Box>
             </Stack>
           )}

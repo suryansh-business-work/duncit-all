@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError } from '@duncit/dialogs';
 import { CREATE_ROLE, DELETE_ROLE, ROLES_TABLE, UPDATE_ROLE, type RoleRow } from './queries';
@@ -98,9 +99,9 @@ export default function RolesPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             New Role
-          </Button>
+          </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={removeRole}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLazyQuery, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardRedeemView from '../gift-cards-page/GiftCardRedeemView';
@@ -60,14 +61,14 @@ export default function GiftCardRedeemPage() {
               htmlInput: { style: { textTransform: 'uppercase' }, maxLength: 19 }
             }}
           />
-          <Button
+          <DuncitButton
             variant="contained"
             disabled={!codeInput.trim() || loading}
             onClick={check}
             sx={{ borderRadius: 999, fontWeight: 700, mt: 1, flexShrink: 0 }}
           >
             {t('mweb.giftCards.checkCta')}
-          </Button>
+          </DuncitButton>
         </Stack>
         {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
         {card && <GiftCardRedeemView key={card.id} card={card} currencySymbol={currencySymbol} />}

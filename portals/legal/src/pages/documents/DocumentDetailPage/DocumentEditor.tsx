@@ -1,4 +1,5 @@
-import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Box, Paper, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import DocumentTypeSelect from '../../../components/DocumentTypeSelect';
 import { useTranslation } from '@duncit/shell';
@@ -54,14 +55,14 @@ export function DocumentEditor(props: Readonly<Props>) {
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button onClick={props.onCancel}>{t('shell.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={props.onCancel}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             disabled={props.saving || !props.name.trim() || !props.docType.trim()}
             onClick={props.onSave}
           >
             Save
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Paper>

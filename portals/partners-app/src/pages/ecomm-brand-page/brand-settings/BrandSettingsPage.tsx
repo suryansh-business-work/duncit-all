@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert, Box, Button, Card, CardContent, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton, Snackbar, Stack, Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import { MY_BRANDS, type EcommBrand } from '../queries';
 import {
@@ -107,14 +105,14 @@ export default function BrandSettingsPage() {
           background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
         }}
       >
-        <Button
+        <DuncitButton
           onClick={() => navigate('/ecomm-brand')}
           startIcon={<ArrowBackIcon />}
           variant="outlined"
           sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}
         >
           {t('partners.venueAvailabilityPage.back')}
-        </Button>
+        </DuncitButton>
         <Typography
           variant="h4"
           sx={{
@@ -157,7 +155,7 @@ export default function BrandSettingsPage() {
       <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           <span>{editingWarehouse ? 'Edit warehouse' : 'New warehouse'}</span>
-          <IconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
+          <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
         </DialogTitle>
         <DialogContent dividers>
           <WarehouseForm
@@ -179,10 +177,10 @@ export default function BrandSettingsPage() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>
+          <DuncitButton onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>
             {t('shell.common.delete')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
       <Snackbar open={!!message} autoHideDuration={3000} message={message ?? ''} onClose={() => setMessage(null)} />

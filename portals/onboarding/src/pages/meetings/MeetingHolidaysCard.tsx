@@ -1,21 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { format } from 'date-fns';
 import {
   ADD_MEETING_HOLIDAY,
@@ -115,9 +104,9 @@ export default function MeetingHolidaysCard() {
               <MenuItem key={value} value={value}>{HOLIDAY_TYPE_LABELS[value]}</MenuItem>
             ))}
           </TextField>
-          <Button variant="contained" onClick={add} disabled={adding} sx={{ flexShrink: 0 }}>
+          <DuncitButton variant="contained" onClick={add} disabled={adding} sx={{ flexShrink: 0 }}>
             {adding ? 'Adding…' : 'Add'}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         <Stack spacing={1} sx={{ mt: 2 }}>
@@ -150,9 +139,9 @@ export default function MeetingHolidaysCard() {
                   color: "text.secondary",
                   flex: 1
                 }}>{h.name || ''}</Typography>
-              <IconButton size="small" color="error" onClick={() => remove(h.id)} aria-label={t('onboarding.meetings.removeHoliday')}>
+              <DuncitIconButton size="small" color="error" onClick={() => remove(h.id)} aria-label={t('onboarding.meetings.removeHoliday')}>
                 <DeleteOutlineIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Stack>
           ))}
         </Stack>

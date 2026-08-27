@@ -1,18 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import { DuncitButton } from '@duncit/buttons';
 import { MY_WALLET } from './queries';
 import { WithdrawForm } from './withdraw';
 import { formatDate } from '@duncit/app-settings';
@@ -107,14 +97,14 @@ export default function WalletPage() {
             {PAYOUT_LABEL[wallet?.payout_mode] ?? ''} · Next cycle {fmtDate(wallet?.next_payout_at)}
           </Typography>
           <Box sx={{ mt: 1.5 }}>
-            <Button
+            <DuncitButton
               variant="contained"
               disabled={!canWithdraw}
               onClick={() => setOpen(true)}
               sx={{ borderRadius: 999, fontWeight: 900 }}
             >
               {t('partners.becomeHostPage.withdraw')}
-            </Button>
+            </DuncitButton>
             {belowMinimum && (
               <Typography
                 variant="caption"

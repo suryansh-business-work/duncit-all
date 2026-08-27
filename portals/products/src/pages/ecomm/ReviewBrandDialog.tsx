@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { StatusChip } from '@duncit/ui';
 import BrandReviewDetails from './BrandReviewDetails';
@@ -150,26 +140,26 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
+          <DuncitButton onClick={onClose} disabled={loading}>
             Cancel
-          </Button>
+          </DuncitButton>
           <Box sx={{ flex: 1 }} />
-          <Button
+          <DuncitButton
             color="error"
             variant="outlined"
             disabled={loading || !trimmedNotes}
             onClick={() => setPending('REJECT')}
           >
             Reject
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             color="success"
             variant="contained"
             disabled={loading}
             onClick={() => setPending('APPROVE')}
           >
             Approve
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import { Alert, Button } from '@mui/material';
+import { Alert } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   ISSUE_REPORT_CATEGORY,
   buildIssueReportMessage,
@@ -51,9 +52,9 @@ export default function IssueNotice({
     if (!issue.offerReport) return undefined;
     if (sent) return undefined;
     return (
-      <Button color="inherit" size="small" disabled={loading} onClick={() => void report()}>
+      <DuncitButton color="inherit" size="small" disabled={loading} onClick={() => void report()}>
         {loading ? t('mweb.issue.reporting') : t('mweb.issue.report')}
-      </Button>
+      </DuncitButton>
     );
   })();
 

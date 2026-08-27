@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Box, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import GroupIcon from '@mui/icons-material/Group';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { useUserData } from '@duncit/user-context';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -119,22 +120,22 @@ export default function CreateAudienceListPage() {
             data-testid="audience-match-count"
           />
           {step === 1 && (
-            <Button startIcon={<ArrowBackIcon />} onClick={() => setStep(0)} disabled={saving}>
+            <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => setStep(0)} disabled={saving}>
               Back
-            </Button>
+            </DuncitButton>
           )}
           {step === 0 && (
-            <Button
+            <DuncitButton
               variant="contained"
               endIcon={<ArrowForwardIcon />}
               onClick={() => setStep(1)}
               data-testid="audience-step-next"
             >
               Next
-            </Button>
+            </DuncitButton>
           )}
           {step === 1 && (
-            <Button
+            <DuncitButton
               type="submit"
               form={AUDIENCE_LIST_FORM_ID}
               variant="contained"
@@ -142,7 +143,7 @@ export default function CreateAudienceListPage() {
               disabled={saving}
             >
               {saving ? 'Saving…' : 'Save list'}
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       </Stack>

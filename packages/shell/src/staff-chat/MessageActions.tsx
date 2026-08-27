@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
+import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ReplyIcon from '@mui/icons-material/Reply';
 import ForwardIcon from '@mui/icons-material/Forward';
@@ -11,6 +11,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import type { StaffMessage } from './queries';
 
@@ -61,14 +62,14 @@ export default function MessageActions({
   return (
     <>
       <Tooltip title={t('shell.chat.actions.more')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           color="inherit"
           aria-label={t('shell.chat.actions.messageActions')}
           onClick={(event) => setAnchor(event.currentTarget)}
         >
           <MoreHorizIcon sx={{ fontSize: 15 }} />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
         <MenuItem onClick={run(onReply)}>

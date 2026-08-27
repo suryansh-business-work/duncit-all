@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Box, FormHelperText, IconButton, Stack, Typography } from '@mui/material';
+import { Box, FormHelperText, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import { DuncitIconButton } from '@duncit/buttons';
 import { coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
@@ -135,14 +136,14 @@ export default function MediaUrlsField({
               ) : (
                 <Box component="img" src={url} alt={t('mweb.createPod.mediaAlt')} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 aria-label={t('mweb.createPod.removeMedia')}
                 onClick={() => removeUrl(url)}
                 sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' } }}
               >
                 <CloseIcon sx={{ fontSize: 14 }} />
-              </IconButton>
+              </DuncitIconButton>
             </Box>
           ))}
           <Box

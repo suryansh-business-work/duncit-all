@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Alert, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PetsIcon from '@mui/icons-material/Pets';
+import { DuncitButton } from '@duncit/buttons';
 import PetForm from './PetForm';
 import PetSummary from './PetSummary';
 import { PetProfile } from './petQueries';
@@ -37,7 +38,7 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
             Pet Profile
           </Typography>
           {!editing && (
-            <Button
+            <DuncitButton
               size="small"
               startIcon={<EditIcon />}
               onClick={() => {
@@ -46,7 +47,7 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
               }}
             >
               {hasPet ? 'Edit' : 'Add pet'}
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
 

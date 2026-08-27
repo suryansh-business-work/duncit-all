@@ -4,23 +4,10 @@ import {
 import { useQuery } from '@apollo/client';
 import { useDebouncedValue } from '@duncit/ui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  InputAdornment,
-  List,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  TablePagination,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, InputAdornment, List, ListItemButton, ListItemText, Stack, TablePagination, TextField, Typography } from '@mui/material';
 import BoltIcon from '@mui/icons-material/Bolt';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton } from '@duncit/buttons';
 import { WA_COMMUNITIES, WA_CONTACTS, WA_GROUPS } from './whatsappQueries';
 import { useExtraction } from './extraction';
 import GroupMembersDialog, { type GroupRef } from './GroupMembersDialog';
@@ -100,9 +87,9 @@ export default function WhatsAppBrowser() {
           mb: 1
         }}>
         <DuncitTabs {...tabs} />
-        <Button size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => void startExtraction()}>
+        <DuncitButton size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => void startExtraction()}>
           {running ? 'Extracting…' : 'Extract'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <TextField

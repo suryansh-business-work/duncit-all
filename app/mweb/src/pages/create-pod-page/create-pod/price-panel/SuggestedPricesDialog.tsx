@@ -1,19 +1,10 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-  Typography,
-  useMediaQuery,
-} from '@mui/material';
+import { Box, CircularProgress, Dialog, DialogContent, DialogTitle, Stack, Typography, useMediaQuery } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import SellIcon from '@mui/icons-material/Sell';
+import { DuncitIconButton } from '@duncit/buttons';
 import { SUGGESTED_TICKET_PRICES, type SuggestedTicketPrice } from './queries';
 import SuggestedPricesTable from './SuggestedPricesTable';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -90,14 +81,14 @@ export default function SuggestedPricesDialog({
       >
         <SellIcon color="primary" fontSize="small" />
         {t('mweb.createPod.suggestedPricesTitle')}
-        <IconButton
+        <DuncitIconButton
           aria-label={t('mweb.auth.close')}
           onClick={onClose}
           data-testid="suggested-prices-close"
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>

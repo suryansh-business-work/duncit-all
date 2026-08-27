@@ -1,18 +1,6 @@
-import {
-  Avatar,
-  Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  List,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
-  Typography,
-} from '@mui/material';
+import { Avatar, Chip, Dialog, DialogContent, DialogTitle, Divider, List, ListItemAvatar, ListItemButton, ListItemText, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { attendeeSeatCount } from '@duncit/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -94,13 +82,13 @@ export default function PodAttendeesDialog({
         <Typography component="span" sx={{ flex: 1, fontWeight: 700 }}>
           {t('mweb.podDetails.attendeesCount', { vars: { count } })}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('mweb.podDetails.closeAttendees')}
           onClick={onClose}
         >
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers sx={{ p: 1 }}>
         {people.length === 0 ? (

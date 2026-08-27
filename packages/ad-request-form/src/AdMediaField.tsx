@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Button, FormHelperText, Stack, Typography } from '@mui/material';
+import { Box, FormHelperText, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { DuncitButton } from '@duncit/buttons';
 import { MediaPickerDialog } from '@duncit/media-picker';
 import type { AdMediaType } from './ad-options';
 import { useTranslation } from './i18n/useTranslation';
@@ -66,9 +67,9 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
           alignItems: "center",
           flexWrap: "wrap"
         }}>
-        <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
+        <DuncitButton variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
           {value ? replaceLabel : uploadLabel}
-        </Button>
+        </DuncitButton>
         {value && (
           <Typography
             variant="caption"

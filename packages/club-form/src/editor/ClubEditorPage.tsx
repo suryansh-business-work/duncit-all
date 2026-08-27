@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import type { UseFormReturn } from 'react-hook-form';
 import ClubForm from '../ClubForm';
 import ClubPreview from '../preview/ClubPreview';
@@ -86,9 +87,9 @@ export default function ClubEditorPage({
               alignItems: "center"
             }}>
               {titleExtras}
-              <Button startIcon={<ArrowBackIcon />} onClick={onBack}>
+              <DuncitButton startIcon={<ArrowBackIcon />} onClick={onBack}>
                 {backLabel}
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
 

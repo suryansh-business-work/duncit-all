@@ -9,13 +9,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n';
 import type { TableDensity } from '../persistence';
 import type { DuncitColumn, TableFilterValue } from '../types';
@@ -73,13 +72,13 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
   const clearAdornment = (
     <InputAdornment position="end">
       <Tooltip title={t('shell.table.clearSearch')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('shell.table.clearSearch')}
           onClick={() => setSearchInput('')}
         >
           <ClearIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </InputAdornment>
   );
@@ -112,13 +111,13 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
         }} />
       {hasFilterableColumns ? (
         <Badge badgeContent={filters.length} color="primary">
-          <Button
+          <DuncitButton
             size="small"
             startIcon={<FilterListIcon />}
             onClick={(event) => setFilterAnchor(event.currentTarget)}
           >
             {t('shell.table.filters')}
-          </Button>
+          </DuncitButton>
         </Badge>
       ) : null}
       {filters.map((filter) => (
@@ -132,28 +131,28 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
       <Box sx={{ flexGrow: 1 }} />
       {toolbarActions}
       <Tooltip title={t('shell.table.columns')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('shell.table.columns')}
           onClick={(event) => setColumnAnchor(event.currentTarget)}
         >
           <ViewColumnIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={densityTitle}>
-        <IconButton size="small" aria-label={densityTitle} onClick={toggleDensity}>
+        <DuncitIconButton size="small" aria-label={densityTitle} onClick={toggleDensity}>
           {isCompact ? <DensityMediumIcon fontSize="small" /> : <DensitySmallIcon fontSize="small" />}
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.table.exportCsv')}>
-        <IconButton size="small" aria-label={t('shell.table.exportCsv')} onClick={onExportCsv}>
+        <DuncitIconButton size="small" aria-label={t('shell.table.exportCsv')} onClick={onExportCsv}>
           <FileDownloadIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.table.refresh')}>
-        <IconButton size="small" aria-label={t('shell.table.refresh')} onClick={onRefresh}>
+        <DuncitIconButton size="small" aria-label={t('shell.table.refresh')} onClick={onRefresh}>
           <RefreshIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <FilterPopover
         open={Boolean(filterAnchor)}

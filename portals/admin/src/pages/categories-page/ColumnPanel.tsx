@@ -1,26 +1,11 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, Card, CardContent, Chip, CircularProgress, Divider, List, ListItemButton, ListItemText, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import { CATEGORIES, CatItem, Level } from './queries';
 import { isImageIconValue, renderIconByName } from '../../components/IconPickerField';
 
@@ -142,7 +127,7 @@ export default function ColumnPanel({
                   secondary={secondaryText}
                 />
                 <Stack direction="row">
-                  <IconButton
+                  <DuncitIconButton
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -150,8 +135,8 @@ export default function ColumnPanel({
                     }}
                   >
                     <EditIcon fontSize="inherit" />
-                  </IconButton>
-                  <IconButton
+                  </DuncitIconButton>
+                  <DuncitIconButton
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -159,7 +144,7 @@ export default function ColumnPanel({
                     }}
                   >
                     <DeleteIcon fontSize="inherit" />
-                  </IconButton>
+                  </DuncitIconButton>
                   {level !== 'SUB' && <ChevronRightIcon fontSize="small" />}
                 </Stack>
               </ListItemButton>
@@ -205,9 +190,9 @@ export default function ColumnPanel({
           </Box>
           <Tooltip title={enabled ? `New ${title}` : 'Select a parent first'}>
             <span>
-              <IconButton color="primary" onClick={onCreate} disabled={!enabled}>
+              <DuncitIconButton color="primary" onClick={onCreate} disabled={!enabled}>
                 <AddIcon />
-              </IconButton>
+              </DuncitIconButton>
             </span>
           </Tooltip>
         </Stack>

@@ -1,11 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -26,10 +20,10 @@ export default function DeleteUserDialog({ open, busy, onClose, onConfirm }: Rea
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button color="error" variant="contained" onClick={onConfirm} disabled={busy}>
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton color="error" variant="contained" onClick={onConfirm} disabled={busy}>
           Delete User
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

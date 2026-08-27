@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import { parseApiError } from '@duncit/utils';
 import { UPDATE_CLUB_ADMIN, type ClubAdminRow } from './queries';
@@ -165,10 +155,10 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
-        <Button variant="contained" disabled={loading || !commissionValid} onClick={onSave}>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={loading || !commissionValid} onClick={onSave}>
           {loading ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

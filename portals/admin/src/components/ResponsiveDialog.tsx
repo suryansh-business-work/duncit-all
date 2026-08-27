@@ -1,18 +1,8 @@
 import { ReactNode } from 'react';
-import {
-  Box,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  SwipeableDrawer,
-  Stack,
-  Typography,
-  useMediaQuery,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, SwipeableDrawer, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -92,9 +82,9 @@ export default function ResponsiveDialog({
               }}>
               {title}
             </Typography>
-            <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
+            <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
               <CloseIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         )}
         <Box sx={{ flex: 1, overflowY: 'auto', px: 2, pb: 2 }}>{children}</Box>
@@ -122,14 +112,14 @@ export default function ResponsiveDialog({
       {title && (
         <DialogTitle sx={{ pr: 6 }}>
           {title}
-          <IconButton
+          <DuncitIconButton
             onClick={onClose}
             sx={{ position: 'absolute', right: 8, top: 8 }}
             size="small"
             aria-label={t('shell.common.close')}
           >
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </DialogTitle>
       )}
       <DialogContent dividers={!!actions}>{children}</DialogContent>

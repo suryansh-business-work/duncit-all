@@ -1,17 +1,8 @@
 import { ReactNode } from 'react';
-import {
-  Box,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  SwipeableDrawer,
-  Stack,
-  useMediaQuery,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, SwipeableDrawer, Stack, useMediaQuery } from '@mui/material';
 import { useTheme, type SxProps, type Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -113,9 +104,9 @@ export default function ResponsiveDialog({
               flex: '0 0 auto'
             }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>{title}</Box>
-            <IconButton size="small" onClick={onClose} aria-label={t('mweb.common.close')}>
+            <DuncitIconButton size="small" onClick={onClose} aria-label={t('mweb.common.close')}>
               <CloseIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
         )}
         <Box sx={mergeSx({ flex: 1, overflowY: 'auto', px: 2, pt: 0.5, pb: 1 }, contentSx)}>{children}</Box>
@@ -146,14 +137,14 @@ export default function ResponsiveDialog({
       {title && (
         <DialogTitle sx={{ pr: 6 }}>
           {title}
-          <IconButton
+          <DuncitIconButton
             onClick={onClose}
             sx={{ position: 'absolute', right: 8, top: 8 }}
             size="small"
             aria-label={t('mweb.common.close')}
           >
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </DialogTitle>
       )}
       <DialogContent dividers={!!actions} sx={mergeSx({ py: 1.5 }, contentSx)}>{children}</DialogContent>

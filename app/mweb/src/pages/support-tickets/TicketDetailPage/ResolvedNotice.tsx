@@ -1,5 +1,6 @@
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
 
 interface Props {
   statusLabel: string;
@@ -55,7 +56,7 @@ export default function ResolvedNotice({
           </Typography>
           {windowNote}
         </Stack>
-        <Button
+        <DuncitButton
           variant="outlined"
           size="small"
           startIcon={<ReplayIcon />}
@@ -64,7 +65,7 @@ export default function ResolvedNotice({
           sx={{ borderRadius: 99, fontWeight: 600, flexShrink: 0 }}
         >
           Re-open
-        </Button>
+        </DuncitButton>
       </Stack>
     </Paper>
   );

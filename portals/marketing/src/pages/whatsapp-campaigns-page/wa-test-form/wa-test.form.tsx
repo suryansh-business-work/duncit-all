@@ -1,16 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import TemplateInputs from '../wa-campaign-form/TemplateInputs';
@@ -152,12 +144,12 @@ export default function WaTestForm({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>
+          <DuncitButton type="button" onClick={onClose} disabled={busy}>
             Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={busy || !isValid}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
             {busy ? 'Sending…' : 'Send test'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

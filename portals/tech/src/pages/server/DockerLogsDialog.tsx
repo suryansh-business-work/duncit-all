@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { TECH_CONTAINER_LOGS } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -46,7 +47,7 @@ export default function DockerLogsDialog({ name, onClose }: Readonly<Props>) {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

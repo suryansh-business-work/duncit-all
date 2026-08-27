@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   isPhoneChannel,
   type ContactChangeLabels,
@@ -77,9 +78,9 @@ export default function ContactValueStep({
             slotProps={{ inputLabel: { shrink: true } }}
           />
         )}
-        <Button type="submit" variant="contained" disabled={busy || !isValid}>
+        <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
           {busy ? labels.sending : labels.sendCode}
-        </Button>
+        </DuncitButton>
       </Stack>
     </form>
   );

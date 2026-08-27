@@ -1,18 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Box, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
@@ -180,14 +170,14 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button color="error" startIcon={<DeleteOutlineIcon />} onClick={remove}>
+        <DuncitButton color="error" startIcon={<DeleteOutlineIcon />} onClick={remove}>
           {t('shell.common.delete')}
-        </Button>
+        </DuncitButton>
         <Box sx={{ flex: 1 }} />
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
-        <Button variant="contained" onClick={save} disabled={saving}>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={save} disabled={saving}>
           {t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

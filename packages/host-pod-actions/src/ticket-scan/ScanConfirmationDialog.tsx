@@ -1,5 +1,6 @@
-import { Button, Dialog, DialogActions, DialogContent, Stack, Typography } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { DuncitButton } from '@duncit/buttons';
 import CompanionsChecklist, { type ChecklistPerson } from './CompanionsChecklist';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { HostTicketScanResult } from '../types';
@@ -67,14 +68,14 @@ export default function ScanConfirmationDialog({ result, text, onDone }: Readonl
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button
+        <DuncitButton
           variant="contained"
           fullWidth
           onClick={onDone}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {labels.confirmDone}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

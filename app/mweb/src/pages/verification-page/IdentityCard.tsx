@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import VerificationCardShell from './VerificationCardShell';
 import {
@@ -91,7 +92,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
               mt: 1,
               flexWrap: 'wrap'
             }}>
-            <Button
+            <DuncitButton
               size="small"
               variant="outlined"
               startIcon={<UploadFileIcon />}
@@ -100,7 +101,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
               sx={{ borderRadius: 999, fontWeight: 700 }}
             >
               {busy ? 'Uploading…' : uploadLabel}
-            </Button>
+            </DuncitButton>
             <AiMonitoringChip />
           </Stack>
         </>

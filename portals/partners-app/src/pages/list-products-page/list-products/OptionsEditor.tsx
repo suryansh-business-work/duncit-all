@@ -1,6 +1,7 @@
-import { Autocomplete, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { Controller, useFieldArray, type Control, type Path } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
@@ -60,14 +61,14 @@ export default function OptionsEditor({ control }: Readonly<Props>) {
               />
             )}
           />
-          <IconButton aria-label={t('partners.listProductsPage.removeOption')} color="error" onClick={() => remove(index)} sx={{ mt: 1 }}>
+          <DuncitIconButton aria-label={t('partners.listProductsPage.removeOption')} color="error" onClick={() => remove(index)} sx={{ mt: 1 }}>
             <DeleteOutlineIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       ))}
-      <Button variant="outlined" startIcon={<AddIcon />} onClick={() => append({ name: '', values: [] })} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton variant="outlined" startIcon={<AddIcon />} onClick={() => append({ name: '', values: [] })} sx={{ alignSelf: 'flex-start' }}>
         Add option
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

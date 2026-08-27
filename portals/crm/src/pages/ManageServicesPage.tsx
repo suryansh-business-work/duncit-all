@@ -1,31 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, TextField, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import HandymanIcon from '@mui/icons-material/Handyman';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   CREATE_CRM_SERVICE,
   CRM_LEAD_CONFIG,
@@ -183,14 +165,14 @@ export default function ManageServicesPage({
             {subtitle}
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={startCreate}
           disabled={busy || !!draft}
         >
           Add service
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error">{parseApiError(error)}</Alert>}
@@ -253,7 +235,7 @@ export default function ManageServicesPage({
                     <TableCell align="right">
                       <Tooltip title={t('shell.common.save')}>
                         <span>
-                          <IconButton
+                          <DuncitIconButton
                             aria-label={t('shell.common.save')}
                             size="small"
                             color="primary"
@@ -261,19 +243,19 @@ export default function ManageServicesPage({
                             disabled={busy}
                           >
                             <SaveIcon fontSize="small" />
-                          </IconButton>
+                          </DuncitIconButton>
                         </span>
                       </Tooltip>
                       <Tooltip title={t('shell.common.cancel')}>
                         <span>
-                          <IconButton
+                          <DuncitIconButton
                             aria-label={t('shell.common.cancel')}
                             size="small"
                             onClick={cancelDraft}
                             disabled={busy}
                           >
                             <CloseIcon fontSize="small" />
-                          </IconButton>
+                          </DuncitIconButton>
                         </span>
                       </Tooltip>
                     </TableCell>
@@ -353,16 +335,16 @@ export default function ManageServicesPage({
                           <>
                             <Tooltip title={t('shell.common.save')}>
                               <span>
-                                <IconButton size="small" color="primary" onClick={saveDraft} disabled={busy}>
+                                <DuncitIconButton size="small" color="primary" onClick={saveDraft} disabled={busy}>
                                   <SaveIcon fontSize="small" />
-                                </IconButton>
+                                </DuncitIconButton>
                               </span>
                             </Tooltip>
                             <Tooltip title={t('shell.common.cancel')}>
                               <span>
-                                <IconButton size="small" onClick={cancelDraft} disabled={busy}>
+                                <DuncitIconButton size="small" onClick={cancelDraft} disabled={busy}>
                                   <CloseIcon fontSize="small" />
-                                </IconButton>
+                                </DuncitIconButton>
                               </span>
                             </Tooltip>
                           </>
@@ -370,21 +352,21 @@ export default function ManageServicesPage({
                           <>
                             <Tooltip title={t('shell.common.edit')}>
                               <span>
-                                <IconButton size="small" onClick={() => startEdit(row)} disabled={busy || !!draft}>
+                                <DuncitIconButton size="small" onClick={() => startEdit(row)} disabled={busy || !!draft}>
                                   <EditIcon fontSize="small" />
-                                </IconButton>
+                                </DuncitIconButton>
                               </span>
                             </Tooltip>
                             <Tooltip title={t('shell.common.delete')}>
                               <span>
-                                <IconButton
+                                <DuncitIconButton
                                   size="small"
                                   color="error"
                                   onClick={() => setRemoving(row)}
                                   disabled={busy || !!draft}
                                 >
                                   <DeleteIcon fontSize="small" />
-                                </IconButton>
+                                </DuncitIconButton>
                               </span>
                             </Tooltip>
                           </>

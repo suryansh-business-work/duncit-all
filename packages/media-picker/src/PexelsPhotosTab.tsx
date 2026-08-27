@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
 import { useApolloClient, useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  LinearProgress,
-  ImageList,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, LinearProgress, ImageList, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import PexelsSearchBar from './PexelsSearchBar';
 import { IMPORT_REMOTE, PEXELS_SEARCH } from './queries';
 import PexelsPhotoCard from './PexelsPhotoCard';
@@ -200,13 +191,13 @@ export default function PexelsPhotosTab({
       )}
       {hasMore && (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Button
+          <DuncitButton
             onClick={() => runPexels(pquery, page + 1, true)}
             disabled={psearching}
             startIcon={psearching ? <CircularProgress size={14} /> : null}
           >
             Load more
-          </Button>
+          </DuncitButton>
         </Box>
       )}
       <Typography

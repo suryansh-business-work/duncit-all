@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { PageHeader, StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
@@ -106,14 +107,14 @@ export default function MyAdsPage() {
         getRowId={getAdRowId}
         onRowClick={(row) => navigate(`/ads/${row.id}`)}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/ads/new')}
           >
             {t('ads.myAds.create')}
-          </Button>
+          </DuncitButton>
         }
         emptyText={t('ads.myAds.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}

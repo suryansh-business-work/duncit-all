@@ -1,14 +1,7 @@
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import type { Control } from 'react-hook-form';
 import type { AvailableCoupon, CheckoutContact, CheckoutForm, CouponPreview } from './queries';
 import { CheckoutFields, type PostalAddressParts } from './checkout';
@@ -142,7 +135,7 @@ export default function PaymentDetailsCard({
             </Typography>
           )}
           <CheckoutRequirementsCard missing={eligibility.missing} />
-          <Button
+          <DuncitButton
             variant="contained"
             size="large"
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
@@ -153,7 +146,7 @@ export default function PaymentDetailsCard({
             {submitting
               ? t('mweb.checkout.processing')
               : t('mweb.checkout.pay', { vars: { amount: formatMoney(currency, effectiveTotal) } })}
-          </Button>
+          </DuncitButton>
           <Typography variant="caption" sx={{ textAlign: 'center', color: 'text.secondary' }}>
             {t('mweb.checkout.receiptNote')}
           </Typography>

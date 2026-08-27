@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Button, Stack, TextField } from '@mui/material';
+import { Alert, Stack, TextField } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CALL_ECOMM_LEAD,
   CALL_HOST_LEAD,
@@ -106,10 +107,10 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
       onClose={onClose}
       actions={
         <>
-          <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
-          <Button variant="contained" onClick={submit} disabled={disabled}>
+          <DuncitButton onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton variant="contained" onClick={submit} disabled={disabled}>
             {loading ? 'Sending…' : submitLabel}
-          </Button>
+          </DuncitButton>
         </>
       }
     >

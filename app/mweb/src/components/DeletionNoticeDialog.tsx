@@ -1,16 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  AlertTitle,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, AlertTitle, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CANCEL_MY_ACCOUNT_DELETION_REQUEST,
   MY_ACCOUNT_DELETION_REQUEST,
@@ -116,10 +107,10 @@ export default function DeletionNoticeDialog() {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} sx={{ textTransform: 'none' }} data-testid="deletion-notice-keep">
+        <DuncitButton onClick={close} sx={{ textTransform: 'none' }} data-testid="deletion-notice-keep">
           {t('mweb.account.deletion.noticeKeep')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           disabled={cancelling}
           onClick={() => {
@@ -131,7 +122,7 @@ export default function DeletionNoticeDialog() {
           {cancelling
             ? t('mweb.account.deletion.withdrawing')
             : t('mweb.account.deletion.withdraw')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

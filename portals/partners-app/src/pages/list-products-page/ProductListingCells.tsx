@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import type { ProductListingRow } from './queries';
 
@@ -74,9 +75,9 @@ export function QuantityCell({ product, disabled, onSave }: Readonly<QuantityCel
           htmlInput: { min: 0 }
         }}
       />
-      <Button size="small" disabled={disabled} onClick={() => onSave(product, Number(value || 0))}>
+      <DuncitButton size="small" disabled={disabled} onClick={() => onSave(product, Number(value || 0))}>
         Update
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

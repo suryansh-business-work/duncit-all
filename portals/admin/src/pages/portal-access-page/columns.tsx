@@ -1,6 +1,7 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { portalNameOf, type PortalAccessRequest } from './helpers';
@@ -47,7 +48,7 @@ export function getPortalAccessColumns({
     }
     return (
       <Stack direction="row" spacing={1}>
-        <Button
+        <DuncitButton
           size="small"
           variant="contained"
           color="success"
@@ -55,8 +56,8 @@ export function getPortalAccessColumns({
           onClick={() => onApprove(row)}
         >
           {t('admin.portalAccess.approve')}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           size="small"
           variant="outlined"
           color="error"
@@ -64,7 +65,7 @@ export function getPortalAccessColumns({
           onClick={() => onDeny(row)}
         >
           {t('admin.portalAccess.deny')}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   };

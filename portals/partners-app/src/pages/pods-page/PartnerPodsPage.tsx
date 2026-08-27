@@ -2,8 +2,9 @@ import { useMemo, useRef, useState } from 'react';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import PodsTable from '../../components/PodsTable';
@@ -59,7 +60,7 @@ export default function PartnerPodsPage() {
             }}>{t('partners.podsPage.createAndManagePods')}</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.podsPage.useTheSamePodSetupFlow')}</Typography>
           </Box>
-          <Button variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>{t('partners.podsPage.addPod')}</Button>
+          <DuncitButton variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>{t('partners.podsPage.addPod')}</DuncitButton>
         </Stack>
       </Box>
       {!approvedHost && <Alert severity="info">{t('partners.podsPage.yourHostApplicationMustBeApproved')}</Alert>}

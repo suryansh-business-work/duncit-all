@@ -1,5 +1,6 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import { locationMapQuery } from '../../utils/location-tree';
 import { getGoogleMapsApiKey } from '../../config/runtimeConfig';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -45,7 +46,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
           }}>
           Map
         </Typography>
-        <Button
+        <DuncitButton
           href={mapUrl}
           target="_blank"
           rel="noreferrer"
@@ -54,7 +55,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
           sx={{ minHeight: 30, px: 1 }}
         >
           Open in Maps
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box
         component="iframe"

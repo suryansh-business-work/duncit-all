@@ -1,9 +1,10 @@
-import { Box, Button, Card, CardContent, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { BrandWarehouse, WarehouseReviewStatus } from './warehouse.queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -88,7 +89,7 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
           }}>
             <Tooltip title={warehouse.is_default ? 'Default warehouse' : 'Make default'}>
               <span>
-                <IconButton
+                <DuncitIconButton
                   size="small"
                   color="primary"
                   disabled={busy || warehouse.is_default}
@@ -96,18 +97,18 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
                   aria-label={`Make ${warehouse.nickname} default`}
                 >
                   {warehouse.is_default ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                </IconButton>
+                </DuncitIconButton>
               </span>
             </Tooltip>
             <Tooltip title={t('shell.common.edit')}>
-              <IconButton size="small" disabled={busy} onClick={() => onEdit(warehouse)} aria-label={`Edit ${warehouse.nickname}`}>
+              <DuncitIconButton size="small" disabled={busy} onClick={() => onEdit(warehouse)} aria-label={`Edit ${warehouse.nickname}`}>
                 <EditIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
             <Tooltip title={t('shell.common.delete')}>
-              <IconButton size="small" color="error" disabled={busy} onClick={() => onDelete(warehouse)} aria-label={`Delete ${warehouse.nickname}`}>
+              <DuncitIconButton size="small" color="error" disabled={busy} onClick={() => onDelete(warehouse)} aria-label={`Delete ${warehouse.nickname}`}>
                 <DeleteOutlineIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           </Stack>
         </Stack>
@@ -154,9 +155,9 @@ export default function WarehouseList({ warehouses, busy, onAdd, onEdit, onDelet
           onSetDefault={onSetDefault}
         />
       ))}
-      <Button variant="contained" onClick={onAdd} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton variant="contained" onClick={onAdd} sx={{ alignSelf: 'flex-start' }}>
         Add warehouse
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

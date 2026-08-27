@@ -1,4 +1,5 @@
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { NotifyHost, notify, notifyError, notifySuccess } from '@duncit/dialogs';
 
 /**
@@ -14,15 +15,15 @@ export function NotifyDemo() {
         flexWrap: "wrap",
         gap: 1
       }}>
-      <Button variant="outlined" onClick={() => notify('Payout queued for the next settlement run.')}>
+      <DuncitButton variant="outlined" onClick={() => notify('Payout queued for the next settlement run.')}>
         notify
-      </Button>
-      <Button variant="outlined" color="success" onClick={() => notifySuccess('Pod DUN-POD-4821 approved.')}>
+      </DuncitButton>
+      <DuncitButton variant="outlined" color="success" onClick={() => notifySuccess('Pod DUN-POD-4821 approved.')}>
         notifySuccess
-      </Button>
-      <Button variant="outlined" color="error" onClick={() => notifyError('Wallet credit failed — retry in 30s.')}>
+      </DuncitButton>
+      <DuncitButton variant="outlined" color="error" onClick={() => notifyError('Wallet credit failed — retry in 30s.')}>
         notifyError
-      </Button>
+      </DuncitButton>
       <NotifyHost />
     </Stack>
   );

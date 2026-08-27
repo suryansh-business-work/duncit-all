@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Avatar, Badge, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Badge, Box, Stack, Tooltip, Typography } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderSearchButton from './HeaderSearchButton';
 import HeaderCartButton from '../cart/HeaderCartButton';
@@ -70,7 +71,7 @@ export default function HeaderQuickActions({
         </Box>
       </QuickAction>
       <Tooltip title={me?.full_name ?? 'Account'}>
-        <IconButton
+        <DuncitIconButton
           onClick={onOpenMenu}
           data-tour="home-profile"
           sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
@@ -106,7 +107,7 @@ export default function HeaderQuickActions({
               {initials(normalizeMe(me))}
             </Avatar>
           </Badge>
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </>
   );

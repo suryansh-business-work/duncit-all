@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import MediaUrlsField from '../../pages/create-pod-page/create-pod/fields/MediaUrlsField';
 import RhfTextField from '../components/RhfTextField';
 import { useReportProblemConfig } from './useReportProblemConfig';
@@ -130,7 +131,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           />
         )}
 
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -139,7 +140,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Sending…' : 'Send feedback'}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>
     </form>

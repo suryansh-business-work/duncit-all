@@ -1,17 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  IconButton,
-  Popover,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, CircularProgress, Popover, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AI_MJML } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
@@ -52,14 +43,14 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
     <>
       {iconOnly ? (
         <Tooltip title={t('crm.emailTemplates.createUpdateWithAi')}>
-          <IconButton size="small" color="secondary" onClick={(e) => setAnchorEl(e.currentTarget)}>
+          <DuncitIconButton size="small" color="secondary" onClick={(e) => setAnchorEl(e.currentTarget)}>
             <AutoAwesomeIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       ) : (
-        <Button size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(e) => setAnchorEl(e.currentTarget)}>
+        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(e) => setAnchorEl(e.currentTarget)}>
           {label || 'Create with AI'}
-        </Button>
+        </DuncitButton>
       )}
       <Popover
         open={open}
@@ -88,8 +79,8 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</Button>
-            <Button
+            <DuncitButton size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+            <DuncitButton
               size="small"
               variant="contained"
               onClick={generate}
@@ -97,7 +88,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
               startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}
             >
               {loading ? 'Working…' : 'Apply'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </Popover>

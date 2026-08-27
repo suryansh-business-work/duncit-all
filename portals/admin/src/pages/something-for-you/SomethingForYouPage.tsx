@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useConfirm } from '@duncit/dialogs';
 import ItemFormDialog from './ItemFormDialog';
 import ItemRow from './ItemRow';
@@ -95,9 +96,9 @@ export default function SomethingForYouPage() {
             The row that scrolls sideways at the bottom of Home, on mWeb and in the app.
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
           New card
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}

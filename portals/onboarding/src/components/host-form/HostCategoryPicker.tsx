@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import type { HostCategoryValue } from '../../forms/host';
 
@@ -45,12 +46,12 @@ export default function HostCategoryPicker({ existingSubIds, onAdd, disabled = f
         alignItems: { md: 'flex-start' }
       }}>
         <AdminCategorySelect value={value} onChange={setValue} direction="row" disabled={disabled} />
-        <Button
+        <DuncitButton
           variant="outlined" size="small" startIcon={<AddIcon />} disabled={!canAdd}
           onClick={handleAdd} sx={{ mt: { md: 0.5 }, whiteSpace: 'nowrap' }}
         >
           Add
-        </Button>
+        </DuncitButton>
       </Stack>
       {duplicate && (
         <Typography variant="caption" color="error">

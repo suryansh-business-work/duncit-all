@@ -1,4 +1,5 @@
-import { Box, Button, Checkbox, FormControlLabel, FormGroup, Stack, Typography } from '@mui/material';
+import { Box, Checkbox, FormControlLabel, FormGroup, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { WEEKDAY_FULL, WEEKDAY_LABELS } from './settings-map';
 import { useTranslation } from '@duncit/shell';
 
@@ -41,9 +42,9 @@ export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Rea
         </Typography>
         <Stack direction="row" spacing={0.25}>
           {presets(t).map((preset) => (
-            <Button key={preset.label} size="small" variant="text" onClick={() => onChange(preset.days)}>
+            <DuncitButton key={preset.label} size="small" variant="text" onClick={() => onChange(preset.days)}>
               {preset.label}
-            </Button>
+            </DuncitButton>
           ))}
         </Stack>
       </Stack>

@@ -1,18 +1,8 @@
 import { useCallback, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Slider,
-  Stack,
-} from '@mui/material';
+import { Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Slider, Stack } from '@mui/material';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { getCroppedImage } from './cropImage';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -98,9 +88,9 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <IconButton aria-label={t('mweb.common.rotate')} onClick={() => setRotation((r) => (r + 90) % 360)}>
+            <DuncitIconButton aria-label={t('mweb.common.rotate')} onClick={() => setRotation((r) => (r + 90) % 360)}>
               <RotateRightIcon />
-            </IconButton>
+            </DuncitIconButton>
             <Slider
               aria-label={t('mweb.profileAvatar.rotation')}
               value={rotation}
@@ -113,17 +103,17 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={cancel} disabled={busy}>
+        <DuncitButton onClick={cancel} disabled={busy}>
           Discard
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={confirm}
           disabled={busy || !area}
           startIcon={busy ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

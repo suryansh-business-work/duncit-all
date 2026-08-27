@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Avatar, Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
@@ -7,6 +7,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { alpha } from '@mui/material/styles';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { ScannedAttendee } from '../types';
 
@@ -182,7 +183,7 @@ export default function ScannedAttendeeCard({
         )}
       </Stack>
 
-      <Button
+      <DuncitButton
         variant="outlined"
         size="small"
         endIcon={<OpenInNewIcon />}
@@ -190,7 +191,7 @@ export default function ScannedAttendeeCard({
         sx={{ alignSelf: 'flex-start', borderRadius: 999, fontWeight: 700 }}
       >
         View profile
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

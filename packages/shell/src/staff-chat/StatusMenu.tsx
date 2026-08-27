@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Menu, MenuItem } from '@mui/material';
+import { Menu, MenuItem } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import PresenceDot from './PresenceDot';
 import type { PresenceStatus } from './usePresence';
@@ -46,7 +47,7 @@ export default function StatusMenu({
 
   return (
     <>
-      <Button
+      <DuncitButton
         size="small"
         color="inherit"
         onClick={(event) => setAnchor(event.currentTarget)}
@@ -57,7 +58,7 @@ export default function StatusMenu({
         }
       >
         {current.label}
-      </Button>
+      </DuncitButton>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
         {options.map((option) => (
           <MenuItem

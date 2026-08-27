@@ -1,7 +1,8 @@
-import { Button, Stack, Tooltip } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import ChatBubbleOutlinedIcon from '@mui/icons-material/ChatBubbleOutlined';
 import WebAssetIcon from '@mui/icons-material/WebAsset';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import { useWorkspace, type WindowIcon, type WorkspaceWindow } from './context';
 
@@ -30,7 +31,7 @@ function TaskbarWindowButton({ window, minimised, onToggle }: Readonly<ButtonPro
 
   return (
     <Tooltip title={window.subtitle ? `${window.title} · ${window.subtitle}` : window.title}>
-      <Button
+      <DuncitButton
         size="small"
         color="inherit"
         aria-label={label}
@@ -56,7 +57,7 @@ function TaskbarWindowButton({ window, minimised, onToggle }: Readonly<ButtonPro
         >
           {window.title}
         </span>
-      </Button>
+      </DuncitButton>
     </Tooltip>
   );
 }

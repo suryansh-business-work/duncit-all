@@ -1,18 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Link,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, Chip, CircularProgress, Link, Stack, Typography } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { DuncitButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';
 import { BackHeader, StatusChip } from '@duncit/ui';
 import {
@@ -75,13 +66,13 @@ function SosAlertActions({ status, busy, onAck, onResolve }: Readonly<SosAlertAc
   return (
     <Stack direction="row" spacing={1}>
       {status === 'ACTIVE' && (
-        <Button variant="contained" color="warning" disabled={busy} onClick={onAck}>
+        <DuncitButton variant="contained" color="warning" disabled={busy} onClick={onAck}>
           Acknowledge
-        </Button>
+        </DuncitButton>
       )}
-      <Button variant="contained" color="success" disabled={busy} onClick={onResolve}>
+      <DuncitButton variant="contained" color="success" disabled={busy} onClick={onResolve}>
         Mark resolved
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

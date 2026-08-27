@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
+import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -30,7 +31,7 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
 
   return (
     <>
-      <IconButton
+      <DuncitIconButton
         aria-label={t('contentReport.menuLabel')}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
@@ -42,7 +43,7 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
         }}
       >
         <MoreVertIcon />
-      </IconButton>
+      </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
         {canDelete && (
           <MenuItem onClick={run(onDelete)}>

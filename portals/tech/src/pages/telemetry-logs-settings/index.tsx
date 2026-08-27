@@ -2,24 +2,9 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  FormGroup,
-  FormHelperText,
-  Snackbar,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Checkbox, Divider, FormControlLabel, FormGroup, FormHelperText, Snackbar, Stack, Switch, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import { LEVELS, TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries';
 import { telemetrySettingsSchema, type TelemetrySettingsForm } from './schema';
@@ -164,14 +149,14 @@ export default function TelemetryLogsSettingsPage() {
         />
         {opError && <Alert severity="error">{opError}</Alert>}
         <Box>
-          <Button
+          <DuncitButton
             type="submit"
             variant="contained"
             startIcon={<SaveIcon />}
             disabled={isSubmitting || !isDirty}
           >
             {isSubmitting ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Box>
         {data?.telemetrySettings?.updated_at && (
           <Typography variant="caption" sx={{

@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Chip, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import {
   GRIEVANCE_STATUS_COLOR,
@@ -65,9 +66,9 @@ export default function GrievanceTicketsTable({
   const columns = useMemo<DuncitColumn<GrievanceTicket>[]>(() => {
     const renderActions = (g: GrievanceTicket) => (
       <Tooltip title={t('legal.grievance.open')}>
-        <IconButton size="small" aria-label={t('legal.grievance.open')} onClick={() => onOpen(g)}>
+        <DuncitIconButton size="small" aria-label={t('legal.grievance.open')} onClick={() => onOpen(g)}>
           <VisibilityIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     );
 

@@ -1,20 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Divider,
-  FormControlLabel,
-  Paper,
-  Snackbar,
-  Stack,
-  Switch,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
+import { Alert, Divider, FormControlLabel, Paper, Snackbar, Stack, Switch, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import AppsIcon from '@mui/icons-material/Apps';
+import { DuncitButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';
 import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
 import { useTranslation } from '@duncit/shell';
@@ -190,9 +178,9 @@ export default function AllVibeIconCard() {
           justifyContent: "flex-end",
           mt: 1.5
         }}>
-        <Button variant="contained" onClick={save} disabled={busy || !dirty}>
+        <DuncitButton variant="contained" onClick={save} disabled={busy || !dirty}>
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Snackbar

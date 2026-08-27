@@ -2,17 +2,8 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { blankAddressValues, type AddressFormValues } from './address-book.types';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -116,12 +107,12 @@ export default function AddressForm({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} disabled={saving}>
+        <DuncitButton onClick={onCancel} disabled={saving}>
           Cancel
-        </Button>
-        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving} sx={{ fontWeight: 600 }}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving} sx={{ fontWeight: 600 }}>
           Save address
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

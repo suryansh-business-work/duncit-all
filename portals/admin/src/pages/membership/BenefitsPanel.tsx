@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import BenefitFormDialog, { type BenefitDialogPlan } from './BenefitFormDialog';
@@ -96,7 +96,7 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
@@ -106,7 +106,7 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
             }}
           >
             New row
-          </Button>
+          </DuncitButton>
         }
         onEdit={(row) => {
           setEditing(row);

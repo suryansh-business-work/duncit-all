@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -13,6 +13,7 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
+import { DuncitButton } from '@duncit/buttons';
 import { TOGGLE_POD_LIKE } from '../pod-details-page/queries';
 import ExploreActionRail from './ExploreActionRail';
 import ExploreReelVideo from './ExploreReelVideo';
@@ -198,7 +199,7 @@ export default function ExplorePodCard({
           </Typography>
         </Box>
         {!expired && (
-          <Button
+          <DuncitButton
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
@@ -206,7 +207,7 @@ export default function ExplorePodCard({
             aria-label={t('mweb.explore.openPodDetails')}
           >
             Go
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
 

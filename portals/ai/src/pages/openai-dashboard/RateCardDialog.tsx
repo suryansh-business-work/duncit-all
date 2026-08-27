@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -109,12 +110,12 @@ export default function RateCardDialog({ price, onClose, onSaved }: Readonly<Pro
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button variant="contained" onClick={submit} disabled={loading}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading}>
           {t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

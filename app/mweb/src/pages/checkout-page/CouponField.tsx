@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Button, Chip, Link, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Chip, Link, Stack, TextField, Typography } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import { DuncitButton } from '@duncit/buttons';
 import type { AvailableCoupon, CouponPreview } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
@@ -66,9 +67,9 @@ export default function CouponField({
             color="success"
           />
         </Stack>
-        <Button size="small" color="inherit" onClick={onRemove}>
+        <DuncitButton size="small" color="inherit" onClick={onRemove}>
           {t('mweb.checkout.couponRemove')}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -85,9 +86,9 @@ export default function CouponField({
             htmlInput: { style: { textTransform: 'uppercase' }, 'aria-label': couponCodeLabel }
           }}
         />
-        <Button variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
+        <DuncitButton variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
           {applying ? t('mweb.checkout.couponApplying') : t('mweb.checkout.couponApply')}
-        </Button>
+        </DuncitButton>
       </Stack>
       {available.length > 0 && (
         <Link

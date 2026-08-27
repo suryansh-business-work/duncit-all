@@ -1,21 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Pagination,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Pagination, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useDebouncedValue } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
@@ -95,13 +83,13 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         {t('marketing.targetAudience.addPeopleToThisList')}
-        <IconButton
+        <DuncitIconButton
           aria-label={t('shell.common.close')}
           onClick={close}
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
 
       <DialogContent dividers>
@@ -157,16 +145,16 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
           {t('marketing.targetAudience.nSelected', { vars: { count: selected.length } })}
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Button onClick={close} disabled={saving}>
+          <DuncitButton onClick={close} disabled={saving}>
             {t('shell.common.cancel')}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             variant="contained"
             onClick={submit}
             disabled={selected.length === 0 || saving}
           >
             {t('marketing.targetAudience.add')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </DialogActions>
     </Dialog>

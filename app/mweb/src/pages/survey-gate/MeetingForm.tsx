@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import SlotPicker from './SlotPicker';
 import { MEETING_SLOTS, type MeetingSlot, type SurveyKind } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -133,18 +134,18 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         <Alert
           severity="warning"
           action={
-            <Button color="inherit" size="small" onClick={() => navigate('/account')} sx={{ fontWeight: 600 }}>
+            <DuncitButton color="inherit" size="small" onClick={() => navigate('/account')} sx={{ fontWeight: 600 }}>
               Go To Profile
-            </Button>
+            </DuncitButton>
           }
         >
           Phone number is required so our team can reach you. Please add your Phone number from Profile to proceed.
         </Alert>
       )}
       {(formError || submitError) && <Alert severity="warning">{formError ?? submitError}</Alert>}
-      <Button variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>
+      <DuncitButton variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>
         {submitting ? 'Booking…' : 'Book this slot'}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

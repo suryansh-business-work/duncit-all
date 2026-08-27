@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Grid, MenuItem, Stack } from '@mui/material';
+import { Alert, Grid, MenuItem, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import DateTimeField from '../../../components/DateTimeField';
 import { peopleCount } from '../../../lib/reach';
@@ -165,9 +166,9 @@ export default function MarketingCampaignForm({
           <Stack direction="row" sx={{
             justifyContent: "flex-end"
           }}>
-            <Button type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || previewLoading || !formState.isValid}>
+            <DuncitButton type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || previewLoading || !formState.isValid}>
               {scheduledAt ? 'Schedule Campaign' : 'Send Now'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Grid>
       </Grid>

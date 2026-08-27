@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { isBackoutMaxed } from '@duncit/utils';
-import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import BackoutConfirmDialog from '../pod-details-page/BackoutConfirmDialog';
 import RejoinConfirmDialog from './RejoinConfirmDialog';
 import { notify } from '../../components/notify';
@@ -92,9 +93,9 @@ export default function PodHistoryDetailsPage() {
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <IconButton size="small" onClick={() => navigate('/pod-history')} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.podHistory.backToPodHistory')}>
+        <DuncitIconButton size="small" onClick={() => navigate('/pod-history')} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.podHistory.backToPodHistory')}>
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Box sx={{ minWidth: 0 }}>
           <Typography
             variant="overline"

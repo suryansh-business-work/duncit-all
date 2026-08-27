@@ -1,8 +1,9 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import GroupsIcon from '@mui/icons-material/Groups';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import { DuncitButton } from '@duncit/buttons';
 import { activeChipColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { ClubAdminClubInfoRow } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -45,7 +46,7 @@ const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
   <Stack direction="row" component="span" sx={{
     justifyContent: "flex-end"
   }}>
-    <Button
+    <DuncitButton
       size="small"
       variant="outlined"
       component={RouterLink}
@@ -53,7 +54,7 @@ const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
       startIcon={<EventNoteIcon />}
     >
       {t('shell.nav.pods')}
-    </Button>
+    </DuncitButton>
   </Stack>
 );
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import type { UseFormReturn } from 'react-hook-form';
 import PodForm from '../PodForm';
 import PodPreview from '../preview/PodPreview';
@@ -124,9 +125,9 @@ export default function PodEditorPage({
               alignItems: "center"
             }}>
               {titleExtras}
-              <Button startIcon={<ArrowBackIcon />} onClick={onBack}>
+              <DuncitButton startIcon={<ArrowBackIcon />} onClick={onBack}>
                 {backLabel}
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
 

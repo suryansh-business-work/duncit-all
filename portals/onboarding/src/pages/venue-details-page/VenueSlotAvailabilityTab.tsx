@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitIconButton } from '@duncit/buttons';
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns';
 import {
   AvailabilityCalendar,
@@ -100,17 +101,17 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
               justifyContent: "space-between",
               mb: 2
             }}>
-            <IconButton onClick={() => setMonth(subMonths(month, 1))} aria-label={t('onboarding.venueDetails.previousMonth')}>
+            <DuncitIconButton onClick={() => setMonth(subMonths(month, 1))} aria-label={t('onboarding.venueDetails.previousMonth')}>
               <ChevronLeftIcon />
-            </IconButton>
+            </DuncitIconButton>
             <Typography variant="h6" sx={{
               fontWeight: 900
             }}>
               {format(month, 'MMMM yyyy')}
             </Typography>
-            <IconButton onClick={() => setMonth(addMonths(month, 1))} aria-label={t('onboarding.venueDetails.nextMonth')}>
+            <DuncitIconButton onClick={() => setMonth(addMonths(month, 1))} aria-label={t('onboarding.venueDetails.nextMonth')}>
               <ChevronRightIcon />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}

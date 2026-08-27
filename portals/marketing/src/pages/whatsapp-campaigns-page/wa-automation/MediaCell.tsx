@@ -1,4 +1,5 @@
-import { Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import {
   MEDIA_STATE_COLORS,
@@ -56,13 +57,13 @@ export function MediaCell({
         </Tooltip>
       )}
       {(row.needs_media || Boolean(row.override_media_url)) && (
-        <Button
+        <DuncitButton
           size="small"
           sx={{ minWidth: 0, px: 0.5, fontSize: 12, textTransform: 'none' }}
           onClick={() => onOpen(row)}
         >
           {setLabel}
-        </Button>
+        </DuncitButton>
       )}
     </Stack>
   );

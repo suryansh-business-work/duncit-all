@@ -1,7 +1,8 @@
-import { Avatar, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ShareIcon from '@mui/icons-material/Share';
+import { DuncitIconButton } from '@duncit/buttons';
 import { sharePost } from '../../../utils/share';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -41,24 +42,24 @@ export default function PostDialogHeader({
         {post.author?.full_name ?? 'User'}
       </Typography>
       <Tooltip title={t('mweb.profile.sharePost')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('mweb.profile.sharePost')}
           onClick={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
         >
           <ShareIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       {canDelete && (
         <Tooltip title={t('mweb.profile.deletePost')}>
-          <IconButton size="small" onClick={onRequestDelete}>
+          <DuncitIconButton size="small" onClick={onRequestDelete}>
             <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       )}
-      <IconButton size="small" onClick={onClose}>
+      <DuncitIconButton size="small" onClick={onClose}>
         <CloseIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }

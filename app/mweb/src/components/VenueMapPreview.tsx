@@ -1,5 +1,6 @@
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { mapEmbedUrl, mapSearchUrl } from '../utils/mapEmbed';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -33,9 +34,9 @@ export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Pro
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>{t('mweb.venueMapPreview.mapPreview')}</Typography>
-        <Button href={mapUrl} target="_blank" rel="noreferrer" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
+        <DuncitButton href={mapUrl} target="_blank" rel="noreferrer" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
           Open in Maps
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box
         component="iframe"

@@ -1,5 +1,6 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import { mapEmbedUrl, mapSearchUrl } from '../../utils/mapEmbed';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -34,7 +35,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
         }}>
           {t('mweb.podDetails.mapPreview')}
         </Typography>
-        <Button
+        <DuncitButton
           href={mapUrl}
           target="_blank"
           rel="noreferrer"
@@ -43,7 +44,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
           sx={{ minHeight: 32, px: 1 }}
         >
           {t('mweb.podDetails.openInMaps')}
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box
         component="iframe"

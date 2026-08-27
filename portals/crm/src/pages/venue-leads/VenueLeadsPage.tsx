@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Snackbar, Stack } from '@mui/material';
+import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_VENUE_LEAD, VENUE_LEADS_TABLE } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE } from '../../api/excel.gql';
@@ -102,9 +103,9 @@ export default function VenueLeadsPage() {
         priorityOptions={priorityOptions}
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/venue-leads/new')}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/venue-leads/new')}>
             New Venue Lead
-          </Button>
+          </DuncitButton>
         }
         onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}

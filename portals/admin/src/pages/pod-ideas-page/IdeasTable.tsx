@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import ShareIcon from '@mui/icons-material/Share';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLOR_MAP, statusIcon, type IdeaRow, type Status } from './queries';
@@ -105,28 +106,28 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
         justifyContent: "flex-end"
       }}>
         <Tooltip title={t('shell.common.view')}>
-          <IconButton size="small" onClick={() => onView(it.id)}>
+          <DuncitIconButton size="small" onClick={() => onView(it.id)}>
             <VisibilityIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         {it.status !== 'APPROVED' && (
           <Tooltip title={t('admin.podIdeas.approve')}>
-            <IconButton size="small" color="success" onClick={() => onSetStatus(it.id, 'APPROVED')}>
+            <DuncitIconButton size="small" color="success" onClick={() => onSetStatus(it.id, 'APPROVED')}>
               <CheckCircleIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         )}
         {it.status !== 'REJECTED' && (
           <Tooltip title={t('admin.podIdeas.reject')}>
-            <IconButton size="small" color="warning" onClick={() => onSetStatus(it.id, 'REJECTED')}>
+            <DuncitIconButton size="small" color="warning" onClick={() => onSetStatus(it.id, 'REJECTED')}>
               <CancelIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         )}
         <Tooltip title={t('shell.common.delete')}>
-          <IconButton size="small" color="error" onClick={() => onDelete(it)}>
+          <DuncitIconButton size="small" color="error" onClick={() => onDelete(it)}>
             <DeleteIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     );

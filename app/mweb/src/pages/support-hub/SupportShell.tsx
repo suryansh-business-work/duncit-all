@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -33,14 +34,14 @@ export default function SupportShell({
       <Stack direction="row" spacing={1.25} sx={{
         alignItems: "center"
       }}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
           aria-label={t('mweb.common.back')}
           sx={{ bgcolor: 'action.hover' }}
         >
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Box
           sx={{
             width: 38,

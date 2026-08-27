@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 
 interface Props {
   title: string;
@@ -80,14 +81,14 @@ export default function NumberSettingCard({
               {description}
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={submit}
             disabled={busy || !dirty || loading || invalid}
           >
             {busy ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
         <TextField
           label={label}

@@ -1,6 +1,7 @@
-import { Alert, Box, Button, Card, CardContent, Stack } from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import SectionRail from '../sections/SectionRail';
 import VenueDetailsSection from '../sections/VenueDetailsSection';
 import VenueTypeCapacitySection from '../sections/VenueTypeCapacitySection';
@@ -145,7 +146,7 @@ interface SaveBarProps {
 function SaveBar({ mode, active, busy, onSave, onSaveApproved, onSubmit }: Readonly<SaveBarProps>) {
   if (mode === 'edit-approved') {
     return (
-      <Button
+      <DuncitButton
         variant="contained"
         size="large"
         startIcon={<SaveIcon />}
@@ -154,12 +155,12 @@ function SaveBar({ mode, active, busy, onSave, onSaveApproved, onSubmit }: Reado
         sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
       >
         Save changes
-      </Button>
+      </DuncitButton>
     );
   }
   if (active === 'review') {
     return (
-      <Button
+      <DuncitButton
         variant="contained"
         size="large"
         endIcon={<SendIcon />}
@@ -168,11 +169,11 @@ function SaveBar({ mode, active, busy, onSave, onSaveApproved, onSubmit }: Reado
         sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
       >
         Submit for review
-      </Button>
+      </DuncitButton>
     );
   }
   return (
-    <Button
+    <DuncitButton
       variant="contained"
       size="large"
       startIcon={<SaveIcon />}
@@ -181,6 +182,6 @@ function SaveBar({ mode, active, busy, onSave, onSaveApproved, onSubmit }: Reado
       sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
     >
       Save & continue
-    </Button>
+    </DuncitButton>
   );
 }

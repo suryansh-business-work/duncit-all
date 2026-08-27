@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
+import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
 import {
@@ -123,27 +124,27 @@ export default function EnvImportExport({ category, categoryLabel, onImported }:
 
   return (
     <>
-      <Button
+      <DuncitButton
         size="small"
         startIcon={<DownloadIcon />}
         disabled={exporting}
         onClick={(e) => setMenuAnchor(e.currentTarget)}
       >
         Export
-      </Button>
+      </DuncitButton>
       <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
         <MenuItem onClick={() => runExport(category)}>{categoryLabel} only</MenuItem>
         <MenuItem onClick={() => runExport(null)}>{t('tech.environment.allCategories')}</MenuItem>
       </Menu>
 
-      <Button
+      <DuncitButton
         size="small"
         startIcon={<UploadIcon />}
         disabled={importing}
         onClick={() => fileRef.current?.click()}
       >
         {importing ? 'Importing…' : 'Import'}
-      </Button>
+      </DuncitButton>
       <input
         ref={fileRef}
         type="file"

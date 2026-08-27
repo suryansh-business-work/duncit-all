@@ -1,14 +1,6 @@
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { DuncitButton } from '@duncit/buttons';
 import { joinPhone, type PodAttendanceLabels, type PodAttendanceRow } from '@duncit/utils';
 
 interface Props {
@@ -65,10 +57,10 @@ export default function ForceMarkDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {labels.forceCancel}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           color="warning"
           disabled={busy || !row}
@@ -76,7 +68,7 @@ export default function ForceMarkDialog({
           sx={{ borderRadius: 999, fontWeight: 800 }}
         >
           {busy ? labels.marking : labels.forceConfirm}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

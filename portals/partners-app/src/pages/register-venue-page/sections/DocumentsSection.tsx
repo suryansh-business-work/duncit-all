@@ -1,19 +1,10 @@
 import { useState } from 'react';
 import { Controller, useFieldArray, type UseFormReturn } from 'react-hook-form';
-import {
-  Box,
-  Button,
-  Chip,
-  FormHelperText,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
 import { useTranslation } from '@duncit/shell';
@@ -132,14 +123,14 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
                 }
               />
             ) : (
-              <Button size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={() => setPickerIndex(index)}>
+              <DuncitButton size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={() => setPickerIndex(index)}>
                 Upload file
-              </Button>
+              </DuncitButton>
             )}
             {!isRowLocked(index) && (
-              <IconButton size="small" aria-label={t('partners.registerVenuePage.removeDocument')} onClick={() => remove(index)}>
+              <DuncitIconButton size="small" aria-label={t('partners.registerVenuePage.removeDocument')} onClick={() => remove(index)}>
                 <DeleteIcon />
-              </IconButton>
+              </DuncitIconButton>
             )}
           </Stack>
           {formState.errors.documents?.[index]?.url && (
@@ -147,13 +138,13 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
           )}
         </Stack>
       ))}
-      <Button
+      <DuncitButton
         startIcon={<AddIcon />}
         onClick={() => append({ type: config.doc_types[0] ?? '', url: '' })}
         sx={{ alignSelf: 'flex-start' }}
       >
         {t('partners.ecommBrandPage.addDocument')}
-      </Button>
+      </DuncitButton>
       <MediaPickerDialog
         open={pickerIndex !== null}
         onClose={() => setPickerIndex(null)}

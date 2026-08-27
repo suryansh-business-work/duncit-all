@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { Box, Chip, IconButton, Stack, Tooltip, useTheme } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, useTheme } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitIconButton } from '@duncit/buttons';
 import { copyToClipboard } from '@duncit/utils';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
@@ -86,28 +87,28 @@ export default function MonacoBlock({
         <Box sx={{ flex: 1 }} />
         {dirty && (
           <Tooltip title={t('tech.packagesDocs.resetSnippetHint')}>
-            <IconButton
+            <DuncitIconButton
               size="small"
               onClick={() => setValue(code)}
               aria-label={t('tech.packagesDocs.resetSnippet')}
             >
               <RestartAltIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
         )}
         <Tooltip title={t('tech.packagesDocs.copy')}>
-          <IconButton size="small" onClick={copy} aria-label={t('tech.packagesDocs.copySnippet')}>
+          <DuncitIconButton size="small" onClick={copy} aria-label={t('tech.packagesDocs.copySnippet')}>
             <ContentCopyIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('tech.packagesDocs.openFullScreen')}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             onClick={() => setExpanded(true)}
             aria-label={t('tech.packagesDocs.expandSnippet')}
           >
             <OpenInFullIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
 

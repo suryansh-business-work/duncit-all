@@ -1,4 +1,5 @@
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   title: string;
@@ -32,7 +33,7 @@ export default function CallToggle({
     <Tooltip title={title}>
       {/* A disabled button fires no events, so the tooltip needs a live wrapper. */}
       <span>
-        <IconButton
+        <DuncitIconButton
           size="small"
           color={on ? onColor : 'inherit'}
           aria-label={label}
@@ -41,7 +42,7 @@ export default function CallToggle({
           onClick={onClick}
         >
           {on ? onIcon : offIcon}
-        </IconButton>
+        </DuncitIconButton>
       </span>
     </Tooltip>
   );

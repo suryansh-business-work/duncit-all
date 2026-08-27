@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import DockerContainersTable from './DockerContainersTable';
 import DockerLogsDialog from './DockerLogsDialog';
@@ -72,7 +73,7 @@ export default function DockerPage() {
             Containers running on the host{docker?.version ? ` · Docker ${docker.version}` : ''}.
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           startIcon={<RefreshIcon />}
@@ -80,7 +81,7 @@ export default function DockerPage() {
           disabled={loading}
         >
           Refresh
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {error && !docker && (

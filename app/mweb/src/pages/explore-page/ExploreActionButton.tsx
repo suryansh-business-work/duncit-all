@@ -1,4 +1,5 @@
-import { CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { CircularProgress, Stack, Typography } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   icon: React.ReactNode;
@@ -24,7 +25,7 @@ export default function ExploreActionButton({
     <Stack spacing={0.25} sx={{
       alignItems: "center"
     }}>
-      <IconButton
+      <DuncitIconButton
         onClick={onClick}
         disabled={loading}
         title={tooltip}
@@ -38,7 +39,7 @@ export default function ExploreActionButton({
         }}
       >
         {loading ? <CircularProgress size={19} color="inherit" /> : icon}
-      </IconButton>
+      </DuncitIconButton>
       <Typography
         variant="caption"
         onClick={onLabelClick}

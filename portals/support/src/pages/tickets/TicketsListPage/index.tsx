@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Button, MenuItem, Stack, TextField } from '@mui/material';
+import { MenuItem, Stack, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';
 import { TICKETS, type TicketPage, type TicketPriority } from '../../../graphql/tickets';
@@ -78,9 +79,9 @@ export default function TicketsListPage() {
                 </MenuItem>
               ))}
             </TextField>
-            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
               {t('support.tickets.create')}
-            </Button>
+            </DuncitButton>
           </>
         }
         onRowClick={(t) => navigate(`/tickets/${t.id}`)}

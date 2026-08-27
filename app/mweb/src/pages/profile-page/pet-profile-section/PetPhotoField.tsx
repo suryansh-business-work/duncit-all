@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Avatar, Button, Stack, Typography } from '@mui/material';
+import { Avatar, Stack, Typography } from '@mui/material';
 import PetsIcon from '@mui/icons-material/Pets';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import { DuncitButton } from '@duncit/buttons';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -41,7 +42,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
           <PetsIcon />
         </Avatar>
         <Stack spacing={0.5} sx={{ flex: 1 }}>
-          <Button
+          <DuncitButton
             variant="outlined"
             size="small"
             startIcon={<PhotoCameraIcon />}
@@ -49,16 +50,16 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
             sx={{ alignSelf: 'flex-start' }}
           >
             {value ? 'Change photo' : 'Upload photo'}
-          </Button>
+          </DuncitButton>
           {value && (
-            <Button
+            <DuncitButton
               size="small"
               color="inherit"
               onClick={() => onChange('')}
               sx={{ alignSelf: 'flex-start' }}
             >
               Remove
-            </Button>
+            </DuncitButton>
           )}
           {touched && error && (
             <Typography variant="caption" color="error">

@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import EcommBrandForm from './EcommBrandForm';
@@ -120,9 +121,9 @@ export default function EcommBrandPage() {
             fetchRows={fetchRows}
             refetchRef={refetchRef}
             toolbarActions={
-              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setError(null); setEditing('new'); }}>
+              <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setError(null); setEditing('new'); }}>
                 New brand
-              </Button>
+              </DuncitButton>
             }
             onOpen={(brand) => { setError(null); setEditing(brand); }}
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
@@ -135,11 +136,11 @@ export default function EcommBrandPage() {
       <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           <span>{dialogTitle}</span>
-          <IconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
+          <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
         </DialogTitle>
         <DialogContent dividers>
           {editingBrand?.status === 'SUBMITTED' && (
-            <Alert severity="info" sx={{ mb: 2 }} action={<Button color="inherit" size="small" onClick={() => withdraw(editingBrand)} disabled={busy}>Edit</Button>}>
+            <Alert severity="info" sx={{ mb: 2 }} action={<DuncitButton color="inherit" size="small" onClick={() => withdraw(editingBrand)} disabled={busy}>Edit</DuncitButton>}>
               This brand is under review.
             </Alert>
           )}

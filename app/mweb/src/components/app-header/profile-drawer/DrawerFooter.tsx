@@ -1,5 +1,6 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
+import { DuncitButton } from '@duncit/buttons';
 
 interface DrawerFooterProps {
   onLogout: () => void;
@@ -8,7 +9,7 @@ interface DrawerFooterProps {
 export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) {
   return (
     <Box sx={{ p: 1.5 }}>
-      <Button
+      <DuncitButton
         fullWidth
         variant="outlined"
         color="error"
@@ -17,7 +18,7 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
         sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         Logout
-      </Button>
+      </DuncitButton>
       <Typography
         variant="caption"
         sx={{

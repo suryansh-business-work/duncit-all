@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import PlanFormDialog from './PlanFormDialog';
@@ -76,7 +76,7 @@ export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => vo
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
@@ -86,7 +86,7 @@ export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => vo
             }}
           >
             New tier
-          </Button>
+          </DuncitButton>
         }
         onEdit={(row) => {
           setEditing(row);

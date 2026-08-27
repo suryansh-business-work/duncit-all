@@ -1,18 +1,7 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
 import FragmentEditorPanel from './FragmentEditorPanel';
@@ -62,9 +51,9 @@ export default function EmailFragmentsPage() {
             email category; add as many of your own as you need.
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddOpen(true)}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setAddOpen(true)}>
           New fragment
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
@@ -115,8 +104,8 @@ export default function EmailFragmentsPage() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddOpen(false)}>{t('shell.common.close')}</Button>
-          <Button
+          <DuncitButton onClick={() => setAddOpen(false)}>{t('shell.common.close')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             disabled={!newName.trim() || f.busy}
             onClick={async () => {
@@ -126,7 +115,7 @@ export default function EmailFragmentsPage() {
             }}
           >
             Add
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
 

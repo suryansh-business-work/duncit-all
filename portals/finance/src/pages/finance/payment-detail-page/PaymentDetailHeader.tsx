@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Alert, AlertTitle, Box, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitIconButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { STATUS_COLORS } from '../payment-logs-page/helpers';
@@ -59,9 +60,9 @@ export default function PaymentDetailHeader({
           alignItems: "center",
           flexWrap: "wrap"
         }}>
-        <IconButton aria-label={t('finance.payment.backToLogs')} onClick={() => navigate('/payment-logs')}>
+        <DuncitIconButton aria-label={t('finance.payment.backToLogs')} onClick={() => navigate('/payment-logs')}>
           <ArrowBackIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Box sx={{ flex: 1, minWidth: 240 }}>
           <Stack
             direction="row"

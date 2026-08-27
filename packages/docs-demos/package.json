@@ -27,6 +27,7 @@
     "@duncit/auto-pods": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
     "@duncit/breadcrumb": "workspace:*",
+    "@duncit/buttons": "workspace:*",
     "@duncit/captcha": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",

@@ -1,8 +1,9 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ImageIcon from '@mui/icons-material/Image';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 const VIDEO_RE = /^.+\.(mp4|webm|mov|m4v)(\?.*)?$/i;
@@ -68,28 +69,28 @@ export default function MediaRow({ url, index, total, onReplace, onMove, onRemov
         </Typography>
       </Box>
       <Tooltip title={t('clubForm.mediaRow.replace')}>
-        <IconButton size="small" onClick={onReplace}>
+        <DuncitIconButton size="small" onClick={onReplace}>
           <ImageIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('clubForm.mediaRow.moveUp')}>
         <span>
-          <IconButton size="small" disabled={index === 0} onClick={() => onMove(-1)}>
+          <DuncitIconButton size="small" disabled={index === 0} onClick={() => onMove(-1)}>
             <ArrowUpwardIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
       <Tooltip title={t('clubForm.mediaRow.moveDown')}>
         <span>
-          <IconButton size="small" disabled={index === total - 1} onClick={() => onMove(1)}>
+          <DuncitIconButton size="small" disabled={index === total - 1} onClick={() => onMove(1)}>
             <ArrowDownwardIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </span>
       </Tooltip>
       <Tooltip title={t('clubForm.mediaRow.remove')}>
-        <IconButton size="small" color="error" onClick={onRemove}>
+        <DuncitIconButton size="small" color="error" onClick={onRemove}>
           <DeleteIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
     </Stack>
   );

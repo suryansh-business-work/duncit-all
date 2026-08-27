@@ -1,7 +1,8 @@
-import { IconButton, InputAdornment, Stack, TextField, Tooltip } from '@mui/material';
+import { InputAdornment, Stack, TextField, Tooltip } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface MessageComposerProps {
@@ -31,9 +32,9 @@ export default function MessageComposer({
         bgcolor: 'transparent'
       }}>
       <Tooltip title={t('mweb.chatRoom.image')}>
-        <IconButton onClick={onOpenPicker} sx={{ bgcolor: 'action.hover' }}>
+        <DuncitIconButton onClick={onOpenPicker} sx={{ bgcolor: 'action.hover' }}>
           <ImageIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <TextField
         value={text}
@@ -54,17 +55,17 @@ export default function MessageComposer({
             sx: { borderRadius: 999, bgcolor: 'background.paper', boxShadow: '0 10px 28px rgba(9,7,18,0.14)' },
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={(e) => onOpenEmoji(e.currentTarget)}>
+                <DuncitIconButton size="small" onClick={(e) => onOpenEmoji(e.currentTarget)}>
                   <EmojiEmotionsIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </InputAdornment>
             ),
           }
         }}
       />
-      <IconButton color="primary" onClick={onSend} disabled={!text.trim()} sx={{ width: 46, height: 46, bgcolor: 'primary.main', color: 'primary.contrastText', '&:hover': { bgcolor: 'primary.dark' }, '&.Mui-disabled': { bgcolor: 'action.disabledBackground' } }}>
+      <DuncitIconButton color="primary" onClick={onSend} disabled={!text.trim()} sx={{ width: 46, height: 46, bgcolor: 'primary.main', color: 'primary.contrastText', '&:hover': { bgcolor: 'primary.dark' }, '&.Mui-disabled': { bgcolor: 'action.disabledBackground' } }}>
         <SendIcon />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }

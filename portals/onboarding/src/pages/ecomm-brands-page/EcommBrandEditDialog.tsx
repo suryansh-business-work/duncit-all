@@ -1,17 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { ADMIN_UPDATE_ECOMM_BRAND, STATUSES } from './queries';
 import EcommBrandEditFields, { type BrandValues, type DocEntry } from './EcommBrandEditFields';
 import { useTranslation } from '@duncit/app-settings';
@@ -156,17 +146,17 @@ export default function EcommBrandEditDialog({ brand, onClose, onSaved }: Readon
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading}>
           Cancel
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={save}
           disabled={state.loading}
           startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
         >
           Save
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

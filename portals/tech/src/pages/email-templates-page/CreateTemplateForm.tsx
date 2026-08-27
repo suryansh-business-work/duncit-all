@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import {
-  Button,
-  DialogActions,
-  DialogContent,
-  TextField,
-} from '@mui/material';
+import { DialogActions, DialogContent, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -51,14 +47,14 @@ export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Prop
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onCancel}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           disabled={!slug || !name || !subject}
           onClick={() => onCreate({ slug, name, subject })}
         >
           Create
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </>
   );

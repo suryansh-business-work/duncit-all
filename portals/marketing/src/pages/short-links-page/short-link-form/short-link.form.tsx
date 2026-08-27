@@ -1,6 +1,7 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Grid, MenuItem, Stack } from '@mui/material';
+import { Alert, Grid, MenuItem, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import {
   blankShortLinkValues,
@@ -146,12 +147,12 @@ export default function ShortLinkForm({
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button onClick={onCancel} disabled={busy}>
+            <DuncitButton onClick={onCancel} disabled={busy}>
               Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={busy || !formState.isValid}>
+            </DuncitButton>
+            <DuncitButton type="submit" variant="contained" disabled={busy || !formState.isValid}>
               {busy ? 'Creating…' : 'Create link'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Grid>
       </Grid>

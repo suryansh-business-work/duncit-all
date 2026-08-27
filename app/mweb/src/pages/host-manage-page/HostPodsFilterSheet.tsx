@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Button, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import {
   DEFAULT_HOST_PODS_FILTERS,
@@ -70,20 +71,20 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
       sheetMaxHeight="80dvh"
       actions={
         <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
-          <Button
+          <DuncitButton
             startIcon={<CloseIcon />}
             onClick={() => setDraft(DEFAULT_HOST_PODS_FILTERS)}
             color="inherit"
           >
             Reset
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             variant="contained"
             onClick={() => onApply(draft)}
             sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
           >
             Apply
-          </Button>
+          </DuncitButton>
         </Stack>
       }
     >

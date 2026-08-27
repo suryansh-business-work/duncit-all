@@ -1,9 +1,10 @@
-import { Box, Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import HandymanIcon from '@mui/icons-material/Handyman';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -51,34 +52,34 @@ export default function LeadsToolbar({
       <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', md: 'auto' }, flexWrap: 'wrap' }} useFlexGap>
         {onManageServices && (
           <Tooltip title={t('crm.components.manageTheCatalogueOfServicesOffered')}>
-            <Button startIcon={<HandymanIcon />} variant="outlined" onClick={onManageServices}>
+            <DuncitButton startIcon={<HandymanIcon />} variant="outlined" onClick={onManageServices}>
               {manageServicesLabel}
-            </Button>
+            </DuncitButton>
           </Tooltip>
         )}
         {onFillWithAi && (
           <Tooltip title={t('crm.components.pasteAFreeTextDescriptionAnd')}>
-            <Button startIcon={<AutoFixHighIcon />} variant="outlined" color="secondary" onClick={onFillWithAi}>
+            <DuncitButton startIcon={<AutoFixHighIcon />} variant="outlined" color="secondary" onClick={onFillWithAi}>
               Fill with AI
-            </Button>
+            </DuncitButton>
           </Tooltip>
         )}
         {onDownloadTemplate && (
           <Tooltip title={t('crm.components.downloadABlankExcelTemplateWith')}>
-            <Button startIcon={<DescriptionIcon />} variant="outlined" onClick={onDownloadTemplate}>
+            <DuncitButton startIcon={<DescriptionIcon />} variant="outlined" onClick={onDownloadTemplate}>
               {t('crm.components.template')}
-            </Button>
+            </DuncitButton>
           </Tooltip>
         )}
         {onImport && (
-          <Button startIcon={<FileUploadIcon />} variant="outlined" onClick={onImport}>
+          <DuncitButton startIcon={<FileUploadIcon />} variant="outlined" onClick={onImport}>
             {t('crm.userLeads.import')}
-          </Button>
+          </DuncitButton>
         )}
         {onExport && (
-          <Button startIcon={<FileDownloadIcon />} variant="outlined" onClick={onExport}>
+          <DuncitButton startIcon={<FileDownloadIcon />} variant="outlined" onClick={onExport}>
             {t('crm.userLeads.export')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     </Stack>

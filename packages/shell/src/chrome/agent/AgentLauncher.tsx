@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Box, Drawer, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Drawer, Stack, Tooltip, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitIconButton } from '@duncit/buttons';
 import { ABOVE_TASKBAR_HEIGHT } from '../../workspace';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AgentChat } from './AgentChat';
@@ -87,13 +88,13 @@ export function AgentLauncher() {
             </Typography>
           </Box>
           <Tooltip title={t('shell.agent.restart')}>
-            <IconButton size="small" onClick={() => restartRef.current?.()}>
+            <DuncitIconButton size="small" onClick={() => restartRef.current?.()}>
               <RestartAltIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
-          <IconButton size="small" onClick={close} aria-label={t('shell.agent.close')}>
+          <DuncitIconButton size="small" onClick={close} aria-label={t('shell.agent.close')}>
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
 
         {/* Mounted only while open: the thread is meant to start fresh each

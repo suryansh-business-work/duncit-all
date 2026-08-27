@@ -1,6 +1,7 @@
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { useHostPodMediaLink } from '../usePodLinkActions';
 
@@ -37,7 +38,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
           {podMediaLabels.shareBody}
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<IosShareIcon fontSize="small" />}
@@ -45,8 +46,8 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {podMediaLabels.shareLink}
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             variant="outlined"
             startIcon={<ContentCopyIcon fontSize="small" />}
@@ -54,7 +55,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {podMediaLabels.copyLink}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Paper>

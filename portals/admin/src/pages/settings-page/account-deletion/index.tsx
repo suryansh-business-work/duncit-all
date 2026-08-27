@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError, useConfirm } from '@duncit/dialogs';
 import { useSession, useTranslation } from '@duncit/app-settings';
 import RunHistoryDialog from './RunHistoryDialog';
@@ -139,7 +140,7 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
               {t('admin.accountDeletion.intro')}
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={() => {
@@ -149,7 +150,7 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
             data-testid="save-deletion-settings"
           >
             {isSubmitting ? t('admin.accountDeletion.saving') : t('admin.accountDeletion.save')}
-          </Button>
+          </DuncitButton>
         </Stack>
 
         <Stack spacing={2}>
@@ -191,7 +192,7 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
           <ScheduleSummary settings={current} dueCount={dueCount} />
 
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-            <Button
+            <DuncitButton
               variant="outlined"
               color="error"
               startIcon={<PlayArrowIcon />}
@@ -203,15 +204,15 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
               sx={{ textTransform: 'none' }}
             >
               {running ? t('admin.accountDeletion.running') : t('admin.accountDeletion.runNowCta')}
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               startIcon={<HistoryIcon />}
               onClick={() => setHistoryOpen(true)}
               data-testid="open-deletion-runs"
               sx={{ textTransform: 'none' }}
             >
               {t('admin.accountDeletion.runsTitle')}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
 

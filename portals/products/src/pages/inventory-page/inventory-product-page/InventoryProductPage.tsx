@@ -3,15 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Container,
-  Snackbar,
-  Stack,
-} from '@mui/material';
+import { Alert, CircularProgress, Container, Snackbar, Stack } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { DuncitButton } from '@duncit/buttons';
 import ProductFormBody from './ProductFormBody';
 import ProductPageHeader from './ProductPageHeader';
 import {
@@ -119,9 +113,9 @@ export default function InventoryProductPage() {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="warning">{t('products.inventory.notFound')}</Alert>
-        <Button sx={{ mt: 2 }} startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
+        <DuncitButton sx={{ mt: 2 }} startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
           {backLabel}
-        </Button>
+        </DuncitButton>
       </Container>
     );
   }

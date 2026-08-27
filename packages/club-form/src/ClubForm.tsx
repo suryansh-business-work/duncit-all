@@ -1,7 +1,8 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Button, DialogActions, Grid } from '@mui/material';
+import { Alert, Box, DialogActions, Grid } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { makeClubSchema } from './schema';
 import { ClubFormDataProvider } from './context';
 import ClubSections from './ClubSections';
@@ -79,9 +80,9 @@ export default function ClubForm({
       <ClubSections />
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
-        <Button onClick={onCancel}>{t('clubForm.common.cancel')}</Button>
+        <DuncitButton onClick={onCancel}>{t('clubForm.common.cancel')}</DuncitButton>
         {!isEdit && (
-          <Button
+          <DuncitButton
             variant="outlined"
             type="button"
             disabled={busyOrSubmitting || !nameFilled}
@@ -90,11 +91,11 @@ export default function ClubForm({
             }}
           >
             Save as Draft
-          </Button>
+          </DuncitButton>
         )}
-        <Button variant="contained" type="submit" disabled={busyOrSubmitting || !nameFilled}>
+        <DuncitButton variant="contained" type="submit" disabled={busyOrSubmitting || !nameFilled}>
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </>
   );

@@ -1,15 +1,7 @@
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Button,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Chip, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '../../server/format';
 import type { CloneConnection } from '../queries';
@@ -87,9 +79,9 @@ export default function ConnectionAccordion({
             <Stack direction="row" sx={{
               justifyContent: "flex-start"
             }}>
-              <Button size="small" startIcon={<RefreshIcon />} onClick={onTest} disabled={busy}>
+              <DuncitButton size="small" startIcon={<RefreshIcon />} onClick={onTest} disabled={busy}>
                 {t('tech.dataClone.retest')}
-              </Button>
+              </DuncitButton>
             </Stack>
           )}
         </Stack>

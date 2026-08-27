@@ -1,20 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import {
   parseApiError,
@@ -84,13 +72,13 @@ export default function ReportDetailDialog({
         }}>
           {subtitle}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           aria-label={t('reportLogs.detailClose')}
           onClick={onClose}
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
@@ -147,10 +135,10 @@ export default function ReportDetailDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('reportLogs.detailClose')}</Button>
-        <Button variant="contained" disabled={loading} onClick={apply}>
+        <DuncitButton onClick={onClose}>{t('reportLogs.detailClose')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={loading} onClick={apply}>
           {t('reportLogs.detailSave')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

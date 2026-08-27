@@ -1,7 +1,8 @@
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { ModelPrice } from './queries';
 
 interface Props {
@@ -38,9 +39,9 @@ function RateRow({ price, onEdit, rateLine, editAria }: Readonly<RateRowProps>) 
           {rateLine}
         </Typography>
       </Box>
-      <IconButton size="small" aria-label={editAria} onClick={() => onEdit(price)}>
+      <DuncitIconButton size="small" aria-label={editAria} onClick={() => onEdit(price)}>
         <EditIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }
@@ -54,9 +55,9 @@ export default function RateCardList({ prices, onEdit }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Stack spacing={1.5}>
-      <Button size="small" startIcon={<AddIcon />} onClick={() => onEdit(null)} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => onEdit(null)} sx={{ alignSelf: 'flex-start' }}>
         {t('ai.rateCard.addModel')}
-      </Button>
+      </DuncitButton>
       <Stack spacing={1.25} divider={<Box sx={{ borderTop: '1px solid', borderColor: 'divider' }} />}>
         {prices.map((price) => (
           <RateRow

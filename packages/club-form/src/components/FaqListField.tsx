@@ -1,6 +1,7 @@
-import { Button, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import type { ClubFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
@@ -35,9 +36,9 @@ export default function FaqListField() {
                 <TextField {...input} value={input.value ?? ''} fullWidth size="small" label={`Question ${index + 1}`} />
               )}
             />
-            <IconButton aria-label={`Remove FAQ ${index + 1}`} onClick={() => remove(index)}>
+            <DuncitIconButton aria-label={`Remove FAQ ${index + 1}`} onClick={() => remove(index)}>
               <DeleteOutlineIcon />
-            </IconButton>
+            </DuncitIconButton>
           </Stack>
           <Controller
             control={control}
@@ -48,14 +49,14 @@ export default function FaqListField() {
           />
         </Stack>
       ))}
-      <Button
+      <DuncitButton
         size="small"
         startIcon={<AddIcon />}
         onClick={() => append({ question: '', answer: '' })}
         sx={{ alignSelf: 'flex-start' }}
       >
         Add FAQ
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

@@ -1,17 +1,10 @@
 import { useState } from 'react';
-import {
-  Divider,
-  IconButton,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Tooltip,
-} from '@mui/material';
+import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -40,13 +33,13 @@ export default function ConversationMenu({ onExport, onClear, onSettings }: Read
   return (
     <>
       <Tooltip title={t('shell.chat.menu.more')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('shell.chat.menu.more')}
           onClick={(event) => setAnchor(event.currentTarget)}
         >
           <MoreVertIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
         <MenuItem onClick={run(onExport)}>

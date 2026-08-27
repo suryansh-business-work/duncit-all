@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import PercentIcon from '@mui/icons-material/Percent';
+import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { DEDUCTION_SETTINGS, UPDATE_DEDUCTIONS } from './queries';
 import DeductionSlider from './DeductionSlider';
@@ -186,9 +178,9 @@ export default function DefaultDeductionsPage() {
         {error && <Alert severity="error">{error}</Alert>}
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant="contained" size="large" onClick={save} disabled={saving}>
+          <DuncitButton variant="contained" size="large" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save Deductions'}
-          </Button>
+          </DuncitButton>
         </Box>
       </Stack>
     </Box>

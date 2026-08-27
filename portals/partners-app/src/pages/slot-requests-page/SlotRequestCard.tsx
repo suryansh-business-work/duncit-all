@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import {
-  Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
-  Divider, Link, Stack, TextField, Typography,
-} from '@mui/material';
+import { Box, Card, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Link, Stack, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation, formatDateTime } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
 import { InfoRow } from '@duncit/ui';
@@ -76,10 +74,10 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
         }}>
           {/* Same page the request email's buttons open — it shows what this
            * booking actually earns after Duncit's commission. */}
-          <Button size="small" component={RouterLink} to={`/venues/requests/${request.slot_id}`}>
+          <DuncitButton size="small" component={RouterLink} to={`/venues/requests/${request.slot_id}`}>
             View earnings
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             color="error"
             variant="outlined"
@@ -88,8 +86,8 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             onClick={() => setDeclineOpen(true)}
           >
             Decline
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             color="success"
             variant="contained"
@@ -98,7 +96,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             onClick={() => setConfirmApprove(true)}
           >
             Approve
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
 
@@ -112,8 +110,8 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmApprove(false)}>{t('shell.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setConfirmApprove(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             color="success"
             disabled={busy}
@@ -123,7 +121,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             }}
           >
             Approve booking
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
 
@@ -150,8 +148,8 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeclineOpen(false)}>{t('shell.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setDeclineOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             color="error"
             disabled={busy}
@@ -161,7 +159,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             }}
           >
             Decline booking
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Card>

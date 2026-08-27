@@ -1,7 +1,8 @@
 import { useMutation } from '@apollo/client';
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { DELETE_ALL_BUGS, DELETE_BUGS, type BugRow } from './queries';
@@ -80,10 +81,10 @@ export default function BugBulkBar({ selected, onClear, onDeleted }: Readonly<Ba
         <Typography variant="body2" sx={{ flex: 1 }}>
           {count} selected on this page
         </Typography>
-        <Button size="small" onClick={onClear} disabled={loading}>
+        <DuncitButton size="small" onClick={onClear} disabled={loading}>
           Clear
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           size="small"
           color="error"
           variant="contained"
@@ -92,7 +93,7 @@ export default function BugBulkBar({ selected, onClear, onDeleted }: Readonly<Ba
           disabled={loading}
         >
           Delete
-        </Button>
+        </DuncitButton>
       </Stack>
     </Paper>
   );
@@ -123,7 +124,7 @@ export function BugDeleteAllButton({ onDeleted }: Readonly<DeleteAllProps>) {
   };
 
   return (
-    <Button
+    <DuncitButton
       size="small"
       color="error"
       startIcon={<DeleteSweepIcon />}
@@ -131,6 +132,6 @@ export function BugDeleteAllButton({ onDeleted }: Readonly<DeleteAllProps>) {
       disabled={loading}
     >
       Delete all
-    </Button>
+    </DuncitButton>
   );
 }

@@ -2,18 +2,8 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { NAV_AREAS, NAV_SITES, type WebsiteNavItem } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -183,8 +173,8 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={() => {
             submit().catch(() => undefined);
@@ -192,7 +182,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
           disabled={form.formState.isSubmitting}
         >
           Save
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

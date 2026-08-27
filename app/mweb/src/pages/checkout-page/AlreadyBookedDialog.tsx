@@ -1,11 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -25,10 +19,10 @@ export default function AlreadyBookedDialog({ open, onClose, onHistory }: Readon
         <DialogContentText>{t('mweb.checkout.alreadyBookedMessage')}</DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>{t('mweb.checkout.alreadyBookedStay')}</Button>
-        <Button variant="contained" onClick={onHistory}>
+        <DuncitButton onClick={onClose}>{t('mweb.checkout.alreadyBookedStay')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={onHistory}>
           {t('mweb.checkout.alreadyBookedHistory')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

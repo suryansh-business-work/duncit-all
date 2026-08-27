@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, InputAdornment, Stack } from '@mui/material';
+import { Alert, InputAdornment, Stack } from '@mui/material';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import {
   deleteAccountDefaults,
@@ -68,7 +69,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           minRows={2}
           size="small"
         />
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           color="error"
@@ -78,7 +79,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? t('mweb.account.deletion.submitting') : t('mweb.account.deletion.submit')}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && (
           <Alert severity="error">{submitError || errorMessage}</Alert>
         )}

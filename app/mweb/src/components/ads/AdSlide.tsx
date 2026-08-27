@@ -1,5 +1,6 @@
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import AdMedia from './AdMedia';
 import { openAdLink } from './adClick';
 import type { PublicAd } from './useActiveAds';
@@ -40,7 +41,7 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
           </Typography>
         )}
         {ad.redirect_url && (
-          <Button
+          <DuncitButton
             variant="contained"
             size="small"
             endIcon={<OpenInNewIcon />}
@@ -48,7 +49,7 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
             sx={{ fontWeight: 600, borderRadius: 999 }}
           >
             Learn more
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     </Box>

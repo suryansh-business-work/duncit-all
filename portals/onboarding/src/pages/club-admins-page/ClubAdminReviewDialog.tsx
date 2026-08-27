@@ -1,18 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  InputAdornment,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Divider, InputAdornment, Paper, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import AssignClubsSection from './AssignClubsSection';
 import { categoryPath, isActiveClubAdmin, type ClubAdminRow } from './queries';
@@ -158,14 +146,14 @@ export default function ClubAdminReviewDialog({
                   input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
                   htmlInput: { min: 0, max: 100, step: 1 }
                 }} />
-              <Button
+              <DuncitButton
                 variant="outlined"
                 disabled={!commissionValid || unchanged || savingCommission}
                 onClick={() => onSaveCommission(Number(commission))}
                 sx={{ mt: 0.5 }}
               >
                 {savingCommission ? 'Saving…' : 'Save commission'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </Box>
 
@@ -188,13 +176,13 @@ export default function ClubAdminReviewDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
-        <Button color="error" disabled={!notes.trim()} onClick={onReject}>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton color="error" disabled={!notes.trim()} onClick={onReject}>
           Reject
-        </Button>
-        <Button variant="contained" onClick={onApprove}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onApprove}>
           Approve
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

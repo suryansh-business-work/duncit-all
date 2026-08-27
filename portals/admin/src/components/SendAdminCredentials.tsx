@@ -1,20 +1,8 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 const SEND_CREDENTIALS = gql`
@@ -76,9 +64,9 @@ export default function SendAdminCredentials() {
 
   return (
     <Stack spacing={1.5}>
-      <Button variant="outlined" onClick={openDialog} disabled={loading || sent}>
+      <DuncitButton variant="outlined" onClick={openDialog} disabled={loading || sent}>
         {sent ? 'Credentials sent' : 'Send Credentials to Admin'}
-      </Button>
+      </DuncitButton>
 
       {error && <Alert severity="error">{error.message}</Alert>}
       {sent && (
@@ -129,9 +117,9 @@ export default function SendAdminCredentials() {
                 {code}
               </Box>
               <Tooltip title={t('admin.captcha.newCode')}>
-                <IconButton onClick={refresh} disabled={loading} aria-label={t('admin.captcha.refresh')}>
+                <DuncitIconButton onClick={refresh} disabled={loading} aria-label={t('admin.captcha.refresh')}>
                   <RefreshIcon />
-                </IconButton>
+                </DuncitIconButton>
               </Tooltip>
             </Stack>
             <TextField
@@ -149,12 +137,12 @@ export default function SendAdminCredentials() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)} disabled={loading}>
+          <DuncitButton onClick={() => setOpen(false)} disabled={loading}>
             {t('shell.common.cancel')}
-          </Button>
-          <Button variant="contained" onClick={confirm} disabled={loading || !entry.trim()}>
+          </DuncitButton>
+          <DuncitButton variant="contained" onClick={confirm} disabled={loading || !entry.trim()}>
             {loading ? 'Sending…' : 'Send credentials'}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Stack>

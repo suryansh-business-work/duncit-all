@@ -1,12 +1,6 @@
 import { gql, useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { buildUsernameLabels, normalizeUsername, type ContactSnapshot } from '@duncit/utils';
 import {
   AccountEditForm,
@@ -118,12 +112,12 @@ export default function EditAccountDialog({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={guard.cancelDiscard} data-testid="discard-cancel">
+          <DuncitButton onClick={guard.cancelDiscard} data-testid="discard-cancel">
             Keep editing
-          </Button>
-          <Button onClick={guard.confirmDiscard} color="error" data-testid="discard-confirm-yes">
+          </DuncitButton>
+          <DuncitButton onClick={guard.confirmDiscard} color="error" data-testid="discard-confirm-yes">
             Discard
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </>

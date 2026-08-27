@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Stack, TextField, Typography } from '@mui/material';
 import BoltIcon from '@mui/icons-material/Bolt';
+import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import { TEST_ENV_CONNECTION, type ConnectionTestResult, type EnvEntry } from '../queries';
 import ResultAlert from './ResultAlert';
@@ -82,9 +83,9 @@ export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
         </>
       )}
 
-      <Button startIcon={<BoltIcon />} variant="contained" onClick={test} disabled={loading}>
+      <DuncitButton startIcon={<BoltIcon />} variant="contained" onClick={test} disabled={loading}>
         {loading ? 'Testing…' : 'Test connection'}
-      </Button>
+      </DuncitButton>
 
       <ResultAlert result={result} />
     </Stack>

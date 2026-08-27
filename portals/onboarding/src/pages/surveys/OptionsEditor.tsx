@@ -1,9 +1,10 @@
 import { useRef } from 'react';
-import { Button, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -63,13 +64,13 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
                 htmlInput: { 'aria-label': `Option ${i + 1}` }
               }}
             />
-            <Tooltip title={t('onboarding.common.moveUp')}><span><IconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
-            <Tooltip title={t('onboarding.common.moveDown')}><span><IconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
-            <Tooltip title={t('onboarding.surveys.removeOption')}><IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+            <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+            <Tooltip title={t('onboarding.surveys.removeOption')}><DuncitIconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
           </Stack>
         );
       })}
-      <Button size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.surveys.addOption')}</Button>
+      <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.surveys.addOption')}</DuncitButton>
     </Stack>
   );
 }

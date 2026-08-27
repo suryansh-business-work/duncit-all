@@ -1,15 +1,5 @@
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { SurveyAnswers } from '../../../components/survey-answers';
@@ -173,15 +163,15 @@ export default function HostReviewDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           Close
-        </Button>
-        <Button color="error" variant="outlined" onClick={onReject} disabled={busy || !notes.trim()}>
+        </DuncitButton>
+        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={busy || !notes.trim()}>
           Reject
-        </Button>
-        <Button variant="contained" color="success" onClick={onApprove} disabled={busy}>
+        </DuncitButton>
+        <DuncitButton variant="contained" color="success" onClick={onApprove} disabled={busy}>
           Approve
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

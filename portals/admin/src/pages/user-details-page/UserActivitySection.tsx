@@ -1,20 +1,9 @@
 import { cloneElement, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { ActivityCalendar } from 'react-activity-calendar';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, MenuItem, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton } from '@duncit/buttons';
 import {
   DELETE_USER_ACTIVITY_DAY,
   DELETE_USER_ACTIVITY_YEAR,
@@ -153,12 +142,12 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
               onChange={(iso) => setSelectedDate(iso)}
               maxDate={new Date()}
             />
-            <Button variant="outlined" color="error" startIcon={<DeleteIcon />} disabled={!selectedDate} onClick={removeDay}>
+            <DuncitButton variant="outlined" color="error" startIcon={<DeleteIcon />} disabled={!selectedDate} onClick={removeDay}>
               Delete Day
-            </Button>
-            <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={removeYear}>
+            </DuncitButton>
+            <DuncitButton variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={removeYear}>
               Delete Year
-            </Button>
+            </DuncitButton>
           </Stack>
           <ActivityJourneyDialog
             open={!!journeyDate}

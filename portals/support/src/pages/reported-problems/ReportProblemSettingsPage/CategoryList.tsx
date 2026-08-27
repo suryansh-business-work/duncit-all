@@ -1,15 +1,7 @@
-import {
-  Button,
-  Chip,
-  FormControlLabel,
-  IconButton,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Chip, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { useState } from 'react';
 import {
@@ -48,13 +40,13 @@ function CategoryRow({ category, shownLabel, removeLabel, onChange, rows }: RowP
         }
         label={shownLabel}
       />
-      <IconButton
+      <DuncitIconButton
         color="error"
         aria-label={`${removeLabel}: ${category.label}`}
         onClick={() => onChange(removeCategory(rows, category.uid))}
       >
         <DeleteIcon />
-      </IconButton>
+      </DuncitIconButton>
     </Stack>
   );
 }
@@ -118,9 +110,9 @@ export default function CategoryList({ rows, onChange, onAdd }: Props) {
             }
           }}
         />
-        <Button startIcon={<AddIcon />} onClick={add} disabled={!draft.trim()}>
+        <DuncitButton startIcon={<AddIcon />} onClick={add} disabled={!draft.trim()}>
           {t('support.problemSettings.add')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </>
   );

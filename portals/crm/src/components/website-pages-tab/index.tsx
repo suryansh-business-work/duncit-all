@@ -1,19 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import DownloadIcon from '@mui/icons-material/Download';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CRM_WEBSITE_PAGES,
   DELETE_CRM_WEBSITE_PAGE,
@@ -125,17 +116,17 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
               <ExternalLink variant="body2" href={website} />
             </Box>
             <Chip size="small" variant="outlined" label={`${pages.length} page${pages.length === 1 ? '' : 's'} saved`} />
-            <Button
+            <DuncitButton
               variant="outlined"
               startIcon={fetchProgress ? <CircularProgress size={16} /> : <DownloadIcon />}
               onClick={fetchAll}
               disabled={!!fetchProgress || unfetched.length === 0}
             >
               {fetchProgress ? `Fetching ${fetchProgress.done}/${fetchProgress.total}` : `Fetch all (${unfetched.length})`}
-            </Button>
-            <Button variant="contained" startIcon={<TravelExploreIcon />} onClick={() => { setActionError(null); setScrapeOpen(true); }}>
+            </DuncitButton>
+            <DuncitButton variant="contained" startIcon={<TravelExploreIcon />} onClick={() => { setActionError(null); setScrapeOpen(true); }}>
               Scrape pages
-            </Button>
+            </DuncitButton>
           </Stack>
         </CardContent>
       </Card>

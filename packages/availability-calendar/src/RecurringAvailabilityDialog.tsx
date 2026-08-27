@@ -1,22 +1,9 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  IconButton,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { addDays, isAfter, isBefore, set as setTimeOnDate, startOfDay } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
 import { wholeDayWindow } from './slot-window';
@@ -159,13 +146,13 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 900, pr: 6 }}>
         {t('shell.availability.recurringTitle')}
-        <IconButton
+        <DuncitIconButton
           onClick={handleClose}
           aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
@@ -242,10 +229,10 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" disabled={saving} onClick={handleAdd}>
+        <DuncitButton onClick={handleClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" disabled={saving} onClick={handleAdd}>
           {saving ? t('shell.availability.adding') : t('shell.availability.addToCalendar')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

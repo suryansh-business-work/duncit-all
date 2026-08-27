@@ -1,17 +1,7 @@
-import {
-  Alert,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import BuildFacts from './BuildFacts';
 import BuildProgress from './BuildProgress';
@@ -61,7 +51,7 @@ const ArtifactRow = ({
       </Typography>
     </Stack>
     {artifact.url && (
-      <Button
+      <DuncitButton
         size="small"
         component="a"
         href={artifact.url}
@@ -69,7 +59,7 @@ const ArtifactRow = ({
         startIcon={<DownloadIcon />}
       >
         {artifact.kind}
-      </Button>
+      </DuncitButton>
     )}
   </Stack>
 );
@@ -165,7 +155,7 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
           </Typography>
         )}
         {build.workflow_run_url && (
-          <Button
+          <DuncitButton
             component="a"
             href={build.workflow_run_url}
             target="_blank"
@@ -173,9 +163,9 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
             startIcon={<OpenInNewIcon />}
           >
             {t('tech.appBuilds.viewRun')}
-          </Button>
+          </DuncitButton>
         )}
-        <Button onClick={onClose}>{t('tech.appBuilds.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('tech.appBuilds.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

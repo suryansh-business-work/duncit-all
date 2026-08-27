@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
+import { DuncitButton } from '@duncit/buttons';
 import { TEST_ENV_GEMINI, TEST_ENV_OPENAI, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '@duncit/utils';
@@ -50,9 +51,9 @@ export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
           htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
         }}
       />
-      <Button startIcon={<ChatIcon />} variant="contained" onClick={send} disabled={loading}>
+      <DuncitButton startIcon={<ChatIcon />} variant="contained" onClick={send} disabled={loading}>
         {loading ? 'Creating…' : `Create ${label} chat`}
-      </Button>
+      </DuncitButton>
       <ResultAlert result={result} />
       {reply && (
         <Box sx={{ p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>

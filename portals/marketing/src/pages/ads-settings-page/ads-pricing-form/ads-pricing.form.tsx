@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Grid, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Grid, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { AD_POSITIONS, formatAdMoney, type AdPosition } from '../../../lib/ad-positions';
 import PlacementCopyFields from './PlacementCopyFields';
@@ -179,14 +180,14 @@ export default function AdsPricingForm({
           <Stack direction="row" sx={{
             justifyContent: "flex-end"
           }}>
-            <Button
+            <DuncitButton
               type="submit"
               variant="contained"
               startIcon={<SaveIcon />}
               disabled={busy || !formState.isValid}
             >
               {busy ? 'Saving…' : 'Save Pricing'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Grid>
       </Grid>

@@ -1,19 +1,8 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Badge,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Badge, Card, CardContent, Chip, CircularProgress, Divider, Stack, Tooltip, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { DuncitIconButton } from '@duncit/buttons';
 import HostPodRow from './HostPodRow';
 import HostPodsFilterSheet from './HostPodsFilterSheet';
 import type { HostPodRowActions } from './hostPodRowActions';
@@ -96,11 +85,11 @@ export default function HostPodsCard({
             Your pods
           </Typography>
           <Tooltip title={t('mweb.hostManage.filterPods')}>
-            <IconButton size="small" aria-label={t('mweb.hostManage.filterPods')} onClick={() => setFilterOpen(true)}>
+            <DuncitIconButton size="small" aria-label={t('mweb.hostManage.filterPods')} onClick={() => setFilterOpen(true)}>
               <Badge badgeContent={activeCount} color="primary">
                 <FilterListIcon fontSize="small" />
               </Badge>
-            </IconButton>
+            </DuncitIconButton>
           </Tooltip>
           <Chip size="small" label={visible.length} />
         </Stack>

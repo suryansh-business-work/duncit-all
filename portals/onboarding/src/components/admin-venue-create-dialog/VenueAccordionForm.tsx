@@ -1,15 +1,9 @@
 import { useMemo, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Button,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { DuncitButton } from '@duncit/buttons';
 import VenueDetailsSection from './VenueDetailsSection';
 import VenueDocsSection from './VenueDocsSection';
 import VenueBankAccountSection from './VenueBankAccountSection';
@@ -98,13 +92,13 @@ export default function VenueAccordionForm({
       <Stack direction="row" spacing={1} sx={{
         justifyContent: "flex-end"
       }}>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={allExpanded ? <UnfoldLessIcon /> : <UnfoldMoreIcon />}
           onClick={allExpanded ? collapseAll : expandAll}
         >
           {allExpanded ? 'Collapse all' : 'Expand all'}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <Accordion expanded={expanded.has('details')} onChange={() => toggle('details')} disableGutters>

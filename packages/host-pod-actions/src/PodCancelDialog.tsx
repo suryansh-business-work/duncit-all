@@ -3,19 +3,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 import type { HostPodActionLabels } from './labels';
 import { HOST_DELETE_POD, HOST_POD_DELETE_IMPACT } from './queries';
@@ -174,10 +163,10 @@ export default function PodCancelDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={removeState.loading}>
+        <DuncitButton onClick={onClose} disabled={removeState.loading}>
           {labels.keepPod}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="pod-cancel-form"
           color="error"
@@ -186,7 +175,7 @@ export default function PodCancelDialog({
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {removeState.loading ? labels.cancelling : confirmLabel}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Box, Button, Card, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Card, Stack, Typography } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import { DuncitButton } from '@duncit/buttons';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { useTranslation } from '../../i18n/useTranslation';
 import { clubUrl } from '../../utils/seoUrls';
@@ -84,7 +85,7 @@ export default function ClubRecommendationRow({
             </Typography>
           )}
         </Box>
-        <Button
+        <DuncitButton
           variant="outlined"
           size="small"
           disabled={joined || loading}
@@ -95,7 +96,7 @@ export default function ClubRecommendationRow({
           sx={{ flex: '0 0 auto', fontWeight: 700 }}
         >
           {joined ? t('mweb.home.joinedClub') : t('mweb.home.joinClub')}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Card>
   );

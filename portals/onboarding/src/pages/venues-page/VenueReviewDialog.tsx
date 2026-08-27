@@ -1,20 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  InputAdornment,
-  Link,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, InputAdornment, Link, Paper, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -246,7 +232,7 @@ export default function VenueReviewDialog({
                   htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Venue commission percentage' }
                 }} />
             </Stack>
-            <Button
+            <DuncitButton
               variant="outlined"
               size="small"
               onClick={saveDeductions}
@@ -254,20 +240,20 @@ export default function VenueReviewDialog({
               sx={{ mt: 1.5 }}
             >
               {savingDeductions ? 'Saving…' : 'Save deductions'}
-            </Button>
+            </DuncitButton>
           </Paper>
         </Stack>
       </DialogContent>
       <Divider />
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
         <Box sx={{ flex: 1 }} />
-        <Button color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
+        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
           Reject
-        </Button>
-        <Button variant="contained" color="success" onClick={onApprove}>
+        </DuncitButton>
+        <DuncitButton variant="contained" color="success" onClick={onApprove}>
           Approve
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

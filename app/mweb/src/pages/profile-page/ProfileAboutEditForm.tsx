@@ -1,9 +1,10 @@
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { UPDATE_MY_PROFILE } from './queries';
 import { ProfileAboutValues, profileSchema } from './profileAbout.schema';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -81,32 +82,32 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
                   />
                 )}
               />
-              <IconButton aria-label={t('mweb.profile.removeLink')} onClick={() => remove(index)}>
+              <DuncitIconButton aria-label={t('mweb.profile.removeLink')} onClick={() => remove(index)}>
                 <DeleteIcon />
-              </IconButton>
+              </DuncitIconButton>
             </Stack>
           ))}
           <Box>
-            <Button
+            <DuncitButton
               size="small"
               startIcon={<AddIcon />}
               disabled={linkCount >= 5}
               onClick={() => append({ label: '', url: '' })}
             >
               Add link
-            </Button>
+            </DuncitButton>
           </Box>
         </Stack>
         {error && <Alert severity="error">{error.message}</Alert>}
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button onClick={onCancel} disabled={loading}>
+          <DuncitButton onClick={onCancel} disabled={loading}>
             Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={loading}>
+          </DuncitButton>
+          <DuncitButton type="submit" variant="contained" disabled={loading}>
             {loading ? 'Saving...' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

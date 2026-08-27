@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
+import { DuncitButton } from '@duncit/buttons';
 import VenueListingsTable from './VenueListingsTable';
 import { useTranslation } from '@duncit/shell';
 
@@ -25,9 +26,9 @@ export default function VenueListingsPage() {
               Track review status and continue your venue application.
             </Typography>
           </Box>
-          <Button component={RouterLink} to="/register-venue/new" variant="contained" startIcon={<AddBusinessIcon />} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+          <DuncitButton component={RouterLink} to="/register-venue/new" variant="contained" startIcon={<AddBusinessIcon />} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
             Register Venue
-          </Button>
+          </DuncitButton>
         </Stack>
       </Box>
       <VenueListingsTable />

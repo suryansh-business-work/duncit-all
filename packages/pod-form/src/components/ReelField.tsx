@@ -1,6 +1,7 @@
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -25,7 +26,7 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
           controls
           sx={{ width: '100%', maxHeight: 260, borderRadius: 1, bgcolor: 'common.black' }}
         />
-        <Button
+        <DuncitButton
           size="small"
           color="error"
           startIcon={<DeleteOutlineIcon />}
@@ -33,7 +34,7 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
           sx={{ alignSelf: 'flex-start' }}
         >
           Remove reel
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -86,9 +87,9 @@ export default function ReelField({ value, onChange, error, onPickVideo }: Reado
         }}>
         <Typography variant="subtitle2">{t('podForm.reelField.podReel')}</Typography>
         {onPickVideo && (
-          <Button size="small" startIcon={<VideocamIcon />} onClick={pick}>
+          <DuncitButton size="small" startIcon={<VideocamIcon />} onClick={pick}>
             {value ? 'Replace video' : 'Pick video'}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
       <Typography variant="caption" color={error ? 'error' : 'text.secondary'} sx={{ display: 'block', mb: 1 }}>

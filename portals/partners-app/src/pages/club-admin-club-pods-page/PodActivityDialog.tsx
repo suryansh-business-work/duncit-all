@@ -1,16 +1,6 @@
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import {
   ACTION_COLORS,
@@ -121,7 +111,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>{t('shell.common.close')}</Button>
+            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

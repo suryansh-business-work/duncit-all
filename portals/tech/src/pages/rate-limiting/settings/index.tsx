@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 import { PageHeader, QueryGuard } from '@duncit/ui';
 import { notifyError, useConfirm } from '@duncit/dialogs';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
@@ -104,9 +105,9 @@ export default function RateLimitSettingsPage() {
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     {t('tech.rateLimit.settings.resetHint')}
                   </Typography>
-                  <Button color="error" startIcon={<RestartAltIcon />} onClick={reset}>
+                  <DuncitButton color="error" startIcon={<RestartAltIcon />} onClick={reset}>
                     {t('tech.rateLimit.settings.resetCounters')}
-                  </Button>
+                  </DuncitButton>
                 </Stack>
               </CardContent>
             </Card>

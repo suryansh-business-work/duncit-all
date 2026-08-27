@@ -1,17 +1,10 @@
 import { useRef } from 'react';
-import {
-  Button,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-} from '@mui/material';
+import { InputAdornment, MenuItem, Stack, TextField, Tooltip } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { FILE_TYPE_OPTIONS, SORT_OPTIONS } from './queries';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -103,13 +96,13 @@ export default function FileManagerToolbar({
       </TextField>
 
       <Tooltip title={t('shell.fileManager.reload')}>
-        <IconButton size="small" onClick={onRefresh} aria-label={t('shell.fileManager.reloadFiles')}>
+        <DuncitIconButton size="small" onClick={onRefresh} aria-label={t('shell.fileManager.reloadFiles')}>
           <RefreshIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
 
       {selectedCount > 0 && canWrite && (
-        <Button
+        <DuncitButton
           size="small"
           color="error"
           variant="outlined"
@@ -117,10 +110,10 @@ export default function FileManagerToolbar({
           onClick={onDeleteSelected}
         >
           Delete {selectedCount}
-        </Button>
+        </DuncitButton>
       )}
 
-      <Button
+      <DuncitButton
         size="small"
         variant="contained"
         startIcon={<UploadFileIcon />}
@@ -128,7 +121,7 @@ export default function FileManagerToolbar({
         disabled={uploading}
       >
         {uploading ? t('shell.fileManager.uploading') : t('shell.fileManager.upload')}
-      </Button>
+      </DuncitButton>
       {/* Any file, several at once — the point of a file manager rather than an
           image picker. The accept list stays open for the same reason. */}
       <input

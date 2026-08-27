@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import {
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  Link,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { CircularProgress, InputAdornment, Link, Stack, TextField, Typography } from '@mui/material';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { LoginFormValues } from './login.types';
 import { loginInitialValues } from './login.types';
 import { inkCta } from './glass';
@@ -99,9 +92,9 @@ export default function LoginForm({
               ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label={t('session.login.togglePassword')}>
+                  <DuncitIconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label={t('session.login.togglePassword')}>
                     {showPwd ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
-                  </IconButton>
+                  </DuncitIconButton>
                 </InputAdornment>
               ),
             }
@@ -135,7 +128,7 @@ export default function LoginForm({
             }}>
             {t('session.login.authorizedOnly')}
           </Typography>
-          <IconButton
+          <DuncitIconButton
             type="submit"
             disabled={loading}
             aria-label={t('session.login.submit')}
@@ -150,7 +143,7 @@ export default function LoginForm({
             }}
           >
             {loading ? <CircularProgress size={20} color="inherit" /> : <ArrowForwardIcon />}
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
       </Stack>
     </form>

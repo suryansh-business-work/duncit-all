@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Paper, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Paper, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CelebrationIcon from '@mui/icons-material/Celebration';
+import { DuncitButton } from '@duncit/buttons';
 import OccasionalIconRowFields from './OccasionalIconRowFields';
 import { OCCASIONAL_ICONS, UPDATE_OCCASIONAL_ICONS, type OccasionalIconRow } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -126,15 +127,15 @@ export default function OccasionalIconsSection() {
         <Stack direction="row" sx={{
           justifyContent: "space-between"
         }}>
-          <Button
+          <DuncitButton
             startIcon={<AddIcon />}
             onClick={() => setRows((current) => [...current, blankRow(current.length)])}
           >
             Add occasion
-          </Button>
-          <Button variant="contained" onClick={submit} disabled={busy}>
+          </DuncitButton>
+          <DuncitButton variant="contained" onClick={submit} disabled={busy}>
             {busy ? 'Saving…' : 'Save'}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
 

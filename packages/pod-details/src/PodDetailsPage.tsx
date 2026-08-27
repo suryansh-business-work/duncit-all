@@ -1,8 +1,9 @@
 import { type ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Grid, Stack, Typography } from '@mui/material';
+import { Grid, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitButton } from '@duncit/buttons';
 import { BackButton, QueryGuard } from '@duncit/ui';
 import { useFeatureFlag } from '@duncit/app-settings';
 import { POD_DETAIL, type AdminPodAttendeeRow } from './queries';
@@ -114,14 +115,14 @@ function PodDetailsView({
             {/* Editable at every stage — a cancelled pod included, so an admin
                 can correct it (or re-route its venue slot) after the fact
                 rather than rebuilding it. */}
-            <Button
+            <DuncitButton
               variant="contained"
               startIcon={<EditIcon />}
               onClick={() => navigate(editTo(pod.id))}
               sx={{ flexShrink: 0 }}
             >
               Edit pod
-            </Button>
+            </DuncitButton>
           </Stack>
 
           {/* Two columns that end at roughly the same line. The old layout

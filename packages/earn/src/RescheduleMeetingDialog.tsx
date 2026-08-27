@@ -1,17 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import EarnSlotPicker from './EarnSlotPicker';
 import { useEarnSurface } from './EarnSurfaceProvider';
 import { MEETING_SLOTS, RESCHEDULE_MY_MEETING, type MeetingSlot } from './queries';
@@ -94,10 +84,10 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={rescheduling}>
+        <DuncitButton onClick={onClose} disabled={rescheduling}>
           {labels.close}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="reschedule-reason-form"
           variant="contained"
@@ -105,7 +95,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {rescheduling ? labels.moving : labels.moveCta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

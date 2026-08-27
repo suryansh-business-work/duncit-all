@@ -1,20 +1,8 @@
 import { gql, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  List,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, Chip, CircularProgress, List, ListItemAvatar, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -146,9 +134,9 @@ export default function UserHostPanel() {
             ? "You're a host. Complete your host profile to add payout and verification details."
             : 'You have not started a host profile yet.'}
         </Typography>
-        <Button component={RouterLink} to="/become-host" variant="outlined" size="small">
+        <DuncitButton component={RouterLink} to="/become-host" variant="outlined" size="small">
           {isHost ? 'Complete host profile' : 'Become a Host'}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -194,7 +182,7 @@ export default function UserHostPanel() {
         </Typography>
       )}
       {host.reviewer_notes && <Alert severity="info">{host.reviewer_notes}</Alert>}
-      <Button
+      <DuncitButton
         component={RouterLink}
         to="/become-host"
         variant="contained"
@@ -202,7 +190,7 @@ export default function UserHostPanel() {
         sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {isApproved ? 'Update host profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
-      </Button>
+      </DuncitButton>
 
       {isApproved && (
         <HostPodsSection pods={pods} loading={podsQuery.loading && !podsQuery.data} />

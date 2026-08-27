@@ -1,6 +1,7 @@
 import { useRef } from 'react';
-import { Box, Button, Chip, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { Tpl } from './queries';
 
@@ -45,9 +46,9 @@ export default function VariablesTab({
         <Typography variant="subtitle2" sx={{ flex: 1 }}>
           Detected in template
         </Typography>
-        <Button size="small" onClick={onImportDetected} disabled={!detected.length}>
+        <DuncitButton size="small" onClick={onImportDetected} disabled={!detected.length}>
           Sync to declared list
-        </Button>
+        </DuncitButton>
       </Stack>
       <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap', mb: 2 }}>
         {detected.length === 0 ? (
@@ -105,7 +106,7 @@ export default function VariablesTab({
                 }}
                 sx={{ flex: 1 }}
               />
-              <IconButton
+              <DuncitIconButton
                 size="small"
                 color="error"
                 onClick={() =>
@@ -113,7 +114,7 @@ export default function VariablesTab({
                 }
               >
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Stack>
           ))}
         </Stack>

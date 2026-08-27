@@ -1,15 +1,6 @@
 import { useLazyQuery, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError } from '@duncit/dialogs';
 import { StatusChip } from '@duncit/ui';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
@@ -168,7 +159,7 @@ export default function WaCampaignDetailDialog({
           onDuplicate={onDuplicate}
           onExportCsv={exportCsv}
         />
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

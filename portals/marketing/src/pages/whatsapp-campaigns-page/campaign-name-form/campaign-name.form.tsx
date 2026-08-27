@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { campaignNameSchema, emptyValues, type CampaignNameValues } from './campaign-name.types';
 import { useTranslation } from '@duncit/app-settings';
@@ -52,9 +53,9 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <Button type="submit" startIcon={<AddIcon />} variant="outlined" disabled={busy || !isValid}>
+          <DuncitButton type="submit" startIcon={<AddIcon />} variant="outlined" disabled={busy || !isValid}>
             Add
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </form>

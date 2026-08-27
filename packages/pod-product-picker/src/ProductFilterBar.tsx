@@ -1,14 +1,6 @@
 import SearchIcon from '@mui/icons-material/Search';
-import {
-  Button,
-  Checkbox,
-  Chip,
-  FormControlLabel,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Checkbox, Chip, FormControlLabel, InputAdornment, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   POD_PRODUCT_SORTS,
   podProductActiveFilterCount,
@@ -115,9 +107,9 @@ export default function ProductFilterBar({
               variant="outlined"
               label={t('podProduct.activeFilters', { vars: { count: activeCount } })}
             />
-            <Button size="small" onClick={onClear}>
+            <DuncitButton size="small" onClick={onClear}>
               {t('podProduct.clearFilters')}
-            </Button>
+            </DuncitButton>
           </>
         )}
       </Stack>

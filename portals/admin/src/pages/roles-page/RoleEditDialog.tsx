@@ -1,13 +1,5 @@
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { RoleEdit } from './types';
 import { useTranslation } from '@duncit/shell';
 
@@ -64,14 +56,14 @@ export default function RoleEditDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={onSave}
           disabled={busy || !editing.key || !editing.name}
         >
           {busy ? 'Saving…' : 'Save'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import MomentTile from '../moments/MomentTile';
 import MomentLightbox from '../moments/MomentLightbox';
@@ -75,14 +76,14 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
             )}
           </Box>
         </Stack>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
           sx={{ minHeight: 36, alignSelf: { xs: 'stretch', sm: 'center' } }}
         >
           {t('mweb.podDetails.viewClub')}
-        </Button>
+        </DuncitButton>
       </Stack>
       {moments.length > 0 && (
         <Stack

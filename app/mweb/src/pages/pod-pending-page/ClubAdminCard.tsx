@@ -1,9 +1,10 @@
-import { Avatar, Button, Card, Stack, Typography } from '@mui/material';
+import { Avatar, Card, Stack, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import ChatIcon from '@mui/icons-material/Chat';
 import EmailIcon from '@mui/icons-material/Email';
 import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import InfoRow, { type InfoRowProps } from './InfoRow';
 import { mailtoUrl, telUrl, whatsappUrl } from './podPending';
@@ -95,7 +96,7 @@ export default function ClubAdminCard({
           flexWrap: "wrap"
         }}>
           {admin.phone && (
-            <Button
+            <DuncitButton
               href={telUrl(admin.phone)}
               size="small"
               startIcon={<CallIcon />}
@@ -103,10 +104,10 @@ export default function ClubAdminCard({
               sx={{ fontWeight: 600 }}
             >
               {t('mweb.podPending.actionCall')}
-            </Button>
+            </DuncitButton>
           )}
           {waUrl && (
-            <Button
+            <DuncitButton
               href={waUrl}
               target="_blank"
               rel="noopener"
@@ -116,10 +117,10 @@ export default function ClubAdminCard({
               sx={{ fontWeight: 600 }}
             >
               {t('mweb.podPending.actionMessage')}
-            </Button>
+            </DuncitButton>
           )}
           {admin.email && (
-            <Button
+            <DuncitButton
               href={mailtoUrl(admin.email)}
               size="small"
               startIcon={<EmailIcon />}
@@ -127,7 +128,7 @@ export default function ClubAdminCard({
               sx={{ fontWeight: 600 }}
             >
               {t('mweb.podPending.actionEmail')}
-            </Button>
+            </DuncitButton>
           )}
         </Stack>
       </Stack>

@@ -1,4 +1,5 @@
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { compactButtonSx } from './buttonSx';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -44,11 +45,11 @@ export default function MemberPanel({
       <Stack direction="row" spacing={1}>
         {/* Same word Pod History uses for the same booking: "Joined" is a
             promise about something still ahead. */}
-        <Button variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
+        <DuncitButton variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
           {isExpired ? t('mweb.podDetails.visited') : t('mweb.podDetails.joined')}
-        </Button>
+        </DuncitButton>
         {canBackout && (
-          <Button
+          <DuncitButton
             variant="outlined"
             color="error"
             onClick={onBackout}
@@ -57,7 +58,7 @@ export default function MemberPanel({
             sx={compactButtonSx}
           >
             {t('mweb.podDetails.backout')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
       <ReleasedSeatsPanel
@@ -99,14 +100,14 @@ function ReleasedSeatsPanel({
   return (
     <Stack spacing={1}>
       <Alert severity="warning">{t(releasedKey, { vars: { count: releasedSeats } })}</Alert>
-      <Button
+      <DuncitButton
         variant="contained"
         onClick={onKeepSpot}
         disabled={restoringSpot}
         sx={{ fontWeight: 700 }}
       >
         {t('mweb.podDetails.takeSeatsBack')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

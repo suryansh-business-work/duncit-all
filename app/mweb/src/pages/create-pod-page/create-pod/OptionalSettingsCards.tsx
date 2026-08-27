@@ -1,13 +1,11 @@
 import { useState, type ReactNode } from 'react';
 import { Controller } from 'react-hook-form';
-import {
-  Box, Button, Card, CardActionArea, Chip, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton, Stack, TextField, Typography,
-} from '@mui/material';
+import { Box, Card, CardActionArea, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import ChipArrayField from './fields/ChipArrayField';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
@@ -139,13 +137,13 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
       <Dialog open={!!active} onClose={() => setActive(null)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ fontWeight: 700, pr: 6 }}>
           {activePanel ? t(activePanel.titleKey) : null}
-          <IconButton aria-label={t('mweb.auth.close')} onClick={() => setActive(null)} sx={{ position: 'absolute', right: 8, top: 8 }}>
+          <DuncitIconButton aria-label={t('mweb.auth.close')} onClick={() => setActive(null)} sx={{ position: 'absolute', right: 8, top: 8 }}>
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </DialogTitle>
         <DialogContent>{active && <PanelBody panelKey={active} form={form} />}</DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={() => setActive(null)} sx={{ fontWeight: 600 }}>{t('mweb.createPod.done')}</Button>
+          <DuncitButton variant="contained" onClick={() => setActive(null)} sx={{ fontWeight: 600 }}>{t('mweb.createPod.done')}</DuncitButton>
         </DialogActions>
       </Dialog>
     </Box>

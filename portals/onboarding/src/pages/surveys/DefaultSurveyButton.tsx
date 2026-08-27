@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import { DuncitButton } from '@duncit/buttons';
 import { SURVEYS, type SurveyKind } from './queries';
 
 type DefaultRow = {
@@ -33,8 +33,8 @@ export default function DefaultSurveyButton({ kind }: Readonly<{ kind: SurveyKin
   };
 
   return (
-    <Button variant="outlined" startIcon={<StarIcon />} onClick={go}>
+    <DuncitButton variant="outlined" startIcon={<StarIcon />} onClick={go}>
       Default Survey
-    </Button>
+    </DuncitButton>
   );
 }

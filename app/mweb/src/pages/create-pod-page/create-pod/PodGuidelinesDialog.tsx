@@ -1,18 +1,7 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import BlockIcon from '@mui/icons-material/Block';
+import { DuncitButton } from '@duncit/buttons';
 import { POD_GUIDELINE_RULE_KEYS } from './create-pod.form';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -58,9 +47,9 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="contained" data-testid="pod-guidelines-close">
+        <DuncitButton onClick={onClose} variant="contained" data-testid="pod-guidelines-close">
           {t('mweb.createPod.gotIt')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

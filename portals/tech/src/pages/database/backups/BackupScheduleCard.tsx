@@ -1,18 +1,9 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  Divider,
-  FormControlLabel,
-  Stack,
-  Switch,
-  Typography,
-} from '@mui/material';
+import { Alert, Card, CardContent, Divider, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '../../server/format';
 import ScheduleFields from './ScheduleFields';
@@ -110,7 +101,7 @@ export default function BackupScheduleCard({ settings, saving, error, onSave }: 
           }}>
             {t('tech.dbBackup.nextRun')}: {nextRunText}
           </Typography>
-          <Button
+          <DuncitButton
             type="submit"
             variant="contained"
             startIcon={<SaveIcon />}
@@ -118,7 +109,7 @@ export default function BackupScheduleCard({ settings, saving, error, onSave }: 
             sx={{ ml: 'auto' }}
           >
             {saving ? t('tech.dbBackup.saving') : t('tech.dbBackup.save')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </CardContent>
     </Card>

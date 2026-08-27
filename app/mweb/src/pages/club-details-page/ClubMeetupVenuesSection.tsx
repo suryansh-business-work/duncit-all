@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import NearMeIcon from '@mui/icons-material/NearMe';
-import { Box, Button, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router-dom';
 import VenueMapPreview from '../../components/VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
@@ -62,9 +63,9 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           We usually meet
         </Typography>
         {!origin && (
-          <Button size="small" startIcon={<NearMeIcon fontSize="small" />} disabled={locating} onClick={locateMe}>
+          <DuncitButton size="small" startIcon={<NearMeIcon fontSize="small" />} disabled={locating} onClick={locateMe}>
             {locating ? 'Locating…' : 'Show distance'}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
       <Stack direction="row" spacing={1.5} sx={{ overflowX: 'auto', pb: 1 }}>
@@ -97,9 +98,9 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
                 </CardContent>
               </CardActionArea>
               <Box sx={{ px: 2, pb: 1.5 }}>
-                <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
+                <DuncitButton component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
                   Venue details
-                </Button>
+                </DuncitButton>
               </Box>
             </Card>
           );
@@ -113,9 +114,9 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
         }}>
         {addressParts(selected).filter(Boolean).join(', ')}
       </Typography>
-      <Button component={RouterLink} to={venueUrl(selected.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ mt: 1 }}>
+      <DuncitButton component={RouterLink} to={venueUrl(selected.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ mt: 1 }}>
         Open venue details
-      </Button>
+      </DuncitButton>
       <VenueMapPreview
         title={selected.venue_name}
         parts={addressParts(selected)}

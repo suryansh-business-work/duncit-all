@@ -1,7 +1,8 @@
 import { useRef } from 'react';
-import { Box, Button, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { CrmDynamicFieldOption } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
 
@@ -65,15 +66,15 @@ export default function DynamicFieldOptionsEditor({ options, onChange }: Readonl
               }}
             />
             <Tooltip title={t('crm.managedynamicfieldspage.removeOption')}>
-              <IconButton size="small" color="error" aria-label={`remove-option-${index}`} onClick={() => remove(index)}>
+              <DuncitIconButton size="small" color="error" aria-label={`remove-option-${index}`} onClick={() => remove(index)}>
                 <DeleteIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           </Stack>
         ))}
-        <Button size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>
           Add option
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import { DuncitIconButton } from '@duncit/buttons';
 
 /**
  * A deliberately small highlighter.
@@ -110,9 +111,9 @@ export default function CodeBlock({ code, language }: Readonly<Props>) {
           {language || 'code'}
         </Typography>
         <Tooltip title={copied ? 'Copied' : 'Copy'}>
-          <IconButton size="small" onClick={copy} aria-label={t('shell.chat.actions.copyCode')}>
+          <DuncitIconButton size="small" onClick={copy} aria-label={t('shell.chat.actions.copyCode')}>
             {copied ? <CheckIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
       {/* Scrolls inside itself — a wide paste must never widen the bubble. */}

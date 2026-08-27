@@ -1,12 +1,8 @@
-import {
-  Alert,
-  Button,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 import { podPhase } from '@duncit/utils';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitButton } from '@duncit/buttons';
 import { podUrl } from '../../utils/seoUrls';
 import BackoutInProcessPanel from './BackoutInProcessPanel';
 import MemberPanel from './MemberPanel';
@@ -65,7 +61,7 @@ export default function PodActionPanel({
   // — replace the booking CTA with the Host Studio entry point.
   if (isHost) {
     return (
-      <Button
+      <DuncitButton
         variant="contained"
         size="large"
         fullWidth
@@ -73,7 +69,7 @@ export default function PodActionPanel({
         sx={gradientButtonSx}
       >
         {t('mweb.podDetails.goToDashboard')}
-      </Button>
+      </DuncitButton>
     );
   }
 
@@ -126,16 +122,16 @@ export default function PodActionPanel({
           {t('mweb.podDetails.backedOutRefundLead')} <b>{m.refund_status}</b>
         </Alert>
         <Typography variant="body2">{t('mweb.podDetails.referFriend')}</Typography>
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<ContentCopyIcon />}
           onClick={() => onCopyReferral(referralToken)}
           sx={compactButtonSx}
         >
           {t('mweb.podDetails.copyReferralLink')}
-        </Button>
+        </DuncitButton>
         {(navigator as any).share && (
-          <Button
+          <DuncitButton
             variant="text"
             startIcon={<ShareIcon />}
             onClick={() => {
@@ -152,7 +148,7 @@ export default function PodActionPanel({
             sx={compactButtonSx}
           >
             {t('mweb.podDetails.share')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
     );
@@ -174,7 +170,7 @@ export default function PodActionPanel({
           maxSeats={maxSeats}
           disabled={joining || ms?.can_join === false}
         />
-        <Button
+        <DuncitButton
           variant="contained"
           size="large"
           fullWidth
@@ -185,7 +181,7 @@ export default function PodActionPanel({
           {ms?.can_join === false
             ? t('mweb.podDetails.podIsFull')
             : t('mweb.podDetails.joinFreePod')}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }
@@ -200,7 +196,7 @@ export default function PodActionPanel({
         maxSeats={maxSeats}
         disabled={ms?.can_join === false}
       />
-      <Button
+      <DuncitButton
         variant="contained"
         size="large"
         fullWidth
@@ -209,7 +205,7 @@ export default function PodActionPanel({
         sx={gradientButtonSx}
       >
         {ms?.can_join === false ? t('mweb.podDetails.podIsFull') : payLabel}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

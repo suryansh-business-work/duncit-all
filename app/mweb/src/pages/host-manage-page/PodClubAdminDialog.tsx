@@ -1,16 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import { DuncitButton } from '@duncit/buttons';
 import ClubAdminCard from '../pod-pending-page/ClubAdminCard';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -113,15 +105,15 @@ export default function PodClubAdminDialog({
       <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.podClubAdmin.title')}</DialogTitle>
       <DialogContent dividers>{body}</DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('mweb.podClubAdmin.close')}</Button>
-        <Button
+        <DuncitButton onClick={onClose}>{t('mweb.podClubAdmin.close')}</DuncitButton>
+        <DuncitButton
           variant="contained"
           startIcon={<SupportAgentIcon />}
           onClick={openSupport}
           data-testid="pod-club-admin-support"
         >
           {t('mweb.podClubAdmin.support')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

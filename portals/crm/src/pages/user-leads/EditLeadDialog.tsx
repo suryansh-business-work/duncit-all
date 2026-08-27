@@ -1,14 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { WA_UPDATE_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
 import type { LeadRow } from './LeadsTable';
 import { useTranslation } from '@duncit/shell';
@@ -69,12 +62,12 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <DuncitButton onClick={onClose} disabled={loading}>
           {t('shell.common.cancel')}
-        </Button>
-        <Button variant="contained" onClick={submit} disabled={loading || !phone.trim()}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading || !phone.trim()}>
           {loading ? 'Saving…' : t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

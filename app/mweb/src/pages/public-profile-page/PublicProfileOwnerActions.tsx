@@ -1,7 +1,8 @@
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -11,7 +12,7 @@ export default function PublicProfileOwnerActions() {
   const btnSx = { minHeight: 44, flex: 1 } as const;
   return (
     <Stack direction="row" spacing={1} sx={{ px: 1 }}>
-      <Button
+      <DuncitButton
         variant="outlined"
         startIcon={<EditIcon />}
         onClick={() => navigate('/account')}
@@ -19,8 +20,8 @@ export default function PublicProfileOwnerActions() {
         aria-label={t('mweb.profile.editMyProfile')}
       >
         Edit
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         variant="outlined"
         startIcon={<SettingsIcon />}
         onClick={() => navigate('/account')}
@@ -28,8 +29,8 @@ export default function PublicProfileOwnerActions() {
         aria-label={t('mweb.profile.openAccountSettings')}
       >
         Settings
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         variant="contained"
         startIcon={<AddIcon />}
         onClick={() => navigate('/pod-ideas')}
@@ -37,7 +38,7 @@ export default function PublicProfileOwnerActions() {
         aria-label={t('mweb.profile.createANewPodIdea')}
       >
         New
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

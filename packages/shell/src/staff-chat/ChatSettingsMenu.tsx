@@ -1,6 +1,7 @@
 import { useRef } from 'react';
-import { IconButton, Popover, Tooltip } from '@mui/material';
+import { Popover, Tooltip } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import ChatSettingsBody from './ChatSettingsBody';
 import type { ChatSettings } from './useChatSettings';
@@ -42,14 +43,14 @@ export default function ChatSettingsMenu({
   return (
     <>
       <Tooltip title={t('shell.chat.settings.title')}>
-        <IconButton
+        <DuncitIconButton
           ref={buttonRef}
           size="small"
           aria-label={t('shell.chat.settings.title')}
           onClick={onOpen}
         >
           <TuneIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Popover
         open={open}

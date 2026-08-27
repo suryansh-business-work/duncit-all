@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Chip, Divider, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Box, Chip, Divider, Stack, TextField, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { brandSchema, type BrandFormValues } from './schema';
 import { useTranslation } from '@duncit/shell';
 
@@ -159,7 +160,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
             onChange={(e) => setCategoryDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
           />
-          <Button onClick={addCategory} disabled={locked} variant="outlined">Add</Button>
+          <DuncitButton onClick={addCategory} disabled={locked} variant="outlined">Add</DuncitButton>
         </Stack>
         <Stack
           direction="row"
@@ -203,7 +204,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
           <Typography variant="subtitle2" sx={{
             fontWeight: 800
           }}>{t('shell.nav.documents')}</Typography>
-          <Button size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addDocument} disabled={locked}>{t('partners.ecommBrandPage.addDocument')}</Button>
+          <DuncitButton size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addDocument} disabled={locked}>{t('partners.ecommBrandPage.addDocument')}</DuncitButton>
         </Stack>
         {documents.length === 0 ? (
           <Typography variant="caption" sx={{
@@ -225,7 +226,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
                     minWidth: 0
                   }}>{doc.url}</Typography>
                 {!locked && (
-                  <IconButton size="small" onClick={() => setValue('documents', documents.filter((_, i) => i !== index))}><DeleteIcon fontSize="small" /></IconButton>
+                  <DuncitIconButton size="small" onClick={() => setValue('documents', documents.filter((_, i) => i !== index))}><DeleteIcon fontSize="small" /></DuncitIconButton>
                 )}
               </Stack>
             ))}
@@ -239,10 +240,10 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
           <Stack direction="row" spacing={1.5} sx={{
             justifyContent: "flex-end"
           }}>
-            <Button type="submit" variant="outlined" disabled={busy}>{t('partners.ecommBrandPage.saveDraft')}</Button>
-            <Button type="button" variant="contained" endIcon={<SendIcon />} disabled={busy} onClick={handleSubmit(onSubmitForReview)}>
+            <DuncitButton type="submit" variant="outlined" disabled={busy}>{t('partners.ecommBrandPage.saveDraft')}</DuncitButton>
+            <DuncitButton type="button" variant="contained" endIcon={<SendIcon />} disabled={busy} onClick={handleSubmit(onSubmitForReview)}>
               Submit for review
-            </Button>
+            </DuncitButton>
           </Stack>
         </>
       )}
@@ -259,8 +260,8 @@ function MediaSlot({ label, url, disabled, onPick, onClear }: Readonly<{ label: 
       }}>{label}</Typography>
       {url && <Box component="img" src={url} alt={label} sx={{ display: 'block', width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 1, my: 0.5 }} />}
       <Stack direction="row" spacing={1}>
-        <Button size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={onPick} disabled={disabled}>{url ? 'Change' : t('partners.becomeHostPage.upload')}</Button>
-        {url && !disabled && <Button size="small" color="error" onClick={onClear}>{t('partners.ecommBrandPage.remove')}</Button>}
+        <DuncitButton size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={onPick} disabled={disabled}>{url ? 'Change' : t('partners.becomeHostPage.upload')}</DuncitButton>
+        {url && !disabled && <DuncitButton size="small" color="error" onClick={onClear}>{t('partners.ecommBrandPage.remove')}</DuncitButton>}
       </Stack>
     </Box>
   );

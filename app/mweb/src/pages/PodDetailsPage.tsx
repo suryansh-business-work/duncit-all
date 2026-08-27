@@ -3,13 +3,9 @@ import { useEntityPageMeta } from '../app/pageMeta';
 import { useMutation, useQuery } from '@apollo/client';
 import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  Alert,
-  Button,
-  Chip,
-  Stack,
-} from '@mui/material';
+import { Alert, Chip, Stack } from '@mui/material';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import { DuncitButton } from '@duncit/buttons';
 import { usePricing } from '../hooks/usePricing';
 import { useTranslation } from '../i18n/useTranslation';
 import { categoryPath } from '../utils/category-match';
@@ -242,7 +238,7 @@ export default function PodDetailsPage() {
         </Stack>
       )}
 
-      <Button
+      <DuncitButton
         variant="text"
         size="small"
         startIcon={<ContactSupportIcon />}
@@ -254,7 +250,7 @@ export default function PodDetailsPage() {
         sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
       >
         {t('mweb.podDetails.contactSupport')}
-      </Button>
+      </DuncitButton>
 
       <StickyPodActionPanel
         pod={pod}

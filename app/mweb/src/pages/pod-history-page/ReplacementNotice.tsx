@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Collapse, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Collapse, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -26,14 +27,14 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
         }}>
           {t('mweb.podHistory.findingReplacement')}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           size="small"
           aria-label={t('mweb.podHistory.refundDetails')}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
         >
           <InfoOutlinedIcon fontSize="small" color="action" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Collapse in={open}>
         <Typography

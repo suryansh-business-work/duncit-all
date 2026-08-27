@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Link, Stack, Typography } from '@mui/material';
+import { Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import RateReviewIcon from '@mui/icons-material/RateReview';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { ReleaseKindChip } from './ReleaseStatusChip';
@@ -98,9 +99,9 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PaymentReleaseRow>[]>(() => {
     const renderActions = (row: PaymentReleaseRow) => (
-      <Button size="small" startIcon={<RateReviewIcon />} disabled={row.status !== 'PENDING'} onClick={() => onReview(row)}>
+      <DuncitButton size="small" startIcon={<RateReviewIcon />} disabled={row.status !== 'PENDING'} onClick={() => onReview(row)}>
         Review
-      </Button>
+      </DuncitButton>
     );
     return [
       {

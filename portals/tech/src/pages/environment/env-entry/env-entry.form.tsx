@@ -1,21 +1,10 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Link,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Link, Stack, Switch, TextField, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ScienceIcon from '@mui/icons-material/Science';
+import { DuncitButton } from '@duncit/buttons';
 import type { EnvCategoryDef, EnvEntry, EnvFieldDef } from '../queries';
 import { emptyValues, envEntrySchema, valuesFromEntry, type EnvEntryFormValues } from './env-entry.types';
 import ConfigField from './ConfigField';
@@ -158,13 +147,13 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between' }}>
           {isEdit && onTest ? (
-            <Button startIcon={<ScienceIcon />} onClick={() => onTest(initial)} disabled={testing}>
+            <DuncitButton startIcon={<ScienceIcon />} onClick={() => onTest(initial)} disabled={testing}>
               {testing ? 'Testing…' : 'Test connection'}
-            </Button>
+            </DuncitButton>
           ) : <span />}
           <Stack direction="row" spacing={1}>
-            <Button onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
-            <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
+            <DuncitButton onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
+            <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Saving…' : 'Save'}</DuncitButton>
           </Stack>
         </DialogActions>
       </form>

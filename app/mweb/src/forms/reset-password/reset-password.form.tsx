@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, IconButton, InputAdornment, Stack } from '@mui/material';
+import { Alert, InputAdornment, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
@@ -29,13 +30,13 @@ const passwordInputProps = (visible: boolean, onToggle: () => void, toggleLabel:
   ),
   endAdornment: (
     <InputAdornment position="end">
-      <IconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
+      <DuncitIconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
         {visible ? (
           <VisibilityOffOutlinedIcon fontSize="small" />
         ) : (
           <VisibilityOutlinedIcon fontSize="small" />
         )}
-      </IconButton>
+      </DuncitIconButton>
     </InputAdornment>
   ),
 });
@@ -114,7 +115,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
             showConfirmPwd ? hideLabel : showLabel,
           ) }}
         />
-        <Button
+        <DuncitButton
           type="submit"
           variant="contained"
           size="large"
@@ -123,7 +124,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? t('mweb.resetPassword.submitting') : t('mweb.resetPassword.submit')}
-        </Button>
+        </DuncitButton>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>
     </form>

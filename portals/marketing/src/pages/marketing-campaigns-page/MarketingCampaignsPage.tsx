@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
@@ -104,13 +105,13 @@ export default function MarketingCampaignsPage() {
             went out.
           </Typography>
         </Stack>
-        <Button
+        <DuncitButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/campaigns/email/new')}
         >
           New campaign
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <CampaignTable

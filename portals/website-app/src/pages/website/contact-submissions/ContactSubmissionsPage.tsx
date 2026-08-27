@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { IconButton, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -37,9 +38,9 @@ export default function ContactSubmissionsPage() {
 
   const columns = useMemo<DuncitColumn<ContactSubmission>[]>(() => {
     const renderActions = (row: ContactSubmission) => (
-      <IconButton size="small" onClick={() => setOpen(row)} aria-label={t('shell.common.view')}>
+      <DuncitIconButton size="small" onClick={() => setOpen(row)} aria-label={t('shell.common.view')}>
         <VisibilityIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     );
     return [
       { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 150 },

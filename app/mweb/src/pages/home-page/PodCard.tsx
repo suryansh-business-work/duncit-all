@@ -1,4 +1,4 @@
-import { Card, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Card, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import EventIcon from '@mui/icons-material/Event';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
@@ -6,6 +6,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import PersonIcon from '@mui/icons-material/PersonOutlined';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
 import PodCardMedia from './PodCardMedia';
@@ -109,7 +110,7 @@ export default function PodCard({
       )}
 
       {onToggleSave && (
-        <IconButton
+        <DuncitIconButton
           aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
           aria-pressed={saved}
           disabled={saving}
@@ -131,7 +132,7 @@ export default function PodCard({
           }}
         >
           {saveButtonContent}
-        </IconButton>
+        </DuncitIconButton>
       )}
 
       {/* The mock's white info box, kept translucent so the image reads through;

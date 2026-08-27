@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
@@ -163,9 +164,9 @@ export default function AisensyTemplates() {
             {t('marketingWhatsapp.subtitle')}
           </Typography>
         </Stack>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
           {t('marketingWhatsapp.createTemplate')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <AisensySection

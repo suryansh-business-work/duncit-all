@@ -1,4 +1,5 @@
-import { Box, Button, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { MembershipPlanData } from './queries';
 
@@ -71,9 +72,9 @@ function PlanCard({ plan, ctaHint }: Readonly<{ plan: MembershipPlanData; ctaHin
             swallows pointer events, so the tooltip needs a wrapper to hang on. */}
         <Tooltip title={ctaHint}>
           <Box sx={{ mt: 1.25 }}>
-            <Button fullWidth size="small" variant="outlined" disabled>
+            <DuncitButton fullWidth size="small" variant="outlined" disabled>
               {plan.cta_label}
-            </Button>
+            </DuncitButton>
           </Box>
         </Tooltip>
       </CardContent>

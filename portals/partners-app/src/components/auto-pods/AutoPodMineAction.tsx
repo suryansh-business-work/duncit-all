@@ -1,5 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Button, Chip, Stack } from '@mui/material';
+import { Chip, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import type { AutoPodLabels, AutoPodRow, AutoPodStage } from '@duncit/utils';
 
 export interface AutoPodMineActionProps {
@@ -41,9 +42,9 @@ export default function AutoPodMineAction({
       }}>
       {status ? <Chip size="small" color={statusColor} label={status} /> : null}
       {podHref ? (
-        <Button size="small" component={RouterLink} to={podHref}>
+        <DuncitButton size="small" component={RouterLink} to={podHref}>
           {labels.viewPod}
-        </Button>
+        </DuncitButton>
       ) : null}
     </Stack>
   );

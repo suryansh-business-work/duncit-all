@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Button,
-  FormControlLabel,
-  Slider,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, FormControlLabel, Slider, Stack, Switch, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitButton } from '@duncit/buttons';
 import type { UploadSettings } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -128,14 +118,14 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
               helperText={heightInvalid ? 'Minimum 240px.' : 'Taller videos are scaled down. Default 1080.'}
             />
           </Stack>
-          <Button
+          <DuncitButton
             variant="contained"
             sx={{ alignSelf: 'flex-start' }}
             disabled={saving || dimInvalid || heightInvalid}
             onClick={save}
           >
             Save compression
-          </Button>
+          </DuncitButton>
         </Stack>
       </AccordionDetails>
     </Accordion>

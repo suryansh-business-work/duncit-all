@@ -1,5 +1,6 @@
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { Alert, Box, Button, CircularProgress } from '@mui/material';
+import { Alert, Box, CircularProgress } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -31,7 +32,7 @@ export function RichTextActions({ disabled, error, loading, onImprove }: Readonl
       ) : (
         <Box />
       )}
-      <Button
+      <DuncitButton
         aria-label={t('shell.richText.improve')}
         disabled={disabled || loading}
         onClick={onImprove}
@@ -40,7 +41,7 @@ export function RichTextActions({ disabled, error, loading, onImprove }: Readonl
         sx={{ flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}
       >
         {t(loading ? 'shell.richText.improving' : 'shell.richText.improve')}
-      </Button>
+      </DuncitButton>
     </Box>
   );
 }

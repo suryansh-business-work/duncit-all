@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DuncitButton } from '@duncit/buttons';
 import {
   CREATE_CRM_REMINDER,
   UPDATE_CRM_REMINDER,
@@ -82,10 +74,10 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
-        <Button variant="contained" onClick={save} disabled={loading || !title.trim()}>
+        <DuncitButton onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={save} disabled={loading || !title.trim()}>
           {loading ? 'Saving…' : t('shell.common.save')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

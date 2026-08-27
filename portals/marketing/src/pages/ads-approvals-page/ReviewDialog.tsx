@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
 import ReviewDetails from './ReviewDetails';
 import type { AdRequestRow } from './helpers';
@@ -59,10 +51,10 @@ export default function ReviewDialog({
 
   const actions = isPending ? (
     <>
-      <Button onClick={onClose} disabled={saving}>
+      <DuncitButton onClick={onClose} disabled={saving}>
         Close
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         color="error"
         variant="outlined"
         startIcon={<CancelIcon />}
@@ -70,8 +62,8 @@ export default function ReviewDialog({
         disabled={saving}
       >
         Reject
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         color="success"
         variant="contained"
         startIcon={<CheckCircleIcon />}
@@ -79,12 +71,12 @@ export default function ReviewDialog({
         disabled={saving}
       >
         Approve
-      </Button>
+      </DuncitButton>
     </>
   ) : (
-    <Button onClick={onClose} variant="contained">
+    <DuncitButton onClick={onClose} variant="contained">
       Close
-    </Button>
+    </DuncitButton>
   );
 
   return (

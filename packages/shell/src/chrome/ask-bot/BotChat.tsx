@@ -1,16 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Chip,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { BotBubble } from './BotBubble';
 import type { BotCopy } from './bot-copy';
@@ -130,7 +121,7 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
             input: {
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
+                  <DuncitIconButton
                     type="submit"
                     size="small"
                     edge="end"
@@ -138,7 +129,7 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
                     aria-label={t('shell.askBot.send')}
                   >
                     <SendIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </InputAdornment>
               ),
             }

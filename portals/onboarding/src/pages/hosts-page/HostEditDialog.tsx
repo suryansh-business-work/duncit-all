@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  MenuItem,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
@@ -101,17 +90,17 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={onClose} disabled={state.loading}>
+            <DuncitButton type="button" onClick={onClose} disabled={state.loading}>
               Cancel
-            </Button>
-            <Button
+            </DuncitButton>
+            <DuncitButton
               type="submit"
               variant="contained"
               disabled={state.loading}
               startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
             >
               Save
-            </Button>
+            </DuncitButton>
           </DialogActions>
         </form>
       </FormProvider>

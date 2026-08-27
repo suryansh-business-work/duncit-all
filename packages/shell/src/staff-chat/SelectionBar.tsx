@@ -1,7 +1,8 @@
-import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import type { useMessageSelection } from './useMessageSelection';
 
@@ -32,26 +33,26 @@ export default function SelectionBar({ selection }: Readonly<Props>) {
         bgcolor: 'action.selected'
       }}>
       <Tooltip title={t('shell.chat.selection.clear')}>
-        <IconButton size="small" onClick={clear} aria-label={t('shell.chat.selection.clear')}>
+        <DuncitIconButton size="small" onClick={clear} aria-label={t('shell.chat.selection.clear')}>
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <Typography variant="subtitle2" sx={{ flex: 1 }}>
         {t('shell.chat.selection.count', { vars: { count: String(selected.length) } })}
       </Typography>
 
-      <Button size="small" startIcon={<ContentCopyIcon />} onClick={copy}>
+      <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={copy}>
         {t('shell.chat.selection.copy')}
-      </Button>
-      <Button size="small" startIcon={<DeleteIcon />} onClick={() => remove(false)}>
+      </DuncitButton>
+      <DuncitButton size="small" startIcon={<DeleteIcon />} onClick={() => remove(false)}>
         {t('shell.chat.selection.hide')}
-      </Button>
+      </DuncitButton>
       {/* Taking a message back reaches the other person's copy, so it is only
           offered when every message picked is one you wrote. */}
       {allMine && (
-        <Button size="small" color="error" onClick={() => remove(true)}>
+        <DuncitButton size="small" color="error" onClick={() => remove(true)}>
           {t('shell.chat.selection.deleteForEveryone')}
-        </Button>
+        </DuncitButton>
       )}
     </Stack>
   );

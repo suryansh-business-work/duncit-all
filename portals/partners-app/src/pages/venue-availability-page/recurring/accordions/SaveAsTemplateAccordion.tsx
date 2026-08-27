@@ -1,21 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Chip, Stack, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   CREATE_SLOT_TEMPLATE,
   DELETE_SLOT_TEMPLATE,
@@ -112,12 +101,12 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
                   <Chip size="small" label={t.name} onClick={() => apply(t)} sx={{ cursor: 'pointer' }} />
                   {t.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
                   <Box sx={{ flex: 1 }} />
-                  <Button size="small" onClick={() => apply(t)}>
+                  <DuncitButton size="small" onClick={() => apply(t)}>
                     Use
-                  </Button>
-                  <IconButton size="small" aria-label={`Delete ${t.name}`} onClick={() => remove(t.id)}>
+                  </DuncitButton>
+                  <DuncitIconButton size="small" aria-label={`Delete ${t.name}`} onClick={() => remove(t.id)}>
                     <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Stack>
               ))}
             </Stack>
@@ -131,9 +120,9 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
               onChange={(e) => setName(e.target.value)}
               sx={{ flex: 1 }}
             />
-            <Button variant="outlined" onClick={save} disabled={saving || name.trim().length === 0}>
+            <DuncitButton variant="outlined" onClick={save} disabled={saving || name.trim().length === 0}>
               {saving ? 'Saving…' : 'Save'}
-            </Button>
+            </DuncitButton>
           </Stack>
         </Stack>
       </AccordionDetails>

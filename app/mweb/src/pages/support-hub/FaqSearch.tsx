@@ -1,19 +1,8 @@
 import { useQuery } from '@apollo/client';
-import {
-  Box,
-  IconButton,
-  InputAdornment,
-  List,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Skeleton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, InputAdornment, List, ListItemButton, ListItemText, Paper, Skeleton, Stack, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { SEARCH_FAQS, type FaqItem } from './faqQueries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -54,9 +43,9 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
             ),
             endAdornment: query ? (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => onQueryChange('')} aria-label={t('mweb.common.clearSearch')}>
+                <DuncitIconButton size="small" onClick={() => onQueryChange('')} aria-label={t('mweb.common.clearSearch')}>
                   <CloseIcon fontSize="small" />
-                </IconButton>
+                </DuncitIconButton>
               </InputAdornment>
             ) : null,
           }

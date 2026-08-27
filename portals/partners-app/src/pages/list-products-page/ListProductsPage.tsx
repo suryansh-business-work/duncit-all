@@ -1,7 +1,8 @@
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { BackButton } from '@duncit/ui';
 import ProductListingsTable from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
@@ -36,7 +37,7 @@ export default function ListProductsPage() {
               Add products under a Super → Category → Sub category. Once the products portal approves them they appear in matching pods.
             </Typography>
           </Box>
-          <Button
+          <DuncitButton
             component={canManageProducts ? RouterLink : 'button'}
             to={canManageProducts ? `/ecomm-brand/${brandId}/products/new` : undefined}
             disabled={!canManageProducts}
@@ -46,7 +47,7 @@ export default function ListProductsPage() {
             sx={{ color: 'primary.main', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
           >
             Add Product
-          </Button>
+          </DuncitButton>
         </Stack>
       </Box>
       {error && <Alert severity="error">{error.message}</Alert>}

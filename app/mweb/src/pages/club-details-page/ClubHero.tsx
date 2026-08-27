@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, Button, CircularProgress, IconButton, Stack } from '@mui/material';
+import { Box, CircularProgress, Stack } from '@mui/material';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -13,6 +13,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import AddIcon from '@mui/icons-material/Add';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -53,18 +54,18 @@ const arrowBtn = {
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <IconButton size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={{ ...arrowBtn, left: 10 }}>
+    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={{ ...arrowBtn, left: 10 }}>
       <ChevronLeftIcon />
-    </IconButton>
+    </DuncitIconButton>
   );
 }
 
 function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <IconButton size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={{ ...arrowBtn, right: 10 }}>
+    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={{ ...arrowBtn, right: 10 }}>
       <ChevronRightIcon />
-    </IconButton>
+    </DuncitIconButton>
   );
 }
 
@@ -96,13 +97,13 @@ export default function ClubHero({
         pointerEvents: 'none',
         '& > *': { pointerEvents: 'auto' }
       }}>
-      <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={overlayBtn}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
       <Stack direction="row" spacing={0.75} sx={{
         alignItems: "center"
       }}>
-        <Button
+        <DuncitButton
           size="small"
           variant={following ? 'contained' : 'outlined'}
           aria-label={following ? 'Following' : 'Follow'}
@@ -122,8 +123,8 @@ export default function ClubHero({
           }}
         >
           {following ? 'Following' : 'Follow'}
-        </Button>
-        <IconButton
+        </DuncitButton>
+        <DuncitIconButton
           size="small"
           aria-label={saved ? 'Saved' : 'Save'}
           onClick={onToggleSave}
@@ -131,10 +132,10 @@ export default function ClubHero({
           sx={overlayBtn}
         >
           {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
-        </IconButton>
-        <IconButton size="small" aria-label={t('mweb.common.share')} onClick={onShare} sx={overlayBtn}>
+        </DuncitIconButton>
+        <DuncitIconButton size="small" aria-label={t('mweb.common.share')} onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     </Stack>
   );

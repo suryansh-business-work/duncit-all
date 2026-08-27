@@ -1,10 +1,11 @@
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import { DuncitButton } from '@duncit/buttons';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -100,9 +101,9 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           )}
         </Box>
         {isHost && (
-          <Button size="small" variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onAddStatus} sx={{ borderRadius: 999, bgcolor: chipBg, color: textColor, boxShadow: 'none', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.2)' : alpha(theme.palette.primary.main, 0.14) } }}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onAddStatus} sx={{ borderRadius: 999, bgcolor: chipBg, color: textColor, boxShadow: 'none', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.2)' : alpha(theme.palette.primary.main, 0.14) } }}>
             {t('mweb.podDetails.addStatus')}
-          </Button>
+          </DuncitButton>
         )}
       </Stack>
       {/* The chip row carries all three facts the tour step names, in its order:

@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
@@ -99,14 +100,14 @@ export default function ClubAdminsTable({
     const renderActions = (row: ClubAdminRow) => (
       <>
         <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(row)}>
+          <DuncitIconButton size="small" onClick={() => onEdit(row)}>
             <EditIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <IconButton size="small" onClick={() => onReview(row)}>
+          <DuncitIconButton size="small" onClick={() => onReview(row)}>
             <RateReviewIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <LifecycleActions
           active={row.is_active !== false}

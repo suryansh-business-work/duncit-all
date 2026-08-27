@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import { DuncitButton } from '@duncit/buttons';
 import RescheduleMeetingDialog from './RescheduleMeetingDialog';
 import CancelMeetingDialog from './CancelMeetingDialog';
 
@@ -29,7 +30,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
     <Stack spacing={1} sx={{ px: 2, pb: 2 }}>
       <Stack direction="row" spacing={1}>
         {canReschedule && (
-          <Button
+          <DuncitButton
             size="small"
             variant="outlined"
             startIcon={<EventRepeatIcon />}
@@ -37,9 +38,9 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
             sx={{ borderRadius: 999, fontWeight: 600 }}
           >
             Reschedule meeting
-          </Button>
+          </DuncitButton>
         )}
-        <Button
+        <DuncitButton
           size="small"
           color="error"
           variant="outlined"
@@ -48,7 +49,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
           sx={{ borderRadius: 999, fontWeight: 600 }}
         >
           Cancel meeting
-        </Button>
+        </DuncitButton>
       </Stack>
       {!canReschedule && (
         <Alert severity="info" sx={{ py: 0 }}>

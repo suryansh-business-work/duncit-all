@@ -1,22 +1,11 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  IconButton,
-  Rating,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Avatar, Box, CircularProgress, Divider, Rating, Stack, TextField, Typography } from '@mui/material';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { CREATE_PRODUCT_REVIEW, PRODUCT_REVIEWS, VOTE_PRODUCT_REVIEW } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -143,18 +132,18 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                   alt={t('mweb.podDetails.review')}
                   sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover' }}
                 />
-                <IconButton
+                <DuncitIconButton
                   size="small"
                   onClick={() => removeImage(url)}
                   sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'background.paper', boxShadow: 1 }}
                 >
                   <CloseIcon sx={{ fontSize: 14 }} />
-                </IconButton>
+                </DuncitIconButton>
               </Box>
             ))}
           </Stack>
         )}
-        <Button
+        <DuncitButton
           size="small"
           startIcon={<AddPhotoAlternateIcon />}
           onClick={() => fileRef.current?.click()}
@@ -162,14 +151,14 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           sx={{ mt: 1 }}
         >
           {uploading ? 'Uploading…' : 'Add photo'}
-        </Button>
+        </DuncitButton>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
         {error && (
           <Alert severity="warning" sx={{ mt: 1 }}>
             {error}
           </Alert>
         )}
-        <Button
+        <DuncitButton
           variant="contained"
           size="small"
           onClick={submit}
@@ -177,7 +166,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           sx={{ mt: 1, borderRadius: 999, fontWeight: 600 }}
         >
           {saving ? 'Submitting…' : 'Submit review'}
-        </Button>
+        </DuncitButton>
       </Box>
 
       {loading && !data ? (
@@ -240,13 +229,13 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
               alignItems: "center",
               mt: 0.5
             }}>
-            <IconButton size="small" color={r.my_vote === 1 ? 'primary' : 'default'} onClick={() => vote(r.id, 1, r.my_vote)}>
+            <DuncitIconButton size="small" color={r.my_vote === 1 ? 'primary' : 'default'} onClick={() => vote(r.id, 1, r.my_vote)}>
               <ThumbUpOffAltIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
             <Typography variant="caption">{r.up_votes}</Typography>
-            <IconButton size="small" color={r.my_vote === -1 ? 'error' : 'default'} onClick={() => vote(r.id, -1, r.my_vote)}>
+            <DuncitIconButton size="small" color={r.my_vote === -1 ? 'error' : 'default'} onClick={() => vote(r.id, -1, r.my_vote)}>
               <ThumbDownOffAltIcon fontSize="small" />
-            </IconButton>
+            </DuncitIconButton>
             <Typography variant="caption">{r.down_votes}</Typography>
           </Stack>
         </Box>

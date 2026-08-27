@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import {
-  Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Fade, Stack,
-  Typography,
-} from '@mui/material';
+import { Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Fade, Stack, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
@@ -67,7 +65,7 @@ export function AiMonitoringChip() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>{t('partners.listProductsPage.gotIt')}</Button>
+          <DuncitButton onClick={() => setOpen(false)}>{t('partners.listProductsPage.gotIt')}</DuncitButton>
         </DialogActions>
       </Dialog>
     </>

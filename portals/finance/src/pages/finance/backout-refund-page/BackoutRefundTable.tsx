@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import {
@@ -92,9 +93,9 @@ export default function BackoutRefundTable({
       }
       return (
         <Tooltip title={t('finance.backoutRefund.processRefund')}>
-          <Button size="small" color="warning" variant="outlined" onClick={() => onRefund(row)}>
+          <DuncitButton size="small" color="warning" variant="outlined" onClick={() => onRefund(row)}>
             Refund
-          </Button>
+          </DuncitButton>
         </Tooltip>
       );
     };

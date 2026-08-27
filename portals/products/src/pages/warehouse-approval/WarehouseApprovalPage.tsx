@@ -1,18 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   APPROVE_WAREHOUSE_REQUEST,
   DENY_WAREHOUSE_REQUEST,
@@ -130,22 +119,22 @@ export default function WarehouseApprovalPage() {
                 </Box>
                 {row.status === 'PENDING' ? (
                   <Stack direction="row" spacing={1}>
-                    <Button
+                    <DuncitButton
                       size="small"
                       variant="contained"
                       color="success"
                       onClick={() => decide(approve, row.id)}
                     >
                       Approve
-                    </Button>
-                    <Button
+                    </DuncitButton>
+                    <DuncitButton
                       size="small"
                       variant="outlined"
                       color="error"
                       onClick={() => decide(deny, row.id)}
                     >
                       Deny
-                    </Button>
+                    </DuncitButton>
                   </Stack>
                 ) : null}
               </Stack>

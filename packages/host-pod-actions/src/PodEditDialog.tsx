@@ -2,16 +2,8 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 import ContentCheckAlert from './ContentCheckAlert';
 import { useContentCheck } from './useContentCheck';
@@ -147,10 +139,10 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           {labels.cancel}
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           type="submit"
           form="pod-edit-form"
           variant="contained"
@@ -158,7 +150,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? labels.saving : labels.saveChanges}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

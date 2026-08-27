@@ -1,14 +1,7 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import ReviewDetails from '../ads-approvals-page/ReviewDetails';
 import { AD_STATUS_CHIP_COLORS, type AdRequestRow } from '../ads-approvals-page/helpers';
@@ -70,18 +63,18 @@ export default function LiveAdDetailsDialog({
         <ReviewDetails request={ad} formatDateTime={formatDateTime} />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy}>
           Close
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           color="error"
           startIcon={<DeleteOutlineIcon />}
           onClick={() => onDelete(ad)}
           disabled={busy}
         >
           Delete
-        </Button>
-        <Button
+        </DuncitButton>
+        <DuncitButton
           variant="contained"
           color="warning"
           startIcon={<StopCircleIcon />}
@@ -89,7 +82,7 @@ export default function LiveAdDetailsDialog({
           disabled={busy}
         >
           Stop ad
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

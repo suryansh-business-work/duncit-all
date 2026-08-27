@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Alert, Button, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import { DuncitButton } from '@duncit/buttons';
 import { UPDATE_VENUE_HOLIDAYS } from '../queries';
 import { formatDay } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -80,7 +81,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
           disabled={disabled || !venueId}
           slotProps={{ textField: { size: 'small', helperText: t('partners.registerVenuePage.pickADateThenPressAdd') } }}
         />
-        <Button
+        <DuncitButton
           startIcon={<AddIcon />}
           variant="outlined"
           size="small"
@@ -89,7 +90,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
           sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, mb: { sm: 2.5 } }}
         >
           Add date
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {dates.length === 0 ? (
@@ -122,7 +123,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
       )}
 
       {!disabled && (
-        <Button
+        <DuncitButton
           startIcon={<SaveIcon />}
           variant="contained"
           disabled={!venueId || !dirty || saveState.loading}
@@ -130,7 +131,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
           sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
         >
           {saveState.loading ? 'Saving…' : 'Save leaves & holidays'}
-        </Button>
+        </DuncitButton>
       )}
     </Stack>
   );

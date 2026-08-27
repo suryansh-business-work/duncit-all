@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Paper, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { ADMIN_UPDATE_LEADERBOARD_SETTINGS, type LeaderboardSettings } from './queries';
@@ -110,9 +111,9 @@ export default function PointsPerActionCard({ settings }: Readonly<Props>) {
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <Button variant="contained" onClick={submit} disabled={busy}>
+          <DuncitButton variant="contained" onClick={submit} disabled={busy}>
             {busy ? t('admin.leaderboard.saving') : t('admin.leaderboard.save')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Paper>

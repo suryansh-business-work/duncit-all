@@ -1,17 +1,8 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, Paper, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
+import { DuncitButton } from '@duncit/buttons';
 import AdjustHealthDialog from './AdjustHealthDialog';
 import type { AdminHealthScore } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
@@ -89,9 +80,9 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
                 Base: {score.base_score} · Admin adjustment: {score.delta_sum >= 0 ? `+${score.delta_sum}` : score.delta_sum} · Final: {score.total_score}/100
               </Typography>
             </Box>
-            <Button variant="contained" size="small" startIcon={<EditIcon />} onClick={() => setOpen(true)}>
+            <DuncitButton variant="contained" size="small" startIcon={<EditIcon />} onClick={() => setOpen(true)}>
               Adjust
-            </Button>
+            </DuncitButton>
           </Stack>
 
           <Box>

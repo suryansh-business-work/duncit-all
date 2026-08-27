@@ -1,18 +1,8 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import { DuncitButton } from '@duncit/buttons';
 import CompanionsChecklist from './CompanionsChecklist';
 import CompanionsForm from './CompanionsForm';
 import ScanConfirmationDialog from './ScanConfirmationDialog';
@@ -199,9 +189,9 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>{labels.close}</Button>
+        <DuncitButton onClick={close}>{labels.close}</DuncitButton>
         {result && (
-          <Button
+          <DuncitButton
             variant="contained"
             onClick={() => {
               setResult(null);
@@ -210,7 +200,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             Scan next
-          </Button>
+          </DuncitButton>
         )}
       </DialogActions>
       <ScanConfirmationDialog

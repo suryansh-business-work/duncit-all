@@ -1,15 +1,7 @@
 import { useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Link,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, Link, Stack, Typography } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { DuncitButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
@@ -67,9 +59,9 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
           }}>{t('crm.emailTemplates.imageOrVideoSentWithEvery')}</Typography>
         </Box>
         <AiMonitoringChip />
-        <Button size="small" variant="outlined" startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
+        <DuncitButton size="small" variant="outlined" startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
           {busy ? 'Uploading…' : 'Add file'}
-        </Button>
+        </DuncitButton>
       </Stack>
       {error && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setError(null)}>{error}</Alert>}
       {attachments.length > 0 && (

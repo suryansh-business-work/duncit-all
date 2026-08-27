@@ -1,21 +1,8 @@
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Link,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Link, Stack, TextField, Typography } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { DuncitButton } from '@duncit/buttons';
 import type { SlotRequestRow } from './queries';
 import { podSummary, requestedAt, slotPrice, slotWindow } from './slot-request';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -109,7 +96,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button
+          <DuncitButton
             size="small"
             color="error"
             startIcon={<CancelIcon />}
@@ -117,8 +104,8 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             onClick={() => setDeclineOpen(true)}
           >
             Decline
-          </Button>
-          <Button
+          </DuncitButton>
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<CheckCircleIcon />}
@@ -126,7 +113,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             onClick={() => setConfirmApprove(true)}
           >
             Approve
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
 
@@ -139,8 +126,8 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmApprove(false)}>{t('mweb.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setConfirmApprove(false)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton
             variant="contained"
             onClick={() => {
               setConfirmApprove(false);
@@ -148,7 +135,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             }}
           >
             Approve
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
 
@@ -169,8 +156,8 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeclineOpen(false)}>{t('mweb.common.cancel')}</Button>
-          <Button
+          <DuncitButton onClick={() => setDeclineOpen(false)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton
             color="error"
             variant="contained"
             onClick={() => {
@@ -180,7 +167,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             }}
           >
             Decline
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Card>

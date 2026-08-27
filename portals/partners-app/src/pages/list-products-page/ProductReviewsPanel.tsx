@@ -1,18 +1,9 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  Rating,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, Divider, Rating, Stack, TextField, Typography } from '@mui/material';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 const PRODUCT_REVIEWS = gql`
@@ -118,9 +109,9 @@ function ReviewRow({
           placeholder={t('partners.listProductsPage.replyToThisReview')}
           fullWidth
         />
-        <Button variant="outlined" onClick={submit} disabled={saving || !reply.trim()}>
+        <DuncitButton variant="outlined" onClick={submit} disabled={saving || !reply.trim()}>
           {review.seller_reply ? 'Update' : 'Reply'}
-        </Button>
+        </DuncitButton>
       </Stack>
     </Box>
   );

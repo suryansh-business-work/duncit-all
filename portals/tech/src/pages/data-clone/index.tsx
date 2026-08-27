@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StorageIcon from '@mui/icons-material/Storage';
+import { DuncitButton } from '@duncit/buttons';
 import { useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import CloneExcludedCard from './CloneExcludedCard';
@@ -92,17 +93,17 @@ export default function DataClonePage() {
             {t('tech.dataClone.subtitle')}
           </Typography>
         </Box>
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<SettingsIcon />}
           onClick={() => setSettingsOpen(true)}
           disabled={running}
         >
           {t('tech.dataClone.settings')}
-        </Button>
-        <Button variant="contained" color="error" onClick={handleStart} disabled={busy}>
+        </DuncitButton>
+        <DuncitButton variant="contained" color="error" onClick={handleStart} disabled={busy}>
           {startState.loading ? t('tech.dataClone.starting') : t('tech.dataClone.start')}
-        </Button>
+        </DuncitButton>
       </Stack>
 
       {(loading || targetsQuery.loading) && <LinearProgress />}

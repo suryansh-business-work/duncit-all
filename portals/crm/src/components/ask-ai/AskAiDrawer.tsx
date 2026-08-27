@@ -1,19 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import {
-  Avatar,
-  Box,
-  CircularProgress,
-  Drawer,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, CircularProgress, Drawer, Stack, TextField, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitIconButton } from '@duncit/buttons';
 import { tokens } from '@duncit/theme';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { parseApiError } from '@duncit/utils';
@@ -110,7 +102,7 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
               display: 'block'
             }}>About {leadName}</Typography>
         </Box>
-        <IconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ flexShrink: 0 }}><CloseIcon /></IconButton>
+        <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ flexShrink: 0 }}><CloseIcon /></DuncitIconButton>
       </Stack>
 
       <Stack spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
@@ -177,9 +169,9 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}
         />
-        <IconButton color="primary" onClick={() => send(input)} disabled={loading || !input.trim()} aria-label={t('crm.components.send')}>
+        <DuncitIconButton color="primary" onClick={() => send(input)} disabled={loading || !input.trim()} aria-label={t('crm.components.send')}>
           <SendIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
     </Drawer>
   );

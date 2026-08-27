@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import VerificationCardShell from './VerificationCardShell';
 import { SUBMIT_ADDRESS_VERIFICATION, type Verification } from './queries';
@@ -124,14 +125,14 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
             fullWidth
           />
         </Stack>
-        <Button
+        <DuncitButton
           variant="outlined"
           disabled={busy}
           onClick={() => onSubmit().catch(() => undefined)}
           sx={{ borderRadius: 999, fontWeight: 700, alignSelf: 'flex-start' }}
         >
           {submitLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
     </VerificationCardShell>
   );

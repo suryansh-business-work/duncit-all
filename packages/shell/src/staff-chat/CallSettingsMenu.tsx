@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { IconButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import DeviceSettingsDialog from './devices/DeviceSettingsDialog';
 
@@ -34,14 +35,14 @@ export default function CallSettingsMenu({
   return (
     <>
       <Tooltip title={t('shell.chat.call.settings')}>
-        <IconButton
+        <DuncitIconButton
           size="small"
           color="inherit"
           aria-label={t('shell.chat.call.settingsLabel')}
           onClick={() => setOpen(true)}
         >
           <SettingsIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </Tooltip>
       <DeviceSettingsDialog
         open={open}

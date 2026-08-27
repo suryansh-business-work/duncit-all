@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { logs } from '@duncit/logs';
-import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
+import { DuncitButton } from '@duncit/buttons';
 import { useGeoLocation } from './useGeoLocation';
 import { matchLocation, matchZone, type MatchableLocation } from './gps-match';
 
@@ -39,7 +40,7 @@ export default function GpsLocationPicker({
 
   return (
     <Box sx={{ mb: 1.5 }}>
-      <Button
+      <DuncitButton
         fullWidth
         size="small"
         variant="outlined"
@@ -68,7 +69,7 @@ export default function GpsLocationPicker({
         }}
       >
         {busy ? 'Locating…' : 'Use my location'}
-      </Button>
+      </DuncitButton>
       {geocoded?.city && (
         <Typography
           variant="caption"

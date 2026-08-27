@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import Button from '@mui/material/Button';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n';
 import type { DuncitColumn, TableFilterValue } from '../types';
 import { FilterControl } from './filterControls';
@@ -71,12 +71,12 @@ export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <Button size="small" onClick={handleClearAll}>
+          <DuncitButton size="small" onClick={handleClearAll}>
             {t('shell.table.clearAll')}
-          </Button>
-          <Button size="small" variant="contained" onClick={handleApply}>
+          </DuncitButton>
+          <DuncitButton size="small" variant="contained" onClick={handleApply}>
             {t('shell.table.apply')}
-          </Button>
+          </DuncitButton>
         </Stack>
       </Stack>
     </Popover>

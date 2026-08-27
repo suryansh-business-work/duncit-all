@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Button,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { DuncitButton } from '@duncit/buttons';
 import { PRESET_USAGE_NOTES, type UploadCropPreset, type UploadSettings } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -133,14 +124,14 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
               Enabled presets need a width and height greater than 0.
             </Typography>
           )}
-          <Button
+          <DuncitButton
             variant="contained"
             sx={{ alignSelf: 'flex-start' }}
             disabled={saving || !defaultValid || invalidDims}
             onClick={() => onSave({ crop_presets: presets, default_crop_key: defaultKey })}
           >
             Save crop presets
-          </Button>
+          </DuncitButton>
         </Stack>
       </AccordionDetails>
     </Accordion>

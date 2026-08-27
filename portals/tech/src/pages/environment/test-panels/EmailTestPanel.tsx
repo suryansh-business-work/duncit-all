@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { DuncitButton } from '@duncit/buttons';
 import { TEST_ENV_EMAIL, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '@duncit/utils';
@@ -42,9 +43,9 @@ export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>)
           htmlInput: { autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }
         }}
       />
-      <Button startIcon={<SendIcon />} variant="contained" onClick={send} disabled={loading || !to.trim()}>
+      <DuncitButton startIcon={<SendIcon />} variant="contained" onClick={send} disabled={loading || !to.trim()}>
         {loading ? 'Sending…' : 'Send test email'}
-      </Button>
+      </DuncitButton>
       <ResultAlert result={result} />
     </Stack>
   );

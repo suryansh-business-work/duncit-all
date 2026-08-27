@@ -1,8 +1,9 @@
-import { Box, Card, CardContent, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { FounderMetric } from './types';
 import { formatMetricValue } from './format';
 import Sparkline from './Sparkline';
@@ -56,14 +57,14 @@ export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>)
           </Typography>
           <Stack direction="row" sx={{ mt: -1, mr: -1 }}>
             <Tooltip title={t('finance.startupDashboard.whatIsThis')}>
-              <IconButton size="small" onClick={() => onInfo(metric)} aria-label={`About ${metric.label}`}>
+              <DuncitIconButton size="small" onClick={() => onInfo(metric)} aria-label={`About ${metric.label}`}>
                 <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
             <Tooltip title={t('finance.startupDashboard.formulaAndSettings')}>
-              <IconButton size="small" onClick={() => onSettings(metric)} aria-label={`Settings for ${metric.label}`}>
+              <DuncitIconButton size="small" onClick={() => onSettings(metric)} aria-label={`Settings for ${metric.label}`}>
                 <SettingsOutlinedIcon fontSize="small" />
-              </IconButton>
+              </DuncitIconButton>
             </Tooltip>
           </Stack>
         </Stack>

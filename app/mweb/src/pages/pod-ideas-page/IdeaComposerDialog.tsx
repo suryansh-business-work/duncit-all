@@ -1,14 +1,5 @@
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import CategoryCascade, {
   type CategoryLabels,
   type CategoryScope,
@@ -78,12 +69,12 @@ export default function IdeaComposerDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={creating}>
+        <DuncitButton onClick={onClose} disabled={creating}>
           Cancel
-        </Button>
-        <Button variant="contained" onClick={onSubmit} disabled={creating}>
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onSubmit} disabled={creating}>
           {creating ? <CircularProgress size={20} /> : 'Submit'}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

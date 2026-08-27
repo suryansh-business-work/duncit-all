@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { WA_CATEGORY_LABELS, waMoney } from '../../helpers';
 import {
@@ -110,14 +111,14 @@ export default function WaPricingForm({
         <RateExample values={values} />
 
         <Box>
-          <Button
+          <DuncitButton
             type="submit"
             variant="contained"
             startIcon={<SaveIcon />}
             disabled={busy || !formState.isValid}
           >
             {busy ? 'Saving…' : 'Save rates'}
-          </Button>
+          </DuncitButton>
         </Box>
       </Stack>
     </form>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Button, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import { DuncitButton } from '@duncit/buttons';
 import {
   canScanTickets,
   earningsBodyFor,
@@ -109,9 +110,9 @@ export default function PodAttendanceView({
         alignItems: "flex-start"
       }}>
         <Alert severity="error">{api.errorText}</Alert>
-        <Button onClick={api.refetch} variant="outlined" sx={{ borderRadius: 999 }}>
+        <DuncitButton onClick={api.refetch} variant="outlined" sx={{ borderRadius: 999 }}>
           {labels.retry}
-        </Button>
+        </DuncitButton>
       </Stack>
     );
   }

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch, type TableFilterValue } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import {
@@ -44,7 +45,7 @@ function CancelPodCell({
   return (
     <Tooltip title={disabledReason ?? CANCEL_HINT}>
       <span>
-        <Button
+        <DuncitButton
           size="small"
           variant="outlined"
           color="error"
@@ -57,7 +58,7 @@ function CancelPodCell({
           sx={{ whiteSpace: 'nowrap' }}
         >
           Cancel pod
-        </Button>
+        </DuncitButton>
       </span>
     </Tooltip>
   );

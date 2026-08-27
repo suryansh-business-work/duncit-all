@@ -1,12 +1,8 @@
 import { useState } from 'react';
-import {
-  Badge,
-  Box,
-  Button,
-  Tooltip,
-} from '@mui/material';
+import { Badge, Box, Tooltip } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import { useTranslation } from '../../i18n/useTranslation';
 import FilterBar from './FilterBar';
@@ -73,7 +69,7 @@ export default function FilterMenu(props: Readonly<Props>) {
       <Tooltip title={props.disabled ? '' : t('mweb.home.vibeFilter')}>
         <span>
         {/* The mock's "Filter" pill — icon + label, active-count badge. */}
-        <Button
+        <DuncitButton
           onClick={() => setOpen(true)}
           disabled={props.disabled}
           aria-label={`Open filters${activeCountSuffix}`}
@@ -94,7 +90,7 @@ export default function FilterMenu(props: Readonly<Props>) {
           }}
         >
           {t('mweb.home.vibeFilter')}
-        </Button>
+        </DuncitButton>
         </span>
       </Tooltip>
 
@@ -105,17 +101,17 @@ export default function FilterMenu(props: Readonly<Props>) {
         sheetMaxHeight="78dvh"
         actions={
           <>
-            <Button
+            <DuncitButton
               size="small"
               startIcon={<RestartAltIcon />}
               onClick={handleReset}
               disabled={activeCount === 0}
             >
               Reset
-            </Button>
-            <Button size="small" variant="contained" onClick={() => setOpen(false)}>
+            </DuncitButton>
+            <DuncitButton size="small" variant="contained" onClick={() => setOpen(false)}>
               Done
-            </Button>
+            </DuncitButton>
           </>
         }
       >

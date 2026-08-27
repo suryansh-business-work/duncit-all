@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -110,9 +111,9 @@ export default function ShortLinksPage() {
             visitor came from.
           </Typography>
         </Stack>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreating(true)}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setCreating(true)}>
           New short link
-        </Button>
+        </DuncitButton>
       </Stack>
 
       <DuncitTable<ShortLinkRow>

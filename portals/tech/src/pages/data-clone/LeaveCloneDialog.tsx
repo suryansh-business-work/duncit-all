@@ -1,11 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -29,12 +23,12 @@ export default function LeaveCloneDialog({ open, onStay, onLeave }: Readonly<Pro
         <DialogContentText>{t('tech.dataClone.leaveMessage')}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onLeave} color="inherit">
+        <DuncitButton onClick={onLeave} color="inherit">
           {t('tech.dataClone.leaveAnyway')}
-        </Button>
-        <Button onClick={onStay} variant="contained" autoFocus>
+        </DuncitButton>
+        <DuncitButton onClick={onStay} variant="contained" autoFocus>
           {t('tech.dataClone.leaveStay')}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

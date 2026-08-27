@@ -1,17 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Alert,
-  Box,
-  Button,
-  Divider,
-  FormControlLabel,
-  Stack,
-  Switch,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Divider, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import { EnumSelect } from '../rules/rate-limit-rule';
@@ -170,7 +162,7 @@ export default function RateLimitSettingsForm({
         />
       </Box>
       {opError && <Alert severity="error">{opError}</Alert>}
-      <Button
+      <DuncitButton
         type="submit"
         variant="contained"
         startIcon={<SaveIcon />}
@@ -178,7 +170,7 @@ export default function RateLimitSettingsForm({
         sx={{ alignSelf: 'flex-start' }}
       >
         {t('shell.common.save')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

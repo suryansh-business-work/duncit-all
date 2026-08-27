@@ -1,18 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Link,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, Chip, CircularProgress, Link, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';
 import { BackHeader, StatusChip } from '@duncit/ui';
 import {
@@ -141,7 +131,7 @@ export default function CallbackDetailsPage() {
                 </Stack>
                 <Stack direction="row" spacing={1}>
                   {req.status === 'PENDING' && (
-                    <Button
+                    <DuncitButton
                       variant="contained"
                       disabled={busy}
                       onClick={() =>
@@ -149,15 +139,15 @@ export default function CallbackDetailsPage() {
                       }
                     >
                       Mark contacted
-                    </Button>
+                    </DuncitButton>
                   )}
-                  <Button
+                  <DuncitButton
                     variant="outlined"
                     disabled={busy}
                     onClick={() => run(() => closeCb({ variables: { id: req.id, ...outcomeVars() } }))}
                   >
                     Close
-                  </Button>
+                  </DuncitButton>
                 </Stack>
               </Stack>
             )}

@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText,
-  DialogTitle, Divider, MenuItem, Snackbar, Stack, TextField, Typography,
-} from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import LinkIcon from '@mui/icons-material/Link';
+import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import { LeadDetailCard } from '../LeadDetailCard';
 import {
@@ -102,12 +100,12 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
       icon={<AssignmentIcon color="primary" />}
       action={survey && (
         <Stack direction="row" spacing={1}>
-          <Button size="small" startIcon={<EditNoteIcon />} variant={filling ? 'contained' : 'outlined'} onClick={() => (filling ? setFilling(false) : openFill())}>
+          <DuncitButton size="small" startIcon={<EditNoteIcon />} variant={filling ? 'contained' : 'outlined'} onClick={() => (filling ? setFilling(false) : openFill())}>
             {filling ? 'Close form' : 'Fill manually'}
-          </Button>
-          <Button size="small" startIcon={<LinkIcon />} variant="outlined" disabled={generating} onClick={onGenerateLink}>
+          </DuncitButton>
+          <DuncitButton size="small" startIcon={<LinkIcon />} variant="outlined" disabled={generating} onClick={onGenerateLink}>
             Generate link
-          </Button>
+          </DuncitButton>
         </Stack>
       )}
     >
@@ -142,10 +140,10 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
         <DialogTitle>{t('crm.components.deleteSurveyEntry')}</DialogTitle>
         <DialogContent><DialogContentText>{t('crm.components.thisPermanentlyRemovesThisGenerationResponse')}</DialogContentText></DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</Button>
-          <Button color="error" variant="contained" disabled={deleting} onClick={() => { const id = confirmDelete!; setConfirmDelete(null); run(() => del({ variables: { entry_id: id } })); }}>
+          <DuncitButton onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" disabled={deleting} onClick={() => { const id = confirmDelete!; setConfirmDelete(null); run(() => del({ variables: { entry_id: id } })); }}>
             {t('shell.common.delete')}
-          </Button>
+          </DuncitButton>
         </DialogActions>
       </Dialog>
       <Snackbar open={!!snack} autoHideDuration={3000} onClose={() => setSnack(null)} message={snack ?? ''} />

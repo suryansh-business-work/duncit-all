@@ -1,5 +1,6 @@
-import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import { format } from 'date-fns';
 import AddSlotForm from './AddSlotForm';
 import SlotList from './SlotList';
@@ -68,9 +69,9 @@ export default function DayDrawer({
               {date ? formatDate(date) : ''}
             </Typography>
           </Box>
-          <IconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
+          <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
             <CloseIcon />
-          </IconButton>
+          </DuncitIconButton>
         </Stack>
 
         <SlotList slots={slots} onToggleBlock={onToggleBlock} onDelete={onDelete} />

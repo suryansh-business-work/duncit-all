@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useUserData } from '@duncit/user-context';
-import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Stack, Typography } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { DuncitButton } from '@duncit/buttons';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
 import DeletionSubmittedDialog from './DeletionSubmittedDialog';
@@ -97,7 +98,7 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
             })}
           </Typography>
         </Alert>
-        <Button
+        <DuncitButton
           variant="outlined"
           onClick={() => {
             withdraw().catch(() => undefined);
@@ -109,7 +110,7 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
           {cancelling
             ? t('mweb.account.deletion.withdrawing')
             : t('mweb.account.deletion.withdraw')}
-        </Button>
+        </DuncitButton>
         {error && (
           <Alert severity="error" onClose={() => setError(null)}>
             {error}
@@ -121,7 +122,7 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Button
+      <DuncitButton
         color="error"
         startIcon={<DeleteForeverIcon />}
         onClick={() => setConfirmOpen(true)}
@@ -129,7 +130,7 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         sx={{ textTransform: 'none', fontWeight: 700, alignSelf: 'flex-start' }}
       >
         {t('mweb.account.deletion.action')}
-      </Button>
+      </DuncitButton>
       {error && (
         <Alert severity="error" onClose={() => setError(null)}>
           {error}

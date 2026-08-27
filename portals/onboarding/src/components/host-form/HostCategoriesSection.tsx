@@ -1,7 +1,8 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import { DuncitIconButton } from '@duncit/buttons';
 import HostCategoryPicker from './HostCategoryPicker';
 import type { HostCategoryValue, HostEditValues } from '../../forms/host';
 import { useTranslation } from '@duncit/app-settings';
@@ -78,9 +79,9 @@ export default function HostCategoriesSection() {
                   )}
                 </Box>
                 <Tooltip title={t('onboarding.hostForm.removeCategory')}>
-                  <IconButton size="small" color="error" aria-label={`Remove ${path(category)}`} onClick={() => remove(index)}>
+                  <DuncitIconButton size="small" color="error" aria-label={`Remove ${path(category)}`} onClick={() => remove(index)}>
                     <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
+                  </DuncitIconButton>
                 </Tooltip>
               </Stack>
             );

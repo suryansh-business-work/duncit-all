@@ -1,19 +1,9 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, CircularProgress, Dialog, DialogContent, Divider, Stack, TextField, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { CREATE_POST } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -74,9 +64,9 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
           }}>
           New post
         </Typography>
-        <IconButton onClick={close} disabled={busy}>
+        <DuncitIconButton onClick={close} disabled={busy}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Divider />
       <DialogContent>
@@ -109,12 +99,12 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
             <Stack direction="row" spacing={1} sx={{
               justifyContent: "flex-end"
             }}>
-              <Button onClick={() => setPickerOpen(true)} disabled={busy}>
+              <DuncitButton onClick={() => setPickerOpen(true)} disabled={busy}>
                 Change photo
-              </Button>
-              <Button variant="contained" onClick={submit} disabled={busy}>
+              </DuncitButton>
+              <DuncitButton variant="contained" onClick={submit} disabled={busy}>
                 {busy ? <CircularProgress size={20} /> : 'Share'}
-              </Button>
+              </DuncitButton>
             </Stack>
           </Stack>
         ) : (
@@ -126,9 +116,9 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
             }}>
             <AddPhotoAlternateIcon sx={{ fontSize: 72, color: 'text.secondary' }} />
             <Typography variant="body1">{t('mweb.profile.pickAnImageToShare')}</Typography>
-            <Button variant="contained" onClick={() => setPickerOpen(true)}>
+            <DuncitButton variant="contained" onClick={() => setPickerOpen(true)}>
               Choose image
-            </Button>
+            </DuncitButton>
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>

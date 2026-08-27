@@ -1,5 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -14,9 +15,9 @@ export default function AvailabilityBlocked({ severity, message }: Readonly<Prop
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
       <Alert severity={severity}>{message}</Alert>
-      <Button component={RouterLink} to="/register-venue" variant="outlined">
+      <DuncitButton component={RouterLink} to="/register-venue" variant="outlined">
         {t('partners.venueAvailabilityPage.backToVenues')}
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

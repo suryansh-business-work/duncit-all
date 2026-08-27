@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { DuncitButton } from '@duncit/buttons';
 import {
   autoPodCityLabel,
   autoPodHostNeedsLocation,
@@ -116,14 +116,14 @@ export function HostClaimDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{labels.dismiss}</Button>
-        <Button
+        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton
           variant="contained"
           onClick={handleAssign}
           disabled={assignState.loading || needsLocation}
         >
           {labels.assignMyselfCta}
-        </Button>
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

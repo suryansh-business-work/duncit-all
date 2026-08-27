@@ -1,8 +1,9 @@
-import { Button, IconButton, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import TodayIcon from '@mui/icons-material/Today';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { CalendarView } from '@duncit/availability-calendar';
 import { useTranslation } from '@duncit/shell';
 
@@ -58,9 +59,9 @@ export default function CalendarToolbar({
           alignItems: "center",
           justifyContent: "center"
         }}>
-        <IconButton onClick={() => onShift(-1)} aria-label={t('partners.venueAvailabilityPage.previous')}>
+        <DuncitIconButton onClick={() => onShift(-1)} aria-label={t('partners.venueAvailabilityPage.previous')}>
           <ChevronLeftIcon />
-        </IconButton>
+        </DuncitIconButton>
         <Typography
           variant="subtitle1"
           sx={{
@@ -70,21 +71,21 @@ export default function CalendarToolbar({
           }}>
           {periodLabel}
         </Typography>
-        <IconButton
+        <DuncitIconButton
           onClick={() => onShift(1)}
           aria-label={t('partners.venueAvailabilityPage.next')}
           disabled={!canGoNext}
         >
           <ChevronRightIcon />
-        </IconButton>
-        <Button size="small" startIcon={<TodayIcon />} onClick={onToday}>
+        </DuncitIconButton>
+        <DuncitButton size="small" startIcon={<TodayIcon />} onClick={onToday}>
           Today
-        </Button>
+        </DuncitButton>
       </Stack>
 
-      <Button variant="outlined" startIcon={<EventRepeatIcon />} onClick={onRecurring}>
+      <DuncitButton variant="outlined" startIcon={<EventRepeatIcon />} onClick={onRecurring}>
         Recurring availability
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

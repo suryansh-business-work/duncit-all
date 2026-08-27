@@ -1,6 +1,7 @@
-import { Box, Collapse, IconButton, TableCell, TableRow } from '@mui/material';
+import { Box, Collapse, TableCell, TableRow } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { DuncitIconButton } from '@duncit/buttons';
 import { PodParticipationTimeline } from '@duncit/ui';
 import { participationInputFrom, type PodParticipationFields } from '@duncit/utils';
 import { fmtDateTime } from './format';
@@ -13,13 +14,13 @@ export function ParticipationToggle({
 }: Readonly<{ open: boolean; disabled: boolean; onToggle: () => void }>) {
   if (disabled) return null;
   return (
-    <IconButton
+    <DuncitIconButton
       size="small"
       aria-label={open ? 'Hide participation timeline' : 'Show participation timeline'}
       onClick={onToggle}
     >
       {open ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
-    </IconButton>
+    </DuncitIconButton>
   );
 }
 

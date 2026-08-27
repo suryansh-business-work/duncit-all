@@ -1,9 +1,9 @@
 import '../../__tests__/helpers/agGridEnv';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import Button from '@mui/material/Button';
 import type { TablePage, TableQueryState } from '@duncit/table';
 import PodsTable, { type PodRowBase } from './PodsTable';
+import { DuncitButton } from '@duncit/buttons';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -148,9 +148,9 @@ describe('PodsTable', () => {
     const onManage = vi.fn();
     renderPodsTable(makeFetch(), {
       renderActions: (pod: PodRowBase) => (
-        <Button size="small" onClick={() => onManage(pod.id)}>
+        <DuncitButton size="small" onClick={() => onManage(pod.id)}>
           Manage
-        </Button>
+        </DuncitButton>
       ),
     });
 
@@ -170,7 +170,7 @@ describe('PodsTable', () => {
 
   it('renders the caller toolbar actions and the empty message with no pods', async () => {
     renderPodsTable(makeFetch([]), {
-      toolbarActions: <Button>Create pod</Button>,
+      toolbarActions: <DuncitButton>Create pod</DuncitButton>,
     });
 
     expect(await screen.findByText('No pods yet.')).toBeTruthy();

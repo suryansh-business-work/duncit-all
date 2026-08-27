@@ -1,16 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { downloadBase64File } from '@duncit/utils';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
@@ -132,12 +124,12 @@ export default function EventTicketsPage() {
               value={token}
               onChange={(e) => setToken(e.target.value)}
             />
-            <Button variant="outlined" onClick={onVerify} disabled={!token.trim()}>
+            <DuncitButton variant="outlined" onClick={onVerify} disabled={!token.trim()}>
               Verify
-            </Button>
-            <Button variant="contained" onClick={onCheckInToken} disabled={!verifyResult?.ok}>
+            </DuncitButton>
+            <DuncitButton variant="contained" onClick={onCheckInToken} disabled={!verifyResult?.ok}>
               {t('admin.eventTickets.checkIn')}
-            </Button>
+            </DuncitButton>
           </Stack>
           {verifyResult && (
             <Alert severity={verifyResult.ok ? 'success' : 'error'} sx={{ mt: 1.5 }}>

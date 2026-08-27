@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import {
   AutoPodCategoryFilter,
   AutoPodQueue,
@@ -56,9 +57,9 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={(row) => (
-          <Button fullWidth variant="contained" onClick={() => setTarget(row)}>
+          <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)}>
             {queue.labels.assignMyselfCta}
-          </Button>
+          </DuncitButton>
         )}
       />
 

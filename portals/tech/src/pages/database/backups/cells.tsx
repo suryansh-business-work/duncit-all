@@ -1,8 +1,9 @@
-import { Box, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import RestoreIcon from '@mui/icons-material/Restore';
+import { DuncitIconButton } from '@duncit/buttons';
 import { formatBytes, formatDateTime } from '../../server/format';
 import {
   compressionLabel,
@@ -180,19 +181,19 @@ export const makeRenderActions = (labels: ActionLabels, actions: RowActions) =>
     return (
       <Box sx={{ display: 'flex', gap: 0.25 }}>
         <Tooltip title={labels.download}>
-          <IconButton size="small" onClick={() => actions.onDownload(row)}>
+          <DuncitIconButton size="small" onClick={() => actions.onDownload(row)}>
             <DownloadIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={labels.restore}>
-          <IconButton size="small" color="warning" onClick={() => actions.onRestore(row)}>
+          <DuncitIconButton size="small" color="warning" onClick={() => actions.onRestore(row)}>
             <RestoreIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={labels.delete}>
-          <IconButton size="small" color="error" onClick={() => actions.onDelete(row)}>
+          <DuncitIconButton size="small" color="error" onClick={() => actions.onDelete(row)}>
             <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Box>
     );

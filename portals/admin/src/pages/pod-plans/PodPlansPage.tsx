@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import PodPlanFormDialog, { type PodPlanFormValues } from './PodPlanFormDialog';
@@ -77,7 +78,7 @@ export default function PodPlansPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button
+          <DuncitButton
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
@@ -87,7 +88,7 @@ export default function PodPlansPage() {
             }}
           >
             New plan
-          </Button>
+          </DuncitButton>
         }
         onEdit={(row) => {
           setEditing(row);

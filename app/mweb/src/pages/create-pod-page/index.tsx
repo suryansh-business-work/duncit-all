@@ -1,8 +1,9 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 import {
   CreatePodStepper,
@@ -205,9 +206,9 @@ export default function CreatePodPage() {
       <Alert
         severity="info"
         action={
-          <Button color="inherit" size="small" onClick={() => navigate('/become-host')}>
+          <DuncitButton color="inherit" size="small" onClick={() => navigate('/become-host')}>
             {t('mweb.createPod.becomeHost')}
-          </Button>
+          </DuncitButton>
         }
       >
         {t('mweb.createPod.hostRequired')}
@@ -247,9 +248,9 @@ export default function CreatePodPage() {
             </Typography>
           </Box>
         </Stack>
-        <IconButton aria-label={t('mweb.auth.close')} onClick={() => navigate('/host/manage')}>
+        <DuncitIconButton aria-label={t('mweb.auth.close')} onClick={() => navigate('/host/manage')}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       {body}
     </Stack>

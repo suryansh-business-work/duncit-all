@@ -1,22 +1,10 @@
 import { useState } from 'react';
-import {
-  Box,
-  Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  LinearProgress,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-  keyframes,
-} from '@mui/material';
+import { Box, Chip, Dialog, DialogContent, DialogTitle, LinearProgress, Paper, Stack, Tooltip, Typography, keyframes } from '@mui/material';
 import SyncIcon from '@mui/icons-material/Sync';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
 import { useExtraction } from './ExtractionContext';
 import type { WaExtraction } from '../whatsappQueries';
@@ -179,13 +167,13 @@ export default function ExtractionWidget() {
           {title}
         </Typography>
         <Tooltip title={t('crm.tools.details')}>
-          <IconButton size="small" onClick={() => setDetails(true)}><InfoOutlinedIcon fontSize="small" /></IconButton>
+          <DuncitIconButton size="small" onClick={() => setDetails(true)}><InfoOutlinedIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('crm.tools.minimize')}>
-          <IconButton size="small" onClick={() => setOpen(false)}><MinimizeIcon fontSize="small" /></IconButton>
+          <DuncitIconButton size="small" onClick={() => setOpen(false)}><MinimizeIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
         <Tooltip title={running ? 'Cancel extraction' : 'Dismiss'}>
-          <IconButton
+          <DuncitIconButton
             size="small"
             color={running ? 'error' : 'default'}
             onClick={() => {
@@ -201,7 +189,7 @@ export default function ExtractionWidget() {
             }}
           >
             <CloseIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
 

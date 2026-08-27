@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -22,7 +23,7 @@ export default function HostWithdrawApplication({ status, busy, onWithdraw }: Re
     <>
       <Alert
         severity="warning"
-        action={<Button color="inherit" size="small" disabled={busy} onClick={() => setOpen(true)}>{t('partners.becomeHostPage.withdraw')}</Button>}
+        action={<DuncitButton color="inherit" size="small" disabled={busy} onClick={() => setOpen(true)}>{t('partners.becomeHostPage.withdraw')}</DuncitButton>}
       >
         You can withdraw this host application until it is approved.
       </Alert>
@@ -34,8 +35,8 @@ export default function HostWithdrawApplication({ status, busy, onWithdraw }: Re
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
-          <Button color="warning" variant="contained" disabled={busy} onClick={confirm}>{t('partners.becomeHostPage.withdraw')}</Button>
+          <DuncitButton onClick={() => setOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="warning" variant="contained" disabled={busy} onClick={confirm}>{t('partners.becomeHostPage.withdraw')}</DuncitButton>
         </DialogActions>
       </Dialog>
     </>

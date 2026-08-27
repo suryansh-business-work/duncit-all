@@ -1,18 +1,8 @@
-import {
-  Card,
-  CardContent,
-  FormControlLabel,
-  IconButton,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Card, CardContent, FormControlLabel, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { QuestionType, SurveyQuestion } from './queries';
 import OptionsEditor from './OptionsEditor';
 import { useTranslation } from '@duncit/app-settings';
@@ -58,9 +48,9 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
               color: "text.secondary",
               flex: 1
             }}>Q{index + 1}</Typography>
-          <Tooltip title={t('onboarding.common.moveUp')}><span><IconButton size="small" onClick={() => onMove(-1)} disabled={index === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
-          <Tooltip title={t('onboarding.common.moveDown')}><span><IconButton size="small" onClick={() => onMove(1)} disabled={index === total - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
-          <Tooltip title={t('shell.common.delete')}><IconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+          <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" onClick={() => onMove(-1)} disabled={index === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+          <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" onClick={() => onMove(1)} disabled={index === total - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+          <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
         </Stack>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1.5} useFlexGap sx={{

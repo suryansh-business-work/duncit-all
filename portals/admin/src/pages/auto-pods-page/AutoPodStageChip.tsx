@@ -1,6 +1,7 @@
-import { Chip, IconButton, Tooltip } from '@mui/material';
+import { Chip, Tooltip } from '@mui/material';
 import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { DuncitIconButton } from '@duncit/buttons';
 import { isAutoPodCancellable, STAGE_COLOR, STAGE_LABEL_KEY } from './helpers';
 import type { AutoPodTableRow } from './queries';
 
@@ -28,9 +29,9 @@ export function ViewPodButton({ row, label, onClick }: Readonly<RowButtonProps>)
   if (!row.pod_id) return null;
   return (
     <Tooltip title={label}>
-      <IconButton size="small" color="primary" aria-label={label} onClick={() => onClick(row)}>
+      <DuncitIconButton size="small" color="primary" aria-label={label} onClick={() => onClick(row)}>
         <OpenInNewIcon fontSize="small" />
-      </IconButton>
+      </DuncitIconButton>
     </Tooltip>
   );
 }
@@ -45,7 +46,7 @@ export function CancelAutoPodButton({ row, label, onClick }: Readonly<RowButtonP
   return (
     <Tooltip title={label}>
       <span>
-        <IconButton
+        <DuncitIconButton
           size="small"
           color="warning"
           aria-label={label}
@@ -53,7 +54,7 @@ export function CancelAutoPodButton({ row, label, onClick }: Readonly<RowButtonP
           onClick={() => onClick(row)}
         >
           <CancelScheduleSendIcon fontSize="small" />
-        </IconButton>
+        </DuncitIconButton>
       </span>
     </Tooltip>
   );

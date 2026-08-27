@@ -1,7 +1,8 @@
 import type { MouseEvent, ReactNode } from 'react';
-import { IconButton, ListItemIcon, ListItemText, MenuItem, Stack, Tooltip } from '@mui/material';
+import { ListItemIcon, ListItemText, MenuItem, Stack, Tooltip } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitIconButton } from '@duncit/buttons';
 
 interface Props {
   /** The line's own icon — a star for the rating link, a camera for the media one. */
@@ -45,14 +46,14 @@ export default function PodLinkMenuItem({
       <ListItemText primary={label} />
       <Stack direction="row" spacing={0.5} sx={{ pl: 1 }}>
         <Tooltip title={shareLabel}>
-          <IconButton size="small" edge="end" aria-label={shareLabel} onClick={act(onShare)}>
+          <DuncitIconButton size="small" edge="end" aria-label={shareLabel} onClick={act(onShare)}>
             <IosShareIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
         <Tooltip title={copyLabel}>
-          <IconButton size="small" edge="end" aria-label={copyLabel} onClick={act(onCopy)}>
+          <DuncitIconButton size="small" edge="end" aria-label={copyLabel} onClick={act(onCopy)}>
             <ContentCopyIcon fontSize="small" />
-          </IconButton>
+          </DuncitIconButton>
         </Tooltip>
       </Stack>
     </MenuItem>

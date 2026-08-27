@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Link, Stack, TextField, Typography } from '@mui/material';
+import { Link, Stack, TextField, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 
@@ -133,7 +134,7 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
         onChange={(e) => setReason(e.target.value)}
         sx={{ width: 160 }}
       />
-      <Button
+      <DuncitButton
         size="small"
         color="success"
         variant="outlined"
@@ -141,8 +142,8 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
         onClick={() => onAct(item.type, 'APPROVED', reason)}
       >
         Approve
-      </Button>
-      <Button
+      </DuncitButton>
+      <DuncitButton
         size="small"
         color="error"
         variant="outlined"
@@ -150,7 +151,7 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
         onClick={() => onAct(item.type, 'REJECTED', reason)}
       >
         Reject
-      </Button>
+      </DuncitButton>
     </Stack>
   );
 }

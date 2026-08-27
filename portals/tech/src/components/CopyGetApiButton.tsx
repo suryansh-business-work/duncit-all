@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
-import { Button, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
+import { DuncitButton } from '@duncit/buttons';
 import { notify } from '@duncit/dialogs';
 import { copyToClipboard } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
@@ -63,9 +64,9 @@ export default function CopyGetApiButton({ path, params, label }: Readonly<Props
   return (
     <Tooltip title={t('tech.copyGetApiButton.aNoLoginUrlThatReturns')}>
       <span>
-        <Button size="small" startIcon={<LinkIcon />} disabled={loading || !key} onClick={copy}>
+        <DuncitButton size="small" startIcon={<LinkIcon />} disabled={loading || !key} onClick={copy}>
           {labelText}
-        </Button>
+        </DuncitButton>
       </span>
     </Tooltip>
   );

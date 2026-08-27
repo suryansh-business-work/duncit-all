@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { Alert, Box, Button, Stack, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Stack, Typography, useTheme } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
 const LINE_HEIGHT = 19;
@@ -63,13 +64,13 @@ export default function MockDataEditor({ initial, onChange }: Readonly<Props>) {
           }}>
           {t('tech.packagesDocs.mockHint')}
         </Typography>
-        <Button
+        <DuncitButton
           size="small"
           startIcon={<RestartAltIcon fontSize="small" />}
           onClick={() => apply(toJson(initial))}
         >
           {t('tech.packagesDocs.resetMock')}
-        </Button>
+        </DuncitButton>
       </Stack>
       <Box sx={{ border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: 1, overflow: 'hidden' }}>
         <Box sx={{ height: lines * LINE_HEIGHT + 16 }}>

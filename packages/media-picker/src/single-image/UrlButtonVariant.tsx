@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Button, FormHelperText, Stack, TextField } from '@mui/material';
+import { FormHelperText, Stack, TextField } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DuncitButton } from '@duncit/buttons';
 import type { SingleImageState } from './types';
 
 interface Props extends SingleImageState {
@@ -47,7 +48,7 @@ export default function UrlButtonVariant({
           disabled={disabled}
           error={externalError}
         />
-        <Button
+        <DuncitButton
           variant="outlined"
           startIcon={<UploadFileIcon />}
           onClick={openPicker}
@@ -56,7 +57,7 @@ export default function UrlButtonVariant({
           sx={{ mt: 0.5, whiteSpace: 'nowrap' }}
         >
           {busy ? 'Uploading…' : buttonLabel}
-        </Button>
+        </DuncitButton>
       </Stack>
       {fileInput}
       {error && <FormHelperText error>{error}</FormHelperText>}

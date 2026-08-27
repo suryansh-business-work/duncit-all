@@ -1,18 +1,7 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Button,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { WA_EVENT_BY_KEY } from '@duncit/communication';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { EM_DASH } from '@duncit/table';
@@ -181,7 +170,7 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shell.common.close')}</Button>
+        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

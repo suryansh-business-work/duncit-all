@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Drawer,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Divider, Drawer, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { FounderMetric } from './types';
 import { labelizeKey } from './format';
 import { useTranslation } from '@duncit/app-settings';
@@ -71,9 +62,9 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
           p: 2
         }}>
         <Typography variant="h6">{metric.label}</Typography>
-        <IconButton onClick={onClose} aria-label={t('shell.common.close')}>
+        <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')}>
           <CloseIcon />
-        </IconButton>
+        </DuncitIconButton>
       </Stack>
       <Divider />
 
@@ -147,9 +138,9 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
         <>
           <Divider />
           <Box sx={{ p: 2 }}>
-            <Button variant="contained" fullWidth onClick={handleSave} disabled={saving}>
+            <DuncitButton variant="contained" fullWidth onClick={handleSave} disabled={saving}>
               {saving ? 'Saving…' : 'Save'}
-            </Button>
+            </DuncitButton>
           </Box>
         </>
       )}

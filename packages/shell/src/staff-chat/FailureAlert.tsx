@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, AlertTitle, Box, Button, Collapse, Stack } from '@mui/material';
+import { Alert, AlertTitle, Box, Collapse, Stack } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import type { Failure } from './failure';
 
@@ -44,12 +45,12 @@ export default function FailureAlert({ failure, onDismiss }: Readonly<Props>) {
           alignItems: "flex-start"
         }}>
           <Stack direction="row" spacing={1}>
-            <Button size="small" color="inherit" onClick={() => setShowing((value) => !value)}>
+            <DuncitButton size="small" color="inherit" onClick={() => setShowing((value) => !value)}>
               {showing ? t('shell.chat.failure.hideDetails') : t('shell.chat.failure.showDetails')}
-            </Button>
-            <Button size="small" color="inherit" startIcon={<ContentCopyIcon />} onClick={copy}>
+            </DuncitButton>
+            <DuncitButton size="small" color="inherit" startIcon={<ContentCopyIcon />} onClick={copy}>
               {copied ? t('shell.chat.failure.copied') : t('shell.chat.failure.copy')}
-            </Button>
+            </DuncitButton>
           </Stack>
           <Collapse in={showing} sx={{ width: '100%' }}>
             <Box

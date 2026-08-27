@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type {
   AddressInput,
   AddressValues,
-  Verification,
+  VerificationAddress,
   VerificationTranslate,
 } from './types';
 
@@ -17,8 +17,20 @@ export const blankAddressValues: AddressValues = {
   country: '',
 };
 
+/**
+ * The address as a caller's GraphQL codegen hands it over.
+ *
+ * Every field is optional here even though `VerificationAddress` declares them:
+ * the native app's generated types mark selected fields optional, and the
+ * package has to accept what each surface's codegen actually produces rather
+ * than making three call sites cast.
+ */
+type AddressLike = Readonly<Partial<Record<keyof VerificationAddress, string | null>>>;
+
 /** Seeds the form from whatever the account already submitted. */
-export function addressValuesFrom(item: Readonly<Pick<Verification, 'address'>>): AddressValues {
+export function addressValuesFrom(
+  item: Readonly<{ address?: AddressLike | null }>,
+): AddressValues {
   return {
     line1: item.address?.line1 ?? '',
     line2: item.address?.line2 ?? '',
@@ -84,61 +96,60 @@ export interface AddressField {
 }
 
 /**
- * The address field set, in the order every surface renders it.
+ * The address form, grouped into the rows a wide layout puts side by side: the
+ * two address lines run full width, then state/city and pincode/country pair up.
  *
- * Held as data so mWeb, the partner console and the native form cannot drift on
- * which field is optional or which label sits above which input.
- */
-export const ADDRESS_FIELDS: readonly AddressField[] = [
-  {
-    name: 'line1',
-    labelKey: 'verification.line1',
-    placeholderKey: 'verification.line1Placeholder',
-    required: true,
-  },
-  {
-    name: 'line2',
-    labelKey: 'verification.line2',
-    placeholderKey: 'verification.line2Placeholder',
-    required: false,
-  },
-  {
-    name: 'state',
-    labelKey: 'verification.state',
-    placeholderKey: 'verification.statePlaceholder',
-    required: true,
-  },
-  {
-    name: 'city',
-    labelKey: 'verification.city',
-    placeholderKey: 'verification.cityPlaceholder',
-    required: true,
-  },
-  {
-    name: 'pincode',
-    labelKey: 'verification.pincode',
-    placeholderKey: 'verification.pincodePlaceholder',
-    required: true,
-  },
-  {
-    name: 'country',
-    labelKey: 'verification.country',
-    placeholderKey: 'verification.countryPlaceholder',
-    required: false,
-  },
-];
-
-/**
- * The same fields grouped into the rows a wide form lays out: the two address
- * lines run full width, then state/city and pincode/country sit side by side.
- *
- * The grouping is data rather than markup so a card renders it by mapping —
- * there is no field-name lookup that could miss, and the narrow native form
- * reads the same order by flattening it.
+ * The layout is data rather than markup so a card renders it by mapping — there
+ * is no field-name lookup that could miss — and the narrow native form reads the
+ * same order by flattening it. mWeb, the partner console and the app therefore
+ * cannot drift on which field is optional or which label sits above which input.
  */
 export const ADDRESS_ROWS: ReadonlyArray<readonly AddressField[]> = [
-  [ADDRESS_FIELDS[0]],
-  [ADDRESS_FIELDS[1]],
-  [ADDRESS_FIELDS[2], ADDRESS_FIELDS[3]],
-  [ADDRESS_FIELDS[4], ADDRESS_FIELDS[5]],
+  [
+    {
+      name: 'line1',
+      labelKey: 'verification.line1',
+      placeholderKey: 'verification.line1Placeholder',
+      required: true,
+    },
+  ],
+  [
+    {
+      name: 'line2',
+      labelKey: 'verification.line2',
+      placeholderKey: 'verification.line2Placeholder',
+      required: false,
+    },
+  ],
+  [
+    {
+      name: 'state',
+      labelKey: 'verification.state',
+      placeholderKey: 'verification.statePlaceholder',
+      required: true,
+    },
+    {
+      name: 'city',
+      labelKey: 'verification.city',
+      placeholderKey: 'verification.cityPlaceholder',
+      required: true,
+    },
+  ],
+  [
+    {
+      name: 'pincode',
+      labelKey: 'verification.pincode',
+      placeholderKey: 'verification.pincodePlaceholder',
+      required: true,
+    },
+    {
+      name: 'country',
+      labelKey: 'verification.country',
+      placeholderKey: 'verification.countryPlaceholder',
+      required: false,
+    },
+  ],
 ];
+
+/** Every field in render order — the flat read of the layout above. */
+export const ADDRESS_FIELDS: readonly AddressField[] = ADDRESS_ROWS.flat();

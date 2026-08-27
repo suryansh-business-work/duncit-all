@@ -184,7 +184,16 @@ describe('VerificationScreen', () => {
     expect(screen.queryByTestId('verification-submit-address')).toBeNull();
   });
 
-  it('shows the Update label and prefilled values when an address is pending', () => {
+  const addressOnFile = {
+    line1: '1 Road',
+    line2: null,
+    city: 'Mumbai',
+    state: 'MH',
+    pincode: '400001',
+    country: null,
+  };
+
+  it('takes the form away while an address is under review', () => {
     setup({
       items: [
         baseItems[0],
@@ -192,22 +201,37 @@ describe('VerificationScreen', () => {
           type: 'ADDRESS',
           status: 'PENDING',
           document_url: null,
-          address: {
-            line1: '1 Road',
-            line2: null,
-            city: 'Mumbai',
-            state: 'MH',
-            pincode: '400001',
-            country: null,
-          },
+          address: addressOnFile,
           reject_reason: null,
         },
         baseItems[2],
       ],
     });
     renderWithProviders(<VerificationScreen />);
-    expect(screen.getByText('Update address')).toBeOnTheScreen();
+    // Under review is the admin's turn: editing now means they approve one
+    // address having read another (@duncit/verification's isVerificationLocked).
+    expect(screen.queryByTestId('verification-submit-address')).toBeNull();
     expect(screen.getAllByText('Under review')).toHaveLength(1);
+  });
+
+  it('offers an update with the values prefilled once an address is rejected', () => {
+    setup({
+      items: [
+        baseItems[0],
+        {
+          type: 'ADDRESS',
+          status: 'REJECTED',
+          document_url: null,
+          address: addressOnFile,
+          reject_reason: 'Pincode does not match the city',
+        },
+        baseItems[2],
+      ],
+    });
+    renderWithProviders(<VerificationScreen />);
+    expect(screen.getByText('Update address')).toBeOnTheScreen();
+    expect(screen.getByText('Pincode does not match the city')).toBeOnTheScreen();
+    expect(screen.getByDisplayValue('1 Road')).toBeOnTheScreen();
   });
 
   it('shows Not Verified for an unverified email', () => {

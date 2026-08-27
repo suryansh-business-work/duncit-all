@@ -65,11 +65,17 @@ export function isVerificationLocked(status: VerificationStatus): boolean {
   return LOCKED.has(status);
 }
 
-/** The reject reason worth showing: only a REJECTED row carries one. */
-export function rejectReasonOf(item: {
-  status: VerificationStatus;
-  reject_reason: string | null;
-}): string | null {
+/**
+ * The reject reason worth showing: only a REJECTED row carries one.
+ *
+ * `reject_reason` is optional here because each surface's GraphQL codegen marks
+ * selected fields differently — the native app's generated row has it optional.
+ * The package accepts what the callers actually hold rather than making three
+ * call sites cast.
+ */
+export function rejectReasonOf(
+  item: Readonly<{ status: VerificationStatus; reject_reason?: string | null }>,
+): string | null {
   if (item.status !== 'REJECTED') return null;
   return item.reject_reason ?? null;
 }

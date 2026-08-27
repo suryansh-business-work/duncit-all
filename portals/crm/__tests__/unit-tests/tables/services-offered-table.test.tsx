@@ -1,6 +1,7 @@
 import '../helpers/agGridEnv';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { formatDateCell } from '@duncit/table';
 import type { MutableRefObject } from 'react';
 import ServicesOfferedTable from '@/pages/data/services-offered/ServicesOfferedTable';
 import type { CrmServiceOfferedRow } from '@/api/data.gql';
@@ -111,7 +112,10 @@ describe('ServicesOfferedTable', () => {
     expect(screen.getAllByText('No')).toHaveLength(2);
   });
 
-  it('shows the sort order and the date-fns Created date in their hidden columns', async () => {
+  it('shows the sort order and the admin-formatted Created date in their hidden columns', async () => {
+    // Same reason as the Created column elsewhere: the pattern is admin
+    // configured, so the expectation is built with the shared formatter.
+    const created = formatDateCell(service.created_at);
     renderTable([service]);
     await screen.findByText('Sound System');
 
@@ -119,7 +123,7 @@ describe('ServicesOfferedTable', () => {
     await showHiddenColumn('Created');
 
     expect(await screen.findByText('3')).toBeTruthy();
-    expect(await screen.findByText('9 Mar 2026')).toBeTruthy();
+    expect(await screen.findByText(created)).toBeTruthy();
   });
 
   it('names the row actions after the service and hands the row to each callback', async () => {

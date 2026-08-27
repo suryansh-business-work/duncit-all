@@ -69,8 +69,46 @@ describe('RecurringAvailabilityDialog', () => {
   it('shows a validation error when required fields are missing', () => {
     const { onAdd } = renderDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(screen.getByText('Pick the dates and the daily times.')).toBeInTheDocument();
+    expect(screen.getByText('Pick the start and end date.')).toBeInTheDocument();
     expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it('shows a validation error when the dates are set but the daily times are not', () => {
+    const { onAdd } = renderDialog();
+    setDate('Start date', 2026, 1, 20);
+    setDate('End date', 2026, 1, 21);
+    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
+    expect(screen.getByText('Pick the daily start and end time.')).toBeInTheDocument();
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it('books each day of the range as a whole-day slot when Whole day is on, needing no times', async () => {
+    const { onAdd, onClose } = renderDialog();
+    fireEvent.click(screen.getByRole('switch'));
+    expect(screen.queryByLabelText('Daily start')).not.toBeInTheDocument();
+    setDate('Start date', 2026, 1, 15); // today: starts a few minutes from now, not at a past midnight
+    setDate('End date', 2026, 1, 16);
+    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
+
+    const expected: NewSlotInput[] = [
+      {
+        start_at: new Date(2026, 0, 15, 12, 5).toISOString(),
+        end_at: new Date(2026, 0, 15, 23, 59, 59, 999).toISOString(),
+        whole_day: true,
+        price: 0,
+        notes: '',
+      },
+      {
+        start_at: new Date(2026, 0, 16).toISOString(),
+        end_at: new Date(2026, 0, 16, 23, 59, 59, 999).toISOString(),
+        whole_day: true,
+        price: 0,
+        notes: '',
+      },
+    ];
+    await waitFor(() => expect(onAdd).toHaveBeenCalledWith(expected));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('switch')).not.toBeChecked(); // reset alongside the fields
   });
 
   it('shows a validation error when the end date is before the start date', () => {
@@ -119,6 +157,7 @@ describe('RecurringAvailabilityDialog', () => {
     const expected: NewSlotInput[] = [16, 17, 18].map((d) => ({
       start_at: new Date(2026, 0, d, 9, 0, 0, 0).toISOString(),
       end_at: new Date(2026, 0, d, 10, 0, 0, 0).toISOString(),
+      whole_day: false,
       price: 200,
       notes: '',
     }));

@@ -1,5 +1,4 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { SHORT_LINK_CLICK_KEY } from '@duncit/utils';
 
 const apolloMock = vi.hoisted(() => ({ mutate: vi.fn() }));
 vi.mock('../../apollo', () => ({ apolloClient: apolloMock }));
@@ -59,26 +58,62 @@ describe('captureShortLinkClick', () => {
 });
 
 describe('reportJourneyStep', () => {
-  it('reports the step against the stored click', () => {
-    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'abc-123');
+  // A report waits on the landing capture rather than reading storage: on the
+  // page load that FOLLOWS a link the click id has not arrived from /r/v yet.
+  // That capture is module state, so each case starts it from "no link".
+  beforeEach(async () => {
+    await captureShortLinkClick('');
+  });
+
+  it('reports the step against the stored click', async () => {
+    await captureShortLinkClick('?dlc=abc-123');
+    expect(storedClickId()).toBe('abc-123');
     reportJourneyStep('VIEWED_POD');
-    expect(apolloMock.mutate).toHaveBeenCalledWith(
-      expect.objectContaining({ variables: { click_id: 'abc-123', step: 'VIEWED_POD' } }),
+    await vi.waitFor(() =>
+      expect(apolloMock.mutate).toHaveBeenCalledWith(
+        expect.objectContaining({ variables: { click_id: 'abc-123', step: 'VIEWED_POD' } }),
+      ),
+    );
+  });
+
+  // Signing in is the first step reported, and it happens while /r/v is still
+  // in flight — reading storage there would drop the account binding a later
+  // payment is matched against.
+  it('waits for a landing capture still in flight', async () => {
+    let resolveVisit: (body: unknown) => void = () => undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolveVisit = (body) => resolve({ json: () => Promise.resolve(body) });
+        }),
+      ),
+    );
+    const landing = captureShortLinkClick('?dlc=late-1');
+    reportJourneyStep('SIGNED_UP');
+    expect(apolloMock.mutate).not.toHaveBeenCalled();
+    resolveVisit({ click_id: 'late-1' });
+    await landing;
+    await vi.waitFor(() =>
+      expect(apolloMock.mutate).toHaveBeenCalledWith(
+        expect.objectContaining({ variables: { click_id: 'late-1', step: 'SIGNED_UP' } }),
+      ),
     );
   });
 
   // The vast majority of traffic never came through a link — it must cost
   // them nothing at all.
-  it('says nothing for a visitor with no attribution', () => {
+  it('says nothing for a visitor with no attribution', async () => {
     reportJourneyStep('SIGNED_UP');
+    await Promise.resolve();
     expect(apolloMock.mutate).not.toHaveBeenCalled();
   });
 
   it('never lets a failed report surface to the screen', async () => {
-    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'abc-123');
+    await captureShortLinkClick('?dlc=abc-123');
     apolloMock.mutate.mockRejectedValue(new Error('offline'));
     expect(() => reportJourneyStep('SURVEY_DONE')).not.toThrow();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(apolloMock.mutate).toHaveBeenCalled());
   });
 });
 

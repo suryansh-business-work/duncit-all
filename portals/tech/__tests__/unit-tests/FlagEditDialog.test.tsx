@@ -37,7 +37,7 @@ describe('FlagEditDialog', () => {
     expect(screen.getByText('Enabled')).toBeInTheDocument();
     expect(screen.getByText('Save failed')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('checkbox')); // toggle enabled
+    fireEvent.click(screen.getByRole('switch')); // toggle enabled
     expect(setEditing).toHaveBeenCalled();
   });
 

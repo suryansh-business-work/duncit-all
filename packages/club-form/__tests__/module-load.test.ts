@@ -31,9 +31,12 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
+  // 30s: a cold import of the form pulls MUI, RHF and zod through esbuild, and
+  // under a fully parallel run that can outlast the 5s default without anything
+  // being wrong with the module.
   it.each(paths)('loads %s', async (modulePath) => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+  }, 30_000);
 });

@@ -44,10 +44,12 @@ describe('LoginScreen', () => {
   it('renders the card, error alert, footer and custom legal links in dark mode', () => {
     renderScreen({
       errorMessage: 'Bad credentials',
+      altSlot: <div>email-code-sign-in</div>,
       footerSlot: <div>google-sign-in</div>,
     });
     expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument();
     expect(screen.getByText('Bad credentials')).toBeInTheDocument();
+    expect(screen.getByText('email-code-sign-in')).toBeInTheDocument();
     expect(screen.getByText('google-sign-in')).toBeInTheDocument();
     expect(screen.getByText('Money, moved.')).toBeInTheDocument();
     // Dark mode shows the "switch to light" control.
@@ -87,7 +89,7 @@ describe('LoginScreen', () => {
 
   it('invokes onToggleMode when the color-mode button is clicked', async () => {
     const { props } = renderScreen();
-    await userEvent.click(screen.getByRole('button', { name: 'toggle color mode' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle colour mode' }));
     expect(props.onToggleMode).toHaveBeenCalledTimes(1);
   });
 

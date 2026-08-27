@@ -76,6 +76,8 @@ const EMPTY = model({
 const wrap = (ui: React.ReactNode) =>
   render(<ThemeProvider theme={testTheme}>{ui}</ThemeProvider>);
 
+const darkTheme = createTheme({ palette: { mode: 'dark' } });
+
 describe('PreviewMedia', () => {
   it('shows the cover the author has chosen', () => {
     const { container } = wrap(
@@ -143,6 +145,16 @@ describe('PodPreviewCard', () => {
 
     expect(container.textContent).toContain('Free');
     expect(container.textContent).not.toContain('₹0');
+  });
+
+  it('keeps the floating info panel legible on the dark theme too', () => {
+    const { container } = render(
+      <ThemeProvider theme={darkTheme}>
+        <PodPreviewCard model={model()} />
+      </ThemeProvider>,
+    );
+
+    expect(container.textContent).toContain('Sunday Badminton');
   });
 
   it('marks a virtual pod as one — there is no place to show', () => {

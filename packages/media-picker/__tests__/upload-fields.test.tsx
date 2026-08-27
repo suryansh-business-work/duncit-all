@@ -11,6 +11,12 @@ import type { ReactElement } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+// Deep import through @duncit/tabs' own node_modules on purpose: this package
+// only PEER-depends on react-router-dom, and pnpm's auto-installed peer here
+// (6.30.3) is a DIFFERENT instance than the one tabs resolves (6.30.6) — a
+// Router from the wrong instance is invisible to useTabParam's useSearchParams.
+// @ts-expect-error -- untyped deep path; the shape is react-router-dom's own
+import { MemoryRouter } from '../../tabs/node_modules/react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import AttachmentUploadField from '../src/AttachmentUploadField';
@@ -38,9 +44,15 @@ const settle = async () => {
   });
 };
 
-const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>
+// MemoryRouter because MediaListField always mounts MediaPickerDialog, whose
+// tab strip keeps its selection in the URL (`useTabParam`).
+const wrap = (ui: ReactElement) => render(
+  <MemoryRouter>
+    <MockedProvider mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
-    </MockedProvider>);
+    </MockedProvider>
+  </MemoryRouter>
+);
 
 const pressEverything = async () => {
   for (const control of [...document.body.querySelectorAll<HTMLElement>('button:not([disabled])')].slice(0, 15)) {
@@ -84,7 +96,17 @@ describe('SingleImageUploadField', () => {
     wrap(<SingleImageUploadField value={IMG} onChange={vi.fn()} folder="/pods" disabled />);
     await settle();
 
-    for (const button of screen.queryAllByRole('button')) expect(button).toBeDisabled();
+    // Editing is off: the URL input and the device-upload picker are disabled.
+    // Two controls deliberately stay clickable because they only SHOW things:
+    // the "Open" end-adornment (view the current image) and the AI Monitoring
+    // notice chip — a disabled field can still be inspected.
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    const viewOnly = new Set(['Open', 'About AI Monitoring']);
+    const buttons = screen.getAllByRole('button');
+    const editButtons = buttons.filter((b) => !viewOnly.has(b.getAttribute('aria-label') ?? ''));
+    expect(editButtons.length).toBeGreaterThan(0);
+    expect(buttons.length - editButtons.length).toBe(2);
+    for (const button of editButtons) expect(button).toBeDisabled();
   });
 
   it('puts the caller testId on the upload control', async () => {

@@ -6,11 +6,11 @@ import DateTimeField from '../../src/components/DateTimeField';
 import type { PodFormValues } from '../../src/types';
 
 vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
-  DateTimePicker: ({ label, value, onChange, minDateTime, format, slotProps }: any) => (
+  DateTimePicker: ({ label, value, onChange, minDateTime, slotProps }: any) => (
     <div>
       <span>{label}</span>
       <span data-testid="min">{minDateTime?.toISOString()}</span>
-      <span data-testid="format">{format ?? 'none'}</span>
+      <span data-testid="full-width">{String(!!slotProps?.textField?.fullWidth)}</span>
       <span data-testid="required">{String(!!slotProps?.textField?.required)}</span>
       <span data-testid="error">{String(!!slotProps?.textField?.error)}</span>
       <span data-testid="helper">{slotProps?.textField?.helperText ?? ''}</span>
@@ -26,11 +26,9 @@ const MIN = new Date('2030-01-01T00:00:00.000Z');
 
 function Wrapper({
   required,
-  format,
   methodsRef,
 }: Readonly<{
   required?: boolean;
-  format?: string;
   methodsRef?: { current: UseFormReturn<PodFormValues> | null };
 }>) {
   const methods = useForm<PodFormValues>({ defaultValues: { pod_date_time: null } as PodFormValues });
@@ -42,18 +40,25 @@ function Wrapper({
       label="Start"
       minDateTime={MIN}
       required={required}
-      format={format}
     />
   );
 }
 
 describe('DateTimeField', () => {
-  it('passes label, minDateTime, format and required through to the picker', () => {
-    render(<Wrapper required format="dd/MM/yyyy" />);
+  // The display format is the picker's own (the admin-configured
+  // LocalizationProvider), so the field passes none of its own through.
+  it('passes label, minDateTime and required through to a full-width picker', () => {
+    render(<Wrapper required />);
     expect(screen.getByText('Start')).toBeInTheDocument();
     expect(screen.getByTestId('min')).toHaveTextContent(MIN.toISOString());
-    expect(screen.getByTestId('format')).toHaveTextContent('dd/MM/yyyy');
+    expect(screen.getByTestId('full-width')).toHaveTextContent('true');
     expect(screen.getByTestId('required')).toHaveTextContent('true');
+  });
+
+  it('renders an optional picker when required is omitted', () => {
+    render(<Wrapper />);
+    expect(screen.getByTestId('required')).toHaveTextContent('false');
+    expect(screen.getByTestId('value')).toHaveTextContent('');
   });
 
   it('writes the picked date back into the RHF field', async () => {

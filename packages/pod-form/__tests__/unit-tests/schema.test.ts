@@ -209,20 +209,46 @@ describe('makePodSchema', () => {
     expect(res.success).toBe(true);
   });
 
-  it('requires a product when products are enabled', () => {
+  // `products_enabled` is derived from the rows (the switch is gone), so the
+  // old switch-vs-rows rules no longer exist: no rows is simply "no products".
+  it('accepts an empty product list whatever the derived flag says', () => {
+    const res = makePodSchema(makeConfig({ showProducts: true })).safeParse(
+      validValues({ products_enabled: true, product_requests: [] }),
+    );
+    expect(res.success).toBe(true);
+  });
+
+  it('rejects a product row that names no product', () => {
     const paths = errorPaths(
       makeConfig({ showProducts: true }),
-      validValues({ products_enabled: true, product_requests: [] }),
+      validValues({ product_requests: [{ product_id: '', quantity: 2 }] }),
+    );
+    expect(paths).toContain('product_requests.0.product_id');
+  });
+
+  it('rejects products on a virtual pod, which has nowhere to hand them out', () => {
+    const paths = errorPaths(
+      makeConfig({ showProducts: true }),
+      validValues({
+        pod_mode: 'VIRTUAL',
+        venue_id: '',
+        meeting_url: 'https://meet.example.com/x',
+        product_requests: [{ product_id: 'p1', quantity: 2 }],
+      }),
     );
     expect(paths).toContain('product_requests');
   });
 
-  it('rejects products when the toggle is off but requests remain', () => {
-    const paths = errorPaths(
-      makeConfig({ showProducts: true }),
-      validValues({ products_enabled: false, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
+  it('ignores product rows when the config hides products', () => {
+    const res = makePodSchema(makeConfig()).safeParse(
+      validValues({
+        pod_mode: 'VIRTUAL',
+        venue_id: '',
+        meeting_url: 'https://meet.example.com/x',
+        product_requests: [{ product_id: 'p1', quantity: 2 }],
+      }),
     );
-    expect(paths).toContain('product_requests');
+    expect(res.success).toBe(true);
   });
 
   it('accepts enabled products with a valid request', () => {
@@ -230,5 +256,77 @@ describe('makePodSchema', () => {
       validValues({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
     );
     expect(res.success).toBe(true);
+  });
+});
+
+describe('makePodSchema - venue and date guards', () => {
+  it('requires a club on an ordinary pod', () => {
+    const paths = errorPaths(makeConfig(), validValues({ club_id: '' }));
+    expect(paths).toContain('club_id');
+  });
+
+  it('requires an end for a virtual pod - it closes the meeting attendance window', () => {
+    const paths = errorPaths(
+      makeConfig(),
+      validValues({
+        pod_mode: 'VIRTUAL',
+        venue_id: '',
+        meeting_url: 'https://meet.example.com/x',
+        pod_end_date_time: null,
+      }),
+    );
+    expect(paths).toContain('pod_end_date_time');
+  });
+});
+
+// Auto Pod mode swaps the club/venue/host/date rules for the template's own -
+// none of those exist until a venue, a host and a club admin enrol.
+describe('makePodSchema (autoPod)', () => {
+  const autoConfig = makeConfig({ autoPod: true, showReel: true });
+  const template = (over: Partial<PodFormValues> = {}): PodFormValues => ({
+    ...blankPodFormValues,
+    pod_title: 'Morning Badminton',
+    pod_description: 'Doubles at Court 2, all levels.',
+    sub_category_id: 'sub-badminton',
+    pod_type: 'PAID',
+    pod_amount: 500,
+    no_of_spots: 8,
+    media_text: 'https://cdn.example.com/court.jpg',
+    ...over,
+  });
+
+  it('accepts a valid template with no club, venue, host or date', () => {
+    const res = makePodSchema(autoConfig).safeParse(template());
+    expect(res.success).toBe(true);
+  });
+
+  it('requires the category that stands in for the club', () => {
+    const paths = errorPaths(autoConfig, template({ sub_category_id: '' }));
+    expect(paths).toContain('sub_category_id');
+  });
+
+  it('holds the price floor at 1 - an Auto Pod is never free', () => {
+    const paths = errorPaths(autoConfig, template({ pod_amount: 0 }));
+    expect(paths).toContain('pod_amount');
+  });
+
+  it('needs at least the 2 spots that bill anyone at all', () => {
+    const paths = errorPaths(autoConfig, template({ no_of_spots: 1 }));
+    expect(paths).toContain('no_of_spots');
+  });
+
+  it('caps the template at 999 spots', () => {
+    const paths = errorPaths(autoConfig, template({ no_of_spots: 999.5 }));
+    expect(paths).toContain('no_of_spots');
+  });
+
+  it('still needs one image', () => {
+    const paths = errorPaths(autoConfig, template({ media_text: 'https://cdn.example.com/clip.mp4' }));
+    expect(paths).toContain('media_text');
+  });
+
+  it('still validates the optional reel URL', () => {
+    const paths = errorPaths(autoConfig, template({ reel_url: 'not-a-url' }));
+    expect(paths).toContain('reel_url');
   });
 });

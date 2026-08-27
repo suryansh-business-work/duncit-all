@@ -35,6 +35,10 @@ const makeVirtualInput = (over: Record<string, unknown> = {}) => ({
   pod_amount: 1000,
   no_of_spots: 2,
   pod_date_time: inDays(1),
+  // A VIRTUAL pod books no venue slot, so nothing else supplies its end: the
+  // service requires the window's end instant on the input itself. A slot-booked
+  // PHYSICAL pod (makeSlotInput) has its window overwritten from the slot.
+  pod_end_date_time: inDays(1.1),
   pod_images_and_videos: [IMG],
   ...over,
 });

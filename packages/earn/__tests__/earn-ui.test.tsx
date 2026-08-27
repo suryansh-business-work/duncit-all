@@ -17,6 +17,7 @@ import EarnBox from '../src/EarnBox';
 import EarnJourneyList from '../src/EarnJourneyList';
 import EarnMeetingActions from '../src/EarnMeetingActions';
 import { EarnSurfaceProvider, type EarnSurfaceConfig } from '../src/EarnSurfaceProvider';
+import { mwebEarnMeetingLabels } from '../src/labels';
 
 /**
  * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
@@ -45,6 +46,9 @@ const config = (over: Partial<EarnSurfaceConfig> = {}): EarnSurfaceConfig =>
     runCta: vi.fn(),
     meetingSlotLabels: () => slotLabels(),
     currentSlotBadge: 'Current',
+    // The dialogs' copy now rides the surface config (commit 5c271eb16); the
+    // key itself stands in for a translator, as in the form's cy spec.
+    meetingLabels: mwebEarnMeetingLabels((key) => key),
     ...over,
   }) as unknown as EarnSurfaceConfig;
 

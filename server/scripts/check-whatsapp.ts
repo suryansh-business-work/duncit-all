@@ -66,6 +66,25 @@ function loadMirror(): WaEvent[] {
   return (shell.exports.WA_EVENTS as WaEvent[]) ?? [];
 }
 
+function compareScenario(key: string, ours: WaEvent, theirs: WaEvent): void {
+  for (const field of ['campaign', 'audience', 'category', 'fires'] as const) {
+    if (ours[field] !== theirs[field]) {
+      fail(`mirror ${key}: ${field} is "${ours[field]}" on the server, "${theirs[field]}" in the package`);
+    }
+  }
+  if (ours.params.length !== theirs.params.length) {
+    fail(
+      `mirror ${key}: ${ours.params.length} param(s) on the server, ${theirs.params.length} in the package`
+    );
+    return;
+  }
+  ours.params.forEach((param, index) => {
+    if (param !== theirs.params[index]) {
+      fail(`mirror ${key}: param ${index + 1} is "${param}" here and "${theirs.params[index]}" there`);
+    }
+  });
+}
+
 function checkMirror(): void {
   const mirrorByKey = new Map(loadMirror().map((event) => [event.key, event]));
   for (const key of serverByKey.keys()) {
@@ -77,22 +96,7 @@ function checkMirror(): void {
   for (const [key, ours] of serverByKey) {
     const theirs = mirrorByKey.get(key);
     if (!theirs) continue;
-    for (const field of ['campaign', 'audience', 'category', 'fires'] as const) {
-      if (ours[field] !== theirs[field]) {
-        fail(`mirror ${key}: ${field} is "${ours[field]}" on the server, "${theirs[field]}" in the package`);
-      }
-    }
-    if (ours.params.length !== theirs.params.length) {
-      fail(
-        `mirror ${key}: ${ours.params.length} param(s) on the server, ${theirs.params.length} in the package`
-      );
-      continue;
-    }
-    ours.params.forEach((param, index) => {
-      if (param !== theirs.params[index]) {
-        fail(`mirror ${key}: param ${index + 1} is "${param}" here and "${theirs.params[index]}" there`);
-      }
-    });
+    compareScenario(key, ours, theirs);
   }
 }
 
@@ -231,35 +235,36 @@ function checkSendSites(): Set<string> {
     );
     const where = rel(file);
 
+    const applyObjectSite = (node: ts.ObjectLiteralExpression): void => {
+      // Shorthand counts: `params,` is a ShorthandPropertyAssignment, and
+      // matching only PropertyAssignment skipped those sites in silence.
+      const named = (key: string) =>
+        node.properties.find(
+          (p) =>
+            (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)) &&
+            p.name.getText() === key
+        );
+      const eventProp = named('event');
+      const paramsProp = named('params');
+      if (!eventProp || !paramsProp) return;
+      sites += 1;
+      const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+      const keys = ts.isPropertyAssignment(eventProp)
+        ? keysAddressed(eventProp.initializer, source)
+        : null;
+      if (keys && ts.isPropertyAssignment(paramsProp)) {
+        checkArity(keys, paramsProp, where, line, reached);
+        return;
+      }
+      unresolved += 1;
+      notes.push(`${where}:${line} addresses its scenario indirectly — arity not checkable`);
+    };
+
     const visit = (node: ts.Node): void => {
       // ANY object literal carrying both `event` and `params` is a send: the
       // scheduler builds its NotifyInputs inside a .map() and hands the array
       // to notifyEach, so keying off the call expression finds a fraction.
-      if (ts.isObjectLiteralExpression(node)) {
-        // Shorthand counts: `params,` is a ShorthandPropertyAssignment, and
-        // matching only PropertyAssignment skipped those sites in silence.
-        const named = (key: string) =>
-          node.properties.find(
-            (p) =>
-              (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)) &&
-              p.name.getText() === key
-          );
-        const eventProp = named('event');
-        const paramsProp = named('params');
-        if (eventProp && paramsProp) {
-          sites += 1;
-          const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
-          const keys = ts.isPropertyAssignment(eventProp)
-            ? keysAddressed(eventProp.initializer, source)
-            : null;
-          if (keys && ts.isPropertyAssignment(paramsProp)) {
-            checkArity(keys, paramsProp, where, line, reached);
-          } else {
-            unresolved += 1;
-            notes.push(`${where}:${line} addresses its scenario indirectly — arity not checkable`);
-          }
-        }
-      }
+      if (ts.isObjectLiteralExpression(node)) applyObjectSite(node);
       if (ts.isCallExpression(node) && node.arguments.length >= 2) {
         const keys = keysAddressed(node.arguments[0] as ts.Expression, source);
         const values = node.arguments.find((arg) => ts.isArrayLiteralExpression(arg));

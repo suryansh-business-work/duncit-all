@@ -40,6 +40,12 @@ export interface ResolvedDevices {
   camId: string;
 }
 
+/** Split one enumerateDevices() answer into the two lists the pickers show. */
+const splitDevices = (all: MediaDeviceInfo[]) => ({
+  mics: all.filter((device) => device.kind === 'audioinput'),
+  cams: all.filter((device) => device.kind === 'videoinput'),
+});
+
 /**
  * The saved microphone and camera, translated into this browser's ids.
  *
@@ -68,10 +74,7 @@ export function useResolvedDevices(
         .enumerateDevices()
         .then((all) => {
           if (!live) return;
-          setLists({
-            mics: all.filter((device) => device.kind === 'audioinput'),
-            cams: all.filter((device) => device.kind === 'videoinput'),
-          });
+          setLists(splitDevices(all));
         })
         .catch(() => undefined);
     };

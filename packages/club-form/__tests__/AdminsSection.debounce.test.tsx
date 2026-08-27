@@ -12,19 +12,20 @@ vi.mock('@apollo/client', () => ({
 // The real MUI Autocomplete resets its (non-memoized) controlled input on every
 // render, which would wipe a typed search term before the debounce reads it.
 // A minimal controlled stand-in lets the term survive so the debounced query
-// path (term truthy) is exercised. renderInput is still invoked for parity.
+// path (term truthy) is exercised. renderInput is still invoked for parity,
+// with the slotProps.input shape the section's TextField reads.
 vi.mock('@mui/material', async (importActual) => {
   const actual = await importActual<typeof import('@mui/material')>();
   function FakeAutocomplete(props: {
     inputValue: string;
     loading: boolean;
     onInputChange: (e: unknown, next: string, reason: string) => void;
-    renderInput: (params: { InputProps: { endAdornment: null }; inputProps: Record<string, unknown> }) => ReactNode;
+    renderInput: (params: { slotProps: { input: { endAdornment: null } } }) => ReactNode;
   }) {
     const { inputValue, loading, onInputChange, renderInput } = props;
     return (
       <div>
-        {renderInput({ InputProps: { endAdornment: null }, inputProps: {} })}
+        {renderInput({ slotProps: { input: { endAdornment: null } } })}
         <input
           aria-label="fake-search"
           value={inputValue}
@@ -53,7 +54,7 @@ const wrap = ({ children }: { children: ReactNode }) => (
 );
 
 const lastSearch = () =>
-  (useQueryMock.mock.lastCall?.[1] as { variables?: { filter?: { search?: string } } })?.variables?.filter?.search;
+  (useQueryMock.mock.lastCall?.[1] as { variables?: { search?: string } })?.variables?.search;
 
 afterEach(() => {
   vi.useRealTimers();

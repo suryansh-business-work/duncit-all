@@ -8,12 +8,14 @@
  */
 import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { aiMonitoringFallbackCopy } from '../src/copy';
 import { AiMonitoringChip } from '../src/mui/AiMonitoringChip';
 import { AiMonitoringDialog } from '../src/mui/AiMonitoringDialog';
+import { AI_MONITORING_CONFIG } from '../src/mui/useAiMonitoringConfig';
+import { AI_MONITORING_FALLBACK_FLAT } from '../src/mui/useTranslation';
 
 const copy = aiMonitoringFallbackCopy((key: string) => key);
 
@@ -81,6 +83,62 @@ describe('AiMonitoringChip', () => {
     await settle();
 
     expect(container.querySelector('.MuiChip-sizeSmall')).not.toBeNull();
+  });
+
+  it('renders nothing once the admin switch arrives turned off', async () => {
+    const disabledConfigMock = {
+      request: { query: AI_MONITORING_CONFIG },
+      result: {
+        data: {
+          aiMonitoringConfig: {
+            __typename: 'AiMonitoringConfig',
+            chip_enabled: false,
+            chip_label: null,
+            dialog_title: null,
+            dialog_intro: null,
+            dialog_points: [],
+            dialog_footnote: null,
+            dismiss_label: null,
+          },
+        },
+      },
+    };
+    const { container } = render(
+      <MockedProvider mocks={[disabledConfigMock]}>
+        <ThemeProvider theme={testTheme}>
+        <AiMonitoringChip />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    await settle();
+
+    expect(container.innerHTML).toBe('');
+  });
+
+  it('closes its dialog again through the dismiss button', async () => {
+    render(
+      <MockedProvider mocks={[]}>
+        <ThemeProvider theme={testTheme}>
+        <AiMonitoringChip />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiChip-root') as Element);
+    await settle();
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+
+    // The dismiss label is the fallback bundle's copy, because no admin
+    // override is mocked — the same string the reader would see offline.
+    fireEvent.click(
+      screen.getByRole('button', { name: AI_MONITORING_FALLBACK_FLAT['aiMonitoring.dismiss'] })
+    );
+
+    // MUI unmounts the dialog only after its exit transition.
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    }, { timeout: 3000 });
   });
 });
 

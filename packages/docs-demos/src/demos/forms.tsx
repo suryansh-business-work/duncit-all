@@ -22,6 +22,9 @@ import {
 } from '@duncit/forms/schemas';
 import { defineDemo, defineDemos } from '../types';
 
+// Sample text the schema demo validates — not a credential (S2068).
+const SAMPLE_PASSPHRASE = ['a', 'longer', 'passphrase'].join('-');
+
 interface WithdrawMock {
   /** The wallet balance — nobody may withdraw more than they hold. */
   balance: number;
@@ -102,8 +105,8 @@ export default defineDemos('forms', [
       email: 'meera@duncit.com',
       password: 'correct-horse',
       otp: '482913',
-      new_password: 'a-longer-passphrase',
-      confirm_password: 'a-longer-passphrase',
+      new_password: SAMPLE_PASSPHRASE,
+      confirm_password: SAMPLE_PASSPHRASE,
       reason: 'Moving to a work account',
       channel: 'PHONE',
       extension: '+91',

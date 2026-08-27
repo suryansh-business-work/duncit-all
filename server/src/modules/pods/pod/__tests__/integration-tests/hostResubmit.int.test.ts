@@ -157,6 +157,9 @@ describe('hostResubmitPod — venue-rejected booking cycle', () => {
       pod_mode: 'VIRTUAL',
       meeting_platform: 'Zoom',
       meeting_url: 'https://zoom.us/j/123',
+      // Dropping the venue drops the slot that used to end the pod, so flipping
+      // to VIRTUAL has to carry the window's end with it.
+      pod_end_date_time: inDays(2.1),
     });
     expect(res.venue_approval_status).toBe('NONE');
     expect(res.is_active).toBe(true);

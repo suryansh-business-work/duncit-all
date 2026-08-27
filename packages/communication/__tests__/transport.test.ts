@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CommunicationProviderError, HttpTransport, isRetryableStatus, redact } from '../src/index';
+import {
+  CommunicationProviderError,
+  HttpTransport,
+  describeFetchError,
+  isRetryableStatus,
+  redact,
+} from '../src/index';
 import type { CommunicationLogEvent } from '../src/types';
 
 const respond = (status: number, body: unknown = {}) =>
@@ -202,5 +208,30 @@ describe('HttpTransport', () => {
     const init = fetchImpl.mock.calls[0][1] as RequestInit;
     expect(init.method).toBe('GET');
     expect(init.body).toBeUndefined();
+  });
+});
+
+describe('describeFetchError', () => {
+  it('names an abort after the per-attempt timeout', () => {
+    expect(describeFetchError({ name: 'AbortError' }, 5000)).toBe('no answer within 5s');
+  });
+
+  it('surfaces the cause code fetch hides behind "fetch failed"', () => {
+    const error = Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } });
+    expect(describeFetchError(error, 5000)).toBe('ENOTFOUND');
+  });
+
+  it('falls back to the cause message when the cause has no code', () => {
+    const error = Object.assign(new TypeError('fetch failed'), { cause: { message: 'socket hang up' } });
+    expect(describeFetchError(error, 5000)).toBe('socket hang up');
+  });
+
+  it('uses the error message when there is no cause at all', () => {
+    expect(describeFetchError(new Error('boom'), 5000)).toBe('boom');
+  });
+
+  it('stringifies a throw that is not an Error shape at all', () => {
+    expect(describeFetchError(null, 5000)).toBe('null');
+    expect(describeFetchError({ message: '' }, 5000)).toBe('[object Object]');
   });
 });

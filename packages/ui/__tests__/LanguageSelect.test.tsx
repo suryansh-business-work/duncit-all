@@ -23,6 +23,13 @@ describe('LanguageSelect', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('still renders a single language when showSingle is set (console tray)', () => {
+    render(
+      <LanguageSelect value="en" options={[OPTIONS[0]]} onChange={vi.fn()} showSingle />,
+    );
+    expect(screen.getByRole('combobox')).toHaveTextContent('English · English');
+  });
+
   it('shows the selected language in its own script beside the English name', () => {
     render(<LanguageSelect value="hi" options={OPTIONS} onChange={vi.fn()} />);
     expect(screen.getByRole('combobox')).toHaveTextContent('हिन्दी · Hindi');

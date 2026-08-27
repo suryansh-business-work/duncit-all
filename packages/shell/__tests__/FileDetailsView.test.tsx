@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router-dom';
 import FileDetailsView from '../src/file-manager/FileDetailsView';
 import type { MediaItem } from '../src/file-manager/queries';
 
@@ -33,9 +34,13 @@ const props = {
 
 const show = (active: MediaItem, siblings: MediaItem[], onNavigate = vi.fn()) => {
   render(
-    <MockedProvider mocks={[]}>
-      <FileDetailsView {...props} file={active} siblings={siblings} onNavigate={onNavigate} />
-    </MockedProvider>
+    // The tab strip keeps its selection in the URL (useTabParam), so the view
+    // only renders under a router.
+    <MemoryRouter>
+      <MockedProvider mocks={[]}>
+        <FileDetailsView {...props} file={active} siblings={siblings} onNavigate={onNavigate} />
+      </MockedProvider>
+    </MemoryRouter>
   );
   return onNavigate;
 };
@@ -94,9 +99,11 @@ describe('FileDetailsView tags', () => {
   it('edits tags as chips, so dropping one does not mean retyping the rest', () => {
     const tagged = { ...file(1), tags: ['hero', 'banner'] };
     render(
-      <MockedProvider mocks={[]}>
-        <FileDetailsView {...props} canWrite file={tagged} />
-      </MockedProvider>
+      <MemoryRouter>
+        <MockedProvider mocks={[]}>
+          <FileDetailsView {...props} canWrite file={tagged} />
+        </MockedProvider>
+      </MemoryRouter>
     );
     fireEvent.click(screen.getByRole('tab', { name: 'Edit' }));
 

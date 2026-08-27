@@ -122,6 +122,8 @@ describe('pod-draft e2e', () => {
         pod_description: 'A valid length description for the pod',
         pod_images_and_videos: [{ url: 'https://cdn.example.com/pod.jpg', type: 'IMAGE' }],
         pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
+        // A VIRTUAL pod books no venue slot, so its end instant is required.
+        pod_end_date_time: new Date(Date.now() + 86_400_000 + 7_200_000).toISOString(),
         pod_type: 'FREE',
       },
     });

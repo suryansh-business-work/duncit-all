@@ -6,68 +6,16 @@
  * copy stores the searchable companion beside it — an editor that emitted only
  * one of the two would silently ship blank search text.
  *
- * Rendered through react-dom directly rather than Testing Library: this package
- * deliberately carries no RTL dependency, and adding one to reach it would put
- * a devDependency (and a lockfile change) on every surface that bundles it.
+ * Rendered through react-dom directly rather than Testing Library (see
+ * ./harness.tsx for why, and for the mount/press helpers every suite shares).
  */
-import { StrictMode, type ReactElement } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
-import { act } from 'react-dom/test-utils';
-import { MockedProvider } from '@apollo/client/testing';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DuncitRichTextInput } from '../src/DuncitRichTextInput';
 import { LinkDialog } from '../src/LinkDialog';
 import type { DuncitRichTextInputProps } from '../src/types';
-
-const testTheme = createTheme();
-
-beforeAll(() => {
-  // ProseMirror measures its own selection; jsdom's Range answers with nothing,
-  // which is fine, but the methods have to exist for the editor to boot at all.
-  const box = { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, toJSON: () => ({}) };
-  Range.prototype.getBoundingClientRect ??= () => box as DOMRect;
-  Range.prototype.getClientRects ??= () => (({
-    length: 0,
-    item: () => null,
-    [Symbol.iterator]: function* () {}
-  }) as never);
-  globalThis.ResizeObserver ??= class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
-});
-
-let container: HTMLDivElement | null = null;
-let root: Root | null = null;
-
-const mount = async (ui: ReactElement) => {
-  container = document.createElement('div');
-  document.body.append(container);
-  root = createRoot(container);
-  await act(async () => {
-    root?.render(
-      <StrictMode>
-        <MockedProvider mocks={[]}>
-          <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
-        </MockedProvider>
-      </StrictMode>
-    );
-  });
-  return container;
-};
-
-afterEach(async () => {
-  await act(async () => {
-    root?.unmount();
-  });
-  container?.remove();
-  root = null;
-  container = null;
-  vi.clearAllMocks();
-});
+import { mount, pressAll as press } from './harness';
 
 const editor = (props: Partial<DuncitRichTextInputProps> = {}) => {
   const onChange = vi.fn();
@@ -75,15 +23,6 @@ const editor = (props: Partial<DuncitRichTextInputProps> = {}) => {
     onChange,
     ui: <DuncitRichTextInput value="<p>Doubles at Court 2.</p>" onChange={onChange} {...props} />,
   };
-};
-
-const press = async (host: HTMLElement, limit = 12) => {
-  for (const button of [...host.querySelectorAll<HTMLButtonElement>('button:not([disabled])')].slice(0, limit)) {
-    if (!button.isConnected) continue;
-    await act(async () => {
-      button.click();
-    });
-  }
 };
 
 describe('DuncitRichTextInput', () => {

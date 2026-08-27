@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { UseFormReturn } from 'react-hook-form';
 import AboutSection from '../../src/sections/AboutSection';
 import OffersSection from '../../src/sections/OffersSection';
 import PerksSection from '../../src/sections/PerksSection';
 import ProductsSection from '../../src/sections/ProductsSection';
 import { Harness, makeData } from './helpers';
+import type { PodFormValues } from '../../src/types';
 
 describe('AboutSection', () => {
   it('renders the description and info fields', async () => {
@@ -78,7 +80,8 @@ describe('ProductsSection', () => {
         <ProductsSection />
       </Harness>,
     );
-    expect(screen.getByRole('button', { name: 'Add approved product' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add a Product' })).toBeEnabled();
+    expect(screen.queryByText('No products available for this category.')).not.toBeInTheDocument();
   });
 
   // A club with no category has nothing to match against, so it offers nothing
@@ -92,7 +95,24 @@ describe('ProductsSection', () => {
         <ProductsSection />
       </Harness>,
     );
-    expect(screen.getByRole('button', { name: 'Add approved product' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add a Product' })).toBeDisabled();
     expect(screen.getByText('No products available for this category.')).toBeInTheDocument();
+  });
+
+  it('surfaces the product-request validation error under the picker', () => {
+    const methodsRef: { current: UseFormReturn<PodFormValues> | null } = { current: null };
+    render(
+      <Harness
+        data={makeData({ clubs: [CLUB] as never, products: [inCategory] as never })}
+        defaultValues={{ club_id: 'c1' }}
+        methodsRef={methodsRef}
+      >
+        <ProductsSection />
+      </Harness>,
+    );
+    act(() => {
+      methodsRef.current?.setError('product_requests', { type: 'custom', message: 'A virtual pod cannot carry products' });
+    });
+    expect(screen.getByText('A virtual pod cannot carry products')).toBeInTheDocument();
   });
 });

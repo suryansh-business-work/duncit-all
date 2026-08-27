@@ -25,6 +25,7 @@ import {
   PHONE_NUMBER_IN,
   PINCODE,
   PINCODE_LOOSE,
+  toDigits,
   UPI_ID,
 } from '../regex.mjs';
 
@@ -281,6 +282,22 @@ describe('PERSON_NAME', () => {
   it('rejects a name longer than 80 characters', () => {
     expect(PERSON_NAME.test('A'.repeat(80))).toBe(true);
     expect(PERSON_NAME.test('A'.repeat(81))).toBe(false);
+  });
+});
+
+describe('toDigits', () => {
+  it('keeps only the digits from a pasted, formatted phone number', () => {
+    expect(toDigits('+91 98765-43210')).toBe('919876543210');
+    expect(toDigits('(080) 2345 6789')).toBe('08023456789');
+  });
+
+  it('coerces non-string input the way a number field hands it over', () => {
+    expect(toDigits(9876543210)).toBe('9876543210');
+  });
+
+  it('returns an empty string for null and undefined, not "null"', () => {
+    expect(toDigits(null)).toBe('');
+    expect(toDigits(undefined)).toBe('');
   });
 });
 

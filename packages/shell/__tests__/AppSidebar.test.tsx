@@ -46,7 +46,7 @@ describe('AppSidebar', () => {
   });
 
   it('uses a custom footer caption and shows the user card', () => {
-    renderSidebar({ footerCaption: '© Acme', user: { full_name: 'Ada Lovelace' } as DuncitUser });
+    renderSidebar({ footerCaption: '© Acme', user: { user_id: 'u1', full_name: 'Ada Lovelace' } as DuncitUser });
     expect(screen.getByText('© Acme')).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
   });

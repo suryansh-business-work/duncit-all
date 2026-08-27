@@ -1,6 +1,7 @@
 import '../helpers/agGridEnv';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { formatDateCell } from '@duncit/table';
 import type { MutableRefObject } from 'react';
 import CallPromptsTable from '@/pages/call-prompts/CallPromptsTable';
 import type { CrmCallPrompt } from '@/api/call.gql';
@@ -79,15 +80,19 @@ describe('CallPromptsTable', () => {
     expect(screen.getByRole('button', { name: 'Add Static Content' })).toBeTruthy();
   });
 
-  it('formats the hidden Created column with date-fns once it is switched on', async () => {
+  it('formats the hidden Created column in the admin pattern once it is switched on', async () => {
+    // The date pattern is an admin setting (@duncit/datetime), so the expected
+    // text comes from the same formatter the column's value getter uses —
+    // hardcoding one spelling of the date asserts the default, not the column.
+    const created = formatDateCell(prompt.created_at);
     renderTable([prompt]);
     await screen.findByText('Venue intro');
-    expect(screen.queryByText('1 Feb 2026')).toBeNull();
+    expect(screen.queryByText(created)).toBeNull();
 
     fireEvent.click(screen.getByLabelText('Columns'));
     fireEvent.click(await screen.findByText('Created'));
 
-    expect(await screen.findByText('1 Feb 2026')).toBeTruthy();
+    expect(await screen.findByText(created)).toBeTruthy();
   });
 
   it('shows the Static Content empty state when the server returns no prompts', async () => {

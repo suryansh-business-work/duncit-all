@@ -44,7 +44,7 @@ describe('FeatureFlagsTable', () => {
     expect(screen.getByText('—')).toBeInTheDocument(); // empty description
     expect(screen.getByRole('button', { name: 'New Flag' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole('checkbox')[0]); // toggle first row
+    fireEvent.click(screen.getAllByRole('switch')[0]); // toggle first row
     fireEvent.click(screen.getAllByTestId('EditIcon')[0].closest('button')!);
     // Delete is disabled for the system row, enabled for the custom row
     // (rows are sorted key asc: cust_flag first, sys_flag second).

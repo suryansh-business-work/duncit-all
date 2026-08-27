@@ -4,6 +4,9 @@ import {
   podToFormValues,
   linesToMedia,
   getProductRequestTotal,
+  buildAutoPodInput,
+  autoPodToFormValues,
+  type AutoPodTemplateRow,
 } from '../../src/build-input';
 import { makeNativeParityPodConfig } from '../../src/configs';
 import {
@@ -71,6 +74,10 @@ describe('getProductRequestTotal', () => {
       products,
     );
     expect(total).toBe(200);
+  });
+
+  it('counts an unparseable quantity as zero rather than NaN-poisoning the sum', () => {
+    expect(getProductRequestTotal([{ product_id: 'p1', quantity: 'x' as unknown as number }], products)).toBe(0);
   });
 });
 
@@ -285,5 +292,121 @@ describe('constants', () => {
       { value: 'PHYSICAL', label: 'Physical' },
       { value: 'VIRTUAL', label: 'Virtual' },
     ]);
+  });
+});
+
+describe('buildAutoPodInput', () => {
+  const templateValues = (over: Partial<PodFormValues> = {}): PodFormValues => ({
+    ...blankPodFormValues,
+    pod_title: '  Morning Badminton  ',
+    pod_description: 'Doubles at Court 2.',
+    sub_category_id: 'sub-badminton',
+    pod_amount: 500,
+    no_of_spots: 8,
+    pod_hashtag_text: '#badminton weekend',
+    media_text: 'https://cdn.example.com/court.jpg\nhttps://cdn.example.com/rally.mp4',
+    reel_url: '  ',
+    payment_terms: '',
+    what_this_pod_offers: ['Coaching'],
+    available_perks: ['Water'],
+    place_charges: [{ label: ' Court fee ', amount: 200, note: '' }],
+    ...over,
+  });
+
+  it('sends the template only — category in place of a club, media typed, tags cleaned', () => {
+    const input = buildAutoPodInput(templateValues());
+    expect(input.pod_title).toBe('Morning Badminton');
+    expect(input.sub_category_id).toBe('sub-badminton');
+    expect(input.pod_amount).toBe(500);
+    expect(input.no_of_spots).toBe(8);
+    expect(input.pod_hashtag).toEqual(['badminton', 'weekend']);
+    expect(input.pod_images_and_videos).toEqual([
+      { url: 'https://cdn.example.com/court.jpg', type: 'IMAGE' },
+      { url: 'https://cdn.example.com/rally.mp4', type: 'VIDEO' },
+    ]);
+    expect(input.reel_url).toBeNull();
+    expect(input.payment_terms).toBeNull();
+    expect(input.place_charges).toEqual([{ label: 'Court fee', amount: 200, note: null }]);
+    // Nothing a partner supplies later rides along.
+    expect('club_id' in input).toBe(false);
+    expect('venue_id' in input).toBe(false);
+    expect('pod_hosts_id' in input).toBe(false);
+    expect('pod_date_time' in input).toBe(false);
+  });
+
+  it('keeps a real reel URL and coerces broken numbers to zero', () => {
+    const input = buildAutoPodInput(
+      templateValues({
+        reel_url: 'https://cdn.example.com/reel.mp4',
+        payment_terms: 'Pay on arrival.',
+        pod_amount: 'x' as unknown as number,
+        no_of_spots: 'y' as unknown as number,
+      }),
+    );
+    expect(input.reel_url).toBe('https://cdn.example.com/reel.mp4');
+    expect(input.payment_terms).toBe('Pay on arrival.');
+    expect(input.pod_amount).toBe(0);
+    expect(input.no_of_spots).toBe(0);
+  });
+});
+
+describe('autoPodToFormValues', () => {
+  const ROW: AutoPodTemplateRow = {
+    pod_title: 'Evening Chess',
+    pod_description: 'Blitz rounds.',
+    pod_info: 'Bring a clock.',
+    pod_hashtag: ['chess', 'blitz'],
+    pod_images_and_videos: [{ url: 'https://cdn.example.com/board.jpg', type: 'IMAGE' }],
+    reel_url: 'https://cdn.example.com/reel.mp4',
+    super_category_id: 'sup-games',
+    sub_category_id: 'sub-chess',
+    pod_amount: 300,
+    no_of_spots: 12,
+    pod_occurrence: 'WEEKLY',
+    what_this_pod_offers: ['Boards'],
+    available_perks: ['Coffee'],
+    payment_terms: 'Pay on arrival.',
+    place_charges: [{ label: 'Entry', amount: 50, note: 'at door' }],
+  };
+
+  it('rehydrates every template field the form edits', () => {
+    const values = autoPodToFormValues(ROW);
+    expect(values.pod_title).toBe('Evening Chess');
+    expect(values.super_category_id).toBe('sup-games');
+    expect(values.sub_category_id).toBe('sub-chess');
+    expect(values.pod_type).toBe('PAID');
+    expect(values.pod_amount).toBe(300);
+    expect(values.no_of_spots).toBe(12);
+    expect(values.pod_occurrence).toBe('WEEKLY');
+    expect(values.pod_info).toBe('Bring a clock.');
+    expect(values.pod_hashtag_text).toBe('chess blitz');
+    expect(values.media_text).toBe('https://cdn.example.com/board.jpg');
+    expect(values.reel_url).toBe('https://cdn.example.com/reel.mp4');
+    expect(values.payment_terms).toBe('Pay on arrival.');
+    expect(values.what_this_pod_offers).toEqual(['Boards']);
+    expect(values.available_perks).toEqual(['Coffee']);
+    expect(values.place_charges).toEqual([{ label: 'Entry', amount: 50, note: 'at door' }]);
+  });
+
+  it('falls back to the paid-template defaults on a sparse legacy row', () => {
+    const values = autoPodToFormValues({
+      pod_title: 'Bare',
+      pod_description: 'Just a title and a picture.',
+      pod_images_and_videos: [{ url: 'https://cdn.example.com/one.jpg' }],
+      super_category_id: 'sup-1',
+      sub_category_id: 'sub-1',
+      pod_amount: undefined as unknown as number,
+      no_of_spots: undefined as unknown as number,
+      place_charges: [{ label: 'Entry', amount: undefined as unknown as number }],
+    });
+    expect(values.pod_amount).toBe(1);
+    expect(values.no_of_spots).toBe(2);
+    expect(values.pod_occurrence).toBe('ONE_TIME');
+    expect(values.pod_hashtag_text).toBe('');
+    expect(values.reel_url).toBe('');
+    expect(values.payment_terms).toBe('');
+    expect(values.what_this_pod_offers).toEqual([]);
+    expect(values.available_perks).toEqual([]);
+    expect(values.place_charges).toEqual([{ label: 'Entry', amount: 0, note: '' }]);
   });
 });

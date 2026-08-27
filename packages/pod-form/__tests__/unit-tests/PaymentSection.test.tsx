@@ -19,6 +19,41 @@ vi.mock('@apollo/client', () => ({
 
 const FINANCE = { platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' };
 
+// The server's waterfall for ₹500 × 9 payable spots at today's default rates —
+// the projection renders these figures, it never re-derives them client-side.
+const WATERFALL = {
+  amount: 4500,
+  gst_pct: 18,
+  gst_amount: 686.44,
+  net_amount: 3813.56,
+  platform_fee_pct: 10,
+  platform_fee_amount: 381.36,
+  pool_amount: 3432.2,
+  club_admin_pct: 0,
+  club_admin_amount: 0,
+  venue_amount: 0,
+  venue_commission_pct: 0,
+  venue_commission_amount: 0,
+  venue_receives: 0,
+  host_amount: 3432.2,
+  host_commission_pct: 5,
+  host_commission_amount: 171.61,
+  host_receives: 3260.59,
+  host_earn_pct: 72.5,
+};
+const PROJECTION = {
+  adminPotentialPodEarnings: {
+    total_spots: 10,
+    payable_spots: 9,
+    venue_budget: 3260,
+    waterfall: WATERFALL,
+  },
+};
+
+afterEach(() => {
+  apollo.data = undefined;
+});
+
 function renderPayment(data: PodFormData, defaults: Partial<PodFormValues> = {}) {
   const methodsRef: { current: UseFormReturn<PodFormValues> | null } = { current: null };
   render(
@@ -80,7 +115,10 @@ describe('PaymentSection', () => {
     expect(screen.getByText('Earnings projection')).toBeInTheDocument();
   });
 
+  // Priced off the ROWS: the "Attach products" switch is gone, so a false
+  // products_enabled must not zero the breakdown while rows are attached.
   it('feeds product cost into the breakdown when inventory + products are on', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
     const data = makeData({
       config: makeConfig({ showFinance: true, showInventory: true }),
       finance: FINANCE,
@@ -89,10 +127,26 @@ describe('PaymentSection', () => {
     renderPayment(data, {
       pod_type: 'NATIVE_PAID',
       pod_amount: 500,
-      products_enabled: true,
+      no_of_spots: 10,
+      products_enabled: false,
       product_requests: [{ product_id: 'p1', quantity: 2 }],
     });
-    expect(screen.getByText('Product cost / payable spot')).toBeInTheDocument();
+    expect(screen.getByText('Duncit product cost')).toBeInTheDocument();
+    // 2 × ₹100 as a deduction, and the payout drops by it: 3260.59 − 200.
+    expect(screen.getByText('− ₹200.00')).toBeInTheDocument();
+    expect(screen.getByText('₹3,060.59')).toBeInTheDocument();
+  });
+
+  it('leaves the product row out of the breakdown when nothing is attached', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    const data = makeData({
+      config: makeConfig({ showFinance: true, showInventory: true }),
+      finance: FINANCE,
+      products: [{ id: 'p1', unit_cost: 100 }],
+    });
+    renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: 10 });
+    expect(screen.queryByText('Duncit product cost')).not.toBeInTheDocument();
+    expect(screen.getByText('₹3,260.59')).toBeInTheDocument();
   });
 
   it('hides the breakdown for a free pod even with finance enabled', () => {
@@ -106,7 +160,7 @@ describe('PaymentSection', () => {
     const data = makeData({ config: makeConfig({ showIsActive: true }) });
     const ref = renderPayment(data, { pod_id: 'pod-1', is_active: true });
     expect(screen.getByText('Active')).toBeInTheDocument();
-    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('switch'));
     expect(ref.current?.getValues('is_active')).toBe(false);
     expect(screen.getByText('Inactive')).toBeInTheDocument();
   });
@@ -114,7 +168,7 @@ describe('PaymentSection', () => {
   it('hides the active switch when creating a new pod', () => {
     const data = makeData({ config: makeConfig({ showIsActive: true }) });
     renderPayment(data, { pod_id: '' });
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
   it('renders the place charges editor for a physical pod', () => {
@@ -127,6 +181,73 @@ describe('PaymentSection', () => {
     const data = makeData({ config: makeConfig({ showPlaceCharges: true }) });
     renderPayment(data, { pod_mode: 'VIRTUAL' });
     expect(screen.queryByText('Place charges')).not.toBeInTheDocument();
+  });
+
+  it('projects while the server waterfall has not answered yet', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [] };
+    const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
+    renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: 10 });
+    expect(screen.getByText('Projecting…')).toBeInTheDocument();
+  });
+
+  it('treats a projection behind the typed inputs as loading, never a mismatched answer', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
+    const ref = renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: 10 });
+    expect(screen.getByText('Total collection')).toBeInTheDocument();
+    // The typed price moves on; the debounced query value has not yet.
+    act(() => {
+      ref.current?.setValue('pod_amount', 600);
+    });
+    expect(screen.getByText('Projecting…')).toBeInTheDocument();
+    expect(screen.queryByText('Total collection')).not.toBeInTheDocument();
+  });
+
+  it('warns that the save will be refused when products eat the whole payout', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    const data = makeData({
+      config: makeConfig({ showFinance: true, showInventory: true }),
+      finance: FINANCE,
+      products: [{ id: 'p1', unit_cost: 2000 }],
+    });
+    renderPayment(data, {
+      pod_type: 'NATIVE_PAID',
+      pod_amount: 500,
+      no_of_spots: 10,
+      product_requests: [{ product_id: 'p1', quantity: 2 }],
+    });
+    expect(screen.getByTestId('earnings-zero')).toBeInTheDocument();
+  });
+
+  it('prices the projection against the booked slot once one is picked', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
+    renderPayment(data, {
+      pod_type: 'NATIVE_PAID',
+      pod_amount: 500,
+      no_of_spots: 10,
+      pod_mode: 'PHYSICAL',
+      venue_id: 'v1',
+      venue_slot_id: 's1',
+    });
+    // The slot price is a real statement line now, not a "pick a venue" prompt.
+    expect(screen.getByText('Venue Slot Price')).toBeInTheDocument();
+    expect(screen.getByText('Host receives')).toBeInTheDocument();
+    expect(screen.queryByText(/Pick a venue slot/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('earnings-venue-budget')).toBeInTheDocument();
+  });
+
+  it('shows no venue budget for a virtual pod, which has no venue at all', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
+    renderPayment(data, {
+      pod_type: 'NATIVE_PAID',
+      pod_amount: 500,
+      no_of_spots: 10,
+      pod_mode: 'VIRTUAL',
+    });
+    expect(screen.queryByTestId('earnings-venue-budget')).not.toBeInTheDocument();
+    expect(screen.queryByText('Venue Slot Price')).not.toBeInTheDocument();
   });
 
   it('shows amount and spot validation errors', () => {
@@ -235,5 +356,70 @@ describe('PaymentSection — spots bounds', () => {
       no_of_spots: 10,
     });
     expect(screen.getByLabelText('No. of spots')).toHaveAttribute('min', '0');
+  });
+});
+
+// An existing pod's slot is BOOKED, so the availability list no longer carries
+// its capacity - the server's podSpotLimits answers instead.
+describe('PaymentSection - live-pod spot limits', () => {
+  it('sizes the slider from the server range when editing an existing pod', () => {
+    apollo.data = {
+      categories: [],
+      venueAvailableSlots: [],
+      podSpotLimits: {
+        current: 10,
+        min: 6,
+        max: 30,
+        seats_taken: 6,
+        venue_capacity: 30,
+        min_pax: 4,
+        slidable: true,
+        can_decrease: false,
+      },
+    };
+    renderPayment(makeData({ editingPodDocId: 'doc-1' }), {
+      pod_id: 'DUN-POD-4821',
+      pod_mode: 'PHYSICAL',
+      no_of_spots: 10,
+    });
+    expect(screen.getByTestId('pod-spots-slider')).toBeInTheDocument();
+    expect(screen.getByText(/needs at least 6, and the space booked holds 30/)).toBeInTheDocument();
+  });
+});
+
+// Auto Pod mode: the type is fixed to PAID, the price floor is 1, and the
+// activity minimum comes from the template's own sub-category.
+describe('PaymentSection (autoPod)', () => {
+  const CATEGORIES = [
+    { id: 'sub-badminton', name: 'Badminton', slug: 'bad', level: 'SUB', parent_id: 'cat-1', min_pax: 3 },
+  ];
+
+  it('fixes the type, floors the price at 1 and floors spots by the template category', () => {
+    apollo.data = { categories: CATEGORIES, venueAvailableSlots: [] };
+    renderPayment(makeData({ config: makeConfig({ autoPod: true }) }), {
+      pod_type: 'PAID',
+      pod_amount: 500,
+      no_of_spots: 8,
+      sub_category_id: 'sub-badminton',
+    });
+    // The type is not chosen - the select is gone.
+    expect(screen.queryByLabelText(/Pod type/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Amount/)).toHaveAttribute('min', '1');
+    expect(screen.getByText(/an Auto Pod is never free/)).toBeInTheDocument();
+    expect(screen.getByLabelText('No. of spots')).toHaveAttribute('min', '3');
+  });
+
+  it('projects the payout with the venue pending, defaulting the symbol', () => {
+    apollo.data = { categories: CATEGORIES, venueAvailableSlots: [], ...PROJECTION };
+    renderPayment(
+      makeData({
+        config: makeConfig({ autoPod: true, showFinance: true }),
+        finance: { platform_fee_pct: 10, gst_pct: 18 },
+      }),
+      { pod_type: 'PAID', pod_amount: 500, no_of_spots: 10, sub_category_id: 'sub-badminton' },
+    );
+    // The venue that enrols later is a deduction nobody can price yet.
+    expect(screen.getByText(/Deducted once a venue enrols/)).toBeInTheDocument();
+    expect(screen.getByText('Host receives before the venue')).toBeInTheDocument();
   });
 });

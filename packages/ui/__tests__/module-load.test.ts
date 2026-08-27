@@ -31,9 +31,15 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    // First import of an MUI-heavy module pays the whole transform cost, which
+    // blows the default 5s on slow-disk Windows machines. Not a behavior knob.
+    60_000,
+  );
 });

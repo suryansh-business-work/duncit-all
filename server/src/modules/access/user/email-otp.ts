@@ -33,4 +33,4 @@ export const hashOtp = (otp: string) =>
  * no mail transport can still finish the flow. Null in production, always.
  */
 export const devOtpEcho = (otp: string) =>
-  (process.env.NODE_ENV || 'development') !== 'production' ? otp : null;
+  (process.env.NODE_ENV || 'development') === 'production' ? null : otp;

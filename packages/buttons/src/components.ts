@@ -50,7 +50,7 @@ type SlotBag = { styleOverrides?: Record<string, SlotStyle | undefined> } & Reco
 
 function selectedFillCss(colors: Readonly<PressColors>): CSSObject {
   const solid = pressCss('solid', colors);
-  return { '&.Mui-selected:active': solid['&:active'] as CSSObject };
+  return { '&.Mui-selected:active': solid['&:active'] };
 }
 
 function cssFor(slot: PressSlot, colors: Readonly<PressColors>): CSSObject {
@@ -78,7 +78,7 @@ export function withPress(
 
   for (const slot of SLOTS) {
     const existing = map[slot.component] ?? {};
-    const overrides = { ...(existing.styleOverrides ?? {}) };
+    const overrides = { ...existing.styleOverrides };
     overrides[slot.part] = mergeSlot(overrides[slot.part], cssFor(slot, colors));
     map[slot.component] = { ...existing, styleOverrides: overrides };
   }
@@ -87,7 +87,7 @@ export function withPress(
   // rather than snapping, so the ones that are not in the table above still
   // belong to the same motion.
   const buttonBase = map.MuiButtonBase ?? {};
-  const baseOverrides = { ...(buttonBase.styleOverrides ?? {}) };
+  const baseOverrides = { ...buttonBase.styleOverrides };
   baseOverrides.root = mergeSlot(baseOverrides.root, { transition: pressTransition });
   map.MuiButtonBase = { ...buttonBase, styleOverrides: baseOverrides };
 

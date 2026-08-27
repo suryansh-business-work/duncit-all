@@ -1,22 +1,24 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DayDrawer from '../src/DayDrawer';
 import { makeSlot } from './fixtures';
 
-// Deterministic stand-in for the MUI X TimePicker: a plain input whose value is
-// parsed as a local date-time string, so onChange fires with a real Date (hours
-// and minutes only matter to the component) or null, without wrestling the real
-// picker's popup/keyboard interaction under jsdom.
+// Deterministic stand-ins for the MUI X pickers: plain inputs whose value is
+// parsed as a local date-time string, so onChange fires with a real Date or
+// null without wrestling the real pickers' popup/keyboard interaction (and
+// their LocalizationProvider requirement) under jsdom.
+vi.mock('@mui/x-date-pickers/DatePicker', () => ({
+  DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (v: Date | null) => void }) => (
+    <input
+      aria-label={label}
+      value={value ? value.toISOString() : ''}
+      onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
+    />
+  ),
+}));
 vi.mock('@mui/x-date-pickers/TimePicker', () => ({
-  TimePicker: ({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: Date | null;
-    onChange: (v: Date | null) => void;
-  }) => (
+  TimePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (v: Date | null) => void }) => (
     <input
       aria-label={label}
       value={value ? value.toISOString() : ''}
@@ -40,9 +42,8 @@ function baseProps(overrides: Partial<DayDrawerProps> = {}): DayDrawerProps {
   };
 }
 
-function setTime(label: string, hhmm: string) {
-  fireEvent.change(screen.getByLabelText(label), { target: { value: `2000-01-01T${hhmm}` } });
-}
+const iso = (y: number, m: number, d: number, h = 0, min = 0, s = 0, ms = 0) =>
+  new Date(y, m, d, h, min, s, ms).toISOString();
 
 describe('DayDrawer', () => {
   beforeEach(() => {
@@ -59,9 +60,10 @@ describe('DayDrawer', () => {
     expect(screen.queryByText('Availability')).not.toBeInTheDocument();
   });
 
-  it('shows the formatted date header and an empty-state message with no slots', () => {
+  it('shows the admin-format date header and an empty-state message with no slots', () => {
     render(<DayDrawer {...baseProps({ slots: [] })} />);
-    expect(screen.getByText('Tuesday, 20 Jan 2026')).toBeInTheDocument();
+    // The header reads the admin's date pattern (fallback 'dd MMM yyyy'), not a local literal.
+    expect(screen.getByText('20 Jan 2026')).toBeInTheDocument();
     expect(screen.getByText('No slots for this date yet.')).toBeInTheDocument();
   });
 
@@ -94,6 +96,43 @@ describe('DayDrawer', () => {
     expect(screen.getAllByRole('button', { name: 'Delete' })).toHaveLength(2); // AVAILABLE + BLOCKED rows
   });
 
+  it('labels timed, multi-day and whole-day slots, and names the space each one is for', () => {
+    const timed = makeSlot({ id: 'timed', start_at: iso(2026, 0, 20, 9), end_at: iso(2026, 0, 20, 10) });
+    const timedMulti = makeSlot({ id: 'multi', start_at: iso(2026, 0, 20, 10), end_at: iso(2026, 0, 22, 18) });
+    const wholeSingle = makeSlot({
+      id: 'whole',
+      whole_day: true,
+      start_at: iso(2026, 0, 20),
+      end_at: iso(2026, 0, 20, 23, 59, 59, 999),
+      space_label: 'Court 1',
+      capacity: 4,
+    });
+    const wholeMulti = makeSlot({
+      id: 'whole-multi',
+      whole_day: true,
+      start_at: iso(2026, 0, 20),
+      end_at: iso(2026, 0, 21, 23, 59, 59, 999),
+      space_label: 'Hall',
+      capacity: 0,
+    });
+    render(<DayDrawer {...baseProps({ slots: [timed, timedMulti, wholeSingle, wholeMulti] })} />);
+
+    const s = (slot: { start_at: string }) => new Date(slot.start_at);
+    const e = (slot: { end_at: string }) => new Date(slot.end_at);
+    expect(screen.getByText(`${formatTime(s(timed))} – ${formatTime(e(timed))}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${formatDateTime(s(timedMulti))} – ${formatDateTime(e(timedMulti))}`),
+    ).toBeInTheDocument();
+    // Two 'Whole day' texts: the single-day whole-day slot's label + the add-form toggle below.
+    expect(screen.getAllByText('Whole day')).toHaveLength(2);
+    expect(
+      screen.getByText(`Whole day · ${formatDate(s(wholeMulti))} – ${formatDate(e(wholeMulti))}`),
+    ).toBeInTheDocument();
+    // A space with a capacity says how many it holds; a 0-capacity space is just its name.
+    expect(screen.getByText('Court 1 · holds 4')).toBeInTheDocument();
+    expect(screen.getByText('Hall')).toBeInTheDocument();
+  });
+
   it('toggles block on an unlocked slot', async () => {
     const onToggleBlock = vi.fn().mockResolvedValue(undefined);
     const slot = makeSlot({ id: 'a1', status: 'AVAILABLE' });
@@ -108,8 +147,7 @@ describe('DayDrawer', () => {
     const slot = makeSlot({ id: 'a1', status: 'AVAILABLE' });
     render(<DayDrawer {...baseProps({ slots: [slot], onToggleBlock })} />);
     fireEvent.click(screen.getByRole('button', { name: 'Block' }));
-    await waitFor(() => expect(screen.getByText('Venue offline')).toBeInTheDocument());
-    const alert = screen.getByText('Venue offline').closest('[role="alert"]') as HTMLElement;
+    const alert = (await screen.findByText('Venue offline')).closest('[role="alert"]') as HTMLElement;
     fireEvent.click(within(alert).getByRole('button'));
     expect(screen.queryByText('Venue offline')).not.toBeInTheDocument();
   });
@@ -119,7 +157,7 @@ describe('DayDrawer', () => {
     const slot = makeSlot({ id: 'a1', status: 'AVAILABLE' });
     render(<DayDrawer {...baseProps({ slots: [slot], onToggleBlock })} />);
     fireEvent.click(screen.getByRole('button', { name: 'Block' }));
-    await waitFor(() => expect(screen.getByText('Could not update slot')).toBeInTheDocument());
+    expect(await screen.findByText('Could not update slot')).toBeInTheDocument();
   });
 
   it('deletes a slot after confirming in the dialog', async () => {
@@ -168,7 +206,7 @@ describe('DayDrawer', () => {
     render(<DayDrawer {...baseProps({ slots: [slot], onDelete })} />);
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(screen.getByText('Slot is booked')).toBeInTheDocument());
+    expect(await screen.findByText('Slot is booked')).toBeInTheDocument();
   });
 
   it('shows a generic message when a delete fails with a non-Error', async () => {
@@ -177,114 +215,23 @@ describe('DayDrawer', () => {
     render(<DayDrawer {...baseProps({ slots: [slot], onDelete })} />);
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(screen.getByText('Could not delete slot')).toBeInTheDocument());
+    expect(await screen.findByText('Could not delete slot')).toBeInTheDocument();
   });
 
-  it('creates a slot with the entered time, price, and notes, then resets the form', async () => {
+  it('seeds the add form with the drawer date and hands the create through with overwrite=false', async () => {
     const onCreate = vi.fn().mockResolvedValue(undefined);
     render(<DayDrawer {...baseProps({ date: new Date(2026, 0, 20), onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '10:00');
-    fireEvent.change(screen.getByLabelText('Price (₹)'), { target: { value: '150' } });
-    fireEvent.change(screen.getByLabelText('Notes (optional)'), { target: { value: 'Yoga session' } });
+    expect(screen.getByLabelText('Start date')).toHaveValue(iso(2026, 0, 20));
+    expect(screen.getByLabelText('End date')).toHaveValue(iso(2026, 0, 20));
+    fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '2000-01-01T09:00' } });
+    fireEvent.change(screen.getByLabelText('End time'), { target: { value: '2000-01-01T10:00' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-
-    const expectedStart = new Date(2026, 0, 20, 9, 0, 0, 0);
-    const expectedEnd = new Date(2026, 0, 20, 10, 0, 0, 0);
     await waitFor(() =>
-      expect(onCreate).toHaveBeenCalledWith({
-        start_at: expectedStart.toISOString(),
-        end_at: expectedEnd.toISOString(),
-        price: 150,
-        notes: 'Yoga session',
-      }),
+      expect(onCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ start_at: iso(2026, 0, 20, 9), end_at: iso(2026, 0, 20, 10) }),
+        false,
+      ),
     );
-    await waitFor(() => expect(screen.getByLabelText('Price (₹)')).toHaveValue(null));
-  });
-
-  it('defaults an empty price to 0', async () => {
-    const onCreate = vi.fn().mockResolvedValue(undefined);
-    render(<DayDrawer {...baseProps({ date: new Date(2026, 0, 20), onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    await waitFor(() => expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ price: 0 })));
-  });
-
-  it('shows a validation error when start or end time is missing', () => {
-    const onCreate = vi.fn();
-    render(<DayDrawer {...baseProps({ onCreate })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    expect(screen.getByText('Pick start and end time.')).toBeInTheDocument();
-    expect(onCreate).not.toHaveBeenCalled();
-  });
-
-  it('shows a validation error when end time is not after start time', () => {
-    const onCreate = vi.fn();
-    render(<DayDrawer {...baseProps({ onCreate })} />);
-    setTime('Start', '10:00');
-    setTime('End', '09:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    expect(screen.getByText('End must be after start.')).toBeInTheDocument();
-    expect(onCreate).not.toHaveBeenCalled();
-  });
-
-  it('shows a validation error when the start time is in the past', () => {
-    const onCreate = vi.fn();
-    // `date` is today (Jan 15); "now" is mocked to noon, so a 09:00 start is already past.
-    render(<DayDrawer {...baseProps({ date: new Date(2026, 0, 15), onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '11:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    expect(screen.getByText('Start time must be in the future.')).toBeInTheDocument();
-    expect(onCreate).not.toHaveBeenCalled();
-  });
-
-  it('shows a validation error when the start time is more than 60 days ahead', () => {
-    const onCreate = vi.fn();
-    render(<DayDrawer {...baseProps({ date: new Date(2026, 5, 1), onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    expect(screen.getByText('Slots can only be scheduled up to 60 days ahead.')).toBeInTheDocument();
-    expect(onCreate).not.toHaveBeenCalled();
-  });
-
-  it('shows an "Adding…" state while creating, then resolves back to normal', async () => {
-    let resolveCreate: () => void = () => {};
-    const onCreate = vi.fn(
-      () =>
-        new Promise<void>((resolve) => {
-          resolveCreate = resolve;
-        }),
-    );
-    render(<DayDrawer {...baseProps({ onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    expect(await screen.findByRole('button', { name: 'Adding…' })).toBeDisabled();
-    resolveCreate();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Add slot' })).toBeEnabled());
-  });
-
-  it('shows the thrown message and keeps the form filled when create fails with an Error', async () => {
-    const onCreate = vi.fn().mockRejectedValue(new Error('Server exploded'));
-    render(<DayDrawer {...baseProps({ onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '10:00');
-    fireEvent.change(screen.getByLabelText('Price (₹)'), { target: { value: '75' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    await waitFor(() => expect(screen.getByText('Server exploded')).toBeInTheDocument());
-    expect(screen.getByLabelText('Price (₹)')).toHaveValue(75);
-  });
-
-  it('shows a generic message when create fails with a non-Error', async () => {
-    const onCreate = vi.fn().mockRejectedValue('boom');
-    render(<DayDrawer {...baseProps({ onCreate })} />);
-    setTime('Start', '09:00');
-    setTime('End', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-    await waitFor(() => expect(screen.getByText('Could not create slot')).toBeInTheDocument());
   });
 
   it('shows the holiday alert and hides the add-slot form when the date is a venue leave', () => {
@@ -292,31 +239,28 @@ describe('DayDrawer', () => {
     expect(
       screen.getByText('This date is marked as a venue leave/holiday — slots cannot be added or booked.'),
     ).toBeInTheDocument();
+    expect(screen.getByText('Add slot')).not.toBeVisible();
   });
 
-  it('resets the form and calls onClose when closed', () => {
+  it('calls onClose from the header close button', () => {
     const onClose = vi.fn();
     render(<DayDrawer {...baseProps({ onClose })} />);
-    fireEvent.change(screen.getByLabelText('Price (₹)'), { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(screen.getByLabelText('Price (₹)')).toHaveValue(null);
   });
 
-  it('treats a date prop that turns null mid-close as unpicked and shows an empty header', () => {
-    const onCreate = vi.fn();
-    const props = baseProps({ date: new Date(2026, 0, 20), onCreate });
+  it('treats a date prop that turns null mid-close as unpicked: empty header, no add form', () => {
+    const props = baseProps({ date: new Date(2026, 0, 20) });
     const { rerender } = render(<DayDrawer {...props} />);
-    expect(screen.getByText('Tuesday, 20 Jan 2026')).toBeInTheDocument();
+    expect(screen.getByText('20 Jan 2026')).toBeInTheDocument();
+    expect(screen.getByText('Add slot')).toBeInTheDocument();
 
     // Simulate the host clearing `date` while `open` is still true: the underlying
     // Drawer starts its close transition but stays mounted synchronously, so the
     // component re-renders once more with `date=null` before it unmounts. MUI marks
     // the transitioning-out root aria-hidden, so query by text (not role) here.
     rerender(<DayDrawer {...props} date={null} />);
-    expect(screen.queryByText('Tuesday, 20 Jan 2026')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText('Add slot'));
-    expect(screen.getByText('Pick start and end time.')).toBeInTheDocument();
-    expect(onCreate).not.toHaveBeenCalled();
+    expect(screen.queryByText('20 Jan 2026')).not.toBeInTheDocument();
+    expect(screen.queryByText('Add slot')).not.toBeInTheDocument();
   });
 });

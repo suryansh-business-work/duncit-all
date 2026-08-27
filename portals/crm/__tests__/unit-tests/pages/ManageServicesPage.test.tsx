@@ -124,7 +124,8 @@ describe('ManageServicesPage', () => {
       configMock(),
     ]);
     await screen.findByText('Catering');
-    const switches = screen.getAllByRole('checkbox');
+    // MUI's Switch reports role="switch", not "checkbox".
+    const switches = screen.getAllByRole('switch');
     fireEvent.click(switches[0]);
     await waitFor(() => expect(updateCalled).toHaveBeenCalled());
   });

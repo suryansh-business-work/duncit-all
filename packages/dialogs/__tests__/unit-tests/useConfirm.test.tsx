@@ -37,7 +37,7 @@ describe('useConfirm', () => {
       promise = result.current({ title: 'Proceed?', confirmColor: 'warning' });
     });
     const confirmButton = screen.getByRole('button', { name: 'Confirm' });
-    expect(confirmButton.className).toContain('MuiButton-containedWarning');
+    expect(confirmButton.className).toContain('MuiButton-colorWarning');
     fireEvent.click(confirmButton);
     await expect(promise!).resolves.toBe(true);
   });

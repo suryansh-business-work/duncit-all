@@ -69,7 +69,9 @@ describe('DynamicFieldsTable', () => {
     const row = screen.getByTestId('dynamic-field-row-alpha');
     fireEvent.click(within(row).getByRole('button', { name: 'Edit' }));
     fireEvent.click(within(row).getByRole('button', { name: 'Delete' }));
-    fireEvent.click(within(row).getByRole('checkbox'));
+    // MUI's Switch exposes itself as role="switch" (its input is still a
+    // type=checkbox), so the active toggle is queried by that role.
+    fireEvent.click(within(row).getByRole('switch'));
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }));
     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }));
     expect(onToggleActive).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }));

@@ -13,7 +13,8 @@ import {
 import { __setTableRows, fetchRowsFrom } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (d: Date | string) => `fmt:${String(d)}` }),
 }));
 const dialogsMock = vi.hoisted(() => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));

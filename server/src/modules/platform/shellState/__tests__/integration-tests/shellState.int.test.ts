@@ -18,6 +18,7 @@ describe('shellStateService integration', () => {
       clock_zone: '',
       clock_seconds: false,
       minimised: [],
+      sidebar_collapsed: false,
     });
   });
 
@@ -67,6 +68,19 @@ describe('shellStateService integration', () => {
     });
     expect(state.clock_zone).toBe('Europe/London');
     expect(state.clock_seconds).toBe(true);
+  });
+
+  it('remembers a collapsed sidebar and ignores a non-boolean for it', async () => {
+    const me = userId();
+    const collapsed = await shellStateService.save(me, { sidebar_collapsed: true });
+    expect(collapsed.sidebar_collapsed).toBe(true);
+
+    // Not a boolean at all — the stored preference stands.
+    const untouched = await shellStateService.save(me, { sidebar_collapsed: 'yes' });
+    expect(untouched.sidebar_collapsed).toBe(true);
+
+    const expanded = await shellStateService.save(me, { sidebar_collapsed: false });
+    expect(expanded.sidebar_collapsed).toBe(false);
   });
 
   it('ignores an empty input rather than blanking the arrangement', async () => {

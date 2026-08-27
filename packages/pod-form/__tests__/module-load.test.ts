@@ -31,9 +31,11 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
+  // The MUI-heavy modules transform slowly on a cold, fully parallel run; the
+  // default 5s is a flake, not a signal.
   it.each(paths)('loads %s', async (modulePath) => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+  }, 30_000);
 });

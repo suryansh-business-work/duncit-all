@@ -31,9 +31,15 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  // The MUI + MUI X import graph behind the dialog takes tens of seconds to
+  // transform on a cold cache (Windows), so each module gets its own room.
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    120_000
+  );
 });

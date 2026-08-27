@@ -79,7 +79,7 @@ describe('ConfigField boolean variant', () => {
     const onToggleBool = vi.fn();
     const field = makeEnvFieldDef({ name: 'secure', label: 'Use TLS', bool: true });
     render(<ConfigField field={field} value="false" helperText=" " onChange={vi.fn()} onBlur={vi.fn()} onToggleBool={onToggleBool} />);
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('switch'));
     expect(onToggleBool).toHaveBeenCalledWith('secure', true);
   });
 

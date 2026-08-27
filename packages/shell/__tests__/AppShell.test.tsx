@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
@@ -103,8 +103,11 @@ describe('AppShell', () => {
     const u = userEvent.setup();
     renderShell({ hasAccess: true });
     await u.click(screen.getByLabelText('open navigation'));
+    const modal = document.querySelector('.MuiDrawer-modal') as HTMLElement;
     await u.keyboard('{Escape}');
-    expect(document.querySelector('.MuiDrawer-modal')?.getAttribute('aria-hidden')).toBe('true');
+    // The drawer is keepMounted, so closing it does not remove it: MUI 7+ marks
+    // the modal hidden once the exit transition has run, instead of aria-hidden.
+    await waitFor(() => expect(modal).toHaveClass('MuiModal-hidden'));
   });
 
   it('falls back to the short name when no fullName is set', () => {

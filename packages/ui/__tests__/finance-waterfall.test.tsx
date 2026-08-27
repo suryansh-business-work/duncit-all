@@ -139,6 +139,15 @@ describe('AttendanceChip', () => {
     expect(container).toBeDefined();
   });
 
+  it('fills the chip green once every booked seat was scanned', () => {
+    const { container } = render(
+      <AttendanceChip attendance={{ attended_seats: 8, booked_seats: 8, recorded: true }} />
+    );
+
+    const chip = container.querySelector('.MuiChip-root');
+    expect(chip).toHaveClass('MuiChip-filled', 'MuiChip-colorSuccess');
+  });
+
   it('renders at either size', () => {
     for (const size of ['small', 'medium'] as const) {
       const { container } = render(

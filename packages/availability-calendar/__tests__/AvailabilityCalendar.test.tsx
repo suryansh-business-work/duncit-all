@@ -160,6 +160,30 @@ describe('AvailabilityCalendar', () => {
       expect(within(day13).getByText('1×')).toBeInTheDocument();
     });
 
+    it('counts a multi-day slot on every day it covers, and none past its exclusive end', () => {
+      const slots = [
+        makeSlot({
+          id: 'm1',
+          start_at: new Date(2026, 0, 20, 10).toISOString(),
+          end_at: new Date(2026, 0, 22, 18).toISOString(),
+          status: 'BOOKED',
+        }),
+        // Ends exactly at midnight: the end instant is exclusive, so Jan 25 stays clear.
+        makeSlot({
+          id: 'm2',
+          start_at: new Date(2026, 0, 24, 9).toISOString(),
+          end_at: new Date(2026, 0, 25, 0, 0).toISOString(),
+          status: 'AVAILABLE',
+        }),
+      ];
+      render(<AvailabilityCalendar month={new Date(2026, 0, 1)} slots={slots} selectedDate={null} onSelect={vi.fn()} />);
+      const cell = (day: string) => screen.getByText(day).closest('[role="button"]') as HTMLElement;
+      for (const day of ['20', '21', '22']) expect(within(cell(day)).getByText('1B')).toBeInTheDocument();
+      expect(within(cell('23')).queryByText('1B')).not.toBeInTheDocument();
+      expect(within(cell('24')).getByText('1A')).toBeInTheDocument();
+      expect(within(cell('25')).queryByText('1A')).not.toBeInTheDocument();
+    });
+
     it('renders no badges on a day with no slots', () => {
       render(<AvailabilityCalendar month={new Date(2026, 0, 1)} slots={[]} selectedDate={null} onSelect={vi.fn()} />);
       const day10 = screen.getByText('10').closest('[role="button"]') as HTMLElement;
@@ -208,7 +232,8 @@ describe('AvailabilityCalendar', () => {
       );
       expect(screen.queryByText('Sun')).not.toBeInTheDocument();
       expect(screen.getAllByRole('button')).toHaveLength(1);
-      expect(screen.getByText('Thursday, 15 Jan')).toBeInTheDocument();
+      // The full date reads the admin's pattern (fallback 'dd MMM yyyy'), not a local literal.
+      expect(screen.getByText('15 Jan 2026')).toBeInTheDocument();
       expect(screen.getByText('Venue on leave — not bookable')).toBeInTheDocument();
       expect(screen.queryByLabelText('Venue on leave')).not.toBeInTheDocument();
     });

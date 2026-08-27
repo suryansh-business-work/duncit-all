@@ -118,4 +118,18 @@ describe('MapEmbedCard', () => {
     expect(screen.getByTitle('Map preview')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open in maps/i })).toBeInTheDocument();
   });
+
+  it('spreads stackSx given as an array of sx entries into the header stack', () => {
+    render(
+      <MapEmbedCard
+        parts={['DLF CyberHub, Gurugram']}
+        apiKey="key1"
+        stackSx={[{ mb: 3 }, { pt: 1 }]}
+      />,
+    );
+    const stack = screen.getByText('Map preview').parentElement as HTMLElement;
+    const style = getComputedStyle(stack);
+    expect(style.marginBottom).toBe('24px');
+    expect(style.paddingTop).toBe('8px');
+  });
 });

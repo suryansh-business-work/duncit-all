@@ -17,7 +17,10 @@ describe('package entry point', () => {
     expect(typeof api.activeChipColumn).toBe('function');
     expect(typeof api.dateColumn).toBe('function');
     expect(typeof api.formatDateCell).toBe('function');
-    expect(api.DEFAULT_DATE_FORMAT).toBe('d MMM yyyy');
+    expect(typeof api.entityIdColumn).toBe('function');
+    expect(typeof api.clientTableFetch).toBe('function');
+    expect(typeof api.fallbackT).toBe('function');
+    expect(typeof api.useTranslation).toBe('function');
     expect(api.EM_DASH).toBe('—');
   });
 });

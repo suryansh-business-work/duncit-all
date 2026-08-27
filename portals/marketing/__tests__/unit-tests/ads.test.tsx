@@ -19,7 +19,8 @@ import { logs } from '@duncit/logs';
 // hand-rolled `@apollo/client` hook mock.
 // ---------------------------------------------------------------------------
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (s: string) => `fmt:${s}` }),
 }));
 const dialogsMock = vi.hoisted(() => ({ notifySuccess: vi.fn() }));

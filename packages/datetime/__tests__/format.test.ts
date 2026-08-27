@@ -85,3 +85,46 @@ describe('createDateFormatter', () => {
     expect(createDateFormatter().clock.source).toBe('BROWSER');
   });
 });
+
+describe('createDateFormatter · typed input and calendar days', () => {
+  it('parses text typed in the configured date pattern', () => {
+    const f = createDateFormatter({ dateFormat: 'yyyy-MM-dd' });
+    const parsed = f.parseDate('2000-01-05');
+    expect(parsed?.getFullYear()).toBe(2000);
+    expect(parsed?.getMonth()).toBe(0);
+    expect(parsed?.getDate()).toBe(5);
+    expect(f.parseDate('not a date')).toBeNull();
+  });
+
+  it('parses date + time typed as the two patterns joined by a plain space', () => {
+    const f = createDateFormatter({ dateFormat: 'yyyy-MM-dd', timeFormat: 'HH:mm' });
+    expect(f.dateTimeInputFormat).toBe('yyyy-MM-dd HH:mm');
+    const parsed = f.parseDateTime('2000-01-05 19:30');
+    expect(parsed?.getDate()).toBe(5);
+    expect(parsed?.getHours()).toBe(19);
+    expect(parsed?.getMinutes()).toBe(30);
+    expect(f.parseDateTime('2000-01-05')).toBeNull();
+  });
+
+  it('offers typing hints derived from the same patterns', () => {
+    const f = createDateFormatter({ dateFormat: 'dd MMM yyyy', timeFormat: 'hh:mm a' });
+    expect(f.datePlaceholder).toBe('DD MMM YYYY');
+    expect(f.dateTimePlaceholder).toBe('DD MMM YYYY hh:mm AM');
+  });
+
+  it('renders a stored calendar day without a zone conversion, even zone-aware', () => {
+    const f = createDateFormatter({
+      dateFormat: 'dd MMM yyyy',
+      timeZone: 'Pacific/Kiritimati',
+      timeZoneAware: true,
+    });
+    // A birthday is a calendar position — the configured zone must not move it.
+    expect(f.formatDay('2000-01-05')).toBe('05 Jan 2000');
+    expect(f.formatDay('not-a-day')).toBe('');
+  });
+
+  it('reads back a picked Date as its LOCAL calendar day', () => {
+    const f = createDateFormatter();
+    expect(f.toIsoDay(new Date(2000, 0, 5, 23, 59))).toBe('2000-01-05');
+  });
+});

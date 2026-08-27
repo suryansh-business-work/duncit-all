@@ -11,10 +11,25 @@ import { rateLimitService } from './rateLimit.service';
  */
 const MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
+/**
+ * Every timestamp on these types is declared `String` in the schema, and the
+ * String scalar serializes a Date through `valueOf()` — so a raw Date leaves
+ * as epoch millis ('1787824800000'), which the console reads back as an Invalid
+ * Date and throws on while it paints the grid. ISO is what every other module
+ * sends and what the portal's date cells parse.
+ */
+function isoDates(plain: object): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...plain };
+  for (const [key, value] of Object.entries(out)) {
+    if (value instanceof Date) out[key] = value.toISOString();
+  }
+  return out;
+}
+
 /** `_id` is what Mongo returns; the API has always spoken `id`. */
 function withId<T extends { _id?: unknown; toObject?: () => Record<string, unknown> }>(doc: T) {
   const plain = doc.toObject ? doc.toObject() : (doc as Record<string, unknown>);
-  return { ...plain, id: String((plain as { _id: unknown })._id) };
+  return { ...isoDates(plain), id: String((plain as { _id: unknown })._id) };
 }
 
 function requireRule<T>(doc: T | null): T {
@@ -24,9 +39,9 @@ function requireRule<T>(doc: T | null): T {
 
 export const rateLimitResolvers = {
   Query: {
-    rateLimitSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    rateLimitSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, MANAGE);
-      return rateLimitService.getSettings();
+      return isoDates(await rateLimitService.getSettings());
     },
     rateLimitRules: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, MANAGE);
@@ -49,7 +64,7 @@ export const rateLimitResolvers = {
     rateLimitSystems: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, MANAGE);
       const rows = await rateLimitService.systems();
-      return rows.map((row) => ({ ...row, id: String(row._id) }));
+      return rows.map((row) => ({ ...isoDates(row), id: String(row._id) }));
     },
     rateLimitEventsTable: async (
       _p: unknown,
@@ -106,13 +121,13 @@ export const rateLimitResolvers = {
       requireRole(ctx, MANAGE);
       return withId(requireRule(await rateLimitService.resetRuleCounters(args.rule_id)));
     },
-    updateRateLimitSettings: (
+    updateRateLimitSettings: async (
       _p: unknown,
       args: { input: Record<string, unknown> },
       ctx: GraphQLContext,
     ) => {
       requireRole(ctx, MANAGE);
-      return rateLimitService.updateSettings(args.input);
+      return isoDates(await rateLimitService.updateSettings(args.input));
     },
     resetRateLimitCounters: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, MANAGE);

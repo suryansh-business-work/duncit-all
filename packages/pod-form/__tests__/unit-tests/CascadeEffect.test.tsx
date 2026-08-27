@@ -58,7 +58,8 @@ describe('CascadeEffect', () => {
     expect(ref.current?.getValues('location_id')).toBe('');
     expect(ref.current?.getValues('zone_name')).toBe('');
     expect(ref.current?.getValues('place_charges')).toEqual([]);
-    expect(ref.current?.getValues('products_enabled')).toBe(false);
+    // `products_enabled` is no longer a field the cascade clears: buildPodInput
+    // derives it from the rows, so dropping the rows is what disables products.
     expect(ref.current?.getValues('product_requests')).toEqual([]);
   });
 
@@ -66,7 +67,7 @@ describe('CascadeEffect', () => {
     const ref = mount({ pod_mode: 'PHYSICAL' });
     act(() => ref.current?.setValue('pod_mode', 'VIRTUAL'));
     expect(ref.current?.getValues('venue_id')).toBe('');
-    expect(ref.current?.getValues('products_enabled')).toBe(false);
+    expect(ref.current?.getValues('product_requests')).toEqual([]);
   });
 
   it('resets the venue when it is no longer linked to the club', () => {

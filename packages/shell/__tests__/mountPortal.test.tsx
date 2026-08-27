@@ -71,7 +71,16 @@ describe('mountPortal', () => {
 
     mountPortal(baseOpts());
 
-    expect(logs.httpTransport).toHaveBeenCalledWith('https://api.test/logs');
+    // The session token + device id ride along as headers, read lazily per call.
+    expect(logs.httpTransport).toHaveBeenCalledWith('https://api.test/logs', {
+      getToken: expect.any(Function),
+      getDeviceId: expect.any(Function),
+    });
+    const { getToken } = logs.httpTransport.mock.calls[0][1] as { getToken: () => string | null };
+    expect(getToken()).toBeNull();
+    localStorage.setItem('tok_key', 'jwt');
+    expect(getToken()).toBe('jwt');
+    localStorage.removeItem('tok_key');
     expect(logs.configureLogs).toHaveBeenCalledWith('transport', { platform: 'web', portal: 'crm' });
     await mounted();
     expect(createRootSpy).toHaveBeenCalledWith(root);

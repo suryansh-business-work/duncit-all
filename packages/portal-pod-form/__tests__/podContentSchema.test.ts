@@ -20,7 +20,7 @@ describe('podContentSchema', () => {
     const result = podContentSchema.safeParse({ ...validInput, pod_title: 'A' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.pod_title).toContain('Name must be at least 2 characters');
+      expect(result.error.flatten().fieldErrors.pod_title).toContain('shell.podContent.nameMin');
     }
   });
 
@@ -28,7 +28,7 @@ describe('podContentSchema', () => {
     const result = podContentSchema.safeParse({ ...validInput, pod_title: '  a  ' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.pod_title).toContain('Name must be at least 2 characters');
+      expect(result.error.flatten().fieldErrors.pod_title).toContain('shell.podContent.nameMin');
     }
   });
 
@@ -44,7 +44,7 @@ describe('podContentSchema', () => {
     const result = podContentSchema.safeParse({ ...validInput, pod_description: '' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.pod_description).toContain('Description is required');
+      expect(result.error.flatten().fieldErrors.pod_description).toContain('shell.podContent.descriptionRequired');
     }
   });
 
@@ -52,7 +52,7 @@ describe('podContentSchema', () => {
     const result = podContentSchema.safeParse({ ...validInput, pod_description: '   ' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.pod_description).toContain('Description is required');
+      expect(result.error.flatten().fieldErrors.pod_description).toContain('shell.podContent.descriptionRequired');
     }
   });
 

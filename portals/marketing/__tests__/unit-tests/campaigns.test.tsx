@@ -26,7 +26,8 @@ vi.mock('@monaco-editor/react', () => ({
     </div>
   ),
 }));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({
     dateFormat: 'dd/MM/yyyy',
     timeFormat: 'HH:mm',

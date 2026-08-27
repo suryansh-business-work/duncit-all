@@ -30,7 +30,7 @@ describe('PortalModesTable', () => {
     expect(screen.getAllByText('Live').length).toBe(2); // tech + odd rows are LIVE
     expect(screen.getAllByText('—').length).toBeGreaterThan(0); // null url rows
     // The busy row's switches are disabled; others stay interactive.
-    const switches = screen.getAllByRole('checkbox');
+    const switches = screen.getAllByRole('switch');
     expect(switches[0]).toBeDisabled();
     expect(switches[1]).toBeDisabled();
     expect(switches[2]).not.toBeDisabled();
@@ -45,7 +45,7 @@ describe('PortalModesTable', () => {
     render(<PortalModesTable fetchRows={fetchFor(rows)} refetchRef={{ current: null }} busyKey={null} onChange={onChange} />);
     await screen.findByText('mWeb');
     // switches order per row: [maintenance, development]
-    const sw = screen.getAllByRole('checkbox');
+    const sw = screen.getAllByRole('switch');
     fireEvent.click(sw[0]); // mweb maintenance ON→OFF → LIVE
     fireEvent.click(sw[1]); // mweb development OFF→ON → DEVELOPMENT
     fireEvent.click(sw[2]); // site maintenance OFF→ON → MAINTENANCE

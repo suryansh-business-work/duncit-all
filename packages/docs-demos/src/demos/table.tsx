@@ -119,7 +119,7 @@ export default defineDemos('table', [
     id: 'query',
     title: 'The table\u2019s state, as the server receives it',
     note:
-      'Every server-side table on the platform sends exactly this. Add a filter to the mock and watch both the payload and the chip label follow — the toolbar is built from the same object.',
+      'Every server-side table on the platform sends exactly this. Add a filter to the mock and watch both the payload and the chip label follow — the toolbar is built from the same object. The date lines below it are the other half: empty and unreadable both print the em dash, because a value getter that throws takes the page down with it.',
     mock: {
       query: {
         search: 'badminton',
@@ -147,6 +147,9 @@ export default defineDemos('table', [
         filterChipLabel(mock.columns, filter, fallbackT)
       ),
       'A blank date cell': formatDateCell(null),
+      // Unreadable reads as blank on purpose: a value getter runs inside the
+      // grid's paint, so throwing there costs the page rather than the cell.
+      'A date cell it cannot read': formatDateCell('1787824800000'),
       'The em dash it uses': EM_DASH,
     }),
   }),

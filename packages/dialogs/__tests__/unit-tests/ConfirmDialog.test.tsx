@@ -66,7 +66,9 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmDialog open title="X" confirmColor="warning" destructive onConfirm={vi.fn()} onClose={vi.fn()} />
     );
-    expect(screen.getByRole('button', { name: 'Confirm' }).className).toContain('MuiButton-containedWarning');
+    const className = screen.getByRole('button', { name: 'Confirm' }).className;
+    expect(className).toContain('MuiButton-colorWarning');
+    expect(className).not.toContain('MuiButton-colorError');
   });
 
   it('falls back to the onCancel alias when onClose is not provided', () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { filterByQuery, matchesQuery } from '../src/search';
 
@@ -29,6 +29,23 @@ describe('matchesQuery', () => {
 
   it('matches on a substring, not only a whole word', () => {
     expect(matchesQuery(['Badminton'], 'badmin')).toBe(true);
+  });
+
+  it('keeps a character whose code point cannot be read instead of dropping it', () => {
+    // for-of over a string never yields an empty chunk, so codePointAt(0) can
+    // only answer undefined if the platform misbehaves — pin that down here.
+    const spy = vi.spyOn(String.prototype, 'codePointAt').mockReturnValue(undefined);
+    let matched: boolean;
+    let readAttempts: number;
+    try {
+      matched = matchesQuery(['DUN-POD-4821 Sunday Badminton'], 'badminton');
+      readAttempts = spy.mock.calls.length;
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(readAttempts).toBeGreaterThan(0);
+    expect(matched).toBe(true);
   });
 });
 

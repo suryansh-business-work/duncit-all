@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DUID_STORAGE_KEY } from '@duncit/user-core';
 import { clearAllStorages, readCachedUser, writeCachedUser } from '../src/storage';
 
 const KEY = 'test_user';
@@ -88,6 +89,14 @@ describe('clearAllStorages', () => {
     clearAllStorages();
     expect(localStorage.length).toBe(0);
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it('keeps the DUID — it identifies the device, not the person', () => {
+    localStorage.setItem(DUID_STORAGE_KEY, 'device-1');
+    localStorage.setItem('a', '1');
+    clearAllStorages();
+    expect(localStorage.getItem(DUID_STORAGE_KEY)).toBe('device-1');
+    expect(localStorage.getItem('a')).toBeNull();
   });
 
   it('swallows a localStorage.clear failure', () => {

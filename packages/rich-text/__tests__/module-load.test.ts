@@ -31,9 +31,12 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
+  // 60s: the editor modules pull the whole tiptap + MUI chain through the
+  // transform pipeline on first import, which outruns the 5s default on
+  // slower machines (Windows dev boxes) while staying instant once warm.
   it.each(paths)('loads %s', async (modulePath) => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+  }, 60_000);
 });

@@ -25,7 +25,11 @@ const NOW = Date.UTC(2026, 7, 10, 9, 0, 0); // 2026-08-10T09:00:00Z
 const iso = (value: unknown): string => {
   if (value instanceof Date) return value.toISOString();
   if (typeof value === 'number') return new Date(value).toISOString();
-  return String(value ?? '');
+  const text = String(value ?? '');
+  // `slotDayLabel` hands the formatter `${dayKey}T00:00:00` with no zone marker.
+  // Pin that to UTC so this UTC-fixed fixture answers the same on any machine —
+  // parsed as device-local time it slips a day on every non-UTC box.
+  return /T\d{2}:\d{2}:\d{2}$/.test(text) ? `${text}Z` : text;
 };
 
 const fmt: SlotFormatter = {

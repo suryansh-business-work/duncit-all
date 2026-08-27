@@ -86,17 +86,24 @@ describe('PodSections', () => {
     expect(about).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('enables the products section only via its switch', async () => {
+  // The "Attach products" switch is gone: attaching a product IS enabling them,
+  // so the section opens like any other and the flag is derived at build time.
+  it('opens the products section like any other, with no enable switch', async () => {
     const user = userEvent.setup();
     const ref = renderSections(makeData({ config: makeConfig({ showProducts: true }) }));
-    // products accordion is present but disabled until the switch is on
-    const productsHeader = screen.getByRole('button', { name: /Approved Products/ });
+    const productsHeader = screen.getByRole('button', { name: /6. Approved Products/ });
+    expect(productsHeader).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
     await user.click(productsHeader);
-    expect(ref.current?.getValues('products_enabled')).toBe(false);
-    // flip the enable switch
-    await user.click(screen.getByRole('checkbox'));
-    expect(ref.current?.getValues('products_enabled')).toBe(true);
     expect(productsHeader).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Add a Product' })).toBeInTheDocument();
+    expect(ref.current?.getValues('products_enabled')).toBe(false);
+  });
+
+  it('leaves the products section out when the config hides products', () => {
+    renderSections(makeData());
+    expect(screen.queryByText(/Approved Products/)).not.toBeInTheDocument();
+    expect(screen.getByText('6. Payment & Charges')).toBeInTheDocument();
   });
 
   it('omits the products section for a virtual pod even when enabled in config', () => {

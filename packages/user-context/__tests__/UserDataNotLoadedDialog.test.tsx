@@ -46,4 +46,22 @@ describe('UserDataNotLoadedDialog', () => {
     // The dialog swallows backdrop dismissal, so it remains mounted.
     expect(screen.getByText('User data not loaded')).toBeInTheDocument();
   });
+
+  it('ignores Escape (stays open)', async () => {
+    render(<UserDataNotLoadedDialog open onReload={vi.fn()} onLogout={vi.fn()} />);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByText('User data not loaded')).toBeInTheDocument();
+  });
+
+  it('never closes itself for any other reason either — only `open` controls it', () => {
+    const onReload = vi.fn();
+    const onLogout = vi.fn();
+    // MUI only ever passes the two refused reasons; the component has no hooks,
+    // so the element tree can be built directly to reach its onClose handler.
+    const dialog = UserDataNotLoadedDialog({ open: true, onReload, onLogout });
+    const { onClose } = dialog.props as { onClose: (e: unknown, reason: string) => void };
+    expect(onClose({}, 'other')).toBeUndefined();
+    expect(onReload).not.toHaveBeenCalled();
+    expect(onLogout).not.toHaveBeenCalled();
+  });
 });

@@ -44,6 +44,13 @@ describe('parseInPattern', () => {
     expect(parseInPattern('05 jan 2000', 'dd MMM yyyy')).not.toBeNull();
   });
 
+  it('refuses text whose echo differs from what was typed, e.g. a 1-digit day for dd', () => {
+    // date-fns reads '5' for `dd` and would hand back a valid date; only the
+    // re-format comparison notices the shape was not the configured one.
+    expect(parseInPattern('5 Jan 2000', 'dd MMM yyyy')).toBeNull();
+    expect(parseInPattern('05 Jan 2000', 'd MMM yyyy')).toBeNull();
+  });
+
   it('refuses trailing junk, which date-fns alone would silently keep', () => {
     expect(parseInPattern('05 Jan 2000 and then some', 'dd MMM yyyy')).toBeNull();
   });

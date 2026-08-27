@@ -81,6 +81,7 @@ const ME = gql`
   query MeProfile {
     me {
       user_id
+      username
       first_name
       last_name
       full_name
@@ -114,6 +115,7 @@ const ME = gql`
 const meData = {
   __typename: 'User',
   user_id: 'u1',
+  username: 'alice',
   first_name: 'Alice',
   last_name: 'Wonder',
   full_name: 'Alice Wonder',

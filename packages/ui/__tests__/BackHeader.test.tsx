@@ -75,4 +75,9 @@ describe('BackHeader', () => {
     );
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
   });
+
+  it('spreads an array titleSx into the title styles', () => {
+    render(withRouter(<BackHeader title="Detail" titleSx={[{ letterSpacing: '2px' }]} />));
+    expect(screen.getByText('Detail')).toHaveStyle({ letterSpacing: '2px' });
+  });
 });

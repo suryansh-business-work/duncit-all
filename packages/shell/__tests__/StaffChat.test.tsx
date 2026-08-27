@@ -1,9 +1,14 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { schemaMockLink } from './schema-mock';
 import CoworkerList from '../src/staff-chat/CoworkerList';
 import Conversation from '../src/staff-chat/Conversation';
-import type { Coworker, StaffMessage, StaffThread } from '../src/staff-chat/queries';
+import { DEFAULT_CHAT_SETTINGS, type ChatFormats } from '../src/staff-chat/useChatSettings';
+import type { Coworker, StaffCall, StaffMessage, StaffThread } from '../src/staff-chat/queries';
 import { useStaffSocket } from '../src/staff-chat/useStaffSocket';
 
 const ping = vi.hoisted(() => vi.fn());
@@ -74,36 +79,118 @@ describe('CoworkerList', () => {
   });
 });
 
+/** jsdom measures everything as zero and has no observers, so a thread left to
+ *  itself never decides anything is on screen. Sized elements + observers that
+ *  answer immediately are what let the messages render at all. */
+beforeAll(() => {
+  for (const prop of ['offsetHeight', 'clientHeight', 'scrollHeight'] as const) {
+    Object.defineProperty(HTMLElement.prototype, prop, { configurable: true, value: 800 });
+  }
+  for (const prop of ['offsetWidth', 'clientWidth'] as const) {
+    Object.defineProperty(HTMLElement.prototype, prop, { configurable: true, value: 1200 });
+  }
+  const size = [{ inlineSize: 1200, blockSize: 800 }];
+  const box = { x: 0, y: 0, top: 0, left: 0, right: 1200, bottom: 800, width: 1200, height: 800 };
+  class SizedResizeObserver {
+    constructor(private readonly callback: ResizeObserverCallback) {}
+    observe(target: Element) {
+      this.callback(
+        [{ target, contentRect: box, borderBoxSize: size, contentBoxSize: size, devicePixelContentBoxSize: size }] as never,
+        this as never
+      );
+    }
+    unobserve() {}
+    disconnect() {}
+  }
+  class SeenIntersectionObserver {
+    constructor(private readonly callback: IntersectionObserverCallback) {}
+    observe(target: Element) {
+      this.callback(
+        [{ target, isIntersecting: true, intersectionRatio: 1, boundingClientRect: box, intersectionRect: box, rootBounds: box, time: 0 }] as never,
+        this as never
+      );
+    }
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  globalThis.ResizeObserver ??= SizedResizeObserver as unknown as typeof ResizeObserver;
+  globalThis.IntersectionObserver ??= SeenIntersectionObserver as unknown as typeof IntersectionObserver;
+  Element.prototype.scrollTo ??= () => undefined;
+  Element.prototype.scrollIntoView ??= () => undefined;
+});
+
 describe('Conversation', () => {
   const message = (id: string, from: string, text: string): StaffMessage => ({
     id,
     from_user_id: from,
     to_user_id: from === 'me' ? 'u1' : 'me',
     text,
-    read_at: null,
     created_at: '2026-08-06T10:00:00.000Z',
   });
 
-  it('sends on Enter and keeps Shift+Enter for a new line', () => {
-    const onSend = vi.fn();
+  /** Fixed and injected, so nothing here reads the machine's clock or zone. */
+  const formats: ChatFormats = {
+    time: { format: (value: Date) => `T:${value.toISOString().slice(11, 16)}` },
+    full: { format: (value: Date) => `F:${value.toISOString()}` },
+    day: { format: (value: Date) => `D:${value.toISOString().slice(0, 10)}` },
+  };
+
+  const conversationProps = () => ({
+    peer: person('u1', 'Asha Rao'),
+    meId: 'me',
+    status: 'ONLINE' as const,
+    lastSeen: null,
+    messages: [] as StaffMessage[],
+    calls: [] as StaffCall[],
+    onPlayRecording: vi.fn(),
+    sending: false,
+    upload: { active: false, pct: null },
+    onBack: vi.fn(),
+    onSend: vi.fn(),
+    onAttach: vi.fn(),
+    onVoiceNote: vi.fn(),
+    paging: { loading: false, hasMore: false, loadingMore: false, onLoadMore: vi.fn() },
+    settings: DEFAULT_CHAT_SETTINGS,
+    formats,
+    spacing: 1,
+    nameOf: (id: string) => (id === 'me' ? 'Me' : 'Asha Rao'),
+    replyTo: null,
+    onCancelReply: vi.fn(),
+    handlers: {
+      onEdit: vi.fn(),
+      onDelete: vi.fn(),
+      onReact: vi.fn(),
+      onReply: vi.fn(),
+      onForward: vi.fn(),
+      onPin: vi.fn(),
+      onNavigate: vi.fn(),
+      onRetry: vi.fn(),
+    },
+    canSeeEditHistory: false,
+    onTyping: vi.fn(),
+    typingAt: 0,
+    actions: { onExport: vi.fn(), onClear: vi.fn(), onSettings: vi.fn(), onCall: vi.fn() },
+  });
+
+  const show = (over: Partial<Parameters<typeof Conversation>[0]> = {}) => {
+    const props = { ...conversationProps(), ...over };
     render(
-      <Conversation
-        peer={person('u1', 'Asha Rao')}
-        meId="me"
-        status="ONLINE"
-        messages={[]}
-        sending={false}
-        uploading={false}
-        onBack={vi.fn()}
-        onSend={onSend}
-        onAttach={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onTyping={vi.fn()}
-        onCall={vi.fn()}
-        onExport={vi.fn()}
-      />
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={createTheme()}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Conversation {...props} />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>
     );
+    return props;
+  };
+
+  it('sends on Enter and keeps Shift+Enter for a new line', () => {
+    const { onSend } = show();
     const box = screen.getByPlaceholderText('Write a message');
     fireEvent.change(box, { target: { value: 'ready?' } });
 
@@ -115,51 +202,39 @@ describe('Conversation', () => {
   });
 
   it('does not send whitespace', () => {
-    const onSend = vi.fn();
-    render(
-      <Conversation
-        peer={person('u1', 'Asha Rao')}
-        meId="me"
-        status="ONLINE"
-        messages={[]}
-        sending={false}
-        uploading={false}
-        onBack={vi.fn()}
-        onSend={onSend}
-        onAttach={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onTyping={vi.fn()}
-        onCall={vi.fn()}
-        onExport={vi.fn()}
-      />
-    );
-    fireEvent.change(screen.getByPlaceholderText('Write a message'), { target: { value: '   ' } });
-    fireEvent.keyDown(screen.getByPlaceholderText('Write a message'), { key: 'Enter' });
+    const { onSend } = show();
+    const box = screen.getByPlaceholderText('Write a message');
+    fireEvent.change(box, { target: { value: '   ' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
     expect(onSend).not.toHaveBeenCalled();
   });
 
   it('shows both sides of the conversation', () => {
-    render(
-      <Conversation
-        peer={person('u1', 'Asha Rao')}
-        meId="me"
-        status="ONLINE"
-        messages={[message('m1', 'u1', 'did you see it'), message('m2', 'me', 'just now')]}
-        sending={false}
-        uploading={false}
-        onBack={vi.fn()}
-        onSend={vi.fn()}
-        onAttach={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onTyping={vi.fn()}
-        onCall={vi.fn()}
-        onExport={vi.fn()}
-      />
-    );
+    show({ messages: [message('m1', 'u1', 'did you see it'), message('m2', 'me', 'just now')] });
     expect(screen.getByText('did you see it')).toBeInTheDocument();
     expect(screen.getByText('just now')).toBeInTheDocument();
+  });
+
+  it('opens and closes the in-conversation search from the header', () => {
+    show();
+    fireEvent.click(screen.getByLabelText('Search this conversation'));
+    expect(screen.getByLabelText('Close search')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Close search'));
+    expect(screen.queryByLabelText('Close search')).not.toBeInTheDocument();
+  });
+
+  it('asks before clearing, and only a confirmed wipe reaches the actions', () => {
+    const { actions } = show();
+    fireEvent.click(screen.getByLabelText('More'));
+    fireEvent.click(screen.getByText('Clear all messages'));
+    expect(screen.getByText('Clear this conversation?')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Clear messages'));
+    expect(actions.onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a real percentage while a file with known progress goes up', () => {
+    show({ upload: { active: true, pct: 40 } });
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 });
 

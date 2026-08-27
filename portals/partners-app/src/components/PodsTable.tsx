@@ -37,6 +37,9 @@ interface Props<T extends PodRowBase> {
   toolbarActions?: ReactNode;
   /** When provided, a trailing Actions column renders this per row. */
   renderActions?: (pod: T) => ReactNode;
+  /** Width of that column. The host list renders one overflow menu; the
+   * club-admin list renders four icon buttons and needs the room. */
+  actionsWidth?: number;
   /** When provided, an "AI Monitoring" column renders this per row — the
    * club-admin list passes the activity-dialog pill; the host list does not. */
   renderMonitor?: (pod: T) => ReactNode;
@@ -60,6 +63,7 @@ export default function PodsTable<T extends PodRowBase>({
   emptyText,
   toolbarActions,
   renderActions,
+  actionsWidth = 120,
   renderMonitor,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
@@ -163,12 +167,12 @@ export default function PodsTable<T extends PodRowBase>({
         field: 'actions',
         headerName: t('shell.common.actions'),
         sortable: false,
-        width: 120,
+        width: actionsWidth,
         cellRenderer: renderActions,
       });
     }
     return cols;
-  }, [clubName, venueName, renderActions, renderMonitor, t]);
+  }, [actionsWidth, clubName, venueName, renderActions, renderMonitor, t]);
 
   return (
     <DuncitTable<T>

@@ -793,6 +793,8 @@ export default defineDemos('utils', [
     title: 'What the attendance board offers its host',
     note:
       'Flip pod_mode to VIRTUAL: the scanner disappears and the earnings sentence changes. ' +
+      'canScanTickets decides whether the scan dialog is MOUNTED, not merely hidden — it reads ' +
+      'the host-actions config, which a console with no host area never supplies. ' +
       'Set viewer to CLUB_ADMIN and needsOtp answers false whatever otp_required says — the ' +
       'override exists for the attendee who cannot be reached.',
     mock: {

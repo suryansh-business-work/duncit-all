@@ -6,6 +6,7 @@ import CreatePodLauncher from './CreatePodLauncher';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -14,7 +15,7 @@ import PodActivityDialog from './PodActivityDialog';
 import AiMonitorPill from './AiMonitorPill';
 import PodStatusFilter from './PodStatusFilter';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
-import type { PodRowStatusFilter } from '../../components/pod-status';
+import { canOpenPodAttendance, type PodRowStatusFilter } from '../../components/pod-status';
 import { useTranslation } from '@duncit/shell';
 
 export default function ClubAdminClubPodsPage() {
@@ -88,6 +89,18 @@ export default function ClubAdminClubPodsPage() {
           <VisibilityIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
+      {canOpenPodAttendance(pod) && (
+        <Tooltip title={t('partners.clubAdminClubPodsPage.podAttendance')}>
+          <DuncitIconButton
+            size="small"
+            color="success"
+            component={RouterLink}
+            to={`${podsPath}/${pod.id}/attendance`}
+          >
+            <CheckCircleOutlinedIcon fontSize="small" />
+          </DuncitIconButton>
+        </Tooltip>
+      )}
       <Tooltip title={t('partners.clubAdminClubPodsPage.editPod')}>
         <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
           <EditIcon fontSize="small" />
@@ -157,6 +170,7 @@ export default function ClubAdminClubPodsPage() {
               </>
             }
             renderActions={renderActions}
+            actionsWidth={160}
             renderMonitor={(pod) => <AiMonitorPill onClick={() => setTrailPod(pod)} />}
           />
         </Stack>

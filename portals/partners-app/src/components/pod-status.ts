@@ -39,6 +39,22 @@ export const podRowStatus = (pod: PodStatusFields): PodRowStatus => {
   return pod.is_active ? 'ACTIVE' : 'DRAFT';
 };
 
+/**
+ * The pods whose attendance can be opened: the ones that are running or have
+ * run. A draft, a pod still awaiting its venue and a venue-rejected one have no
+ * door to have stood at, and a cancelled pod never happened — the server locks
+ * its board for exactly that reason.
+ *
+ * COMPLETED stays in on purpose. Completion locks MARKING, because the payout
+ * is already split by then, but the roster is still the record of who was
+ * there — and the board says why it is closed far more usefully than a missing
+ * action does.
+ */
+const ATTENDANCE_STATUSES = new Set<PodRowStatus>(['ACTIVE', 'COMPLETED']);
+
+export const canOpenPodAttendance = (pod: PodStatusFields): boolean =>
+  ATTENDANCE_STATUSES.has(podRowStatus(pod));
+
 type ChipColor = 'success' | 'info' | 'default' | 'error' | 'warning';
 
 export const POD_ROW_STATUS_COLORS: Record<PodRowStatus, ChipColor> = {

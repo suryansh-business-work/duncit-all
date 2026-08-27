@@ -10,6 +10,8 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'HostPodActionsProvider'
+  - 'useHostPodActionsConfig'
+  - 'PodAttendanceView'
   - 'HostPodActionsMenu'
   - 'useHostPodActions'
   - 'PodCompleteDialog'
@@ -84,6 +86,38 @@ import { buildSlotLabels } from '@duncit/slots';
 
 A dialog rendered outside the provider throws rather than falling back to defaults: silently losing
 the media picker and showing raw translation keys reads as a broken feature, not a missing mount.
+
+That applies to `PodAttendanceView` too, and it is easy to miss because the board looks like a
+read-only roster. It is not: a host's board carries the door scanner, so the view mounts
+`TicketScanDialog` — and `podAttendanceBoard` answers `viewer: HOST` whenever the caller hosts
+the pod, on whichever console they opened it. A club admin hosting a pod in their own club is the
+ordinary case, so the Club Admin's section sits inside the provider exactly like the host's list
+does. The dialog is mounted only when `canScanTickets(board)` is true, which keeps a
+club-admin-only board renderable, but that is the narrow case, not the contract.
+
+## The attendance board
+
+`PodAttendanceView` is the roster a pod is paid on: who is marked, who is not, and the one action
+that changes it. Both MUI surfaces render this one component — mWeb's Host Studio page and the
+Partners console's Club Admin section — over the single `podAttendanceBoard` read (rule 41), so
+"is this person marked" has one answer.
+
+What the viewer may do comes from the server, not from the call site: `viewer`, `can_mark`,
+`lock` and `otp_required` are all on the board. A surface supplies only its copy, its date
+format and where to report to.
+
+```tsx
+import { PodAttendanceView } from '@duncit/host-pod-actions';
+import { shellAttendanceLabels } from '@duncit/utils';   // mwebAttendanceLabels(t) in mWeb
+
+<PodAttendanceView
+  podId={podId}
+  labels={shellAttendanceLabels(t)}
+  formatDateTime={formatDateTime}
+  notifySuccess={notifySuccess}
+  notifyError={notifyError}
+/>
+```
 
 ## Wire a list to it
 

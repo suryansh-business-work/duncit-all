@@ -13,7 +13,9 @@ import { mwebAttendanceLabels } from '@duncit/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodAttendanceView from '../src/attendance/PodAttendanceView';
+import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
 import { POD_ATTENDANCE_BOARD } from '../src/attendance/queries';
+import { hostActionsConfig } from './host-actions-config';
 
 const POD_ID = 'pod-1';
 
@@ -82,18 +84,34 @@ const boardMock = (over: Record<string, unknown> = {}): MockedResponse => ({
   result: { data: { podAttendanceBoard: board(over) } },
 });
 
+const view = (
+  <PodAttendanceView
+    podId={POD_ID}
+    labels={labels}
+    formatDateTime={(iso) => `at:${iso}`}
+    notifySuccess={vi.fn()}
+    notifyError={vi.fn()}
+  />
+);
+
+/**
+ * A host surface: the scanner it opens reads the host-actions config, so the
+ * provider is part of what a host area supplies.
+ */
 const mount = (mocks: MockedResponse[] = [boardMock()]) =>
   render(
     <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>
-      <PodAttendanceView
-        podId={POD_ID}
-        labels={labels}
-        formatDateTime={(iso) => `at:${iso}`}
-        notifySuccess={vi.fn()}
-        notifyError={vi.fn()}
-      />
+        <HostPodActionsProvider {...hostActionsConfig()}>{view}</HostPodActionsProvider>
       </ThemeProvider>
+    </MockedProvider>
+  );
+
+/** A surface with no host area at all — the Club Admin's console. */
+const mountBare = (mocks: MockedResponse[]) =>
+  render(
+    <MockedProvider mocks={mocks}>
+      <ThemeProvider theme={testTheme}>{view}</ThemeProvider>
     </MockedProvider>
   );
 
@@ -142,6 +160,19 @@ describe('PodAttendanceView', () => {
 
     expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
     expect(container.innerHTML).not.toBe('');
+  });
+
+  it('renders a club admin’s board on a console with no host area behind it', async () => {
+    // The Club Admin's section in the Partners console mounts this view on its
+    // own: there is no door to scan at, so nothing there supplies the
+    // host-actions config. Mounting the scanner regardless threw the whole
+    // roster away the moment the board answered — the one screen a club admin
+    // opens the pod to use.
+    const { container } = mountBare([boardMock({ viewer: 'CLUB_ADMIN' })]);
+    await settle();
+
+    expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
+    expect(container.textContent).not.toContain(labels.scanCta);
   });
 
   it('closes the board once the pod is completed — the payout is already split by then', async () => {

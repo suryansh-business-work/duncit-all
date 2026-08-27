@@ -31,6 +31,7 @@ import ClubAdminClubsPage from './pages/club-admin-clubs-page/ClubAdminClubsPage
 import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminClubPodsPage';
 import ClubAdminEditClubPage from './pages/club-admin-edit-club-page/ClubAdminEditClubPage';
 import ClubAdminPodDetailsPage from './pages/club-admin-pod-details-page/ClubAdminPodDetailsPage';
+import ClubAdminPodAttendancePage from './pages/club-admin-pod-attendance-page';
 import ClubAdminPodEditorPage from './pages/club-admin-pod-editor-page';
 import ClubAdminAutoPodEditorPage from './pages/club-admin-auto-pod-editor-page';
 import ClubAdminPodMonitoringPage from './pages/club-admin-monitoring-page/ClubAdminPodMonitoringPage';
@@ -97,6 +98,10 @@ export default function App() {
       <Route path="/club-admin/clubs/:clubId/auto-pods/new" element={authed(<ClubAdminAutoPodEditorPage />)} />
       <Route path="/club-admin/clubs/:clubId/pods/:id" element={authed(<ClubAdminPodDetailsPage />)} />
       <Route path="/club-admin/clubs/:clubId/pods/:id/edit" element={authed(<ClubAdminPodEditorPage />)} />
+      <Route
+        path="/club-admin/clubs/:clubId/pods/:id/attendance"
+        element={authed(<ClubAdminPodAttendancePage />)}
+      />
       <Route path="/wallet" element={authed(<WalletPage />)} />
       <Route path="/earn" element={authed(<EarnPage />)} />
       <Route path="/verification" element={authed(<VerificationPage />)} />

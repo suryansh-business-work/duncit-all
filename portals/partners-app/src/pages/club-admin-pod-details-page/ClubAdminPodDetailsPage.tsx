@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
-import ClubAdminAttendanceSection from './ClubAdminAttendanceSection';
+import ClubAdminAttendanceSection from '../../components/ClubAdminAttendanceSection';
 
 // Below the attendee table, because it is the ACTION on the people that
 // table lists — and because it is the one thing on this page a club admin

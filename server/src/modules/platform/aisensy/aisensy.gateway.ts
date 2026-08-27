@@ -109,7 +109,7 @@ export function campaignErrorReason(body: any, status: number): string {
  * which is a real problem with a real asset and must NOT look like this one.
  */
 export function isMediaMissing(error: unknown): boolean {
-  const message = (error instanceof Error ? error.message : String(error ?? '')).toLowerCase();
+  const message = (error instanceof Error ? error.message : JSON.stringify(error ?? '')).toLowerCase();
   return message.includes('media') && (message.includes('missing') || message.includes('required'));
 }
 

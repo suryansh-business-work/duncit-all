@@ -26,7 +26,7 @@ export function mergeCss(base: CSSObject | undefined, extra: CSSObject): CSSObje
       existing !== null &&
       typeof value === 'object' &&
       value !== null;
-    out[key] = bothNested ? { ...(existing as CSSObject), ...(value as CSSObject) } : value;
+    out[key] = bothNested ? { ...existing, ...value } : value;
   }
   return out;
 }

@@ -20,7 +20,6 @@ import type {
   PodOption,
   SearchPodHosts,
 } from './types';
-import { useTranslation } from './i18n/useTranslation';
 
 export interface PodFormProps {
   initialValues: PodFormValues;
@@ -83,7 +82,6 @@ export default function PodForm({
   hideDraftOnEdit = false,
   preview,
 }: Readonly<PodFormProps>) {
-  const { t } = useTranslation();
   const schema = useMemo(() => makePodSchema(config), [config]);
   const submitMode = useRef<'publish' | 'draft'>('publish');
   const methods = useForm<PodFormValues>({

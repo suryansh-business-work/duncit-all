@@ -1207,8 +1207,8 @@ async function assertContactsUnchanged(user_id: string, input: UpdateMyProfileDT
   const current = await UserModel.findById(user_id)
     .select('auth.phone.number communication.whatsapp.number')
     .lean();
-  const moved = (incoming: string | undefined, stored: unknown) =>
-    incoming !== undefined && incoming.trim() !== String(stored ?? '').trim();
+  const moved = (incoming: string | undefined, stored: string | null | undefined) =>
+    incoming !== undefined && incoming.trim() !== (stored ?? '').trim();
 
   if (moved(incomingPhone, (current as any)?.auth?.phone?.number)) {
     throw new GraphQLError('Verify your new phone number to change it.', {

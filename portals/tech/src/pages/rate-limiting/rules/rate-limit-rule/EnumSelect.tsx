@@ -16,6 +16,16 @@ interface Props<T extends FieldValues> {
   multiple?: boolean;
 }
 
+/** renderValue for the multiple variant — hoisted so the chip row is not re-defined per render (S6478). */
+const renderSelectedChips =
+  (options: ReadonlyArray<SelectOption>) => (selected: unknown) => (
+    <Stack direction="row" sx={{ gap: 0.5, flexWrap: 'wrap' }}>
+      {(selected as string[]).map((value) => (
+        <Chip key={value} size="small" label={options.find((o) => o.value === value)?.label ?? value} />
+      ))}
+    </Stack>
+  );
+
 /**
  * A select over options the SERVER supplied.
  *
@@ -49,19 +59,7 @@ export default function EnumSelect<T extends FieldValues>({
           slotProps={{
             select: {
               multiple,
-              renderValue: multiple
-                ? (selected) => (
-                    <Stack direction="row" sx={{ gap: 0.5, flexWrap: 'wrap' }}>
-                      {(selected as string[]).map((value) => (
-                        <Chip
-                          key={value}
-                          size="small"
-                          label={options.find((o) => o.value === value)?.label ?? value}
-                        />
-                      ))}
-                    </Stack>
-                  )
-                : undefined,
+              renderValue: multiple ? renderSelectedChips(options) : undefined,
             },
           }}
         >

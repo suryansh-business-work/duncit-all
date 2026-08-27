@@ -76,6 +76,10 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
     onClose();
   }, [busy, onClose]);
 
+  const cancelOpacity = busy ? 0.6 : 1;
+  const submitOpacity = busy ? 0.7 : 1;
+  const submitPress = busy ? undefined : () => fireAndForget(submit());
+
   const footer = (
     <XStack gap={12}>
       <XStack
@@ -91,7 +95,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
-        opacity={busy ? 0.6 : 1}
+        opacity={cancelOpacity}
         pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
@@ -103,7 +107,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
         role="button"
         aria-label={t('mweb.hostManage.completePod')}
         aria-disabled={busy}
-        onPress={busy ? undefined : () => fireAndForget(submit())}
+        onPress={submitPress}
         flex={1}
         height={46}
         alignItems="center"
@@ -111,7 +115,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
         gap={8}
         borderRadius={12}
         backgroundColor="$primary"
-        opacity={busy ? 0.7 : 1}
+        opacity={submitOpacity}
         pressStyle={PRESS_STYLE.control}
       >
         {busy ? <Spinner size="small" color={onPrimary} /> : null}

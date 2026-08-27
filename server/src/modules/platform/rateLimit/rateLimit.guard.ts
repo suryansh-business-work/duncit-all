@@ -3,7 +3,7 @@ import { GraphQLError, Kind, type FieldNode } from 'graphql';
 import { HeaderMap, type ApolloServerPlugin } from '@apollo/server';
 import { logs } from '@observability/log';
 import { decodeAuthUser, type GraphQLContext } from '@context';
-import { evaluate, type RateLimitContextInfo } from './rateLimit.enforcer';
+import { evaluate, shouldSendHeaders, type RateLimitContextInfo } from './rateLimit.enforcer';
 import { normaliseApp, normaliseSurface } from './rateLimit.match';
 import type { RateLimitChannel, RateLimitDecision, RateLimitRequest } from './rateLimit.types';
 
@@ -17,7 +17,15 @@ import type { RateLimitChannel, RateLimitDecision, RateLimitRequest } from './ra
  * which is why the answer is computed in one place.
  */
 
-/** The header naming which Duncit app is calling — `tech`, `mweb`, `native`. */
+/**
+ * The header naming which Duncit app is calling — `tech`, `mweb`, `native`.
+ *
+ * The clients read the same string from `@duncit/user-core`, and this is a
+ * second copy of it rather than an import on purpose: `server/src` takes no
+ * `@duncit/*` dependency by design (rule 40), because the Docker image never
+ * copies those packages. Changing it means changing both, plus the nginx
+ * `Access-Control-Allow-Headers` allowlist that lets a browser send it at all.
+ */
 export const APP_HEADER = 'x-duncit-app';
 
 /** First header value when a proxy sent several. */
@@ -92,9 +100,9 @@ export const rateLimitMiddleware: RequestHandler = (
   if (SKIP_PREFIXES.some((prefix) => req.path.startsWith(prefix))) return next();
   const { request, info } = describeRequest(req, 'REST');
   evaluate(request, info)
-    .then((decision) => {
+    .then(async (decision) => {
       if (decision.allowed) return next();
-      res.set(limitHeaders(decision));
+      if (await shouldSendHeaders()) res.set(limitHeaders(decision));
       res.status(429).json({ error: 'rate_limited', message: decision.message });
     })
     .catch((err) => {
@@ -114,13 +122,14 @@ function selectedFields(selections: readonly unknown[]): string[] {
     .filter((name) => !name.startsWith('__'));
 }
 
-function graphqlRefusal(decision: RateLimitDecision): GraphQLError {
+function graphqlRefusal(decision: RateLimitDecision, sendHeaders: boolean): GraphQLError {
+  const headers = sendHeaders ? Object.entries(limitHeaders(decision)) : [];
   return new GraphQLError(decision.message ?? 'Too many requests.', {
     extensions: {
       code: 'RATE_LIMITED',
       rule: decision.rule_name,
       retry_after: decision.retry_after,
-      http: { status: 429, headers: new HeaderMap(Object.entries(limitHeaders(decision))) },
+      http: { status: 429, headers: new HeaderMap(headers) },
     },
   });
 }
@@ -149,7 +158,7 @@ export const rateLimitPlugin: ApolloServerPlugin<GraphQLContext> = {
           },
           info,
         );
-        if (!decision.allowed) throw graphqlRefusal(decision);
+        if (!decision.allowed) throw graphqlRefusal(decision, await shouldSendHeaders());
       },
     };
   },

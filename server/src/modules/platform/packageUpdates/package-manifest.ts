@@ -2557,6 +2557,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@tailwindcss/vite", range: "^4.3.3", kind: "dependencies" },
       { name: "astro", range: "^5.18.2", kind: "dependencies" },
@@ -2572,6 +2573,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@tailwindcss/vite", range: "^4.3.3", kind: "dependencies" },
       { name: "astro", range: "^5.18.2", kind: "dependencies" },
@@ -2589,6 +2591,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/captcha", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@fortawesome/fontawesome-free", range: "^7.3.1", kind: "dependencies" },
       { name: "@tailwindcss/vite", range: "^4.3.3", kind: "dependencies" },
@@ -2606,6 +2609,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@fortawesome/fontawesome-free", range: "^7.3.1", kind: "dependencies" },
       { name: "@tailwindcss/vite", range: "^4.3.3", kind: "dependencies" },
@@ -2625,6 +2629,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@emotion/react", range: "^11.14.0", kind: "dependencies" },
       { name: "@emotion/styled", range: "^11.14.1", kind: "dependencies" },

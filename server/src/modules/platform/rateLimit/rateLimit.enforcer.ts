@@ -220,17 +220,35 @@ async function announce(rule: IRateLimitRule, req: RateLimitRequest, key: string
 }
 
 /** Everything that happens AFTER the caller has been answered. */
-function reportBreach(input: EventInput, mode: 'ENFORCE' | 'MONITOR', notify: boolean): void {
+function reportBreach(
+  input: EventInput,
+  mode: 'ENFORCE' | 'MONITOR',
+  config: IRateLimitSettings,
+): void {
   const { rule, req } = input;
   if (mode === 'ENFORCE' && rule.block_seconds > 0) {
     block(`${rule._id}:${input.key}`, rule.block_seconds).catch((err) => {
       logs.server.warn('rateLimit', 'block', { error: err });
     });
   }
+  if (config.log_blocks) {
+    // A warn, not an error: a limiter doing its job is not a fault. This is
+    // what puts refusals in Telemetry beside everything else the request did.
+    logs.server.warn('rateLimit', rule.name, {
+      mode,
+      key: input.key,
+      surface: req.surface,
+      app: req.app,
+      channel: req.channel,
+      target: req.operation ?? req.path,
+      count: input.count,
+      limit: rule.limit,
+    });
+  }
   recordEvent(input, mode).catch((err) => {
     logs.server.warn('rateLimit', 'recordEvent', { error: err });
   });
-  if (notify) {
+  if (rule.notify_slack || config.notify_slack) {
     announce(rule, req, input.key).catch((err) => {
       logs.server.warn('rateLimit', 'announce', { error: err });
     });
@@ -294,11 +312,7 @@ async function applyRule(
   if (!result.exceeded) return null;
 
   const retryAfter = rule.block_seconds > 0 ? rule.block_seconds : result.resetSeconds;
-  reportBreach(
-    { rule, req, key, count: result.count, retryAfter, ...info },
-    mode,
-    rule.notify_slack || config.notify_slack,
-  );
+  reportBreach({ rule, req, key, count: result.count, retryAfter, ...info }, mode, config);
   if (mode === 'MONITOR') {
     return { allowed: true, monitored: true, rule_id: String(rule._id), rule_name: rule.name };
   }
@@ -306,6 +320,40 @@ async function applyRule(
 }
 
 const ALLOWED: RateLimitDecision = { allowed: true };
+
+/** The two global lists, answered before any rule is consulted. */
+function globalDecision(
+  config: IRateLimitSettings,
+  req: RateLimitRequest,
+): RateLimitDecision | null {
+  if (!req.ip) return null;
+  if (ipListed(config.allow_ips, req.ip)) return ALLOWED;
+  if (!ipListed(config.block_ips, req.ip)) return null;
+  return {
+    allowed: false,
+    rule_name: 'Blocked address',
+    message: config.default_message,
+    retry_after: 3600,
+    limit: 0,
+    remaining: 0,
+  };
+}
+
+/**
+ * Record the request against its system, then hand the decision back.
+ *
+ * Every exit from `evaluate` goes through here, so no path can forget to count
+ * itself — including the one where the master switch is OFF. The Systems page
+ * is what an operator reads to decide what to limit; it has to be true whether
+ * or not anything is being limited yet.
+ *
+ * A socket handshake is a session rather than a request, so it is deliberately
+ * left out: mixing it in would make one column mean two things.
+ */
+function observed(req: RateLimitRequest, decision: RateLimitDecision): RateLimitDecision {
+  if (req.channel !== 'SOCKET') countSystem(req, !decision.allowed);
+  return decision;
+}
 
 /**
  * The one entry point. Every seam — the GraphQL plugin, the REST middleware,
@@ -318,33 +366,30 @@ export async function evaluate(
 ): Promise<RateLimitDecision> {
   try {
     const config = await loadSettings();
-    if (!config?.enabled) return ALLOWED;
-    if (req.ip && ipListed(config.allow_ips, req.ip)) return ALLOWED;
-    if (req.ip && ipListed(config.block_ips, req.ip)) {
-      countSystem(req, true);
-      return {
-        allowed: false,
-        rule_name: 'Blocked address',
-        message: config.default_message,
-        retry_after: 3600,
-        limit: 0,
-        remaining: 0,
-      };
-    }
+    if (!config?.enabled) return observed(req, ALLOWED);
+    const global = globalDecision(config, req);
+    if (global) return observed(req, global);
 
     let monitored: RateLimitDecision | null = null;
     for (const rule of await loadRules()) {
       const decision = await applyRule(rule, req, config, info);
-      if (decision?.allowed === false) {
-        countSystem(req, true);
-        return decision;
-      }
+      if (decision?.allowed === false) return observed(req, decision);
       if (decision?.monitored) monitored = decision;
     }
-    countSystem(req, false);
-    return monitored ?? ALLOWED;
+    return observed(req, monitored ?? ALLOWED);
   } catch (err) {
     logs.server.error('rateLimit', 'evaluate', { error: err });
     return ALLOWED;
   }
+}
+
+/**
+ * Whether the X-RateLimit-* headers should be sent, from the master settings.
+ *
+ * Read by the guards rather than baked into the decision, because a decision to
+ * ALLOW carries no numbers and there would be nothing to attach them to.
+ */
+export async function shouldSendHeaders(): Promise<boolean> {
+  const config = await loadSettings();
+  return config?.send_headers ?? true;
 }

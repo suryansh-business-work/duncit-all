@@ -1,5 +1,5 @@
 {
-  "maxPercent": 1.8,
+  "maxPercent": 1.7,
   "areas": {
     "app/mobile-app": 2834,
     "app/mweb": 3200,
@@ -32,10 +32,10 @@
     "portals/support": 194,
     "portals/tech": 445,
     "portals/website-app": 191,
-    "server": 3691,
-    "website/ads-website": 162,
-    "website/earnwith-website": 158,
-    "website/main-website": 127,
-    "website/partners-website": 158
+    "server": 3695,
+    "website/ads-website": 139,
+    "website/earnwith-website": 135,
+    "website/main-website": 104,
+    "website/partners-website": 135
   }
 }

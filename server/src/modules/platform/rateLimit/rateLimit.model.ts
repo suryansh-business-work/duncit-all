@@ -1,4 +1,4 @@
-import { Schema, model, type Document } from 'mongoose';
+import { Schema, model, type Document, type Types } from 'mongoose';
 import {
   RATE_LIMIT_ALGORITHMS,
   RATE_LIMIT_AUDIENCES,
@@ -33,6 +33,10 @@ const CHANNELS = ['GRAPHQL', 'REST', 'SOCKET', 'ALL'] as const;
 /* --------------------------------- rules --------------------------------- */
 
 export interface IRateLimitRule extends Document {
+  /* Typed rather than inherited as unknown: the enforcer builds a counter key
+     out of it on every request, and `String(unknown)` is the exact shape that
+     silently becomes "[object Object]". */
+  _id: Types.ObjectId;
   name: string;
   description?: string;
   enabled: boolean;

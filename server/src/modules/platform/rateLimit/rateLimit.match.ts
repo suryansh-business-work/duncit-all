@@ -57,6 +57,31 @@ function audienceMatches(rule: IRateLimitRule, req: RateLimitRequest): boolean {
   return true;
 }
 
+/**
+ * The GraphQL half: operation kind and the fields the document selects.
+ *
+ * A rule that names REST paths is a rule about REST, whatever its channel says
+ * — the mirror of the `operations` check in `matchesRoute` below. Without it, a
+ * rule written for `/upload*` on channel ALL would also govern every GraphQL
+ * request, which is not remotely what its author asked for.
+ */
+function matchesOperation(rule: IRateLimitRule, req: RateLimitRequest): boolean {
+  if (rule.paths.length > 0) return false;
+  if (rule.operation_type !== 'ALL' && rule.operation_type !== req.operationType) return false;
+  const fields = req.fields?.length ? req.fields : [req.operation ?? ''];
+  return anyFieldMatches(rule.operations, fields);
+}
+
+/** The REST/socket half: path and method. */
+function matchesRoute(rule: IRateLimitRule, req: RateLimitRequest): boolean {
+  if (rule.operations.length > 0) return false;
+  if (!listMatches(rule.paths, req.path)) return false;
+  return listMatches(
+    rule.methods.map((m) => m.toUpperCase()),
+    (req.method ?? '').toUpperCase(),
+  );
+}
+
 /** Does this rule govern this request at all? */
 export function ruleMatches(rule: IRateLimitRule, req: RateLimitRequest): boolean {
   if (!rule.enabled) return false;
@@ -64,20 +89,8 @@ export function ruleMatches(rule: IRateLimitRule, req: RateLimitRequest): boolea
   if (rule.surface !== 'ALL' && rule.surface !== req.surface) return false;
   if (!globMatches(rule.app, req.app)) return false;
   if (!audienceMatches(rule, req)) return false;
-
-  if (req.channel === 'GRAPHQL') {
-    if (rule.operation_type !== 'ALL' && rule.operation_type !== req.operationType) return false;
-    const fields = req.fields?.length ? req.fields : [req.operation ?? ''];
-    return anyFieldMatches(rule.operations, fields);
-  }
-  // REST and socket: paths and methods. A rule naming GraphQL operations only
-  // is not a rule about a REST route, so it must not silently catch one.
-  if (rule.operations.length > 0) return false;
-  if (!listMatches(rule.paths, req.path)) return false;
-  return listMatches(
-    rule.methods.map((m) => m.toUpperCase()),
-    (req.method ?? '').toUpperCase(),
-  );
+  if (req.channel === 'GRAPHQL') return matchesOperation(rule, req);
+  return matchesRoute(rule, req);
 }
 
 /**

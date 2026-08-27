@@ -177,7 +177,8 @@ const SEED_RULES = [
   },
   {
     name: 'Socket connections',
-    description: 'Chat and presence handshakes. A reconnect storm is what this catches.',
+    description:
+      'Chat and presence handshakes — how often one address may OPEN a socket, not how much it says once open. A reconnect storm is what this catches. Handshakes are deliberately left out of the Systems counts: a socket is a session, and mixing it into a per-request table would make one column mean two things.',
     priority: 60,
     mode: 'MONITOR',
     surface: 'ALL',

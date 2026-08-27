@@ -8,6 +8,13 @@ import {
   listTemplates,
 } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
+import {
+  defaultFor,
+  defaultKindFor,
+  mediaPair,
+  type SendMedia,
+  type WaDefaults,
+} from './whatsapp.media';
 import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
 import { WaMessageLogModel, type WaMessageStatus } from './waMessageLog.model';
 import { WaPreferenceModel } from './waPreference.model';
@@ -47,9 +54,6 @@ export interface WaSendInput {
   media?: { url: string; filename: string } | null;
 }
 
-/** A header image or document, or nothing — the shape AiSensy's `media` takes. */
-type SendMedia = { url: string; filename: string } | null;
-
 export interface WaSendOutcome {
   status: WaMessageStatus;
   reason: string;
@@ -77,17 +81,17 @@ interface Switches {
   /** The template's header kind, cached with the pair above. The platform
    * default is one image, so it is attached to IMAGE and nothing else. */
   header_format: string;
-  /** The platform-wide default header asset, off the global row. The last
-   * resort in the media order, and — with no campaign at AiSensy carrying an
-   * asset of its own — the one that actually sends today. */
-  default_media: SendMedia;
+  /** The platform-wide default header asset PER header kind, off the global
+   * row. The last resort in the media order, and — with no campaign at AiSensy
+   * carrying an asset of its own — the one that actually sends today. */
+  defaults: WaDefaults;
 }
 
 /** Both switches in one read: the collection holds a handful of rows. */
 async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
     .select(
-      'event_key enabled template_category media_url media_filename media_synced_at template_header_format override_media_url override_media_filename'
+      'event_key enabled template_category media_url media_filename media_synced_at template_header_format override_media_url override_media_filename default_document_url default_document_filename'
     )
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
@@ -99,7 +103,7 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     media: null,
     media_synced: true,
     header_format: '',
-    default_media: null,
+    defaults: { IMAGE: null, DOCUMENT: null },
   });
   // An absent global row means nobody has turned automatic WhatsApp on yet.
   if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) return off('Automatic WhatsApp is switched off');
@@ -111,13 +115,12 @@ async function switchesFor(eventKey: string): Promise<Switches> {
   // and 0 of the live campaigns actually carry one. The filename travels with
   // whichever url won, never mixed across the two pairs.
   const mediaUrl = own?.override_media_url || own?.media_url || '';
-  const mediaFilename = own?.override_media_url ? own.override_media_filename : own?.media_filename;
-  const defaultUrl = global?.override_media_url ?? '';
+  const ownFilename = own?.override_media_url ? own.override_media_filename : own?.media_filename;
   return {
     on: true,
     reason: '',
     category: own?.template_category ?? '',
-    media: mediaUrl ? { url: mediaUrl, filename: mediaFilename || 'attachment' } : null,
+    media: mediaPair(mediaUrl, ownFilename),
     // A row stamped before `template_header_format` existed knows its asset
     // but not its header kind — so it counts as unsynced and binds once more,
     // rather than reading as "no header" until somebody presses Reconcile.
@@ -125,9 +128,12 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     // `undefined` here rather than ''.
     media_synced: Boolean(own?.media_synced_at) && own?.template_header_format !== undefined,
     header_format: own?.template_header_format ?? '',
-    default_media: defaultUrl
-      ? { url: defaultUrl, filename: global?.override_media_filename || 'attachment' }
-      : null,
+    // The global row's override pair IS the default image — the field it has
+    // always been stored in, so nothing an operator already uploaded moves.
+    defaults: {
+      IMAGE: mediaPair(global?.override_media_url ?? '', global?.override_media_filename),
+      DOCUMENT: mediaPair(global?.default_document_url ?? '', global?.default_document_filename),
+    },
   };
 }
 
@@ -137,16 +143,6 @@ interface BoundMedia {
   /** Its template's header kind — TEXT, IMAGE, VIDEO, FILE, or '' for none. */
   header_format: string;
 }
-
-/**
- * The only header kind the platform default fits.
- *
- * The default is one image an operator uploads once. A VIDEO header wants a
- * video, and the five FILE-header templates are the payment ones — each wants
- * that send's own invoice, never a shared picture. Both keep failing until
- * they are given an asset of their own, which is the honest outcome.
- */
-const DEFAULTABLE_HEADER = 'IMAGE';
 
 /**
  * The campaign's own header asset — and its template's header kind — read off
@@ -189,10 +185,7 @@ async function bindCampaignMedia(event: WaEvent): Promise<BoundMedia | null> {
       },
       { upsert: true }
     );
-    const media = campaign?.media_url
-      ? { url: campaign.media_url, filename: campaign.media_filename || 'attachment' }
-      : null;
-    return { media, header_format };
+    return { media: mediaPair(campaign?.media_url ?? '', campaign?.media_filename), header_format };
   } catch (error) {
     // An unconfigured or unreachable Project API is not a send failure. No
     // stamp is written, so the next send on this scenario tries again.
@@ -307,56 +300,69 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
 /**
  * The header asset this send carries, or null.
  *
- * The platform default is attached ONLY to an IMAGE header: a text template
- * sent with a header it does not have is a different rejection, not a fix, and
- * a document header wants a document.
+ * The platform default is attached only to a header the platform HOLDS a
+ * default for: a text template sent with a header it does not have is a
+ * different rejection rather than a fix, and a video header wants a video the
+ * platform has none of.
  */
+interface ResolvedMedia {
+  media: SendMedia;
+  /**
+   * The header kind this send was resolved against: the row's cache, or what
+   * binding the campaign just read off AiSensy. '' when nobody knows yet.
+   *
+   * Carried rather than re-read because a bind that happened DURING this send
+   * is the freshest answer there is, and the recovery below would otherwise
+   * offer an image to a template it has just learned wants a document.
+   */
+  header_format: string;
+}
+
 async function resolveMedia(
   event: WaEvent,
   input: WaSendInput,
   switches: Switches
-): Promise<SendMedia> {
+): Promise<ResolvedMedia> {
   const own = input.media ?? switches.media;
-  if (own) return own;
+  if (own) return { media: own, header_format: switches.header_format };
 
   const bound = switches.media_synced ? null : await bindCampaignMedia(event);
-  if (bound?.media) return bound.media;
+  const header_format = bound?.header_format ?? switches.header_format;
+  if (bound?.media) return { media: bound.media, header_format };
 
-  const headerFormat = bound?.header_format ?? switches.header_format;
-  return headerFormat === DEFAULTABLE_HEADER ? switches.default_media : null;
+  return { media: defaultFor(header_format, switches.defaults), header_format };
 }
 
 /**
- * Header kinds the platform default — one image — must never stand in for. A
- * VIDEO header wants a video, and the five FILE-header templates are the
- * payment ones: each wants that send's own invoice, never a shared picture.
+ * The rejections an operator can act on, in the words of the screen that fixes
+ * them. AiSensy's own sentence names no setting anybody can find.
  */
-const OWN_ASSET_HEADERS = new Set(['VIDEO', 'FILE', 'DOCUMENT']);
-
-/**
- * The two rejections an operator can act on, in the words of the screen that
- * fixes them. AiSensy's own sentence names no setting anybody can find.
- */
-const NO_DEFAULT_MEDIA =
-  'This campaign needs a header image and none is set — add the default header image under Marketing > WhatsApp > Settings';
+const noDefaultSet = (kind: string) =>
+  `This campaign needs a header ${kind} and no default is set — add one under Marketing > WhatsApp > Settings`;
 const headerOfItsOwn = (format: string) =>
   `This campaign needs its own header ${format.toLowerCase()} — set media on this scenario under Marketing > WhatsApp > Automation`;
 
 /**
- * Remember that this campaign's template carries an image header, because
- * AiSensy has just said so by rejecting a send.
+ * Remember the header kind AiSensy has just proved this template carries, by
+ * rejecting a send without one and taking the retry that had it.
  *
- * It fills the same reconcile-owned pair `bindCampaignMedia` does, so the NEXT send on
- * this scenario attaches the default straight away rather than paying for a
- * rejection first — and it learns it without the Project API, which is a second
+ * It fills the same reconcile-owned pair `bindCampaignMedia` does, so the NEXT
+ * send attaches the default straight away rather than paying for a rejection
+ * first — and it learns it without the Project API, which is a second
  * credential the send path does not otherwise need.
  */
-async function rememberImageHeader(eventKey: string): Promise<void> {
+async function rememberHeaderFormat(eventKey: string, format: string): Promise<void> {
   await WaEventSettingModel.updateOne(
     { event_key: eventKey },
-    { $set: { template_header_format: DEFAULTABLE_HEADER, media_synced_at: new Date() } },
+    { $set: { template_header_format: format, media_synced_at: new Date() } },
     { upsert: true }
   ).catch((error) => logs.server.warn('whatsapp', 'learnHeader', { error, event: eventKey }));
+}
+
+interface Recovery {
+  media: { url: string; filename: string };
+  /** The header kind that asset stands for — what the row learns on success. */
+  format: string;
 }
 
 /**
@@ -366,19 +372,41 @@ async function rememberImageHeader(eventKey: string): Promise<void> {
  * Only for a send that carried NOTHING: `Media URL Missing` on a message that
  * already had an asset is a different problem — an unreachable URL — and
  * resending the default over it would hide that.
+ *
+ * AiSensy says a header is required but never which kind. A kind already
+ * learned answers that exactly; an unlearned one is read as IMAGE, which is
+ * what 54 of this project's 59 media templates carry — and a kind the platform
+ * holds no default for is not guessed at, because there is nothing to guess
+ * with.
  */
-function recoveryMedia(error: unknown, carried: SendMedia, switches: Switches): SendMedia {
-  if (carried || !isMediaMissing(error)) return null;
-  if (OWN_ASSET_HEADERS.has(switches.header_format.toUpperCase())) return null;
-  return switches.default_media;
+function recoveryFor(
+  error: unknown,
+  resolved: ResolvedMedia,
+  defaults: WaDefaults
+): Recovery | null {
+  if (resolved.media || !isMediaMissing(error)) return null;
+  const known = resolved.header_format.trim().toUpperCase();
+  if (known) {
+    const media = defaultFor(known, defaults);
+    return media ? { media, format: known } : null;
+  }
+  // Nobody has learned this template's header kind: reading it needs the
+  // Project API, a second credential the send does not otherwise have. An image
+  // is what 54 of the 59 media templates carry, so it is offered first — and a
+  // platform that has only set a document default gets that rather than nothing.
+  if (defaults.IMAGE) return { media: defaults.IMAGE, format: 'IMAGE' };
+  return defaults.DOCUMENT ? { media: defaults.DOCUMENT, format: 'FILE' } : null;
 }
 
 /** What the Logs console shows for a failure. */
-function failureReason(error: unknown, carried: SendMedia, switches: Switches): string {
+function failureReason(error: unknown, carried: SendMedia, headerFormat: string): string {
   const raw = error instanceof Error ? error.message : 'AiSensy rejected the message';
   if (carried || !isMediaMissing(error)) return raw;
-  const format = switches.header_format.toUpperCase();
-  return OWN_ASSET_HEADERS.has(format) ? headerOfItsOwn(format) : NO_DEFAULT_MEDIA;
+  const format = headerFormat.trim().toUpperCase();
+  const kind = defaultKindFor(format || 'IMAGE');
+  // A kind whose default is simply unset is one upload away; a kind the
+  // platform holds no default FOR needs an asset on this scenario.
+  return kind ? noDefaultSet(kind.toLowerCase()) : headerOfItsOwn(format);
 }
 
 interface PostAttempt {
@@ -438,22 +466,25 @@ async function postWithMediaRecovery(
   input: WaSendInput,
   destination: string,
   params: string[],
-  switches: Switches,
-  media: SendMedia
+  defaults: WaDefaults,
+  resolved: ResolvedMedia
 ): Promise<SendAttempt> {
-  const first = await postOnce(event, input, destination, params, media);
+  const header = resolved.header_format;
+  const first = await postOnce(event, input, destination, params, resolved.media);
   if (!first.error) return { ...first, reason: '' };
 
-  const fallback = recoveryMedia(first.error, media, switches);
-  if (!fallback) return { ...first, reason: failureReason(first.error, media, switches) };
+  const recovery = recoveryFor(first.error, resolved, defaults);
+  if (!recovery) return { ...first, reason: failureReason(first.error, resolved.media, header) };
 
-  const second = await postOnce(event, input, destination, params, fallback);
-  if (second.error) return { ...second, reason: failureReason(second.error, fallback, switches) };
+  const second = await postOnce(event, input, destination, params, recovery.media);
+  if (second.error) {
+    return { ...second, reason: failureReason(second.error, recovery.media, header) };
+  }
 
-  // Only now: the retry going through is the proof that an image header is what
-  // this template wanted. Stamping it before would teach the row the wrong kind
-  // off a VIDEO or FILE template that rejected the image for its own reason.
-  await rememberImageHeader(event.key);
+  // Only now: the retry going through is the proof that this is the header kind
+  // the template wanted. Stamping it before would teach the row the wrong kind
+  // off a template that rejected the asset for its own reason.
+  await rememberHeaderFormat(event.key, recovery.format);
   return { ...second, reason: '' };
 }
 
@@ -475,7 +506,8 @@ async function dispatch(
   //
   // Resolved lazily: a caller that brought its own asset must not pay for two
   // AiSensy reads to learn a header kind this send will never consult.
-  const media = await resolveMedia(event, input, switches);
+  const resolved = await resolveMedia(event, input, switches);
+  const media = resolved.media;
 
   const claim = {
     event_key: event.key,
@@ -508,7 +540,14 @@ async function dispatch(
   }
 
   const startedAt = Date.now();
-  const attempt = await postWithMediaRecovery(event, input, destination, params, switches, media);
+  const attempt = await postWithMediaRecovery(
+    event,
+    input,
+    destination,
+    params,
+    switches.defaults,
+    resolved
+  );
   // Re-stamped rather than left at the claim's guess: the recovery above can
   // change what actually travelled, and a header that went out empty is the
   // whole story behind a `Media URL Missing` row.

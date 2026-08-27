@@ -53,7 +53,12 @@ export default function WaAutomation() {
   );
 
   const rows = board?.rows ?? EMPTY_ROWS;
-  const defaultMediaUrl = board?.default_media_url ?? '';
+  const defaultImage = board?.default_media_url ?? '';
+  const defaultDocument = board?.default_document_url ?? '';
+  const defaults = useMemo(
+    () => ({ image: defaultImage, document: defaultDocument }),
+    [defaultImage, defaultDocument]
+  );
   const columns = useMemo(
     () =>
       getScenarioColumns({
@@ -61,9 +66,9 @@ export default function WaAutomation() {
         busyKey,
         onToggle: toggle,
         onSetMedia: setMediaFor,
-        defaultMediaUrl,
+        defaults,
       }),
-    [t, busyKey, toggle, defaultMediaUrl]
+    [t, busyKey, toggle, defaults]
   );
   const fetchRows = useMemo(() => clientTableFetch(rows, scenarioSearchText), [rows]);
 
@@ -108,8 +113,8 @@ export default function WaAutomation() {
         </Alert>
       )}
       {/* One banner for what is otherwise 52 identical blockers. */}
-      {board && needsDefaultMedia(rows, defaultMediaUrl) && (
-        <Alert severity="warning">{t('adminWhatsapp.defaultMediaMissing')}</Alert>
+      {board && needsDefaultMedia(rows, defaults) && (
+        <Alert severity="warning">{t('adminWhatsapp.defaultMediaMissingAny')}</Alert>
       )}
       {boardIsHealthy(rows, board?.catalogue_ok ?? false) && (
         <Alert severity="success">{t('adminWhatsapp.healthy')}</Alert>

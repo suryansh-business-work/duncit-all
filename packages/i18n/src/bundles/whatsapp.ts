@@ -137,8 +137,8 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     mediaFromCampaign: 'Campaign asset',
     mediaDefault: 'Default asset',
     mediaCustom: 'Custom asset',
-    defaultMediaMissing:
-      'Some scenarios send a header image and no default is set — every one of them fails with "Media URL Missing" until you set one under Settings.',
+    defaultMediaMissingAny:
+      'Some scenarios send a header asset and no default covers them — every one of those fails with "Media URL Missing" until you set the default image, or the default document, under Settings.',
     setMedia: 'Set media…',
     clearMedia: 'Clear custom asset',
     mediaDialogTitle: 'Set the header asset',
@@ -269,6 +269,19 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
       loadFailed: 'Could not read the default header image.',
       errorUrl: 'Use a full public link that starts with http:// or https://',
       none: 'No default set — every scenario with an image header fails until one is.',
+      // The second default. Five templates — the payment and booking ones —
+      // carry a FILE header, and one picture cannot stand in for a document:
+      // WhatsApp shows the recipient its file name and reads its type from the
+      // extension, so this one is a pasted link rather than an upload.
+      documentTitle: 'Default header document',
+      documentBody:
+        'The payment and booking templates carry a document above the message instead of an image. This file is what every one of them sends unless a scenario on the Automation tab has its own. Paste a public link to it.',
+      documentLabel: 'Header document URL',
+      documentHint: 'A full public link — AiSensy fetches it itself when it sends.',
+      documentFilenameLabel: 'File name',
+      documentFilenameHint: 'What WhatsApp shows the recipient on the document, extension included.',
+      documentNone:
+        'No default set — every scenario with a document header fails until one is.',
     },
     // The ONE logs view. Campaign sends and the messages the platform sends by
     // itself are the same record asked for in the same breath — "did this go

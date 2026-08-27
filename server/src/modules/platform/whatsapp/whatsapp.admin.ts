@@ -10,20 +10,74 @@ import {
   type AisensyTemplate,
 } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENTS, isRequiredWaCategory } from './whatsapp.events';
+import {
+  defaultFor,
+  defaultKindFor,
+  mediaPair,
+  type WaDefaultKind,
+  type WaDefaults,
+} from './whatsapp.media';
 import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
 
 export interface WaDefaultMedia {
+  /** The default IMAGE — stored in the global row's override pair, which is the
+   * field it has always lived in. */
   url: string;
   filename: string;
+  /** The default DOCUMENT, for the FILE-header templates one picture cannot
+   * stand in for. */
+  document_url: string;
+  document_filename: string;
 }
 
-type GlobalRowMedia = { override_media_url?: string; override_media_filename?: string } | undefined;
+type GlobalRowMedia =
+  | {
+      override_media_url?: string;
+      override_media_filename?: string;
+      default_document_url?: string;
+      default_document_filename?: string;
+    }
+  | undefined;
 
-/** The global row's own asset pair — see {@link WA_GLOBAL_KEY}. */
+/** The global row's own asset pairs, verbatim — see {@link WA_GLOBAL_KEY}. */
 const defaultMediaOf = (global: GlobalRowMedia): WaDefaultMedia => ({
   url: global?.override_media_url ?? '',
   filename: global?.override_media_filename ?? '',
+  document_url: global?.default_document_url ?? '',
+  document_filename: global?.default_document_filename ?? '',
 });
+
+/** The same pairs in the shape the send path picks a default from, so the board
+ * and the send agree on which header kinds are covered. */
+const defaultsOf = (media: WaDefaultMedia): WaDefaults => ({
+  IMAGE: mediaPair(media.url, media.filename),
+  DOCUMENT: mediaPair(media.document_url, media.document_filename),
+});
+
+/** Which pair on the global row each default kind is stored in. The IMAGE
+ * default keeps the override pair it was written to before there were kinds, so
+ * no already-uploaded asset has to move. */
+const DEFAULT_FIELDS: Readonly<Record<WaDefaultKind, { url: string; filename: string }>> = {
+  IMAGE: { url: 'override_media_url', filename: 'override_media_filename' },
+  DOCUMENT: { url: 'default_document_url', filename: 'default_document_filename' },
+};
+
+/**
+ * A media link AiSensy could actually fetch, or a blank one that clears the
+ * asset.
+ *
+ * AiSensy fetches it itself at send time, so anything but an absolute public
+ * link fails once per recipient — refused here rather than at the first send.
+ */
+function publicUrlOrThrow(url: string): string {
+  const mediaUrl = url.trim();
+  if (mediaUrl && !/^https?:\/\/\S+$/i.test(mediaUrl)) {
+    throw new GraphQLError('Media URL must be a full public link that starts with http:// or https://', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
+  return mediaUrl;
+}
 import { WaMessageLogModel } from './waMessageLog.model';
 
 /**
@@ -47,8 +101,8 @@ function blockerFor(
   declaredParams: number,
   cachedMediaUrl: string,
   overrideMediaUrl: string,
-  /** The platform default — one image, so it only ever covers an IMAGE header. */
-  defaultMediaUrl: string
+  /** The platform defaults, one per header kind an operator can set. */
+  defaults: WaDefaults
 ): string {
   if (!campaign) return `No AiSensy campaign named "${campaignName}"`;
   if (campaign.status && campaign.status !== 'LIVE') return `Campaign is ${campaign.status}`;
@@ -65,19 +119,15 @@ function blockerFor(
   // API cannot attach one), not cached, not set on the row, and no platform
   // default — is the one case nothing can bind, because there is nothing to
   // bind. Only an operator can fix it, and the default is the one-click fix.
-  const coveredByDefault = template.header_format === 'IMAGE' && !!defaultMediaUrl;
-  if (template.needs_media && !campaign.media_url && !cachedMediaUrl && !overrideMediaUrl) {
-    if (coveredByDefault) return '';
-    // A VIDEO or FILE header is not covered by the default, which is one
-    // image — the five FILE templates are the payment ones, and each wants
-    // that send's own invoice.
-    const needsOwn = template.header_format && template.header_format !== 'IMAGE';
-    if (needsOwn) {
-      return `Template needs its own header ${template.header_format.toLowerCase()} — set media on this row`;
-    }
-    return 'Template needs a header asset — set the default header image under Settings, or set media on this row';
+  if (!template.needs_media || campaign.media_url || cachedMediaUrl || overrideMediaUrl) return '';
+  if (defaultFor(template.header_format, defaults)) return '';
+  // A kind the platform holds no default FOR — a video — can only be answered
+  // on this row; a kind whose default is merely unset is one upload away.
+  const kind = defaultKindFor(template.header_format);
+  if (!kind) {
+    return `Template needs its own header ${template.header_format.toLowerCase()} — set media on this row`;
   }
-  return '';
+  return `Template needs a header ${kind.toLowerCase()} — set the default under Settings, or set media on this row`;
 }
 
 /** The live catalogue, or empty when AiSensy cannot be read. Never throws: a
@@ -95,6 +145,13 @@ async function catalogue(): Promise<{
   }
   try {
     const [campaigns, templates] = await Promise.all([listCampaigns(), listTemplates()]);
+    // A live project holds both. Zero of each is a payload shape this reader did
+    // not recognise rather than an empty AiSensy — and taking it at face value
+    // would let Reconcile write a blank header kind over all 67 rows and unbind
+    // every asset in one button press.
+    if (campaigns.length === 0 && templates.length === 0) {
+      return { ok: false, error: 'AiSensy returned no campaigns and no templates', ...empty };
+    }
     return {
       ok: true,
       error: '',
@@ -114,13 +171,14 @@ export const whatsappAdminService = {
       catalogue(),
       WaEventSettingModel.find()
         .select(
-          'event_key enabled template_category media_url media_filename template_header_format override_media_url override_media_filename'
+          'event_key enabled template_category media_url media_filename template_header_format override_media_url override_media_filename default_document_url default_document_filename'
         )
         .lean(),
     ]);
     const byKey = new Map(settings.map((row) => [row.event_key, row]));
     const global = byKey.get(WA_GLOBAL_KEY);
     const defaultMedia = defaultMediaOf(global);
+    const defaults = defaultsOf(defaultMedia);
 
     const rows = WA_EVENTS.map((event) => {
       const campaign = live.campaigns.get(event.campaign);
@@ -160,7 +218,7 @@ export const whatsappAdminService = {
               event.params.length,
               setting?.media_url ?? '',
               setting?.override_media_url ?? '',
-              defaultMedia.url
+              defaults
             )
           : '',
       };
@@ -170,6 +228,8 @@ export const whatsappAdminService = {
       global_enabled: global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED,
       default_media_url: defaultMedia.url,
       default_media_filename: defaultMedia.filename,
+      default_document_url: defaultMedia.document_url,
+      default_document_filename: defaultMedia.document_filename,
       catalogue_ok: live.ok,
       catalogue_error: live.error,
       rows,
@@ -185,9 +245,49 @@ export const whatsappAdminService = {
    */
   async defaultMedia(): Promise<WaDefaultMedia> {
     const global = await WaEventSettingModel.findOne({ event_key: WA_GLOBAL_KEY })
-      .select('override_media_url override_media_filename')
+      .select(
+        'override_media_url override_media_filename default_document_url default_document_filename'
+      )
       .lean();
     return defaultMediaOf(global ?? undefined);
+  },
+
+  /**
+   * Set or clear (empty url) ONE of the platform default header assets — what
+   * every media-header scenario falls back to when neither it nor its campaign
+   * carries one.
+   *
+   * One per header kind, because a single picture cannot stand in for a
+   * document header: 54 of this project's templates carry an image header and 5
+   * carry a file one, and before there was a document default those five failed
+   * every send with `Media URL Missing` and no screen to fix it on.
+   */
+  async setDefaultMedia(
+    kind: WaDefaultKind,
+    url: string,
+    filename: string,
+    actor?: string | null
+  ) {
+    const mediaUrl = publicUrlOrThrow(url);
+    const fields = DEFAULT_FIELDS[kind];
+    await WaEventSettingModel.updateOne(
+      { event_key: WA_GLOBAL_KEY },
+      {
+        $set: {
+          [fields.url]: mediaUrl,
+          // A filename without a url is meaningless, so clearing clears both.
+          [fields.filename]: mediaUrl ? filename.trim() : '',
+          updated_by: actorId(actor),
+        },
+        // The schema default for `enabled` is true, which is right for a scenario
+        // row (absent means ON) and wrong for the global row (absent means
+        // nobody has turned WhatsApp on). Without this, setting a default asset
+        // on a fresh database would flip the kill switch on.
+        $setOnInsert: { enabled: WA_GLOBAL_DEFAULT_ENABLED },
+      },
+      { upsert: true }
+    );
+    return this.scenarios();
   },
 
   /** Flip one scenario, or the global switch when `event_key` is `__global__`. */
@@ -211,15 +311,11 @@ export const whatsappAdminService = {
    * Reconcile, which is exactly the trap the override pair exists to close.
    */
   async setMedia(eventKey: string, url: string, filename: string, actor?: string | null) {
-    const mediaUrl = url.trim();
-    // AiSensy fetches the asset itself at send time, so anything but an
-    // absolute public link fails once per recipient — refuse it here rather
-    // than at the first send.
-    if (mediaUrl && !/^https?:\/\/\S+$/i.test(mediaUrl)) {
-      throw new GraphQLError('Media URL must be a full public link that starts with http:// or https://', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
-    }
+    // The global row holds the platform DEFAULTS, which are one per header kind
+    // and not an override of anything. Delegated rather than refused so each
+    // stored pair keeps exactly one writer.
+    if (eventKey === WA_GLOBAL_KEY) return this.setDefaultMedia('IMAGE', url, filename, actor);
+    const mediaUrl = publicUrlOrThrow(url);
     await WaEventSettingModel.updateOne(
       { event_key: eventKey },
       {
@@ -229,11 +325,9 @@ export const whatsappAdminService = {
           override_media_filename: mediaUrl ? filename.trim() : '',
           updated_by: actorId(actor),
         },
-        // The schema default for `enabled` is true, which is right for a
-        // scenario row (absent means ON) and wrong for the global row (absent
-        // means nobody has turned WhatsApp on). Without this, setting the
-        // default asset on a fresh database would flip the kill switch on.
-        $setOnInsert: { enabled: eventKey === WA_GLOBAL_KEY ? WA_GLOBAL_DEFAULT_ENABLED : true },
+        // Absent means ON for a scenario row, which is the schema default too;
+        // stated so a row this creates cannot read as switched off.
+        $setOnInsert: { enabled: true },
       },
       { upsert: true }
     );

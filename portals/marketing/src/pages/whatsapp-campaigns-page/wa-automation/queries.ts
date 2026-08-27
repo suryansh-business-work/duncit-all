@@ -30,22 +30,28 @@ export interface WaScenario {
 
 export interface WaScenarioBoard {
   global_enabled: boolean;
-  /** The platform default header asset — one image, so it covers an IMAGE
-   * header and nothing else. Empty means unset. */
+  /** The platform default header IMAGE. Empty means unset. */
   default_media_url: string;
+  /** The platform default header DOCUMENT, for a FILE header one picture
+   * cannot stand in for. Empty means unset. */
+  default_document_url: string;
   catalogue_ok: boolean;
   catalogue_error: string;
   rows: WaScenario[];
 }
 
-/** The default alone, for the Settings card — no AiSensy read behind it. */
+/** The defaults alone, for the Settings card — no AiSensy read behind them. */
 export interface WaDefaultMedia {
   url: string;
+  filename: string;
+  document_url: string;
+  document_filename: string;
 }
 
 const SCENARIO_BOARD_FIELDS = `
   global_enabled
   default_media_url
+  default_document_url
   catalogue_ok
   catalogue_error
   rows {
@@ -83,6 +89,9 @@ export const WHATSAPP_DEFAULT_MEDIA = gql`
   query WhatsappDefaultMedia {
     whatsappDefaultMedia {
       url
+      filename
+      document_url
+      document_filename
     }
   }
 `;
@@ -104,8 +113,17 @@ export const RECONCILE_WHATSAPP_SCENARIOS = gql`
   }
 `;
 
-/** An empty url clears the override. Reconcile never overwrites what this sets.
- * With `__global__` as the key it writes the platform default instead. */
+/** One of the platform defaults — what a media-header scenario sends when
+ * neither it nor its campaign carries an asset. An empty url clears it. */
+export const SET_WHATSAPP_DEFAULT_MEDIA = gql`
+  mutation SetWhatsappDefaultMedia($kind: WaMediaKind!, $url: String!, $filename: String) {
+    setWhatsappDefaultMedia(kind: $kind, url: $url, filename: $filename) {
+      ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+/** An empty url clears the override. Reconcile never overwrites what this sets. */
 export const SET_WHATSAPP_SCENARIO_MEDIA = gql`
   mutation SetWhatsappScenarioMedia($event_key: String!, $url: String!, $filename: String) {
     setWhatsappScenarioMedia(event_key: $event_key, url: $url, filename: $filename) {

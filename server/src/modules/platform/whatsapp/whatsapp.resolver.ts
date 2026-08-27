@@ -6,6 +6,7 @@ import {
   deleteTemplate,
 } from '@modules/platform/aisensy/aisensy.project';
 import { whatsappAdminService } from './whatsapp.admin';
+import type { WaDefaultKind } from './whatsapp.media';
 import { whatsappPreferenceService } from './whatsapp.preference.service';
 
 /**
@@ -58,6 +59,19 @@ export const waAutomationResolvers = {
     ) => {
       const user = requireRole(ctx, ADMIN_ROLES);
       return whatsappAdminService.setMedia(args.event_key, args.url, args.filename ?? '', user.id);
+    },
+    setWhatsappDefaultMedia: (
+      _p: unknown,
+      args: { kind: WaDefaultKind; url: string; filename?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_ROLES);
+      return whatsappAdminService.setDefaultMedia(
+        args.kind,
+        args.url,
+        args.filename ?? '',
+        user.id
+      );
     },
     setMyWhatsappPreference: (
       _p: unknown,

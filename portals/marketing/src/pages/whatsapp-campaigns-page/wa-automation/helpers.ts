@@ -25,24 +25,45 @@ export const BLOCKER_COLORS: StatusColorMap = { BLOCKED: 'error' };
  */
 export type MediaState = 'CUSTOM' | 'CAMPAIGN' | 'DEFAULT' | 'MISSING' | 'NOT_NEEDED';
 
-/** The one header kind the platform default fits — it is a single image, so a
- * VIDEO or FILE header still needs its own asset. Mirrors the send path. */
-const DEFAULTABLE_HEADER = 'IMAGE';
+/** The platform defaults, one per header kind an operator can set. */
+export interface WaDefaultUrls {
+  image: string;
+  document: string;
+}
 
-export const mediaStateFor = (row: WaScenario, defaultUrl: string): MediaState => {
+/**
+ * Header kind -> which platform default covers it. AiSensy says FILE where Meta
+ * says DOCUMENT and both mean the same header; VIDEO is absent because the
+ * platform holds no default video, so one would need an asset of its own.
+ *
+ * Mirrors `server/src/modules/platform/whatsapp/whatsapp.media.ts`, which the send
+ * path reads — the board and the send must agree on what is covered.
+ */
+const DEFAULT_BY_HEADER: Readonly<Record<string, keyof WaDefaultUrls>> = {
+  IMAGE: 'image',
+  FILE: 'document',
+  DOCUMENT: 'document',
+};
+
+/** The platform default this header may fall back to, or '' when none covers it. */
+export const defaultUrlFor = (headerFormat: string, defaults: WaDefaultUrls): string => {
+  const kind = DEFAULT_BY_HEADER[headerFormat.trim().toUpperCase()];
+  return kind ? defaults[kind] : '';
+};
+
+export const mediaStateFor = (row: WaScenario, defaults: WaDefaultUrls): MediaState => {
   if (row.override_media_url) return 'CUSTOM';
   if (row.media_url) return 'CAMPAIGN';
   if (!row.needs_media) return 'NOT_NEEDED';
-  const covered = row.template_header_format === DEFAULTABLE_HEADER && !!defaultUrl;
-  return covered ? 'DEFAULT' : 'MISSING';
+  return defaultUrlFor(row.template_header_format, defaults) ? 'DEFAULT' : 'MISSING';
 };
 
 /** The URL a send on this row would actually carry, readable without opening
  * the dialog. */
-export const effectiveMediaUrl = (row: WaScenario, defaultUrl: string): string => {
+export const effectiveMediaUrl = (row: WaScenario, defaults: WaDefaultUrls): string => {
   const own = row.override_media_url || row.media_url;
   if (own) return own;
-  return mediaStateFor(row, defaultUrl) === 'DEFAULT' ? defaultUrl : '';
+  return defaultUrlFor(row.template_header_format, defaults);
 };
 
 /** MISSING is the only failing state — it is the `Media URL Missing` send. */
@@ -56,8 +77,8 @@ export const MEDIA_STATE_COLORS: StatusColorMap = {
 /** Whether the board has media-header rows that would fall through to a
  * default nobody has set — the one warning worth a banner, because it is 52
  * rows failing the same way for the same reason. */
-export const needsDefaultMedia = (rows: readonly WaScenario[], defaultUrl: string) =>
-  !defaultUrl && rows.some((row) => mediaStateFor(row, defaultUrl) === 'MISSING');
+export const needsDefaultMedia = (rows: readonly WaScenario[], defaults: WaDefaultUrls) =>
+  rows.some((row) => mediaStateFor(row, defaults) === 'MISSING');
 
 /** AiSensy is not consistent about casing; the colour maps are. */
 export const statusKey = (status: string) => status.toUpperCase();

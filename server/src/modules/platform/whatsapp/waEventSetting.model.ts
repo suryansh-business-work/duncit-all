@@ -70,6 +70,17 @@ export interface IWaEventSetting {
    */
   override_media_url: string;
   override_media_filename: string;
+  /**
+   * The platform default header DOCUMENT — GLOBAL ROW ONLY.
+   *
+   * The override pair above doubles as the default IMAGE on that row, and one
+   * picture cannot stand in for a FILE header: the templates that carry one are
+   * the payment and booking messages, and without an asset every send of them
+   * comes back `Media URL Missing` exactly as the image ones did. Same answer,
+   * set once, in the same place — see {@link WA_GLOBAL_KEY}.
+   */
+  default_document_url: string;
+  default_document_filename: string;
   updated_by: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
@@ -80,9 +91,10 @@ export interface IWaEventSetting {
  * its own singleton so the send path reads ONE collection: a second collection
  * would mean a second round trip in front of every message.
  *
- * Its `override_media_url` / `override_media_filename` pair is the DEFAULT
- * header asset: what every media-header scenario sends when it has no asset of
- * its own. 59 of the project's 74 templates carry an image or document header
+ * Its `override_media_url` / `override_media_filename` pair is the DEFAULT header
+ * IMAGE, and `default_document_url` / `default_document_filename` the default
+ * DOCUMENT: what every media-header scenario sends when it has no asset of its
+ * own. 59 of the project's 74 templates carry an image or document header
  * and not one campaign at AiSensy has an asset attached, so without a default
  * every one of those scenarios fails with `Media URL Missing` until somebody
  * sets media on it by hand, row by row. Set once, under Marketing > WhatsApp >
@@ -106,6 +118,8 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
     template_header_format: { type: String, default: '' },
     override_media_url: { type: String, default: '' },
     override_media_filename: { type: String, default: '' },
+    default_document_url: { type: String, default: '' },
+    default_document_filename: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

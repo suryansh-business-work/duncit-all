@@ -105,14 +105,29 @@ async function projectRequest(
   }
 }
 
-/** AiSensy wraps a collection under its own key per endpoint — take the first
- * array in the payload rather than betting on one wrapper name. */
-function toArray(payload: unknown): Record<string, any>[] {
-  if (Array.isArray(payload)) return payload;
-  for (const value of Object.values((payload ?? {}) as Record<string, unknown>)) {
-    if (Array.isArray(value)) return value;
+/** The first array within `depth` levels of a payload, or null. */
+function firstArray(value: unknown, depth: number): Record<string, any>[] | null {
+  if (Array.isArray(value)) return value;
+  if (depth === 0 || !value || typeof value !== 'object') return null;
+  for (const entry of Object.values(value as Record<string, unknown>)) {
+    const found = firstArray(entry, depth - 1);
+    if (found) return found;
   }
-  return [];
+  return null;
+}
+
+/**
+ * AiSensy wraps a collection under its own key per endpoint, and sometimes puts
+ * that wrapper inside a `data` envelope on top — so the search goes two levels
+ * deep rather than betting on one wrapper name.
+ *
+ * A miss here does not read as an error: it reads as "this project holds no
+ * campaigns", and every caller believes it, which is how one press of Reconcile
+ * could unbind every scenario. `catalogue` in whatsapp.admin refuses that
+ * answer for exactly this reason.
+ */
+function toArray(payload: unknown): Record<string, any>[] {
+  return firstArray(payload, 2) ?? [];
 }
 
 export interface AisensyCampaign {

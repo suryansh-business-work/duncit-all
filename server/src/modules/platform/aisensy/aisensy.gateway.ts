@@ -154,7 +154,11 @@ export function campaignPayload(message: CampaignMessage, key: string): Record<s
   // Omitted rather than sent empty: a `media` key with a blank url fails the
   // whole send, while a text-header template with no key is simply fine.
   if (message.media?.url) {
-    payload.media = { url: message.media.url, filename: message.media.filename };
+    // The filename key is omitted rather than sent blank: AiSensy's published
+    // example always carries one, and an empty string is not a name.
+    payload.media = message.media.filename
+      ? { url: message.media.url, filename: message.media.filename }
+      : { url: message.media.url };
   }
   // Same rule, for the same reason: AiSensy does not document what it does with
   // a `buttons` array for a template that has no dynamic link, so one is sent

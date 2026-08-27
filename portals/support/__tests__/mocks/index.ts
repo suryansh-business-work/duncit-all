@@ -10,6 +10,7 @@ export * from './sos.mock';
 export * from './callback.mock';
 export * from './ticket.mock';
 export * from './supportChat.mock';
+export * from './faq.mock';
 export * from './dashboard.mock';
 export * from './auth.mock';
 export * from './upload.mock';

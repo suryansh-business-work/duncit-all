@@ -16,7 +16,6 @@ vi.mock('../../src/pages/website', () => ({
   BlogPage: () => <div>BLOG PAGE</div>,
   NewsletterPage: () => <div>NEWSLETTER PAGE</div>,
   ContactSubmissionsPage: () => <div>CONTACT PAGE</div>,
-  FaqSubmissionsPage: () => <div>FAQ PAGE</div>,
   JobApplicationsPage: () => <div>JOBS PAGE</div>,
   NavigationPage: () => <div>NAVIGATION PAGE</div>,
 }));
@@ -46,7 +45,6 @@ describe('App routing', () => {
     ['/blog', 'BLOG PAGE'],
     ['/newsletter', 'NEWSLETTER PAGE'],
     ['/contact-submissions', 'CONTACT PAGE'],
-    ['/faq-submissions', 'FAQ PAGE'],
     ['/job-applications', 'JOBS PAGE'],
     ['/navigation', 'NAVIGATION PAGE'],
     ['/profile', 'PROFILE PAGE'],

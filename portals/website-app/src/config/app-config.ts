@@ -30,7 +30,6 @@ export const appConfig = {
     { label: 'Blog', labelKey: 'shell.nav.blog', to: '/blog', icon: 'article' },
     { label: 'Newsletter Submission', labelKey: 'shell.nav.newsletterSubmission', to: '/newsletter', icon: 'email' },
     { label: 'Contact Submission', labelKey: 'shell.nav.contactSubmission', to: '/contact-submissions', icon: 'contactMail' },
-    { label: 'FAQ Submission', labelKey: 'shell.nav.faqSubmission', to: '/faq-submissions', icon: 'help' },
     { label: 'Job Applications', labelKey: 'shell.nav.jobApplications', to: '/job-applications', icon: 'personSearch' },
     { label: 'Navigation', labelKey: 'shell.nav.navigation', to: '/navigation', icon: 'accountTree' },
   ],

@@ -70,7 +70,6 @@ const ROUTES = [
   '/blog',
   '/newsletter',
   '/contact-submissions',
-  '/faq-submissions',
   '/job-applications',
   '/navigation',
 ];

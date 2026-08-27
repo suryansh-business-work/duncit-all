@@ -6,10 +6,11 @@ import { requireRole } from '@middleware/rbac';
 import { requireHuman } from '@modules/platform/captcha/captcha.guard';
 
 // FAQs are authored from the Support portal, so its managers write them
-// alongside the admins who still hold every platform key.
+// alongside the admins who still hold every platform key. The submission
+// queue is gated the same way rather than by the Website portal's role: a
+// submission is only ever resolved by writing the FAQ it asks for, and that
+// screen has always been Support's.
 const FAQ_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'SUPPORT_MANAGER'];
-// FAQ submissions are triaged from the Website portal as well as admin.
-const SUBMISSION_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'WEBSITE_MANAGER'];
 
 const toCatPub = (c: any) => ({
   id: String(c._id),
@@ -45,11 +46,11 @@ export const faqResolvers = {
     publicFaqGroups: () => faqService.publicGroups(),
     publicPartnerFaqs: (_p: unknown, args: { topic?: any }) => faqService.publicPartnerFaqs(args.topic),
     faqSubmissions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, SUBMISSION_ROLES);
+      requireRole(ctx, FAQ_RW);
       return faqSubmissionService.list(args.status);
     },
     faqSubmissionsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, SUBMISSION_ROLES);
+      requireRole(ctx, FAQ_RW);
       return faqSubmissionService.table(args.query);
     },
   },
@@ -75,7 +76,7 @@ export const faqResolvers = {
       args: { faq_submission_id: string; status: any; converted_faq_id?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, SUBMISSION_ROLES);
+      requireRole(ctx, FAQ_RW);
       return faqSubmissionService.setStatus(args.faq_submission_id, args.status, args.converted_faq_id);
     },
   },

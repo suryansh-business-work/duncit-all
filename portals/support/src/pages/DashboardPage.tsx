@@ -5,6 +5,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ForumIcon from '@mui/icons-material/Forum';
+import HelpOutlinedIcon from '@mui/icons-material/HelpOutlined';
 import { PageHeader, StatCard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import {
@@ -15,6 +16,7 @@ import {
 } from '../graphql/bouncer';
 import { TICKETS, type TicketPage } from '../graphql/tickets';
 import { SUPPORT_CHAT_SESSIONS, type SupportChatSessionPage } from '../graphql/supportChat';
+import { FAQ_SUBMISSIONS, type FaqSubmissionRow } from './faqs/faq-submissions';
 import { useSupportSocket } from '../lib/useSupportSocket';
 import { useTranslation } from '@duncit/shell';
 
@@ -60,6 +62,12 @@ export default function DashboardPage() {
   });
   const chats = useQuery<{ supportChatSessions: SupportChatSessionPage }>(SUPPORT_CHAT_SESSIONS, {
     variables: { status: 'OPEN', page_size: 1 },
+    fetchPolicy: 'cache-and-network',
+  });
+  // The queue moved here with the page it belongs to; the count is what tells
+  // a shift lead there is an unanswered question waiting to become an FAQ.
+  const submissions = useQuery<{ faqSubmissions: FaqSubmissionRow[] }>(FAQ_SUBMISSIONS, {
+    variables: { status: 'NEW' },
     fetchPolicy: 'cache-and-network',
   });
 
@@ -142,8 +150,24 @@ export default function DashboardPage() {
           />
         ),
       },
+      {
+        id: 'faq-submissions',
+        bare: true,
+        defaultLayout: { x: 0, y: 2, w: 3, h: 2 },
+        minW: 2,
+        minH: 2,
+        content: (
+          <SupportStatCard
+            label={t('support.dashboard.newFaqSubmissions')}
+            count={submissions.data?.faqSubmissions.length ?? 0}
+            icon={<HelpOutlinedIcon fontSize="large" />}
+            color="info.main"
+            to="/faqs/submissions"
+          />
+        ),
+      },
     ],
-    [sos.data, callbacks.data, tickets.data, chats.data],
+    [sos.data, callbacks.data, tickets.data, chats.data, submissions.data],
   );
 
   return (

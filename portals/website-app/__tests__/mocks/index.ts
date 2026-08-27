@@ -11,7 +11,6 @@ export * from './appSettings.mock';
 export * from './auth.mock';
 export * from './jobApplication.mock';
 export * from './contact.mock';
-export * from './faq.mock';
 export * from './newsletter.mock';
 export * from './navigation.mock';
 export * from './content.mock';

@@ -6,8 +6,7 @@ import Typography from '@mui/material/Typography';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitIconButton } from '@duncit/buttons';
-import { format as formatWithDateFns } from 'date-fns';
-import { ambientDateFormat } from '@duncit/datetime';
+import { ambientDateFormat, ambientDateFormatter } from '@duncit/datetime';
 import { fallbackT, useTranslation } from './i18n';
 import type { DuncitColumn } from './types';
 
@@ -38,12 +37,19 @@ function resolveLabel<T>(label: RowLabel<T> | undefined, row: T, fallback: strin
  * still ends up rendering them. It used to default to a hardcoded 'd MMM yyyy',
  * which is how a table column and the detail page it opened could show the same
  * date two different ways.
+ *
+ * Formatting goes through the shared formatter rather than date-fns directly,
+ * because that one already refuses to throw: a value getter runs inside the
+ * grid's paint, so an unparseable date raised there took the whole page down
+ * rather than the one cell holding it. An unreadable value reads as an
+ * em-dash, the same as an absent one.
  */
 export function formatDateCell(
   iso: string | null | undefined,
   dateFormat: string = ambientDateFormat(),
 ): string {
-  return iso ? formatWithDateFns(new Date(iso), dateFormat) : EM_DASH;
+  if (!iso) return EM_DASH;
+  return ambientDateFormatter().formatPattern(iso, dateFormat) || EM_DASH;
 }
 
 export interface DateColumnOptions<T> {

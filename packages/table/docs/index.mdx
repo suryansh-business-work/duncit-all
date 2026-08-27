@@ -224,7 +224,15 @@ payoutQuery.filters.map((f) => filterChipLabel(payoutColumns, f, t));
 formatDateCell('2026-07-28T09:15:00.000Z');                     // the admin's configured pattern
 formatDateCell('2026-07-28T09:15:00.000Z', 'dd/MM/yyyy HH:mm'); // '28/07/2026 14:45' (IST)
 formatDateCell(null);                                           // '—'  (EM_DASH)
+formatDateCell('1787824800000');                                // '—'  — unreadable, not a crash
 ```
+
+A value getter runs inside the grid's paint, so a date the formatter cannot read has to end
+as an em-dash rather than an exception: one unreadable cell used to throw
+`RangeError: Invalid time value` and take the whole page with it. Epoch millis is what that
+looks like in practice — GraphQL's `String` scalar serializes a raw `Date` through
+`valueOf()`, so a resolver that forgets `.toISOString()` sends `'1787824800000'`. The cell
+survives it now; the resolver sending it is still wrong.
 
 The pattern is not a constant this package owns. Left out, it is read from
 `ambientDateFormat()` (`@duncit/datetime`) **at call time**, so a grid built before the
@@ -334,7 +342,7 @@ await fetchRows(payoutQuery);
 | `activeChipColumn` | `<T>(options?: ActiveChipColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'is_active'`, header `shell.common.status`, `width 110`, labels `shell.common.active` / `shell.common.inactive`, `filterable true`. |
 | `actionsColumn` | `<T>(options: ActionsColumnOptions<T>) => DuncitColumn<T>` | Edit/Delete icon buttons; each side takes `RowActionOptions` (`title`, `ariaLabel`, `color`, `icon`, `disabled`, `disabledTitle`), all accepting a `(row) => string`. |
 | `entityIdColumn` | `<T>(options: EntityIdColumnOptions<T>) => DuncitColumn<T>` | Requires `field` + `headerName`. Defaults: `width 150`, `filterable true`. Monospace, non-wrapping, `EM_DASH` when the record predates its id. |
-| `formatDateCell` | `(iso: string \| null \| undefined, dateFormat?: string) => string` | `EM_DASH` when empty. |
+| `formatDateCell` | `(iso: string \| null \| undefined, dateFormat?: string) => string` | `EM_DASH` when empty **or unreadable** — it never throws out of a value getter. |
 | `buildAgTheme` | `(muiTheme: Theme, density: 'compact' \| 'standard')` | Maps the live MUI theme onto AG Grid's Theming API — zero CSS imports, light and dark both work. |
 | `EM_DASH` | `'—'` | The empty-cell character every table uses, so blanks look identical across portals. |
 | `useTranslation` | `() => { t; has; locale; … }` | The grid's own translator, layered over `shell.*`. Chrome copy lives under `shell.table.*` (rule 38). |
@@ -486,7 +494,8 @@ reshaping the state.
 ## Column helpers — use them instead of re-deriving cells
 
 `dateColumn()` defaults to the hidden `created_at` column in the admin's configured date
-pattern and an em-dash fallback for null. `formatDateCell(iso, format)` is the
+pattern and an em-dash fallback for null — and for anything it cannot parse, because a getter
+that throws mid-paint costs the whole page. `formatDateCell(iso, format)` is the
 same formatting on its own, and `EM_DASH` is the empty-value character every table uses so
 blanks look identical across portals. `actionsColumn()` and `activeChipColumn()` cover the two
 cell shapes that repeated most.

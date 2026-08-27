@@ -141,3 +141,34 @@ describe('rule aliases', () => {
     expect(typeof zodRules.optionalUrl).toBe('function');
   });
 });
+
+/**
+ * The two optional-phone rules. Duncit stopped collecting a phone at signup, so
+ * "no number" is an ordinary state of a real account — a form that required one
+ * would leave Save disabled over a value nobody was ever asked for.
+ */
+describe('zodRules.optionalPhoneNumber / optionalPhoneExtension', () => {
+  it('accepts a blank number and a blank code', () => {
+    expect(zodRules.optionalPhoneNumber().safeParse('').success).toBe(true);
+    expect(zodRules.optionalPhoneExtension().safeParse('   ').success).toBe(true);
+  });
+
+  it('accepts a real number and code', () => {
+    expect(zodRules.optionalPhoneNumber().parse(' 9820098200 ')).toBe('9820098200');
+    expect(zodRules.optionalPhoneExtension().parse(' +91 ')).toBe('+91');
+  });
+
+  it('still refuses a number that is filled in but wrong', () => {
+    expect(msg(zodRules.optionalPhoneNumber(), '98200')).toBe(
+      'Phone number must contain only digits (6-15 digits)',
+    );
+    expect(msg(zodRules.optionalPhoneNumber('WhatsApp number'), 'abcdefg')).toBe(
+      'WhatsApp number must contain only digits (6-15 digits)',
+    );
+  });
+
+  it('still refuses a country code that is filled in but wrong', () => {
+    expect(msg(zodRules.optionalPhoneExtension(), '++91')).toBe('Phone code is invalid');
+    expect(msg(zodRules.optionalPhoneExtension('Code'), 'abc')).toBe('Code is invalid');
+  });
+});

@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.72.51",
+  "version": "1.72.55",
   "private": true,
   "type": "module",
   "scripts": {
@@ -32,6 +32,7 @@
     "@duncit/earn": "workspace:*",
     "@duncit/errors": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",
+    "@duncit/forms": "workspace:*",
     "@duncit/geo": "workspace:*",
     "@duncit/host-pod-actions": "workspace:*",
     "@duncit/i18n": "workspace:*",

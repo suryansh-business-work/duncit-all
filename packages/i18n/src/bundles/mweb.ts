@@ -2976,6 +2976,29 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pods: 'Pods',
       profileHealth: 'Profile health',
       viewProfileHealth: 'View profile health',
+      // The Host Studio insight charts. mWeb draws them with @mui/x-charts and
+      // the app with gifted-charts, but the labels come from @duncit/utils'
+      // host-insights helpers so the two read identically (rule 27). They were
+      // English literals inside both copies of that file before it was shared.
+      insights: {
+        rangeAll: 'All',
+        rangeLastYear: 'Last Year ({year})',
+        rangeCurrentYear: 'Current Year ({year})',
+        rangePast6Months: 'Past 6 Months',
+        rangePast3Months: 'Past 3 Months',
+        titleAll: 'All Hosted Pods',
+        descAll: 'Your complete Pod hosting history.',
+        titleYear: 'Pods Hosted in {year}',
+        descYear: 'Your hosted Pods during {year}.',
+        titlePast6: 'Pods Hosted in Past 6 Months',
+        descPast6: 'Your hosted Pods over the last 6 months.',
+        titlePast3: 'Pods Hosted in Past 3 Months',
+        descPast3: 'Your hosted Pods over the last 3 months.',
+        statusUpcoming: 'Upcoming',
+        statusOngoing: 'Ongoing',
+        statusCompleted: 'Completed',
+        statusCancelled: 'Cancelled',
+      },
     },
     hostManage: {
       applyNow: 'Apply Now',
@@ -3190,6 +3213,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // account. Rendered by mWeb and the native app from ONE label builder in
     // @duncit/utils, so the two screens cannot say different things (rule 27).
     contactChange: {
+      // The contact-change form refuses input the same way on mWeb and native —
+      // the rules live in @duncit/forms/schemas, so these sentences are shared
+      // rather than hard-coded once per surface (rule 38).
+      validation: {
+        emailTooLong: 'That address is too long',
+        emailInvalid: 'Enter a valid email address',
+        extensionInvalid: 'Pick a country code',
+        phoneInvalid: 'Enter a valid phone number',
+        otpInvalid: 'Enter the 6-digit code',
+      },
       emailName: 'Email',
       emailField: 'New email address',
       emailEmpty: 'No email address yet',

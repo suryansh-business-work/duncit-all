@@ -16,6 +16,7 @@ import { MEDIA_BUNDLE } from './bundles/media';
 import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
 import { UI_BUNDLE } from './bundles/ui';
 import { VERIFICATION_BUNDLE } from './bundles/verification';
+import { WITHDRAW_BUNDLE } from './bundles/withdraw';
 import { SESSION_BUNDLE } from './bundles/session';
 import { LOCATION_BUNDLE } from './bundles/location';
 import { MWEB_BUNDLE } from './bundles/mweb';
@@ -91,6 +92,7 @@ export {
   TECH_BUNDLE,
   UI_BUNDLE,
   VERIFICATION_BUNDLE,
+  WITHDRAW_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -115,6 +117,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   adRequest: AD_REQUEST_BUNDLE,
   ui: UI_BUNDLE,
   verification: VERIFICATION_BUNDLE,
+  withdraw: WITHDRAW_BUNDLE,
   session: SESSION_BUNDLE,
   location: LOCATION_BUNDLE,
   mweb: MWEB_BUNDLE,

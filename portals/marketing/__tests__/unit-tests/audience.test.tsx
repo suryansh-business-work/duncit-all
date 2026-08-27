@@ -1,10 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router-dom';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import {
+  addAudienceListMembersMock,
   audienceFilterOptionsEmptyMock,
   audienceFilterOptionsMock,
+  audienceListCandidatesMock,
   audienceListMissingMock,
   audienceListMock,
   audienceListFailedMock,
@@ -14,19 +17,24 @@ import {
   deleteAudienceListMock,
   makeAudienceListRow,
   makeAudienceRow,
+  makePickableUser,
   makeSparseAudienceRow,
+  removeAudienceListMemberMock,
 } from '../mocks';
 import { __setTableRows, fetchRowsFrom } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (d: Date) => `fmt:${d.toISOString()}` }),
 }));
 const locationsMock = vi.hoisted(() => ({ locations: [] as unknown[] }));
 vi.mock('@duncit/location', () => ({
   useAdminLocations: () => ({ locations: locationsMock.locations }),
 }));
-const userMock = vi.hoisted(() => ({ user: { id: 'me', full_name: 'Asha Rao' } as Record<string, unknown> | null }));
+const userMock = vi.hoisted(() => ({
+  user: { user_id: 'me', full_name: 'Asha Rao' } as Record<string, unknown> | null,
+}));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => ({ user: userMock.user }) }));
 const navigateMock = vi.hoisted(() => ({ fn: vi.fn() }));
 vi.mock('react-router-dom', async (importOriginal) => ({
@@ -49,6 +57,10 @@ import { getAudienceListColumns } from '../../src/pages/target-audience-page/aud
 import { EMPTY_FILTERS } from '../../src/pages/target-audience-page/audience-filters';
 import { locationOptions, toOptions } from '../../src/pages/target-audience-page/helpers';
 
+/** The same translator the provider-free `useTranslation` falls back to, so a
+ * column built here is labelled with the copy that actually ships. */
+const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
+
 const LOCATIONS = [
   {
     id: 'l1',
@@ -67,7 +79,7 @@ const columnDeps = { formatDate: (d: Date) => d.toISOString() };
 beforeEach(() => {
   __setTableRows([]);
   locationsMock.locations = LOCATIONS;
-  userMock.user = { id: 'me', full_name: 'Asha Rao' };
+  userMock.user = { user_id: 'me', full_name: 'Asha Rao' };
   navigateMock.fn.mockClear();
   dialogsMock.notifySuccess.mockClear();
 });
@@ -100,7 +112,17 @@ describe('audience helpers', () => {
 describe('audience columns', () => {
   // Filtering moved to the sidebar; a column popover can only ever show one.
   it('carries no column filters at all', () => {
-    expect(getAudienceColumns(columnDeps).filter((c) => c.filter)).toEqual([]);
+    expect(getAudienceColumns(columnDeps, t).filter((c) => c.filter)).toEqual([]);
+  });
+
+  // The audience directory and the create wizard's preview render the same
+  // table against no list, so there is nothing there to remove somebody from.
+  it('carries no Actions column until the page hands it a remove handler', () => {
+    const fields = getAudienceColumns(columnDeps, t).map((c) => c.field);
+    expect(fields).not.toContain('actions');
+    expect(getAudienceColumns({ ...columnDeps, onRemove: vi.fn() }, t).map((c) => c.field)).toContain(
+      'actions',
+    );
   });
 
   it('renders a fully populated row', async () => {
@@ -148,7 +170,8 @@ describe('AudiencePicker', () => {
 });
 
 describe('audience list columns', () => {
-  const cols = () => getAudienceListColumns({ formatDate: (d) => d.toISOString(), onDelete: vi.fn() });
+  const cols = () =>
+    getAudienceListColumns({ formatDate: (d) => d.toISOString(), onDelete: vi.fn() }, t);
   const cell = (field: string, row: ReturnType<typeof makeAudienceListRow>) =>
     render(<>{cols().find((c) => c.field === field)?.cellRenderer?.(row)}</>);
 
@@ -314,6 +337,123 @@ describe('AudienceListDetailPage', () => {
     renderDetail([audienceListMissingMock('gone')], 'gone');
     expect(await screen.findByText('That audience list no longer exists.')).toBeInTheDocument();
   });
+
+  it('reports how many people were taken out by hand', async () => {
+    renderDetail([audienceListMock(makeAudienceListRow({ excluded_member_count: 3 }))]);
+    expect(await screen.findByText('3 removed by hand')).toBeInTheDocument();
+  });
+
+  it('keeps the removed chip off a list nobody has been taken out of', async () => {
+    renderDetail([audienceListMock()]);
+    await screen.findByText('Pune regulars');
+    expect(screen.queryByText(/removed by hand/)).not.toBeInTheDocument();
+  });
+
+  describe('removing one person', () => {
+    /** The members table, showing Asha, with the list loaded behind it. */
+    const renderRoster = (extra: Parameters<typeof renderWithProviders>[1]['mocks'] = []) => {
+      __setTableRows([makeAudienceRow()]);
+      return renderDetail([audienceListMock(), ...(extra ?? [])]);
+    };
+
+    const openConfirm = async () => {
+      await screen.findByTestId('table-row');
+      fireEvent.click(screen.getByRole('button', { name: 'Remove from this list' }));
+      return screen.findByText('Remove this person from the list?');
+    };
+
+    it('names the person and says the removal sticks', async () => {
+      renderRoster();
+      await openConfirm();
+      // A list re-runs its criteria, so "stays out" is the part that matters.
+      expect(screen.getByText(/Asha Rao will be taken out of this list and stay out/)).toBeInTheDocument();
+    });
+
+    it('takes them out once the removal is confirmed', async () => {
+      renderRoster([removeAudienceListMemberMock('u1')]);
+      await openConfirm();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+      await waitFor(() =>
+        expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Removed from the list'),
+      );
+    });
+
+    it('surfaces a failed removal instead of closing on a lie', async () => {
+      renderRoster([removeAudienceListMemberMock('u1', { failWith: 'still sending to them' })]);
+      await openConfirm();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+      expect(await screen.findByText(/still sending to them/)).toBeInTheDocument();
+      expect(dialogsMock.notifySuccess).not.toHaveBeenCalled();
+    });
+
+    it('closes the confirm without removing anybody', async () => {
+      renderRoster();
+      await openConfirm();
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      await waitFor(() =>
+        expect(screen.queryByText('Remove this person from the list?')).not.toBeInTheDocument(),
+      );
+    });
+
+    // A phone signup has no name and no email; a confirmation naming nobody is
+    // not a confirmation.
+    it('falls back to the phone number when the account has no name', async () => {
+      __setTableRows([makeSparseAudienceRow()]);
+      renderDetail([audienceListMock()]);
+      await screen.findByTestId('table-row');
+      fireEvent.click(screen.getByRole('button', { name: 'Remove from this list' }));
+      expect(await screen.findByText(/^u2 will be taken out/)).toBeInTheDocument();
+    });
+  });
+
+  describe('adding people', () => {
+    const openPicker = async () => {
+      fireEvent.click(await screen.findByRole('button', { name: /Add user/ }));
+      return screen.findByText('Add people to this list');
+    };
+
+    // The whole point: the picker asks for CANDIDATES keyed on this list, so
+    // whoever is already in it never reaches the checkbox list.
+    it('offers only people the list does not already hold', async () => {
+      renderDetail([audienceListMock(), audienceListCandidatesMock()]);
+      await openPicker();
+      expect(await screen.findByText('Vikram Nair')).toBeInTheDocument();
+      expect(screen.queryByText('Asha Rao', { selector: 'span' })).not.toBeInTheDocument();
+    });
+
+    it('says everybody is already in rather than blaming the search', async () => {
+      renderDetail([audienceListMock(), audienceListCandidatesMock([])]);
+      await openPicker();
+      expect(await screen.findByText('Everyone eligible is already in this list.')).toBeInTheDocument();
+    });
+
+    it('adds the people that were ticked', async () => {
+      renderDetail([
+        audienceListMock(),
+        audienceListCandidatesMock(),
+        addAudienceListMembersMock(['u9']),
+      ]);
+      await openPicker();
+      fireEvent.click(await screen.findByText('Vikram Nair'));
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+      await waitFor(() =>
+        expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('People added to the list'),
+      );
+    });
+
+    it('surfaces a failed add', async () => {
+      renderDetail([
+        audienceListMock(),
+        audienceListCandidatesMock([makePickableUser()]),
+        addAudienceListMembersMock(['u9'], { failWith: 'they closed their account' }),
+      ]);
+      await openPicker();
+      fireEvent.click(await screen.findByText('Vikram Nair'));
+      fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+      expect(await screen.findByText(/they closed their account/)).toBeInTheDocument();
+    });
+  });
 });
 
 describe('CreateAudienceListPage', () => {
@@ -372,7 +512,7 @@ describe('CreateAudienceListPage', () => {
   });
 
   it('leaves the owner blank when the signed-in user is not an eligible owner', async () => {
-    userMock.user = { id: 'someone-else', full_name: 'Nobody' };
+    userMock.user = { user_id: 'someone-else', full_name: 'Nobody' };
     renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
     expect(screen.getByLabelText(/List owner/)).toHaveValue('');

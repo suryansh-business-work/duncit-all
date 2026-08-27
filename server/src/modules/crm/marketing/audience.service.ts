@@ -287,6 +287,12 @@ async function pushPlatformsFor(ids: string[]): Promise<Map<string, string[]>> {
  */
 const NOT_DELETED: BaseFilter = { 'metadata.deleted_at': null };
 
+/** The removed-by-hand people as a filter fragment, or nothing when a list has
+ * removed nobody — an empty `$nin` is a clause every read would carry for no
+ * reason. */
+const exclusion = (excludedIds?: Types.ObjectId[] | null): BaseFilter =>
+  excludedIds?.length ? { _id: { $nin: excludedIds } } : {};
+
 /**
  * The Mongo filter a saved list describes right now.
  *
@@ -295,17 +301,25 @@ const NOT_DELETED: BaseFilter = { 'metadata.deleted_at': null };
  * the list whether or not they match the filters, which is the entire reason
  * for adding them. With no criteria at all the list is already everybody, so
  * the union is skipped rather than written as a redundant `$or`.
+ *
+ * `excludedIds` are the people taken out by hand. They are subtracted from the
+ * WHOLE union rather than from either half, so a removal holds whether the
+ * person was hand-picked or matched the criteria — and keeps holding as the
+ * criteria re-run. It sits beside NOT_DELETED for the same reason: both are
+ * "who is eligible at all", and both must survive the `$or`.
  */
 export async function audienceFilter(
   input?: TableQueryInput | null,
-  manualIds?: Types.ObjectId[] | null
+  manualIds?: Types.ObjectId[] | null,
+  excludedIds?: Types.ObjectId[] | null
 ): Promise<BaseFilter> {
   const { base, query } = await translate(input);
   const criteria = combineFilters(base, buildTableFilter(query, AUDIENCE_TABLE_CONFIG));
+  const eligible = combineFilters(NOT_DELETED, exclusion(excludedIds));
   if (!manualIds?.length || Object.keys(criteria).length === 0) {
-    return combineFilters(NOT_DELETED, criteria);
+    return combineFilters(eligible, criteria);
   }
-  return combineFilters(NOT_DELETED, { $or: [criteria, { _id: { $in: manualIds } }] });
+  return combineFilters(eligible, { $or: [criteria, { _id: { $in: manualIds } }] });
 }
 
 /** How many people a saved list holds right now — its criteria plus anybody
@@ -313,9 +327,10 @@ export async function audienceFilter(
  * every read rather than kept as a column. */
 export async function countAudience(
   input?: TableQueryInput | null,
-  manualIds?: Types.ObjectId[] | null
+  manualIds?: Types.ObjectId[] | null,
+  excludedIds?: Types.ObjectId[] | null
 ): Promise<number> {
-  return UserModel.countDocuments(await audienceFilter(input, manualIds));
+  return UserModel.countDocuments(await audienceFilter(input, manualIds, excludedIds));
 }
 
 /**
@@ -329,10 +344,11 @@ export async function countAudience(
 export async function audienceMatchesUser(
   input: TableQueryInput | null | undefined,
   userId: string,
-  manualIds?: Types.ObjectId[] | null
+  manualIds?: Types.ObjectId[] | null,
+  excludedIds?: Types.ObjectId[] | null
 ): Promise<boolean> {
   if (!Types.ObjectId.isValid(userId)) return false;
-  const filter = await audienceFilter(input, manualIds);
+  const filter = await audienceFilter(input, manualIds, excludedIds);
   const match = await UserModel.exists({ $and: [filter, { _id: new Types.ObjectId(userId) }] });
   return !!match;
 }
@@ -341,10 +357,26 @@ export async function audienceMatchesUser(
  * Recomputed per send, so a list built last month reaches this month's people. */
 export async function audienceUserIds(
   input?: TableQueryInput | null,
-  manualIds?: Types.ObjectId[] | null
+  manualIds?: Types.ObjectId[] | null,
+  excludedIds?: Types.ObjectId[] | null
 ): Promise<Types.ObjectId[]> {
-  const users = await UserModel.find(await audienceFilter(input, manualIds)).select('_id');
+  const users = await UserModel.find(await audienceFilter(input, manualIds, excludedIds)).select(
+    '_id'
+  );
   return users.map((u: any) => u._id);
+}
+
+/**
+ * The complement of a list's membership: everybody the list does NOT hold.
+ *
+ * This is what the Add-user picker offers, and it is derived from the very
+ * filter that decides membership rather than re-stated — a second definition of
+ * "already in the list" is how a picker starts offering people it should not.
+ * `$nor` negates the whole membership filter, including its NOT_DELETED half,
+ * so closed accounts come back out as "not members"; the AND puts them back.
+ */
+export function notInAudience(membership: BaseFilter): BaseFilter {
+  return combineFilters(NOT_DELETED, { $nor: [membership] });
 }
 
 /**

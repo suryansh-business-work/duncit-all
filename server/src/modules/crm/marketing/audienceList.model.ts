@@ -11,6 +11,9 @@ import { Schema, model, InferSchemaType, type Types } from 'mongoose';
  * `manual_user_ids` is the one exception: people added to the list by hand,
  * unioned with whoever the criteria match. It is a union and not a snapshot, so
  * a list can be a segment, a hand-picked set, or both at once.
+ *
+ * `excluded_user_ids` is that union's subtraction — the people a marketer took
+ * out by hand. Membership is therefore (criteria OR manual) AND NOT excluded.
  */
 const audienceFilterSchema = new Schema(
   {
@@ -38,6 +41,11 @@ const audienceListSchema = new Schema(
     search: { type: String, default: '', trim: true, maxlength: 200 },
     /** People added to this list by hand, on top of whoever the criteria match. */
     manual_user_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
+    /** People taken out of this list by hand. Held as a set rather than a row
+     * delete because the criteria re-run on every read: somebody removed for
+     * matching them would simply be back on the next one. Subtracted AFTER the
+     * union, so it removes a hand-picked person too. */
+    excluded_user_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     /** The signed-in user who created it (audit; `owner` is editable copy). */
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },

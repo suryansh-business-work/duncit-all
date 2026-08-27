@@ -20,7 +20,7 @@ import {
   buildStatusSlices,
   hostRangeMeta,
   type HostChartRange,
-} from './insights';
+} from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const ALL_TIME_FROM = '1970-01-01T00:00:00.000Z';
@@ -82,9 +82,9 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
 
   const overTime = buildPodsOverTime(pods.map((p) => p.pod_date_time), range);
   const participants = buildParticipantTrend(pods);
-  const statusSlices = buildStatusSlices(insights?.status_counts ?? EMPTY_COUNTS);
+  const statusSlices = buildStatusSlices(insights?.status_counts ?? EMPTY_COUNTS, semantic, t);
   const earnings = buildEarningsBars(insights?.monthly_earnings ?? []);
-  const meta = hostRangeMeta(range);
+  const meta = hostRangeMeta(range, t);
 
   return (
     <Stack spacing={2.25}>

@@ -33,7 +33,8 @@ export interface AudienceListFilterRow {
 }
 
 /** A saved Target Audience list. Stores criteria, not people, so member_count
- * is recomputed by the server every time it is read. */
+ * is recomputed by the server every time it is read — the criteria plus anyone
+ * added by hand, minus anyone removed by hand. */
 export interface AudienceListRow {
   id: string;
   name: string;
@@ -43,6 +44,8 @@ export interface AudienceListRow {
   search: string;
   /** How many people were added to the list by hand. */
   manual_member_count: number;
+  /** How many people were taken out of the list by hand. */
+  excluded_member_count: number;
   member_count: number;
   filters: AudienceListFilterRow[];
   created_at?: string | null;

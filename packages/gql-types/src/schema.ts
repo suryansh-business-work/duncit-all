@@ -1461,12 +1461,15 @@ export type AudienceInterestOption = {
  * A saved Target Audience list. It stores the filter CRITERIA, not the people —
  * opening it re-runs them, so the membership and the count are always current
  * rather than a snapshot of the day it was built. People added by hand are
- * unioned on top of whoever the criteria match.
+ * unioned on top of whoever the criteria match, and people removed by hand are
+ * subtracted from that union.
  */
 export type AudienceList = {
   __typename?: 'AudienceList';
   created_at?: Maybe<Scalars['String']['output']>;
   description: Scalars['String']['output'];
+  /** How many people were taken out of this list by hand. */
+  excluded_member_count: Scalars['Int']['output'];
   filters: Array<AudienceListFilter>;
   id: Scalars['ID']['output'];
   /** How many people were added to this list by hand. */
@@ -8801,6 +8804,13 @@ export type Mutation = {
    * ask again — so the pop-up stops reappearing on every page load.
    */
   remindPodFeedback: Scalars['Boolean']['output'];
+  /**
+   * Take one person out of a saved list. A list stores criteria, not people, so
+   * this records a removal rather than deleting a row: the person stays out as
+   * the criteria re-run, and is offered by the picker again if they should
+   * return. Removing somebody the list never held succeeds quietly.
+   */
+  removeAudienceListMember: AudienceList;
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
@@ -11269,6 +11279,12 @@ export type MutationRejoinPodArgs = {
 export type MutationRemindPodFeedbackArgs = {
   choice: PodFeedbackReminderChoice;
   pod_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveAudienceListMemberArgs = {
+  id: Scalars['ID']['input'];
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -16073,6 +16089,12 @@ export type Query = {
   /** One saved list, with its member count recomputed. */
   audienceList?: Maybe<AudienceList>;
   /**
+   * Who may still be ADDED to one saved list — the whole audience minus whoever
+   * the list already holds. Derived from the same membership the query above
+   * renders, so the Add-user picker cannot offer somebody already in the list.
+   */
+  audienceListCandidatesTable: AudienceTablePage;
+  /**
    * Who is in one saved list right now — the criteria re-run, plus everyone
    * added by hand. The union is resolved here so a list's detail page can never
    * show a membership that differs from what the next send reaches.
@@ -17332,6 +17354,12 @@ export type QueryApprovalRequestsTableArgs = {
 
 export type QueryAudienceListArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryAudienceListCandidatesTableArgs = {
+  list_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
 };
 
 

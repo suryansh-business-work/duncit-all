@@ -68,6 +68,9 @@ importers:
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../../packages/fallback-icons
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
       '@duncit/geo':
         specifier: workspace:*
         version: link:../../packages/geo
@@ -1560,6 +1563,12 @@ importers:
 
   packages/forms:
     devDependencies:
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../regex
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
       '@mui/material':
         specifier: ^9.3.1
         version: 9.3.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

@@ -53,11 +53,17 @@ export const AUDIENCE_LIST_MEMBERS_TABLE = gql`
   ${AUDIENCE_MEMBER_FIELDS}
 `;
 
-/** The Add-user picker reads the same audience, but only the four fields it
- * shows — a picker has no use for push platforms or login history. */
-export const AUDIENCE_PICKER_USERS = gql`
-  query AudiencePickerUsers($query: TableQueryInput) {
-    audienceTable(query: $query) {
+/**
+ * Who may still be added to a list: the audience minus its current members.
+ * The server subtracts them, not the dialog — a picker filtering a page of 25
+ * against the ids it happens to know would still offer everybody on page 2.
+ *
+ * Only the four fields the picker shows; it has no use for push platforms or
+ * login history.
+ */
+export const AUDIENCE_LIST_CANDIDATES = gql`
+  query AudienceListCandidates($list_id: ID!, $query: TableQueryInput) {
+    audienceListCandidatesTable(list_id: $list_id, query: $query) {
       total
       rows {
         id
@@ -78,6 +84,7 @@ const AUDIENCE_LIST_FIELDS = gql`
     owner_user_id
     search
     manual_member_count
+    excluded_member_count
     member_count
     created_at
     filters {
@@ -135,6 +142,18 @@ export const ADD_AUDIENCE_LIST_MEMBERS = gql`
     addAudienceListMembers(id: $id, user_ids: $user_ids) {
       id
       manual_member_count
+      excluded_member_count
+      member_count
+    }
+  }
+`;
+
+export const REMOVE_AUDIENCE_LIST_MEMBER = gql`
+  mutation RemoveAudienceListMember($id: ID!, $user_id: ID!) {
+    removeAudienceListMember(id: $id, user_id: $user_id) {
+      id
+      manual_member_count
+      excluded_member_count
       member_count
     }
   }

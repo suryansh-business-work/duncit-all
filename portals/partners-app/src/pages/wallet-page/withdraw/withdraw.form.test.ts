@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildWithdrawInput, buildWithdrawSchema } from './withdraw.form';
-import { blankWithdrawValues } from './withdraw.types';
+import {
+  blankWithdrawValues,
+  buildWithdrawInput,
+  makeWithdrawSchema as buildWithdrawSchema,
+} from '@duncit/forms/schemas';
 
 describe('buildWithdrawSchema', () => {
   const schema = buildWithdrawSchema(500, 0, (key: string) => key);

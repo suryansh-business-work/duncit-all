@@ -8,11 +8,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { Section, OptionChipRow } from '@/components/home/HomeFilterParts';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import {
-  DEFAULT_HOST_CHART_RANGE,
-  hostRangeOptions,
-  type HostChartRange,
-} from '@/utils/host-insights';
+import { DEFAULT_HOST_CHART_RANGE, hostRangeOptions, type HostChartRange } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -41,7 +37,7 @@ export function HostInsightsFilterSheet({
     if (open) setDraft(initial);
   }, [open, initial]);
 
-  const options = hostRangeOptions(hasPods);
+  const options = hostRangeOptions(hasPods, t);
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>

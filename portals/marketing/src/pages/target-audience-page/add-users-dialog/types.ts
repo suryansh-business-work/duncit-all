@@ -7,7 +7,7 @@ export interface PickableUser {
 }
 
 export interface PickerUsersData {
-  audienceTable: {
+  audienceListCandidatesTable: {
     total: number;
     rows: PickableUser[];
   };

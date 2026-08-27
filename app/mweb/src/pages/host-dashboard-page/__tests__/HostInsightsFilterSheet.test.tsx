@@ -2,7 +2,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import HostInsightsFilterSheet from '../HostInsightsFilterSheet';
-import { DEFAULT_HOST_CHART_RANGE, hostRangeOptions } from '../insights';
+import { DEFAULT_HOST_CHART_RANGE, hostRangeOptions } from '@duncit/utils';
+import { fallbackT } from '../../../i18n/fallback';
 
 // ResponsiveDialog uses useMediaQuery -> matchMedia (not implemented in jsdom).
 beforeAll(() => {
@@ -47,7 +48,7 @@ describe('HostInsightsFilterSheet', () => {
     expect(screen.getByText('Filter pods by month')).toBeInTheDocument();
     // hasPods=false => no "All" chip
     expect(screen.queryByText('All')).not.toBeInTheDocument();
-    for (const [, label] of hostRangeOptions(false)) {
+    for (const [, label] of hostRangeOptions(false, fallbackT)) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });

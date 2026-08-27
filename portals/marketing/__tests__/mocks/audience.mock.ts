@@ -2,11 +2,14 @@ import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import type { AudienceFilterOptions } from '@duncit/gql-types';
 import {
+  ADD_AUDIENCE_LIST_MEMBERS,
   AUDIENCE_FILTER_OPTIONS,
   AUDIENCE_LIST,
+  AUDIENCE_LIST_CANDIDATES,
   AUDIENCE_LIST_OWNERS,
   CREATE_AUDIENCE_LIST,
   DELETE_AUDIENCE_LIST,
+  REMOVE_AUDIENCE_LIST_MEMBER,
 } from '../../src/pages/target-audience-page/queries';
 import type { AudienceListRow, AudienceRow } from '../../src/pages/target-audience-page/helpers';
 
@@ -71,6 +74,8 @@ export const makeAudienceListRow = (over: Partial<AudienceListRow> = {}): Audien
   description: 'Everyone browsing Pune',
   owner: 'Asha Rao',
   search: '',
+  manual_member_count: 0,
+  excluded_member_count: 0,
   member_count: 1284,
   owner_user_id: 'me',
   filters: [{ field: 'city', op: 'in', value: null, values: ['Pune'] }],
@@ -166,4 +171,85 @@ export const createAudienceListMock = (
 export const deleteAudienceListMock = (id = 'l1', failWith?: string): MockedResponse => ({
   request: { query: DELETE_AUDIENCE_LIST, variables: { id } },
   ...(failWith ? rejection(failWith) : { result: { data: { deleteAudienceList: true } } }),
+});
+
+/** Somebody the Add-user picker may still offer — the server has already taken
+ * the list's own members out, which is what the picker is asserting. */
+export const makePickableUser = (over: Record<string, unknown> = {}) => ({
+  __typename: 'AudienceMember',
+  id: 'u9',
+  full_name: 'Vikram Nair',
+  email: 'vikram@example.com',
+  phone: '9811111111',
+  ...over,
+});
+
+/** The picker's feed. `search` and `page` are part of the request, so a spec
+ * that types into the box must build the mock for the search it typed. */
+export const audienceListCandidatesMock = (
+  users: Record<string, unknown>[] = [makePickableUser()],
+  { listId = 'l1', search = '', page = 1 } = {},
+): MockedResponse => ({
+  request: {
+    query: AUDIENCE_LIST_CANDIDATES,
+    variables: { list_id: listId, query: { search, page, page_size: 25 } },
+  },
+  result: {
+    data: {
+      audienceListCandidatesTable: {
+        __typename: 'AudienceTablePage',
+        total: users.length,
+        rows: users,
+      },
+    },
+  },
+});
+
+/** The counts both member mutations answer with — Apollo normalises them
+ * straight into the detail page's chips. */
+const listCounts = (over: Record<string, number> = {}) => ({
+  __typename: 'AudienceList',
+  id: 'l1',
+  manual_member_count: 0,
+  excluded_member_count: 0,
+  member_count: 1284,
+  ...over,
+});
+
+export const addAudienceListMembersMock = (
+  userIds = ['u9'],
+  { listId = 'l1', failWith = '' } = {},
+): MockedResponse => ({
+  request: { query: ADD_AUDIENCE_LIST_MEMBERS, variables: { id: listId, user_ids: userIds } },
+  ...(failWith
+    ? rejection(failWith)
+    : {
+        result: {
+          data: {
+            addAudienceListMembers: listCounts({
+              manual_member_count: userIds.length,
+              member_count: 1285,
+            }),
+          },
+        },
+      }),
+});
+
+export const removeAudienceListMemberMock = (
+  userId = 'u1',
+  { listId = 'l1', failWith = '' } = {},
+): MockedResponse => ({
+  request: { query: REMOVE_AUDIENCE_LIST_MEMBER, variables: { id: listId, user_id: userId } },
+  ...(failWith
+    ? rejection(failWith)
+    : {
+        result: {
+          data: {
+            removeAudienceListMember: listCounts({
+              excluded_member_count: 1,
+              member_count: 1283,
+            }),
+          },
+        },
+      }),
 });

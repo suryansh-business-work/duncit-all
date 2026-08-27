@@ -1,10 +1,13 @@
 import {
   blankWithdrawValues,
   buildWithdrawInput,
-  buildWithdrawSchema,
+  makeWithdrawSchema,
   type WithdrawValues,
 } from '../withdraw.form';
 import { WithdrawalMethod } from '@/generated/graphql/graphql';
+
+/** The shared schema takes the reader's translator; the tests assert on keys. */
+const schemaFor = (max: number, min = 0) => makeWithdrawSchema(max, min, (key: string) => key);
 
 const valid = (over: Partial<WithdrawValues> = {}): WithdrawValues => ({
   ...blankWithdrawValues,
@@ -15,13 +18,13 @@ const valid = (over: Partial<WithdrawValues> = {}): WithdrawValues => ({
 });
 
 const issues = (max: number, values: WithdrawValues) => {
-  const r = buildWithdrawSchema(max).safeParse(values);
+  const r = schemaFor(max).safeParse(values);
   return r.success ? [] : r.error.issues.map((i) => i.path.join('.'));
 };
 
 describe('buildWithdrawSchema', () => {
   it('accepts a valid UPI withdrawal within balance', () => {
-    expect(buildWithdrawSchema(1000).safeParse(valid()).success).toBe(true);
+    expect(schemaFor(1000).safeParse(valid()).success).toBe(true);
   });
 
   it('rejects an amount over balance or non-positive', () => {
@@ -38,7 +41,7 @@ describe('buildWithdrawSchema', () => {
     expect(bank).toContain('account_number');
     expect(bank).toContain('ifsc_code');
     expect(
-      buildWithdrawSchema(1000).safeParse(
+      schemaFor(1000).safeParse(
         valid({ payout_method: 'IMPS', upi_id: '', account_number: '123', ifsc_code: 'HDFC0001' }),
       ).success,
     ).toBe(true);

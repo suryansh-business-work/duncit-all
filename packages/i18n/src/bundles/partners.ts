@@ -537,11 +537,17 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     },
 
     walletPage: {
+      // The three validation sentences moved to the shared `withdraw.*`
+      // namespace with the rules themselves (@duncit/forms/schemas); these are
+      // kept until the new keys are seeded, and nothing reads them any more.
       enterAccountNumber: 'Enter account number',
       enterIfscCode: 'Enter IFSC code',
       enterYourUpiId: 'Enter your UPI ID',
+      amountMax: 'Amount (max {max})',
       noWithdrawalsYet: 'No withdrawals yet.',
       payoutMethod: 'Payout method',
+      requesting: 'Requesting…',
+      requestWithdrawal: 'Request withdrawal',
       withdrawFromWallet: 'Withdraw from wallet',
       yourPayoutsWillShowUpHere: 'Your payouts will show up here.',
     },

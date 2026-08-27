@@ -2,7 +2,7 @@ import { Dimensions } from 'react-native';
 import { BarChart, LineChart, PieChart } from 'react-native-gifted-charts';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { ChartDatum, StatusSlice } from '@/utils/host-insights';
+import type { ChartDatum, StatusSlice } from '@duncit/utils';
 
 const CHART_HEIGHT = 170;
 const chartWidth = () => Dimensions.get('window').width - 88;

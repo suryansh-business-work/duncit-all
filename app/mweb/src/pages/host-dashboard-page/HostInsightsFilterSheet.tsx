@@ -3,7 +3,12 @@ import { Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
-import { DEFAULT_HOST_CHART_RANGE, hostRangeOptions, type HostChartRange } from './insights';
+import {
+  DEFAULT_HOST_CHART_RANGE,
+  hostRangeOptions,
+  type HostChartRange,
+} from '@duncit/utils';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -22,13 +27,14 @@ export default function HostInsightsFilterSheet({
   onApply,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<HostChartRange>(initial);
 
   useEffect(() => {
     if (open) setDraft(initial);
   }, [open, initial]);
 
-  const options = hostRangeOptions(hasPods);
+  const options = hostRangeOptions(hasPods, t);
 
   return (
     <ResponsiveDialog

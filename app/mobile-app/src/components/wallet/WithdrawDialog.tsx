@@ -18,7 +18,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   blankWithdrawValues,
   buildWithdrawInput,
-  buildWithdrawSchema,
+  makeWithdrawSchema,
   type WithdrawMethod,
   type WithdrawValues,
 } from './withdraw.form';
@@ -49,7 +49,7 @@ export function WithdrawDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit, setValue, watch } = useForm<WithdrawValues>({
-    resolver: zodResolver(buildWithdrawSchema(maxAmount, minAmount)),
+    resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)),
     defaultValues: blankWithdrawValues,
   });
   const method = watch('payout_method');

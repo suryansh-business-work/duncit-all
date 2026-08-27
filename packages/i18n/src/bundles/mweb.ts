@@ -2976,6 +2976,29 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pods: 'Pods',
       profileHealth: 'Profile health',
       viewProfileHealth: 'View profile health',
+      // The Host Studio insight charts. mWeb draws them with @mui/x-charts and
+      // the app with gifted-charts, but the labels come from @duncit/utils'
+      // host-insights helpers so the two read identically (rule 27). They were
+      // English literals inside both copies of that file before it was shared.
+      insights: {
+        rangeAll: 'All',
+        rangeLastYear: 'Last Year ({year})',
+        rangeCurrentYear: 'Current Year ({year})',
+        rangePast6Months: 'Past 6 Months',
+        rangePast3Months: 'Past 3 Months',
+        titleAll: 'All Hosted Pods',
+        descAll: 'Your complete Pod hosting history.',
+        titleYear: 'Pods Hosted in {year}',
+        descYear: 'Your hosted Pods during {year}.',
+        titlePast6: 'Pods Hosted in Past 6 Months',
+        descPast6: 'Your hosted Pods over the last 6 months.',
+        titlePast3: 'Pods Hosted in Past 3 Months',
+        descPast3: 'Your hosted Pods over the last 3 months.',
+        statusUpcoming: 'Upcoming',
+        statusOngoing: 'Ongoing',
+        statusCompleted: 'Completed',
+        statusCancelled: 'Cancelled',
+      },
     },
     hostManage: {
       applyNow: 'Apply Now',

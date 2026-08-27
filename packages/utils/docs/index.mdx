@@ -15,6 +15,14 @@ consumers:
   - 'packages/media-picker'
   - 'packages/ad-request-form'
 exports:
+  - 'buildPodsOverTime'
+  - 'buildParticipantTrend'
+  - 'buildStatusSlices'
+  - 'buildEarningsBars'
+  - 'hostRangeOptions'
+  - 'hostRangeMeta'
+  - 'allZero'
+  - 'DEFAULT_HOST_CHART_RANGE'
   - 'parseApiError'
   - 'isNetworkFailureMessage'
   - 'OFFLINE_MESSAGE'
@@ -1317,3 +1325,36 @@ single next partner to name.
 100/100/100/100 vitest gate. A new helper needs its branches tested before it will build, and it
 must stay framework-free — no React, no MUI, no Tamagui, no Apollo. If a helper needs one of
 those, it belongs in `@duncit/ui` (MUI) or the consuming app, not here.
+
+## Host Studio insights
+
+`host-insights.ts` is the data behind the four Host Studio charts. mWeb draws them with
+`@mui/x-charts` and the app with `gifted-charts` — two views that can never be shared — but the
+NUMBERS have to be identical, because a host reads them beside the money the settlement pays
+out. They were two near-identical ~190-line files (`app/mweb/.../insights.ts` and
+`app/mobile-app/src/utils/host-insights.ts`), and the app's copy had already hard-coded the
+donut palette instead of reading the shared tokens.
+
+```ts
+buildPodsOverTime(dates, 'PAST_6_MONTHS'); // pods per month, empty months at 0
+buildParticipantTrend(pods); // seats taken minus the host(s), per pod, in date order
+buildStatusSlices(counts, semantic, t); // the donut, coloured by the caller's palette
+buildEarningsBars(rows); // "2026-08" -> { label: 'Aug', value: 4200 }
+allZero(series); // what drives the empty state
+```
+
+Two arguments are injected rather than held here, and both for the same reason — this package
+has **zero dependencies**:
+
+- **the palette.** Both surfaces pass `semantic` from `@duncit/auth-tokens`. Keeping the hex
+  codes here would be a zero-dependency copy of the design tokens, which is exactly how the
+  app's donut got its own literals.
+- **the translator.** Every label is a `mweb.hostDashboard.insights.*` key (rule 38). The range
+  names and chart titles were English literals inside both copies before this moved.
+
+`hostRangeOptions` and `hostRangeMeta` and `buildPodsOverTime` also take an optional `now`, so a
+test run on 31 December does not disagree with one run on 1 January.
+
+`buildParticipantTrend` counts **seats**, not people: it sits beside money, and the settlement
+it has to agree with is priced per seat. It also copies before sorting — the caller's array is
+usually the Apollo cache's, and sorting that in place is a render-loop bug waiting to happen.

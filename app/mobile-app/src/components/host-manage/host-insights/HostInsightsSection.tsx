@@ -14,10 +14,12 @@ import {
   hostRangeMeta,
   type HostChartRange,
   type ParticipantPod,
-} from '@/utils/host-insights';
+} from '@duncit/utils';
 import { InsightCard } from './InsightCard';
 import { InsightsBars, InsightsDonut, InsightsLine } from './InsightCharts';
 import { HostInsightsFilterSheet } from './HostInsightsFilterSheet';
+import { semantic } from '@duncit/auth-tokens';
+
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -65,9 +67,9 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
     range,
   );
   const participants = buildParticipantTrend(pods);
-  const slices = buildStatusSlices(statusCounts);
+  const slices = buildStatusSlices(statusCounts, semantic, t);
   const earnings = buildEarningsBars(monthlyEarnings);
-  const meta = hostRangeMeta(range);
+  const meta = hostRangeMeta(range, t);
 
   return (
     <YStack gap={14} testID="host-insights-section">

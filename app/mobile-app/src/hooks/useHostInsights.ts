@@ -3,7 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { HostInsightsDocument } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
-import type { StatusCounts } from '@/utils/host-insights';
+import type { StatusCounts } from '@duncit/utils';
 
 const ALL_TIME_FROM = '1970-01-01T00:00:00.000Z';
 const EMPTY_COUNTS: StatusCounts = { upcoming: 0, ongoing: 0, completed: 0, cancelled: 0 };

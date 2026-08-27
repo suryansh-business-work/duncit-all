@@ -3,6 +3,7 @@ import { LayoutAnimation } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { Skeleton } from '@/components/Skeleton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -15,15 +16,34 @@ interface PolicyLink {
 /** Collapsible "Policies" group — RN port of mWeb's <PoliciesSection/>. */
 export function SidebarPolicies({
   policies,
+  loading = false,
   onSelect,
 }: Readonly<{
   policies: PolicyLink[];
+  /** The links are still in flight — hold the row rather than popping it in. */
+  loading?: boolean;
   onSelect: (slug: string) => void;
 }>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { muted } = useThemeColors();
 
+  if (loading) {
+    return (
+      <XStack
+        testID="sidebar-policies-skeleton"
+        alignItems="center"
+        gap={12}
+        marginHorizontal={8}
+        marginVertical={2}
+        paddingHorizontal={12}
+        paddingVertical={18}
+      >
+        <Skeleton width={24} height={24} radius={12} />
+        <Skeleton width="40%" height={14} />
+      </XStack>
+    );
+  }
   if (policies.length === 0) return null;
 
   const toggle = () => {

@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { Skeleton } from '@/components/Skeleton';
 import { COIN_GOLD_TINT } from '@/constants/coin-gold';
 import { useCoinBalance, useCoinGold } from '@/hooks/useCoins';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -17,7 +18,10 @@ export function SidebarDuncitCoinCard({
   const { t } = useTranslation();
   const { muted } = useThemeColors();
   const gold = useCoinGold();
-  const { balance } = useCoinBalance();
+  const { balance, isLoading } = useCoinBalance();
+  // A balance of 0 is a real answer, so it must not be what the card shows
+  // while the query is still deciding — it would tick up a beat later.
+  const pending = isLoading && !balance;
 
   return (
     <YStack paddingHorizontal={16} paddingBottom={10}>
@@ -49,19 +53,27 @@ export function SidebarDuncitCoinCard({
           <Text numberOfLines={1} fontSize={14} fontWeight="600" color="$color">
             {t('mweb.coin.title')}
           </Text>
-          <Text numberOfLines={1} fontSize={12} color="$muted">
-            {t('mweb.coin.sidebarCaption', { vars: { pct: balance?.earn_pct ?? 0 } })}
-          </Text>
+          {pending ? (
+            <Skeleton width="65%" height={12} />
+          ) : (
+            <Text numberOfLines={1} fontSize={12} color="$muted">
+              {t('mweb.coin.sidebarCaption', { vars: { pct: balance?.earn_pct ?? 0 } })}
+            </Text>
+          )}
         </YStack>
-        <Text
-          testID="sidebar-duncit-coin-balance"
-          numberOfLines={1}
-          fontSize={14}
-          fontWeight="700"
-          color={gold}
-        >
-          {balance?.balance ?? 0}
-        </Text>
+        {pending ? (
+          <Skeleton width={28} height={14} />
+        ) : (
+          <Text
+            testID="sidebar-duncit-coin-balance"
+            numberOfLines={1}
+            fontSize={14}
+            fontWeight="700"
+            color={gold}
+          >
+            {balance?.balance ?? 0}
+          </Text>
+        )}
         <MaterialIcons name="chevron-right" size={20} color={muted} />
       </XStack>
     </YStack>

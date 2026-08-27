@@ -6,6 +6,8 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Skeleton,
+  Stack,
 } from '@mui/material';
 import ArticleIcon from '@mui/icons-material/Article';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -15,17 +17,33 @@ import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PoliciesSectionProps {
   publicPolicies: { id: string; slug: string; title: string }[];
+  /** The links are still in flight — hold the row rather than popping it in. */
+  loading?: boolean;
   policiesOpen: boolean;
   setPoliciesOpen: (fn: (v: boolean) => boolean) => void;
 }
 
 export default function PoliciesSection({
   publicPolicies,
+  loading = false,
   policiesOpen,
   setPoliciesOpen,
 }: Readonly<PoliciesSectionProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  if (loading) {
+    return (
+      <Stack
+        data-testid="policies-skeleton"
+        direction="row"
+        spacing={1.5}
+        sx={{ alignItems: 'center', px: 2.5, py: 2.25 }}
+      >
+        <Skeleton variant="circular" width={24} height={24} />
+        <Skeleton width="40%" height={20} />
+      </Stack>
+    );
+  }
   if (publicPolicies.length === 0) return null;
 
   return (

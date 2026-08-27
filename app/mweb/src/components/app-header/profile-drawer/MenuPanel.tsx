@@ -24,11 +24,16 @@ import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../
 import DrawerFooter from './DrawerFooter';
 import PoliciesSection from './PoliciesSection';
 import StudioSwitchDialog from './StudioSwitchDialog';
+import MenuSkeleton from './MenuSkeleton';
 import UserModeContent from './UserModeContent';
 
 interface Props {
   /** Closes the menu — the page hands back to the previous route. */
   onClose: () => void;
+  /** The account query is still in flight with nothing cached — body skeletons. */
+  loading?: boolean;
+  /** The policy links are still in flight — that group skeletons its own row. */
+  policiesLoading?: boolean;
   me: any;
   publicPolicies: { id: string; slug: string; title: string }[];
   policiesOpen: boolean;
@@ -42,6 +47,8 @@ interface Props {
  * header is what returns to where the user came from. */
 export default function MenuPanel({
   onClose,
+  loading = false,
+  policiesLoading = false,
   me,
   publicPolicies,
   policiesOpen,
@@ -101,18 +108,22 @@ export default function MenuPanel({
       <Box sx={{ flex: 1 }}>
         {/* One unified card layout for every role — the studio-specific menu
             list was retired so all modes share this design. */}
-        <UserModeContent
-          me={me}
-          roles={roles}
-          mode={effectiveMode}
-          showPodPlans={showPodPlans}
-          showLeaderboard={showLeaderboard}
-          showMembership={showMembership}
-          showGiftCards={showGiftCards}
-          showTourGuide={showTourGuide}
-          showAutoPods={showAutoPods}
-          onNavigate={go}
-        />
+        {loading ? (
+          <MenuSkeleton />
+        ) : (
+          <UserModeContent
+            me={me}
+            roles={roles}
+            mode={effectiveMode}
+            showPodPlans={showPodPlans}
+            showLeaderboard={showLeaderboard}
+            showMembership={showMembership}
+            showGiftCards={showGiftCards}
+            showTourGuide={showTourGuide}
+            showAutoPods={showAutoPods}
+            onNavigate={go}
+          />
+        )}
 
         {canSwitch && (
           <Box sx={{ px: 2, pb: 1.25 }}>
@@ -158,10 +169,11 @@ export default function MenuPanel({
             input: { 'aria-label': 'Toggle dark mode' }
           }} />
         </Stack>
-        {publicPolicies.length > 0 && (
+        {(policiesLoading || publicPolicies.length > 0) && (
           <>
             <Divider />
             <PoliciesSection
+              loading={policiesLoading}
               publicPolicies={publicPolicies}
               policiesOpen={policiesOpen}
               setPoliciesOpen={setPoliciesOpen}

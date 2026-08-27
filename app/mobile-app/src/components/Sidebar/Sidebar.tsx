@@ -22,6 +22,7 @@ import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarPolicies } from './SidebarPolicies';
+import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
 
 /**
@@ -37,10 +38,14 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const { color: ink, primary } = useThemeColors();
   const { t } = useTranslation();
 
-  const { data } = useMe();
-  const { me: account } = useAccount();
-  const { data: policiesData } = usePublicPolicies();
+  const { data, isLoading } = useMe();
+  const { me: account, isLoading: accountLoading } = useAccount();
+  const { data: policiesData, isLoading: policiesLoading } = usePublicPolicies();
   const me = data?.me;
+  // Rendering `me` as undefined would paint a stranger's menu for a beat — an
+  // anonymous "User" avatar at 0% profile completion. mWeb skeletons the same
+  // block; the header ✕ stays either way, so there is always a way back out.
+  const pending = isLoading && !me;
   const roles = me?.roles ?? [];
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
@@ -120,19 +125,24 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
         >
           {/* One unified card layout for every role — the studio-specific
               menu list was retired so all modes share this design. */}
-          <SidebarUserContent
-            me={me}
-            account={account}
-            roles={roles}
-            mode={effectiveMode}
-            showPodPlans={showPodPlans}
-            showLeaderboard={showLeaderboard}
-            showMembership={showMembership}
-            showGiftCards={showGiftCards}
-            showTourGuide={showTourGuide}
-            showAutoPods={showAutoPods}
-            onNavigate={go}
-          />
+          {pending ? (
+            <SidebarSkeleton />
+          ) : (
+            <SidebarUserContent
+              me={me}
+              account={account}
+              accountLoading={accountLoading}
+              roles={roles}
+              mode={effectiveMode}
+              showPodPlans={showPodPlans}
+              showLeaderboard={showLeaderboard}
+              showMembership={showMembership}
+              showGiftCards={showGiftCards}
+              showTourGuide={showTourGuide}
+              showAutoPods={showAutoPods}
+              onNavigate={go}
+            />
+          )}
 
           {canSwitch ? (
             <XStack
@@ -192,6 +202,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           <Separator borderColor="$borderColor" />
           <SidebarPolicies
             policies={policiesData?.publicPolicies ?? []}
+            loading={policiesLoading}
             onSelect={(slug) => {
               onClose();
               navigation.navigate('Policy', { slug });

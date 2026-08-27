@@ -33,7 +33,6 @@ describe('Duncit Website app config', () => {
       '/blog',
       '/newsletter',
       '/contact-submissions',
-      '/faq-submissions',
       '/job-applications',
       '/navigation',
     ]);

@@ -8,7 +8,6 @@ import {
   BlogPage,
   NewsletterPage,
   ContactSubmissionsPage,
-  FaqSubmissionsPage,
   JobApplicationsPage,
   NavigationPage,
 } from './pages/website';
@@ -28,7 +27,6 @@ export default function App() {
       <Route path="/blog" element={authed(<BlogPage />)} />
       <Route path="/newsletter" element={authed(<NewsletterPage />)} />
       <Route path="/contact-submissions" element={authed(<ContactSubmissionsPage />)} />
-      <Route path="/faq-submissions" element={authed(<FaqSubmissionsPage />)} />
       <Route path="/job-applications" element={authed(<JobApplicationsPage />)} />
       <Route path="/navigation" element={authed(<NavigationPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />

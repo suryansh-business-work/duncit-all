@@ -19,20 +19,17 @@
 import type { ReactNode } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { buildSlotLabels } from '@duncit/slots';
-import { mwebPodMediaLabels } from '@duncit/utils';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { HostPodActionsProvider, type HostPodActionsConfig } from '../src/HostPodActionsProvider';
+import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
+import { hostActionsConfig } from './host-actions-config';
 import ScannedAttendeeCard from '../src/ticket-scan/ScannedAttendeeCard';
 import CompanionsForm from '../src/ticket-scan/CompanionsForm';
 import AttendanceRoster from '../src/pod-complete/AttendanceRoster';
 import HostPodActionsMenu from '../src/HostPodActionsMenu';
-import { mwebHostPodLabels } from '../src/labels';
 import type { PodSettlementAttendee, ScannedAttendee } from '../src/types';
 
-const t = (key: string) => key;
 const testTheme = createTheme();
 
 const settle = async () => {
@@ -45,19 +42,7 @@ const settle = async () => {
 
 const onViewProfile = vi.fn();
 
-const config = (): HostPodActionsConfig => ({
-  labels: mwebHostPodLabels(t),
-  renderMediaField: ({ value, onChange }) => (
-    <textarea aria-label="media" value={value} onChange={(event) => onChange(event.target.value)} />
-  ),
-  onViewProfile,
-  linkBaseUrl: 'https://duncit.com',
-  onOpenFeedback: vi.fn(),
-  notifySuccess: vi.fn(),
-  notifyError: vi.fn(),
-  slotLabels: buildSlotLabels(t, 'mweb.slots'),
-  podMediaLabels: mwebPodMediaLabels(t),
-});
+const config = () => hostActionsConfig({ onViewProfile });
 
 const wrap = (ui: ReactNode) =>
   render(

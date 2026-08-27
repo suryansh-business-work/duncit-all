@@ -7,7 +7,7 @@ import { useApolloTableFetch } from '@duncit/table';
 import { HostPodActionsMenu, useHostPodActions } from '@duncit/host-pod-actions';
 import { buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import PodsTable from '../../components/PodsTable';
-import HostPodActionsBridge from './HostPodActionsBridge';
+import HostPodActionsBridge from '../../components/HostPodActionsBridge';
 import NewPodDialog from './NewPodDialog';
 import {
   CREATE_PARTNER_POD,

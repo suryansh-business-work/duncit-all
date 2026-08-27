@@ -80,7 +80,7 @@ export default function OrderFulfilmentPanel({
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mt: 2.5 }}>
           {flow.map((step) => (
             <Step key={step}>
-              <StepLabel>{humaniseStatus(step)}</StepLabel>
+              <StepLabel>{humaniseStatus(step, t)}</StepLabel>
             </Step>
           ))}
         </Stepper>
@@ -97,7 +97,7 @@ export default function OrderFulfilmentPanel({
           >
             {ALL_STATUSES.map((status) => (
               <MenuItem key={status} value={status}>
-                {humaniseStatus(status)}
+                {humaniseStatus(status, t)}
               </MenuItem>
             ))}
           </TextField>

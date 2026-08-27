@@ -19,10 +19,9 @@ describe('DashboardPage', () => {
     userMock.value = { first_name: 'Sam', full_name: 'Sam Fuller' };
     renderWithProviders(<DashboardPage />, { mocks: dashboardMocks() });
     expect(await screen.findByText(/Hi Sam, welcome back/)).toBeInTheDocument();
-    // Career=1, Newsroom=1, Blog=2, Newsletter total=2 (1 active), Contact=2 (1 new), FAQ=2 (1 new)
+    // Career=1, Newsroom=1, Blog=2, Newsletter total=2 (1 active), Contact=2 (1 new)
     await waitFor(() => expect(screen.getByText('1 active')).toBeInTheDocument());
-    // Contact + FAQ both show "1 new".
-    expect(screen.getAllByText('1 new')).toHaveLength(2);
+    expect(screen.getAllByText('1 new')).toHaveLength(1);
   });
 
   it('falls back to full_name when there is no first name', async () => {
@@ -37,6 +36,6 @@ describe('DashboardPage', () => {
     expect(await screen.findByText(/Hi there, welcome back/)).toBeInTheDocument();
     // With empty lists the `?? []` fallbacks yield "0 active"/"0 new".
     await waitFor(() => expect(screen.getByText('0 active')).toBeInTheDocument());
-    expect(screen.getAllByText('0 new')).toHaveLength(2);
+    expect(screen.getAllByText('0 new')).toHaveLength(1);
   });
 });

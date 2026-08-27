@@ -6,7 +6,16 @@ jest.mock('@services/invoice/invoice.pdf', () => ({
 // (ticketService.ensureForMembership). Stub it so that floating promise never
 // touches Mongo after this suite tears down.
 jest.mock('@modules/pods/ticket/ticket.service', () => ({
-  ticketService: { ensureForMembership: jest.fn().mockResolvedValue(null) },
+  ticketService: {
+    // Truthy on purpose: runPodLeg refuses to finalize a booking it could not
+    // issue a ticket for, so a null stub fails the checkout instead of
+    // standing in for it.
+    ensureForMembership: jest.fn().mockResolvedValue({
+      _id: '6512f0000000000000000001',
+      ticket_code: 'DUN-TKT-VARIANT',
+    }),
+    emailById: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 import { Types } from 'mongoose';
@@ -16,7 +25,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
-import { sendEmail } from '@services/email/email.service';
+import { receiptForPayment } from '@test/deferred-payment';
 
 let seq = 0;
 
@@ -168,8 +177,8 @@ describe('variant-aware checkout pricing', () => {
   });
 });
 
-describe('payment-receipt "View Booking" CTA', () => {
-  it('deep-links to the booking the payment created', async () => {
+describe('payment-receipt-pod "View Booking" CTA', () => {
+  it('deep-links to the booking the payment created, and names the pod', async () => {
     const user = await seedUser();
     const product = await seedVariantProduct();
     const pod = await seedPodWith(product);
@@ -183,11 +192,11 @@ describe('payment-receipt "View Booking" CTA', () => {
     const member = await PodMemberModel.findOne({ pod_id: pod._id, user_id: user._id });
     expect(member).toBeTruthy();
 
-    const receipt = (sendEmail as jest.Mock).mock.calls
-      .map(([opts]) => opts)
-      .find((opts) => opts.template === 'payment-receipt');
+    const receipt = await receiptForPayment(res.payment_id);
+    // A POD payment takes the pod receipt. Plain `payment-receipt` is now only
+    // the OTHER fallback, so routing this one there again would be the bug.
+    expect(receipt.template).toBe('payment-receipt-pod');
     expect(receipt.vars.booking_url).toMatch(new RegExp(`/booking/${String(member!._id)}$`));
-    // DB-cached copies of the template still reference {{app_url}} — same target.
-    expect(receipt.vars.app_url).toBe(receipt.vars.booking_url);
+    expect(receipt.vars.pod_title).toBe('Variant Pod');
   });
 });

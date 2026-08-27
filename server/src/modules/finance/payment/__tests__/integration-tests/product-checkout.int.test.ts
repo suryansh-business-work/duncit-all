@@ -15,6 +15,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
+import { receiptForPayment } from '@test/deferred-payment';
 
 let seq = 0;
 const seedUser = () =>
@@ -423,5 +424,31 @@ describe('standalone product checkout', () => {
       expect(byWarehouse.get(String(whFree._id))).toMatchObject({ charge: 0, quoted: true, free: true });
       expect(byWarehouse.get(String(whPaid._id))).toMatchObject({ charge: 40, quoted: false, free: false });
     });
+  });
+});
+
+describe('payment-receipt-product', () => {
+  it('names the order and what was in it, not the checkout description', async () => {
+    const user = await seedUser();
+    const wh = await seedWarehouse('WH-RCPT', '110009');
+    const product = await seedShipProduct(wh._id);
+    const pod = await seedPodFor(product._id);
+
+    const res = await paymentService.dummyProductCheckout(
+      cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 2 }]),
+      String(user._id)
+    );
+
+    const receipt = await receiptForPayment(res.payment_id);
+    // A PRODUCT payment takes the product receipt — the one thing the single
+    // `payment-receipt` could never say was WHICH order it was paying for.
+    expect(receipt.template).toBe('payment-receipt-product');
+
+    const orders = await ordersFor(res.id);
+    expect(orders).toHaveLength(1);
+    expect(receipt.vars.order_no).toBe(orders[0].order_no);
+    // The pod's snapshot name, which is what the order line was written with.
+    expect(receipt.vars.items).toBe('Shipped Item × 2');
+    expect(receipt.vars.orders_url.endsWith('/orders')).toBe(true);
   });
 });

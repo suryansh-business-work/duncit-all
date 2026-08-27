@@ -20,6 +20,7 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
       pendingCallbacks: 'Pending callbacks',
       openTickets: 'Open tickets',
       openChats: 'Open chats',
+      newFaqSubmissions: 'New FAQ submissions',
     },
 
     sos: {
@@ -196,10 +197,12 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
     },
 
     faqs: {
-      title: 'FAQs',
+      appTitle: 'App FAQs',
       subtitle: 'The questions and answers the app shows its members.',
+      hint: 'These answers surface in the app and mWeb Help Centre, grouped by super category and ordered by Sort. Hide one rather than deleting it to take it off the screen without losing the wording.',
       partnerTitle: 'Partner FAQs',
       partnerSubtitle: 'The questions and answers the partner surfaces show hosts, venues and brands.',
+      partnerHint: 'These answers surface in the Partners console under FAQs, filtered by topic — a venue owner never sees the Host or Products ones.',
       newFaq: 'New FAQ',
       editTitle: 'Edit FAQ',
       newTitle: 'New FAQ',
@@ -237,6 +240,22 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
       audienceHost: 'Host',
       audienceVenue: 'Venue',
       audienceProducts: 'Products',
+    },
+
+    faqSubmissions: {
+      title: 'FAQ Submissions',
+      subtitle: 'Questions asked from duncit.com that no published FAQ answers yet.',
+      hint: 'A submission is not an answer. Write the reply under App FAQs, then mark the row Converted so it leaves the queue — Ignore is for anything not worth publishing.',
+      question: 'Question',
+      superCategory: 'Super Cat.',
+      received: 'Received',
+      statusNew: 'New',
+      statusConverted: 'Converted',
+      statusIgnored: 'Ignored',
+      markConverted: 'Mark Converted',
+      ignore: 'Ignore',
+      empty: 'No submissions yet.',
+      searchPlaceholder: 'Search question, email or category',
     },
   },
 };

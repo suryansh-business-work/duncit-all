@@ -21,7 +21,6 @@ export const WEBSITE_APP_BUNDLE: NestedCatalogue = {
       blog: 'Blog',
       newsletter: 'Newsletter',
       contact: 'Contact',
-      faq: 'FAQ',
       hintPosts: 'Published & draft posts',
       hintEntries: 'Published & draft entries',
       hintArticles: 'Published & draft articles',
@@ -57,13 +56,6 @@ export const WEBSITE_APP_BUNDLE: NestedCatalogue = {
       ctaLabel: 'CTA label',
       ctaUrl: 'CTA URL',
       published: 'Published',
-    },
-
-    faq: {
-      empty: 'No submissions.',
-      colQuestion: 'Question',
-      colSuperCategory: 'Super Cat.',
-      colReceived: 'Received',
     },
 
     jobs: {

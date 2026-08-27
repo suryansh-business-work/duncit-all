@@ -101,6 +101,7 @@ const ROUTES = [
   '/club-admin/clubs/smoke-id/pods/new',
   '/club-admin/clubs/smoke-id/pods/smoke-id',
   '/club-admin/clubs/smoke-id/pods/smoke-id/edit',
+  '/club-admin/clubs/smoke-id/pods/smoke-id/attendance',
   '/wallet',
   '/earn',
   '/verification',

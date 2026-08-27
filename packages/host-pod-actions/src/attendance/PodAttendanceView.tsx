@@ -160,9 +160,25 @@ export default function PodAttendanceView({
       />
 
       {/* Only the host has a door to scan at (a virtual pod has none); a Club
-          Admin reading the same board is fixing a record after the fact. */}
+          Admin reading the same board is fixing a record after the fact.
+          The dialog is MOUNTED behind the same condition, not merely left
+          closed: it reads the host-actions config, which only a surface with a
+          host area supplies — so mounting it unconditionally threw the whole
+          board away on every surface that has no scanner to configure.
+          Closing it re-reads the board, so a guest scanned at the door moves
+          into the marked list behind it — the roster and the counts can never
+          be one scan out of date. */}
       {showScan && (
-        <ScanCta labels={labels} onScan={() => setScanOpen(true)} icon={<QrCodeScannerIcon />} />
+        <>
+          <ScanCta labels={labels} onScan={() => setScanOpen(true)} icon={<QrCodeScannerIcon />} />
+          <TicketScanDialog
+            pod={scanOpen ? { id: board.pod_id, pod_title: board.pod_title } : null}
+            onClose={() => {
+              setScanOpen(false);
+              api.refetch();
+            }}
+          />
+        </>
       )}
 
       {/* Only useful to a host who has run out of options — a Club Admin
@@ -184,16 +200,6 @@ export default function PodAttendanceView({
         busy={!!api.busyId}
         onClose={api.cancelForce}
         onConfirm={api.confirmForce}
-      />
-      {/* Closing the scanner re-reads the board, so a guest scanned at the door
-          moves into the marked list behind it — the roster and the counts can
-          never be one scan out of date. */}
-      <TicketScanDialog
-        pod={scanOpen ? { id: board.pod_id, pod_title: board.pod_title } : null}
-        onClose={() => {
-          setScanOpen(false);
-          api.refetch();
-        }}
       />
     </Stack>
   );

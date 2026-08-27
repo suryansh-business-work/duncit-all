@@ -5,6 +5,7 @@ import {
   SESSION_BUNDLE,
   SHELL_BUNDLE,
   WITHDRAW_BUNDLE,
+  FULFILMENT_BUNDLE,
   type FlatCatalogue,
   type NestedCatalogue,
   type Translator,
@@ -33,6 +34,7 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   ...SHELL_BUNDLE,
   ...SESSION_BUNDLE,
   ...WITHDRAW_BUNDLE,
+  ...FULFILMENT_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

@@ -11,6 +11,7 @@ import {
   VERIFICATION_BUNDLE,
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
+  FULFILMENT_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
@@ -47,6 +48,7 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...VERIFICATION_BUNDLE,
   ...WHATSAPP_BUNDLE,
   ...WITHDRAW_BUNDLE,
+  ...FULFILMENT_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

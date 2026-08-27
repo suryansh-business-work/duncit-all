@@ -88,6 +88,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       deletePod: 'Delete pod',
       deletePod2: 'Delete pod?',
       editPod: 'Edit pod',
+      podAttendance: 'Pod Attendance',
       podDeleted: 'Pod deleted.',
       podDetails: 'Pod details',
       thisClubHasNoPodsYet: 'This club has no pods yet. Create the first one.',
@@ -140,6 +141,10 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       aiSummary: 'AI Summary',
       changes: 'Changes',
       noPodActivityRecordedYet: 'No pod activity recorded yet.',
+    },
+
+    clubAdminPodAttendancePage: {
+      backToClubPods: 'Club pods',
     },
 
     common: {

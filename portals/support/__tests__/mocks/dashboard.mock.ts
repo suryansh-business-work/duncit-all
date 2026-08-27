@@ -2,18 +2,23 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { BOUNCER_CALLBACK_REQUESTS, BOUNCER_SOS_ALERTS } from '../../src/graphql/bouncer';
 import { TICKETS } from '../../src/graphql/tickets';
 import { SUPPORT_CHAT_SESSIONS } from '../../src/graphql/supportChat';
+import { faqSubmissionsListMock, makeFaqSubmission } from './faq.mock';
 
 /**
- * Dashboard KPI mocks. Each stat card fires a `page_size: 1` count query and
+ * Dashboard KPI mocks. Each queue card fires a `page_size: 1` count query and
  * reads only `total`; the empty `items` page wrappers carry the schema
  * `__typename` so the default `addTypename` cache is satisfied. `maxUsageCount`
  * absorbs the socket-driven refetches every card subscribes to.
+ *
+ * The FAQ-submissions card is the exception: it reads a NEW-only list and
+ * counts its length, so `submissions` is a row count rather than a total.
  */
 interface DashboardCounts {
   sos?: number;
   callbacks?: number;
   tickets?: number;
   chats?: number;
+  submissions?: number;
 }
 
 const countMock = (
@@ -43,4 +48,9 @@ export const dashboardMocks = (counts: DashboardCounts = {}): MockedResponse[] =
   ),
   countMock(TICKETS, 'OPEN', 'tickets', 'TicketPage', counts.tickets ?? 3),
   countMock(SUPPORT_CHAT_SESSIONS, 'OPEN', 'supportChatSessions', 'SupportChatSessionPage', counts.chats ?? 0),
+  faqSubmissionsListMock(
+    Array.from({ length: counts.submissions ?? 4 }, (_row, index) =>
+      makeFaqSubmission({ id: `sub-${index}` }),
+    ),
+  ),
 ];

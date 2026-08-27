@@ -7,7 +7,8 @@ import {
   PodProductOrderItem,
   PodProductOrdersCard,
 } from '@/components/pod-history';
-import { buildOrderTimeline } from '@/utils/product-orders';
+import { buildOrderTimeline } from '@duncit/utils';
+import { fallbackT } from '@/i18n/fallback';
 
 const line = (o: Record<string, any> = {}) => ({
   product_id: 'pr1',
@@ -54,7 +55,10 @@ beforeEach(() => openURL.mockClear());
 
 describe('OrderTrackingTimeline', () => {
   it('renders done/current/pending steps', () => {
-    const steps = buildOrderTimeline({ fulfilment_method: 'SHIP', fulfilment_status: 'SHIPPED' });
+    const steps = buildOrderTimeline(
+      { fulfilment_method: 'SHIP', fulfilment_status: 'SHIPPED' },
+      fallbackT,
+    );
     renderWithProviders(<OrderTrackingTimeline steps={steps} testID="tl" />);
     expect(screen.getByTestId('tl')).toBeOnTheScreen();
     expect(screen.getByText('Shipped')).toBeOnTheScreen();

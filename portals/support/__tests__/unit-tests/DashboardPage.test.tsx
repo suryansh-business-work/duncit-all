@@ -29,6 +29,9 @@ describe('DashboardPage', () => {
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
+    // The submissions tile counts NEW rows rather than reading a page total.
+    expect(await screen.findByText('New FAQ submissions')).toBeInTheDocument();
+    expect(screen.getByText('4')).toBeInTheDocument();
 
     // Cover every live-refetch callback.
     sockMock.events.onSos();

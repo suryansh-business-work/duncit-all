@@ -30,13 +30,17 @@ export const appConfig = {
     { label: 'Tickets', labelKey: 'shell.nav.tickets', to: '/tickets', icon: 'ticket' },
     { label: 'Chat with Us', labelKey: 'shell.nav.chatWithUs', to: '/live-chat', icon: 'chat' },
     {
-      // A group header, not a link: the two children are the two FAQ
-      // audiences — the app's members and the partner surfaces.
+      // A group header, not a link. One FAQ collection is authored here for
+      // three audiences — the app's members, the partner surfaces, and the
+      // questions duncit.com visitors asked that nothing answers yet. The
+      // submissions queue moved out of the Website portal, whose managers
+      // could triage a question but could not write the answer it asks for.
       label: 'FAQs', labelKey: 'shell.nav.faqs',
       icon: 'help',
       children: [
-        { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', icon: 'help' },
-        { label: 'Partner FAQs', labelKey: 'shell.nav.partnerFaqs', to: '/partners/faqs', icon: 'help' },
+        { label: 'App FAQs', labelKey: 'shell.nav.appFaqs', to: '/faqs', icon: 'menuBook' },
+        { label: 'Partner FAQs', labelKey: 'shell.nav.partnerFaqs', to: '/partners/faqs', icon: 'handshake' },
+        { label: 'FAQ Submissions', labelKey: 'shell.nav.faqSubmissions', to: '/faqs/submissions', icon: 'contactMail' },
       ],
     },
     { label: 'Mail Automation', labelKey: 'shell.nav.mailAutomation', to: '/mail-automation', icon: 'markEmailRead' },

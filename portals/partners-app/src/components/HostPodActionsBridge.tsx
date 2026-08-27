@@ -9,7 +9,7 @@ import {
   shellHostPodLabels,
   type MediaFieldRenderProps,
 } from '@duncit/host-pod-actions';
-import { urlConfigs } from '../../config/url-configs';
+import { urlConfigs } from '../config/url-configs';
 
 interface Toast {
   message: string;
@@ -23,6 +23,11 @@ interface Toast {
  * portal's ImageKit list field), and where the rating link points — this portal
  * has no rating page of its own, so both the link and the "open" action go to
  * mWeb, which is where a guest fills the form in.
+ *
+ * Every part of this console that mounts one of those dialogs sits inside it:
+ * the host's pod list, and the Club Admin's attendance board — a club admin who
+ * hosts a pod in their own club reads that board as its HOST, scanner and all.
+ * The toast below is the one both of them report through.
  */
 export default function HostPodActionsBridge({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useTranslation();

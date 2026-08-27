@@ -16,6 +16,7 @@ import LiveChatPage from './pages/live-chat/LiveChatPage';
 import MailAutomationPage from './pages/mail-automation';
 import FaqsPage from './pages/faqs/FaqsPage';
 import PartnerFaqsPage from './pages/faqs/PartnerFaqsPage';
+import { FaqSubmissionsPage } from './pages/faqs/faq-submissions';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -41,7 +42,10 @@ export default function App() {
       <Route path="/live-chat" element={authed(<LiveChatPage />)} />
       {/* The reply and the queue. Connecting a mailbox is the Tech portal's. */}
         <Route path="/mail-automation" element={authed(<MailAutomationPage />)} />
+        {/* The three FAQ screens: the app's answers, the partner surfaces'
+            answers, and the queue of questions duncit.com has no answer for. */}
         <Route path="/faqs" element={authed(<FaqsPage />)} />
+        <Route path="/faqs/submissions" element={authed(<FaqSubmissionsPage />)} />
         <Route path="/partners/faqs" element={authed(<PartnerFaqsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -3,9 +3,9 @@ import { useApolloClient } from '@apollo/client';
 import { Chip, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import { PageHeader } from '@duncit/ui';
 import { useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
+import FaqPageIntro from './FaqPageIntro';
 import FaqsTableBase, { type FaqRow } from './FaqsTableBase';
 import { FAQS_TABLE } from './queries';
 import { FaqForm, type FaqCategoryOption, type FaqFormValues } from './faq-form';
@@ -83,9 +83,10 @@ export default function PartnerFaqsPage() {
 
   return (
     <Stack spacing={2}>
-      <PageHeader
+      <FaqPageIntro
         title={t('support.faqs.partnerTitle')}
-        subtitle={t('support.faqs.partnerSubtitle')}
+        description={t('support.faqs.partnerSubtitle')}
+        hint={t('support.faqs.partnerHint')}
       />
       <FaqsTableBase
         tableId="support-partner-faqs"

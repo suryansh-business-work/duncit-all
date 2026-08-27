@@ -1,5 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
+import { statusLabel } from '@duncit/utils';
 
 interface Props {
   events: any[];
@@ -7,13 +9,13 @@ interface Props {
 
 export default function OrderTrackingTimeline({ events }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
+  const { t } = useTranslation();
 
   if (!events || events.length === 0) {
     return (
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>No tracking updates yet.
-              </Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        {t('fulfilment.noTrackingUpdates')}
+      </Typography>
     );
   }
 
@@ -35,7 +37,7 @@ export default function OrderTrackingTimeline({ events }: Readonly<Props>) {
             <Typography variant="body2" sx={{
               fontWeight: 600
             }}>
-              {event.status}
+              {statusLabel(event.status, t)}
             </Typography>
             {event.note && (
               <Typography

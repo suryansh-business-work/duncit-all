@@ -7,9 +7,8 @@ import { Types } from 'mongoose';
 import { paymentService } from '../../payment.service';
 import { PaymentModel } from '../../payment.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
+import { invoiceArgsForPayment } from '@test/deferred-payment';
 
-const mockPdf = generateInvoicePdf as jest.Mock;
 
 let seq = 0;
 async function seedUser(over: Record<string, any> = {}) {
@@ -40,8 +39,6 @@ const baseInput = (over: Record<string, any> = {}) => ({
   ...over,
 });
 
-beforeEach(() => mockPdf.mockClear());
-
 describe('checkout billing (structured)', () => {
   it('persists the structured billing block and composes the legacy string', async () => {
     const user = await seedUser();
@@ -64,7 +61,7 @@ describe('checkout billing (structured)', () => {
     );
 
     // The invoice bill-to receives the address lines + GSTIN.
-    const inv = mockPdf.mock.calls[0][0];
+    const inv = await invoiceArgsForPayment(res.payment_id);
     expect(inv.customer_name).toBe('Riya Sharma');
     expect(inv.customer_gstin).toBe('27ABCDE1234F1Z5');
     expect(inv.customer_address_lines).toEqual([
@@ -86,10 +83,8 @@ describe('checkout billing (structured)', () => {
     expect(doc!.billing.line1).toBe('99 Old Street, Mumbai 400001'); // legacy → line1
     expect(doc!.billing_address).toBe('99 Old Street, Mumbai 400001');
     // Bill-to shows the free-text line + the default country row.
-    expect(mockPdf.mock.calls[0][0].customer_address_lines).toEqual([
-      '99 Old Street, Mumbai 400001',
-      'India',
-    ]);
+    const inv = await invoiceArgsForPayment(res.payment_id);
+    expect(inv.customer_address_lines).toEqual(['99 Old Street, Mumbai 400001', 'India']);
   });
 
   it('saves a separate billing email and prints both on the invoice', async () => {
@@ -106,7 +101,7 @@ describe('checkout billing (structured)', () => {
     expect(doc!.user_email).toBe('riya.personal@x.com'); // main contact email
     expect(doc!.billing.email).toBe('accounts@company.com'); // separate billing email
 
-    const inv = mockPdf.mock.calls[0][0];
+    const inv = await invoiceArgsForPayment(res.payment_id);
     expect(inv.customer_email).toBe('riya.personal@x.com'); // contact
     expect(inv.customer_billing_email).toBe('accounts@company.com'); // billing — both on invoice
   });
@@ -120,7 +115,7 @@ describe('checkout billing (structured)', () => {
     const doc = await PaymentModel.findById(res.id);
     expect(doc!.billing.email).toBe('solo@x.com');
     // Same email → no separate billing-email line on the invoice.
-    expect(mockPdf.mock.calls[0][0].customer_billing_email).toBeUndefined();
+    expect((await invoiceArgsForPayment(res.payment_id)).customer_billing_email).toBeUndefined();
   });
 
   it('exposes the billing block over the public shape', async () => {

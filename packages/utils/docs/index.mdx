@@ -1260,20 +1260,21 @@ followRequestRowState({ actionType: 'NEW_FOLLOWER', actorId: 'u-meera', followBa
 `'mweb.follow.accepted'`, `'mweb.follow.rejected'`, or null when there is nothing to state
 (still open, withdrawn, or a NEW_FOLLOWER row).
 
-`offersFollowBack` is the second, independent question the row asks: is there somebody here
-the viewer does not follow yet? A→B and B→A are separate edges, so a request that is still
-PENDING renders Accept / Deny **and** Follow Back — somebody asking to follow you is exactly
-the moment you may want to follow them, and making that wait for an Accept is why people
-reported having no way to do it. The rule is the simplest one that fits in a sentence: every
-follow row offers it unless the viewer already follows that person.
+`offersFollowBack` is the question the row asks once the ask is settled: is there somebody
+here the viewer chose to let in and does not follow yet? Follow Back is the SECOND step of
+this flow, never a parallel one — a PENDING request offers Accept / Deny alone, because
+offering the button beside them let a viewer follow somebody whose request they were about
+to deny. It is exactly the `FOLLOW_BACK` state, plus a check that there is an `actorId` to
+act on.
 
 ```ts
 const asking = { actionType: 'FOLLOW_REQUEST', requestId: 'fr-4821', status: 'PENDING', actorId: 'u-riya', followBackStatus: 'NONE' };
 followRequestRowState(asking);  // 'ANSWER'  — Accept / Deny
-offersFollowBack(asking);       // true      — ...and Follow Back beside them
-offersFollowBack({ ...asking, status: 'DENIED' });               // true  — 'Denied', and the button
-offersFollowBack({ ...asking, followBackStatus: 'FOLLOWING' });  // false — already followed
-offersFollowBack({ ...asking, actorId: null });                  // false — nobody to act on
+offersFollowBack(asking);       // false     — ...and nothing else until one of them is tapped
+offersFollowBack({ ...asking, status: 'ACCEPTED' });             // true  — 'Accepted', and the button
+offersFollowBack({ ...asking, status: 'DENIED' });               // false — the viewer said no
+offersFollowBack({ ...asking, status: 'ACCEPTED', followBackStatus: 'FOLLOWING' });  // false — already followed
+offersFollowBack({ ...asking, status: 'ACCEPTED', actorId: null });                  // false — nobody to act on
 ```
 
 `NEW_FOLLOWER` matters more than it looks: a PUBLIC profile never receives a follow request,

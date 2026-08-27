@@ -368,7 +368,7 @@ export default defineDemos('utils', [
     id: 'follow-notification-rows',
     title: 'What each follow row in the inbox offers',
     note:
-      "Set a row's followBackStatus to FOLLOWING and its Follow Back disappears — that is the only thing that suppresses it, on any row. A still-PENDING request offers Follow Back BESIDE Accept/Deny, and a DENIED one still offers it, because the two follow directions are independent edges. A NEW_FOLLOWER row has no request behind it, so it never shows Accept/Deny, and it is the only follow row a public profile ever receives.",
+      "Follow Back only ever rides on the FOLLOW_BACK state. Flip Riya's status from PENDING to ACCEPTED and the button appears; flip it to DENIED and it does not — a viewer answers the ask first, and denying it ends the row. Set followBackStatus to FOLLOWING and the button goes even on an accepted row, since there is nothing left to do. A NEW_FOLLOWER row has no request behind it, so it carries Follow Back alone, and it is the only follow row a public profile ever receives.",
     mock: {
       rows: [
         {

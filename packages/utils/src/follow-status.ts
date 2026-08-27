@@ -98,14 +98,13 @@ export function followButtonLabelKey(status: FollowStatus, followsViewer?: boole
  * mWeb and native both own a Tamagui/MUI view of this row, so the DECISION
  * lives here and only the pixels differ (rule 40). The ordering matters:
  *
- *  - ANSWER      the request is still open — Accept / Deny. Follow Back can
- *                ride alongside these; `offersFollowBack` decides that, since
- *                the two follow directions are independent edges.
+ *  - ANSWER      the request is still open — Accept / Deny, and NOTHING else.
+ *                Follow Back is not offered until the ask has been accepted.
  *  - FOLLOW_BACK either an accepted request or a new follower, where the
- *                viewer does NOT follow them back yet.
+ *                viewer does NOT follow them back yet. This is the only state
+ *                that carries the Follow Back button.
  *  - SETTLED     the request is answered, so there is an outcome to state
- *                instead of Accept / Deny. Follow Back can still ride on it —
- *                again `offersFollowBack`, not this enum, decides that.
+ *                instead of Accept / Deny, and nothing to act on.
  *  - HIDDEN      not an actionable follow row at all.
  */
 export type FollowRequestRowState = 'HIDDEN' | 'ANSWER' | 'FOLLOW_BACK' | 'SETTLED';
@@ -148,28 +147,24 @@ export function followRequestRowState(row: FollowNotificationRow): FollowRequest
 }
 
 /**
- * Whether the row also offers Follow Back, on top of whatever
- * `followRequestRowState` says it offers.
+ * Whether the row offers Follow Back.
  *
- * This is deliberately NOT a fifth state: A→B and B→A are independent edges,
- * so a request that is still PENDING carries Accept / Deny AND Follow Back.
- * Somebody asking to follow you is exactly the moment you may want to follow
- * them, and making that wait until you have accepted is why people reported
- * having no way to do it from the inbox.
+ * Follow Back is the SECOND step of one flow, not an independent one: it is
+ * offered only once the viewer has ACCEPTED the ask (or the person already
+ * follows them, which is a NEW_FOLLOWER row with nothing to accept). Offering
+ * it beside Accept / Deny let a viewer follow somebody whose request they were
+ * about to deny, so the two directions of the edge appeared to be one decision
+ * when they are not.
  *
- * The rule is deliberately the simplest one that can be stated in a sentence:
- * EVERY follow row offers Follow Back unless the viewer already follows that
- * person. A DENIED request included — denying someone's ask says nothing about
- * whether you want to follow them, and the button is theirs to ignore.
- *
- * The two things that suppress it: FOLLOWING (there is nothing to do), and a
- * missing `actorId`, which is who the button would follow — rows written before
- * that column existed have nobody to act on. HIDDEN covers both the not-a-follow
- * row case and the already-following NEW_FOLLOWER row.
+ * That makes it exactly the FOLLOW_BACK state — a PENDING request (ANSWER) and
+ * a denied one (SETTLED) both offer nothing. The extra `actorId` check is who
+ * the button would follow: an accepted row written before that column existed
+ * has nobody to act on, so it stays inert rather than sending a follow with no
+ * target.
  */
 export function offersFollowBack(row: FollowNotificationRow): boolean {
-  if (followRequestRowState(row) === 'HIDDEN') return false;
-  return Boolean(row.actorId) && row.followBackStatus !== 'FOLLOWING';
+  if (followRequestRowState(row) !== 'FOLLOW_BACK') return false;
+  return Boolean(row.actorId);
 }
 
 /** The i18n key for the Follow Back button in each of its two live states.

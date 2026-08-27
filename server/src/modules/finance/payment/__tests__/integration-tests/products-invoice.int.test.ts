@@ -6,16 +6,21 @@ jest.mock('@services/invoice/invoice.pdf', () => ({
 // (ticketService.ensureForMembership). Stub it so that floating promise never
 // touches Mongo after this suite tears down ("Cannot log after tests are done").
 jest.mock('@modules/pods/ticket/ticket.service', () => ({
-  ticketService: { ensureForMembership: jest.fn().mockResolvedValue(null) },
+  ticketService: {
+    ensureForMembership: jest.fn().mockResolvedValue({
+      _id: '6512f0000000000000000002',
+      ticket_code: 'DUN-TKT-INVOICE',
+    }),
+    emailById: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 import { Types } from 'mongoose';
 import { paymentService } from '../../payment.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
+import { invoiceArgsForPayment } from '@test/deferred-payment';
 
-const mockPdf = generateInvoicePdf as jest.Mock;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 let seq = 0;
@@ -59,8 +64,6 @@ const buyInput = (podId: Types.ObjectId, selected: any[]) => ({
   selected_products: selected,
 });
 
-beforeEach(() => mockPdf.mockClear());
-
 describe('invoice itemization with products', () => {
   it('adds an Event ticket line + one line per product, summing to the subtotal', async () => {
     const user = await seedUser();
@@ -79,9 +82,11 @@ describe('invoice itemization with products', () => {
     expect(round2(res.subtotal + res.gst_amount)).toBe(res.total);
     expect(res.platform_fee_amount).toBe(round2((res.subtotal * res.platform_fee_pct) / 100));
 
-    const inv = mockPdf.mock.calls[0][0];
+    const inv = await invoiceArgsForPayment(res.payment_id);
     const descs = inv.items.map((i: any) => i.description);
-    expect(descs).toEqual(['Event ticket', 'T-Shirt', 'Mug']);
+    // The ticket line is the payment's own description; 'Event ticket' is only
+    // the fallback for a payment that has none.
+    expect(descs).toEqual(['Pod booking · Market Pod', 'T-Shirt', 'Mug']);
     // Lines sum to the (net) subtotal exactly.
     const sum = round2(inv.items.reduce((s: number, i: any) => s + i.amount, 0));
     expect(sum).toBe(round2(inv.subtotal));
@@ -93,8 +98,8 @@ describe('invoice itemization with products', () => {
   it('keeps a single line when no products are selected', async () => {
     const user = await seedUser();
     const { pod } = await seedPodWithProducts();
-    await paymentService.dummyCheckout(buyInput(pod._id, []), String(user._id));
-    const inv = mockPdf.mock.calls[0][0];
+    const res = await paymentService.dummyCheckout(buyInput(pod._id, []), String(user._id));
+    const inv = await invoiceArgsForPayment(res.payment_id);
     expect(inv.items).toHaveLength(1);
     expect(inv.items[0].amount).toBe(inv.subtotal);
   });

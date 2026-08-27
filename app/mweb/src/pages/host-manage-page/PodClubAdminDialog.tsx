@@ -1,6 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
-import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+} from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { DuncitButton } from '@duncit/buttons';
 import ClubAdminCard from '../pod-pending-page/ClubAdminCard';

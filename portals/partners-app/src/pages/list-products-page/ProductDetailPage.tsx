@@ -8,7 +8,11 @@ import ProductDetailView from './ProductDetailView';
 import ProductAnalyticsPanel from './ProductAnalyticsPanel';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import {
+  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_LISTING_ACCESS,
+  canManageProductListings,
+} from './productAccess';
 import { useTranslation } from '@duncit/shell';
 
 export default function ProductDetailPage() {

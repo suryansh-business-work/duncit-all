@@ -6,7 +6,12 @@ import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
-import { DELETE, TEMPLATES, TEMPLATES_TABLE, type EmailTemplateRow } from '../../api/emailTemplates.gql';
+import {
+  DELETE,
+  TEMPLATES,
+  TEMPLATES_TABLE,
+  type EmailTemplateRow,
+} from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { ConfirmDialog } from '@duncit/dialogs';
 import TemplatesTable from './TemplatesTable';

@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -33,7 +34,7 @@ export function ExploreActionButton({
       onPress={onPress}
       alignItems="center"
       gap={3}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <YStack
         width={46}
@@ -50,6 +51,7 @@ export function ExploreActionButton({
         )}
       </YStack>
       <Text
+        pressStyle={PRESS_STYLE.inline}
         testID={onLabelPress ? `${testID}-count` : undefined}
         onPress={onLabelPress}
         fontSize={11}

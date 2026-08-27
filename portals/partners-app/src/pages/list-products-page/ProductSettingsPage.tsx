@@ -4,14 +4,28 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, CircularProgress, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Typography,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { parseApiError } from '@duncit/utils';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { UPDATE_PRODUCT_SETTINGS } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import {
+  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_LISTING_ACCESS,
+  canManageProductListings,
+} from './productAccess';
 import { useTranslation } from '@duncit/shell';
 
 const settingsSchema = z.object({

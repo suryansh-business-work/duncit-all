@@ -9,6 +9,7 @@ import {
   podProductStock,
   type PodPickerProduct,
 } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   product: PodPickerProduct | null;
@@ -27,7 +28,7 @@ const stepperBox = {
   borderRadius: 10,
   borderWidth: 1,
   borderColor: '$borderColor',
-  pressStyle: { opacity: 0.7 },
+  pressStyle: PRESS_STYLE.row,
 } as const;
 
 interface StepperButtonProps {
@@ -176,7 +177,7 @@ export function ProductQuantityBar({
         alignItems="center"
         justifyContent="center"
         backgroundColor={product ? '$primary' : muted}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
           {t('podProduct.addToPod')}

@@ -44,7 +44,7 @@ const SLOTS: readonly PressSlot[] = [
  * Controls that are transparent until selected. Their selected state has a
  * fill, so it darkens rather than taking the state layer that would replace it.
  */
-const SELECTED_FILLS: readonly string[] = ['MuiToggleButton', 'MuiListItemButton'];
+const SELECTED_FILLS = new Set(['MuiToggleButton', 'MuiListItemButton']);
 
 type SlotBag = { styleOverrides?: Record<string, SlotStyle | undefined> } & Record<string, unknown>;
 
@@ -55,7 +55,7 @@ function selectedFillCss(colors: Readonly<PressColors>): CSSObject {
 
 function cssFor(slot: PressSlot, colors: Readonly<PressColors>): CSSObject {
   const base = mergeCss(pressCss(slot.intent, colors, { tint: slot.tint }), focusRingCss(colors));
-  if (slot.part === 'root' && SELECTED_FILLS.includes(slot.component)) {
+  if (slot.part === 'root' && SELECTED_FILLS.has(slot.component)) {
     return mergeCss(base, selectedFillCss(colors));
   }
   return base;

@@ -19,6 +19,7 @@ import { NotificationFilterChips } from './NotificationFilterChips';
 import { NotificationRow } from './NotificationRow';
 import { NotificationsHero } from './NotificationsHero';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface NotificationsScreenProps {
   open: boolean;
@@ -92,7 +93,7 @@ export function NotificationsScreen({
                 justifyContent="center"
                 borderRadius={20}
                 backgroundColor="$surface"
-                pressStyle={{ opacity: 0.7 }}
+                pressStyle={PRESS_STYLE.row}
               >
                 <MaterialIcons name="close" size={20} color={color} />
               </XStack>
@@ -118,7 +119,7 @@ export function NotificationsScreen({
                 borderRadius={20}
                 backgroundColor="$surface"
                 opacity={markAllDisabled ? 0.5 : 1}
-                pressStyle={{ opacity: 0.7 }}
+                pressStyle={PRESS_STYLE.row}
               >
                 {markAllBusy ? (
                   <Spinner testID="notifications-mark-all-busy" size="small" color={primary} />

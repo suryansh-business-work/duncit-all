@@ -1,4 +1,13 @@
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Link,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import type { CrmWebsitePage } from '../../api/websitePages.gql';
 import { useTranslation } from '@duncit/shell';

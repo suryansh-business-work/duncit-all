@@ -2,7 +2,16 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SaveIcon from '@mui/icons-material/Save';
@@ -12,7 +21,12 @@ import { useSession, useTranslation } from '@duncit/app-settings';
 import RunHistoryDialog from './RunHistoryDialog';
 import ScheduleFields from './ScheduleFields';
 import ScheduleSummary from './ScheduleSummary';
-import { MAX_RETENTION_DAYS, MIN_RETENTION_DAYS, deletionSettingsSchema, type DeletionSettingsValues } from './schema';
+import {
+  MAX_RETENTION_DAYS,
+  MIN_RETENTION_DAYS,
+  deletionSettingsSchema,
+  type DeletionSettingsValues,
+} from './schema';
 import {
   ACCOUNT_DELETION_CRON,
   RUN_DELETION_PURGE_NOW,

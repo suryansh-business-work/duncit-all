@@ -5,6 +5,7 @@ import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import type { SearchCategory } from '@/hooks/useSearch';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -52,7 +53,7 @@ export function SearchFilterSheet({
       justifyContent="center"
       borderRadius={12}
       backgroundColor="$primary"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="700" color="$onPrimary">
         Apply

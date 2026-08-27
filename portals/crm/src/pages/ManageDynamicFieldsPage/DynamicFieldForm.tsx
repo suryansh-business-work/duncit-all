@@ -1,4 +1,15 @@
-import { Card, Checkbox, FormControlLabel, MenuItem, Stack, Switch, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Card,
+  Checkbox,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
 import type { CrmDynamicFieldKind } from '../../api/crm.types';

@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { describeAttachment, typeLabel, type AttachmentInfo } from '@/utils/attachment';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Video/document card: type icon + file name + type badge + open/download.
  * Tapping opens the file in the device's default viewer. */
@@ -23,7 +24,7 @@ function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
       maxWidth={240}
       borderRadius={10}
       backgroundColor="$background"
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={22} color={muted} />
       <YStack flex={1} minWidth={0}>

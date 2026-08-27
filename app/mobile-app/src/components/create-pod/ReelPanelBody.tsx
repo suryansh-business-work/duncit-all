@@ -3,6 +3,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   value: string;
@@ -68,7 +69,7 @@ export function ReelPanelBody({
             alignItems="center"
             justifyContent="center"
             borderRadius={14}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="close" size={16} color={muted} />
           </XStack>
@@ -90,7 +91,7 @@ export function ReelPanelBody({
           borderStyle="dashed"
           backgroundColor="$surface"
           opacity={uploading ? 0.7 : 1}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           {uploading ? (
             <Spinner size="small" color={primary} />

@@ -8,6 +8,7 @@ import { FOLLOW_LABEL_KEY, type FollowStatus } from '@duncit/utils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PublicHost } from '@/hooks/useHostsVenues';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface HostCardProps {
   host: PublicHost;
@@ -46,7 +47,7 @@ export function HostCard({
       borderColor="$borderColor"
       backgroundColor="$surface"
       alignItems="center"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack
         width={54}
@@ -142,7 +143,7 @@ function FollowButton({ userId, status, pending, onToggleFollow }: Readonly<Foll
       borderColor="$borderColor"
       backgroundColor={filled ? '$primary' : 'transparent'}
       opacity={pending ? 0.6 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {pending ? (
         <Spinner size="small" color={ink} />

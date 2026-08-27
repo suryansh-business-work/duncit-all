@@ -5,7 +5,11 @@ import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { BackButton } from '@duncit/ui';
 import ProductListingsTable from './ProductListingsTable';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import {
+  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_LISTING_ACCESS,
+  canManageProductListings,
+} from './productAccess';
 import { useTranslation } from '@duncit/shell';
 
 export default function ListProductsPage() {

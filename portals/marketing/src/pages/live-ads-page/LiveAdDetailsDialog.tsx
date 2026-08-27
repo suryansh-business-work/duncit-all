@@ -1,4 +1,11 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton } from '@duncit/buttons';

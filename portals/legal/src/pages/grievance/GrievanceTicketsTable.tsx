@@ -2,7 +2,13 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitIconButton } from '@duncit/buttons';
-import { DuncitTable, dateColumn, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  dateColumn,
+  entityIdColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import {
   GRIEVANCE_STATUS_COLOR,
   GRIEVANCE_STATUS_LABEL,

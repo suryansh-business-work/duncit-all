@@ -11,6 +11,7 @@ import {
 
 import { AttendeeAvatar } from '@/components/attendance/AttendeeAvatar';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const openUrl = (url: string) => {
   Linking.openURL(url).catch(() => undefined);
@@ -135,7 +136,7 @@ function ContactPill({
       borderRadius={999}
       borderWidth={1}
       borderColor="$borderColor"
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <MaterialIcons name={icon} size={14} color={primary} />
       <Text fontSize={12} fontWeight="700" color="$color">

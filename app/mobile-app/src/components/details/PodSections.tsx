@@ -6,6 +6,7 @@ import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type HostPerson } from './AttendeesSection';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export { AttendeesSection, buildAttendeePeople, buildHostPeople } from './AttendeesSection';
 
@@ -77,7 +78,7 @@ function HostRow({
       alignItems="center"
       gap={10}
       paddingVertical={6}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <YStack
         width={40}

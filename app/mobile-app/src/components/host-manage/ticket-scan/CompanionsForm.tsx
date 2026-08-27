@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Same rule the server enforces on a companion's number (6-15 digits). */
 const PHONE = /^\d{6,15}$/;
@@ -105,7 +106,7 @@ export function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Pro
         borderRadius={12}
         backgroundColor="$primary"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">
           {t('mweb.hostScan.companionsSubmit')}

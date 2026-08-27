@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Box,
+  FormControlLabel,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RuleIcon from '@mui/icons-material/Rule';
 import { DuncitButton } from '@duncit/buttons';

@@ -1,5 +1,12 @@
 import { useMemo } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';

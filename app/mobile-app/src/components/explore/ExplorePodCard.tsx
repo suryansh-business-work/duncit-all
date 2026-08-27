@@ -12,6 +12,7 @@ import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 import { ReelBackdrop } from '@/components/explore/ReelVideo';
 import { podSeatsTaken } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ExplorePodCardProps {
   pod: ExplorePod;
@@ -192,7 +193,7 @@ export function ExplorePodCard({
             borderRadius={12}
             paddingHorizontal={14}
             paddingVertical={9}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text color="$onPrimary" fontSize={13} fontWeight="700">
               Go

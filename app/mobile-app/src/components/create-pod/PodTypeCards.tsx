@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -33,7 +34,7 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
       borderColor={selected ? '$primary' : '$borderColor'}
       backgroundColor="$surface"
       alignItems="center"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={24} color={selected ? primary : color} />
       <Text fontSize={16} fontWeight="700" color={selected ? '$primary' : '$color'}>

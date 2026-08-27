@@ -8,7 +8,11 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import { DuncitButton } from '@duncit/buttons';
 import type { TableQueryState } from '@duncit/table';
-import { WA_EXPORT_USER_LEADS, WA_IMPORT_USER_LEADS, WA_USER_LEADS } from '../tools/whatsapp/whatsappQueries';
+import {
+  WA_EXPORT_USER_LEADS,
+  WA_IMPORT_USER_LEADS,
+  WA_USER_LEADS,
+} from '../tools/whatsapp/whatsappQueries';
 import CreateLeadDialog from './CreateLeadDialog';
 import EditLeadDialog from './EditLeadDialog';
 import DeleteLeadsDialog from './DeleteLeadsDialog';

@@ -1,7 +1,16 @@
 import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Card, CardContent, Chip, CircularProgress, Link, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Link,
+  Stack,
+  Typography,
+} from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { DuncitButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';

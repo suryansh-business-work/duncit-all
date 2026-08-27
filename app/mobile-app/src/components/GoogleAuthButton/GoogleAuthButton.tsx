@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 // Official Google "G" marks (from the Google sign-in branding kit). The light
 // mark sits on a white tile, the dark mark on a dark tile, so each blends into
@@ -77,7 +78,7 @@ export function GoogleAuthButton({
       borderColor="$borderColor"
       backgroundColor="$surface"
       opacity={isDisabled ? 0.6 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Image
         testID="google-auth-icon"

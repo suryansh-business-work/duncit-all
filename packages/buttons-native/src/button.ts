@@ -136,6 +136,13 @@ export interface ButtonSpec extends ButtonSizeSpec {
 
 const TRANSPARENT = 'transparent';
 
+/**
+ * What each variant paints, at rest and while held.
+ *
+ * A transparent variant flashes the tone's own tonal fill rather than going
+ * only dimmer: it is the same state layer mWeb paints, and without it a ghost
+ * button's press is a barely-visible change in the label alone.
+ */
 function surfaceFor(variant: ButtonVariant, tone: Readonly<ToneTokens>) {
   if (variant === 'solid') {
     return { background: tone.fill, press: tone.fillPress, label: tone.onFill, border: 0 };
@@ -144,9 +151,9 @@ function surfaceFor(variant: ButtonVariant, tone: Readonly<ToneTokens>) {
     return { background: tone.soft, press: tone.soft, label: tone.accent, border: 0 };
   }
   if (variant === 'outline') {
-    return { background: TRANSPARENT, press: TRANSPARENT, label: tone.accent, border: 1 };
+    return { background: TRANSPARENT, press: tone.soft, label: tone.accent, border: 1 };
   }
-  return { background: TRANSPARENT, press: TRANSPARENT, label: tone.accent, border: 0 };
+  return { background: TRANSPARENT, press: tone.soft, label: tone.accent, border: 0 };
 }
 
 /**

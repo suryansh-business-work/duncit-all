@@ -2,6 +2,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** True when the card is being sent to someone else. */
@@ -59,7 +60,7 @@ export function GiftCardRecipientFields({
               borderWidth={1}
               borderColor={isActive ? '$primary' : '$borderColor'}
               backgroundColor={isActive ? '$primary' : 'transparent'}
-              pressStyle={{ opacity: 0.8 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
                 {option.label}

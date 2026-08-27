@@ -6,6 +6,7 @@ import { COIN_GOLD_TINT } from '@/constants/coin-gold';
 import { useCoinGold } from '@/hooks/useCoins';
 import type { CoinRedemption } from '@/hooks/useCoinRedemption';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface RowProps {
   gold: string;
@@ -70,7 +71,7 @@ export function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedemption }>) 
           aria-label={removeLabel}
           onPress={coins.onRemove}
           paddingHorizontal={8}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <Text fontSize={13} fontWeight="700" color={gold}>
             {removeLabel}
@@ -101,7 +102,7 @@ export function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedemption }>) 
         borderWidth={1}
         borderColor={gold}
         opacity={canApply ? 1 : 0.5}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={13} fontWeight="700" color={gold}>
           {applyLabel}

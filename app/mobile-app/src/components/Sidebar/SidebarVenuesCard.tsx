@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useBranding } from '@/hooks/useBranding';
 import type { MenuRoute } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const CARD_HEIGHT = 132;
 /** Dark scrim so the big title stays readable over any video frame. */
@@ -59,7 +60,7 @@ export function SidebarVenuesCard({
         borderRadius={16}
         overflow="hidden"
         backgroundColor="$surface"
-        pressStyle={{ opacity: 0.9 }}
+        pressStyle={PRESS_STYLE.surface}
       >
         {videoUrl ? <VenuesCardVideo url={videoUrl} /> : null}
         <YStack flex={1} padding={16} justifyContent="flex-end" style={{ backgroundColor: SCRIM }}>

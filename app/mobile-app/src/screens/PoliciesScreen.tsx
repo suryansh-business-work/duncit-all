@@ -9,6 +9,7 @@ import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Policies — the list of policy documents; tapping opens the reader. */
 export function PoliciesScreen() {
@@ -43,7 +44,7 @@ export function PoliciesScreen() {
                 borderWidth={1}
                 borderColor="$borderColor"
                 backgroundColor="$surface"
-                pressStyle={{ opacity: 0.85 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <MaterialIcons name="description" size={20} color={primary} />
                 <Text flex={1} fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>

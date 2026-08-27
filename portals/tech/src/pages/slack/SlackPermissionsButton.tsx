@@ -1,6 +1,17 @@
 import { useState, type MouseEvent } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Chip, CircularProgress, Divider, Link, Popover, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  Divider,
+  Link,
+  Popover,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';

@@ -1,24 +1,34 @@
 import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { semantic } from '@duncit/auth-tokens';
+import {
+  isVerificationSettled,
+  rejectReasonOf,
+  STATUS_META,
+  TONE_HEX,
+  VERIFICATION_LABEL_KEYS,
+} from '@duncit/verification';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { Verification } from '@/hooks/useVerifications';
 
-import { LABELS, STATUS_META } from './labels';
-
-const DONE = new Set(['APPROVED', 'VERIFIED_BY_APP']);
-
 /** Shared card shell for one verification type: check icon, title, status chip,
- * reject reason, and a body slot for the type-specific action. */
+ * reject reason, and a body slot for the type-specific action.
+ *
+ * The status table, the labels and the settled/locked rules come from
+ * @duncit/verification — the same ones mWeb and the partner console render
+ * through their MUI cards (rules 27 and 40). */
 export function VerificationCard({
   item,
   children,
 }: Readonly<{ item: Verification; children?: ReactNode }>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const meta = STATUS_META[item.status];
-  const verified = DONE.has(item.status);
+  const verified = isVerificationSettled(item.status);
+  const reason = rejectReasonOf(item);
 
   return (
     <YStack
@@ -34,7 +44,7 @@ export function VerificationCard({
         <MaterialIcons name="check-circle" size={22} color={verified ? semantic.success : muted} />
         <YStack flex={1} gap={4}>
           <Text fontSize={14.5} fontWeight="700" color="$color">
-            {LABELS[item.type]}
+            {t(VERIFICATION_LABEL_KEYS[item.type])}
           </Text>
           <XStack
             testID={`verification-status-${item.type}`}
@@ -42,15 +52,15 @@ export function VerificationCard({
             paddingHorizontal={8}
             paddingVertical={2}
             borderRadius={999}
-            backgroundColor={meta.color}
+            backgroundColor={TONE_HEX[meta.tone]}
           >
             <Text fontSize={11} fontWeight="700" color="$onPrimary">
-              {meta.label}
+              {t(meta.labelKey)}
             </Text>
           </XStack>
-          {item.status === 'REJECTED' && item.reject_reason ? (
+          {reason ? (
             <Text fontSize={12} color="$danger">
-              {item.reject_reason}
+              {reason}
             </Text>
           ) : null}
         </YStack>

@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Alert, Box, Card, CardContent, CircularProgress, FormControlLabel, MenuItem, Snackbar, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  FormControlLabel,
+  MenuItem,
+  Snackbar,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';

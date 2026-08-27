@@ -1,6 +1,15 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import { Box, CircularProgress, Dialog, DialogContent, DialogTitle, Stack, Typography, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+  useMediaQuery,
+} from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import SellIcon from '@mui/icons-material/Sell';

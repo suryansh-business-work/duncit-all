@@ -6,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { EarningsStatement } from '@duncit/utils';
 import { ChargeRow, ChargeSection, sectionTint } from './ChargeSection';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   statement: EarningsStatement;
@@ -43,7 +44,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
         justifyContent="space-between"
         paddingHorizontal={12}
         paddingVertical={11}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <XStack alignItems="center" gap={8} flexShrink={1}>
           <MaterialIcons name="receipt-long" size={16} color={primary} />

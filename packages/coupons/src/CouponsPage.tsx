@@ -8,7 +8,13 @@ import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from './i18n';
 import CouponsTable from './CouponsTable';
 import CouponFormDialog from './CouponFormDialog';
-import { COUPON_PODS, COUPONS_TABLE, DELETE_COUPON, type CouponPodOption, type CouponRow } from './queries';
+import {
+  COUPON_PODS,
+  COUPONS_TABLE,
+  DELETE_COUPON,
+  type CouponPodOption,
+  type CouponRow,
+} from './queries';
 
 export default function CouponsPage() {
   const { t } = useTranslation();

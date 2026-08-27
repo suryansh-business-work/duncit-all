@@ -1,4 +1,13 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, Switch, TextField } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  Stack,
+  Switch,
+  TextField,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';
 import CallToActionSection from './CallToActionSection';

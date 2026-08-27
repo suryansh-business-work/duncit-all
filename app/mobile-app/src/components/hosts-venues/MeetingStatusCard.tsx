@@ -7,6 +7,7 @@ import { useMyMeeting } from '@/hooks/useMyMeeting';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * The signed-in user's onboarding meeting for a kind — scheduled time + a join
@@ -68,7 +69,7 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
               paddingVertical={9}
               borderRadius={999}
               backgroundColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color="$onPrimary">
                 Join meeting

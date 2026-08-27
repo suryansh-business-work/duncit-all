@@ -4,6 +4,7 @@ import { ScrollView, Text, YStack } from 'tamagui';
 
 import type { ClubDetail } from '@/hooks/useDetails';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type ClubHost = ClubDetail['hosts'][number];
 
@@ -40,6 +41,7 @@ export function ClubHostsRail({
       >
         {hosts.map((host) => (
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             key={host.id}
             testID={`${testIdPrefix}-${host.id}`}
             width={72}

@@ -10,6 +10,7 @@ import {
 } from '@/components/details/AttendeesDialog';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodPerson, PodSpotFill } from '@/hooks/useDetails';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Builds the full attendee list — hosts first, each flagged for highlighting. */
 export function buildAttendeePeople(
@@ -166,7 +167,7 @@ export function AttendeesSection({
           onPress={() => setOpen(true)}
           alignItems="center"
           gap={8}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <XStack alignItems="center">
             {previews.map((person, index) => (

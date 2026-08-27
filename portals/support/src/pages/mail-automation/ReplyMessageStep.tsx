@@ -1,4 +1,13 @@
-import { Alert, Chip, FormControlLabel, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Chip,
+  FormControlLabel,
+  Paper,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitButton } from '@duncit/buttons';
 import { Controller, type Control, type FieldErrors } from 'react-hook-form';

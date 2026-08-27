@@ -1,6 +1,13 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';

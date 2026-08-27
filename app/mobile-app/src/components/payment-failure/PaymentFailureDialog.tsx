@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PAYMENT_FAILURE_KEYS, type PaymentFailure } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   failure: PaymentFailure | null;
@@ -96,6 +97,7 @@ export function PaymentFailureDialog({
 
         <XStack gap={8} justifyContent="flex-end">
           <XStack
+            pressStyle={PRESS_STYLE.control}
             testID="payment-failure-close"
             role="button"
             aria-label={t('mweb.payment.close')}
@@ -113,6 +115,7 @@ export function PaymentFailureDialog({
             </Text>
           </XStack>
           <XStack
+            pressStyle={PRESS_STYLE.control}
             testID="payment-failure-retry"
             role="button"
             aria-label={t('mweb.payment.retry')}

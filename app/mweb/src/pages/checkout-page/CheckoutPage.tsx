@@ -20,7 +20,11 @@ import {
   type CheckoutForm,
   type CheckoutState,
 } from './queries';
-import { openRazorpayCheckout, type RazorpayOrderData, type RazorpaySignature } from './razorpayCheckout';
+import {
+  openRazorpayCheckout,
+  type RazorpayOrderData,
+  type RazorpaySignature,
+} from './razorpayCheckout';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
 import { IssueNotice, useServerIssue } from '../../components/issue-notice';
 import { useTranslation } from '../../i18n/useTranslation';

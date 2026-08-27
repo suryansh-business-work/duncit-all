@@ -1,6 +1,7 @@
 import type { LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SurveyFooterProps {
   count: number;
@@ -78,7 +79,7 @@ export function SurveyFooter({
           paddingHorizontal={20}
           paddingVertical={12}
           opacity={canSubmit ? 1 : 0.5}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={16} fontWeight="600" color="$onPrimary">
             {saving ? 'Saving…' : 'Find my crew'}

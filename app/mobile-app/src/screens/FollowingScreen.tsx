@@ -15,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { Translate } from '@/i18n/fallback';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const TABS: FeedSource[] = ['PEOPLE', 'CLUBS'];
 const TAB_LABELS: Record<FeedSource, string> = { PEOPLE: 'People', CLUBS: 'Clubs' };
@@ -74,7 +75,7 @@ export function FollowingScreen() {
               backgroundColor={selected ? '$primary' : '$surface'}
               borderWidth={1}
               borderColor={selected ? '$primary' : '$borderColor'}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
                 {TAB_LABELS[value]}

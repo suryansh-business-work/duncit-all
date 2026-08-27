@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 import type { FollowStatus } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -90,7 +91,7 @@ export function FollowStatusButton({
       borderColor={view.border}
       backgroundColor={view.background}
       opacity={busy ? 0.7 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={view.icon} size={18} color={view.iconColor} />
       <Text fontSize={14} fontWeight="700" color={view.labelColor}>

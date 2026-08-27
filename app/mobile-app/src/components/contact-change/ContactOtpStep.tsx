@@ -9,6 +9,7 @@ import {
   contactOtpSchema,
   type ContactOtpValues,
 } from '@/forms/contact-change/contact-change.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   labels: ContactChangeLabels;
@@ -80,7 +81,7 @@ export function ContactOtpStep({
             borderRadius={12}
             borderWidth={1}
             borderColor="$borderColor"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14} fontWeight="600" color="$color">
               {labels.editValue}

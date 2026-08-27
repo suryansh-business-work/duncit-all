@@ -5,6 +5,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   photo?: string | null;
@@ -67,7 +68,7 @@ export function AvatarStoryButton({
         justifyContent="center"
         borderWidth={hasStory ? 3 : 0}
         borderColor={hasStory ? '$primary' : 'transparent'}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {photo ? (
           <AppImage
@@ -83,6 +84,7 @@ export function AvatarStoryButton({
       </YStack>
 
       <YStack
+        pressStyle={PRESS_STYLE.surface}
         testID={`${testID}-edit`}
         role="button"
         aria-label={t('mweb.common.editPhoto')}

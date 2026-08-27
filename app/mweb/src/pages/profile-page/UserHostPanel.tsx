@@ -1,5 +1,17 @@
 import { gql, useQuery } from '@apollo/client';
-import { Alert, Avatar, Box, Chip, CircularProgress, List, ListItemAvatar, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Chip,
+  CircularProgress,
+  List,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  Typography,
+} from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { DuncitButton } from '@duncit/buttons';

@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, CircularProgress, Dialog, DialogContent, Divider, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  Divider,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';

@@ -9,6 +9,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '@/utils/studio-mode';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -57,6 +58,7 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
       <ModalThemeScope>
         <YStack flex={1} alignItems="center" justifyContent="center" testID="studio-switch-dialog">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             testID="studio-switch-backdrop"
             role="button"
             aria-label={t('mweb.common.close')}
@@ -99,7 +101,7 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
                       borderWidth={2}
                       borderColor={selected ? '$primary' : '$borderColor'}
                       backgroundColor={selected ? '$primary' : '$surface'}
-                      pressStyle={{ opacity: 0.85 }}
+                      pressStyle={PRESS_STYLE.control}
                     >
                       <MaterialIcons
                         name={ICONS[option.mode]}

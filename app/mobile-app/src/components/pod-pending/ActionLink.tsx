@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ActionLinkProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -24,7 +25,7 @@ export function ActionLink({ icon, label, url, testID }: Readonly<ActionLinkProp
       onPress={() => fireAndForget(Linking.openURL(url))}
       alignItems="center"
       gap={4}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <MaterialIcons name={icon} size={16} color={primary} />
       <Text fontSize={13} fontWeight="600" color="$primary">

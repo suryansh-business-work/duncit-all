@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, CircularProgress, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Typography,
+} from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';

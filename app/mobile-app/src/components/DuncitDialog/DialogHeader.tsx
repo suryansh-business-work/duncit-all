@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   title: string;
@@ -53,7 +54,7 @@ export function DialogHeader({ title, subtitle, closeLabel, testID, onClose }: R
           alignItems="center"
           justifyContent="center"
           borderRadius={16}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="close" size={19} color={ink} />
         </XStack>

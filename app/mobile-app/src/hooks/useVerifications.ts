@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { isDocumentTooLarge } from '@duncit/verification';
 
 import {
   MyVerificationsDocument,
@@ -12,6 +13,7 @@ import {
 import { UploadImageDocument } from '@/graphql/status';
 import { VerificationType } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export type Verification = ResultOf<typeof MyVerificationsDocument>['myVerifications'][number];
 
@@ -25,8 +27,12 @@ export interface AddressInput {
   country?: string;
 }
 
-/** Documents over 4 MB are rejected client-side before upload (server stores the URL only). */
-export const MAX_DOC_BYTES = 4 * 1024 * 1024;
+/**
+ * Documents over 4 MB are rejected client-side before upload (server stores the
+ * URL only). Re-exported so this screen and its tests read the one cap
+ * @duncit/verification owns, which mWeb's card enforces too.
+ */
+export { MAX_DOC_BYTES } from '@duncit/verification';
 
 interface PickedDoc {
   base64: string;
@@ -36,15 +42,10 @@ interface PickedDoc {
   size?: number | null;
 }
 
-/** Reads the document's byte size: the asset's reported size, else the base64 length. */
-function byteSize(doc: PickedDoc): number {
-  if (typeof doc.size === 'number') return doc.size;
-  return Math.floor((doc.base64.length * 3) / 4);
-}
-
 /** Loads the user's 3 verifications (Identity/Address/Email) and submits an
  * IDENTITY document (image or PDF, 4 MB cap) or a structured ADDRESS form. */
 export function useVerifications() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Verification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -68,7 +69,7 @@ export function useVerifications() {
 
   const pickImage = useCallback(async (): Promise<PickedDoc | null> => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) throw new Error('Photo access is needed to upload a document.');
+    if (!permission.granted) throw new Error(t('verification.photoPermission'));
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       base64: true,
@@ -83,7 +84,7 @@ export function useVerifications() {
       fileName: asset.fileName ?? `doc-${Date.now()}.jpg`,
       size: asset.fileSize,
     };
-  }, []);
+  }, [t]);
 
   const pickPdf = useCallback(async (): Promise<PickedDoc | null> => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -106,8 +107,8 @@ export function useVerifications() {
 
   const submitIdentity = useCallback(
     async (doc: PickedDoc) => {
-      if (byteSize(doc) > MAX_DOC_BYTES) {
-        setDocError('File is too large — choose a document under 4 MB.');
+      if (isDocumentTooLarge(doc)) {
+        setDocError(t('verification.tooLarge'));
         return;
       }
       setDocError(null);
@@ -134,7 +135,7 @@ export function useVerifications() {
         setBusyType(null);
       }
     },
-    [load],
+    [load, t],
   );
 
   const uploadIdentityImage = useCallback(async () => {

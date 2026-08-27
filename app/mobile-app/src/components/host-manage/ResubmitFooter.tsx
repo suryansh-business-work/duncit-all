@@ -2,6 +2,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   busy: boolean;
@@ -29,7 +30,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
         borderWidth={1}
         borderColor="$borderColor"
         opacity={busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           Cancel
@@ -49,7 +50,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
         borderRadius={12}
         backgroundColor="$primary"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {busy ? <Spinner size="small" color={onPrimary} /> : null}
         <Text fontSize={14} fontWeight="700" color="$onPrimary">

@@ -25,6 +25,7 @@ import { SidebarPolicies } from './SidebarPolicies';
 import { SidebarRefreshBar } from './SidebarRefreshBar';
 import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Body of the account menu screen (/menu) — the RN twin of mWeb's <MenuPanel/>.
@@ -118,7 +119,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             justifyContent="center"
             borderRadius={18}
             backgroundColor="$surface"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="close" size={18} color={ink} />
           </XStack>
@@ -166,7 +167,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               paddingHorizontal={12}
               paddingVertical={10}
               backgroundColor="$surface"
-              pressStyle={{ opacity: 0.7 }}
+              pressStyle={PRESS_STYLE.row}
             >
               <MaterialIcons name="swap-horiz" size={20} color={primary} />
               <YStack flex={1}>

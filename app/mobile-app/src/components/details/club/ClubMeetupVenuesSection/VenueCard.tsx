@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { ClubDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type ClubVenue = ClubDetail['matched_venues'][number];
 
@@ -30,7 +31,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
         {venue.venue_name}
@@ -64,7 +65,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
         alignItems="center"
         alignSelf="flex-start"
         gap={4}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <Text fontSize={13} fontWeight="600" color="$primary">
           Venue details

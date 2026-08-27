@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { StatementLine } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Subtle section tints — venue-side vs everything else (both themes). */
 export const DEFAULT_TINT = 'rgba(99,102,241,0.10)';
@@ -76,7 +77,7 @@ export function ChargeSection({
         justifyContent="space-between"
         paddingHorizontal={12}
         paddingVertical={9}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
           {title}

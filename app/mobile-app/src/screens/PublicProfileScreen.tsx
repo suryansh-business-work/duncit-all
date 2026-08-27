@@ -14,6 +14,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Owner-only shortcut into the account editor. */
 function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
@@ -32,7 +33,7 @@ function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
       borderRadius={999}
       borderWidth={1}
       borderColor="$borderColor"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="600" color="$color">
         Edit my profile

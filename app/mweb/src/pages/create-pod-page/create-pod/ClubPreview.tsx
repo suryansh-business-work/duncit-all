@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Avatar, Box, Chip, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';

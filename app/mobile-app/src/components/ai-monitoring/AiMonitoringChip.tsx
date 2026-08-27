@@ -5,6 +5,7 @@ import { Text, XStack } from 'tamagui';
 import { useAiMonitoringConfig } from '@/hooks/useAiMonitoringConfig';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { AiMonitoringDialog } from './AiMonitoringDialog';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   testID?: string;
@@ -32,7 +33,7 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
         role="button"
         aria-label={copy.title}
         onPress={() => setOpen(true)}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
         alignItems="center"
         gap={5}
         borderRadius={999}

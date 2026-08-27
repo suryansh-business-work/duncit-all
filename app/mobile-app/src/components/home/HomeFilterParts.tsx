@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface FilterChipProps {
   label: string;
@@ -24,7 +25,7 @@ export function FilterChip({ label, selected, onPress, testID }: Readonly<Filter
       borderWidth={1.5}
       backgroundColor={selected ? '$primary' : '$surface'}
       borderColor={selected ? '$primary' : '$borderColor'}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}

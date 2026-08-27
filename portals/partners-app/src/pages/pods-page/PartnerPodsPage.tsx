@@ -2,13 +2,29 @@ import { useMemo, useRef, useState } from 'react';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import PodsTable from '../../components/PodsTable';
-import { CREATE_PARTNER_POD, MY_HOST_PODS_TABLE, PARTNER_POD_LOOKUPS, type PartnerPodRow } from './queries';
+import {
+  CREATE_PARTNER_POD,
+  MY_HOST_PODS_TABLE,
+  PARTNER_POD_LOOKUPS,
+  type PartnerPodRow,
+} from './queries';
 import { PARTNER_POD_CONFIG, getClubVenueIds } from './partner-pod-config';
 
 export default function PartnerPodsPage() {

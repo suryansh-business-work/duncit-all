@@ -8,6 +8,7 @@ import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { VideoTrim } from '@/services/video-compression';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Story videos are short clips — capped at 15s (Bug 3). */
 export const MAX_STORY_VIDEO_SECONDS = 15;
@@ -58,7 +59,7 @@ function StepButton({ testID, icon, disabled, onPress }: Readonly<StepButtonProp
       borderWidth={1}
       borderColor="$borderColor"
       opacity={disabled ? 0.4 : 1}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <MaterialIcons name={icon} size={24} color={muted} />
     </XStack>
@@ -113,7 +114,7 @@ function PreviewBody({
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           Cancel
@@ -130,7 +131,7 @@ function PreviewBody({
         justifyContent="center"
         borderRadius={12}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
           {needsTrim ? 'Trim & Post' : 'Post story'}

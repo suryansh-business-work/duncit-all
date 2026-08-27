@@ -11,6 +11,7 @@ import { formatDate } from '@/utils/date-format';
 import { GIFT_CARD_STATUS_KEYS, giftCardShareLink } from '@/utils/gift-cards';
 import { shareUrl } from '@/services/share-link';
 import { GiftCardVisual } from './GiftCardVisual';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   card: GiftCard;
@@ -86,7 +87,7 @@ export function GiftCardRow({
           onPress={copy}
           alignItems="center"
           gap={4}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="content-copy" size={15} color={ink} />
           <Text fontSize={12.5} fontWeight="700" color="$color">
@@ -100,7 +101,7 @@ export function GiftCardRow({
           onPress={share}
           alignItems="center"
           gap={4}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="share" size={15} color={ink} />
           <Text fontSize={12.5} fontWeight="700" color="$color">

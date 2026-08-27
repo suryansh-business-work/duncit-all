@@ -15,6 +15,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Liker = ResultOf<typeof PodLikersDocument>['publicUsersByIds'][number];
 
@@ -73,6 +74,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
         contentContainerStyle={{ paddingHorizontal: 16 }}
         renderItem={({ item }) => (
           <XStack
+            pressStyle={PRESS_STYLE.surface}
             testID={`liker-${item.user_id}`}
             role="button"
             aria-label={item.full_name ?? 'User'}
@@ -118,6 +120,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
       <ModalThemeScope>
         <YStack flex={1} testID="likes-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.common.close')}
             onPress={onClose}
@@ -150,6 +153,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                   Liked by
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="likes-close"
                   role="button"
                   aria-label={t('mweb.common.close')}

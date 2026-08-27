@@ -1,4 +1,11 @@
-import { CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import {
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import type { ReactNode } from 'react';

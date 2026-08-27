@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';

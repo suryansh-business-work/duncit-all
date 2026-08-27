@@ -3,6 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Every venue image, cover first — the grid renders all but the cover. */
@@ -25,6 +26,7 @@ export function VenueImagesGrid({ images, onOpen }: Readonly<Props>) {
       <XStack flexWrap="wrap" gap={8}>
         {images.slice(1).map((url, tileIndex) => (
           <XStack
+            pressStyle={PRESS_STYLE.surface}
             key={url}
             testID="venue-gallery-image"
             role="button"

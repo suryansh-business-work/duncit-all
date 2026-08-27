@@ -38,6 +38,7 @@ COPY packages/onboarding ./packages/onboarding
 COPY packages/tours ./packages/tours
 COPY packages/virtual-scroll ./packages/virtual-scroll
 COPY packages/slots ./packages/slots
+COPY packages/verification ./packages/verification
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

@@ -5,7 +5,11 @@ import AddIcon from '@mui/icons-material/Add';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
-import { CRM_CALL_PROMPTS_TABLE, DELETE_CRM_CALL_PROMPT, type CrmCallPrompt } from '../../api/call.gql';
+import {
+  CRM_CALL_PROMPTS_TABLE,
+  DELETE_CRM_CALL_PROMPT,
+  type CrmCallPrompt,
+} from '../../api/call.gql';
 import { ConfirmDialog } from '@duncit/dialogs';
 import CallPromptsTable from './CallPromptsTable';
 import CallPromptDialog from './CallPromptDialog';

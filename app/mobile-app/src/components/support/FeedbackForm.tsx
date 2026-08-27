@@ -4,6 +4,7 @@ import { Button, Input, Spinner, Text, XStack, YStack } from 'tamagui';
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
 import { useReportProblemConfig } from '@/hooks/useReportProblemConfig';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface FeedbackValues {
   category: string;
@@ -101,7 +102,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
                   borderWidth={1}
                   borderColor={selected ? '$primary' : '$borderColor'}
                   backgroundColor={selected ? '$primary' : '$surface'}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontWeight="600" fontSize={13} color={selected ? '$onPrimary' : '$color'}>
                     {option.label}

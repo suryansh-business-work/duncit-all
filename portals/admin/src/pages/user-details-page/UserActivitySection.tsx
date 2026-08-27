@@ -1,7 +1,18 @@
 import { cloneElement, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { ActivityCalendar } from 'react-activity-calendar';
-import { Alert, Box, Card, CardContent, CircularProgress, MenuItem, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  MenuItem,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton } from '@duncit/buttons';
 import {

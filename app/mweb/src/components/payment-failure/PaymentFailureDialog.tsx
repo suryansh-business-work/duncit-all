@@ -1,4 +1,12 @@
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { PAYMENT_FAILURE_KEYS, type PaymentFailure } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';

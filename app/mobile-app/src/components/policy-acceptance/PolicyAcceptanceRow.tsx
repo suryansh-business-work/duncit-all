@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SignupPolicy } from '@/stores/policies.store';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PolicyAcceptanceRowProps {
   policy: SignupPolicy;
@@ -46,7 +47,7 @@ export function PolicyAcceptanceRow({
         flex={1}
         alignItems="center"
         gap={10}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons
           name={accepted ? 'check-box' : 'check-box-outline-blank'}
@@ -58,6 +59,7 @@ export function PolicyAcceptanceRow({
         </Text>
       </XStack>
       <Text
+        pressStyle={PRESS_STYLE.inline}
         testID={`policy-read-${policy.slug}`}
         role="button"
         aria-label={t('policyAcceptance.readAction')}

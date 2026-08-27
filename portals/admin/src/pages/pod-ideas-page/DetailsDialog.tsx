@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Avatar, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import ShareIcon from '@mui/icons-material/Share';

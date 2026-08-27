@@ -5,6 +5,7 @@ import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   venues: CreatePodVenue[];
@@ -65,7 +66,7 @@ export function VenuePicker({
                 borderWidth={selected ? 2 : 1}
                 borderColor={selected ? '$primary' : '$borderColor'}
                 backgroundColor="$surface"
-                pressStyle={{ opacity: 0.85 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <XStack alignItems="center" gap={6}>
                   <Text flex={1} fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>

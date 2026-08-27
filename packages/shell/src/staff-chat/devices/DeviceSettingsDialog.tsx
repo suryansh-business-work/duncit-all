@@ -1,5 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import DevicePicker from './DevicePicker';

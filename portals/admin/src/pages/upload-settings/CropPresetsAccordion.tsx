@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DuncitButton } from '@duncit/buttons';
 import { PRESET_USAGE_NOTES, type UploadCropPreset, type UploadSettings } from './queries';

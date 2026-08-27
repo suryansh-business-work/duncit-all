@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { Badge, Box, Checkbox, Chip, Collapse, FormControlLabel, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import {
+  Badge,
+  Box,
+  Checkbox,
+  Chip,
+  Collapse,
+  FormControlLabel,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import { DuncitIconButton } from '@duncit/buttons';

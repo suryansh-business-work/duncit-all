@@ -15,6 +15,7 @@ import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
 import { UI_BUNDLE } from './bundles/ui';
+import { VERIFICATION_BUNDLE } from './bundles/verification';
 import { SESSION_BUNDLE } from './bundles/session';
 import { LOCATION_BUNDLE } from './bundles/location';
 import { MWEB_BUNDLE } from './bundles/mweb';
@@ -89,6 +90,7 @@ export {
   SUPPORT_BUNDLE,
   TECH_BUNDLE,
   UI_BUNDLE,
+  VERIFICATION_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -112,6 +114,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   media: MEDIA_BUNDLE,
   adRequest: AD_REQUEST_BUNDLE,
   ui: UI_BUNDLE,
+  verification: VERIFICATION_BUNDLE,
   session: SESSION_BUNDLE,
   location: LOCATION_BUNDLE,
   mweb: MWEB_BUNDLE,

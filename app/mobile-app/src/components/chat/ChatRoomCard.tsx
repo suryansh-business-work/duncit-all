@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatRoom } from '@/stores/chat.store';
 import { podStatus, type PodStatus } from '@/utils/pod-format';
 import type { Translate } from '@/i18n/fallback';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const statusMeta = (t: Translate): Record<PodStatus, { label: string; color: string }> => ({
   LIVE: { label: t('mweb.common.live'), color: semantic.success },
@@ -40,7 +41,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.9 }}
+      pressStyle={PRESS_STYLE.surface}
     >
       <YStack
         width={54}

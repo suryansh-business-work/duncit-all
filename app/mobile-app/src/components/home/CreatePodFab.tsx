@@ -3,6 +3,7 @@ import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The host-only floating Create Pod button — extracted from HomeFeed for the
  * 200-line cap. The gate (hosts only) is behaviour and stays with the caller. */
@@ -31,7 +32,7 @@ export function CreatePodFab({
       shadowOpacity={0.25}
       shadowRadius={12}
       shadowOffset={{ width: 0, height: 6 }}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="add" size={28} color={onPrimary} />
     </XStack>

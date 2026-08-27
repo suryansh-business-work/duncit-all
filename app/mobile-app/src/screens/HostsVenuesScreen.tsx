@@ -11,6 +11,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Tab = 'HOSTS' | 'VENUES';
 
@@ -103,7 +104,7 @@ export function HostsVenuesScreen() {
               backgroundColor={selected ? '$primary' : '$surface'}
               borderWidth={1}
               borderColor={selected ? '$primary' : '$borderColor'}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
                 {t === 'HOSTS' ? 'Hosts' : 'Venues'}

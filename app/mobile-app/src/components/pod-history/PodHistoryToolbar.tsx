@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   filterCount: number;
@@ -31,7 +32,7 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
         borderWidth={1}
         borderColor={filterActive ? '$primary' : '$borderColor'}
         backgroundColor={filterActive ? '$primary' : '$surface'}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="filter-list" size={16} color={filterActive ? onPrimary : color} />
         {filterActive ? (
@@ -53,7 +54,7 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="swap-vert" size={16} color={color} />
       </XStack>

@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';

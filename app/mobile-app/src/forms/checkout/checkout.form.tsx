@@ -19,6 +19,7 @@ import {
   type CheckoutFormValues,
   type CheckoutMainAddress,
 } from './checkout.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface CheckoutFormProps {
   initialValues?: Partial<CheckoutFormValues>;
@@ -101,7 +102,7 @@ export function CheckoutForm({
           onPress={() => simulate.field.onChange(!simulate.field.value)}
           alignItems="center"
           gap={10}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons
             name={simulate.field.value ? 'check-box' : 'check-box-outline-blank'}

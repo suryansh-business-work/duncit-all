@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { useFaqSearch, type FaqItem } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface FaqResultsProps {
   results: FaqItem[];
@@ -68,7 +69,7 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
           padding={14}
           borderTopWidth={index === 0 ? 0 : 1}
           borderTopColor="$borderColor"
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text flex={1} fontSize={14} fontWeight="600" color="$color">
             {faq.question}
@@ -128,7 +129,7 @@ export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchPr
             alignItems="center"
             justifyContent="center"
             borderRadius={14}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="close" size={18} color={muted} />
           </XStack>

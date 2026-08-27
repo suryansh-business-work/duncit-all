@@ -1,5 +1,11 @@
 import { useMutation } from '@apollo/client';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { WA_DELETE_USER_LEADS } from '../tools/whatsapp/whatsappQueries';
 import { useTranslation } from '@duncit/shell';

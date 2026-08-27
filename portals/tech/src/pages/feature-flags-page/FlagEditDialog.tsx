@@ -1,4 +1,14 @@
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { type FlagEdit } from './queries';
 import { useTranslation } from '@duncit/app-settings';

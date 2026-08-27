@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface DeletionSubmittedDialogProps {
   open: boolean;
@@ -43,7 +44,7 @@ export function DeletionSubmittedDialog({
       justifyContent="center"
       borderRadius={12}
       backgroundColor="$primary"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="700" color="$onPrimary">
         {t('mweb.account.deletion.signOutNow')}

@@ -13,6 +13,7 @@ import { useVenueDetails, type PublicVenue } from '@/hooks/useHostsVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function addressLine(venue: PublicVenue): string {
   return [
@@ -83,6 +84,7 @@ function VenueDetailsContent({
       >
         {gallery[0] ? (
           <XStack
+            pressStyle={PRESS_STYLE.surface}
             testID="venue-cover-image"
             role="button"
             aria-label={t('mweb.podDetails.viewImage')}

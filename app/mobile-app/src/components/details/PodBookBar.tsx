@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { SeatPicker } from '@/components/details/SeatPicker';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PodBookBarProps {
   isFree: boolean;
@@ -57,7 +58,7 @@ export function PodBookBar({
         borderRadius={999}
         backgroundColor={isFull ? '$muted' : '$primary'}
         opacity={isFull ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={15} fontWeight="700" color={onPrimary}>
           {bookText}

@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { requestPasswordResetOtp, resetPasswordWithOtp } from '@/services/auth.service';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Reset password — OTP + new password, then a success screen. RN twin of mWeb's
  * ResetPasswordPage (with the "password reset successfully" state). */
@@ -72,6 +73,7 @@ export function ResetPasswordScreen() {
           {t('mweb.resetPassword.didntGetIt')}
         </Text>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="reset-resend"
           fontSize={14}
           fontWeight="600"

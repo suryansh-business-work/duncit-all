@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, CircularProgress, InputAdornment, Link, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  InputAdornment,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitButton } from '@duncit/buttons';
 import ClubsGrid from './clubs-page/ClubsGrid';

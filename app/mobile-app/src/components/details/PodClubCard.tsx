@@ -7,6 +7,7 @@ import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type PodClub = NonNullable<PodDetail['club']>;
 
@@ -63,7 +64,7 @@ export function PodClubCard({
         alignItems="center"
         gap={8}
         alignSelf="flex-start"
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="groups" size={18} color={primary} />
         <Text fontSize={14} fontWeight="600" color="$primary">

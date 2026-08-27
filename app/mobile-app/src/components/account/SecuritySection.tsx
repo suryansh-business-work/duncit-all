@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { DeletionRequestPanel } from './DeletionRequestPanel';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Account security — change password + the de-emphasised deletion corner at
  * the bottom of Profile Settings. RN twin of mWeb's SecuritySection. */
@@ -38,6 +39,7 @@ export function SecuritySection() {
           </Text>
         </YStack>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="open-change-password"
           role="button"
           aria-label={t('mweb.account.changePassword')}

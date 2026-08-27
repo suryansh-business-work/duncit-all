@@ -1,4 +1,16 @@
-import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import PolicyTypeSelect from '../../components/PolicyTypeSelect';

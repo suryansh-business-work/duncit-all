@@ -1,5 +1,13 @@
 import SearchIcon from '@mui/icons-material/Search';
-import { Checkbox, Chip, FormControlLabel, InputAdornment, MenuItem, Stack, TextField } from '@mui/material';
+import {
+  Checkbox,
+  Chip,
+  FormControlLabel,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  TextField,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
   POD_PRODUCT_SORTS,

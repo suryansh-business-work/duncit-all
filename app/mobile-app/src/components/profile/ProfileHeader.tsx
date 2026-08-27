@@ -11,6 +11,7 @@ import type { ProfileMe } from '@/hooks/useProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { shareProfile } from '@/utils/share';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function Stat({
   value,
@@ -26,7 +27,7 @@ function Stat({
       onPress={onPress}
       alignItems="center"
       flex={1}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <Text fontSize={18} fontWeight="700" color="$color">
         {value}
@@ -141,7 +142,7 @@ export function ProfileHeader({
         borderRadius={999}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="share" size={16} color={color} />
         <Text fontSize={14} fontWeight="600" color="$color">

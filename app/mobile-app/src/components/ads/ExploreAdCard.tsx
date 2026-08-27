@@ -8,6 +8,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { AdMedia } from './AdMedia';
 import { SponsoredBadge } from './AdCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ExploreAdCardProps {
   ad: ActiveAd;
@@ -49,7 +50,7 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
             borderRadius={12}
             paddingHorizontal={14}
             paddingVertical={9}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text color="$onPrimary" fontSize={13} fontWeight="700">
               Learn more

@@ -14,6 +14,7 @@ import {
   trackingUrl,
   type ProductOrder,
 } from '@/utils/product-orders';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) {
   return (
@@ -98,6 +99,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             </Text>
           ) : null}
           <XStack
+            pressStyle={PRESS_STYLE.surface}
             testID={`po-track-${order.id}`}
             role="button"
             aria-label={t('mweb.podHistory.trackShipment')}

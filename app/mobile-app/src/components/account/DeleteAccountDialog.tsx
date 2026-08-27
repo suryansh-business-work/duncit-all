@@ -12,6 +12,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { SecuritySheet } from './SecuritySheet';
 import type { PendingRequest } from './DeletionRequestPanel';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface DeleteAccountDialogProps {
   open: boolean;
@@ -90,6 +91,7 @@ export function DeleteAccountDialog({
         </Text>
         <DeleteAccountForm loading={submitting} errorMessage={error} onSubmit={handleSubmit} />
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="delete-account-resend"
           role="button"
           aria-label={t('mweb.account.deletion.resend')}

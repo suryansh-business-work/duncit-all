@@ -4,6 +4,7 @@ import type { TooltipProps } from 'rn-tourguide';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useToursStore } from '@/stores/tours.store';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * The tooltip for a native tour step.
@@ -67,7 +68,7 @@ export function TourCard({
             onPress={handleStop}
             paddingVertical={8}
             paddingHorizontal={10}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <Text fontSize={12.5} fontWeight="600" color="$muted">
               Skip
@@ -84,7 +85,7 @@ export function TourCard({
               borderRadius={10}
               borderWidth={1}
               borderColor="$borderColor"
-              pressStyle={{ opacity: 0.7 }}
+              pressStyle={PRESS_STYLE.row}
             >
               <Text fontSize={12.5} fontWeight="600" color="$color">
                 Previous
@@ -100,7 +101,7 @@ export function TourCard({
             paddingHorizontal={14}
             borderRadius={10}
             backgroundColor="$primary"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
               {isLastStep ? 'Finish' : 'Next'}

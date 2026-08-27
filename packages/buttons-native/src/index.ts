@@ -20,7 +20,7 @@ export {
   type PressIntent,
   type PressRecipe,
 } from './intents';
-export { PRESS_STYLE, pressStyle, restingOpacity, type NativePressStyle } from './press';
+export { PRESS_STYLE, pressStyle, type NativePressStyle } from './press';
 export {
   buttonSpec,
   BUTTON_SIZES,

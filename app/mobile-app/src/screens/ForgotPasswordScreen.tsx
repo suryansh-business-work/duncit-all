@@ -10,6 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { requestPasswordResetOtp } from '@/services/auth.service';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Forgot password — request an OTP by email, then move to the reset step.
  * Only registered emails receive an OTP; an unregistered email is flagged and
@@ -69,6 +70,7 @@ export function ForgotPasswordScreen() {
             {t('mweb.forgotPassword.remembered')}
           </Text>
           <Text
+            pressStyle={PRESS_STYLE.inline}
             testID="forgot-back-login"
             fontSize={14}
             fontWeight="600"

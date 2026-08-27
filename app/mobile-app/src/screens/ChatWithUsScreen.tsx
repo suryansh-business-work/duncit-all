@@ -7,6 +7,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Chat with Us — a single entry point into the real-time agent chat. The ticket
@@ -36,7 +37,7 @@ export function ChatWithUsScreen() {
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <YStack
             width={44}

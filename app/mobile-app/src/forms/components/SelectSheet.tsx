@@ -9,6 +9,7 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SelectOption {
   value: string;
@@ -92,7 +93,7 @@ export function SelectSheet({
         borderColor={error ? '$danger' : '$borderColor'}
         backgroundColor="$surface"
         opacity={disabled ? 0.5 : 1}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {leading}
         <Text flex={1} fontSize={14} color={triggerText ? '$color' : '$muted'} numberOfLines={1}>
@@ -111,6 +112,7 @@ export function SelectSheet({
           <KeyboardScreen>
             <YStack flex={1} alignItems="center" justifyContent="center" testID={`${testID}-sheet`}>
               <YStack
+                pressStyle={PRESS_STYLE.surface}
                 testID={`${testID}-sheet-backdrop`}
                 role="button"
                 aria-label={t('mweb.common.close')}
@@ -179,7 +181,7 @@ export function SelectSheet({
                           alignItems="center"
                           gap={10}
                           paddingVertical={11}
-                          pressStyle={{ opacity: 0.7 }}
+                          pressStyle={PRESS_STYLE.row}
                         >
                           {option.flag ? (
                             <AppImage

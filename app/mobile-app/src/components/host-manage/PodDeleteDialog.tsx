@@ -16,6 +16,7 @@ import {
   type PodDeleteImpact,
 } from './pod-edit.form';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   podId: string | null;
@@ -104,6 +105,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
         <KeyboardScreen>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-delete-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={dismiss}
@@ -151,7 +153,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                           borderWidth={1}
                           borderColor={selected ? '$primary' : '$borderColor'}
                           backgroundColor={selected ? '$primary' : 'transparent'}
-                          pressStyle={{ opacity: 0.85 }}
+                          pressStyle={PRESS_STYLE.control}
                         >
                           <Text
                             fontSize={13.5}
@@ -200,7 +202,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                     borderWidth={1}
                     borderColor="$borderColor"
                     opacity={busy ? 0.6 : 1}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
                       Keep pod
@@ -220,7 +222,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                     borderRadius={12}
                     backgroundColor="$danger"
                     opacity={busy ? 0.7 : 1}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     {busy ? <Spinner size="small" color={onPrimary} /> : null}
                     <Text fontSize={14} fontWeight="700" color={onPrimary} numberOfLines={1}>

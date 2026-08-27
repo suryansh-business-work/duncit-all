@@ -1,5 +1,16 @@
 import { useQuery } from '@apollo/client';
-import { Box, InputAdornment, List, ListItemButton, ListItemText, Paper, Skeleton, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  Skeleton,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';

@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Box, CircularProgress, LinearProgress, ImageList, InputAdornment, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  LinearProgress,
+  ImageList,
+  InputAdornment,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitButton } from '@duncit/buttons';
 import { IMPORT_REMOTE_MEDIA, PEXELS_VIDEO_SEARCH } from './queries';

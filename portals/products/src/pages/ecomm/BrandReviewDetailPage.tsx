@@ -1,6 +1,17 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Avatar, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';

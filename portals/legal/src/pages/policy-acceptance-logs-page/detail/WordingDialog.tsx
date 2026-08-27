@@ -1,4 +1,11 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, Paper, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Paper,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { useTranslation } from '@duncit/app-settings';

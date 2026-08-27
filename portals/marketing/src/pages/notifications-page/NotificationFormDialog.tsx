@@ -2,7 +2,19 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { peopleCount } from '../../lib/reach';
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { DuncitButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';

@@ -6,6 +6,7 @@ import { OptionChipRow, Section } from '@/components/home/HomeFilterParts';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from '@/hooks/useShopFilters';
 import type { ShopSort } from '@/screens/ShopScreen';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   filters: ShopFilters;
@@ -62,7 +63,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
           backgroundColor={open ? '$primary' : '$background'}
           alignItems="center"
           justifyContent="center"
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="tune" size={20} color={open ? '#ffffff' : muted} />
           {filters.activeCount > 0 ? (
@@ -138,7 +139,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
             onPress={() => filters.setIncludeOutOfStock(!filters.includeOutOfStock)}
             alignItems="center"
             gap={8}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons
               name={filters.includeOutOfStock ? 'check-box' : 'check-box-outline-blank'}

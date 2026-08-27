@@ -6,6 +6,7 @@ import { VibeCategoryTab } from '@/components/home/VibeCategoryTab';
 import type { VibeCategory, VibeIconLayout } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface HomeVibeChipsProps {
   categories: VibeCategory[];
@@ -46,7 +47,7 @@ function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipP
       borderWidth={1.5}
       backgroundColor={selected ? '$primary' : '$surface'}
       borderColor={selected ? '$primary' : '$borderColor'}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}

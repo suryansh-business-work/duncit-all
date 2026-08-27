@@ -3,6 +3,7 @@ import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   testID: string;
@@ -17,6 +18,7 @@ export function JumpToLatestButton({ testID, bottom, onPress }: Readonly<Props>)
   const { onPrimary } = useThemeColors();
   return (
     <XStack
+      pressStyle={PRESS_STYLE.surface}
       testID={testID}
       role="button"
       aria-label={t('mweb.common.jumpToLatest')}

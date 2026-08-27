@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Only true when the server said this viewer may delete THIS slide. */
@@ -46,7 +47,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
           gap={8}
           paddingHorizontal={16}
           paddingVertical={12}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="delete-outline" size={18} color={danger} />
           <Text fontSize={14} fontWeight="600" color="$danger">
@@ -64,7 +65,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
           gap={8}
           paddingHorizontal={16}
           paddingVertical={12}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="flag" size={18} color={color} />
           <Text fontSize={14} fontWeight="600" color="$color">

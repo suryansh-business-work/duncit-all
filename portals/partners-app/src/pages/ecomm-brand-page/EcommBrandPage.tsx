@@ -1,7 +1,18 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
@@ -10,7 +21,15 @@ import MediaPickerDialog from '../../components/MediaPickerDialog';
 import EcommBrandForm from './EcommBrandForm';
 import BrandPauseDialog from './BrandPauseDialog';
 import PartnerBrandsTable from './PartnerBrandsTable';
-import { MY_BRANDS, MY_BRANDS_TABLE, SAVE_BRAND, SUBMIT_BRAND, WITHDRAW_BRAND, type EcommBrand, type EcommBrandRow } from './queries';
+import {
+  MY_BRANDS,
+  MY_BRANDS_TABLE,
+  SAVE_BRAND,
+  SUBMIT_BRAND,
+  WITHDRAW_BRAND,
+  type EcommBrand,
+  type EcommBrandRow,
+} from './queries';
 import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
 import { useTranslation } from '@duncit/shell';
 

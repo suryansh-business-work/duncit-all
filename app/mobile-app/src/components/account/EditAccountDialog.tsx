@@ -17,6 +17,7 @@ import {
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface EditAccountDialogProps {
   open: boolean;
@@ -108,6 +109,7 @@ export function EditAccountDialog({
         <KeyboardScreen>
           <YStack flex={1} testID="edit-account-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={requestClose}
@@ -140,6 +142,7 @@ export function EditAccountDialog({
                     Edit profile
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID="edit-account-close"
                     role="button"
                     aria-label={t('mweb.common.close')}

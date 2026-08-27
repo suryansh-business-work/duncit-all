@@ -5,6 +5,7 @@ import { Input, Spinner, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   value: string;
@@ -81,7 +82,7 @@ export function CommentComposer({
         justifyContent="center"
         backgroundColor="$primary"
         opacity={canSend ? 1 : 0.5}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {posting ? (
           <Spinner color="#ffffff" />

@@ -7,6 +7,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -43,7 +44,7 @@ export function PlaceholderScreen({
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>

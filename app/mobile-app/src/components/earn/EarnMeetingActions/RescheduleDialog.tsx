@@ -11,6 +11,7 @@ import type { MeetingSlot } from '@/graphql/onboarding-survey';
 import { ReasonField } from './ReasonField';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -53,6 +54,7 @@ export function RescheduleDialog({
         <KeyboardScreen>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="reschedule-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               testID="reschedule-backdrop"
               role="button"
               aria-label={t('mweb.common.close')}
@@ -128,7 +130,7 @@ export function RescheduleDialog({
                     borderRadius={12}
                     borderWidth={1}
                     borderColor="$borderColor"
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
                       Close
@@ -147,7 +149,7 @@ export function RescheduleDialog({
                     borderRadius={12}
                     backgroundColor="$primary"
                     opacity={busy ? 0.7 : 1}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="700" color={onPrimary}>
                       {busy ? 'Moving…' : 'Move to this slot'}

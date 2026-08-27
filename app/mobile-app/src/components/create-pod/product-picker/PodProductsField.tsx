@@ -8,6 +8,7 @@ import { podProductRequestsTotal, type PodPickerProduct } from '@duncit/utils';
 import type { PodProductRequest } from '../create-pod.types';
 import { AttachedProductRow } from './AttachedProductRow';
 import { ProductPickerDialog } from './ProductPickerDialog';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   value: PodProductRequest[];
@@ -91,7 +92,7 @@ export function PodProductsField({ value, onChange, products, error }: Readonly<
         borderWidth={1}
         borderColor="$primary"
         opacity={noProducts ? 0.5 : 1}
-        pressStyle={{ opacity: 0.75 }}
+        pressStyle={PRESS_STYLE.ghost}
       >
         <MaterialIcons name="add-shopping-cart" size={18} color={primary} />
         <Text fontSize={14} fontWeight="700" color="$primary">

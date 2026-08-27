@@ -7,6 +7,7 @@ import { useConfigStore } from '@/stores/config.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { locationMapEmbedUrl, mapEmbedHtml } from '@/utils/location-tree';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   query: string;
@@ -37,7 +38,7 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
           onPress={() => Linking.openURL(mapUrl)}
           alignItems="center"
           gap={4}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
             Open in Maps

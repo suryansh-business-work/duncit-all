@@ -2,7 +2,17 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { NAV_AREAS, NAV_SITES, type WebsiteNavItem } from './queries';
 import { useTranslation } from '@duncit/shell';

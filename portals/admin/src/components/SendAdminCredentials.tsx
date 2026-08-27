@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';

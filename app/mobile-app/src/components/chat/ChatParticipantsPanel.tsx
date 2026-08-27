@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatPerson } from '@/hooks/useChat';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface PersonProps {
   person: ChatPerson;
@@ -26,7 +27,7 @@ function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
       width={64}
       alignItems="center"
       gap={4}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <YStack
         width={46}

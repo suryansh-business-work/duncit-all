@@ -9,6 +9,7 @@ import {
   type PodProductCriteria,
   type PodProductSort,
 } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   criteria: PodProductCriteria;
@@ -39,7 +40,7 @@ function FilterChip({ label, active, onPress, testID }: Readonly<ChipProps>) {
       borderWidth={1}
       borderColor={active ? '$primary' : '$borderColor'}
       backgroundColor={active ? '$primary' : 'transparent'}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={12} fontWeight="600" color={active ? '$onPrimary' : '$color'}>
         {label}
@@ -121,7 +122,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
           onPress={() => patch({ inStockOnly: !criteria.inStockOnly })}
           alignItems="center"
           gap={6}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons
             name={criteria.inStockOnly ? 'check-box' : 'check-box-outline-blank'}
@@ -139,7 +140,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
             role="button"
             aria-label={t('podProduct.clearFilters')}
             onPress={onClear}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <Text fontSize={12.5} fontWeight="700" color="$primary">
               {t('podProduct.clearFilters')}

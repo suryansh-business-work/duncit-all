@@ -7,6 +7,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** A confirm button pinned over the bottom of the viewer — lets the viewer double
  * as a "look before you commit" step (the stock-photo picker previews a photo
@@ -52,6 +53,7 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
           />
           <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, right: 0 }}>
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               testID="image-viewer-close"
               role="button"
               aria-label={t('mweb.common.closeImage')}
@@ -92,7 +94,7 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
                   borderRadius={12}
                   backgroundColor="$primary"
                   opacity={action.busy ? 0.7 : 1}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   {action.busy ? <Spinner color="$onPrimary" /> : null}
                   <Text fontSize={14} fontWeight="700" color="$onPrimary">

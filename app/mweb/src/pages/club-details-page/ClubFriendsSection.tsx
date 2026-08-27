@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { Avatar, AvatarGroup, Box, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemAvatar, ListItemText, Typography } from '@mui/material';
+import {
+  Avatar,
+  AvatarGroup,
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Typography,
+} from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import { DuncitButton } from '@duncit/buttons';
 

@@ -11,6 +11,7 @@ import type { CheckoutPayment, CheckoutPod } from '@/hooks/useCheckout';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface CheckoutSuccessProps {
   payment: NonNullable<CheckoutPayment>;
@@ -149,7 +150,7 @@ export function CheckoutSuccess({
           justifyContent="center"
           borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {t('mweb.checkout.home')}
@@ -167,7 +168,7 @@ export function CheckoutSuccess({
           borderRadius={999}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color="$color">
             {profileAction}
@@ -218,7 +219,7 @@ function ActionButton({
       borderColor="$primary"
       backgroundColor={filled ? '$primary' : undefined}
       opacity={busy ? 0.6 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {busy ? (
         <Spinner size="small" color={filled ? onPrimary : '$primary'} />

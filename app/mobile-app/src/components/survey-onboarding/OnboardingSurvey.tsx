@@ -21,6 +21,7 @@ import { SurveyPhase } from './SurveyPhase';
 import { MeetingPhase } from './MeetingPhase';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -68,7 +69,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
               paddingVertical={12}
               borderRadius={999}
               backgroundColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
                 Done
@@ -109,7 +110,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>

@@ -16,7 +16,12 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import DynamicFieldForm from './DynamicFieldForm';
 import DynamicFieldsTable from './DynamicFieldsTable';
-import { blankDraft, buildDynamicFieldInput, draftFromRow, type DraftState } from './dynamicFieldDraft';
+import {
+  blankDraft,
+  buildDynamicFieldInput,
+  draftFromRow,
+  type DraftState,
+} from './dynamicFieldDraft';
 import { useTranslation } from '@duncit/shell';
 
 const refetchAfter = [

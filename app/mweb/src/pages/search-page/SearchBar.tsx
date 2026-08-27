@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Box, ClickAwayListener, InputAdornment, List, ListItemButton, ListItemText, Paper, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  ClickAwayListener,
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';

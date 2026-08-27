@@ -1,5 +1,6 @@
 import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import { Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface RowProps {
   option: GrievanceSupportTicketOption;
@@ -28,7 +29,7 @@ function GrievanceTicketOptionRow({ option, selected, onPick }: Readonly<RowProp
       paddingHorizontal={12}
       paddingVertical={11}
       backgroundColor={background}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={13} fontWeight={weight} color={ink}>
         {option.label}

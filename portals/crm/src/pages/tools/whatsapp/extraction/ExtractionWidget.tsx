@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { Box, Chip, Dialog, DialogContent, DialogTitle, LinearProgress, Paper, Stack, Tooltip, Typography, keyframes } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+  keyframes,
+} from '@mui/material';
 import SyncIcon from '@mui/icons-material/Sync';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';

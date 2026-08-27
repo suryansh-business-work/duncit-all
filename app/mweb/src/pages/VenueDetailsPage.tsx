@@ -4,7 +4,16 @@ import { gql, useQuery } from '@apollo/client';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlaceIcon from '@mui/icons-material/Place';
-import { Box, ButtonBase, Chip, CircularProgress, Divider, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  ButtonBase,
+  Chip,
+  CircularProgress,
+  Divider,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useNavigate, useParams } from 'react-router-dom';
 import MomentLightbox from '../components/moments/MomentLightbox';

@@ -9,6 +9,7 @@ import {
 } from '@/hooks/useVenueSlotRequests';
 import { formatDate, formatDateTime, formatTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Slot Requests — the RN twin of mWeb's venue-slot-requests-page.
@@ -178,6 +179,7 @@ export function VenueSlotRequestsScreen() {
 
         {slots.feedback && (
           <Text
+            pressStyle={PRESS_STYLE.inline}
             fontSize={12.5}
             color={slots.feedback.ok ? '$green10' : '$red10'}
             onPress={slots.clearFeedback}

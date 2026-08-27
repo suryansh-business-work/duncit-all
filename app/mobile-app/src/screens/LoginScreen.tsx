@@ -16,6 +16,7 @@ import { linkGoogleAccount, login as loginService, loginWithGoogle } from '@/ser
 import { useAuthStore } from '@/stores/auth.store';
 import { appVersion } from '@/utils/app-version';
 import { errorCode, toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export function LoginScreen() {
   const { t } = useTranslation();
@@ -98,6 +99,7 @@ export function LoginScreen() {
       <LoginForm loading={loading} errorMessage={error} onSubmit={handleSubmit} />
       <XStack justifyContent="flex-end">
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="go-forgot-password"
           fontSize={14}
           fontWeight="600"
@@ -118,6 +120,7 @@ export function LoginScreen() {
           {t('mweb.login.newHere')}
         </Text>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="go-signup"
           fontSize={14}
           fontWeight="600"

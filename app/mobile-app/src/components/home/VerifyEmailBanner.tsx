@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Hidden when the account has no email or it is already verified. */
@@ -34,7 +35,7 @@ export function VerifyEmailBanner({ email, verified, onPress }: Readonly<Props>)
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="mark-email-unread" size={18} color={primary} />
       <Text flex={1} fontSize={13} fontWeight="700" color="$color">

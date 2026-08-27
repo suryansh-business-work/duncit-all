@@ -1,6 +1,16 @@
 import { useCallback, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, Card, CardContent, InputAdornment, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  InputAdornment,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import KeyIcon from '@mui/icons-material/Key';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';

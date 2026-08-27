@@ -7,6 +7,7 @@ import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePexelsPhotos, type PexelsPhoto } from './usePexelsPhotos';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const TILE = 104;
 
@@ -112,7 +113,7 @@ export function PexelsTab({
           justifyContent="center"
           borderRadius={10}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="700" color="$onPrimary">
             {t('mweb.createPod.search')}
@@ -162,7 +163,7 @@ export function PexelsTab({
               borderColor={picked ? '$primary' : '$borderColor'}
               backgroundColor={photo.avg_color ?? '$surface'}
               opacity={frozen ? 0.45 : 1}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <AppImage
                 source={{ uri: photo.src_medium ?? photo.src_tiny ?? '' }}
@@ -204,7 +205,7 @@ export function PexelsTab({
           borderRadius={10}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="600" color="$color">
             {pexels.searching ? t('mweb.createPod.loading') : loadMore}

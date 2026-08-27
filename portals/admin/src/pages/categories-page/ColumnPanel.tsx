@@ -1,6 +1,21 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Avatar, Box, Card, CardContent, Chip, CircularProgress, Divider, List, ListItemButton, ListItemText, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';

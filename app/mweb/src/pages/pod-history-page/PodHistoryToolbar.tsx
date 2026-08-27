@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { Box, Divider, FormControl, InputLabel, Menu, MenuItem, Popover, Select, Stack, Typography, type SelectChangeEvent } from '@mui/material';
+import {
+  Box,
+  Divider,
+  FormControl,
+  InputLabel,
+  Menu,
+  MenuItem,
+  Popover,
+  Select,
+  Stack,
+  Typography,
+  type SelectChangeEvent,
+} from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SortIcon from '@mui/icons-material/SwapVert';
 import { DuncitButton } from '@duncit/buttons';

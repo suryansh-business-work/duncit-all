@@ -1,4 +1,16 @@
-import { Avatar, Box, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemAvatar, ListItemText, Stack, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitIconButton } from '@duncit/buttons';

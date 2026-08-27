@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { UPDATE_LEGAL_DOCUMENT, type LegalDocumentListItem } from '../../graphql/documents';

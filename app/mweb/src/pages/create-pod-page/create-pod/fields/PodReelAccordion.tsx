@@ -1,5 +1,15 @@
 import { useRef, useState } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Box, Chip, CircularProgress, LinearProgress, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Chip,
+  CircularProgress,
+  LinearProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';

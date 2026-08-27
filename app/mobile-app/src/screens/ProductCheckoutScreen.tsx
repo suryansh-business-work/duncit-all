@@ -38,6 +38,7 @@ import { useCartStore } from '@/stores/cart.store';
 import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal, toPickedContact } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type CheckoutAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -87,7 +88,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
         justifyContent="center"
         borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
           {backLabel}

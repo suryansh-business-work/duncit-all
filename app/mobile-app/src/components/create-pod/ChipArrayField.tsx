@@ -5,6 +5,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   label: string;
@@ -58,7 +59,7 @@ export function ChipArrayField({
               paddingVertical={7}
               borderRadius={999}
               backgroundColor="$primary"
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={12.5} fontWeight="600" color="$onPrimary">
                 {tag}

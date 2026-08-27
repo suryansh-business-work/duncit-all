@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   label: string;
@@ -74,7 +75,7 @@ export function ConnectedAccountRow({
             borderWidth={1}
             borderColor={danger}
             opacity={busy ? 0.5 : 1}
-            pressStyle={{ opacity: 0.75 }}
+            pressStyle={PRESS_STYLE.ghost}
           >
             <Text fontSize={12.5} fontWeight="700" color="$danger">
               {actionLabel}

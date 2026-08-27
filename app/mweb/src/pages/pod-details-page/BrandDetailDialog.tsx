@@ -1,5 +1,15 @@
 import { useQuery } from '@apollo/client';
-import { Avatar, Box, Chip, CircularProgress, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlaceIcon from '@mui/icons-material/Place';
 import EventIcon from '@mui/icons-material/Event';

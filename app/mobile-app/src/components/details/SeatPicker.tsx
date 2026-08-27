@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   value: number;
@@ -62,7 +63,7 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
         height={48}
         alignItems="center"
         justifyContent="center"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="remove" size={18} color={seats <= 1 ? muted : ink} />
       </XStack>
@@ -86,7 +87,7 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
         height={48}
         alignItems="center"
         justifyContent="center"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="add" size={18} color={seats >= top ? muted : ink} />
       </XStack>

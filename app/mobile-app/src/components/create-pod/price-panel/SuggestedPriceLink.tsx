@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The "Suggested Price ⓘ" link that sits to the RIGHT of the Ticket Price
  * label and opens the suggestions modal. mWeb twin. */
@@ -18,7 +19,7 @@ export function SuggestedPriceLink({ onPress }: Readonly<{ onPress: () => void }
       onPress={onPress}
       alignItems="center"
       gap={4}
-      pressStyle={{ opacity: 0.6 }}
+      pressStyle={PRESS_STYLE.inline}
     >
       <Text fontSize={13} fontWeight="700" color="$primary" textDecorationLine="underline">
         {label}

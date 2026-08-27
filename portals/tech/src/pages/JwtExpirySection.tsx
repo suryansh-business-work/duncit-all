@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Divider, FormControlLabel, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';

@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { Skeleton } from '@/components/Skeleton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface PolicyLink {
   id: string;
@@ -54,6 +55,7 @@ export function SidebarPolicies({
   return (
     <YStack testID="sidebar-policies">
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         role="button"
         aria-label={t('mweb.common.policies')}
         onPress={toggle}
@@ -74,6 +76,7 @@ export function SidebarPolicies({
       {open
         ? policies.map((p) => (
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               key={p.id}
               testID={`sidebar-policy-${p.slug}`}
               role="button"

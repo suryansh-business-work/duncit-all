@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import {

@@ -6,7 +6,12 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DuncitButton } from '@duncit/buttons';
-import { splitAutoPods, type AutoPodRole, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
+import {
+  splitAutoPods,
+  type AutoPodRole,
+  type AutoPodRow,
+  type AutoPodLabels,
+} from '@duncit/utils';
 import { AutoPodCard } from './AutoPodCard';
 
 export interface AutoPodQueueProps {

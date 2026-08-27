@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';

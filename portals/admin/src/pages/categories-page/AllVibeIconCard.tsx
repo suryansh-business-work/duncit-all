@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Divider, FormControlLabel, Paper, Snackbar, Stack, Switch, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Alert,
+  Divider,
+  FormControlLabel,
+  Paper,
+  Snackbar,
+  Stack,
+  Switch,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import AppsIcon from '@mui/icons-material/Apps';
 import { DuncitButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';

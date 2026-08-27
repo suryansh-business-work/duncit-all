@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CategoryLabels } from './useOnboardingFlow';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const summary = (labels: CategoryLabels) =>
   [labels.super, labels.category, labels.sub].filter(Boolean).join(' › ');
@@ -42,6 +43,7 @@ export function CategorySummaryBanner({
         </Text>
       </YStack>
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         testID="category-change"
         role="button"
         aria-label={t('mweb.surveyOnboarding.changeCategory')}

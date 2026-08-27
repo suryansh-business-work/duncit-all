@@ -1,6 +1,7 @@
 import { Text, XStack } from 'tamagui';
 
 import { CHAT_EMOJIS } from '@/constants/chat';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface EmojiBarProps {
   onSelect: (emoji: string) => void;
@@ -30,7 +31,7 @@ export function EmojiBar({ onSelect, testID = 'emoji-bar' }: Readonly<EmojiBarPr
           onPress={() => onSelect(emoji)}
           fontSize={24}
           padding={6}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           {emoji}
         </Text>

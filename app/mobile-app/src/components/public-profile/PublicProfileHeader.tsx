@@ -8,6 +8,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfileUser } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Centered avatar + name + location + bio — RN twin of mWeb's PublicProfileHeader.
  * The follower/following counts open that user's list (bug 9). */
@@ -56,7 +57,7 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
           onPress={() => openFollow('followers')}
           alignItems="center"
           gap={4}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={14} fontWeight="700" color="$color">
             {user.followers_count}
@@ -72,7 +73,7 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
           onPress={() => openFollow('following')}
           alignItems="center"
           gap={4}
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={14} fontWeight="700" color="$color">
             {user.following_count}

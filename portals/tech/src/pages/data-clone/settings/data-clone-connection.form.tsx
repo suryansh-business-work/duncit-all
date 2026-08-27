@@ -7,7 +7,10 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { CloneConnection } from '../queries';
-import { dataCloneConnectionSchema, type DataCloneConnectionValues } from './data-clone-connection.types';
+import {
+  dataCloneConnectionSchema,
+  type DataCloneConnectionValues,
+} from './data-clone-connection.types';
 
 interface Props {
   connection: CloneConnection;

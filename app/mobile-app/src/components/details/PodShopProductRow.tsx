@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PodDetail } from '@/hooks/useDetails';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Product = PodDetail['product_requests'][number];
 
@@ -38,7 +39,7 @@ export function StepButton({
       borderWidth={1}
       borderColor="$borderColor"
       opacity={disabled ? 0.5 : 1}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <MaterialIcons name={icon} size={18} color={color} />
     </XStack>
@@ -96,7 +97,7 @@ function AddToCartButton({
       height={32}
       borderRadius={999}
       backgroundColor="$primary"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="add-shopping-cart" size={15} color={onPrimary} />
       <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
@@ -229,7 +230,7 @@ export function PodShopProductRow({
         alignItems="center"
         justifyContent="center"
         borderRadius={999}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         <MaterialIcons name="info-outline" size={18} color={muted} />
       </XStack>

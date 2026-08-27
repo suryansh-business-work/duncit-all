@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';

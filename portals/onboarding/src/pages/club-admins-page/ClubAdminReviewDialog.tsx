@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Divider, InputAdornment, Paper, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import AssignClubsSection from './AssignClubsSection';

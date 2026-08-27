@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Stack,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { CANCEL_MY_MEETING } from './queries';
 import { useEarnSurface } from './EarnSurfaceProvider';

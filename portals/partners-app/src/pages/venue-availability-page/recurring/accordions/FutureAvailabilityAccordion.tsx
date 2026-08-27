@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Box,
+  FormControlLabel,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';

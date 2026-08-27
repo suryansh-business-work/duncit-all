@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Box, CircularProgress, LinearProgress, ImageList, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  LinearProgress,
+  ImageList,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import PexelsSearchBar from './PexelsSearchBar';
 import { IMPORT_REMOTE, PEXELS_SEARCH } from './queries';

@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { Alert, CircularProgress, Divider, Link, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Divider,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutlined';
 import { useTranslation } from '../i18n/useTranslation';
 import LoginIcon from '@mui/icons-material/Login';

@@ -1,6 +1,16 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Alert, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Card,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
@@ -9,7 +19,12 @@ import { QuantityCell, renderListingStatus, renderProduct } from './ProductListi
 import ProductRowActions from './ProductRowActions';
 import ListingPauseDialog from './ListingPauseDialog';
 import RunAdDialog, { type AdKind } from './RunAdDialog';
-import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
+import {
+  DELETE_LISTING,
+  MY_PRODUCT_LISTINGS_TABLE,
+  UPDATE_QUANTITY,
+  type ProductListingRow,
+} from './queries';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 

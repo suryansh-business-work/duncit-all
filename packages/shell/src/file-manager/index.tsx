@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { Alert, Box, CircularProgress, Dialog, DialogContent, DialogTitle, LinearProgress, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import FileCard from './FileCard';

@@ -5,6 +5,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodPlaceCharge } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   value: PodPlaceCharge[];
@@ -88,7 +89,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
             onPress={() => remove(idx)}
             alignItems="center"
             gap={4}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="delete-outline" size={16} color={danger} />
             <Text fontSize={13} fontWeight="700" color="$danger">
@@ -104,7 +105,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
         onPress={add}
         alignItems="center"
         gap={4}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="add" size={18} color={primary} />
         <Text fontSize={13} fontWeight="600" color="$primary">

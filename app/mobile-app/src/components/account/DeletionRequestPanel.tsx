@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
 import { DeletionSubmittedDialog } from './DeletionSubmittedDialog';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   onDone: (message: string) => void;
@@ -153,6 +154,7 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
           </YStack>
         </XStack>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="withdraw-deletion"
           role="button"
           aria-label={t('mweb.account.deletion.withdraw')}
@@ -179,7 +181,7 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
         onPress={() => setConfirmOpen(true)}
         alignItems="center"
         gap={10}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="delete-forever" size={18} color={danger} />
         <Text fontSize={13.5} fontWeight="600" color="$danger">

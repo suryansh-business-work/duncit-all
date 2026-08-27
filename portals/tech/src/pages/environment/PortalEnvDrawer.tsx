@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Box, Checkbox, Chip, CircularProgress, Divider, Drawer, InputAdornment, List, ListItemButton, ListItemText, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Divider,
+  Drawer,
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitButton } from '@duncit/buttons';
 import { ENV_ENTRIES, type EnvEntry } from './queries';

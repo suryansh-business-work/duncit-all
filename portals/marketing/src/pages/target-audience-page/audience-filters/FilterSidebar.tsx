@@ -1,5 +1,13 @@
 import type { JSX } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Badge, Paper, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Badge,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { DuncitButton } from '@duncit/buttons';

@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -53,7 +54,7 @@ function EnabledStatus({
         borderRadius={999}
         alignItems="center"
         justifyContent="center"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={12} fontWeight="700" color="$onPrimary">
           {cta.label}

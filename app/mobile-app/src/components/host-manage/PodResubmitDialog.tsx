@@ -25,6 +25,7 @@ import {
   type ResubmitVenueOption,
 } from './pod-resubmit.form';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   pod: HostPodForResubmit | null;
@@ -93,6 +94,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
         <KeyboardScreen>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-resubmit-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={dismiss}

@@ -2,6 +2,7 @@ import { Text, YStack } from 'tamagui';
 import { POD_FEEDBACK_REMINDER_OPTIONS, type PodFeedbackReminderChoice } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ButtonProps {
   label: string;
@@ -14,6 +15,7 @@ interface ButtonProps {
 function ReminderButton({ label, primary, testID, onPress }: Readonly<ButtonProps>) {
   return (
     <YStack
+      pressStyle={PRESS_STYLE.control}
       testID={testID}
       role="button"
       aria-label={label}

@@ -8,6 +8,7 @@ import { buildUsernameLabels, profileUrl } from '@duncit/utils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { POD_WEB_BASE } from '@/utils/pod-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** The server-minted @handle, or null for an account that predates them. */
@@ -56,7 +57,7 @@ export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
       alignItems="center"
       gap={5}
       alignSelf="flex-start"
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <Text fontSize={13} color="$muted" numberOfLines={1}>
         {labels.handle(username)}

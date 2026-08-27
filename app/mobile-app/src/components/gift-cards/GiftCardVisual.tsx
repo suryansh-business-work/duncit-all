@@ -7,6 +7,7 @@ import { canFlipGiftCard, giftCardArtwork } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type GiftCardTheme } from '@/utils/gift-cards';
 import { GiftCardFace } from './GiftCardFace';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Long enough to read as a card turning over, short enough not to be in the way. */
 const FLIP_MS = 600;
@@ -109,7 +110,7 @@ export function GiftCardVisual({
         alignItems="center"
         justifyContent="center"
         backgroundColor="rgba(0,0,0,0.35)"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="flip" size={18} color="#ffffff" />
       </XStack>

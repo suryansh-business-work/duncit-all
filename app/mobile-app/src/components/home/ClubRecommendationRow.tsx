@@ -9,6 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import type { HomeClub } from '@/hooks/useHomeFeed';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   clubs: HomeClub[];
@@ -90,7 +91,7 @@ export function ClubRecommendationRow({ clubs, onOpenClub }: Readonly<Props>) {
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Avatar circular size={44}>
         {image ? <Avatar.Image src={image} /> : null}
@@ -127,7 +128,7 @@ export function ClubRecommendationRow({ clubs, onOpenClub }: Readonly<Props>) {
         paddingHorizontal={13}
         paddingVertical={7}
         opacity={joined || busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <Text fontSize={12} fontWeight="700" color={joined ? '$muted' : '$primary'}>
           {joined ? t('mweb.home.joinedClub') : t('mweb.home.joinClub')}

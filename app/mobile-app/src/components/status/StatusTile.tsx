@@ -6,6 +6,7 @@ import { Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface StatusTileProps {
   label: string;
@@ -98,7 +99,7 @@ export function StatusTile({
       width={70}
       alignItems="center"
       gap={6}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {seen ? (
         <YStack
@@ -121,6 +122,7 @@ export function StatusTile({
       )}
       {badge ? (
         <YStack
+          pressStyle={PRESS_STYLE.surface}
           testID={badgeTestID}
           role="button"
           aria-label={t('mweb.common.addStory')}

@@ -9,6 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserBadge } from '@/hooks/usePublicProfile';
 import { formatDate } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Badge grid with a details sheet — RN twin of mWeb's PublicProfileBadges. */
 export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }>) {
@@ -47,7 +48,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
             width={72}
             alignItems="center"
             gap={4}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <YStack
               width={48}
@@ -96,7 +97,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
             borderRadius={999}
             borderWidth={1}
             borderColor="$borderColor"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14} fontWeight="600" color={color}>
               Close

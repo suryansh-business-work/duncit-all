@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Fade, Stack, Typography } from '@mui/material';
+import {
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Fade,
+  Stack,
+  Typography,
+} from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';

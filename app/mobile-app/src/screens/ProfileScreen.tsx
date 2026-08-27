@@ -20,6 +20,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Profile — identity header, links/pet panels, host/venue shortcuts and the
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
@@ -109,7 +110,7 @@ export function ProfileScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
@@ -126,7 +127,7 @@ export function ProfileScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="settings" size={22} color={ink} />
           </XStack>

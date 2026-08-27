@@ -1,4 +1,12 @@
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Chip, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Chip,
+  Stack,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DuncitButton } from '@duncit/buttons';

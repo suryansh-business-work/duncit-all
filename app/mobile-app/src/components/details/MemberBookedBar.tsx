@@ -4,6 +4,7 @@ import { semantic } from '@duncit/auth-tokens';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface MemberBookedBarProps {
   canBackout: boolean;
@@ -84,7 +85,7 @@ export function MemberBookedBar({
             borderRadius={999}
             borderWidth={1}
             borderColor="$danger"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14} fontWeight="700" color="$danger">
               {t('mweb.podDetails.backout')}
@@ -147,7 +148,7 @@ function ReleasedSeatsRow({
         borderRadius={999}
         backgroundColor="$primary"
         opacity={restoringSpot ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <TakeSeatsBackLabel />
       </XStack>

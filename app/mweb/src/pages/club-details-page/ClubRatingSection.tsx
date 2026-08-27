@@ -1,6 +1,22 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Avatar, Box, Dialog, DialogActions, DialogContent, DialogTitle, Divider, List, ListItem, ListItemAvatar, ListItemText, Rating, Stack, TextField, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Rating,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import { DuncitButton } from '@duncit/buttons';
 import { ADD_CLUB_RATING, CLUB_RATINGS } from '../ClubDetailsPage/clubDetailsQueries';

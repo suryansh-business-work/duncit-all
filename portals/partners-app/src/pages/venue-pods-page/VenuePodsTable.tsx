@@ -2,7 +2,12 @@ import { useMemo } from 'react';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, type DuncitColumn, type TableFetch, type TableFilterValue } from '@duncit/table';
+import {
+  DuncitTable,
+  type DuncitColumn,
+  type TableFetch,
+  type TableFilterValue,
+} from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import {
   BUCKET_COLORS,

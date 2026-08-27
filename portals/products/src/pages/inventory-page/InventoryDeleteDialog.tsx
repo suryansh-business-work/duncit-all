@@ -1,6 +1,21 @@
 import { useEffect } from 'react';
 import { useLazyQuery, useMutation } from '@apollo/client';
-import { Alert, Box, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemText,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
   ARCHIVE_INVENTORY_PRODUCT,

@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Alert, Avatar, Box, Chip, Container, Divider, Paper, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Chip,
+  Container,
+  Divider,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import EditIcon from '@mui/icons-material/Edit';
 import GoogleIcon from '@mui/icons-material/Google';

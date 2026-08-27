@@ -1,6 +1,16 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DuncitButton } from '@duncit/buttons';
 import CompanionsChecklist from './CompanionsChecklist';

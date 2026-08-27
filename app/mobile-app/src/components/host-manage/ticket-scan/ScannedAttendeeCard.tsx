@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ScannedAttendee } from './scan.types';
 import { formatDateTime } from '@/utils/date-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -195,7 +196,7 @@ export function ScannedAttendeeCard({
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="open-in-new" size={16} color={primary} />
         <Text fontSize={13.5} fontWeight="700" color="$primary">

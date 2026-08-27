@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Link, MenuItem, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Link,
+  MenuItem,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import PolicyRenderer from '../../components/PolicyRenderer';
 import { useTranslation } from '../../i18n/useTranslation';

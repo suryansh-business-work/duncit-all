@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -52,7 +53,7 @@ export function Accordion({
         alignItems="center"
         gap={10}
         padding={14}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name={icon} size={18} color={primary} />
         <Text flex={1} fontSize={15} fontWeight="700" color={titleTint}>

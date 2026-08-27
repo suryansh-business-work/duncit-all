@@ -5,6 +5,7 @@ import { AppImage } from '@/components/AppImage';
 import { StatusViewer } from '@/components/status/StatusViewer';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { PublicProfileStory } from '@/hooks/usePublicProfile';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   authorId: string;
@@ -58,6 +59,7 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
       >
         {group.slides.map((slide, index) => (
           <XStack
+            pressStyle={PRESS_STYLE.surface}
             key={slide.id}
             testID={`public-profile-story-${index}`}
             role="button"

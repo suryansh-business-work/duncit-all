@@ -2,7 +2,13 @@ import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
-import { useFieldArray, type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
+import {
+  useFieldArray,
+  type Control,
+  type Path,
+  type UseFormSetValue,
+  type UseFormWatch,
+} from 'react-hook-form';
 import type { ProductListingValues } from './list-products.types';
 import { emptyVariant } from './list-products.map';
 import VariantFields from './VariantFields';

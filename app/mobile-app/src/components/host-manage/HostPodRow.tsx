@@ -5,6 +5,7 @@ import { semantic } from '@duncit/auth-tokens';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { VenueApprovalChip } from '@/utils/venue-approval';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   id: string;
@@ -52,7 +53,7 @@ export function HostPodRow({
           aria-label={t('mweb.common.openPod')}
           onPress={onOpen}
           flex={1}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
             {title}
@@ -85,7 +86,7 @@ export function HostPodRow({
           borderRadius={10}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="more-vert" size={18} color={ink} />
         </XStack>

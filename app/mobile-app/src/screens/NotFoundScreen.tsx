@@ -8,6 +8,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** 404 — shown for unknown deep links / unmatched routes. RN twin of mWeb's
  * NotFound page; offers a route back to Home. */
@@ -41,7 +42,7 @@ export function NotFoundScreen() {
             paddingVertical={12}
             borderRadius={999}
             backgroundColor="$primary"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14} fontWeight="700" color={onPrimary}>
               Go to Home

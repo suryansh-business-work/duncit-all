@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Field } from '@/components/Field';
 import { CouponsSheet } from '@/components/checkout/CouponsSheet';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   code: string;
@@ -70,7 +71,7 @@ export function CouponField({
           role="button"
           aria-label={t('mweb.checkout.couponRemoveAria')}
           onPress={onRemove}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
             {t('mweb.checkout.couponRemove')}
@@ -108,7 +109,7 @@ export function CouponField({
             borderWidth={1}
             borderColor="$primary"
             opacity={applying || !code.trim() ? 0.5 : 1}
-            pressStyle={{ opacity: 0.8 }}
+            pressStyle={PRESS_STYLE.control}
           >
             {applying ? (
               <Spinner color={primary} />
@@ -127,7 +128,7 @@ export function CouponField({
           aria-label={availableLabel}
           onPress={() => setSheetOpen(true)}
           alignSelf="flex-start"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
             {availableLabel}

@@ -1,4 +1,15 @@
-import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';

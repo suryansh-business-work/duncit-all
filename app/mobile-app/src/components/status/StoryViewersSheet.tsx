@@ -11,6 +11,7 @@ import { StoryViewersDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Viewer {
   user_id: string;
@@ -63,6 +64,7 @@ export function StoryViewersSheet({
                   </Text>
                 </XStack>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="story-viewers-close"
                   role="button"
                   aria-label={t('mweb.common.closeViewers')}

@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { SEND_TEST } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';

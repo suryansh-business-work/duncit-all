@@ -13,6 +13,7 @@ import { useFollowList, type FollowListPerson, type FollowTab } from '@/hooks/us
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const TABS: FollowTab[] = ['followers', 'following'];
 const TAB_LABELS: Record<FollowTab, string> = { followers: 'Followers', following: 'Following' };
@@ -51,7 +52,7 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
         alignItems="center"
         gap={12}
         flex={1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {person.profile_photo ? (
           <AppImage
@@ -124,7 +125,7 @@ export function FollowListScreen() {
               backgroundColor={selected ? '$primary' : '$surface'}
               borderWidth={1}
               borderColor={selected ? '$primary' : '$borderColor'}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
                 {TAB_LABELS[value]}

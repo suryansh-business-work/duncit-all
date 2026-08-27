@@ -9,6 +9,7 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SecuritySheetProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function SecuritySheet({
         <KeyboardScreen>
           <YStack flex={1} testID={testID}>
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={onClose}
@@ -69,6 +71,7 @@ export function SecuritySheet({
                     {title}
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID={`${testID}-close`}
                     role="button"
                     aria-label={t('mweb.common.close')}

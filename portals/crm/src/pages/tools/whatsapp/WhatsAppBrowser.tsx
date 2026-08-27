@@ -4,7 +4,20 @@ import {
 import { useQuery } from '@apollo/client';
 import { useDebouncedValue } from '@duncit/ui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
-import { Alert, Box, Chip, CircularProgress, InputAdornment, List, ListItemButton, ListItemText, Stack, TablePagination, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  TablePagination,
+  TextField,
+  Typography,
+} from '@mui/material';
 import BoltIcon from '@mui/icons-material/Bolt';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitButton } from '@duncit/buttons';

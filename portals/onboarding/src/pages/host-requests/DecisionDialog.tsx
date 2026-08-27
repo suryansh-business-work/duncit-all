@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import type { HostRequest } from './queries';
 import { useTranslation } from '@duncit/app-settings';

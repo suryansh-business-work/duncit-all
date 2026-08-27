@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { categoryPathLabel } from '@/utils/idea-category';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   idea: PodIdea;
@@ -93,7 +94,7 @@ export function IdeaCard({
             aria-label={t('mweb.podIdeas.deleteIdea')}
             onPress={onDelete}
             padding={4}
-            pressStyle={{ opacity: 0.6 }}
+            pressStyle={PRESS_STYLE.inline}
           >
             <MaterialIcons name="delete-outline" size={18} color={danger} />
           </XStack>
@@ -105,7 +106,7 @@ export function IdeaCard({
         aria-label={idea.title}
         onPress={onOpen}
         gap={4}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={16} fontWeight="700" color="$color">
           {idea.title}
@@ -157,7 +158,7 @@ export function IdeaCard({
           onPress={onLike}
           alignItems="center"
           gap={5}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons
             name={idea.liked_by_me ? 'favorite' : 'favorite-border'}
@@ -175,7 +176,7 @@ export function IdeaCard({
           onPress={onOpen}
           alignItems="center"
           gap={5}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="chat-bubble-outline" size={16} color={muted} />
           <Text fontSize={12.5} fontWeight="700" color="$muted">
@@ -189,7 +190,7 @@ export function IdeaCard({
           onPress={onShare}
           alignItems="center"
           gap={5}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="share" size={16} color={muted} />
           <Text fontSize={12.5} fontWeight="700" color="$muted">

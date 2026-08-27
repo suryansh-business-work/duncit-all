@@ -1,4 +1,18 @@
-import { Box, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, Switch, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { AdminCategoryValue } from '@duncit/category';

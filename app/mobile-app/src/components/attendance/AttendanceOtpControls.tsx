@@ -1,6 +1,7 @@
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** One selectable delivery channel — the RN stand-in for a checkbox row. */
 export function MediumToggle({
@@ -23,7 +24,7 @@ export function MediumToggle({
       borderWidth={1}
       borderColor={selected ? primary : '$borderColor'}
       backgroundColor={selected ? primary : 'transparent'}
-      pressStyle={{ opacity: 0.75 }}
+      pressStyle={PRESS_STYLE.ghost}
     >
       <Text fontSize={12.5} fontWeight="700" color={selected ? onPrimary : '$color'}>
         {label}
@@ -64,7 +65,7 @@ export function PillButton({
       borderColor="$borderColor"
       backgroundColor={solid ? primary : 'transparent'}
       opacity={disabled ? 0.55 : 1}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={13.5} fontWeight="800" color={solid ? onPrimary : '$color'}>
         {label}

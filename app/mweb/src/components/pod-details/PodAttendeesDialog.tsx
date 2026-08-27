@@ -1,4 +1,16 @@
-import { Avatar, Chip, Dialog, DialogContent, DialogTitle, Divider, List, ListItemAvatar, ListItemButton, ListItemText, Typography } from '@mui/material';
+import {
+  Avatar,
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  List,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { attendeeSeatCount } from '@duncit/utils';

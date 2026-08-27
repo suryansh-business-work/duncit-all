@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TICKET_CATEGORIES, categoryLabel } from './ticketCategories';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   value: string;
@@ -24,6 +25,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
   return (
     <YStack gap={6}>
       <XStack
+        pressStyle={PRESS_STYLE.surface}
         testID="ticket-category"
         role="button"
         aria-label={t('mweb.common.category')}
@@ -68,7 +70,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
                 paddingHorizontal={12}
                 paddingVertical={11}
                 backgroundColor={selected ? '$primary' : 'transparent'}
-                pressStyle={{ opacity: 0.8 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <Text
                   fontSize={14}

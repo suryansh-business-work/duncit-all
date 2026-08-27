@@ -5,6 +5,7 @@ import { semantic } from '@duncit/auth-tokens';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { VenueApprovalChip } from '@/utils/venue-approval';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type FactIcon = 'place' | 'schedule-send' | 'event-available';
 
@@ -88,7 +89,7 @@ export function VenueRequestRow({
           onPress={onOpen}
           flex={1}
           gap={2}
-          pressStyle={{ opacity: 0.8 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
             {title}
@@ -109,7 +110,7 @@ export function VenueRequestRow({
           borderRadius={10}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="more-vert" size={18} color={ink} />
         </XStack>

@@ -3,6 +3,7 @@ import { Input, Spinner, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ChatComposerProps {
   value: string;
@@ -49,7 +50,7 @@ export function ChatComposer({
         justifyContent="center"
         borderRadius={20}
         opacity={sending ? 0.5 : 1}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         {sending ? (
           <Spinner color="$muted" />
@@ -85,7 +86,7 @@ export function ChatComposer({
         alignItems="center"
         justifyContent="center"
         borderRadius={20}
-        pressStyle={{ opacity: 0.6 }}
+        pressStyle={PRESS_STYLE.inline}
       >
         <MaterialIcons name="emoji-emotions" size={24} color={muted} />
       </XStack>
@@ -103,7 +104,7 @@ export function ChatComposer({
         borderRadius={22}
         backgroundColor={canSend ? '$primary' : '$borderColor'}
         opacity={canSend ? 1 : 0.6}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="send" size={20} color={onPrimary} />
       </XStack>

@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+  Step,
+  StepLabel,
+  Stepper,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router-dom';
 import MediaPickerDialog from '../../components/MediaPickerDialog';

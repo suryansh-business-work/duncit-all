@@ -1,4 +1,13 @@
-import { Dialog, DialogContent, DialogTitle, List, ListItemButton, ListItemText, Radio, Stack } from '@mui/material';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItemButton,
+  ListItemText,
+  Radio,
+  Stack,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { SEARCH_SORT_OPTIONS, type SearchSort } from './searchSort';

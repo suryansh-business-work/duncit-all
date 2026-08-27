@@ -17,6 +17,7 @@ import {
   type CategoryScope,
 } from './CategoryCascadeField';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -89,6 +90,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
         <KeyboardScreen>
           <YStack flex={1} testID="idea-composer-sheet">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={close}
@@ -115,6 +117,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                     Share a pod idea
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID="idea-composer-close"
                     role="button"
                     aria-label={t('mweb.common.close')}
@@ -178,7 +181,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                       borderRadius={12}
                       backgroundColor="$primary"
                       opacity={submitting ? 0.7 : 1}
-                      pressStyle={{ opacity: 0.85 }}
+                      pressStyle={PRESS_STYLE.control}
                     >
                       {submitting ? <Spinner size="small" color={onPrimary} /> : null}
                       <Text fontSize={14} fontWeight="700" color={onPrimary}>

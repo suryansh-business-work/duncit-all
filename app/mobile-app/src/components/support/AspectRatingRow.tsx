@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const STARS = [1, 2, 3, 4, 5];
 
@@ -37,7 +38,7 @@ export function AspectRatingRow({ aspect, label, value, onChange, starLabel }: R
             role="button"
             aria-label={starLabel(star)}
             onPress={() => onChange(star)}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
             padding={2}
           >
             <MaterialIcons

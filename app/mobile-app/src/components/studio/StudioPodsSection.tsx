@@ -7,6 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { StudioPodFigures } from './StudioPodFigures';
 import { StudioPodRow } from './StudioPodRow';
 import type { StudioPodsState } from './useStudioPods';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Which studio is rendering — the only thing that differs between the two. */
 export type StudioPodsVariant = 'VENUE' | 'CLUB';
@@ -62,7 +63,7 @@ function StudioPodsBody({ state, emptyKey, scopeKey, testID }: Readonly<StudioPo
           borderRadius={999}
           borderWidth={1}
           borderColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="refresh" size={16} color={primary} />
           <Text fontSize={13} fontWeight="600" color="$primary">

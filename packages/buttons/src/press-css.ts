@@ -75,12 +75,10 @@ export function pressCss(
   return {
     transition: pressTransition,
     '&:active': active,
-    // A control with nothing to do must not react to being held.
-    '&.Mui-disabled:active, &:disabled:active': {
-      transform: 'none',
-      opacity: 'inherit',
-      filter: 'none',
-    },
+    // A control with nothing to do must not react to being held. MUI already
+    // sets pointer-events: none on a disabled button, so this is the belt to
+    // that braces — a call site can re-enable pointer events for a tooltip.
+    '&.Mui-disabled:active, &:disabled:active': { transform: 'none', filter: 'none' },
   };
 }
 

@@ -7,6 +7,7 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { useTickets } from '@/hooks/useSupport';
 import { ticketNo } from '@/components/support/TicketMeta';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Filter = 'ALL' | 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
 const FILTERS: Filter[] = ['ALL', 'OPEN', 'PENDING', 'RESOLVED', 'CLOSED'];
@@ -62,7 +63,7 @@ export function MyTicketsList() {
           borderColor="$borderColor"
           backgroundColor="$surface"
           gap={3}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <XStack justifyContent="space-between" alignItems="center" gap={8}>
             <Text fontSize={14} fontWeight="600" color="$color" flex={1} numberOfLines={1}>
@@ -100,7 +101,7 @@ export function MyTicketsList() {
               borderWidth={1}
               borderColor={active ? '$primary' : '$borderColor'}
               backgroundColor={active ? '$primary' : 'transparent'}
-              pressStyle={{ opacity: 0.85 }}
+              pressStyle={PRESS_STYLE.control}
             >
               <Text fontSize={12} fontWeight="600" color={active ? '$onPrimary' : '$muted'}>
                 {LABEL[f]} ({countFor(f)})

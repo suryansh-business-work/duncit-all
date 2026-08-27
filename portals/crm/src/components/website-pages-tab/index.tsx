@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import DownloadIcon from '@mui/icons-material/Download';

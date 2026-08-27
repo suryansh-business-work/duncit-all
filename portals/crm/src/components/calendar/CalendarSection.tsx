@@ -1,6 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, Card, CardContent, CircularProgress, MenuItem, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  MenuItem,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
@@ -9,8 +20,18 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import {
   addDays, addMonths, addWeeks, addYears, eachDayOfInterval, endOfWeek, endOfYear, format, startOfDay, startOfWeek, startOfYear,
 } from 'date-fns';
-import { useCalendarEvents, type CalEvent, type EntityFilter, type StatusFilter } from './useCalendarEvents';
-import { CRM_REMINDERS, DELETE_CRM_REMINDER, TOGGLE_CRM_REMINDER, type CrmReminder } from '../../api/reminders.gql';
+import {
+  useCalendarEvents,
+  type CalEvent,
+  type EntityFilter,
+  type StatusFilter,
+} from './useCalendarEvents';
+import {
+  CRM_REMINDERS,
+  DELETE_CRM_REMINDER,
+  TOGGLE_CRM_REMINDER,
+  type CrmReminder,
+} from '../../api/reminders.gql';
 import CalendarMonth from './CalendarMonth';
 import CalendarList from './CalendarList';
 import EventDrawer from './EventDrawer';

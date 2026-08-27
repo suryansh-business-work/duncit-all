@@ -3,7 +3,11 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
-import { cartLineKey, lineQualifiesFreeDelivery, type CartLine } from '../../components/cart/CartContext';
+import {
+  cartLineKey,
+  lineQualifiesFreeDelivery,
+  type CartLine,
+} from '../../components/cart/CartContext';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {

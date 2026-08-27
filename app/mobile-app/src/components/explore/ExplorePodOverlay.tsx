@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PressScale } from '@/animations/PressScale';
 import type { ExplorePod } from '@/stores/explore.store';
 import { podDateLabel, podPriceLabel } from '@/utils/pod-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const CAPTION_COLLAPSE_AT = 90;
 
@@ -74,7 +75,11 @@ function Caption({
   const toggleLabel = expanded ? 'Show less' : 'More';
 
   return (
-    <YStack testID="explore-caption-wrap" onPress={collapsible ? onToggle : undefined}>
+    <YStack
+      pressStyle={PRESS_STYLE.surface}
+      testID="explore-caption-wrap"
+      onPress={collapsible ? onToggle : undefined}
+    >
       <Text
         testID="explore-caption"
         color="rgba(255,255,255,0.9)"

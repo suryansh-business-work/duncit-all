@@ -12,6 +12,7 @@ import { TourAnchor } from '@/tours/TourAnchor';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   pod: PodDetail;
@@ -147,7 +148,7 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
         height={48}
         borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={15} fontWeight="700" color={onPrimary}>
           {t('mweb.podDetails.goToDashboard')}

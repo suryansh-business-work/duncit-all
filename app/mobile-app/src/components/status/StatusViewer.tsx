@@ -15,6 +15,7 @@ import { StatusViewerMenu } from '@/components/status/StatusViewerMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import { statusRemainingLabel } from '@/utils/date-format';
 import { resolveSwipe } from '@/utils/swipe';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** A viewer item: an author's story group, optionally carrying a sub-label and a
  * deep-link target (followed club/pod/user) for the "Open details" button. */
@@ -114,6 +115,7 @@ function StatusRoundButton({
 }>) {
   return (
     <XStack
+      pressStyle={PRESS_STYLE.surface}
       testID={testID}
       role="button"
       aria-label={label}
@@ -190,7 +192,7 @@ function StatusLikeButton({
         onPress={onPress}
         alignItems="center"
         gap={6}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons
           name={liked ? 'favorite' : 'favorite-border'}
@@ -403,8 +405,18 @@ export function StatusViewer({
                 onEnded={() => advanceRef.current()}
               />
               <XStack position="absolute" top={0} bottom={0} left={0} right={0}>
-                <YStack testID="status-prev" width="30%" onPress={goPrev} />
-                <YStack flex={1} testID="status-next" onPress={() => advanceRef.current()} />
+                <YStack
+                  pressStyle={PRESS_STYLE.surface}
+                  testID="status-prev"
+                  width="30%"
+                  onPress={goPrev}
+                />
+                <YStack
+                  pressStyle={PRESS_STYLE.surface}
+                  flex={1}
+                  testID="status-next"
+                  onPress={() => advanceRef.current()}
+                />
               </XStack>
             </YStack>
             {current?.caption ? (
@@ -424,7 +436,7 @@ export function StatusViewer({
                   onPress={() => onViewers(current.id)}
                   alignItems="center"
                   gap={6}
-                  pressStyle={{ opacity: 0.7 }}
+                  pressStyle={PRESS_STYLE.row}
                 >
                   <MaterialIcons name="visibility" size={20} color="#ffffff" />
                   <Text fontSize={13} fontWeight="600" color="#ffffff">
@@ -447,7 +459,7 @@ export function StatusViewer({
                   gap={6}
                   borderRadius={999}
                   backgroundColor="$primary"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     Open details

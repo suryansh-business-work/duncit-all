@@ -1,12 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, Divider, Drawer, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Divider,
+  Drawer,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { SingleImageUploadField } from '@duncit/media-picker';
-import { ADD_REFUND, CREATE_EXPENSE, DELETE_EXPENSE, EXPENSE_CATEGORIES, PAYMENT_METHODS, REMOVE_REFUND, UPDATE_EXPENSE, labelize } from './queries';
+import {
+  ADD_REFUND,
+  CREATE_EXPENSE,
+  DELETE_EXPENSE,
+  EXPENSE_CATEGORIES,
+  PAYMENT_METHODS,
+  REMOVE_REFUND,
+  UPDATE_EXPENSE,
+  labelize,
+} from './queries';
 import RefundTimeline from './RefundTimeline';
 import { useTranslation } from '@duncit/app-settings';
 

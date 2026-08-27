@@ -16,6 +16,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DobCalendarSheet } from './DobCalendarSheet';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Parse a stored 'YYYY-MM-DD' value into a Date, or null when blank/invalid. */
 export const parseDob = parseIsoDay;
@@ -110,7 +111,7 @@ export function DobDateField<T extends FieldValues>({
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="event" size={20} color={ink} />
         </XStack>
@@ -126,6 +127,7 @@ export function DobDateField<T extends FieldValues>({
           <KeyboardScreen>
             <YStack flex={1} alignItems="center" justifyContent="center" testID="dob-sheet">
               <YStack
+                pressStyle={PRESS_STYLE.surface}
                 testID="dob-sheet-backdrop"
                 role="button"
                 aria-label={t('mweb.common.close')}

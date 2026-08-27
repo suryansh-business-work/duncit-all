@@ -20,6 +20,7 @@ import {
   type PodCompleteValues,
 } from './pod-complete.form';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   pod: HostPodForComplete | null;
@@ -91,7 +92,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
         borderWidth={1}
         borderColor="$borderColor"
         opacity={busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           {t('mweb.common.cancel')}
@@ -111,7 +112,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
         borderRadius={12}
         backgroundColor="$primary"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {busy ? <Spinner size="small" color={onPrimary} /> : null}
         <Text fontSize={14} fontWeight="700" color="$onPrimary">

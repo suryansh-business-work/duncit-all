@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { parseDateTimeText } from './create-pod.form';
 import { CalendarSheet } from './DateTimeSheet';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   label: string;
@@ -78,7 +79,7 @@ export function DateTimeField({
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="event" size={20} color={ink} />
         </XStack>
@@ -98,6 +99,7 @@ export function DateTimeField({
         <ModalThemeScope>
           <YStack flex={1} alignItems="center" justifyContent="center" testID={`${testID}-sheet`}>
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               testID={`${testID}-sheet-backdrop`}
               role="button"
               aria-label={t('mweb.auth.close')}

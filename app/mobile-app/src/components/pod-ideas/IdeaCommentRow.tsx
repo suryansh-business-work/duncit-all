@@ -5,6 +5,7 @@ import type { PodIdeaComment } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   comment: PodIdeaComment;
@@ -54,7 +55,7 @@ export function IdeaCommentRow({ comment, canDelete, onDelete }: Readonly<Props>
           aria-label={t('mweb.common.deleteComment')}
           onPress={onDelete}
           padding={4}
-          pressStyle={{ opacity: 0.6 }}
+          pressStyle={PRESS_STYLE.inline}
         >
           <MaterialIcons name="delete-outline" size={18} color={muted} />
         </XStack>

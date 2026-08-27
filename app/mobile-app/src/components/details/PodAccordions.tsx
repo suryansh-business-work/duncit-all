@@ -19,6 +19,7 @@ import {
   ChipList,
   HostsSection,
 } from '@/components/details/PodSections';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 interface Section {
@@ -138,7 +139,7 @@ export function PodAccordions({
             onPress={onOpenClub}
             alignItems="center"
             gap={8}
-            pressStyle={{ opacity: 0.8 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="groups" size={18} color={primary} />
             <Text fontSize={14} fontWeight="600" color="$primary">
@@ -262,6 +263,7 @@ export function PodAccordions({
     <YStack paddingHorizontal={16} paddingBottom={8} paddingTop={8}>
       <XStack justifyContent="flex-end" gap={18} marginBottom={10}>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="pod-expand-all"
           role="button"
           aria-label={t('mweb.podDetails.expandAll')}
@@ -273,6 +275,7 @@ export function PodAccordions({
           {t('mweb.podDetails.expandAll')}
         </Text>
         <Text
+          pressStyle={PRESS_STYLE.inline}
           testID="pod-collapse-all"
           role="button"
           aria-label={t('mweb.podDetails.collapseAll')}

@@ -1,6 +1,7 @@
 import { Text, XStack } from 'tamagui';
 
 import { colorForId, emojiFromIcon, withAlpha } from '@/constants/survey-palette';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SurveyChipProps {
   id: string;
@@ -39,7 +40,7 @@ export function SurveyChip({
       borderWidth={1.5}
       backgroundColor={selected ? hue : withAlpha(hue, 0.1)}
       borderColor={selected ? hue : withAlpha(hue, 0.4)}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       {emoji ? <Text fontSize={large ? 17 : 15}>{emoji}</Text> : null}
       <Text color={selected ? '#ffffff' : hue} fontWeight="700" fontSize={large ? 15 : 13.5}>

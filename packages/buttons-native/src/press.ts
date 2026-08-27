@@ -1,4 +1,4 @@
-import { DISABLED_OPACITY, PRESS, type PressIntent } from './intents';
+import { PRESS, type PressIntent } from './intents';
 
 /**
  * A Tamagui/React Native style fragment. Deliberately structural — this
@@ -45,5 +45,3 @@ export function pressStyle(
   return disabled ? undefined : PRESS_STYLE[intent];
 }
 
-/** Opacity a control renders at, given its disabled state. */
-export const restingOpacity = (disabled: boolean): number => (disabled ? DISABLED_OPACITY : 1);

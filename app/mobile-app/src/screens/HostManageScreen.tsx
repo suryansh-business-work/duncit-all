@@ -18,6 +18,7 @@ import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Hosts Management — start a new pod and resume/delete in-progress drafts. */
 export function HostManageScreen() {
@@ -66,7 +67,7 @@ export function HostManageScreen() {
             borderWidth={1}
             borderColor="$borderColor"
             backgroundColor="$surface"
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="insights" size={18} color={ink} />
             <Text fontSize={14} fontWeight="600" color="$color">

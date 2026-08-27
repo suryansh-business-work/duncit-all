@@ -15,6 +15,7 @@ import { LocationMap } from './LocationMap';
 import { useLocationDraft } from './useLocationDraft';
 import type { LocationItem } from '@/stores/location.store';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -42,6 +43,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
         <KeyboardScreen>
           <YStack flex={1} testID="location-dialog">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               testID="location-backdrop"
               role="button"
               aria-label={t('mweb.common.close')}
@@ -70,6 +72,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                       Choose your location
                     </Text>
                     <XStack
+                      pressStyle={PRESS_STYLE.surface}
                       testID="location-close"
                       role="button"
                       aria-label={t('mweb.common.close')}
@@ -94,7 +97,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                     borderRadius={12}
                     borderWidth={1.5}
                     borderColor="$primary"
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     {draft.busy ? (
                       <Spinner color="$primary" />
@@ -161,7 +164,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                     borderRadius={12}
                     borderWidth={1}
                     borderColor="$borderColor"
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
                       Cancel
@@ -180,7 +183,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                     borderRadius={12}
                     backgroundColor={draft.draftId ? '$primary' : '$borderColor'}
                     opacity={draft.draftId ? 1 : 0.6}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="700" color={draft.draftId ? onPrimary : color}>
                       {applyLabel}

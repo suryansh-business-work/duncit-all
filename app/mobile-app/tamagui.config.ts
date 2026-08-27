@@ -2,6 +2,7 @@ import { defaultConfig } from '@tamagui/config/v4';
 import { Platform } from 'react-native';
 import { createTamagui } from 'tamagui';
 import { dark, light, semantic, typography } from '@duncit/auth-tokens';
+import { pressThemeKeys } from '@duncit/buttons-native';
 
 /**
  * Brand themes layered on top of Tamagui's default config. We keep the default
@@ -11,6 +12,17 @@ import { dark, light, semantic, typography } from '@duncit/auth-tokens';
  * SAME source mWeb's MUI theme and the old NativeWind config consumed, so brand
  * colours stay in lock-step across web and native.
  */
+// The extra keys the press system needs and a plain palette does not carry:
+// tonal (`*Soft`) fills, and a pressed step for the tones that had no darker
+// one. Derived in @duncit/buttons-native so the alpha maths is the same one
+// mWeb's MUI theme runs, rather than a hand-typed rgba() per screen.
+const pressKeys = pressThemeKeys({
+  primary: light.primary,
+  primaryActive: light.primaryActive,
+  danger: semantic.error,
+  success: semantic.success,
+});
+
 const brandLight = {
   background: light.bg,
   backgroundHover: light.soft,
@@ -32,6 +44,7 @@ const brandLight = {
   danger: semantic.error,
   success: semantic.success,
   warning: semantic.warning,
+  ...pressKeys,
 };
 
 const brandDark: typeof brandLight = {
@@ -55,6 +68,7 @@ const brandDark: typeof brandLight = {
   danger: semantic.error,
   success: semantic.success,
   warning: semantic.warning,
+  ...pressKeys,
 };
 
 // Brand typeface. On web we use the SAME Quicksand stack mWeb loads via Google

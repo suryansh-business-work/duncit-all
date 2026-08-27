@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { SUPPORT_CREATE_USER } from '../../graphql/supportChat';
 import { useTranslation } from '@duncit/shell';

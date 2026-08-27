@@ -1,6 +1,17 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
@@ -8,7 +19,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
-import { ADD_TEMPLATE_IMAGE, REMOVE_TEMPLATE_IMAGE, type EmailAsset } from '../../api/emailTemplates.gql';
+import {
+  ADD_TEMPLATE_IMAGE,
+  REMOVE_TEMPLATE_IMAGE,
+  type EmailAsset,
+} from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 

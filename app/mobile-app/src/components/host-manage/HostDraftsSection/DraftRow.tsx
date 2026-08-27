@@ -7,6 +7,7 @@ import { STEP_TITLES } from '@/components/create-pod';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDate } from '@/utils/date-format';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface DraftRowData extends ExpiringDraft {
   id: string;
@@ -72,7 +73,7 @@ export function DraftRow({ draft, expiring, onContinue, onDelete }: Readonly<Pro
           justifyContent="center"
           borderRadius={10}
           backgroundColor={expiring ? semantic.warning : '$primary'}
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="700" color="$onPrimary">
             {t('mweb.common.continue')}
@@ -90,7 +91,7 @@ export function DraftRow({ draft, expiring, onContinue, onDelete }: Readonly<Pro
           borderRadius={10}
           borderWidth={1}
           borderColor="$borderColor"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           <MaterialIcons name="delete-outline" size={20} color={danger} />
         </XStack>

@@ -5,6 +5,7 @@ import { ScrollView, Text, YStack } from 'tamagui';
 
 import type { FaqItem } from '@/hooks/useLibrary';
 import { SUPPORT_GRADIENTS } from './gradients';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface FrequentlyAskedTileProps {
   faq: FaqItem;
@@ -24,7 +25,7 @@ function FrequentlyAskedTile({ faq, colors, onOpen }: Readonly<FrequentlyAskedTi
       minHeight={130}
       borderRadius={18}
       overflow="hidden"
-      pressStyle={{ opacity: 0.9 }}
+      pressStyle={PRESS_STYLE.surface}
     >
       <LinearGradient
         colors={colors}

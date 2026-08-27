@@ -9,6 +9,7 @@ import { compressUploadedVideo } from '@/services/video-compression';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ReelPanelBody } from './ReelPanelBody';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Reels stream directly to ImageKit (multipart) — the 100MB cap is checked
  * client-side from the picked asset before any bytes leave the device. */
@@ -99,7 +100,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
         padding={12}
         gap={10}
         alignItems="center"
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <YStack
           width={36}

@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { allPoliciesAccepted, togglePolicyId } from '@/utils/policy-acceptance';
 import { PolicyAcceptanceBody } from './PolicyAcceptanceBody';
 import { PolicyAcceptanceReader } from './PolicyAcceptanceReader';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface PolicyAcceptanceSheetProps {
   open: boolean;
@@ -68,6 +69,7 @@ export function PolicyAcceptanceSheet({
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="policy-acceptance-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('policyAcceptance.close')}
             onPress={dismiss}
@@ -100,7 +102,7 @@ export function PolicyAcceptanceSheet({
                   justifyContent="center"
                   borderRadius={16}
                   backgroundColor="$surface"
-                  pressStyle={{ opacity: 0.7 }}
+                  pressStyle={PRESS_STYLE.row}
                 >
                   <MaterialIcons name={reading ? 'arrow-back' : 'close'} size={18} color={color} />
                 </XStack>
@@ -140,7 +142,7 @@ export function PolicyAcceptanceSheet({
                       borderColor="$borderColor"
                       alignItems="center"
                       justifyContent="center"
-                      pressStyle={{ opacity: 0.75 }}
+                      pressStyle={PRESS_STYLE.ghost}
                     >
                       <Text fontSize={14} fontWeight="700" color="$color">
                         {t('policyAcceptance.close')}
@@ -159,7 +161,7 @@ export function PolicyAcceptanceSheet({
                       alignItems="center"
                       justifyContent="center"
                       opacity={canAcceptAll ? 1 : 0.5}
-                      pressStyle={{ opacity: 0.85 }}
+                      pressStyle={PRESS_STYLE.control}
                     >
                       <Text fontSize={14} fontWeight="700" color="$onPrimary">
                         {t('policyAcceptance.acceptAll')}

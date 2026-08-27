@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Resolved/closed ticket within the reopen window. */
@@ -38,7 +39,7 @@ export function TicketReopenFooter({
           borderRadius={999}
           borderWidth={1}
           borderColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="replay" size={18} color={ink} />
           <Text fontSize={13} fontWeight="600" color="$primary">

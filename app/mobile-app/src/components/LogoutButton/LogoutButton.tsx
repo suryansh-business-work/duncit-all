@@ -4,6 +4,7 @@ import { XStack } from 'tamagui';
 import { useLogout } from '@/hooks/useLogout';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Clears the session and returns to login — mirrors mWeb's header logout. */
 export function LogoutButton() {
@@ -25,7 +26,7 @@ export function LogoutButton() {
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="logout" size={20} color={color} />
     </XStack>

@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { Translate } from '@/i18n/fallback';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type ChatPodFilterValue = 'ALL' | 'UPCOMING' | 'PREVIOUS';
 
@@ -42,7 +43,7 @@ export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
             borderWidth={1}
             borderColor={selected ? primary : '$borderColor'}
             backgroundColor={selected ? primary : 'transparent'}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <Text
               fontSize={12.5}

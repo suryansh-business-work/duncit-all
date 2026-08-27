@@ -1,4 +1,12 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Link,
+  Stack,
+  Typography,
+} from '@mui/material';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';

@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Checkbox, CircularProgress, FormControlLabel, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Checkbox,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { notifySuccess } from '@duncit/dialogs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';

@@ -13,6 +13,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { stripHtml } from '@/utils/html';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Reader for a single public policy, opened from the sidebar's Policies group. */
 export function PolicyScreen() {
@@ -55,7 +56,7 @@ export function PolicyScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
@@ -75,7 +76,7 @@ export function PolicyScreen() {
             justifyContent="center"
             borderRadius={20}
             opacity={busy ? 0.5 : 1}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="picture-as-pdf" size={22} color={ink} />
           </XStack>

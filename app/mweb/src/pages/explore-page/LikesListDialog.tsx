@@ -1,7 +1,19 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, CircularProgress, Dialog, DialogContent, DialogTitle, List, ListItemAvatar, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
+import {
+  Avatar,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { POD_LIKERS } from './queries';

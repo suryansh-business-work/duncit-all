@@ -8,6 +8,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDistance, haversineKm } from '@/utils/distance';
 import { VenueCard, type ClubVenue } from './VenueCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Origin = { lat: number; lng: number };
 
@@ -86,7 +87,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
             onPress={locateMe}
             alignItems="center"
             gap={4}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="near-me" size={14} color={primary} />
             <Text fontSize={13} fontWeight="600" color="$primary">
@@ -121,7 +122,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
         alignItems="center"
         alignSelf="flex-start"
         gap={4}
-        pressStyle={{ opacity: 0.7 }}
+        pressStyle={PRESS_STYLE.row}
       >
         <Text fontSize={13} fontWeight="600" color="$primary">
           Open venue details

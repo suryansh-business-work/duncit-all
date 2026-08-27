@@ -1,5 +1,15 @@
 import { ReactNode } from 'react';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, SwipeableDrawer, Stack, Typography, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  SwipeableDrawer,
+  Stack,
+  Typography,
+  useMediaQuery,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';

@@ -11,6 +11,7 @@ import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
 import { ClubSearchField } from '../ClubSearchField';
 import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   form: CreatePodForm;
@@ -80,7 +81,7 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
             borderWidth={1}
             borderColor="$borderColor"
             borderRadius={10}
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <Text fontSize={13} fontWeight="600" color="$color">
               {t('mweb.createPod.change')}

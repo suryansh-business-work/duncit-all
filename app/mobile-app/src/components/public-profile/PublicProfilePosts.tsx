@@ -10,6 +10,7 @@ import { PublicProfileStories } from '@/components/public-profile/PublicProfileS
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfilePost, PublicProfileStory } from '@/hooks/usePublicProfile';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Posts grid + active stories on a member's public profile. Shows a lock card
  * for a private account the viewer doesn't follow. */
@@ -87,6 +88,7 @@ export function PublicProfilePosts({
         <XStack flexWrap="wrap" gap={4} justifyContent="flex-start">
           {posts.map((post, index) => (
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               key={post.id}
               testID={`public-profile-post-${index}`}
               role="button"

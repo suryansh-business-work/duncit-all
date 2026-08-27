@@ -3,6 +3,7 @@ import { Spinner, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   refreshing: boolean;
@@ -28,7 +29,7 @@ export function RefreshAction({ refreshing, onPress }: Readonly<Props>) {
       alignItems="center"
       justifyContent="center"
       borderRadius={20}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       {refreshing ? (
         <Spinner size="small" color={primary} />

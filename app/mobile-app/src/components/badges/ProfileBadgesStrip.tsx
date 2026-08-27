@@ -9,6 +9,7 @@ import { useBadges } from '@/hooks/useBadges';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * The member's earned badges, shown on their own profile directly under the
@@ -48,7 +49,7 @@ export function ProfileBadgesStrip() {
           fontSize={13}
           fontWeight="700"
           color="$primary"
-          pressStyle={{ opacity: 0.7 }}
+          pressStyle={PRESS_STYLE.row}
         >
           {t('mweb.badges.viewAll')}
         </Text>

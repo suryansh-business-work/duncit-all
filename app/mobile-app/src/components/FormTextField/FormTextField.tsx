@@ -8,6 +8,7 @@ import { Input, XStack } from 'tamagui';
 import { Field } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The RN TextInput props the auth forms pass through (Tamagui's <Input> styles
  * the rest); spreading the full TextInputProps clashes with Tamagui's typing. */
@@ -118,7 +119,7 @@ export function FormTextField<T extends FieldValues>({
             zIndex={1}
             alignItems="center"
             justifyContent="center"
-            pressStyle={{ opacity: 0.6 }}
+            pressStyle={PRESS_STYLE.inline}
           >
             <MaterialIcons
               name={visible ? 'visibility-off' : 'visibility'}

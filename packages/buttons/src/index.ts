@@ -26,7 +26,7 @@ export {
   type PressCssOptions,
   type TintSource,
 } from './press-css';
-export { pressColorsOf, pressFor, restStatesCss, minHeightFor, SIZE_BY_MUI } from './state-css';
+export { pressColorsOf, pressFor, restStatesCss } from './state-css';
 export { mergeCss, mergeSlot, type SlotStyle } from './merge';
 export {
   PRESS,

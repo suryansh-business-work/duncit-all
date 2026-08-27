@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { Skeleton } from '@/components/Skeleton';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Super-category switch as the mock's promo tiles — "For You" / "For Your Pet":
@@ -56,7 +57,7 @@ export function SuperCategoryTabs() {
             gap={8}
             paddingHorizontal={12}
             paddingVertical={10}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             {selected ? (
               <LinearGradient

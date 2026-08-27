@@ -5,6 +5,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CompanionsChecklist, type ChecklistPerson } from './CompanionsChecklist';
 import type { HostTicketScanResult } from './scan.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** The scan that just marked attendance — null keeps the overlay hidden. */
@@ -86,7 +87,7 @@ export function ScanConfirmation({ result, text, onDone }: Readonly<Props>) {
           justifyContent="center"
           borderRadius={12}
           backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {t('mweb.hostScan.confirmDone')}

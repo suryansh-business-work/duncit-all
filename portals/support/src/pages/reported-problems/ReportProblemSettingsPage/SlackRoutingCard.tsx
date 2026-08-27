@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Card, CardContent, Chip, FormControlLabel, MenuItem, Snackbar, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Card,
+  CardContent,
+  Chip,
+  FormControlLabel,
+  MenuItem,
+  Snackbar,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import {

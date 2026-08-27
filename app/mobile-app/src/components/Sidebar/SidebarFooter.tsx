@@ -4,6 +4,7 @@ import { semantic } from '@duncit/auth-tokens';
 
 import { appVersion } from '@/utils/app-version';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Logout footer + app version — RN port of mWeb's <DrawerFooter/>. */
 export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) {
@@ -24,7 +25,7 @@ export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) 
         borderColor="$danger"
         paddingHorizontal={16}
         paddingVertical={12}
-        pressStyle={{ opacity: 0.8 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="logout" size={18} color={semantic.error} />
         <Text fontSize={14} fontWeight="600" color="$danger">

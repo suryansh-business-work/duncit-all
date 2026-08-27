@@ -11,6 +11,7 @@ import { usePodIdeaDetails } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { IdeaDetailsBody } from './IdeaDetailsBody';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   id: string;
@@ -51,6 +52,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
         <KeyboardScreen>
           <YStack flex={1} testID="idea-details-sheet">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={onClose}
@@ -77,6 +79,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
                     {idea?.title ?? 'Pod idea'}
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID="idea-details-close"
                     role="button"
                     aria-label={t('mweb.common.close')}

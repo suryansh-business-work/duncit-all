@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
-import { Alert, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, useMediaQuery } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  useMediaQuery,
+} from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';

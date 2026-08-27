@@ -15,6 +15,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { SecuritySheet } from './SecuritySheet';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ChangePasswordDialogProps {
   open: boolean;
@@ -120,6 +121,7 @@ export function ChangePasswordDialog({
           </Text>
           <NewPasswordForm loading={loading} errorMessage={error} onSubmit={handleChange} />
           <Text
+            pressStyle={PRESS_STYLE.inline}
             testID="change-password-resend"
             role="button"
             aria-label={t('mweb.account.resendOtp')}

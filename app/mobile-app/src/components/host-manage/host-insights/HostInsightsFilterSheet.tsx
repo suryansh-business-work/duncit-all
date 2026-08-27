@@ -14,6 +14,7 @@ import {
   type HostChartRange,
 } from '@/utils/host-insights';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -47,6 +48,7 @@ export function HostInsightsFilterSheet({
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="insights-filter-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
@@ -69,6 +71,7 @@ export function HostInsightsFilterSheet({
                   Filter pods by month
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="insights-filter-close"
                   role="button"
                   aria-label={t('mweb.common.close')}
@@ -109,7 +112,7 @@ export function HostInsightsFilterSheet({
                   borderRadius={12}
                   borderWidth={1}
                   borderColor="$borderColor"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
                     Reset
@@ -126,7 +129,7 @@ export function HostInsightsFilterSheet({
                   justifyContent="center"
                   borderRadius={12}
                   backgroundColor="$primary"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     Apply

@@ -13,6 +13,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useUploadSettings } from '@/hooks/useUploadSettings';
 import type { Translate } from '@/i18n/fallback';
 import { CoverPickerDialog } from './cover-picker';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
@@ -143,7 +144,7 @@ export function MediaUploadField({
                 justifyContent="center"
                 borderRadius={11}
                 backgroundColor="rgba(0,0,0,0.55)"
-                pressStyle={{ opacity: 0.8 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 <MaterialIcons name="close" size={14} color="#ffffff" />
               </XStack>
@@ -168,7 +169,7 @@ export function MediaUploadField({
         borderStyle="dashed"
         backgroundColor="$surface"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <YStack
           width={52}

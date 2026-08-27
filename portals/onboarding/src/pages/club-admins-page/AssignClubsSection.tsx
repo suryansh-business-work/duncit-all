@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Checkbox, CircularProgress, List, ListItemButton, ListItemText, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Checkbox,
+  CircularProgress,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { MATCHING_CLUBS, categoryPath, type ClubAdminRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';

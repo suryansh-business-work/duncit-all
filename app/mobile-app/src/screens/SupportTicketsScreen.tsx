@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useMeStore } from '@/stores/me.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Create Support Tickets — opens straight onto the form (mWeb parity), with the
@@ -84,7 +85,7 @@ export function SupportTicketsScreen() {
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"
-          pressStyle={{ opacity: 0.85 }}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="help-outline" size={22} color={success} />
           <YStack flex={1}>

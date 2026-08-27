@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { useMutation, useQuery, type ApolloCache } from '@apollo/client';
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import {

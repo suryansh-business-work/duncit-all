@@ -10,6 +10,7 @@ import { usePodMediaBoard } from '@/hooks/usePodMediaBoard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   podId: string;
@@ -46,6 +47,7 @@ export function PodMediaSummary({ podId, onLeave }: Readonly<Props>) {
           {t('mweb.hostManage.podMedia')}
         </Text>
         <XStack
+          pressStyle={PRESS_STYLE.surface}
           testID="pod-complete-open-media"
           alignItems="center"
           gap={4}

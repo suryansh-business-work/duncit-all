@@ -1,6 +1,7 @@
 import { ScrollView } from 'react-native';
 import { Text, XStack } from 'tamagui';
 import type { NotificationChip, NotificationFilterKey } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   chips: NotificationChip[];
@@ -38,7 +39,7 @@ export function NotificationFilterChips({ chips, value, onChange }: Readonly<Pro
             borderWidth={1}
             borderColor={active ? '$primary' : '$borderColor'}
             backgroundColor={active ? '$primary' : '$surface'}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={13} fontWeight="700" color={active ? '$onPrimary' : '$color'}>
               {chip.label} {chip.count}

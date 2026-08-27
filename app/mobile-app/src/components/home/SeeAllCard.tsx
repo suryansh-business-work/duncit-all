@@ -3,6 +3,7 @@ import { Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** How many more entries the full screen holds beyond the rail's cap.
@@ -35,7 +36,7 @@ export function SeeAllCard({ count, width = 200, height = 230, onPress, testID }
       alignItems="center"
       justifyContent="center"
       gap={8}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack
         width={44}

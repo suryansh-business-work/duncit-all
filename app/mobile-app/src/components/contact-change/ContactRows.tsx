@@ -6,6 +6,7 @@ import {
   type ContactChannel,
   type ContactSnapshot,
 } from '@duncit/utils';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface RowProps {
   channel: ContactChannel;
@@ -48,7 +49,7 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
         borderRadius={10}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={13} fontWeight="600" color="$color">
           {action}

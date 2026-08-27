@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import { Alert, CircularProgress, Popover, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Popover,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';

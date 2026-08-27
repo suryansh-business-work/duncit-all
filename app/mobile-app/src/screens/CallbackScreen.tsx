@@ -11,6 +11,7 @@ import { useBouncer } from '@/hooks/useBouncer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type SupportTarget = { phone: string; available: boolean } | null;
 
@@ -166,7 +167,7 @@ export function CallbackScreen() {
             borderWidth={1}
             borderColor="$primary"
             opacity={busy ? 0.6 : 1}
-            pressStyle={{ opacity: 0.85 }}
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="phone-callback" size={18} color={primary} />
             <Text fontSize={14} fontWeight="600" color="$primary">

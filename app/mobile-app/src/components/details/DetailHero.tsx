@@ -9,6 +9,7 @@ import { Spinner, XStack, YStack } from 'tamagui';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -42,7 +43,7 @@ export function HeroButton({
       alignItems="center"
       justifyContent="center"
       backgroundColor={active ? 'rgba(255,79,115,0.9)' : 'rgba(0,0,0,0.45)'}
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       {loading ? (
         <Spinner color="#ffffff" />
@@ -84,6 +85,7 @@ export function DetailHero({
           onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
           renderItem={({ item, index: i }) => (
             <XStack
+              pressStyle={PRESS_STYLE.surface}
               testID={`detail-hero-image-${i}`}
               role="button"
               aria-label={t('mweb.podDetails.viewImage')}

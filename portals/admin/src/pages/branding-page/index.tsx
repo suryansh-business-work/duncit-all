@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Divider, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Box,
+  Divider,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DuncitButton } from '@duncit/buttons';

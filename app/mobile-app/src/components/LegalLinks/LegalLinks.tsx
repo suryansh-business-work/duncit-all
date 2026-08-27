@@ -3,6 +3,7 @@ import { Text } from 'tamagui';
 import { auth } from '@duncit/auth-tokens';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Terms & Privacy footer, mirroring mWeb's <LegalLinks/>. URLs come from the
@@ -18,6 +19,7 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
     <Text textAlign="center" fontSize={12} lineHeight={20} color="$muted">
       {lead} {t('mweb.auth.legalAgree')}{' '}
       <Text
+        pressStyle={PRESS_STYLE.inline}
         testID="legal-terms"
         color={auth.accent}
         fontWeight="700"
@@ -27,6 +29,7 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
       </Text>{' '}
       {t('mweb.auth.legalAnd')}{' '}
       <Text
+        pressStyle={PRESS_STYLE.inline}
         testID="legal-privacy"
         color={auth.accent}
         fontWeight="700"

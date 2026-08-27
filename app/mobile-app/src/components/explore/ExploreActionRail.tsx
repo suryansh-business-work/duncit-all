@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { ExploreActionButton } from '@/components/explore/ExploreActionButton';
 import { railLayout } from '@/utils/explore-rail';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -84,7 +85,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
                   gap={10}
                   paddingVertical={8}
                   paddingHorizontal={10}
-                  pressStyle={{ opacity: 0.7 }}
+                  pressStyle={PRESS_STYLE.row}
                 >
                   <MaterialIcons name={action.icon} size={18} color="#ffffff" />
                   <Text color="#ffffff" fontSize={13} fontWeight="600">

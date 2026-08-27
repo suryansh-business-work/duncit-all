@@ -17,6 +17,7 @@ import {
   type HomeFilters,
 } from '@/utils/home-filters';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -65,6 +66,7 @@ export function HomeFilterSheet({
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="home-filter-sheet">
           <YStack
+            pressStyle={PRESS_STYLE.surface}
             role="button"
             aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
@@ -87,6 +89,7 @@ export function HomeFilterSheet({
                   Filters
                 </Text>
                 <XStack
+                  pressStyle={PRESS_STYLE.surface}
                   testID="home-filter-close"
                   role="button"
                   aria-label={t('mweb.common.close')}
@@ -157,7 +160,7 @@ export function HomeFilterSheet({
                   borderWidth={1}
                   borderColor="$borderColor"
                   opacity={count === 0 ? 0.5 : 1}
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
                     Reset
@@ -174,7 +177,7 @@ export function HomeFilterSheet({
                   justifyContent="center"
                   borderRadius={12}
                   backgroundColor="$primary"
-                  pressStyle={{ opacity: 0.85 }}
+                  pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     Done

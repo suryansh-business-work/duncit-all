@@ -2,6 +2,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -67,7 +68,7 @@ export function ConfirmSheet({
         borderWidth={1}
         borderColor="$borderColor"
         opacity={busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           {cancelLabel}
@@ -87,7 +88,7 @@ export function ConfirmSheet({
         borderRadius={12}
         backgroundColor="$danger"
         opacity={busy ? 0.7 : 1}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {busy ? <Spinner size="small" color={onPrimary} /> : null}
         <Text fontSize={14} fontWeight="700" color={onPrimary}>

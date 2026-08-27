@@ -1,5 +1,15 @@
 import { useQuery } from '@apollo/client';
-import { Avatar, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import {
+  Avatar,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip } from '@duncit/ui';
 import {

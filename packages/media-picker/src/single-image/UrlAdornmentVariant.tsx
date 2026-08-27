@@ -1,6 +1,14 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { Box, CircularProgress, InputAdornment, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  InputAdornment,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitIconButton } from '@duncit/buttons';

@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PexelsTab } from './PexelsTab';
 import { SelectionTray } from './SelectionTray';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const TAB_KEYS = ['mweb.createPod.tabFromPhone', 'mweb.createPod.tabPexels'];
 
@@ -80,6 +81,7 @@ export function CoverPickerDialog({
         <KeyboardScreen>
           <YStack flex={1} justifyContent="flex-end" testID="cover-picker">
             <YStack
+              pressStyle={PRESS_STYLE.surface}
               role="button"
               aria-label={close}
               onPress={onClose}
@@ -103,6 +105,7 @@ export function CoverPickerDialog({
                     {t('mweb.createPod.addPodMedia')}
                   </Text>
                   <XStack
+                    pressStyle={PRESS_STYLE.surface}
                     testID="cover-picker-close"
                     role="button"
                     aria-label={close}
@@ -132,7 +135,7 @@ export function CoverPickerDialog({
                       borderWidth={1}
                       borderColor={tab === index ? '$primary' : '$borderColor'}
                       backgroundColor={tab === index ? '$primary' : 'transparent'}
-                      pressStyle={{ opacity: 0.85 }}
+                      pressStyle={PRESS_STYLE.control}
                     >
                       <Text
                         fontSize={13.5}
@@ -181,7 +184,7 @@ export function CoverPickerDialog({
                       borderStyle="dashed"
                       backgroundColor="$surface"
                       opacity={busy || atLimit ? 0.6 : 1}
-                      pressStyle={{ opacity: 0.85 }}
+                      pressStyle={PRESS_STYLE.control}
                     >
                       <MaterialIcons name="add-photo-alternate" size={26} color={primary} />
                       <Text fontSize={14} fontWeight="600" color="$color">
@@ -222,7 +225,7 @@ export function CoverPickerDialog({
                     borderRadius={12}
                     borderWidth={1}
                     borderColor="$borderColor"
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
                       {t('mweb.createPod.cancel')}
@@ -241,7 +244,7 @@ export function CoverPickerDialog({
                     borderRadius={12}
                     backgroundColor="$primary"
                     opacity={tray.length === 0 ? 0.6 : 1}
-                    pressStyle={{ opacity: 0.85 }}
+                    pressStyle={PRESS_STYLE.control}
                   >
                     <Text fontSize={14} fontWeight="700" color={onPrimary}>
                       {doneLabel}

@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   deductionPct: number;
@@ -25,6 +26,7 @@ export function ReplacementNotice({ deductionPct }: Readonly<Props>) {
           {t('mweb.podHistory.findingReplacement')}
         </Text>
         <XStack
+          pressStyle={PRESS_STYLE.surface}
           testID="ph-replacement-info"
           role="button"
           aria-label={t('mweb.podHistory.refundDetails')}

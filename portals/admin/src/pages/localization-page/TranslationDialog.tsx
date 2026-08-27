@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import {
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { valueFor, type LocaleRow, type TranslationRow } from './queries';
 import { useTranslation } from '@duncit/shell';

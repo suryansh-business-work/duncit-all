@@ -43,6 +43,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/ai-monitoring", range: "file:../../packages/ai-monitoring", kind: "dependencies" },
       { name: "@duncit/auth-tokens", range: "file:../../packages/auth-tokens", kind: "dependencies" },
+      { name: "@duncit/buttons-native", range: "file:../../packages/buttons-native", kind: "dependencies" },
       { name: "@duncit/datetime", range: "file:../../packages/datetime", kind: "dependencies" },
       { name: "@duncit/dialogs-native", range: "file:../../packages/dialogs-native", kind: "dependencies" },
       { name: "@duncit/errors", range: "file:../../packages/errors", kind: "dependencies" },
@@ -147,6 +148,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/auth-tokens", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/earn", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/errors", range: "workspace:*", kind: "dependencies" },
@@ -262,6 +264,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
@@ -298,6 +301,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/ai-monitoring/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^9.3.1", kind: "devDependencies" },
@@ -326,6 +330,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "devDependencies" },
@@ -411,6 +416,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/auto-pods/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
@@ -449,6 +455,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^9.3.1", kind: "devDependencies" },
@@ -513,6 +520,40 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     ],
   },
   {
+    name: "@duncit/buttons-native",
+    path: "packages/buttons-native/package.json",
+    private: true,
+    dependencies: [
+      { name: "@vitest/coverage-v8", range: "^2.1.9", kind: "devDependencies" },
+      { name: "typescript", range: "^5.9.3", kind: "devDependencies" },
+      { name: "vitest", range: "^2.1.9", kind: "devDependencies" },
+    ],
+  },
+  {
+    name: "@duncit/buttons",
+    path: "packages/buttons/package.json",
+    private: true,
+    dependencies: [
+      { name: "@duncit/buttons-native", range: "workspace:*", kind: "dependencies" },
+      { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
+      { name: "@testing-library/dom", range: "^10.4.1", kind: "devDependencies" },
+      { name: "@testing-library/jest-dom", range: "^6.10.0", kind: "devDependencies" },
+      { name: "@testing-library/react", range: "^16.3.2", kind: "devDependencies" },
+      { name: "@testing-library/user-event", range: "^14.6.6", kind: "devDependencies" },
+      { name: "@types/react", range: "^19.2.18", kind: "devDependencies" },
+      { name: "@types/react-dom", range: "^19.2.5", kind: "devDependencies" },
+      { name: "@vitest/coverage-v8", range: "^2.1.9", kind: "devDependencies" },
+      { name: "jsdom", range: "^25.0.1", kind: "devDependencies" },
+      { name: "react", range: "^19.2.8", kind: "devDependencies" },
+      { name: "react-dom", range: "^19.2.8", kind: "devDependencies" },
+      { name: "typescript", range: "^5.9.3", kind: "devDependencies" },
+      { name: "vitest", range: "^2.1.9", kind: "devDependencies" },
+      { name: "@mui/material", range: ">=5", kind: "peerDependencies" },
+      { name: "react", range: ">=18", kind: "peerDependencies" },
+      { name: "react-dom", range: ">=18", kind: "peerDependencies" },
+    ],
+  },
+  {
     name: "@duncit/captcha",
     path: "packages/captcha/package.json",
     private: true,
@@ -571,6 +612,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/club-form/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/location", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
@@ -622,6 +664,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
@@ -663,6 +706,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "gridstack", range: "^13.2.0", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
@@ -719,6 +763,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
       { name: "@testing-library/dom", range: "^10.4.1", kind: "devDependencies" },
       { name: "@testing-library/jest-dom", range: "^6.10.0", kind: "devDependencies" },
@@ -749,6 +794,8 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/availability-calendar", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/breadcrumb", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons-native", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/captcha", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/club-form", range: "workspace:*", kind: "dependencies" },
@@ -816,6 +863,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/onboarding", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/slots", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
@@ -919,6 +967,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/slots", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
@@ -968,6 +1017,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^9.3.1", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
@@ -1011,6 +1061,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/ai-monitoring", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/tabs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
@@ -1056,6 +1107,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/table", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
@@ -1093,6 +1145,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/pod-form/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/pod-product-picker", range: "workspace:*", kind: "devDependencies" },
@@ -1143,6 +1196,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^3.14.1", kind: "devDependencies" },
@@ -1175,6 +1229,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@hookform/resolvers", range: "^3.10.0", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^9.3.1", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
@@ -1217,6 +1272,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/gql-types", range: "workspace:*", kind: "dependencies" },
       { name: "@tiptap/extension-link", range: "3.30.3", kind: "dependencies" },
       { name: "@tiptap/extension-placeholder", range: "3.30.3", kind: "dependencies" },
@@ -1251,6 +1307,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/breadcrumb", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/fallback-icons", range: "workspace:*", kind: "dependencies" },
@@ -1343,6 +1400,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^9.3.1", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
@@ -1402,6 +1460,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/theme/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
       { name: "@testing-library/dom", range: "^10.4.1", kind: "devDependencies" },
       { name: "@testing-library/jest-dom", range: "^6.10.0", kind: "devDependencies" },
@@ -1436,6 +1495,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^9.3.1", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.3.1", kind: "devDependencies" },
@@ -1464,6 +1524,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/user-context/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
@@ -1533,6 +1594,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/club-form", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/coupons", range: "workspace:*", kind: "dependencies" },
@@ -1611,6 +1673,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/ad-request-form", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
@@ -1663,6 +1726,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/ai-prompts", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
@@ -1714,6 +1778,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
@@ -1766,6 +1831,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/ai-monitoring", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
@@ -1833,6 +1899,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/shell", range: "workspace:*", kind: "dependencies" },
@@ -1923,6 +1990,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
@@ -2021,6 +2089,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
@@ -2076,6 +2145,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/communication", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/coupons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
@@ -2133,6 +2203,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/availability-calendar", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
@@ -2195,6 +2266,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/availability-calendar", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/club-form", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
@@ -2264,6 +2336,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
@@ -2316,6 +2389,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
@@ -2372,6 +2446,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/docs-demos", range: "workspace:*", kind: "dependencies" },
@@ -2432,6 +2507,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@apollo/client", range: "^3.14.1", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },

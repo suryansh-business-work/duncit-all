@@ -1,6 +1,15 @@
 import { useCallback, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
-import { Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Slider, Stack } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Slider,
+  Stack,
+} from '@mui/material';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';

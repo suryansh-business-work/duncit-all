@@ -1,5 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, InputAdornment, Link, Paper, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  InputAdornment,
+  Link,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';

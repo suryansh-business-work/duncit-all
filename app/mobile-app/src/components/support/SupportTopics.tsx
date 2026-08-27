@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import type { FaqGroup } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Renders a super-category `icon`: an image thumbnail for a URL, an emoji for a
  * short string, or a MaterialIcons fallback (mirrors VibeCategoryTab's TabIcon
@@ -44,7 +45,7 @@ function SupportTopicRow({ group, isLast, onOpen }: Readonly<SupportTopicRowProp
       paddingVertical={12}
       borderBottomWidth={isLast ? 0 : 1}
       borderBottomColor="$borderColor"
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <YStack
         width={38}

@@ -14,6 +14,7 @@ import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
 import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
  * this space books ('' = whole venue), used to filter the slot list. */
@@ -94,7 +95,7 @@ function SpaceChip({
       borderWidth={1}
       borderColor={selected ? '$primary' : '$borderColor'}
       backgroundColor={selected ? '$primary' : 'transparent'}
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}

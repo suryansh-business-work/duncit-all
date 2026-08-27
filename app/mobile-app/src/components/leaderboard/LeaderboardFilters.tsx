@@ -10,6 +10,7 @@ import {
   type LeaderboardPeriodKey,
 } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type ChipTone = '$onPrimary' | '$color';
 
@@ -32,7 +33,7 @@ function FilterChip({
       borderWidth={1}
       backgroundColor={selected ? '$primary' : '$surface'}
       borderColor={selected ? '$primary' : '$borderColor'}
-      pressStyle={{ opacity: 0.8 }}
+      pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={13} fontWeight="700" color={ink}>
         {label}

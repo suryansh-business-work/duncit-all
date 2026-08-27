@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** One flagged issue, resolved to the step the host must fix it on. */
 export interface BlockedViolation {
@@ -43,7 +44,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
       justifyContent="center"
       borderWidth={1}
       borderColor="$borderColor"
-      pressStyle={{ opacity: 0.7 }}
+      pressStyle={PRESS_STYLE.row}
     >
       <Text fontSize={14} fontWeight="600" color="$color">
         {close}
@@ -89,7 +90,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                 alignSelf="flex-start"
                 alignItems="center"
                 gap={4}
-                pressStyle={{ opacity: 0.7 }}
+                pressStyle={PRESS_STYLE.row}
               >
                 <MaterialIcons name="arrow-forward" size={14} color={primary} />
                 <Text fontSize={12} fontWeight="600" color="$primary">

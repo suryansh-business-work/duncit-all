@@ -11,6 +11,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useAuthStore } from '@/stores/auth.store';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface PendingRequest {
   request_id: string;
@@ -90,7 +91,7 @@ export function DeletionNoticeDialog() {
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
           {t('mweb.account.deletion.noticeKeep')}
@@ -107,7 +108,7 @@ export function DeletionNoticeDialog() {
         justifyContent="center"
         borderRadius={12}
         backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">
           {cancelling

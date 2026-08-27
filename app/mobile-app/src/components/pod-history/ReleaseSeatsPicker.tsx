@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Seats the booking holds. */
@@ -56,7 +57,7 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
             height={44}
             alignItems="center"
             justifyContent="center"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="remove" size={18} color={ink} />
           </XStack>
@@ -80,7 +81,7 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
             height={44}
             alignItems="center"
             justifyContent="center"
-            pressStyle={{ opacity: 0.7 }}
+            pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="add" size={18} color={ink} />
           </XStack>

@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  MenuItem,
+  Stack,
+  TextField,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { ADMIN_UPDATE_ECOMM_BRAND, STATUSES } from './queries';
 import EcommBrandEditFields, { type BrandValues, type DocEntry } from './EcommBrandEditFields';

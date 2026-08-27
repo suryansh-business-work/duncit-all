@@ -14,6 +14,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Redeem a gift card — code entry, the looked-up card, and the conversion of
  * its full value into Duncit Coins. RN twin of mWeb's /gift-cards/redeem
@@ -86,7 +87,7 @@ export function GiftCardRedeemScreen() {
                 borderWidth={1}
                 borderColor="$primary"
                 opacity={checking || !code.trim() ? 0.5 : 1}
-                pressStyle={{ opacity: 0.8 }}
+                pressStyle={PRESS_STYLE.control}
               >
                 {checking ? (
                   <Spinner color={primary} />

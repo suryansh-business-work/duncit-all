@@ -1,12 +1,28 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Link, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  Link,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ScienceIcon from '@mui/icons-material/Science';
 import { DuncitButton } from '@duncit/buttons';
 import type { EnvCategoryDef, EnvEntry, EnvFieldDef } from '../queries';
-import { emptyValues, envEntrySchema, valuesFromEntry, type EnvEntryFormValues } from './env-entry.types';
+import {
+  emptyValues,
+  envEntrySchema,
+  valuesFromEntry,
+  type EnvEntryFormValues,
+} from './env-entry.types';
 import ConfigField from './ConfigField';
 import { useTranslation } from '@duncit/app-settings';
 

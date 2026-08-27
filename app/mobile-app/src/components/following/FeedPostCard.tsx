@@ -6,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { FeedPost } from '@/hooks/useFollowingFeed';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   post: FeedPost;
@@ -44,7 +45,7 @@ export function FeedPostCard({
         alignItems="center"
         gap={10}
         padding={12}
-        pressStyle={{ opacity: 0.85 }}
+        pressStyle={PRESS_STYLE.control}
       >
         {avatar ? (
           <AppImage source={{ uri: avatar }} style={{ width: 36, height: 36, borderRadius: 18 }} />
@@ -94,7 +95,7 @@ export function FeedPostCard({
             onPress={onToggleLike}
             alignItems="center"
             gap={5}
-            pressStyle={{ opacity: 0.6 }}
+            pressStyle={PRESS_STYLE.inline}
           >
             <MaterialIcons
               name={post.liked_by_me ? 'favorite' : 'favorite-border'}
@@ -112,7 +113,7 @@ export function FeedPostCard({
             onPress={onOpenComments}
             alignItems="center"
             gap={5}
-            pressStyle={{ opacity: 0.6 }}
+            pressStyle={PRESS_STYLE.inline}
           >
             <MaterialIcons name="chat-bubble-outline" size={19} color={muted} />
             <Text fontSize={13} fontWeight="600" color="$muted">

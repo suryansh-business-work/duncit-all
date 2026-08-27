@@ -17,6 +17,7 @@ import { useClubFollow } from '@/hooks/useFollow';
 import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
 
@@ -75,7 +76,12 @@ export function ClubDetailsScreen() {
       <Text color="$muted" testID="club-details-error">
         This club is unavailable.
       </Text>
-      <XStack role="button" aria-label={t('mweb.common.goBack')} onPress={goBack}>
+      <XStack
+        pressStyle={PRESS_STYLE.surface}
+        role="button"
+        aria-label={t('mweb.common.goBack')}
+        onPress={goBack}
+      >
         <Text color="$primary" fontWeight="700">
           Go back
         </Text>

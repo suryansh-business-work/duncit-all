@@ -1,6 +1,17 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { WA_EVENT_BY_KEY } from '@duncit/communication';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';

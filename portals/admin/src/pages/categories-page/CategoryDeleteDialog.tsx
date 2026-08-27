@@ -1,4 +1,11 @@
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+} from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import type { CatItem, Level } from './queries';
 import { useTranslation } from '@duncit/shell';

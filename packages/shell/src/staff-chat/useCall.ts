@@ -494,11 +494,14 @@ export function useCall(
    */
   const hangUp = useCallback(() => {
     if (peerId) {
+      // Read before record(), which resets it — otherwise the tone below
+      // would never fire, since record() always leaves it false behind it.
+      const wasAnswered = answered.current;
       socket?.emit('call_end', { to: peerId });
-      record(answered.current ? 'ANSWERED' : 'CANCELLED', peerId, kind);
+      record(wasAnswered ? 'ANSWERED' : 'CANCELLED', peerId, kind);
       // Only when a call was actually up: a tone for a call that never
       // connected would be a sound for nothing happening.
-      if (answered.current) playCallEnded();
+      if (wasAnswered) playCallEnded();
     }
     teardown();
     setError(null);
@@ -531,7 +534,6 @@ export function useCall(
       if (!pc.current || !signal.sdp) return;
       await pc.current.setRemoteDescription(signal.sdp);
       answered.current = true;
-      startedAt.current = startedAt.current ?? new Date();
       setPhase('connected');
     };
 

@@ -69,6 +69,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
   const selectedFiles = manager.files.filter((file) => manager.selected.includes(file.fileId));
 
   const say = (text: string, kind: 'success' | 'error' = 'success') => setToast({ text, kind });
+  const dismissToast = () => setToast(null);
 
   const copy = (url: string) => {
     manager
@@ -237,10 +238,10 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
       <Snackbar
         open={Boolean(toast)}
         autoHideDuration={3000}
-        onClose={() => setToast(null)}
+        onClose={dismissToast}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={toast?.kind ?? 'success'} onClose={() => setToast(null)}>
+        <Alert severity={toast?.kind ?? 'success'} onClose={dismissToast}>
           {toast?.text}
         </Alert>
       </Snackbar>

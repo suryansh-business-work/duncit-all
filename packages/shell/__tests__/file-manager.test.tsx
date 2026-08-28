@@ -11,22 +11,36 @@
  * must not be shown a control that will be refused. `canWrite` is that line and
  * these hold both sides of it.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { schemaMockLink } from './schema-mock';
 import FileCard from '../src/file-manager/FileCard';
-import FileDetailsView from '../src/file-manager/FileDetailsView';
+import FileDetailsView, { describeSaveError } from '../src/file-manager/FileDetailsView';
 import FileInfoPanel from '../src/file-manager/FileInfoPanel';
 import FileManagerToolbar from '../src/file-manager/FileManagerToolbar';
 import { FileManagerDialog } from '../src/file-manager';
+import {
+  DELETE_MEDIA_FILES,
+  MEDIA_FILES,
+  PAGE_SIZE,
+  RENAME_MEDIA_FILE,
+  UPDATE_MEDIA_FILE,
+  type MediaItem,
+} from '../src/file-manager/queries';
+import { downloadUrl, thumbUrl } from '../src/file-manager/transform';
 import { TitleBar, ResizeGrip } from '../src/floating-window/WindowChrome';
-import type { MediaItem } from '../src/file-manager/queries';
 
 const testTheme = createTheme();
+
+const uploadMock = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock('@duncit/media-picker', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/media-picker')>()),
+  useImagekitDirectUpload: () => ({ upload: uploadMock, uploading: false }),
+}));
 
 beforeAll(() => {
   globalThis.ResizeObserver ??= class {
@@ -35,6 +49,14 @@ beforeAll(() => {
     disconnect() {}
   } as unknown as typeof ResizeObserver;
   Element.prototype.scrollIntoView ??= () => undefined;
+});
+
+beforeEach(() => {
+  uploadMock.mockClear();
+  Object.defineProperty(globalThis.navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText: vi.fn(async () => undefined) },
+  });
 });
 
 const settle = async () => {
@@ -126,6 +148,12 @@ describe('FileCard', () => {
 
     expect(spies.onToggle).toHaveBeenCalledWith('f-1');
   });
+
+  it('names a non-image file generically when ImageKit reports no mime type for it', () => {
+    const { container } = card({ file: file({ fileType: 'non-image', mime: null }) });
+
+    expect(container.textContent).toContain('file');
+  });
 });
 
 describe('FileInfoPanel', () => {
@@ -140,6 +168,14 @@ describe('FileInfoPanel', () => {
     const { container } = wrap(<FileInfoPanel file={PDF} />);
 
     expect(container.textContent).toContain('roster.pdf');
+  });
+
+  it('falls back to the raw type and a placeholder version when ImageKit reports neither', () => {
+    const bare = file({ fileType: null, mime: null, versionId: null, type: 'file' });
+    const { container } = wrap(<FileInfoPanel file={bare} />);
+
+    expect(container.textContent).toContain('file');
+    expect(container.textContent).toContain('—');
   });
 });
 
@@ -220,6 +256,146 @@ describe('FileDetailsView', () => {
   });
 });
 
+describe('FileDetailsView saving', () => {
+  const openEdit = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) => {
+    const spies = {
+      onBack: vi.fn(),
+      onCopy: vi.fn(),
+      onDelete: vi.fn(),
+      onChanged: vi.fn(),
+      onError: vi.fn(),
+    };
+    const view = render(
+      <MockedProvider mocks={[...mocks]}>
+        <ThemeProvider theme={testTheme}>
+          <MemoryRouter>
+            <FileDetailsView file={file()} canWrite {...spies} {...props} />
+          </MemoryRouter>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    fireEvent.click(view.container.querySelectorAll('[role="tab"]')[1]);
+    return { spies, ...view };
+  };
+
+  const clickSave = (container: HTMLElement, which: 'name' | 'tags') => {
+    const buttons = [...container.querySelectorAll('button')].filter((b) => b.textContent === 'Save');
+    fireEvent.click(buttons[which === 'name' ? 0 : 1]);
+  };
+
+  it('does nothing when the name field is saved unchanged', async () => {
+    const { container, spies } = openEdit([]);
+
+    clickSave(container, 'name');
+    await settle();
+
+    expect(spies.onChanged).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when the name field is cleared to blank', async () => {
+    const { container, spies } = openEdit([]);
+    const nameField = container.querySelector('input[value="court.png"]') as HTMLInputElement;
+    fireEvent.change(nameField, { target: { value: '   ' } });
+
+    clickSave(container, 'name');
+    await settle();
+
+    expect(spies.onChanged).not.toHaveBeenCalled();
+  });
+
+  it('renames the file and hands the updated record back', async () => {
+    const updated = file({ name: 'renamed.png' });
+    const mocks: MockedResponse[] = [
+      {
+        request: {
+          query: RENAME_MEDIA_FILE,
+          variables: { fileId: 'f-1', newFileName: 'renamed.png', purgeCache: true },
+        },
+        result: { data: { renameMediaFile: updated } },
+      },
+    ];
+    const { container, spies } = openEdit(mocks);
+    const nameField = container.querySelector('input[value="court.png"]') as HTMLInputElement;
+    fireEvent.change(nameField, { target: { value: 'renamed.png' } });
+
+    clickSave(container, 'name');
+    await settle();
+
+    expect(spies.onChanged).toHaveBeenCalledWith(updated);
+  });
+
+  it('reports a rename that fails', async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: {
+          query: RENAME_MEDIA_FILE,
+          variables: { fileId: 'f-1', newFileName: 'taken.png', purgeCache: true },
+        },
+        error: new Error('That name is already in use'),
+      },
+    ];
+    const { container, spies } = openEdit(mocks);
+    const nameField = container.querySelector('input[value="court.png"]') as HTMLInputElement;
+    fireEvent.change(nameField, { target: { value: 'taken.png' } });
+
+    clickSave(container, 'name');
+    await settle();
+
+    expect(spies.onError).toHaveBeenCalledWith(expect.stringContaining('already in use'));
+  });
+
+  it('saves the tags as they stand', async () => {
+    const updated = file({ tags: ['venue', 'court'] });
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: UPDATE_MEDIA_FILE, variables: { fileId: 'f-1', tags: ['venue', 'court'] } },
+        result: { data: { updateMediaFile: updated } },
+      },
+    ];
+    const { container, spies } = openEdit(mocks);
+
+    clickSave(container, 'tags');
+    await settle();
+
+    expect(spies.onChanged).toHaveBeenCalledWith(updated);
+  });
+
+  it('reports a tag save that fails', async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: UPDATE_MEDIA_FILE, variables: { fileId: 'f-1', tags: ['venue', 'court'] } },
+        error: new Error('offline'),
+      },
+    ];
+    const { container, spies } = openEdit(mocks);
+
+    clickSave(container, 'tags');
+    await settle();
+
+    expect(spies.onError).toHaveBeenCalledWith(expect.stringContaining('offline'));
+  });
+
+  it('adds a free-typed tag through the autocomplete', () => {
+    const { container } = openEdit([]);
+    const tagsInput = container.querySelector('.MuiAutocomplete-root input') as HTMLInputElement;
+
+    fireEvent.change(tagsInput, { target: { value: 'new-tag' } });
+    fireEvent.keyDown(tagsInput, { key: 'Enter', code: 'Enter' });
+
+    expect(container.textContent).toContain('new-tag');
+  });
+});
+
+describe('describeSaveError', () => {
+  it('reads the message off a real Error', () => {
+    expect(describeSaveError(new Error('boom'), 'fallback')).toBe('boom');
+  });
+
+  it('falls back when whatever was thrown is not an Error', () => {
+    expect(describeSaveError('a string was thrown', 'fallback')).toBe('fallback');
+  });
+});
+
 describe('FileManagerToolbar', () => {
   const toolbar = (over: Partial<Parameters<typeof FileManagerToolbar>[0]> = {}) => {
     const spies = {
@@ -278,6 +454,69 @@ describe('FileManagerToolbar', () => {
 
     expect(container.innerHTML).not.toBe('');
   });
+
+  it('hands the picked files to the caller once the hidden input reports them', () => {
+    const { container, spies } = toolbar();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const picked = new File(['x'], 'court.png', { type: 'image/png' });
+    Object.defineProperty(input, 'files', { configurable: true, value: [picked] });
+
+    fireEvent.change(input);
+
+    expect(spies.onUpload).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when the file picker is dismissed with nothing chosen', () => {
+    const { container, spies } = toolbar();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { configurable: true, value: [] });
+
+    fireEvent.change(input);
+
+    expect(spies.onUpload).not.toHaveBeenCalled();
+  });
+
+  it('changes the file type through its dropdown', () => {
+    const { container, spies } = toolbar();
+    const [typeSelect] = container.querySelectorAll('[role="combobox"]');
+    fireEvent.mouseDown(typeSelect);
+    const option = [...document.body.querySelectorAll('[role="option"]')].find((o) => o.textContent === 'Images');
+
+    fireEvent.click(option as HTMLElement);
+
+    expect(spies.onFileType).toHaveBeenCalledWith('image');
+  });
+
+  it('changes the sort order through its dropdown', () => {
+    const { container, spies } = toolbar();
+    const combos = container.querySelectorAll('[role="combobox"]');
+    fireEvent.mouseDown(combos[1]);
+    const option = [...document.body.querySelectorAll('[role="option"]')].find((o) => o.textContent === 'Oldest first');
+
+    fireEvent.click(option as HTMLElement);
+
+    expect(spies.onSort).toHaveBeenCalledWith('ASC_CREATED');
+  });
+});
+
+describe('transform', () => {
+  it('appends the first query parameter with a question mark', () => {
+    expect(thumbUrl('https://ik.imagekit.io/duncit/court.png', 200)).toBe(
+      'https://ik.imagekit.io/duncit/court.png?tr=w-200,h-200,c-maintain_ratio'
+    );
+    expect(downloadUrl('https://ik.imagekit.io/duncit/court.png')).toBe(
+      'https://ik.imagekit.io/duncit/court.png?ik-attachment=true'
+    );
+  });
+
+  it('joins onto an existing query string with an ampersand instead', () => {
+    expect(thumbUrl('https://ik.imagekit.io/duncit/court.png?v=2')).toBe(
+      'https://ik.imagekit.io/duncit/court.png?v=2&tr=w-240,h-240,c-maintain_ratio'
+    );
+    expect(downloadUrl('https://ik.imagekit.io/duncit/court.png?v=2')).toBe(
+      'https://ik.imagekit.io/duncit/court.png?v=2&ik-attachment=true'
+    );
+  });
 });
 
 describe('FileManagerDialog', () => {
@@ -303,6 +542,395 @@ describe('FileManagerDialog', () => {
     wrap(<FileManagerDialog open onClose={vi.fn()} roles={undefined} />);
     await settle();
     expect(document.body.innerHTML).not.toBe('');
+  });
+});
+
+describe('FileManagerDialog interactions', () => {
+  const BASE_VARS = { search: null, fileType: null, skip: 0, limit: PAGE_SIZE, sort: 'DESC_CREATED' };
+
+  const filesMock = (
+    items: MediaItem[],
+    overrideVars: Record<string, unknown> = {},
+    over: Partial<MockedResponse> = {}
+  ): MockedResponse =>
+    ({
+      request: { query: MEDIA_FILES, variables: { ...BASE_VARS, ...overrideVars } },
+      result: { data: { mediaFiles: items } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+      ...over,
+    }) as MockedResponse;
+
+  const wrapMocked = (ui: React.ReactNode, mocks: readonly MockedResponse[]) =>
+    render(
+      <MockedProvider mocks={[...mocks]}>
+        <ThemeProvider theme={testTheme}>
+          <MemoryRouter>{ui}</MemoryRouter>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+
+  const dialog = (mocks: readonly MockedResponse[]) =>
+    wrapMocked(<FileManagerDialog open onClose={vi.fn()} roles={['SUPER_ADMIN']} />, mocks);
+
+  it('shows the error banner when the list fails to load', async () => {
+    const mocks = [filesMock([], {}, { result: undefined, error: new Error('ImageKit is down') })];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('ImageKit is down');
+  });
+
+  it('says nothing matches once a search is typed in, without waiting for the debounce', async () => {
+    dialog([filesMock([])]);
+    await settle();
+    await settle();
+
+    fireEvent.change(document.body.querySelector('input') as HTMLInputElement, { target: { value: 'zzz' } });
+
+    expect(document.body.textContent).toContain('zzz');
+  });
+
+  it('copies a link and reports success through a toast', async () => {
+    dialog([filesMock([file()])]);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('[aria-label="Copy link to court.png"]') as HTMLElement);
+    await settle();
+
+    expect(document.body.textContent).toContain('Link copied');
+  });
+
+  it('reports a copy that fails', async () => {
+    (globalThis.navigator.clipboard.writeText as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('Clipboard blocked')
+    );
+    dialog([filesMock([file()])]);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('[aria-label="Copy link to court.png"]') as HTMLElement);
+    await settle();
+
+    expect(document.body.textContent).toContain('Clipboard blocked');
+  });
+
+  it('deletes the selected files and reports how many', async () => {
+    const mocks = [
+      filesMock([file(), file({ fileId: 'f-2', name: 'net.png' })]),
+      { request: { query: DELETE_MEDIA_FILES, variables: { fileIds: ['f-1'] } }, result: { data: { deleteMediaFiles: 1 } } },
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('input[type="checkbox"]') as HTMLElement);
+    const deleteButton = [...document.body.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Delete '));
+    fireEvent.click(deleteButton as HTMLElement);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('Deleted 1 file');
+  });
+
+  it('ticks and unticks a file for bulk selection', async () => {
+    dialog([filesMock([file()])]);
+    await settle();
+    await settle();
+
+    const checkbox = document.body.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    fireEvent.click(checkbox);
+    expect([...document.body.querySelectorAll('button')].some((b) => b.textContent?.startsWith('Delete '))).toBe(true);
+
+    fireEvent.click(checkbox);
+    expect([...document.body.querySelectorAll('button')].some((b) => b.textContent?.startsWith('Delete '))).toBe(false);
+  });
+
+  it('reports zero deleted with the plural wording, when nothing came back at all', async () => {
+    const mocks = [
+      filesMock([file()]),
+      { request: { query: DELETE_MEDIA_FILES, variables: { fileIds: ['f-1'] } }, result: { data: { deleteMediaFiles: null } } },
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('input[type="checkbox"]') as HTMLElement);
+    const deleteButton = [...document.body.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Delete '));
+    fireEvent.click(deleteButton as HTMLElement);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('Deleted 0 files');
+  });
+
+  it('reports a bulk delete that fails', async () => {
+    const mocks = [
+      filesMock([file()]),
+      { request: { query: DELETE_MEDIA_FILES, variables: { fileIds: ['f-1'] } }, error: new Error('offline') },
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('input[type="checkbox"]') as HTMLElement);
+    const deleteButton = [...document.body.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Delete '));
+    fireEvent.click(deleteButton as HTMLElement);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('offline');
+  });
+
+  it('deletes a single file from its details panel', async () => {
+    const mocks = [
+      filesMock([file()]),
+      { request: { query: DELETE_MEDIA_FILES, variables: { fileIds: ['f-1'] } }, result: { data: { deleteMediaFiles: 1 } } },
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiCardActionArea-root') as HTMLElement);
+    await settle();
+    const deleteButton = [...document.body.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
+    fireEvent.click(deleteButton as HTMLElement);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('Deleted court.png');
+  });
+
+  it('says nothing was deleted when the record was already gone', async () => {
+    const mocks = [
+      filesMock([file()]),
+      { request: { query: DELETE_MEDIA_FILES, variables: { fileIds: ['f-1'] } }, result: { data: { deleteMediaFiles: null } } },
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiCardActionArea-root') as HTMLElement);
+    await settle();
+    const deleteButton = [...document.body.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
+    fireEvent.click(deleteButton as HTMLElement);
+    // Two network hops behind manager.removeOne (the mutation, then its own
+    // refetch) before index.tsx's .then() can toast — one settle lands mid-chain.
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('Nothing was deleted');
+  });
+
+  it('reports a single-file delete that fails', async () => {
+    const mocks = [
+      filesMock([file()]),
+      { request: { query: DELETE_MEDIA_FILES, variables: { fileIds: ['f-1'] } }, error: new Error('locked') },
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiCardActionArea-root') as HTMLElement);
+    await settle();
+    const deleteButton = [...document.body.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
+    fireEvent.click(deleteButton as HTMLElement);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('locked');
+  });
+
+  it('uploads files and reports how many', async () => {
+    dialog([filesMock([])]);
+    await settle();
+    await settle();
+
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
+    const picked = new File(['x'], 'court.png', { type: 'image/png' });
+    Object.defineProperty(input, 'files', { configurable: true, value: [picked] });
+    fireEvent.change(input);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(uploadMock).toHaveBeenCalled();
+    expect(document.body.textContent).toContain('Uploaded 1 file');
+  });
+
+  it('uploads more than one file with the plural wording', async () => {
+    dialog([filesMock([])]);
+    await settle();
+    await settle();
+
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
+    const picked = [
+      new File(['x'], 'court.png', { type: 'image/png' }),
+      new File(['y'], 'net.png', { type: 'image/png' }),
+    ];
+    Object.defineProperty(input, 'files', { configurable: true, value: picked });
+    fireEvent.change(input);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(uploadMock).toHaveBeenCalledTimes(2);
+    expect(document.body.textContent).toContain('Uploaded 2 files');
+  });
+
+  it('reports an upload that fails', async () => {
+    uploadMock.mockRejectedValueOnce(new Error('too large'));
+    dialog([filesMock([])]);
+    await settle();
+    await settle();
+
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
+    const picked = new File(['x'], 'court.png', { type: 'image/png' });
+    Object.defineProperty(input, 'files', { configurable: true, value: [picked] });
+    fireEvent.change(input);
+    await settle();
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('too large');
+  });
+
+  it('refreshes the list from the toolbar without throwing', async () => {
+    dialog([filesMock([file()])]);
+    await settle();
+    await settle();
+
+    const refreshButton = document.body.querySelector('[aria-label="Reload files"]') as HTMLElement;
+    expect(() => fireEvent.click(refreshButton)).not.toThrow();
+    await settle();
+
+    expect(document.body.textContent).toContain('court.png');
+  });
+
+  it('pages forward and back through the results', async () => {
+    const pageOne = Array.from({ length: PAGE_SIZE }, (_, i) => file({ fileId: `f-${i}`, name: `file-${i}.png` }));
+    const mocks = [filesMock(pageOne), filesMock([file({ fileId: 'f-40', name: 'file-40.png' })], { skip: PAGE_SIZE })];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    const [prevButton, nextButton] = [...document.body.querySelectorAll('button')].filter(
+      (b) => b.textContent === 'Previous' || b.textContent === 'Next'
+    );
+    expect(prevButton).toBeDisabled();
+
+    fireEvent.click(nextButton);
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('file-40.png');
+    expect(prevButton).not.toBeDisabled();
+
+    fireEvent.click(prevButton);
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain('file-0.png');
+  });
+
+  it('closes the details panel through its own close button', async () => {
+    dialog([filesMock([file()])]);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiCardActionArea-root') as HTMLElement);
+    await settle();
+    expect(document.body.querySelector('[aria-label="Close file details"]')).not.toBeNull();
+
+    fireEvent.click(document.body.querySelector('[aria-label="Close file details"]') as HTMLElement);
+    await settle();
+
+    expect(document.body.querySelector('[aria-label="Close file details"]')).toBeNull();
+  });
+
+  it('saves a rename from inside the dialog and toasts that it was saved', async () => {
+    const updated = file({ name: 'renamed.png' });
+    const mocks = [
+      filesMock([file()]),
+      {
+        request: {
+          query: RENAME_MEDIA_FILE,
+          variables: { fileId: 'f-1', newFileName: 'renamed.png', purgeCache: true },
+        },
+        result: { data: { renameMediaFile: updated } },
+      } as MockedResponse,
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiCardActionArea-root') as HTMLElement);
+    await settle();
+    fireEvent.click(document.body.querySelectorAll('[role="tab"]')[1]);
+    const nameField = document.body.querySelector('input[value="court.png"]') as HTMLInputElement;
+    fireEvent.change(nameField, { target: { value: 'renamed.png' } });
+    const saveButtons = [...document.body.querySelectorAll('button')].filter((b) => b.textContent === 'Save');
+    fireEvent.click(saveButtons[0]);
+    await settle();
+
+    expect(document.body.textContent).toContain('Saved');
+  });
+
+  it('reports a rename failure from inside the dialog', async () => {
+    const mocks = [
+      filesMock([file()]),
+      {
+        request: {
+          query: RENAME_MEDIA_FILE,
+          variables: { fileId: 'f-1', newFileName: 'taken.png', purgeCache: true },
+        },
+        error: new Error('That name is taken'),
+      } as MockedResponse,
+    ];
+    dialog(mocks);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiCardActionArea-root') as HTMLElement);
+    await settle();
+    fireEvent.click(document.body.querySelectorAll('[role="tab"]')[1]);
+    const nameField = document.body.querySelector('input[value="court.png"]') as HTMLInputElement;
+    fireEvent.change(nameField, { target: { value: 'taken.png' } });
+    const saveButtons = [...document.body.querySelectorAll('button')].filter((b) => b.textContent === 'Save');
+    fireEvent.click(saveButtons[0]);
+    await settle();
+
+    expect(document.body.textContent).toContain('That name is taken');
+  });
+
+  it('dismisses the toast through its own close button', async () => {
+    dialog([filesMock([file()])]);
+    await settle();
+    await settle();
+
+    fireEvent.click(document.body.querySelector('[aria-label="Copy link to court.png"]') as HTMLElement);
+    await settle();
+    expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
+
+    const alert = document.body.querySelector('[role="alert"]') as HTMLElement;
+    fireEvent.click(alert.querySelector('button') as HTMLElement);
+    // The Alert plays a real exit transition (Grow/Fade) before unmounting —
+    // its own JS timeout fallback needs actual wall-clock time, not a
+    // zero-delay settle, since jsdom never fires transitionend.
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 400);
+      });
+    });
+
+    expect(document.body.querySelector('[role="alert"]')).toBeNull();
   });
 });
 

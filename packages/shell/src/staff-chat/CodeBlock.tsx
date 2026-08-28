@@ -46,10 +46,11 @@ function paint(code: string) {
   let key = 0;
   while (match !== null) {
     if (match.index > last) out.push(code.slice(last, match.index));
-    // Which capture group matched decides the colour.
-    const group = [1, 2, 3, 4].find((index) => match?.[index] !== undefined) ?? 0;
+    // Which capture group matched decides the colour — exactly one of the four
+    // always does, since TOKENS is a plain alternation between them.
+    const group = [1, 2, 3, 4].find((index) => match?.[index] !== undefined) as 1 | 2 | 3 | 4;
     out.push(
-      <Box component="span" key={`t-${key++}`} sx={{ color: COLOR[group - 1] ?? 'inherit' }}>
+      <Box component="span" key={`t-${key++}`} sx={{ color: COLOR[group - 1] }}>
         {match[0]}
       </Box>,
     );

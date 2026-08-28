@@ -211,7 +211,11 @@ export function AppShell({
                   open={chatOpen}
                   meId={user?.user_id ?? ''}
                   meName={user?.full_name ?? user?.first_name ?? undefined}
-                  meRoles={user?.roles ?? []}
+                  // `showChat` already means `isStaff`, which only holds for a
+                  // user with a non-empty, matching `roles` array — the empty
+                  // fallback `.some()` needs to stay safe for everyone else can
+                  // never actually apply here.
+                  meRoles={user!.roles!}
                   onClose={closeChat}
                   onRequestOpen={openChat}
                 />

@@ -37,8 +37,9 @@ export function buildLocationInput(form: LocForm) {
     throw new Error('PIN code is required for every locality / area');
   }
   if (!form.location_image.trim()) throw new Error('Location image URL is required');
-  const primaryPincode = form.location_pincode.trim() || cleanZones[0]?.pincode || '';
-  if (!primaryPincode) throw new Error('PIN code is required');
+  // The guards above already leave at least one zone, every one with a
+  // pincode — cleanZones[0].pincode always exists once we get here.
+  const primaryPincode = form.location_pincode.trim() || cleanZones[0].pincode!;
 
   return {
     location_name: form.city.trim(),

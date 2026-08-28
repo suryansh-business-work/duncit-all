@@ -19,6 +19,7 @@ import { fireEvent } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from './testkit';
+import ContactActionDialog from '../ContactActionDialog';
 import {
   buildContactTarget,
   openNativeContact,
@@ -185,7 +186,6 @@ describe('buildContactActionSchema', () => {
 
 describe('ContactActionDialog', () => {
   it('renders nothing while it is closed', async () => {
-    const { default: ContactActionDialog } = await import('../ContactActionDialog');
     renderWithProviders(
       <ContactActionDialog open={false} type="CALL" user={USER} onClose={vi.fn()} onSaved={vi.fn()} />
     );
@@ -194,7 +194,6 @@ describe('ContactActionDialog', () => {
   });
 
   it('opens on the member, showing the number it would dial', async () => {
-    const { default: ContactActionDialog } = await import('../ContactActionDialog');
     renderWithProviders(
       <ContactActionDialog open type="CALL" user={USER} onClose={vi.fn()} onSaved={vi.fn()} />
     );
@@ -203,7 +202,6 @@ describe('ContactActionDialog', () => {
   });
 
   it('opens on the address for an email instead', async () => {
-    const { default: ContactActionDialog } = await import('../ContactActionDialog');
     renderWithProviders(
       <ContactActionDialog open type="EMAIL" user={USER} onClose={vi.fn()} onSaved={vi.fn()} />
     );
@@ -212,7 +210,6 @@ describe('ContactActionDialog', () => {
   });
 
   it('opens for a member with nothing on file, rather than crashing on it', async () => {
-    const { default: ContactActionDialog } = await import('../ContactActionDialog');
     renderWithProviders(
       <ContactActionDialog
         open
@@ -228,7 +225,6 @@ describe('ContactActionDialog', () => {
 
   it('closes through the caller rather than on its own', async () => {
     const onClose = vi.fn();
-    const { default: ContactActionDialog } = await import('../ContactActionDialog');
     renderWithProviders(
       <ContactActionDialog open type="CALL" user={USER} onClose={onClose} onSaved={vi.fn()} />
     );

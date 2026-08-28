@@ -115,14 +115,18 @@ export default function PodCancelDialog({
   const confirmLabel = hasRefunds ? labels.initiateRefunds : labels.cancelPod;
 
   const submit = handleSubmit(async (values) => {
-    await remove({
-      variables: {
-        pod_doc_id: podId,
-        reason_subject: values.reason_subject,
-        reason_note: values.reason_note.trim() || null,
-      },
-    });
-    onCancelled();
+    try {
+      await remove({
+        variables: {
+          pod_doc_id: podId,
+          reason_subject: values.reason_subject,
+          reason_note: values.reason_note.trim() || null,
+        },
+      });
+      onCancelled();
+    } catch {
+      // removeState.error, read below, is what renders the failure.
+    }
   });
 
   return (

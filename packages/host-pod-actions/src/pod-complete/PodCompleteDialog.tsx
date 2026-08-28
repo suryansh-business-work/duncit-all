@@ -104,8 +104,12 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
   const podId = pod?.id ?? '';
 
   const submit = handleSubmit(async (values) => {
-    await complete({ variables: { input: buildCompleteInput(values, podId) } });
-    onCompleted();
+    try {
+      await complete({ variables: { input: buildCompleteInput(values, podId) } });
+      onCompleted();
+    } catch {
+      // completeState.error, read below, is what renders the failure.
+    }
   });
 
   return (

@@ -34,12 +34,27 @@ describe('formatGmtOffset', () => {
 
 describe('describeZone', () => {
   it('names a zone by its abbreviation when the engine has one', () => {
+    // describeZone reads the process's ambient default locale (undefined) on
+    // purpose — in a browser that is the visitor's own setting. A test runner
+    // has no such visitor, so its default locale is whatever the OS/container
+    // happens to be configured with, and 'IST' is only what ICU answers for an
+    // Indian one. Pin it here so the assertion means something everywhere.
+    const RealDateTimeFormat = Intl.DateTimeFormat;
+    const spy = vi
+      .spyOn(Intl, 'DateTimeFormat')
+      .mockImplementation(
+        (locale, options) =>
+          new RealDateTimeFormat(locale ?? 'en-IN', options) as unknown as Intl.DateTimeFormat,
+      );
+
     const zone = describeZone('Asia/Kolkata', AT);
 
     expect(zone.value).toBe('Asia/Kolkata');
     expect(zone.offset).toBe(330);
     expect(zone.gmt).toBe('GMT+05:30');
     expect(zone.name).toBe('IST');
+
+    spy.mockRestore();
   });
 
   it('falls back to the long name when the short one is just the offset again', () => {

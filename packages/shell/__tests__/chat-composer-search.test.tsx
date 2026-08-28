@@ -18,13 +18,25 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { act, fireEvent, render } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { schemaMockLink } from './schema-mock';
 import ChatComposer from '../src/staff-chat/ChatComposer';
 import ChatSearchPanel from '../src/staff-chat/ChatSearchPanel';
 import LocationDialog from '../src/staff-chat/LocationDialog';
 import type { ChatFormats } from '../src/staff-chat/useChatSettings';
+
+const voiceState = vi.hoisted(() => ({
+  recording: false,
+  seconds: 0,
+  level: 0,
+  error: null as string | null,
+  start: vi.fn(async () => undefined),
+  stop: vi.fn(async () => undefined as { blob: Blob; seconds: number; peaks: number[] } | undefined),
+}));
+vi.mock('../src/staff-chat/voice/useVoiceNote', () => ({
+  useVoiceNote: () => voiceState,
+}));
 
 const testTheme = createTheme();
 
@@ -59,6 +71,13 @@ const wrap = (ui: React.ReactNode) =>
       </ThemeProvider>
     </MockedProvider>
   );
+
+beforeEach(() => {
+  voiceState.recording = false;
+  voiceState.seconds = 0;
+  voiceState.level = 0;
+  voiceState.error = null;
+});
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -176,6 +195,127 @@ describe('ChatComposer', () => {
     }
 
     expect(container.innerHTML).not.toBe('');
+  });
+
+  it('picks a suggestion by clicking it, writing the mention into the draft', async () => {
+    const { box, container } = composer();
+
+    fireEvent.change(box, { target: { value: '@Vik' } });
+    await settle();
+    const item = container.querySelector('.MuiListItemButton-root') as HTMLElement;
+
+    fireEvent.mouseDown(item);
+    await settle();
+
+    expect(box.value.startsWith('@Vikram N')).toBe(true);
+  });
+
+  it('lets Enter pick the highlighted suggestion instead of sending it', async () => {
+    const { box, spies } = composer();
+
+    fireEvent.change(box, { target: { value: '@Vik' } });
+    await settle();
+    fireEvent.keyDown(box, { key: 'Enter' });
+
+    expect(spies.onSend).not.toHaveBeenCalled();
+    expect(box.value.startsWith('@Vikram N')).toBe(true);
+  });
+
+  it('falls back to the draft length for the caret once the box has vanished mid-suggestion', async () => {
+    const spies = {
+      onSend: vi.fn(),
+      onAttach: vi.fn(),
+      onVoiceNote: vi.fn(),
+      onTyping: vi.fn(),
+      onShareLocation: vi.fn(),
+    };
+    const tree = () => (
+      <ChatComposer
+        sending={false}
+        uploading={false}
+        mentionNames={['Vikram N', 'Asha Rao']}
+        enterToSend
+        {...spies}
+      />
+    );
+    const { container, rerender } = wrap(tree());
+    const box = container.querySelector('textarea') as HTMLTextAreaElement;
+    fireEvent.change(box, { target: { value: '@Vik' } });
+    await settle();
+    expect(container.querySelector('.MuiListItemButton-root')).not.toBeNull();
+
+    // Recording starts without the suggestion list being told to close — the
+    // box it was anchored to is gone, but the popup is still up.
+    voiceState.recording = true;
+    rerender(
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={testTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>{tree()}</LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    const item = container.querySelector('.MuiListItemButton-root') as HTMLElement;
+
+    expect(() => {
+      fireEvent.mouseDown(item);
+    }).not.toThrow();
+  });
+
+  it('starts recording through the record button when the draft is empty', () => {
+    const { container } = composer();
+    const recordButton = container.querySelector('button[aria-label="Record a voice note"]') as HTMLElement;
+
+    fireEvent.click(recordButton);
+
+    expect(voiceState.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows an error banner from the voice recorder', () => {
+    voiceState.error = 'Microphone permission was denied';
+    const { container } = composer();
+
+    expect(container.textContent).toContain('Microphone permission was denied');
+  });
+
+  it('sends a recorded voice note with its waveform, once stopped', async () => {
+    voiceState.recording = true;
+    voiceState.stop.mockResolvedValueOnce({
+      blob: new Blob(['audio'], { type: 'audio/webm' }),
+      seconds: 7,
+      peaks: [1, 2, 3],
+    });
+    const { container, spies } = composer();
+
+    fireEvent.click(container.querySelector('[aria-label="Send voice note"]') as HTMLElement);
+    await settle();
+
+    expect(voiceState.stop).toHaveBeenCalledWith(true);
+    const [file, peaks, seconds] = spies.onVoiceNote.mock.calls[0];
+    expect((file as File).name).toBe('voice-note-7s.webm');
+    expect(peaks).toEqual([1, 2, 3]);
+    expect(seconds).toBe(7);
+  });
+
+  it('sends nothing when stopping the recording produced no note at all', async () => {
+    voiceState.recording = true;
+    voiceState.stop.mockResolvedValueOnce(undefined);
+    const { container, spies } = composer();
+
+    fireEvent.click(container.querySelector('[aria-label="Send voice note"]') as HTMLElement);
+    await settle();
+
+    expect(spies.onVoiceNote).not.toHaveBeenCalled();
+  });
+
+  it('discards a voice note on cancel, without sending anything', async () => {
+    voiceState.recording = true;
+    const { container, spies } = composer();
+
+    fireEvent.click(container.querySelector('[aria-label="Discard voice note"]') as HTMLElement);
+    await settle();
+
+    expect(voiceState.stop).toHaveBeenCalledWith(false);
+    expect(spies.onVoiceNote).not.toHaveBeenCalled();
   });
 });
 

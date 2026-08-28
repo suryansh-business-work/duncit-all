@@ -418,3 +418,34 @@ describe('CONFIRM_OUTCOME_KEYS', () => {
     expect(new Set(Object.values(CONFIRM_OUTCOME_KEYS)).size).toBe(3);
   });
 });
+
+describe('confirmPaymentAfterTransportFailure, when the read throws before it is even a promise', () => {
+  // A client that dies constructing the request throws where the caller stands,
+  // not down a promise. The poll has to survive that the same way it survives a
+  // rejection — the buyer's money has already left either way.
+  it('treats a synchronous throw as a read that has not happened, and keeps polling', async () => {
+    const fetchStatus = vi.fn((): Promise<Row | null> => {
+      throw new Error('no network interface');
+    });
+
+    const result = await confirmPaymentAfterTransportFailure({
+      fetchStatus,
+      attempts: 3,
+      sleep: noSleep,
+    });
+
+    expect(result).toBeNull();
+    expect(fetchStatus).toHaveBeenCalledTimes(3);
+  });
+
+  it('still settles on a later read that works', async () => {
+    const fetchStatus = vi
+      .fn<[], Promise<Row | null>>()
+      .mockImplementationOnce(() => { throw new Error('no network interface'); })
+      .mockResolvedValueOnce(row('SUCCESS'));
+
+    await expect(
+      confirmPaymentAfterTransportFailure({ fetchStatus, attempts: 3, sleep: noSleep }),
+    ).resolves.toEqual(row('SUCCESS'));
+  });
+});

@@ -7,6 +7,7 @@ import {
   SURFACE_BUNDLES,
   WEBSITE_BUNDLE,
 } from '../src';
+import * as bundles from '../src/bundles';
 
 describe('shipped fallback bundles', () => {
   it('namespaces every key by surface, so admin filters work', () => {
@@ -30,11 +31,24 @@ describe('shipped fallback bundles', () => {
         expect(merged).toHaveProperty(key);
       }
     }
-    expect(Object.keys(SURFACE_BUNDLES).sort((a, b) => a.localeCompare(b))).toEqual([
-      'mweb',
-      'shell',
-      'website',
-    ]);
+  });
+
+  // The registry is what the admin seeder reads, so a bundle written but never
+  // registered ships keys no translator is ever offered.
+  it('registers every bundle the package exports', () => {
+    const registered = new Set(Object.values(SURFACE_BUNDLES));
+    const unregistered = Object.entries(bundles)
+      .filter(([name, value]) => name.endsWith('_BUNDLE') && !registered.has(value as never))
+      .map(([name]) => name);
+
+    expect(unregistered).toEqual([]);
+    expect(Object.keys(SURFACE_BUNDLES)).toHaveLength(registered.size);
+  });
+
+  it('registers the three bundles the shared surfaces render from', () => {
+    expect(SURFACE_BUNDLES.mweb).toBe(MWEB_BUNDLE);
+    expect(SURFACE_BUNDLES.shell).toBe(SHELL_BUNDLE);
+    expect(SURFACE_BUNDLES.website).toBe(WEBSITE_BUNDLE);
   });
 
   it('never ships one key with two different values', () => {

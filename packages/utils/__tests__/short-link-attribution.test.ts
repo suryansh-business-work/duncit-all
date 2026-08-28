@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   SHORT_LINK_CLICK_KEY,
+  SHORT_LINK_SHARE_KEY,
   SHORT_LINK_UTM_KEY,
   captureShortLinkAttribution,
   installAttributionLinkDecorator,
   isAttributableLink,
   parseShortLinkParams,
   storedAttributionParams,
+  storedMemberShare,
   storedShortLinkClickId,
   withAttribution,
 } from '../src/short-link-attribution';
@@ -26,12 +28,29 @@ describe('parseShortLinkParams', () => {
     expect(parseShortLinkParams('?utm_source=instagram&dl=aB3xY9Zq&dlc=c-1')).toEqual({
       code: 'aB3xY9Zq',
       clickId: 'c-1',
+      memberShare: false,
     });
   });
 
+  it('marks the link a member minted by sharing, so a landing may relax the session guard', () => {
+    expect(parseShortLinkParams('?dl=aB3xY9Zq&dlc=c-1&dls=1')).toEqual({
+      code: 'aB3xY9Zq',
+      clickId: 'c-1',
+      memberShare: true,
+    });
+  });
+
+  it('reads any other dls value as the stricter marketing case', () => {
+    expect(parseShortLinkParams('?dl=aB3xY9Zq&dls=0').memberShare).toBe(false);
+  });
+
   it('is empty for ordinary traffic', () => {
-    expect(parseShortLinkParams('')).toEqual({ code: null, clickId: null });
-    expect(parseShortLinkParams('?utm_source=instagram')).toEqual({ code: null, clickId: null });
+    expect(parseShortLinkParams('')).toEqual({ code: null, clickId: null, memberShare: false });
+    expect(parseShortLinkParams('?utm_source=instagram')).toEqual({
+      code: null,
+      clickId: null,
+      memberShare: false,
+    });
   });
 });
 
@@ -377,5 +396,66 @@ describe('installAttributionLinkDecorator', () => {
     expect(anchor.href).toContain('dlc=c-1');
     anchor.remove();
     uninstall();
+  });
+});
+
+describe('storedMemberShare', () => {
+  it('remembers that the click came from a member sharing something', () => {
+    localStorage.setItem(SHORT_LINK_SHARE_KEY, '1');
+    expect(storedMemberShare()).toBe(true);
+  });
+
+  it('reads anything else as the stricter marketing case', () => {
+    expect(storedMemberShare()).toBe(false);
+    localStorage.setItem(SHORT_LINK_SHARE_KEY, '0');
+    expect(storedMemberShare()).toBe(false);
+  });
+
+  it('reads storage the browser refuses as the stricter marketing case too', () => {
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    expect(storedMemberShare()).toBe(false);
+    getItem.mockRestore();
+  });
+});
+
+describe('member-share markers through a capture', () => {
+  it('stores the share marker beside the click, so it survives the hops that follow', async () => {
+    await captureShortLinkAttribution({
+      search: '?dl=aB3xY9Zq&dlc=c-1&dls=1',
+      referrer: '',
+      serverUrl: SERVER,
+      fetchFn: okFetch('c-1'),
+    });
+
+    expect(storedMemberShare()).toBe(true);
+    expect(storedShortLinkClickId()).toBe('c-1');
+  });
+
+  it('clears a stale share marker when the next landing is a marketing one', async () => {
+    localStorage.setItem(SHORT_LINK_SHARE_KEY, '1');
+
+    await captureShortLinkAttribution({
+      search: '?dl=aB3xY9Zq&dlc=c-2',
+      referrer: '',
+      serverUrl: SERVER,
+      fetchFn: okFetch('c-2'),
+    });
+
+    expect(storedMemberShare()).toBe(false);
+  });
+
+  it('carries the marker onto decorated links, so a hop cannot turn a friend’s link into a marketing landing', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    localStorage.setItem(SHORT_LINK_SHARE_KEY, '1');
+
+    expect(storedAttributionParams()).toEqual({ dlc: 'c-1', dls: '1' });
+  });
+
+  it('leaves the marker off when the browser is attributed to no click at all', () => {
+    localStorage.setItem(SHORT_LINK_SHARE_KEY, '1');
+
+    expect(storedAttributionParams()).toEqual({});
   });
 });

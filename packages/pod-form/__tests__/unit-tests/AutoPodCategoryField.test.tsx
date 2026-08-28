@@ -11,6 +11,9 @@ const CATEGORIES = [
   { id: 'sup-sports', name: 'Sports', slug: 'sports', level: 'SUPER', parent_id: null },
   { id: 'cat-racket', name: 'Racket', slug: 'racket', level: 'CATEGORY', parent_id: 'sup-sports' },
   { id: 'sub-badminton', name: 'Badminton', slug: 'bad', level: 'SUB', parent_id: 'cat-racket' },
+  // A second Super, so a test can actually MOVE the top level — re-selecting the
+  // option already showing fires no change at all.
+  { id: 'sup-arts', name: 'Arts', slug: 'arts', level: 'SUPER', parent_id: null },
 ];
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
@@ -52,9 +55,9 @@ describe('AutoPodCategoryField', () => {
       ref.current?.setError('sub_category_id', { type: 'custom', message: 'Select a category' });
     });
     expect(screen.getByText('Select a category')).toBeInTheDocument();
-    // Re-picking the Super empties the Sub; only a chosen Sub (or a submit) validates.
+    // Moving the Super empties the Sub; only a chosen Sub (or a submit) validates.
     await user.click(screen.getByLabelText(/Super Category/));
-    await user.click(screen.getByRole('option', { name: 'Sports' }));
+    await user.click(screen.getByRole('option', { name: 'Arts' }));
     expect(ref.current?.getValues('sub_category_id')).toBe('');
     expect(screen.queryByText('Select a category')).not.toBeInTheDocument();
   });

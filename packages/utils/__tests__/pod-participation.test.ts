@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  backoutAttemptsLeft,
   buildPodParticipationTimeline,
+  isBackoutMaxed,
   isPodPast,
   participationInputFrom,
   podParticipationActions,
@@ -725,5 +727,50 @@ describe('podParticipationActions', () => {
     const actions = podParticipationActions(noClock);
     expect(actions.canBackout).toBe(false);
     expect(actions.joinedLabelKind).toBe('VISITED');
+  });
+});
+
+describe('backoutAttemptsLeft', () => {
+  it('subtracts what the booking has already spent', () => {
+    expect(backoutAttemptsLeft({ backout_attempts_max: 3, backout_attempts_used: 1 })).toBe(2);
+    expect(backoutAttemptsLeft({ backout_attempts_max: 3, backout_attempts_used: 3 })).toBe(0);
+  });
+
+  it('never reads below zero, even when the server allowed more than the cap', () => {
+    expect(backoutAttemptsLeft({ backout_attempts_max: 1, backout_attempts_used: 4 })).toBe(0);
+  });
+
+  it('is 0 for a booking whose attempt columns are missing or unanswered', () => {
+    expect(backoutAttemptsLeft({})).toBe(0);
+    expect(backoutAttemptsLeft({ backout_attempts_max: null, backout_attempts_used: null })).toBe(0);
+    expect(backoutAttemptsLeft(null)).toBe(0);
+    expect(backoutAttemptsLeft(undefined)).toBe(0);
+    expect(backoutAttemptsLeft()).toBe(0);
+  });
+
+  it('counts an unused allowance in full', () => {
+    expect(backoutAttemptsLeft({ backout_attempts_max: 2 })).toBe(2);
+  });
+});
+
+describe('isBackoutMaxed', () => {
+  it('is true only once the server has actually said the attempts are gone', () => {
+    expect(isBackoutMaxed({ backout_attempts_max: 2, backout_attempts_used: 2 })).toBe(true);
+  });
+
+  it('is false while attempts remain', () => {
+    expect(isBackoutMaxed({ backout_attempts_max: 2, backout_attempts_used: 1 })).toBe(false);
+  });
+
+  // Absent state means "not answered yet", not "none left" — treating a pending
+  // query as exhausted greys the control out on every first paint.
+  it('is false while the query has not answered', () => {
+    expect(isBackoutMaxed(null)).toBe(false);
+    expect(isBackoutMaxed(undefined)).toBe(false);
+    expect(isBackoutMaxed()).toBe(false);
+  });
+
+  it('is true for a loaded booking that was never given an allowance', () => {
+    expect(isBackoutMaxed({})).toBe(true);
   });
 });

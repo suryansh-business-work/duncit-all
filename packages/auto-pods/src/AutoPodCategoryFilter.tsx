@@ -46,7 +46,11 @@ export function AutoPodCategoryFilter({
   const { data, loading } = useQuery<MyHostCategories>(MY_HOST_CATEGORIES_FOR_AUTO_POD, {
     fetchPolicy: 'cache-first',
   });
-  const rows = (data?.myHost?.host_categories ?? []).filter((row) => row.sub_category_id);
+  // Narrowed on the way in, so the options below read the id straight off the
+  // row rather than defending against a null the filter already removed.
+  const rows = (data?.myHost?.host_categories ?? []).filter(
+    (row): row is HostCategory & { sub_category_id: string } => !!row.sub_category_id,
+  );
 
   if (!loading && rows.length === 0) {
     return (
@@ -76,7 +80,7 @@ export function AutoPodCategoryFilter({
     >
       <MenuItem value={ALL}>{labels.allCategories}</MenuItem>
       {rows.map((row) => (
-        <MenuItem key={row.sub_category_id ?? ''} value={row.sub_category_id ?? ''}>
+        <MenuItem key={row.sub_category_id} value={row.sub_category_id}>
           {pathOf(row)}
         </MenuItem>
       ))}

@@ -186,4 +186,14 @@ describe('buildPodPreview - the edges the card renders around', () => {
     const model = buildPodPreview(values({ pod_amount: 250 }), data({ finance: undefined }));
     expect(model.priceText).toBe('₹250');
   });
+
+  // Step 1 of a paid pod is reached with the amount box still empty, and the
+  // preview renders alongside it — a blank box must price at zero, not NaN.
+  it('prices a paid pod at zero while the amount box is still empty', () => {
+    const empty = buildPodPreview(
+      values({ pod_amount: '' as unknown as number }),
+      data(),
+    );
+    expect(empty.priceText).toBe('₹0');
+  });
 });

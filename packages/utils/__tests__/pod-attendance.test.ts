@@ -3,6 +3,7 @@ import {
   OTP_MEDIUMS,
   attendanceProgress,
   attendanceRowState,
+  canScanTickets,
   hasUnmarked,
   isOtpCodeShape,
   isOtpExtensionShape,
@@ -195,5 +196,25 @@ describe('joinPhone', () => {
   it('survives a null extension or number from the API', () => {
     expect(joinPhone(null as unknown as string, '9876543210')).toBe('9876543210');
     expect(joinPhone('+91', null as unknown as string)).toBe('');
+  });
+});
+
+describe('canScanTickets', () => {
+  // A virtual pod's attendance is recorded when a member opens the meeting
+  // link, so offering the scanner there points at a door that does not exist.
+  it('offers the scanner to a host running a physical pod', () => {
+    expect(canScanTickets({ viewer: 'HOST', can_mark: true, pod_mode: 'PHYSICAL' })).toBe(true);
+  });
+
+  it('hides it on a virtual pod, where there is nothing to scan at', () => {
+    expect(canScanTickets({ viewer: 'HOST', can_mark: true, pod_mode: 'VIRTUAL' })).toBe(false);
+  });
+
+  it('hides it from a Club Admin, whose way in is the override', () => {
+    expect(canScanTickets({ viewer: 'CLUB_ADMIN', can_mark: true, pod_mode: 'PHYSICAL' })).toBe(false);
+  });
+
+  it('hides it once the board is locked and nothing can be marked', () => {
+    expect(canScanTickets({ viewer: 'HOST', can_mark: false, pod_mode: 'PHYSICAL' })).toBe(false);
   });
 });

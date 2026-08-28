@@ -116,7 +116,7 @@ const TRAILING = new Set([' ', '\t', '\n', '.', ',', ';', ':', '!', '-']);
  */
 function stripTrailingPunctuation(value: string): string {
   let end = value.length;
-  while (end > 0 && TRAILING.has(value[end - 1] ?? '')) end -= 1;
+  while (end > 0 && TRAILING.has(value.charAt(end - 1))) end -= 1;
   return value.slice(0, end);
 }
 

@@ -409,4 +409,26 @@ describe('autoPodToFormValues', () => {
     expect(values.available_perks).toEqual([]);
     expect(values.place_charges).toEqual([{ label: 'Entry', amount: 0, note: '' }]);
   });
+
+  // Auto Pods written before these columns were required come back with nulls
+  // where the schema now promises strings. The form still has to open on them.
+  it('opens on a legacy row whose text columns came back null', () => {
+    const values = autoPodToFormValues({
+      pod_title: null,
+      pod_description: null,
+      pod_images_and_videos: null,
+      super_category_id: null,
+      sub_category_id: null,
+      pod_amount: 300,
+      no_of_spots: 12,
+      place_charges: [{ label: null, amount: 50 }],
+    } as unknown as AutoPodTemplateRow);
+
+    expect(values.pod_title).toBe('');
+    expect(values.pod_description).toBe('');
+    expect(values.super_category_id).toBe('');
+    expect(values.sub_category_id).toBe('');
+    expect(values.media_text).toBe('');
+    expect(values.place_charges).toEqual([{ label: '', amount: 50, note: '' }]);
+  });
 });

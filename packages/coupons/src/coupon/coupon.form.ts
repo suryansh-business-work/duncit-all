@@ -97,7 +97,7 @@ export function toCouponInput(values: CouponFormValues) {
     description: cast.description || '',
     discount_pct: Number(cast.discount_pct),
     scope: cast.scope,
-    pod_id: cast.scope === 'POD' ? cast.pod_id || null : null,
+    pod_id: cast.scope === 'POD' ? cast.pod_id : null,
     valid_from: cast.valid_from ? new Date(cast.valid_from).toISOString() : null,
     valid_until: cast.valid_until ? new Date(cast.valid_until).toISOString() : null,
     max_uses: cast.max_uses ?? null,

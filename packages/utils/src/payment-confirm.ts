@@ -116,21 +116,24 @@ async function readQuietly<T>(
   fetchStatus: () => Promise<T | null>,
   timeoutMs: number
 ): Promise<T | null> {
-  let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
   try {
     // The rejection is swallowed on the read itself, not by the race, so a read
     // that fails after losing to the deadline cannot surface as an unhandled
-    // rejection.
+    // rejection. Neither side of the race can reject, so the only way out of
+    // this block other than the return below is fetchStatus throwing where it
+    // stands — before a deadline was ever armed, which is why the cleanup sits
+    // on the settled path rather than in a finally.
+    let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
     const read = fetchStatus().catch(() => null);
     const deadline = new Promise<null>((resolve) => {
       timer = globalThis.setTimeout(() => resolve(null), timeoutMs);
     });
-    return await Promise.race([read, deadline]);
+    const row = await Promise.race([read, deadline]);
+    globalThis.clearTimeout(timer);
+    return row;
   } catch {
     // fetchStatus threw synchronously.
     return null;
-  } finally {
-    if (timer !== undefined) globalThis.clearTimeout(timer);
   }
 }
 

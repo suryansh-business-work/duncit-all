@@ -53,5 +53,9 @@ const FALLBACK = flattenCatalogue(CAPTCHA_BUNDLE);
  * straight off the shipped bundle so there is one copy of the words and not
  * two. The Astro marketing sites have no translator at build time, and a blank
  * label is worse than an untranslated one.
+ *
+ * Every key below is one CAPTCHA_BUNDLE ships, so there is nothing to fall
+ * back to — a key added here without its copy is caught by the bundle tests,
+ * not papered over at runtime as its own name.
  */
-export const CAPTCHA_FALLBACK_COPY: CaptchaCopy = captchaCopy((key) => FALLBACK[key] ?? key);
+export const CAPTCHA_FALLBACK_COPY: CaptchaCopy = captchaCopy((key) => FALLBACK[key]);

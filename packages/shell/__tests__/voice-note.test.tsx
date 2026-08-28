@@ -374,6 +374,17 @@ describe('VoiceNotePlayer', () => {
     expect(audio.pause).toHaveBeenCalled();
   });
 
+  it('switches back to the play icon once the note actually pauses', () => {
+    const { container } = player();
+    const audio = audioOf(container);
+    fireEvent.play(audio);
+    expect(screen.getByRole('button', { name: 'Pause the voice note' })).toBeInTheDocument();
+
+    fireEvent.pause(audio);
+
+    expect(screen.getByRole('button', { name: 'Play the voice note' })).toBeInTheDocument();
+  });
+
   it('counts back down to zero, and starts over when the note ends', () => {
     const { container } = player();
     const audio = audioOf(container);

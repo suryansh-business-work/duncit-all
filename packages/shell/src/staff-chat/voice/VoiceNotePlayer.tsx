@@ -47,8 +47,10 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
   const bars = peaks.length > 0 ? peaks : new Array(24).fill(0.25);
 
   const toggle = () => {
-    const node = audioRef.current;
-    if (!node) return;
+    // Only ever wired to the button below, which renders in the same pass as
+    // the audio element the ref points at — never null by the time it can be
+    // pressed.
+    const node = audioRef.current!;
     if (node.paused) {
       node.play().catch(() => undefined);
     } else {

@@ -356,6 +356,26 @@ describe('useMessageSelection', () => {
     expect(result.current.active).toBe(false);
   });
 
+  it('copies the attachment name for a picked message with no text, and nothing at all for neither', async () => {
+    const withAttachment: StaffMessage[] = [
+      { id: 'm1', from_user_id: 'me', to_user_id: 'u1', text: '', attachment_name: 'roster.pdf' } as StaffMessage,
+      { id: 'm2', from_user_id: 'u1', to_user_id: 'me', text: '', attachment_name: undefined } as StaffMessage,
+    ];
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...globalThis.navigator, clipboard: { writeText } });
+    const nameOf = (id: string) => (id === 'me' ? 'Me' : 'Them');
+    const { result } = renderHook(() =>
+      useMessageSelection({ messages: withAttachment, meId: 'me', nameOf, onDelete: vi.fn() })
+    );
+    act(() => result.current.start('m1'));
+    act(() => result.current.toggle('m2'));
+
+    await act(async () => result.current.copy());
+    await settle();
+
+    expect(writeText).toHaveBeenCalledWith('Me: roster.pdf\nThem: ');
+  });
+
   it('deletes each selected message and clears the selection', () => {
     const onDelete = vi.fn();
     const { result } = hook(onDelete);

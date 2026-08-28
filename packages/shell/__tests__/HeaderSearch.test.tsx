@@ -39,6 +39,17 @@ describe('HeaderSearch component', () => {
     expect(onNavigated).toHaveBeenCalledTimes(1);
   });
 
+  it('navigates on select even with no onNavigated caller to tell', async () => {
+    const user = userEvent.setup();
+    render(<HeaderSearch nav={nav} />);
+    const input = screen.getByPlaceholderText('Search');
+    await user.click(input);
+    await user.type(input, 'Leads');
+
+    await expect(user.click(await screen.findByText('Leads'))).resolves.not.toThrow();
+    expect(navigate).toHaveBeenCalledWith('/leads');
+  });
+
   it('renders a section caption when the item has a section, and prefers explicit items', async () => {
     const user = userEvent.setup();
     render(<HeaderSearch items={[{ label: 'Reports', to: '/reports', section: 'Analytics' }]} />);

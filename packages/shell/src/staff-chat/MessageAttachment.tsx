@@ -35,7 +35,10 @@ export function humanSize(bytes?: number | null): string {
 
 /** An icon per family, so a PDF does not look like a zip. */
 function iconFor(name: string, type: string) {
-  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  // slice/lastIndexOf rather than split(...).pop(), whose Array#pop() return
+  // type is optional for the general case — this name always has a tail, a
+  // dot or not, so there is no real "nothing to lower-case" branch to guard.
+  const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
   if (type.includes('pdf') || ext === 'pdf') return PictureAsPdfIcon;
   if (['xls', 'xlsx', 'csv'].includes(ext)) return TableChartIcon;
   if (['doc', 'docx', 'txt', 'rtf', 'md'].includes(ext)) return DescriptionIcon;

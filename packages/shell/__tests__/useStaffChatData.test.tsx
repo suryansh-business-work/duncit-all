@@ -169,6 +169,31 @@ describe('sending', () => {
     );
   });
 
+  it('leaves a still-pending message untouched when a different one in the outbox fails', async () => {
+    const { result } = mount();
+    let resolveFirst: () => void = () => undefined;
+    harness.mutations.SendStaffMessage.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirst = () => resolve({ data: {} });
+        })
+    ).mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.send('first, still going'));
+    act(() => result.current.send('second, will fail'));
+
+    await waitFor(() =>
+      expect(result.current.visibleMessages.find((m) => m.text === 'second, will fail')?.failed).toBe(true)
+    );
+    const first = result.current.visibleMessages.find((m) => m.text === 'first, still going');
+    expect(first?.pending).toBe(true);
+    expect(first?.failed).toBeFalsy();
+
+    await act(async () => {
+      resolveFirst();
+    });
+  });
+
   it('re-sends a failed attachment with the file, not just the caption', async () => {
     const { result } = mount();
     act(() =>
@@ -254,6 +279,17 @@ describe('exportChat', () => {
     await act(() => result.current.exportChat());
     expect(exporter.download).not.toHaveBeenCalled();
   });
+
+  it('exports an empty transcript rather than throwing when neither query has answered yet', async () => {
+    harness.client.query = vi.fn().mockResolvedValue({ data: {} });
+    const { result } = mount();
+
+    await act(() => result.current.exportChat());
+
+    expect(exporter.build).toHaveBeenCalledWith(
+      expect.objectContaining({ messages: [], calls: [] })
+    );
+  });
 });
 
 describe('history paging', () => {
@@ -291,6 +327,17 @@ describe('history paging', () => {
     const { result } = mount();
     await act(() => result.current.loadOlder());
     expect(harness.client.query).not.toHaveBeenCalled();
+  });
+
+  it('treats an empty answer as a short page rather than throwing', async () => {
+    harness.data.StaffMessages = { staffMessages: [live('m2', 'later', '2026-08-20T10:00:00Z')] };
+    harness.client.query = vi.fn().mockResolvedValue({ data: {} });
+    const { result } = mount();
+
+    await act(() => result.current.loadOlder());
+
+    expect(result.current.hasMore).toBe(false);
+    expect(result.current.visibleMessages).toHaveLength(1);
   });
 });
 

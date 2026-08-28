@@ -14,7 +14,13 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/vite-env.d.ts',
+        'src/main.tsx', // app bootstrap: mountPortal side-effect, no unit surface
+        'src/apollo.ts', // thin Apollo client factory
+        'src/theme.ts', // pure re-export barrel of @duncit/theme
+      ],
     },
     environment: 'jsdom',
     globals: true,

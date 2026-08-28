@@ -70,4 +70,27 @@ describe('AppSidebar', () => {
     await u.click(btn);
     expect(screen.getByRole('button', { name: /Collapse all/ })).toBeInTheDocument();
   });
+
+  it('shrinks to the icon rail with no footer caption, when collapsed', () => {
+    renderSidebar({ collapsed: true });
+    expect(screen.queryByText('© Duncit')).not.toBeInTheDocument();
+  });
+
+  it('offers a minimise control that reports which way it would go', async () => {
+    const u = userEvent.setup();
+    const onToggleCollapse = vi.fn();
+    renderSidebar({ onToggleCollapse });
+    await u.click(screen.getByLabelText('Minimise the menu'));
+    expect(onToggleCollapse).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads the same control as expanding, once collapsed', () => {
+    renderSidebar({ collapsed: true, onToggleCollapse: vi.fn() });
+    expect(screen.getByLabelText('Expand the menu')).toBeInTheDocument();
+  });
+
+  it('offers no minimise control at all when the caller has not wired one up', () => {
+    renderSidebar();
+    expect(screen.queryByLabelText(/Minimise the menu|Expand the menu/)).not.toBeInTheDocument();
+  });
 });

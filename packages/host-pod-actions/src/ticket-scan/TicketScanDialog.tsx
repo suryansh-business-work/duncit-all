@@ -20,6 +20,7 @@ import ScannedAttendeeCard from './ScannedAttendeeCard';
 import ScannerViewport from './ScannerViewport';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { HOST_SCAN_POD_TICKET } from '../queries';
+import { writeFailure } from '../write-failure';
 import type { HostPodActionLabels } from '../labels';
 import type { HostTicketScanResult, PodCompanionInput, ScanTarget } from '../types';
 
@@ -96,9 +97,9 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
       // Freshly marked (not a re-scan of someone already in) → confirm it
       // unmissably. A one-line text swap read as "nothing happened".
       if (outcome?.ok && !outcome.already_checked_in) setConfirmed(outcome);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (epoch !== epochRef.current) return;
-      setFailure(e?.message ?? 'Could not read that ticket');
+      setFailure(writeFailure(e, 'Could not read that ticket'));
     }
   };
 

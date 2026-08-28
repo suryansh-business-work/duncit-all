@@ -17,7 +17,7 @@ import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { createRef } from 'react';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import DeviceUploadTab from '../src/DeviceUploadTab';
 import ImageCropStep from '../src/ImageCropStep';
@@ -31,16 +31,6 @@ import * as compressionModule from '../src/videoCompression';
 import type { UploadCropPreset, UploadSettings } from '../src/types';
 
 const testTheme = createTheme();
-
-beforeAll(() => {
-  globalThis.ResizeObserver ??= class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
-  globalThis.URL.createObjectURL ??= () => 'blob:preview';
-  globalThis.URL.revokeObjectURL ??= () => undefined;
-});
 
 const settle = async () => {
   await act(async () => {

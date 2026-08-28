@@ -14,11 +14,13 @@ import SingleImageUploadField from '../src/SingleImageUploadField';
 import MediaListField from '../src/media-list-field/MediaListField';
 import PexelsPhotoCard from '../src/PexelsPhotoCard';
 import PexelsVideoCard from '../src/PexelsVideoCard';
+import PexelsPhotosTab from '../src/PexelsPhotosTab';
+import DeviceUploadTab from '../src/DeviceUploadTab';
 import { useDeviceUpload } from '../src/useDeviceUpload';
 import { directUploadToImagekit } from '../src/useImagekitDirectUpload';
 import * as uploadModule from '../src/upload';
 const { uploadImageToImagekit } = uploadModule;
-import { UPLOAD_IMAGE, UPLOAD_SETTINGS } from '../src/queries';
+import { IMPORT_REMOTE, PEXELS_SEARCH, UPLOAD_IMAGE, UPLOAD_SETTINGS } from '../src/queries';
 // @ts-expect-error -- untyped deep path; the shape is react-router-dom's own
 import { MemoryRouter } from '../../tabs/node_modules/react-router-dom';
 
@@ -358,7 +360,7 @@ describe('MediaListField picking through the dialog', () => {
     await settle();
 
     const upload = [...document.body.querySelectorAll<HTMLElement>('[role="dialog"] button')].find(
-      (b) => b.textContent?.trim() === 'Upload',
+      (b) => b.textContent?.includes('Upload to ImageKit'),
     );
     fireEvent.click(upload as HTMLElement);
     await settle();
@@ -403,5 +405,280 @@ describe('MediaListField picking through the dialog', () => {
     await uploadThroughDialog();
 
     expect(onChange).toHaveBeenCalledWith([A, UPLOADED].join('\n'));
+  });
+});
+
+describe('the last edges', () => {
+  it('reports progress to a caller that asked for it', async () => {
+    class Reader {
+      result: string | null = null;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      readAsDataURL() {
+        this.result = 'data:image/png;base64,eA==';
+        this.onload?.();
+      }
+    }
+    vi.stubGlobal('FileReader', Reader);
+    const apollo = {
+      mutate: vi.fn().mockResolvedValue({
+        data: { uploadImageToImagekit: { url: 'https://ik.imagekit.io/duncit/a.png' } },
+      }),
+    } as never;
+    const onProgress = vi.fn();
+
+    await uploadImageToImagekit(apollo, new File(['x'], 'a.png', { type: 'image/png' }), {
+      onProgress,
+    });
+
+    expect(onProgress).toHaveBeenCalledWith(55);
+  });
+
+  // A 200 with a body that is not JSON means the store said nothing about
+  // where the file went, so there is no URL to hand back.
+  it('refuses a success whose body could not be read at all', async () => {
+    let sent: { status: number; responseText: string; onload: (() => void) | null } | null = null;
+    class Xhr {
+      status = 200;
+      responseText = '';
+      upload = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      open() {}
+      send() {
+        sent = this as never;
+      }
+    }
+    vi.stubGlobal('XMLHttpRequest', Xhr);
+    const client = {
+      mutate: vi.fn().mockResolvedValue({
+        data: {
+          getImagekitAuth: {
+            uploadUrl: 'https://server.test/upload',
+            ticket: 'tkt-1',
+            urlEndpoint: 'https://ik.io/x',
+          },
+        },
+      }),
+    } as never;
+
+    const promise = directUploadToImagekit(client, new File(['x'], 'a.mp4'), 'pods');
+    await vi.waitFor(() => expect(sent).not.toBeNull());
+    sent!.responseText = 'not json at all';
+    sent!.onload?.();
+
+    await expect(promise).rejects.toThrow(/no file U/);
+  });
+
+  it('shows the avatar chrome working while an upload is in flight', async () => {
+    class SlowReader {
+      result: string | null = null;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      readAsDataURL() {
+        this.result = 'data:image/png;base64,eA==';
+        setTimeout(() => this.onload?.(), 0);
+      }
+    }
+    vi.stubGlobal('FileReader', SlowReader);
+    const { container } = wrap(
+      <SingleImageUploadField value="" onChange={vi.fn()} folder="/pods" variant="avatar" />,
+      [
+        {
+          request: { query: UPLOAD_IMAGE },
+          variableMatcher: () => true,
+          delay: 50,
+          result: {
+            data: {
+              uploadImageToImagekit: { url: 'https://ik.imagekit.io/duncit/a.png', fileId: 'f-1' },
+            },
+          },
+        },
+      ],
+    );
+    await settle();
+
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [new File(['x'], 'a.png', { type: 'image/png' })],
+    });
+    fireEvent.change(input);
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Uploading/ })).toBeDisabled());
+  });
+
+  // A video has no aspect to match a crop preset against, so the tab suggests
+  // nothing rather than the closest picture preset.
+  it('suggests no crop preset for a picked video', async () => {
+    const { container } = wrap(
+      <DeviceUploadTab
+        accept="image/*,video/*"
+        picked={new File(['x'], 'reel.mp4', { type: 'video/mp4' })}
+        previewUrl="blob:preview"
+        uploading={false}
+        uploadPct={null}
+        stage="uploading"
+        settings={{
+          surface: 'POD',
+          crop_presets: [
+            { key: 'COVER', label: 'Cover', width: 1200, height: 630, enabled: true },
+          ],
+          default_crop_key: 'NO_CROP',
+        }}
+        cropKey="NO_CROP"
+        setCropKey={vi.fn()}
+        setCropRect={vi.fn()}
+        onPickFile={vi.fn()}
+        fileInputRef={{ current: null }}
+      />,
+    );
+    await settle();
+
+    expect(container.querySelector('video')).not.toBeNull();
+    expect(container.textContent).not.toContain('Suggested');
+  });
+
+  it('imports the medium source for a Pexels photo listed with no large one', async () => {
+    const onPicked = vi.fn();
+    const photo = {
+      id: 'p-9',
+      photographer: 'Asha Rao',
+      photographer_url: 'https://pexels.com/@asha',
+      avg_color: '#334455',
+      alt: 'A badminton court',
+      src_large: '',
+      src_medium: 'https://images.pexels.com/p-9-medium.jpg',
+      src_tiny: 'https://images.pexels.com/p-9-tiny.jpg',
+    };
+    const importCalls: Record<string, unknown>[] = [];
+    const { container } = wrap(
+      <PexelsPhotosTab active open folder="pods" onPicked={onPicked} onClose={vi.fn()} setError={vi.fn()} />,
+      [
+        {
+          request: { query: PEXELS_SEARCH },
+          variableMatcher: () => true,
+          result: { data: { pexelsSearch: { page: 1, next_page: null, photos: [photo] } } },
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+        {
+          request: { query: IMPORT_REMOTE },
+          variableMatcher: (variables: Record<string, unknown>) => {
+            importCalls.push(variables);
+            return true;
+          },
+          result: {
+            data: {
+              importRemoteImageToImagekit: {
+                url: 'https://ik.imagekit.io/duncit/imported.jpg',
+                fileId: 'ik-1',
+              },
+            },
+          },
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ],
+    );
+    await settle();
+    await settle();
+
+    fireEvent.click(container.querySelector('li') as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(importCalls[0]).toMatchObject({ remoteUrl: 'https://images.pexels.com/p-9-medium.jpg' });
+    expect(onPicked).toHaveBeenCalledWith('https://ik.imagekit.io/duncit/imported.jpg');
+  });
+});
+
+describe('the crop suggestion, once the picture has measured itself', () => {
+  /** jsdom never loads an image, so its dimensions are handed over directly. */
+  const stubImage = (width: number, height: number) => {
+    class StubImage {
+      naturalWidth = width;
+      naturalHeight = height;
+      onload: (() => void) | null = null;
+      set src(_value: string) {
+        setTimeout(() => this.onload?.(), 0);
+      }
+    }
+    vi.stubGlobal('Image', StubImage);
+  };
+
+  // The preset whose aspect is closest to the picked photo is called out, so
+  // nobody has to work out which of them fits.
+  it('calls out the preset closest to the picture that was picked', async () => {
+    stubImage(1200, 630);
+    const { container } = wrap(
+      <DeviceUploadTab
+        accept="image/*"
+        picked={new File(['x'], 'court.png', { type: 'image/png' })}
+        previewUrl="blob:preview"
+        uploading={false}
+        uploadPct={null}
+        stage="uploading"
+        settings={{
+          surface: 'POD',
+          crop_presets: [
+            { key: 'COVER', label: 'Cover', width: 1200, height: 630, enabled: true },
+            { key: 'SQUARE', label: 'Square', width: 600, height: 600, enabled: true },
+          ],
+          default_crop_key: 'NO_CROP',
+        }}
+        cropKey="NO_CROP"
+        setCropKey={vi.fn()}
+        setCropRect={vi.fn()}
+        onPickFile={vi.fn()}
+        fileInputRef={{ current: null }}
+      />,
+    );
+    await settle();
+    await settle();
+
+    // The picture measures itself, and the preset whose aspect matches it is
+    // the one the dropdown calls out.
+    await waitFor(() => expect(container.textContent).toContain('1200×630'));
+    fireEvent.mouseDown(screen.getByLabelText('Crop'));
+    await settle();
+
+    const cover = screen.getByRole('option', { name: /Cover/ });
+    expect(cover.textContent).toContain('Suggested');
+    expect(screen.getByRole('option', { name: /Square/ }).textContent).not.toContain('Suggested');
+  });
+});
+
+describe('a store that answers 200 with a JSON null', () => {
+  it('reads it as no answer at all, so no URL is reported', async () => {
+    let sent: { status: number; responseText: string; onload: (() => void) | null } | null = null;
+    class Xhr {
+      status = 200;
+      responseText = '';
+      upload = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      open() {}
+      send() {
+        sent = this as never;
+      }
+    }
+    vi.stubGlobal('XMLHttpRequest', Xhr);
+    const client = {
+      mutate: vi.fn().mockResolvedValue({
+        data: {
+          getImagekitAuth: {
+            uploadUrl: 'https://server.test/upload',
+            ticket: 'tkt-1',
+            urlEndpoint: 'https://ik.io/x',
+          },
+        },
+      }),
+    } as never;
+
+    const promise = directUploadToImagekit(client, new File(['x'], 'a.mp4'), 'pods');
+    await vi.waitFor(() => expect(sent).not.toBeNull());
+    sent!.responseText = 'null';
+    sent!.onload?.();
+
+    await expect(promise).rejects.toThrow(/no file U/);
   });
 });

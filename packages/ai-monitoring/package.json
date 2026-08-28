@@ -16,8 +16,8 @@
     "src"
   ],
   "scripts": {
-    "test": "vitest run --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/ai-monitoring"
   },
   "peerDependencies": {

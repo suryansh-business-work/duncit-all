@@ -10,13 +10,14 @@
 import type { ReactNode } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
 import { hostActionsConfig } from './host-actions-config';
 import PodCompleteDialog from '../src/pod-complete/PodCompleteDialog';
 import TicketScanDialog from '../src/ticket-scan/TicketScanDialog';
+import { labelsFor } from './host-actions-config';
 /**
  * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
  * than falling back to the default one — so a component reading it through a
@@ -53,6 +54,7 @@ const pressEverything = async () => {
 };
 
 const POD = { id: 'pod-1', pod_title: 'Sunday Badminton' };
+const labels = labelsFor();
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -112,7 +114,25 @@ describe('PodCompleteDialog', () => {
     wrap(<PodCompleteDialog pod={POD} onClose={vi.fn()} onCompleted={vi.fn()} />);
     await settle();
 
-    expect(document.body.textContent).toContain('Sunday Badminton');
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(document.body.textContent).toContain(labels.completePod);
+    expect(document.body.textContent).toContain(labels.completeHint);
+  });
+
+  // Only a pod booked into a venue owes the venue anything, so only that one
+  // is asked for a bill — an unbooked pod's dialog has no such box to fill.
+  it('asks for the venue bill only when the pod was booked into a venue', async () => {
+    wrap(
+      <PodCompleteDialog pod={{ ...POD, venue_id: 'venue-1' }} onClose={vi.fn()} onCompleted={vi.fn()} />,
+    );
+    await settle();
+    expect(document.body.textContent).toContain(labels.venueBillAmount);
+
+    cleanup();
+    wrap(<PodCompleteDialog pod={POD} onClose={vi.fn()} onCompleted={vi.fn()} />);
+    await settle();
+
+    expect(document.body.textContent).not.toContain(labels.venueBillAmount);
   });
 
   it('survives the settlement preview failing rather than blanking the dialog', async () => {

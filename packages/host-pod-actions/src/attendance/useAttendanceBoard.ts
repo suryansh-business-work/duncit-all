@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { needsOtp, type PodAttendanceBoard, type PodAttendanceRow } from '@duncit/utils';
 import { FORCE_ATTENDANCE, HOST_MARK_ATTENDANCE, POD_ATTENDANCE_BOARD } from './queries';
+import { writeFailure } from '../write-failure';
 
 export interface AttendanceBoardApi {
   board: PodAttendanceBoard | undefined;
@@ -67,7 +68,7 @@ export function useAttendanceBoard(
           notifySuccess(message);
           reload();
         })
-        .catch((e: unknown) => notifyError((e as Error)?.message ?? message))
+        .catch((e: unknown) => notifyError(writeFailure(e, message)))
         .finally(() => setBusyId(''));
     },
     [notifyError, notifySuccess, reload]

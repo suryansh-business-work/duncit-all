@@ -7,6 +7,7 @@ import {
   REMOVE_POD_PARTY_MEDIA,
   type PodMediaBoard,
 } from './queries';
+import { writeFailure } from '../write-failure';
 
 export interface PodMediaBoardApi {
   board: PodMediaBoard | null;
@@ -57,7 +58,7 @@ export function usePodMediaBoard({
         notifySuccess(labels.added(urls.length));
       } catch (e) {
         setFailedWrite(true);
-        notifyError(e instanceof Error ? e.message : labels.loadFailed);
+        notifyError(writeFailure(e, labels.loadFailed));
       }
     },
     [addMedia, podId, labels, notifySuccess, notifyError],
@@ -71,7 +72,7 @@ export function usePodMediaBoard({
         notifySuccess(labels.removed);
       } catch (e) {
         setFailedWrite(true);
-        notifyError(e instanceof Error ? e.message : labels.loadFailed);
+        notifyError(writeFailure(e, labels.loadFailed));
       }
     },
     [removeMedia, podId, labels, notifySuccess, notifyError],

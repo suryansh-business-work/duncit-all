@@ -44,13 +44,25 @@ describe('tours store', () => {
   });
 
   it('starting clears the previous tour’s locked step list', () => {
-    useToursStore.getState().armTour([{ anchor: 'home-pods', titleKey: 'mweb.tours.home.pods.title', bodyKey: 'mweb.tours.home.pods.body' }]);
+    useToursStore.getState().armTour([
+      {
+        anchor: 'home-pods',
+        titleKey: 'mweb.tours.home.pods.title',
+        bodyKey: 'mweb.tours.home.pods.body',
+      },
+    ]);
     useToursStore.getState().startTour('club');
     expect(useToursStore.getState().activeSteps).toEqual([]);
   });
 
   it('locks a copy of the resolved steps in, so the caller cannot mutate them', () => {
-    const resolved = [{ anchor: 'home-pods', titleKey: 'mweb.tours.home.pods.title', bodyKey: 'mweb.tours.home.pods.body' }];
+    const resolved = [
+      {
+        anchor: 'home-pods',
+        titleKey: 'mweb.tours.home.pods.title',
+        bodyKey: 'mweb.tours.home.pods.body',
+      },
+    ];
     useToursStore.getState().armTour(resolved);
     expect(useToursStore.getState().activeSteps).toEqual(resolved);
     expect(useToursStore.getState().activeSteps).not.toBe(resolved);

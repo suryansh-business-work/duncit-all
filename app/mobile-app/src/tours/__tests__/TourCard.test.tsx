@@ -12,8 +12,16 @@ jest.mock('@/services/secure-storage', () => ({
 }));
 
 const STEPS = [
-  { anchor: 'home-pods', titleKey: 'mweb.tours.home.pods.title', bodyKey: 'mweb.tours.home.pods.body' },
-  { anchor: 'home-clubs', titleKey: 'mweb.tours.home.clubs.title', bodyKey: 'mweb.tours.home.clubs.body' },
+  {
+    anchor: 'home-pods',
+    titleKey: 'mweb.tours.home.pods.title',
+    bodyKey: 'mweb.tours.home.pods.body',
+  },
+  {
+    anchor: 'home-clubs',
+    titleKey: 'mweb.tours.home.clubs.title',
+    bodyKey: 'mweb.tours.home.clubs.body',
+  },
 ];
 
 /** The step object rn-tourguide hands the tooltip; `order` is the zone number. */

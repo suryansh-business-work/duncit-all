@@ -115,12 +115,10 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
                 <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={6}>
-                  Edit & resubmit pod
+                  {t('mweb.hostPodActions.resubmitTitle')}
                 </Text>
                 <Text fontSize={12.5} color="$muted" paddingBottom={10}>
-                  Select a different venue or choose a different time slot — your booking request is
-                  sent to the venue again when you resubmit. Your pod is kept, no new pod is
-                  created.
+                  {t('mweb.hostPodActions.resubmitHint')}
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <YStack gap={12} paddingBottom={6}>
@@ -129,7 +127,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       name="pod_title"
                       label={t('mweb.common.title')}
                       required
-                      hint="3–120 characters"
+                      hint={t('mweb.hostPodActions.resubmitTitleLengthHint')}
                     />
                     <FormTextField
                       control={control}
@@ -137,7 +135,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       label={t('mweb.common.description')}
                       multiline
                       required
-                      hint="At least 10 characters"
+                      hint={t('mweb.hostPodActions.resubmitDescriptionLengthHint')}
                     />
                     <Controller
                       control={control}

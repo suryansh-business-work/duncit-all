@@ -2272,6 +2272,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Select a different venue or choose a different time slot — your booking request is sent to the venue again when you resubmit. Your pod is kept, no new pod is created.',
       resubmitting: 'Resubmitting…',
       resubmitCta: 'Resubmit request',
+      resubmitTitleLengthHint: '3–120 characters',
+      resubmitDescriptionLengthHint: 'At least 10 characters',
       venue: 'Venue',
       venueHint: 'Pick the venue to request',
       completeHint:

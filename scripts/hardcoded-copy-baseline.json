@@ -53,7 +53,6 @@
   "app/mobile-app/src/components/host-manage/pod-resubmit.form.ts": 5,
   "app/mobile-app/src/components/host-manage/PodDeleteDialog.tsx": 3,
   "app/mobile-app/src/components/host-manage/PodEditDialog.tsx": 1,
-  "app/mobile-app/src/components/host-manage/PodResubmitDialog.tsx": 1,
   "app/mobile-app/src/components/host-manage/SettlementSummary.tsx": 2,
   "app/mobile-app/src/components/host-manage/ticket-scan/ScannedAttendeeCard.tsx": 1,
   "app/mobile-app/src/components/host-manage/ticket-scan/ScannerFrame.tsx": 2,

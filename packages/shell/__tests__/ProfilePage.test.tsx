@@ -95,6 +95,22 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
   });
 
+  it('swallows a rejected save rather than leaving it unhandled', async () => {
+    const u = userEvent.setup();
+    const save = vi.fn().mockRejectedValue(new Error('network down'));
+    userCtx.user = { user_id: 'u1', first_name: 'Ada', roles: [] };
+    mockMutation.mockReturnValue([save, { loading: false, error: undefined }] as never);
+
+    render(<ProfilePage />);
+    await u.click(screen.getByRole('button', { name: 'Edit' }));
+    await u.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(save).toHaveBeenCalled();
+    // Still on the edit form — a rejected save neither closes it nor toasts.
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
+    expect(userCtx.refetch).not.toHaveBeenCalled();
+  });
+
   it('falls back to the Duncit brand name when branding has no app name', () => {
     branding.appName = '';
     userCtx.user = { user_id: 'u1', first_name: 'Ada', roles: [] };

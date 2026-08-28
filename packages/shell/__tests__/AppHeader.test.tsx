@@ -76,4 +76,14 @@ describe('AppHeader', () => {
     await u.click(await screen.findByText('Home'));
     expect(screen.getByLabelText('open search')).toBeInTheDocument();
   });
+
+  it('opens the apps drawer, and closes it from its own close button', async () => {
+    const u = userEvent.setup();
+    renderHeader('light');
+
+    await u.click(screen.getByLabelText('open apps'));
+    expect(screen.getByText('File Manager')).toBeInTheDocument();
+
+    await u.click(screen.getByLabelText('Close apps'));
+  });
 });

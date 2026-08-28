@@ -31,7 +31,9 @@ function tally(reactions: StaffReaction[]) {
     }
     byEmoji.get(reaction.emoji)?.push(reaction.user_id);
   }
-  return order.map((emoji) => ({ emoji, users: byEmoji.get(emoji) ?? [] }));
+  // Every emoji in `order` was `set` in the same pass above, so `get` is
+  // always defined here.
+  return order.map((emoji) => ({ emoji, users: byEmoji.get(emoji)! }));
 }
 
 /**

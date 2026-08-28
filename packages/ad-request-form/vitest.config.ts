@@ -12,7 +12,7 @@ export default defineConfig({
       // to false), so one red suite deleted this whole workspace's lcov and SonarQube
       // read the silence as 0%.
       reportOnFailure: true,
-      reporter: ['text', 'lcov'],
+      reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**'],
       // Co-located *.test.ts files sit under src/, so they land inside `include`

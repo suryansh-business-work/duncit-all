@@ -25,6 +25,8 @@ vi.mock('../src/AdMediaField', () => ({
     <div data-testid="media-field">
       <span data-testid="media-type">{props.adType}</span>
       <span data-testid="media-value">{props.value}</span>
+      <span data-testid="media-error">{String(props.error)}</span>
+      <span data-testid="media-helper">{props.helperText}</span>
       <button onClick={() => props.onChange('picked-media-url')}>pick-media</button>
     </div>
   ),
@@ -98,6 +100,16 @@ describe('AdRequestForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'clear-date' }));
     await waitFor(() => expect(screen.getByTestId('date-error')).toHaveTextContent('true'));
     expect(screen.getByTestId('date-helper')).toHaveTextContent(/required/i);
+  });
+
+  it('flags the ad media field once its value is emptied out', async () => {
+    renderForm({ initialValues: { ...validValues(), media_url: '' } });
+    expect(screen.getByTestId('media-error')).toHaveTextContent('false');
+    // media_url starts invalid; any onChange re-runs the whole-schema
+    // validation and surfaces it — the date field is the easiest to drive.
+    fireEvent.click(screen.getByRole('button', { name: 'set-date' }));
+    await waitFor(() => expect(screen.getByTestId('media-error')).toHaveTextContent('true'));
+    expect(screen.getByTestId('media-helper')).toHaveTextContent(/upload the ad media/i);
   });
 
   it('adjusts the duration via the slider and pluralises the label', async () => {

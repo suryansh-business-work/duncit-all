@@ -114,8 +114,9 @@ export default function MessageThread({
   }, [jumpToId]);
 
   const onScroll = () => {
-    const node = scroller.current;
-    if (!node) return;
+    // Only ever wired to this element's own onScroll below — the ref is
+    // already attached by the time it can fire.
+    const node = scroller.current!;
     const near = node.scrollHeight - node.scrollTop - node.clientHeight < 80;
     setAtBottom(near);
     if (near) setUnseen(0);

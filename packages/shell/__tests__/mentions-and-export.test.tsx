@@ -522,6 +522,32 @@ describe('FloatingWindow', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('backs out of the close warning without ending the call', async () => {
+    const onClose = vi.fn();
+    render(
+      <FloatingWindow
+        id="w1"
+        open
+        title="Call with Vikram"
+        initial={initial}
+        onClose={onClose}
+        closeWarning={{ title: 'End call?', message: 'This ends the call for both of you.', confirmLabel: 'End call' }}
+      >
+        <div>content</div>
+      </FloatingWindow>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    // The dialog's own exit transition needs real wall-clock time in jsdom.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByText('End call?')).not.toBeInTheDocument();
+  });
+
   it('closes straight away with no warning configured', () => {
     const onClose = vi.fn();
     render(

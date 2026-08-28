@@ -307,6 +307,21 @@ describe('MessageThread', () => {
     expect(container.innerHTML).not.toBe('');
   });
 
+  it('does nothing risky when told to jump to a message that is not loaded', () => {
+    expect(() => thread({ jumpToId: 'm-nowhere' })).not.toThrow();
+  });
+
+  it('does nothing risky jumping to a real message on an engine with no scrollIntoView at all', () => {
+    const original = Element.prototype.scrollIntoView;
+    // @ts-expect-error -- proving the optional call is genuinely optional.
+    delete Element.prototype.scrollIntoView;
+    try {
+      expect(() => thread({ jumpToId: 'm-code' })).not.toThrow();
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
+  });
+
   it('renders the selection state for messages picked in bulk', () => {
     const { container } = thread({ selectedIds: new Set(['m-plain', 'm-image']) });
 
@@ -424,6 +439,42 @@ describe('MessageThread', () => {
 
     fireEvent.click(jumpButton);
     expect(jumpButton.textContent).not.toBe('1');
+  });
+
+  it('caps the unseen pill at "9+" rather than an exact count once it grows past nine', () => {
+    const spies = handlers();
+    const tree = (msgs: StaffMessage[]) => (
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={testTheme}>
+          <MessageThread
+            messages={msgs}
+            calls={CALLS}
+            meId={ME}
+            loading={false}
+            hasMore={false}
+            loadingMore={false}
+            settings={DEFAULT_CHAT_SETTINGS}
+            formats={formats}
+            spacing={1}
+            nameOf={(userId) => (userId === ME ? 'Asha Rao' : 'Vikram N')}
+            {...spies}
+          />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    const { container, rerender } = render(tree(MESSAGES));
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    Object.defineProperty(scroller, 'scrollHeight', { value: 2000, configurable: true, writable: true });
+    Object.defineProperty(scroller, 'scrollTop', { value: 500, configurable: true, writable: true });
+    fireEvent.scroll(scroller);
+
+    let current = MESSAGES;
+    for (let i = 0; i < 10; i += 1) {
+      current = [...current, message({ id: `m-flood-${i}`, text: `flood ${i}` })];
+      rerender(tree(current));
+    }
+
+    expect((container.querySelector('.MuiFab-root') as HTMLElement).textContent).toBe('9+');
   });
 
   it('asks for the previous page once scrolled near the top, but not while one is already loading', () => {

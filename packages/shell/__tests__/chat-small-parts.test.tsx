@@ -15,9 +15,12 @@ import { playCallEnded, playMessagePing, startRinging } from '../src/staff-chat/
 import { STAFF_UNREAD, type StaffMessage } from '../src/staff-chat/queries';
 import { ShellRuntimeProvider } from '../src/lib/runtime';
 
+const socketOn = vi.hoisted(() => ({ handlers: {} as Record<string, (p: unknown) => void> }));
 vi.mock('socket.io-client', () => ({
   io: () => ({
-    on: vi.fn(),
+    on: (event: string, handler: (p: unknown) => void) => {
+      socketOn.handlers[event] = handler;
+    },
     off: vi.fn(),
     emit: vi.fn(),
     disconnect: vi.fn(),
@@ -331,5 +334,29 @@ describe('StaffChatButton', () => {
     await settle();
 
     expect(screen.getByRole('button', { name: 'Chat with a coworker' })).toHaveClass('MuiIconButton-colorPrimary');
+  });
+
+  it('skips the unread query and the socket outside a portal boot at all', async () => {
+    expect(() =>
+      render(
+        <MockedProvider mocks={[]}>
+          <StaffChatButton meId="me" open={false} onToggle={vi.fn()} />
+        </MockedProvider>,
+      ),
+    ).not.toThrow();
+    await settle();
+  });
+
+  it('swallows a badge refresh that fails to arrive after a socket message', async () => {
+    socketOn.handlers = {};
+    localStorage.setItem('token', 'jwt');
+    button([unreadMock(0), unreadMock(0)]);
+    await settle();
+
+    expect(() => {
+      socketOn.handlers.staff_message?.({ id: 'm', from_user_id: 'u1', to_user_id: 'me', text: 'hi' });
+    }).not.toThrow();
+    await settle();
+    localStorage.removeItem('token');
   });
 });

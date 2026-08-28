@@ -234,6 +234,22 @@ describe('useVoiceNote', () => {
     expect(result.current.recording).toBe(false);
   });
 
+  it('falls back to a webm blob type when the recorder never settled on a mimeType', async () => {
+    stubMedia();
+    const { result } = renderHook(() => useVoiceNote());
+    await act(async () => {
+      await result.current.start();
+    });
+    FakeRecorder.last!.mimeType = '';
+
+    let note: Awaited<ReturnType<typeof result.current.stop>> = null;
+    await act(async () => {
+      note = await result.current.stop(true);
+    });
+
+    expect(note?.blob.type).toBe('audio/webm');
+  });
+
   it('hands back nothing when the note was discarded', async () => {
     stubMedia();
     const { result } = renderHook(() => useVoiceNote());

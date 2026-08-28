@@ -209,6 +209,14 @@ describe('Conversation', () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 
+  it('shows what is being answered above the composer, until it is cancelled', () => {
+    const onCancelReply = vi.fn();
+    show({ replyTo: message('m1', 'u1', 'Original text'), onCancelReply });
+
+    expect(screen.getByText('Replying to Asha Rao')).toBeInTheDocument();
+    expect(screen.getByText('Original text')).toBeInTheDocument();
+  });
+
   it('shows both sides of the conversation', () => {
     show({ messages: [message('m1', 'u1', 'did you see it'), message('m2', 'me', 'just now')] });
     expect(screen.getByText('did you see it')).toBeInTheDocument();

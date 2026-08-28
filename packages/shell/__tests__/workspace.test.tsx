@@ -172,6 +172,27 @@ describe('a window on the taskbar', () => {
     </>
   );
 
+  it('names itself on the bar by title alone, for a window with no subtitle', async () => {
+    mount(
+      <>
+        <FloatingWindow
+          id="demo-plain"
+          open
+          title="A window with no subtitle"
+          icon="WINDOW"
+          initial={{ x: 40, y: 40, width: 400, height: 300 }}
+          onClose={vi.fn()}
+        >
+          <div>plain content</div>
+        </FloatingWindow>
+        <Taskbar />
+      </>,
+    );
+    await settle();
+
+    expect(screen.getByRole('button', { name: /Minimise A window with no subtitle/ })).toBeInTheDocument();
+  });
+
   it('announces itself to the bar while it is open', async () => {
     mount(openWindow());
     await settle();

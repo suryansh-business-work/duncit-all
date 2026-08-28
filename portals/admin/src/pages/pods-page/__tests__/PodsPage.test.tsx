@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, useLocation } from 'react-router-dom';
 import type { MockedResponse } from '@apollo/client/testing';
 import { renderWithProviders } from '../../../__tests__/testkit';
-import { COMPLETE_POD_SETTLEMENT } from '../queries';
+import { COMPLETE_POD_SETTLEMENT, DELETE } from '../queries';
 import { buildCompleteInput } from '../complete-pod-dialog';
 import PodsPage from '../PodsPage';
 
@@ -16,24 +16,7 @@ const harness = vi.hoisted(() => ({
     venue_id: 'venue1',
   },
   fetchCalls: [] as { rootField: string; options: unknown }[],
-  nativeParityCalls: [] as unknown[],
-  featureFlagKeys: [] as string[],
-  productsFlag: true,
   tableRefetch: vi.fn(),
-  editor: {
-    open: false,
-    editingPod: null as unknown,
-    initialValues: { pod_title: '' },
-    busy: false,
-    opError: null as string | null,
-    openCreate: vi.fn(),
-    openEdit: vi.fn(),
-    close: vi.fn(),
-    submit: vi.fn(),
-    remove: vi.fn(),
-  },
-  onChanged: null as null | ((message: string) => void),
-  lastConfig: null as Record<string, unknown> | null,
   pickerOpen: false,
   pickImage: vi.fn(),
   pickVideo: vi.fn(),
@@ -47,24 +30,23 @@ vi.mock('@duncit/table', () => ({
   },
 }));
 
-vi.mock('@duncit/app-settings', () => ({
-  useFeatureFlag: (key: string) => {
-    harness.featureFlagKeys.push(key);
+// `@duncit/dialogs`' ConfirmDialog imports `flattenCatalogue`/`SHELL_BUNDLE` from
+// this module at load time, so it must stay a REAL module (via importOriginal)
+// rather than a full replacement. `useTranslation` is left untouched too: with
+// no LocaleProvider mounted in these tests it already falls back to the real
+// shipped copy (e.g. "Club", "Include cancelled", "Saved"), which is what every
+// text query below matches.
+vi.mock('@duncit/app-settings', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
     // `auto_pods` off, so New Pod opens the ordinary editor without first asking
     // which kind — the chooser has its own coverage in @duncit/auto-pods.
-    if (key === 'auto_pods') return false;
-    return harness.productsFlag;
-  },
-  useTranslation: () => ({
-    t: (key: string) => (key === 'shell.podKind.newPodCta' ? 'New Pod' : key),
-  }),
-}));
+    useFeatureFlag: (key: string) => key !== 'auto_pods',
+  };
+});
 
 vi.mock('@duncit/pod-form', () => ({
-  makeNativeParityPodConfig: (args: unknown) => {
-    harness.nativeParityCalls.push(args);
-    return { nativeParity: true };
-  },
   useMediaPickerBridge: () => ({
     pickerOpen: harness.pickerOpen,
     pickImage: harness.pickImage,
@@ -73,14 +55,6 @@ vi.mock('@duncit/pod-form', () => ({
     title: 'Pick a cover',
     accept: 'image/*',
   }),
-}));
-
-vi.mock('../usePodEditor', () => ({
-  default: (args: { config: Record<string, unknown>; onChanged: (m: string) => void }) => {
-    harness.lastConfig = args.config;
-    harness.onChanged = args.onChanged;
-    return harness.editor;
-  },
 }));
 
 vi.mock('../usePodPageData', () => ({
@@ -189,25 +163,6 @@ vi.mock('../ReleaseSummaryDialog', () => ({
   ),
 }));
 
-vi.mock('../PodFormDialog', () => ({
-  default: (props: {
-    open: boolean;
-    editing: boolean;
-    config: Record<string, unknown>;
-    clubs: unknown[];
-    hosts: { user_id: string }[];
-  }) => (
-    <div
-      data-testid="pod-form-dialog"
-      data-open={String(props.open)}
-      data-editing={String(props.editing)}
-      data-config={JSON.stringify(props.config)}
-      data-club-count={props.clubs.length}
-      data-host-ids={props.hosts.map((h) => h.user_id).join(',')}
-    />
-  ),
-}));
-
 vi.mock('../QuickEditPodDialog', () => ({
   default: (props: { pod: { pod_title?: string } | null; onClose: () => void; onSaved: () => void }) => (
     <div data-testid="quick-edit" data-open={String(!!props.pod)}>
@@ -234,9 +189,18 @@ vi.mock('../../../components/MediaPickerDialog', () => ({
 
 function LocationProbe() {
   const location = useLocation();
-  return <span data-testid="search">{location.search}</span>;
+  return (
+    <>
+      <span data-testid="search">{location.search}</span>
+      <span data-testid="pathname">{location.pathname}</span>
+    </>
+  );
 }
 
+// The create/edit flows now navigate to the real admin routes (`/pods/new`,
+// `/pods/:id/edit`) instead of opening an in-page dialog, so every route the
+// page can send the browser to is registered here — each paired with the probe
+// so a test can assert exactly where it landed.
 const renderPage = (entry = '/pods') =>
   renderWithProviders(<></>, {
     initialEntries: [entry],
@@ -251,7 +215,17 @@ const renderPage = (entry = '/pods') =>
             </>
           }
         />
-        <Route path="/pods/:id" element={<div>POD DETAIL ROUTE</div>} />
+        <Route
+          path="/pods/:id"
+          element={
+            <>
+              <div>POD DETAIL ROUTE</div>
+              <LocationProbe />
+            </>
+          }
+        />
+        <Route path="/pods/new" element={<LocationProbe />} />
+        <Route path="/pods/:id/edit" element={<LocationProbe />} />
       </>
     ),
   });
@@ -265,14 +239,7 @@ const renderPageWithMocks = (mocks: MockedResponse[]) =>
 
 beforeEach(() => {
   harness.fetchCalls.length = 0;
-  harness.nativeParityCalls.length = 0;
-  harness.featureFlagKeys.length = 0;
-  harness.productsFlag = true;
-  harness.editor.open = false;
-  harness.editor.editingPod = null;
   harness.pickerOpen = false;
-  harness.onChanged = null;
-  harness.lastConfig = null;
   vi.clearAllMocks();
 });
 
@@ -287,14 +254,15 @@ describe('PodsPage / club filter', () => {
     renderPage('/pods?club_id=club2');
     expect(harness.fetchCalls[0].options).toEqual({
       extraFilters: [{ field: 'club_id', op: 'eq', value: 'club2' }],
-      // Cancelled pods stay out of the list until the toggle asks for them.
-      extraVariables: { include_deleted: false },
+      // Cancelled pods stay out of the list until the toggle asks for them, and
+      // no lifecycle stage is picked until the status select is touched.
+      extraVariables: { include_deleted: false, lifecycle: null },
     });
   });
 
   it('asks the server for cancelled pods when "Include cancelled" is switched on', async () => {
     renderPage('/pods');
-    fireEvent.click(screen.getByRole('checkbox', { name: /include cancelled/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /include cancelled/i }));
     await waitFor(() =>
       expect(
         (harness.fetchCalls.at(-1)?.options as { extraVariables?: { include_deleted?: boolean } })
@@ -332,62 +300,15 @@ describe('PodsPage / club filter', () => {
   });
 });
 
-describe('PodsPage / pod form config', () => {
-  it('builds the native-parity config with the products feature flag', () => {
-    harness.productsFlag = true;
-    renderPage();
-    expect(harness.featureFlagKeys).toContain('is_product_visible');
-    expect(harness.nativeParityCalls[0]).toEqual({ showProducts: true });
-  });
-
-  it('passes the flag through when products are switched off', () => {
-    harness.productsFlag = false;
-    renderPage();
-    expect(harness.nativeParityCalls[0]).toEqual({ showProducts: false });
-  });
-
-  it('layers the admin-only capabilities on top of the native parity base', () => {
-    renderPage();
-    const config = JSON.parse(screen.getByTestId('pod-form-dialog').getAttribute('data-config') ?? '{}');
-    expect(config).toEqual({
-      nativeParity: true,
-      requireHosts: true,
-      singleHost: true,
-      showLocationZone: true,
-      showInventory: true,
-      showFinance: true,
-      showIsActive: true,
-    });
-  });
-
-  it('feeds the host column with approved hosts, not the whole user directory', () => {
-    renderPage();
-    expect(screen.getByTestId('pod-form-dialog')).toHaveAttribute('data-host-ids', 'u1,u2');
-    // The complete-pod dialog still labels historical hosts from the full directory.
-    expect(screen.getByTestId('complete-user-count')).toHaveTextContent('1');
-  });
-
-  it('hands the same config to the editor hook that the dialog renders', () => {
-    renderPage();
-    expect(harness.lastConfig).toMatchObject({ requireHosts: true, showFinance: true });
-  });
-
-  it('mirrors the editor open/editing state onto the dialog', () => {
-    harness.editor.open = true;
-    harness.editor.editingPod = harness.pod;
-    renderPage();
-    const dialog = screen.getByTestId('pod-form-dialog');
-    expect(dialog).toHaveAttribute('data-open', 'true');
-    expect(dialog).toHaveAttribute('data-editing', 'true');
-    expect(dialog).toHaveAttribute('data-club-count', '2');
-  });
-});
-
 describe('PodsPage / row actions', () => {
-  it('opens the create dialog from the New Pod toolbar action', () => {
+  // Create and edit are their own routed pages now (`/pods/new`,
+  // `/pods/:id/edit`) rather than a dialog PodsPage owns — see
+  // `pod-editor-page/index.tsx`. These assert the navigation the toolbar and
+  // the grid rows wire up to.
+  it('navigates to the new-pod route from the New Pod toolbar action', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /new pod/i }));
-    expect(harness.editor.openCreate).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/pods/new');
   });
 
   it('routes a row view to the pod detail page', () => {
@@ -396,17 +317,48 @@ describe('PodsPage / row actions', () => {
     expect(screen.getByText('POD DETAIL ROUTE')).toBeInTheDocument();
   });
 
-  it('sends edit and delete straight to the editor hook', () => {
+  it("routes a row edit to the pod's edit page", () => {
     renderPage();
     fireEvent.click(screen.getByText('row-edit'));
-    fireEvent.click(screen.getByText('row-delete'));
-    expect(harness.editor.openEdit).toHaveBeenCalledWith(harness.pod);
-    expect(harness.editor.remove).toHaveBeenCalledWith(harness.pod);
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/pods/doc1/edit');
   });
 
   it('passes the name lookups down to the grid columns', () => {
     renderPage();
     expect(screen.getByTestId('lookups')).toHaveTextContent('Club<club1>|Venue<venue1>|Loc<loc1>');
+  });
+});
+
+describe('PodsPage / delete a pod', () => {
+  it('asks for confirmation naming the pod before deleting', async () => {
+    renderPageWithMocks([]);
+    fireEvent.click(screen.getByText('row-delete'));
+    expect(await screen.findByText('Delete pod "Hackathon Night"?')).toBeInTheDocument();
+  });
+
+  it('deletes nothing when the confirmation is dismissed', async () => {
+    renderPageWithMocks([]);
+    fireEvent.click(screen.getByText('row-delete'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+    await waitFor(() =>
+      expect(screen.queryByText('Delete pod "Hackathon Night"?')).not.toBeInTheDocument(),
+    );
+    expect(harness.tableRefetch).not.toHaveBeenCalled();
+  });
+
+  it('deletes the pod, toasts and reloads the grid once confirmed', async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: DELETE, variables: { id: 'doc1' } },
+        result: { data: { deletePod: true } },
+      },
+    ];
+    renderPageWithMocks(mocks);
+    fireEvent.click(screen.getByText('row-delete'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByText('Deleted')).toBeInTheDocument();
+    await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalled());
   });
 });
 
@@ -432,13 +384,6 @@ describe('PodsPage / quick edit', () => {
 });
 
 describe('PodsPage / toasts', () => {
-  it('shows the editor message and reloads the grid when a pod is saved', async () => {
-    renderPage();
-    act(() => harness.onChanged?.('Draft saved'));
-    expect(await screen.findByText('Draft saved')).toBeInTheDocument();
-    expect(harness.tableRefetch).toHaveBeenCalled();
-  });
-
   it('shows no toast before anything happens', () => {
     renderPage();
     expect(screen.queryByText('Saved')).not.toBeInTheDocument();
@@ -446,10 +391,11 @@ describe('PodsPage / toasts', () => {
 
   it('dismisses the toast on escape', async () => {
     renderPage();
-    act(() => harness.onChanged?.('Deleted'));
-    expect(await screen.findByText('Deleted')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('row-quick-edit'));
+    fireEvent.click(screen.getByText('quick-saved'));
+    expect(await screen.findByText('Saved')).toBeInTheDocument();
     fireEvent.keyDown(document.body, { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByText('Deleted')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument());
   });
 });
 

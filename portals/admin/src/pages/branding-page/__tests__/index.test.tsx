@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router-dom';
 import BrandingPage from '../index';
 import { BRANDING, OCCASIONAL_ICONS, UPDATE_BRANDING } from '../queries';
 
@@ -62,10 +63,15 @@ const iconsQuery: MockedResponse = {
   result: { data: { branding: { __typename: 'Branding', occasional_icons: [] } } },
 };
 
+// FontsSection's tab strip keeps its selection in the URL via useTabParam
+// (@duncit/tabs), which needs a Router in scope even though this page never
+// navigates.
 const renderPage = (mocks: MockedResponse[]) =>
   render(
     <MockedProvider mocks={mocks}>
-      <BrandingPage />
+      <MemoryRouter>
+        <BrandingPage />
+      </MemoryRouter>
     </MockedProvider>,
   );
 

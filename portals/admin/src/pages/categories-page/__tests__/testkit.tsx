@@ -46,6 +46,8 @@ interface CategoryNode {
   min_pax: number | null;
   icon_layout_mweb: { __typename: string; position: string; width: number; height: number } | null;
   icon_layout_native: { __typename: string; position: string; width: number; height: number } | null;
+  gift_card_image_front: string;
+  gift_card_image_back: string;
   updated_at: string;
 }
 
@@ -68,6 +70,8 @@ export const catNode = (over: Partial<CategoryNode> = {}): CategoryNode => ({
   min_pax: 0,
   icon_layout_mweb: null,
   icon_layout_native: null,
+  gift_card_image_front: '',
+  gift_card_image_back: '',
   updated_at: '2026-01-01T00:00:00.000Z',
   ...over,
 });

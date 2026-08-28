@@ -9,6 +9,48 @@ import TimeSourceSection from '../TimeSourceSection';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 /**
+ * The real DateTimePicker renders its value as per-section contenteditable
+ * spans rather than a single editable input, which is meant to be driven by
+ * keyboard events, not `fireEvent.change`. TimeSourceSection's own contract
+ * with it is the `value`/`onChange` pair (a Date in, a Date out) — the
+ * section-by-section editing UI belongs to MUI X's own test suite, not this
+ * component's. Stubbed as a plain labelled input so the anchor can be typed
+ * in the same local `YYYY-MM-DDTHH:mm` shape the field already speaks
+ * (`LocalDateTimeField` still runs its real `parseLocalDateTimeInput` /
+ * `toLocalDateTimeInput` conversions around this stub).
+ */
+vi.mock('@mui/x-date-pickers/DateTimePicker', () => {
+  const LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return {
+    DateTimePicker: ({ label, value, onChange }: any) => (
+      <input
+        aria-label={label}
+        value={
+          value
+            ? `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`
+            : ''
+        }
+        onChange={(e: any) => {
+          const parts = LOCAL_DATE_TIME.exec(e.target.value);
+          onChange(
+            parts
+              ? new Date(
+                  Number(parts[1]),
+                  Number(parts[2]) - 1,
+                  Number(parts[3]),
+                  Number(parts[4]),
+                  Number(parts[5]),
+                )
+              : null,
+          );
+        }}
+      />
+    ),
+  };
+});
+
+/**
  * Restated from the component (the documents are private to it), so a renamed
  * field or operation stops every mock below from matching.
  */
@@ -134,11 +176,9 @@ const renderSection = (mocks: readonly MockedResponse[], onToast = vi.fn()) => {
 
 const saveButton = () => screen.getByRole('button', { name: /^Sav/ });
 const ianaField = () => screen.getByLabelText('IANA zone');
-/** The datetime-local box, disambiguated from the "Custom time" select row. */
-const customTimeInput = () =>
-  screen.getByLabelText('Custom time', { selector: 'input[type="datetime-local"]' });
-const noCustomTimeInput = () =>
-  screen.queryByLabelText('Custom time', { selector: 'input[type="datetime-local"]' });
+/** The (stubbed) custom-anchor picker, disambiguated from the "Time source" select row. */
+const customTimeInput = () => screen.getByLabelText('Custom time');
+const noCustomTimeInput = () => screen.queryByLabelText('Custom time');
 const preview = () => screen.getByText(/^Apps now show:/).textContent ?? '';
 
 const pickOption = (selectName: string, optionName: RegExp) => {

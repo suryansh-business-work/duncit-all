@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { TextField } from '@mui/material';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { parseLocalDateTimeInput, toLocalDateTimeInput } from '@duncit/datetime';
 import OccasionalIconsSection from '../OccasionalIconsSection';
 import { OCCASIONAL_ICONS, UPDATE_OCCASIONAL_ICONS, type OccasionalIconRow } from '../queries';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
@@ -10,6 +12,34 @@ import { DuncitLocalizationProvider } from '@duncit/app-settings';
 vi.mock('../../../components/MediaPickerField', () => ({
   default: (props: Readonly<{ label: string; value: string }>) => (
     <span aria-label={props.label}>{props.value || 'no icon'}</span>
+  ),
+}));
+
+/** The real field is a MUI X DateTimePicker (a Date in, a Date out); it is
+ * stubbed as the plain `datetime-local` box it replaced (LocalDateTimeField's
+ * own doc comment: the value shape is unchanged) so a hand-typed window can
+ * still be exercised. */
+vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
+  DateTimePicker: ({
+    label,
+    value,
+    onChange,
+    slotProps,
+  }: Readonly<{
+    label: string;
+    value: Date | null;
+    onChange: (value: Date | null) => void;
+    slotProps?: { textField?: { fullWidth?: boolean; error?: boolean; helperText?: string } };
+  }>) => (
+    <TextField
+      label={label}
+      type="datetime-local"
+      value={value ? toLocalDateTimeInput(value) : ''}
+      onChange={(e) => onChange(parseLocalDateTimeInput(e.target.value))}
+      fullWidth={slotProps?.textField?.fullWidth}
+      error={slotProps?.textField?.error}
+      helperText={slotProps?.textField?.helperText}
+    />
   ),
 }));
 
@@ -83,7 +113,7 @@ describe('OccasionalIconsSection — add and remove', () => {
     expect(slugFields().map((f) => f.value)).toEqual(['diwali', '']);
     const priorities = screen.getAllByLabelText('Priority') as HTMLInputElement[];
     expect(priorities[1]).toHaveValue(1);
-    expect(screen.getAllByRole('checkbox')[1]).toBeChecked();
+    expect(screen.getAllByRole('switch')[1]).toBeChecked();
   });
 
   it('removes only the row whose delete button was pressed', async () => {
@@ -156,7 +186,7 @@ describe('OccasionalIconsSection — saving', () => {
     await waitFor(() => expect(slugFields()).toHaveLength(2));
 
     fireEvent.change(screen.getAllByLabelText('Label')[1], { target: { value: 'Rangwali' } });
-    fireEvent.click(screen.getAllByRole('checkbox')[1]);
+    fireEvent.click(screen.getAllByRole('switch')[1]);
     fireEvent.change(screen.getAllByLabelText('Priority')[1], { target: { value: '4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 

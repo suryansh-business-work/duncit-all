@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { TextField } from '@mui/material';
 import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
+import { parseLocalDateTimeInput, toLocalDateTimeInput } from '@duncit/datetime';
 import OccasionalIconRowFields, { toLocalInput } from '../OccasionalIconRowFields';
 import type { OccasionalIconRow } from '../queries';
 import { MockedProvider } from '@apollo/client/testing';
@@ -15,6 +17,34 @@ vi.mock('../../../components/MediaPickerField', () => ({
     <button type="button" aria-label={props.label} onClick={() => props.onChange(PICKED_URL)}>
       {props.value || 'no icon'}
     </button>
+  ),
+}));
+
+/** The real field is a MUI X DateTimePicker (a Date in, a Date out); it is
+ * stubbed as the plain `datetime-local` box it replaced (LocalDateTimeField's
+ * own doc comment: the value shape is unchanged) so a row's window can still
+ * be exercised with a typed local string. */
+vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
+  DateTimePicker: ({
+    label,
+    value,
+    onChange,
+    slotProps,
+  }: Readonly<{
+    label: string;
+    value: Date | null;
+    onChange: (value: Date | null) => void;
+    slotProps?: { textField?: { fullWidth?: boolean; error?: boolean; helperText?: string } };
+  }>) => (
+    <TextField
+      label={label}
+      type="datetime-local"
+      value={value ? toLocalDateTimeInput(value) : ''}
+      onChange={(e) => onChange(parseLocalDateTimeInput(e.target.value))}
+      fullWidth={slotProps?.textField?.fullWidth}
+      error={slotProps?.textField?.error}
+      helperText={slotProps?.textField?.helperText}
+    />
   ),
 }));
 
@@ -190,16 +220,16 @@ describe('OccasionalIconRowFields — activation, priority and removal', () => {
   it('reads Active and pauses the row when switched off', () => {
     const { onChange } = renderRow({ is_active: true }, 0);
     expect(screen.getByText('Active')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).toBeChecked();
-    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('switch')).toBeChecked();
+    fireEvent.click(screen.getByRole('switch'));
     expect(onChange).toHaveBeenCalledWith(0, { is_active: false });
   });
 
   it('reads Paused and reactivates the row when switched on', () => {
     const { onChange } = renderRow({ is_active: false }, 0);
     expect(screen.getByText('Paused')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).not.toBeChecked();
-    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('switch')).not.toBeChecked();
+    fireEvent.click(screen.getByRole('switch'));
     expect(onChange).toHaveBeenCalledWith(0, { is_active: true });
   });
 

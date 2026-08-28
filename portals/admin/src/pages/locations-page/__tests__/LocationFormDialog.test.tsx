@@ -90,7 +90,7 @@ describe('LocationFormDialog', () => {
   it('titles itself "New Location" and hides the active toggle without an id', () => {
     renderWithProviders(<Harness initial={seed()} />);
     expect(screen.getByText('New Location')).toBeInTheDocument();
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
   it('titles itself "Edit Location" and toggles the active switch', () => {
@@ -98,7 +98,7 @@ describe('LocationFormDialog', () => {
     expect(screen.getByText('Edit Location')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('switch'));
     expect(screen.getByText('Inactive')).toBeInTheDocument();
   });
 
@@ -148,7 +148,7 @@ describe('LocationFormDialog', () => {
     expect(areaInputs()[1].value).toBe('');
 
     // The last row's remove button drops that row, keeping the first one.
-    const removeButtons = screen.getAllByTestId('RemoveCircleOutlineIcon').map((i) => i.closest('button')!);
+    const removeButtons = screen.getAllByTestId('RemoveCircleOutlinedIcon').map((i) => i.closest('button')!);
     fireEvent.click(removeButtons[1]);
     expect(areaInputs()).toHaveLength(1);
     expect(areaInputs()[0].value).toBe('Indiranagar');
@@ -156,7 +156,7 @@ describe('LocationFormDialog', () => {
 
   it('will not let the only area row be removed', () => {
     renderWithProviders(<Harness initial={seed()} />);
-    expect(screen.getByTestId('RemoveCircleOutlineIcon').closest('button')).toBeDisabled();
+    expect(screen.getByTestId('RemoveCircleOutlinedIcon').closest('button')).toBeDisabled();
   });
 
   it('stores the picked location image on the form', () => {

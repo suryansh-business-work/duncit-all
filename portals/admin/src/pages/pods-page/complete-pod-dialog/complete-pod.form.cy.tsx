@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { ADMIN_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/app-settings';
 import { buildCompleteInput, buildCompleteSchema, mediaTextToInput } from './complete-pod.form';
 import type { CompletePodValues } from './complete-pod.types';
-import { buildWaterfallLines, type PodFinanceWaterfall } from '@duncit/ui';
+import { buildWaterfallLines, fallbackT, type PodFinanceWaterfall } from '@duncit/ui';
+
+// The real English copy, not a bare key — errorsOf's assertions read like an
+// admin would, and a stub `(key) => key` can never fail when a key is renamed
+// out from under it.
+const adminFallbackT = createTranslator({
+  locale: 'en-IN',
+  fallback: flattenCatalogue(ADMIN_BUNDLE),
+}).t;
 
 const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   host_user_id: 'u1',
@@ -12,7 +21,7 @@ const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
 });
 
 const errorsOf = (hasVenue: boolean, values: CompletePodValues): string[] => {
-  const result = buildCompleteSchema(hasVenue, (key: string) => key).safeParse(values);
+  const result = buildCompleteSchema(hasVenue, adminFallbackT).safeParse(values);
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 };
 
@@ -82,19 +91,19 @@ const waterfall: PodFinanceWaterfall = {
 
 describe('buildWaterfallLines', () => {
   it('orders the full waterfall for a venue pod', () => {
-    const lines = buildWaterfallLines(waterfall, '₹', true, 1000);
+    const lines = buildWaterfallLines(waterfall, '₹', true, fallbackT, 1000);
     expect(lines.map((line) => line.key)).toEqual(['paid', 'gst', 'fee', 'pool', 'venue', 'host', 'duncit']);
     expect(lines.map((line) => line.value)).toEqual([1000, 152.54, 42.37, 805.09, 300, 454.58, 122.88]);
   });
 
   it('labels the deductions with API percentages', () => {
-    const lines = buildWaterfallLines(waterfall, '₹', true);
+    const lines = buildWaterfallLines(waterfall, '₹', true, fallbackT);
     expect(lines.find((line) => line.key === 'gst')?.label).toBe('− GST (18%)');
     expect(lines.find((line) => line.key === 'fee')?.label).toBe('− Platform Fee (5%)');
   });
 
   it('explains the venue and host lines via commission secondaries', () => {
-    const lines = buildWaterfallLines(waterfall, '₹', true);
+    const lines = buildWaterfallLines(waterfall, '₹', true, fallbackT);
     const venue = lines.find((line) => line.key === 'venue');
     expect(venue?.secondary).toContain('10% commission');
     expect(venue?.secondary).toContain('venue receives ₹270.00');
@@ -104,7 +113,7 @@ describe('buildWaterfallLines', () => {
   });
 
   it('omits the venue line for no-venue pods and falls back to waterfall.amount', () => {
-    const lines = buildWaterfallLines(waterfall, '₹', false);
+    const lines = buildWaterfallLines(waterfall, '₹', false, fallbackT);
     expect(lines.some((line) => line.key === 'venue')).toBe(false);
     expect(lines.find((line) => line.key === 'paid')?.value).toBe(1000);
   });

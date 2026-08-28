@@ -58,6 +58,25 @@ vi.mock('../components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));
 
+/**
+ * Chart.js reaches into real layout — `getComputedStyle` on the canvas's
+ * parent, then a resize/observer binding — that jsdom's canvas does not back,
+ * so react-chartjs-2 throws "Cannot read properties of null (reading
+ * 'ownerDocument')" on mount no matter what size or data it is handed. That is
+ * the same class of gap the ResizeObserver/IntersectionObserver shims above
+ * exist for; jsdom just has no workaround for this one. Both dashboard widgets
+ * built on it are stubbed to a plain placeholder so /dashboard, /pods/dashboard
+ * and anything that can navigate into them — the Hub tile included — still
+ * mount and stay pressable.
+ */
+vi.mock('../pages/dashboard/CountsBySuperCategoryGrid', () => ({
+  default: () => <div data-testid="counts-chart-stub" />,
+}));
+
+vi.mock('../pages/pods-dashboard/PodTrendChart', () => ({
+  default: () => <div data-testid="pod-trend-chart-stub" />,
+}));
+
 import App from '../App';
 import { clearToken, setToken } from '../lib/session';
 

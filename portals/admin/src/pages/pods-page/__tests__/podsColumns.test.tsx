@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { formatDateTime } from '@duncit/app-settings';
 import { buildPodsColumns, type PodsColumnDeps } from '../podsColumns';
 import type { PodRow } from '../queries';
 
@@ -69,6 +70,7 @@ describe('buildPodsColumns / column set', () => {
       'pod_type',
       'pod_amount',
       'no_of_spots',
+      'attendance',
       'pod_hits',
       'is_active',
       'completed_at',
@@ -78,21 +80,22 @@ describe('buildPodsColumns / column set', () => {
     ]);
   });
 
-  it('labels every visible header the way the grid shows it', () => {
+  it('labels every visible header with its translation key', () => {
     const headers = Object.fromEntries(buildPodsColumns(makeDeps()).map((c) => [c.field, c.headerName]));
     expect(headers).toMatchObject({
-      cover: 'Cover',
-      pod_title: 'Title',
-      club_id: 'Club',
-      place: 'Venue',
-      pod_date_time: 'Date / Time',
-      pod_mode: 'Type',
-      pod_type: 'Pod Type',
-      pod_amount: 'Amount',
-      no_of_spots: 'Spots',
-      pod_hits: 'Hits',
-      is_active: 'Status',
-      actions: 'Actions',
+      cover: 'admin.pods.colCover',
+      pod_title: 'shell.common.title',
+      club_id: 'admin.pods.colClub',
+      place: 'admin.pods.colVenue',
+      pod_date_time: 'admin.pods.colDateTime',
+      pod_mode: 'shell.common.type',
+      pod_type: 'admin.pods.colPodType',
+      pod_amount: 'admin.pods.colAmount',
+      no_of_spots: 'admin.pods.colSpots',
+      attendance: 'admin.pods.colAttendance',
+      pod_hits: 'admin.pods.colHits',
+      is_active: 'shell.common.status',
+      actions: 'shell.common.actions',
     });
   });
 
@@ -101,7 +104,7 @@ describe('buildPodsColumns / column set', () => {
     expect(fields[7]).toBe('pod_amount');
     expect(fields[8]).toBe('products');
     expect(fields[9]).toBe('no_of_spots');
-    expect(fields).toHaveLength(16);
+    expect(fields).toHaveLength(17);
   });
 
   it('hides the audit-only columns by default', () => {
@@ -161,9 +164,9 @@ describe('buildPodsColumns / value getters', () => {
 
   it('formats the pod date and dashes an empty one', () => {
     const iso = '2026-03-04T10:30:00.000Z';
-    expect(valueOf('pod_date_time', makePod({ pod_date_time: iso }))).toBe(new Date(iso).toLocaleString());
+    expect(valueOf('pod_date_time', makePod({ pod_date_time: iso }))).toBe(formatDateTime(iso));
     expect(valueOf('pod_date_time', makePod({ pod_date_time: null }))).toBe('—');
-    expect(valueOf('completed_at', makePod({ completed_at: iso }))).toBe(new Date(iso).toLocaleString());
+    expect(valueOf('completed_at', makePod({ completed_at: iso }))).toBe(formatDateTime(iso));
     expect(valueOf('created_at', makePod({ created_at: null }))).toBe('—');
   });
 
@@ -259,15 +262,15 @@ describe('buildPodsColumns / cell renderers', () => {
 
   it('renders Completed / Active / Draft status chips', () => {
     const completed = renderCell('is_active', makePod({ completed_at: '2026-03-05T00:00:00.000Z' }));
-    expect(completed.getByText('Completed')).toBeInTheDocument();
+    expect(completed.getByText('admin.podsDashboard.completed')).toBeInTheDocument();
     completed.unmount();
 
     const active = renderCell('is_active', makePod({ is_active: true }));
-    expect(active.getByText('Active')).toBeInTheDocument();
+    expect(active.getByText('admin.profile.active')).toBeInTheDocument();
     active.unmount();
 
     const draft = renderCell('is_active', makePod({ is_active: false }));
-    expect(draft.getByText('Draft')).toBeInTheDocument();
+    expect(draft.getByText('admin.pods.draft')).toBeInTheDocument();
   });
 
   it('pluralises the product summary and dashes an empty basket', () => {

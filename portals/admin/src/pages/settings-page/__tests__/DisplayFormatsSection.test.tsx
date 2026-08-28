@@ -171,8 +171,11 @@ describe('DisplayFormatsSection', () => {
     fireEvent.change(datePattern(), { target: { value: 'YYYY-MM-dd' } });
 
     expect(previewText()).toBe('Preview: Invalid format pattern');
-    // Still saveable — the admin is free to persist whatever they typed.
-    expect(saveButton()).toBeEnabled();
+    // 'YYYY' isn't a token a picker field can split into sections, so saving
+    // it would silently break every date/time picker elsewhere — blocked,
+    // with the warning below explaining why.
+    expect(saveButton()).toBeDisabled();
+    expect(screen.getByText(/cannot edit/i)).toHaveTextContent('YYYY');
   });
 
   it('shows each preset next to a live sample and applies the one picked', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import FolderIcon from '@mui/icons-material/Folder';
 import { AppsDrawer } from '../src/chrome/AppsDrawer';
@@ -37,7 +37,67 @@ describe('AppsDrawer', () => {
     expect(screen.getByText('File Manager')).toBeInTheDocument();
   });
 
-  it('mounts the file manager only once a tool is chosen', () => {
+  it('drops the staff-chat tool when this console does not have chat', () => {
+    render(<AppsDrawer open onClose={vi.fn()} chatEnabled={false} />);
+    expect(screen.queryByText('Chat with a coworker')).not.toBeInTheDocument();
+    expect(screen.getByText('File Manager')).toBeInTheDocument();
+  });
+
+  it('hands staff-chat up to the layout instead of opening it itself', () => {
+    const onOpenChat = vi.fn();
+    const onClose = vi.fn();
+    render(<AppsDrawer open onClose={onClose} onOpenChat={onOpenChat} />);
+
+    fireEvent.click(screen.getByText('Chat with a coworker'));
+
+    expect(onOpenChat).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes and clears the search from its own close button', () => {
+    const onClose = vi.fn();
+    render(<AppsDrawer open onClose={onClose} />);
+    fireEvent.change(screen.getByPlaceholderText('Search apps'), { target: { value: 'payroll' } });
+
+    fireEvent.click(screen.getByLabelText('Close apps'));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByPlaceholderText('Search apps')).toHaveValue('');
+  });
+
+  it('opens Jump to Portal over the page from its own tool, and closes it back to no dialog at all', async () => {
+    render(
+      <MockedProvider mocks={[]}>
+        <AppsDrawer open onClose={vi.fn()} />
+      </MockedProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Jump to Portal'));
+    // One "Jump to Portal" for the drawer's own list row, a second for the
+    // dialog's title — the AppsDrawer itself is a modal Drawer too (also
+    // `role="dialog"`) and stays open beneath, so counting text beats querying
+    // by role here.
+    expect(screen.getAllByText('Jump to Portal')).toHaveLength(2);
+
+    fireEvent.click(screen.getByLabelText('Close'));
+    await waitFor(() => expect(screen.getAllByText('Jump to Portal')).toHaveLength(1));
+  });
+
+  it('opens Ask Bot over the page from its own tool, and closes it back to no dialog at all', async () => {
+    render(
+      <MockedProvider mocks={[]}>
+        <AppsDrawer open onClose={vi.fn()} />
+      </MockedProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Ask Bot'));
+    expect(screen.getAllByText('Ask Bot')).toHaveLength(2);
+
+    fireEvent.click(screen.getByLabelText('Close'));
+    await waitFor(() => expect(screen.getAllByText('Ask Bot')).toHaveLength(1));
+  });
+
+  it('mounts the file manager only once a tool is chosen, and unmounts it again on close', async () => {
     const onClose = vi.fn();
     render(
       <MockedProvider mocks={[]}>
@@ -50,7 +110,11 @@ describe('AppsDrawer', () => {
 
     fireEvent.click(screen.getByText('File Manager'));
     expect(onClose).toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Close file manager' })).toBeInTheDocument();
+    const close = screen.getByRole('button', { name: 'Close file manager' });
+    expect(close).toBeInTheDocument();
+
+    fireEvent.click(close);
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Close file manager' })).not.toBeInTheDocument());
   });
 });
 

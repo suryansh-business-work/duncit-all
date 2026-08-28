@@ -162,9 +162,11 @@ describe('sending', () => {
     const failed = result.current.visibleMessages.find((m) => m.text === 'did not go')!;
     act(() => result.current.retry(failed));
     await waitFor(() => expect(harness.mutations.SendStaffMessage).toHaveBeenCalledTimes(3));
-    expect(
-      result.current.visibleMessages.find((m) => m.text === 'did not go')
-    ).toBeUndefined();
+    // The pending row is dropped once the retry lands, which is a state update
+    // AFTER the call — asserting it straight off the call count made this flaky.
+    await waitFor(() =>
+      expect(result.current.visibleMessages.find((m) => m.text === 'did not go')).toBeUndefined()
+    );
   });
 
   it('re-sends a failed attachment with the file, not just the caption', async () => {

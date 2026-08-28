@@ -4,7 +4,7 @@
  * can never name the same category on two screens.
  */
 import { describe, expect, it } from 'vitest';
-import { captchaCopy, CAPTCHA_FALLBACK_COPY } from '../src/captcha';
+import { captchaCopy, captchaFallbackWord, CAPTCHA_FALLBACK_COPY } from '../src/captcha';
 import { grievanceEscalationCopy, grievanceTicketFieldCopy } from '../src/grievance';
 import { mailCategoryCopy } from '../src/mail-preference';
 import { policyAcceptanceMethodLabel } from '../src/policy-acceptance';
@@ -39,6 +39,13 @@ describe('captchaCopy', () => {
       expect(value, field).not.toBe('');
       expect(value, field).not.toMatch(/^captcha\./);
     }
+  });
+
+  it('reads a word the bundle does not carry back as its own key', () => {
+    // A missing word is a bug, not a blank label: the key is at least
+    // greppable. The lookup is typed as possibly-undefined under the native
+    // app's compiler, so this fallback is a contract rather than dead code.
+    expect(captchaFallbackWord('captcha.somethingNew')).toBe('captcha.somethingNew');
   });
 
   it('reads each fallback word off the shipped bundle, not a second copy of it', () => {

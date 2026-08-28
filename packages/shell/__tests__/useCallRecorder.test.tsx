@@ -38,12 +38,15 @@ class FakeMediaStream {
 class FakeMediaRecorder {
   static instances: FakeMediaRecorder[] = [];
   static failNext = false;
+  static failNextWithString = false;
   static isTypeSupported(type: string) {
     return type === 'video/webm;codecs=vp9,opus' || type === 'audio/webm;codecs=opus';
   }
   ondataavailable: ((e: { data: Blob }) => void) | null = null;
   onstop: (() => void) | null = null;
-  mimeType = 'video/webm';
+  // Real browsers leave this blank until they have actually chosen a
+  // container; the fake mirrors that when no mimeType hint was passed in.
+  mimeType: string;
   started: number | null = null;
   constructor(
     readonly stream: FakeMediaStream,
@@ -53,6 +56,11 @@ class FakeMediaRecorder {
       FakeMediaRecorder.failNext = false;
       throw new Error('recorder exploded');
     }
+    if (FakeMediaRecorder.failNextWithString) {
+      FakeMediaRecorder.failNextWithString = false;
+      throw 'recorder exploded, not as an Error';
+    }
+    this.mimeType = options.mimeType ?? '';
     FakeMediaRecorder.instances.push(this);
   }
   start(timeslice: number) {
@@ -102,6 +110,7 @@ const instantPipeline = () => {
 beforeEach(() => {
   FakeMediaRecorder.instances = [];
   FakeMediaRecorder.failNext = false;
+  FakeMediaRecorder.failNextWithString = false;
   g.MediaRecorder = FakeMediaRecorder;
   g.MediaStream = FakeMediaStream;
   g.AudioContext = FakeAudioContext;
@@ -165,6 +174,35 @@ describe('starting', () => {
     act(() => result.current.toggle());
     expect(result.current.stage).toBe('FAILED');
     expect(result.current.error).toBe('recorder exploded');
+  });
+
+  it('falls back to a generic message when the recorder throws something other than an Error', () => {
+    FakeMediaRecorder.failNextWithString = true;
+    const { result } = mount();
+    act(() => result.current.toggle());
+    expect(result.current.stage).toBe('FAILED');
+    expect(result.current.error).toBe('Could not start recording');
+  });
+
+  it('mixes a side with no microphone in without recording silence for it', () => {
+    // Local has no audio track at all — the mixer must skip it rather than
+    // connecting nothing, and still carry the remote side's audio through.
+    const { result } = mount({ localStream: stream('video'), remoteStream: stream('audio', 'video') });
+    act(() => result.current.toggle());
+
+    expect(FakeMediaRecorder.instances[0].stream.getAudioTracks()).toHaveLength(1);
+  });
+
+  it('leaves no mimeType hint at all when nothing the browser offers is supported', () => {
+    const original = FakeMediaRecorder.isTypeSupported;
+    FakeMediaRecorder.isTypeSupported = () => false;
+    try {
+      const { result } = mount();
+      act(() => result.current.toggle());
+      expect(FakeMediaRecorder.instances[0].options.mimeType).toBeUndefined();
+    } finally {
+      FakeMediaRecorder.isTypeSupported = original;
+    }
   });
 });
 
@@ -260,6 +298,83 @@ describe('stopping', () => {
     });
     expect(result.current.stage).toBe('READY');
     expect(client.query).toHaveBeenCalledTimes(2);
+  });
+
+  it('falls back to a generic conversion-failed message when the server gives no reason', async () => {
+    uploadDirect.mockResolvedValue('https://ik.duncit.com/call-recordings/raw.webm');
+    client.mutate.mockResolvedValue({ data: { startVideoCompression: { job_id: 'job-4' } } });
+    client.query.mockResolvedValue({ data: { videoCompressionJob: { status: 'FAILED' } } });
+    const { result } = record();
+
+    act(() => result.current.toggle());
+    await waitFor(() => expect(result.current.stage).toBe('FAILED'));
+    expect(result.current.error).toBe('Conversion failed');
+  });
+
+  it('reads an unreported percentage as zero rather than NaN', async () => {
+    vi.useFakeTimers();
+    uploadDirect.mockResolvedValue('https://ik.duncit.com/call-recordings/raw.webm');
+    client.mutate.mockResolvedValue({ data: { startVideoCompression: { job_id: 'job-5' } } });
+    client.query
+      .mockResolvedValueOnce({ data: { videoCompressionJob: { status: 'PROCESSING' } } })
+      .mockResolvedValue({
+        data: { videoCompressionJob: { status: 'DONE', url: 'https://ik.duncit.com/call-recordings/call.mp4' } },
+      });
+    const { result } = record();
+
+    act(() => result.current.toggle());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current.pct).toBe(0);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2100);
+    });
+    expect(result.current.stage).toBe('READY');
+  });
+
+  it('falls back to a webm blob type when the recorder never settled on a mimeType', async () => {
+    const original = FakeMediaRecorder.isTypeSupported;
+    FakeMediaRecorder.isTypeSupported = () => false;
+    try {
+      instantPipeline();
+      const { result } = record();
+
+      act(() => result.current.toggle());
+      await waitFor(() => expect(result.current.stage).toBe('READY'));
+
+      const [, file] = uploadDirect.mock.calls[0];
+      expect((file as File).type).toBe('video/webm');
+    } finally {
+      FakeMediaRecorder.isTypeSupported = original;
+    }
+  });
+
+  it('falls back to a generic message when the pipeline rejects with something other than an Error', async () => {
+    uploadDirect.mockRejectedValue('imagekit is down');
+    const { result } = record();
+
+    act(() => result.current.toggle());
+    await waitFor(() => expect(result.current.stage).toBe('FAILED'));
+    expect(result.current.error).toBe('Could not save the recording');
+  });
+
+  it('ignores a second, overlapping stop rather than tearing down twice', async () => {
+    instantPipeline();
+    const { result } = record();
+
+    // Both calls see the same `recording === true` closure and both call
+    // stop() — the second must find `recorder.current` already cleared by
+    // the first and do nothing, not throw.
+    expect(() => {
+      act(() => {
+        result.current.toggle();
+        result.current.toggle();
+      });
+    }).not.toThrow();
+
+    await waitFor(() => expect(result.current.stage).toBe('READY'));
   });
 
   it('resets back to idle for the next call', async () => {

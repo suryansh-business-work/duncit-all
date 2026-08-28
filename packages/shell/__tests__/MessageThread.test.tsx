@@ -54,7 +54,9 @@ const MESSAGES: StaffMessage[] = [
   message({ id: 'm-plain', text: 'Morning — the court is booked.' }),
   message({ id: 'm-mine', from_user_id: ME, to_user_id: PEER, text: 'Thanks, noted.', read_at: AT }),
   message({ id: 'm-delivered', from_user_id: ME, to_user_id: PEER, text: 'On my way.', delivered_at: AT }),
-  message({ id: 'm-pending', from_user_id: ME, to_user_id: PEER, text: 'Sending…', pending: true }),
+  // A message not yet acknowledged by the server has no created_at at all —
+  // see buildTimeline's own comment on why that sorts it to the very end.
+  message({ id: 'm-pending', from_user_id: ME, to_user_id: PEER, text: 'Sending…', pending: true, created_at: undefined }),
   message({ id: 'm-failed', from_user_id: ME, to_user_id: PEER, text: 'Did not go.', failed: true }),
   message({ id: 'm-edited', text: 'Corrected copy.', edited_at: AT }),
   message({ id: 'm-deleted', text: '', deleted_at: AT }),
@@ -123,6 +125,15 @@ const MESSAGES: StaffMessage[] = [
     attachment_name: '12.9716,77.5946',
     attachment_url: 'https://maps.google.com/?q=12.9716,77.5946',
   }),
+  message({ id: 'm-today', text: 'Sent moments ago.', created_at: new Date().toISOString() }),
+  message({
+    id: 'm-yesterday',
+    text: 'Sent yesterday.',
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  }),
+  // Replies to a message from before the loaded page — there is no sibling to
+  // find in `byId`, which is exactly the case the `?? null` fallback guards.
+  message({ id: 'm-reply-orphan', text: 'Still true.', reply_to_id: 'not-loaded' }),
 ];
 
 const CALLS: StaffCall[] = [
@@ -339,5 +350,138 @@ describe('MessageThread', () => {
 
     const ids = new Set(MESSAGES.map((m) => m.id));
     for (const [id] of spies.onSelect.mock.calls) expect(ids.has(id as string)).toBe(true);
+  });
+
+  it('labels today and yesterday by name, and a message with no timestamp yet gets no separator', () => {
+    const { container } = thread();
+
+    expect(container.textContent).toContain('Today');
+    expect(container.textContent).toContain('Yesterday');
+  });
+
+  it('scrolls to the newest message on arrival, while already at the bottom', () => {
+    const spies = handlers();
+    const tree = (msgs: StaffMessage[]) => (
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={testTheme}>
+          <MessageThread
+            messages={msgs}
+            calls={CALLS}
+            meId={ME}
+            loading={false}
+            hasMore={false}
+            loadingMore={false}
+            settings={DEFAULT_CHAT_SETTINGS}
+            formats={formats}
+            spacing={1}
+            nameOf={(userId) => (userId === ME ? 'Asha Rao' : 'Vikram N')}
+            {...spies}
+          />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const { rerender } = render(tree(MESSAGES));
+    spy.mockClear();
+
+    rerender(tree([...MESSAGES, message({ id: 'm-arrived', text: 'Just landed' })]));
+
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('counts an arriving message as unseen once scrolled away from the bottom, and jumping clears it', () => {
+    const spies = handlers();
+    const tree = (msgs: StaffMessage[]) => (
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={testTheme}>
+          <MessageThread
+            messages={msgs}
+            calls={CALLS}
+            meId={ME}
+            loading={false}
+            hasMore={false}
+            loadingMore={false}
+            settings={DEFAULT_CHAT_SETTINGS}
+            formats={formats}
+            spacing={1}
+            nameOf={(userId) => (userId === ME ? 'Asha Rao' : 'Vikram N')}
+            {...spies}
+          />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    const { container, rerender } = render(tree(MESSAGES));
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    Object.defineProperty(scroller, 'scrollHeight', { value: 2000, configurable: true });
+    Object.defineProperty(scroller, 'scrollTop', { value: 500, configurable: true, writable: true });
+    fireEvent.scroll(scroller);
+
+    rerender(tree([...MESSAGES, message({ id: 'm-arrived-2', text: 'While scrolled up' })]));
+
+    const jumpButton = container.querySelector('.MuiFab-root') as HTMLElement;
+    expect(jumpButton.textContent).toBe('1');
+
+    fireEvent.click(jumpButton);
+    expect(jumpButton.textContent).not.toBe('1');
+  });
+
+  it('asks for the previous page once scrolled near the top, but not while one is already loading', () => {
+    const { container, spies } = thread({ hasMore: true });
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    Object.defineProperty(scroller, 'scrollHeight', { value: 2000, configurable: true });
+    Object.defineProperty(scroller, 'scrollTop', { value: 10, configurable: true, writable: true });
+
+    fireEvent.scroll(scroller);
+
+    expect(spies.onLoadMore).toHaveBeenCalledTimes(1);
+
+    const busy = thread({ hasMore: true, loadingMore: true });
+    const busyScroller = busy.container.querySelector('.MuiStack-root') as HTMLElement;
+    Object.defineProperty(busyScroller, 'scrollHeight', { value: 2000, configurable: true });
+    Object.defineProperty(busyScroller, 'scrollTop', { value: 10, configurable: true, writable: true });
+
+    fireEvent.scroll(busyScroller);
+
+    expect(busy.spies.onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it('clears the unseen count by scrolling back down, not only by clicking the pill', () => {
+    const spies = handlers();
+    const tree = (msgs: StaffMessage[]) => (
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={testTheme}>
+          <MessageThread
+            messages={msgs}
+            calls={CALLS}
+            meId={ME}
+            loading={false}
+            hasMore={false}
+            loadingMore={false}
+            settings={DEFAULT_CHAT_SETTINGS}
+            formats={formats}
+            spacing={1}
+            nameOf={(userId) => (userId === ME ? 'Asha Rao' : 'Vikram N')}
+            {...spies}
+          />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    const { container, rerender } = render(tree(MESSAGES));
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    Object.defineProperty(scroller, 'scrollHeight', { value: 2000, configurable: true, writable: true });
+    Object.defineProperty(scroller, 'scrollTop', { value: 500, configurable: true, writable: true });
+    fireEvent.scroll(scroller);
+
+    rerender(tree([...MESSAGES, message({ id: 'm-arrived-3', text: 'While scrolled up' })]));
+    expect((container.querySelector('.MuiFab-root') as HTMLElement).textContent).toBe('1');
+
+    // Scrolling itself back near the bottom — not the jump pill — is the other
+    // way the count clears.
+    Object.defineProperty(scroller, 'scrollHeight', { value: 800, configurable: true, writable: true });
+    Object.defineProperty(scroller, 'scrollTop', { value: 0, configurable: true, writable: true });
+    fireEvent.scroll(scroller);
+
+    expect((container.querySelector('.MuiFab-root') as HTMLElement).textContent).not.toBe('1');
   });
 });

@@ -116,4 +116,105 @@ describe('presence', () => {
     const second = renderHook(() => usePresence(socket, 'me'));
     expect(second.result.current.mine).toBe('BUSY');
   });
+
+  it('reads a saved value that is not one of the four statuses as the default', () => {
+    globalThis.localStorage.setItem('duncit_chat_status', 'NOT_A_STATUS');
+
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+
+    expect(result.current.mine).toBe('ONLINE');
+  });
+
+  it('falls back to ONLINE when storage cannot even be read', () => {
+    const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+
+    expect(result.current.mine).toBe('ONLINE');
+    spy.mockRestore();
+  });
+
+  it('keeps the chosen status for this session when storage refuses to save it', () => {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('full');
+    });
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+
+    act(() => {
+      result.current.choose('BUSY');
+    });
+
+    expect(result.current.mine).toBe('BUSY');
+    spy.mockRestore();
+  });
+
+  it('tracks a coworker from the socket, ignoring a blank id or its own', () => {
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+    const onPresence = socket.on.mock.calls
+      .filter(([event]: [string]) => event === 'staff_presence')
+      .at(-1)?.[1];
+
+    act(() => {
+      onPresence?.({ user_id: '', status: 'ONLINE' });
+      onPresence?.({ user_id: 'me', status: 'BUSY' });
+    });
+    expect(result.current.others).toEqual({});
+
+    act(() => {
+      onPresence?.({ user_id: 'u1', status: 'AWAY', last_seen: '2026-08-06T10:00:00.000Z' });
+    });
+    expect(result.current.statusOf('u1')).toBe('AWAY');
+    expect(result.current.lastSeen.u1).toBe('2026-08-06T10:00:00.000Z');
+    expect(result.current.statusOf('unheard-of')).toBe('OFFLINE');
+
+    act(() => {
+      onPresence?.({ user_id: 'u2', status: 'ONLINE' });
+    });
+    expect(result.current.lastSeen.u2).toBeUndefined();
+  });
+
+  it('re-arms the idle timer on activity, so it never fires while active', () => {
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+
+    act(() => {
+      vi.advanceTimersByTime(9 * 60 * 1000);
+      globalThis.dispatchEvent(new Event('mousemove'));
+      vi.advanceTimersByTime(9 * 60 * 1000);
+    });
+
+    expect(result.current.mine).toBe('ONLINE');
+  });
+
+  it('comes back online on activity, once the idle timer had marked it away', () => {
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+    act(() => {
+      vi.advanceTimersByTime(10 * 60 * 1000 + 100);
+    });
+    expect(result.current.mine).toBe('AWAY');
+
+    act(() => {
+      globalThis.dispatchEvent(new Event('mousemove'));
+    });
+
+    expect(result.current.mine).toBe('ONLINE');
+    expect(socket.emit).toHaveBeenCalledWith('staff_status', 'ONLINE');
+  });
+
+  it('leaves a status the reader chose alone on activity, even while marked away', () => {
+    // Can only happen if BUSY/OFFLINE was chosen from another tab after this
+    // one drifted to AWAY — activity here must not fight that choice.
+    const { result } = renderHook(() => usePresence(socket, 'me'));
+    act(() => {
+      vi.advanceTimersByTime(10 * 60 * 1000 + 100);
+    });
+    globalThis.localStorage.setItem('duncit_chat_status', 'BUSY');
+
+    act(() => {
+      globalThis.dispatchEvent(new Event('mousemove'));
+    });
+
+    expect(result.current.mine).toBe('AWAY');
+  });
 });

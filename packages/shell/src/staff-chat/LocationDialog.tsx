@@ -97,8 +97,9 @@ export default function LocationDialog({ open, onClose, onSend }: Readonly<Props
     );
   };
 
+  // The only caller is the Send button below, already disabled while `shown`
+  // is empty — nothing else invokes this, so there is no "empty" case to guard.
   const send = () => {
-    if (!shown) return;
     onSend(`📍 ${shown}\n${searchUrl(shown)}`);
     onClose();
   };

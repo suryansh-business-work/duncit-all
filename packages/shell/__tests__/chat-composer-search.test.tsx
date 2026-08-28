@@ -24,6 +24,7 @@ import { schemaMockLink } from './schema-mock';
 import ChatComposer from '../src/staff-chat/ChatComposer';
 import ChatSearchPanel from '../src/staff-chat/ChatSearchPanel';
 import LocationDialog from '../src/staff-chat/LocationDialog';
+import { PUBLIC_CLIENT_CONFIG } from '../src/staff-chat/queries';
 import type { ChatFormats } from '../src/staff-chat/useChatSettings';
 
 const voiceState = vi.hoisted(() => ({
@@ -433,5 +434,87 @@ describe('LocationDialog', () => {
     for (const [text] of spies.onSend.mock.calls) {
       expect(String(text)).toContain('https://');
     }
+  });
+
+  it('does nothing on Enter with a blank or whitespace-only search', async () => {
+    dialog();
+    await settle();
+    const field = document.body.querySelector('input') as HTMLInputElement;
+
+    fireEvent.change(field, { target: { value: '   ' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    await settle();
+
+    expect(document.body.querySelector('iframe')).toBeNull();
+  });
+
+  it('finds itself and shows the two-coordinate point, on a successful locate', async () => {
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success({ coords: { latitude: 12.9716, longitude: 77.5946 } } as GeolocationPosition);
+    });
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    dialog();
+    await settle();
+
+    fireEvent.click(document.body.querySelectorAll('button')[1]);
+    await settle();
+
+    expect((document.body.querySelector('input') as HTMLInputElement).value).toBe('12.9716,77.5946');
+  });
+
+  it('reports why locating failed, rather than leaving the button stuck', async () => {
+    const getCurrentPosition = vi.fn(
+      (_success: PositionCallback, error: PositionErrorCallback) => {
+        error({ message: 'Location permission was denied' } as GeolocationPositionError);
+      }
+    );
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    dialog();
+    await settle();
+
+    fireEvent.click(document.body.querySelectorAll('button')[1]);
+    await settle();
+
+    expect(document.body.textContent).toContain('Location permission was denied');
+  });
+
+  it('does nothing, rather than throwing, on a browser with no geolocation at all', async () => {
+    Object.defineProperty(globalThis.navigator, 'geolocation', { configurable: true, value: undefined });
+    dialog();
+    await settle();
+
+    expect(() => {
+      fireEvent.click(document.body.querySelectorAll('button')[1]);
+    }).not.toThrow();
+  });
+
+  it('still lets a place be sent when the portal has no Maps key configured, just without a preview', async () => {
+    const noKeyMock = {
+      request: { query: PUBLIC_CLIENT_CONFIG },
+      result: { data: { publicClientConfig: { google_maps_api_key: '' } } },
+    };
+    render(
+      <MockedProvider mocks={[noKeyMock]}>
+        <ThemeProvider theme={testTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <LocationDialog open onClose={vi.fn()} onSend={vi.fn()} />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    await settle();
+    const field = document.body.querySelector('input') as HTMLInputElement;
+    fireEvent.change(field, { target: { value: 'Church Street' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    await settle();
+
+    expect(document.body.querySelector('iframe')).toBeNull();
+    expect(document.body.textContent).toContain('You can still send the place.');
   });
 });

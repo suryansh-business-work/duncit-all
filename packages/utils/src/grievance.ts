@@ -159,10 +159,10 @@ export function grievanceSupportTicketOptions(
   rows: readonly GrievanceSupportTicketSource[]
 ): GrievanceSupportTicketOption[] {
   return rows
-    .filter((row) => (row.ticket_no ?? '').trim().length > 0)
+    .filter((row) => row.ticket_no.trim().length > 0)
     .map((row) => {
       const value = row.ticket_no.trim();
-      const title = (row.title ?? '').trim();
+      const title = row.title.trim();
       return { value, label: title ? `${value} · ${title}` : value };
     });
 }

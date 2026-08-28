@@ -99,10 +99,12 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
   }, [pod, reset]);
 
   const billAmount = Number(watch('venue_bill_amount')) || 0;
+  // Read once: the dialog only submits while a pod is open, so the id the
+  // write carries is settled here rather than re-checked inside the handler.
+  const podId = pod?.id ?? '';
 
   const submit = handleSubmit(async (values) => {
-    if (!pod) return;
-    await complete({ variables: { input: buildCompleteInput(values, pod.id) } });
+    await complete({ variables: { input: buildCompleteInput(values, podId) } });
     onCompleted();
   });
 

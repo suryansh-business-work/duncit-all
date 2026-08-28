@@ -47,9 +47,11 @@ export default function MediaListField({
     const copy = items.filter((_, idx) => idx !== i);
     onChange(copy.join('\n'));
   };
+  // No bounds check: a row's own arrows are disabled at the two ends (see
+  // MediaListRow), so there is one place that decides what is movable rather
+  // than two that could disagree.
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
-    if (j < 0 || j >= items.length) return;
     const copy = [...items];
     [copy[i], copy[j]] = [copy[j], copy[i]];
     onChange(copy.join('\n'));

@@ -42,12 +42,12 @@ export default function TourGuidePage() {
     >
       <Box>
         <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
-          Back
+          {t('mweb.tourGuide.back')}
         </DuncitButton>
       </Box>
       <Stack spacing={0.5}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          Tour Guide
+          {t('mweb.tourGuide.tourGuide')}
         </Typography>
         <Typography
           variant="body2"
@@ -55,7 +55,7 @@ export default function TourGuidePage() {
             color: "text.secondary",
             fontWeight: 700
           }}>
-          Take a guided walkthrough of any screen, as often as you like.
+          {t('mweb.tourGuide.intro')}
         </Typography>
       </Stack>
       <Stack spacing={1.5}>
@@ -76,14 +76,14 @@ export default function TourGuidePage() {
                       alignItems: "center"
                     }}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {tour.title}
+                        {t(tour.titleKey)}
                       </Typography>
                       {done && <Chip size="small" label={t('mweb.tourGuide.completed')} color="success" />}
                     </Stack>
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
                     }}>
-                      {tour.caption}
+                      {t(tour.captionKey)}
                     </Typography>
                   </Stack>
                   <DuncitButton
@@ -97,7 +97,7 @@ export default function TourGuidePage() {
                     }}
                     sx={{ flexShrink: 0 }}
                   >
-                    {done ? 'Restart' : 'Start'}
+                    {done ? t('mweb.tourGuide.restart') : t('mweb.tourGuide.start')}
                   </DuncitButton>
                 </Stack>
               </CardContent>

@@ -141,7 +141,7 @@ export default function LoginScreen({
                   underline="none"
                   sx={[{
                     color: "text.secondary"
-                  }, ...(Array.isArray(legalLink) ? legalLink : [legalLink])]}>
+                  }, legalLink]}>
                   {t('session.login.privacyPolicy')}
                 </Link>
                 <Box sx={{ color: 'text.disabled' }}>·</Box>
@@ -152,7 +152,7 @@ export default function LoginScreen({
                   underline="none"
                   sx={[{
                     color: "text.secondary"
-                  }, ...(Array.isArray(legalLink) ? legalLink : [legalLink])]}>
+                  }, legalLink]}>
                   {t('session.login.termsOfUse')}
                 </Link>
                 <Box sx={{ color: 'text.disabled' }}>·</Box>

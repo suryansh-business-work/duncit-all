@@ -14,6 +14,7 @@ export default defineConfig({
       reportOnFailure: true,
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
+      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
       include: ['src/**'],
       exclude: ['src/**/index.ts', 'src/**/*.d.ts'],
     },

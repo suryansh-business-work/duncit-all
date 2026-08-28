@@ -91,8 +91,11 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafIt
 }
 
 function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonly<GroupItemProps>) {
+  // NavNode only renders a GroupItem once it has confirmed `item.children` is
+  // a non-empty array — safe to treat it as always present here.
+  const children = item.children!;
   const active = useMemo(() => groupActive(pathname, item), [pathname, item]);
-  const winner = useMemo(() => bestChild(pathname, item.children ?? []), [pathname, item.children]);
+  const winner = useMemo(() => bestChild(pathname, children), [pathname, children]);
   const [open, setOpen] = useState(active);
   // Expand-all / Collapse-all re-syncs every group when its nonce changes.
   useEffect(() => {
@@ -115,7 +118,7 @@ function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonl
       </ListItemButton>
       <Collapse in={isOpen} timeout="auto" unmountOnExit>
         <List disablePadding sx={{ pl: 2 }}>
-          {(item.children ?? []).map((child) => (
+          {children.map((child) => (
             <NavNode
               key={child.label}
               item={child}

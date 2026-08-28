@@ -2,7 +2,7 @@ import { Box, Stack, TextField, Typography } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton } from '@duncit/buttons';
-import { useTranslation } from '../i18n/useTranslation';
+import { splitAroundAction, useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   /** Reel video URL ('' = no reel). */
@@ -13,10 +13,9 @@ interface Props {
   onPickVideo?: () => Promise<string | null>;
 }
 
-const HELPER = 'Shows in Explore while the pod is live.';
-
 function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
   const { t } = useTranslation();
+  const [emptyBefore, emptyAfter] = splitAroundAction(t('podForm.reelField.empty'));
   if (value) {
     return (
       <Stack spacing={1}>
@@ -33,7 +32,7 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
           onClick={() => onChange('')}
           sx={{ alignSelf: 'flex-start' }}
         >
-          Remove reel
+          {t('podForm.reelField.removeReel')}
         </DuncitButton>
       </Stack>
     );
@@ -45,7 +44,9 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
       >
         <VideocamIcon sx={{ opacity: 0.5 }} />
         <Typography variant="caption" sx={{ display: 'block' }}>
-          No reel yet. Click <b>{t('podForm.reelField.pickVideo')}</b> to upload or pick from Pexels.
+          {emptyBefore}
+          <b>{t('podForm.reelField.pickVideo')}</b>
+          {emptyAfter}
         </Typography>
       </Box>
     );
@@ -88,12 +89,12 @@ export default function ReelField({ value, onChange, error, onPickVideo }: Reado
         <Typography variant="subtitle2">{t('podForm.reelField.podReel')}</Typography>
         {onPickVideo && (
           <DuncitButton size="small" startIcon={<VideocamIcon />} onClick={pick}>
-            {value ? 'Replace video' : 'Pick video'}
+            {value ? t('podForm.reelField.replaceVideo') : t('podForm.reelField.pickVideo')}
           </DuncitButton>
         )}
       </Stack>
       <Typography variant="caption" color={error ? 'error' : 'text.secondary'} sx={{ display: 'block', mb: 1 }}>
-        {error || HELPER}
+        {error || t('podForm.reelField.helper')}
       </Typography>
       <ReelBody value={value} onChange={onChange} error={error} onPickVideo={onPickVideo} />
     </Box>

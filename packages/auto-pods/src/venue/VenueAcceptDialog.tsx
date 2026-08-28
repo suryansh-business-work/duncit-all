@@ -16,6 +16,7 @@ import {
   VENUE_ACCEPT_AUTO_POD,
   VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD,
 } from '../queries';
+import { enrolmentFailure } from '../failure-message';
 
 interface VenueOption {
   id: string;
@@ -109,7 +110,7 @@ export function VenueAcceptDialog({
       onAccepted();
       handleClose();
     } catch (err) {
-      setFailure(err instanceof Error ? err.message : labels.claimedElsewhere);
+      setFailure(enrolmentFailure(err, labels.claimedElsewhere));
     }
   };
 

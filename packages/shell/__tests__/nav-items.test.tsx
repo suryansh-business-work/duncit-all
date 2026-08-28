@@ -43,6 +43,16 @@ describe('NavNode leaf', () => {
     renderNode({ item: { label: 'Nowhere' }, pathname: '/x' });
     expect(screen.getByRole('link', { name: 'Nowhere' })).toBeInTheDocument();
   });
+
+  it('renders a featured leaf as a highlighted card, with its caption line', () => {
+    renderNode({
+      item: { label: 'Earn with Duncit', to: '/earn', featured: true, caption: 'Host a pod, get paid' },
+      pathname: '/x',
+    });
+    const link = screen.getByRole('link', { name: /Earn with Duncit/ });
+    expect(link).toBeInTheDocument();
+    expect(screen.getByText('Host a pod, get paid')).toBeInTheDocument();
+  });
 });
 
 describe('NavNode group', () => {

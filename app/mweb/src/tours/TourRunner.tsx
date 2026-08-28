@@ -5,6 +5,8 @@ import { findTour, type TourStep } from '@duncit/tours';
 import { useLocation } from 'react-router-dom';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import { useTours } from './TourContext';
+import type { Translate } from '../i18n/fallback';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Anchors are declared as `data-tour="<anchor>"` on the element they describe. */
 const selectorFor = (anchor: string) => `[data-tour="${anchor}"]`;
@@ -43,13 +45,13 @@ const SETTLE_TICKS = 3;
  * against a missing target, and a screen legitimately varies (no clubs yet → no
  * clubs section). Dropping keeps the rest of the walkthrough usable.
  */
-function resolveSteps(steps: readonly TourStep[]): Step[] {
+function resolveSteps(steps: readonly TourStep[], t: Translate): Step[] {
   return steps
     .filter((step) => globalThis.document.querySelector(selectorFor(step.anchor)))
     .map((step) => ({
       target: selectorFor(step.anchor),
-      title: step.title,
-      content: step.body,
+      title: t(step.titleKey),
+      content: t(step.bodyKey),
     }));
 }
 
@@ -59,6 +61,7 @@ function resolveSteps(steps: readonly TourStep[]): Step[] {
  */
 export function TourRunner() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const location = useLocation();
   const { activeTourId, finishTour } = useTours();
   const [steps, setSteps] = useState<Step[]>([]);
@@ -89,7 +92,7 @@ export function TourRunner() {
     let best = 0;
     let quiet = 0;
     const timer = globalThis.setInterval(() => {
-      const resolved = resolveSteps(tour.steps);
+      const resolved = resolveSteps(tour.steps, t);
 
       if (resolved.length > best) {
         best = resolved.length;
@@ -107,7 +110,7 @@ export function TourRunner() {
       }
     }, POLL_MS);
     return () => globalThis.clearInterval(timer);
-  }, [activeTourId, finishTour, location.pathname]);
+  }, [activeTourId, finishTour, location.pathname, t]);
 
   if (!enabled || !activeTourId || steps.length === 0) return null;
 
@@ -138,7 +141,13 @@ export function TourRunner() {
         arrowColor: theme.palette.background.paper,
       }}
       onEvent={handleEvent}
-      locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next', skip: 'Skip' }}
+      locale={{
+        back: t('mweb.tours.previous'),
+        close: t('mweb.tours.close'),
+        last: t('mweb.tours.finish'),
+        next: t('mweb.tours.next'),
+        skip: t('mweb.tours.skip'),
+      }}
     />
   );
 }

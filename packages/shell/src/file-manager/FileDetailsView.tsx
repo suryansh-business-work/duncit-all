@@ -38,6 +38,10 @@ const TAB_SX = { minHeight: 36, minWidth: 0, px: 1 };
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
+/** A mutation always rejects with an Error; the fallback covers a caller that doesn't. */
+export const describeSaveError = (err: unknown, fallback: string): string =>
+  err instanceof Error ? err.message : fallback;
+
 /** Tab labels are copy, so the strip is built from the active catalogue.
  *  @duncit/tabs is framework-free and takes resolved text, not keys. */
 const buildTabs = (t: Translate, canWrite: boolean): DuncitTabItem<TabKey>[] => {
@@ -108,7 +112,7 @@ export default function FileDetailsView({
       });
       onChanged(res.data.renameMediaFile);
     } catch (err) {
-      onError(err instanceof Error ? err.message : t('shell.fileManager.renameFailed'));
+      onError(describeSaveError(err, t('shell.fileManager.renameFailed')));
     }
   };
 
@@ -117,7 +121,7 @@ export default function FileDetailsView({
       const res = await update({ variables: { fileId: file.fileId, tags } });
       onChanged(res.data.updateMediaFile);
     } catch (err) {
-      onError(err instanceof Error ? err.message : t('shell.fileManager.tagsFailed'));
+      onError(describeSaveError(err, t('shell.fileManager.tagsFailed')));
     }
   };
 

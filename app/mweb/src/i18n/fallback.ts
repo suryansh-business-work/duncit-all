@@ -1,5 +1,7 @@
 import {
   CONTENT_REPORT_BUNDLE,
+  EARNINGS_BUNDLE,
+  POD_TIMELINE_BUNDLE,
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
@@ -39,6 +41,8 @@ import {
 export const MWEB_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
   ...CONTENT_REPORT_BUNDLE,
+  ...EARNINGS_BUNDLE,
+  ...POD_TIMELINE_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,

@@ -38,16 +38,28 @@ changes — that is the "extensible for future screens" requirement:
 ```js
 {
   id: 'club',
-  title: 'Club Page',
-  caption: 'Following a club and finding its pods — open any club to start',
+  titleKey: 'mweb.tours.club.title',
+  captionKey: 'mweb.tours.club.caption',
   path: '/clubs',            // mWeb route
   nativeRoute: 'Home',       // native stack screen — must open with no params
   nativeTab: 'Clubs',        // …and, when the landing is a bottom tab, which one
   steps: [
-    { anchor: 'club-follow', title: 'Follow', body: 'Following puts this club’s new pods in front of you…' },
+    {
+      anchor: 'club-follow',
+      titleKey: 'mweb.tours.club.follow.title',
+      bodyKey: 'mweb.tours.club.follow.body',
+    },
   ],
 }
 ```
+
+**The registry holds structure, never words.** Each entry names catalogue keys
+under `mweb.tours.*`, and whichever overlay is drawing resolves them with its
+own translator — so a tour translates like every other screen (rule 38) and mWeb
+and native cannot describe the same screen differently. Add a tour by adding its
+copy to `packages/i18n/src/bundles/mweb.ts` first, then pointing the entry at it;
+the keys are written out in full because `verify-translation-keys.mjs` greps
+source for the literal string.
 
 **A tour's steps must all live on ONE screen.** Both runners resolve a tour
 against what has rendered and then freeze, so a step whose element only appears

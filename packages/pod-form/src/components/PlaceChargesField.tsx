@@ -35,7 +35,7 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-        Place charges
+        {t('podForm.placeChargesField.title')}
       </Typography>
       {helperText && (
         <Typography
@@ -89,7 +89,7 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
           </Stack>
         ))}
         <DuncitButton startIcon={<AddIcon />} onClick={add} size="small" sx={{ alignSelf: 'flex-start' }}>
-          Add charge
+          {t('podForm.placeChargesField.addCharge')}
         </DuncitButton>
       </Stack>
     </Box>

@@ -7,7 +7,19 @@ import type { PodCancelActor, PodTimelineKind, PodTimelineNode } from './pod-par
  * in MUI and the native app draws them in Tamagui, and two hand-written copies
  * of this table is exactly how the two apps start describing the same booking
  * differently (rule 27).
+ *
+ * The words themselves live in `podTimeline.*`; this module only decides
+ * WHICH of them a node says (CLAUDE.md rule 38). Every key is written out as a
+ * literal rather than built from the kind, because
+ * `scripts/verify-translation-keys.mjs` greps source for the literal string —
+ * a composed key reads as shipped-but-never-rendered and fails Shared Gates.
+ * Same shape, and the same reason, as `pod-attendance-copy.ts`.
  */
+export type TimelineTranslate = (
+  key: string,
+  options?: { vars?: Record<string, string | number> },
+) => string;
+
 export interface TimelineCopy {
   title: string;
   detail: string;
@@ -15,88 +27,89 @@ export interface TimelineCopy {
   tone: 'good' | 'bad' | 'warn' | 'info';
 }
 
-const ACTOR: Record<PodCancelActor, string> = {
-  HOST: 'the host',
-  VENUE: 'the venue',
-  CLUB_ADMIN: 'the club admin',
-  ADMIN: 'Duncit',
-  SYSTEM: 'the system',
+const ACTOR_KEY: Record<PodCancelActor, string> = {
+  HOST: 'podTimeline.actorHost',
+  VENUE: 'podTimeline.actorVenue',
+  CLUB_ADMIN: 'podTimeline.actorClubAdmin',
+  ADMIN: 'podTimeline.actorAdmin',
+  SYSTEM: 'podTimeline.actorSystem',
 };
 
-const BASE: Record<PodTimelineKind, TimelineCopy> = {
+/** The key pair and the tone for each kind. The tone is not copy, so it stays. */
+const BASE: Record<PodTimelineKind, { titleKey: string; detailKey: string; tone: TimelineCopy['tone'] }> = {
   JOINED: {
-    title: 'Pod Joined',
-    detail: 'You have successfully joined the pod.',
+    titleKey: 'podTimeline.joinedTitle',
+    detailKey: 'podTimeline.joinedDetail',
     tone: 'good',
   },
   DATE_ARRIVES: {
-    title: 'Pod Date Arrives',
-    detail: 'The pod is happening as scheduled.',
+    titleKey: 'podTimeline.dateArrivesTitle',
+    detailKey: 'podTimeline.dateArrivesDetail',
     tone: 'info',
   },
   ATTENDED: {
-    title: 'Pod Attended',
-    detail: 'You attended the pod. Experience recorded.',
+    titleKey: 'podTimeline.attendedTitle',
+    detailKey: 'podTimeline.attendedDetail',
     tone: 'good',
   },
   NOT_ATTENDED: {
-    title: 'Pod Not Attended',
-    detail: 'You did not attend the pod.',
+    titleKey: 'podTimeline.notAttendedTitle',
+    detailKey: 'podTimeline.notAttendedDetail',
     tone: 'bad',
   },
   ATTENDANCE_NOT_RECORDED: {
-    title: 'Attendance Not Recorded',
-    detail: 'Nobody scanned tickets at this pod, so attendance was never taken.',
+    titleKey: 'podTimeline.attendanceNotRecordedTitle',
+    detailKey: 'podTimeline.attendanceNotRecordedDetail',
     tone: 'info',
   },
   FINDING_REPLACEMENT: {
-    title: 'Finding Your Replacement',
-    detail: 'Your seat is back on sale. The refund follows once somebody takes it.',
+    titleKey: 'podTimeline.findingReplacementTitle',
+    detailKey: 'podTimeline.findingReplacementDetail',
     tone: 'info',
   },
   BACKOUT_REQUESTED: {
-    title: 'Pod Backout Requested',
-    detail: 'You have requested to back out from the pod.',
+    titleKey: 'podTimeline.backoutRequestedTitle',
+    detailKey: 'podTimeline.backoutRequestedDetail',
     tone: 'warn',
   },
   SPOT_FILLED: {
-    title: 'Spot Filled',
-    detail: 'Your spot was filled by someone else.',
+    titleKey: 'podTimeline.spotFilledTitle',
+    detailKey: 'podTimeline.spotFilledDetail',
     tone: 'good',
   },
   SPOT_NOT_FILLED: {
-    title: 'Spot Not Filled',
-    detail: 'Your spot could not be filled by anyone.',
+    titleKey: 'podTimeline.spotNotFilledTitle',
+    detailKey: 'podTimeline.spotNotFilledDetail',
     tone: 'warn',
   },
   KEPT_SPOT: {
-    title: 'Spot Kept',
-    detail: 'You reserved your spot back and stayed in the pod.',
+    titleKey: 'podTimeline.keptSpotTitle',
+    detailKey: 'podTimeline.keptSpotDetail',
     tone: 'good',
   },
   REFUND_INITIATED: {
-    title: 'Refund Initiated',
-    detail: 'Refund has been initiated to your original payment method.',
+    titleKey: 'podTimeline.refundInitiatedTitle',
+    detailKey: 'podTimeline.refundInitiatedDetail',
     tone: 'good',
   },
   REFUND_PENDING: {
-    title: 'Refund Being Processed',
-    detail: 'Your refund is with our finance team and has not left yet.',
+    titleKey: 'podTimeline.refundPendingTitle',
+    detailKey: 'podTimeline.refundPendingDetail',
     tone: 'info',
   },
   REFUND_NOT_ELIGIBLE: {
-    title: 'Refund Not Eligible',
-    detail: 'Refund is not eligible as per policy.',
+    titleKey: 'podTimeline.refundNotEligibleTitle',
+    detailKey: 'podTimeline.refundNotEligibleDetail',
     tone: 'bad',
   },
   POD_CANCELLED: {
-    title: 'Pod Cancelled',
-    detail: 'The pod has been cancelled.',
+    titleKey: 'podTimeline.podCancelledTitle',
+    detailKey: 'podTimeline.podCancelledDetail',
     tone: 'bad',
   },
   CANCELLED_BY: {
-    title: 'Cancelled By',
-    detail: 'The pod was cancelled.',
+    titleKey: 'podTimeline.cancelledByTitle',
+    detailKey: 'podTimeline.cancelledByDetail',
     tone: 'bad',
   },
 };
@@ -108,11 +121,21 @@ const BASE: Record<PodTimelineKind, TimelineCopy> = {
  * when somebody gave up one seat of four and is still going, and that sentence
  * is the only place on the screen where the difference is visible.
  */
-export function timelineCopy(node: PodTimelineNode): TimelineCopy {
+export function timelineCopy(node: PodTimelineNode, t: TimelineTranslate): TimelineCopy {
   const base = BASE[node.kind];
+  const copy: TimelineCopy = {
+    title: t(base.titleKey),
+    detail: t(base.detailKey),
+    tone: base.tone,
+  };
 
   if (node.kind === 'CANCELLED_BY' && node.cancelledBy) {
-    return { ...base, detail: `The pod was cancelled by ${ACTOR[node.cancelledBy]}.` };
+    return {
+      ...copy,
+      detail: t('podTimeline.cancelledByActorDetail', {
+        vars: { actor: t(ACTOR_KEY[node.cancelledBy]) },
+      }),
+    };
   }
 
   if (node.kind === 'BACKOUT_REQUESTED') {
@@ -122,12 +145,12 @@ export function timelineCopy(node: PodTimelineNode): TimelineCopy {
     if (partial) {
       const kept = before - seats;
       return {
-        ...base,
-        title: 'Partial Backout Requested',
-        detail: `You released ${seats} of ${before} seats and kept ${kept}.`,
+        ...copy,
+        title: t('podTimeline.partialBackoutTitle'),
+        detail: t('podTimeline.partialBackoutDetail', { vars: { seats, before, kept } }),
       };
     }
   }
 
-  return base;
+  return copy;
 }

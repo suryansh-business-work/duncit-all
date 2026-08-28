@@ -29,9 +29,11 @@ export default function FailureAlert({ failure, onDismiss }: Readonly<Props>) {
   const headline = t(failure.message);
   const hasDetail = failure.detail !== '' && failure.detail !== headline;
 
+  // Only reachable from the button below, which `hasDetail` already gates —
+  // `failure.detail` is never '' by the time this runs.
   const copy = () => {
     globalThis.navigator?.clipboard
-      ?.writeText(failure.detail || headline)
+      ?.writeText(failure.detail)
       .then(() => setCopied(true))
       .catch(() => setCopied(false));
   };

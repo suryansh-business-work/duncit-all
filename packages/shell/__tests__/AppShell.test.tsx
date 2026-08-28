@@ -21,6 +21,15 @@ vi.mock('@duncit/breadcrumb', async (importOriginal) => ({
   BreadcrumbProvider: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   AppBreadcrumbs: () => <nav data-testid="crumbs" />,
 }));
+// The panel carries a socket and the full chat tree — only whether AppShell
+// mounts it for a staff role is this file's concern, not what it renders.
+vi.mock('../src/staff-chat', () => ({
+  StaffChatPanel: ({ open, meName }: { open: boolean; meName?: string }) => (
+    <div data-testid="staff-chat-panel" data-me-name={meName ?? ''}>
+      {open ? 'open' : 'closed'}
+    </div>
+  ),
+}));
 
 import { useQuery } from '@apollo/client';
 import { DuncitThemeProvider } from '@duncit/theme';
@@ -58,7 +67,11 @@ function renderShell(props: Partial<ShellProps> = {}) {
 
 describe('AppShell', () => {
   beforeEach(() => {
-    mockQuery.mockReturnValue({ data: { branding: { portals_logo_url: '/l.png', app_name: 'Acme' } }, loading: false } as never);
+    mockQuery.mockReturnValue({
+      data: { branding: { portals_logo_url: '/l.png', app_name: 'Acme' } },
+      loading: false,
+      refetch: vi.fn().mockResolvedValue(undefined),
+    } as never);
   });
 
   it('shows the boot spinner while the user is loading', () => {
@@ -108,6 +121,29 @@ describe('AppShell', () => {
     // The drawer is keepMounted, so closing it does not remove it: MUI 7+ marks
     // the modal hidden once the exit transition has run, instead of aria-hidden.
     await waitFor(() => expect(modal).toHaveClass('MuiModal-hidden'));
+  });
+
+  it('mounts the docked chat panel for a staff role, closed until the header opens it', () => {
+    const staff = { full_name: 'Ada Lovelace', roles: ['SUPER_ADMIN'] } as DuncitUser;
+    renderShell({ hasAccess: true, user: staff });
+    expect(screen.getByTestId('staff-chat-panel')).toHaveTextContent('closed');
+  });
+
+  it('falls back to the first name for the panel when a staff member has no full name', () => {
+    const staff = { full_name: null, first_name: 'Ada', roles: ['SUPER_ADMIN'] } as unknown as DuncitUser;
+    renderShell({ hasAccess: true, user: staff });
+    expect(screen.getByTestId('staff-chat-panel')).toHaveAttribute('data-me-name', 'Ada');
+  });
+
+  it('gives the panel no name at all for a staff member with neither name on file', () => {
+    const staff = { full_name: null, first_name: null, roles: ['SUPER_ADMIN'] } as unknown as DuncitUser;
+    renderShell({ hasAccess: true, user: staff });
+    expect(screen.getByTestId('staff-chat-panel')).toHaveAttribute('data-me-name', '');
+  });
+
+  it('offers no chat panel at all for a non-staff role', () => {
+    renderShell({ hasAccess: true, user: { ...user, roles: ['MEMBER'] } as DuncitUser });
+    expect(screen.queryByTestId('staff-chat-panel')).not.toBeInTheDocument();
   });
 
   it('falls back to the short name when no fullName is set', () => {

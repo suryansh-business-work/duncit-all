@@ -108,7 +108,7 @@ export default function EarningsProjection({ productCost }: Readonly<Props>) {
       );
     }
     const w = projection.waterfall;
-    const statement = buildEarningsStatement(w, { has_venue: venue === 'slot', symbol });
+    const statement = buildEarningsStatement(w, { has_venue: venue === 'slot', symbol, t });
     const rows = projectionRows({ statement, waterfall: w, venue, productCost, money, t });
     const payout = rows[rows.length - 1];
     const budget = money(projection.venue_budget);

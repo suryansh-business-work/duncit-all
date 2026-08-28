@@ -49,9 +49,20 @@ export function captchaCopy(t: CaptchaTranslate): CaptchaCopy {
 const FALLBACK = flattenCatalogue(CAPTCHA_BUNDLE);
 
 /**
+ * One shipped word, by its key.
+ *
+ * Exported so the fallback is somebody's contract rather than an unreachable
+ * guard: an index lookup reads as a possibly-undefined string under the native
+ * app's stricter compiler, so the fallback has to be there — and being a
+ * named function is what lets a test show what it does with a key the bundle
+ * does not carry.
+ */
+export const captchaFallbackWord = (key: string): string => FALLBACK[key] ?? key;
+
+/**
  * The same copy with nothing to resolve it — the default language, read
  * straight off the shipped bundle so there is one copy of the words and not
- * two. The Astro marketing sites have no translator at build time, and a blank
- * label is worse than an untranslated one.
+ * two. The Astro marketing sites have no translator at build time, and a
+ * blank label is worse than an untranslated one.
  */
-export const CAPTCHA_FALLBACK_COPY: CaptchaCopy = captchaCopy((key) => FALLBACK[key] ?? key);
+export const CAPTCHA_FALLBACK_COPY: CaptchaCopy = captchaCopy(captchaFallbackWord);

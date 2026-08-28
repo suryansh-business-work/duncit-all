@@ -7,15 +7,17 @@
  * wide for the same reason — a card must not change shape as partners join.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { mwebAutoPodLabels, shellPodKindLabels, type AutoPodRow } from '@duncit/utils';
+import { mwebAutoPodLabels, shellPodKindLabels, type AutoPodLocation, type AutoPodRow } from '@duncit/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AutoPodCard } from '../src/AutoPodCard';
 import { AutoPodQueue } from '../src/AutoPodQueue';
+import { MY_HOST_CATEGORIES_FOR_AUTO_POD } from '../src/queries';
 import { AutoPodTicks } from '../src/AutoPodTicks';
+import { AutoPodCategoryFilter } from '../src/AutoPodCategoryFilter';
 import { PodKindChooser } from '../src/PodKindChooser';
 
 /** Echoes the key back, so an assertion reads as the key that was rendered. */
@@ -243,5 +245,220 @@ describe('PodKindChooser', () => {
     }
 
     for (const [kind] of onPick.mock.calls) expect(typeof kind).toBe('string');
+  });
+});
+
+const BENGALURU: AutoPodLocation = {
+  location_id: 'loc-blr',
+  location_name: 'Bengaluru',
+  country: 'India',
+  state: 'Karnataka',
+  city: 'Bengaluru',
+  bound_by: 'VENUE',
+  bound_at: '2026-08-20T10:00:00.000Z',
+};
+
+const VENUE_CLAIM = {
+  venue_id: 'v-1',
+  venue_slot_id: 'slot-1',
+  owner_user_id: 'owner-1',
+  venue_name: 'Indiranagar Court',
+  pod_date_time: '2026-09-01T10:00:00.000Z',
+  pod_end_date_time: null,
+  slot_price: 500,
+  accepted_at: '2026-08-20T10:00:00.000Z',
+};
+
+const card = (over: Partial<AutoPodRow> = {}) =>
+  render(
+    <AutoPodCard row={row(over)} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
+  );
+
+describe('AutoPodCard details', () => {
+  it('names the city an offer is pinned to, and says so when nobody has pinned one', () => {
+    expect(card({ location: BENGALURU }).container.textContent).toContain(
+      labels.pinnedTo('Bengaluru, Karnataka')
+    );
+    expect(card().container.textContent).toContain(labels.unpinned);
+  });
+
+  it('adds the venue and its slot only once a venue has committed one', () => {
+    const withVenue = card({ venue_claim: VENUE_CLAIM }).container.textContent ?? '';
+    expect(withVenue).toContain('Indiranagar Court');
+    expect(withVenue).toContain('when:2026-09-01T10:00:00.000Z');
+
+    expect(card().container.textContent).not.toContain('Indiranagar Court');
+  });
+
+  it('appends the category to the Auto Pod number, and leaves it off when there is none', () => {
+    expect(card().container.textContent).toContain('DUN-AP-001 · Badminton');
+    expect(card({ category_name: null }).container.textContent).toContain('DUN-AP-001');
+  });
+
+  it('states the earnings only once the server has worked them out', () => {
+    expect(card().container.textContent).toContain(labels.expectedEarnings('₹1400'));
+    expect(card({ expected_host_earnings: null }).container.textContent).not.toContain(
+      labels.expectedEarnings('₹1400')
+    );
+  });
+
+  it('says who the offer is still waiting on, and stops once all three have enrolled', () => {
+    expect(card().container.textContent).toContain(labels.waitingFor(['venue', 'host', 'club']));
+
+    const full = card({
+      venue_claim: VENUE_CLAIM,
+      host_claim: { user_id: 'u-1', host_name: 'Asha', assigned_at: '2026-08-21T10:00:00.000Z' },
+      club_claim: {
+        club_id: 'c-1',
+        club_name: 'Smashers',
+        user_id: 'u-2',
+        claimed_at: '2026-08-21T11:00:00.000Z',
+      },
+      stage: 'LIVE',
+    });
+    expect(full.container.textContent).not.toContain(labels.waitingFor(['venue']));
+  });
+
+  // A template cover 404s at request time rather than arriving empty, so the
+  // dead URL is caught on its error event, never left as the broken-image glyph.
+  it('swaps a cover that fails to load for the placeholder', () => {
+    const { container } = card();
+    const image = container.querySelector('img');
+    expect(image).not.toBeNull();
+
+    fireEvent.error(image as HTMLImageElement);
+
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('svg')).not.toBeNull();
+  });
+
+  it('treats media with no type as a picture, and skips a video', () => {
+    expect(
+      card({ pod_images_and_videos: [{ url: 'https://cdn.duncit.com/auto/a.jpg' }] }).container.querySelector('img')
+    ).not.toBeNull();
+    expect(
+      card({ pod_images_and_videos: [{ url: 'https://cdn.duncit.com/auto/a.mp4', type: 'VIDEO' }] }).container.querySelector('img')
+    ).toBeNull();
+  });
+});
+
+describe('AutoPodQueue already-enrolled rows', () => {
+  it('leaves the enrolled slot empty when the surface passes no renderer for it', async () => {
+    const { container } = wrapped(
+      <AutoPodQueue
+        role="VENUE"
+        rows={[row({ viewer_claimed: true, pod_id: 'pod-9' })]}
+        labels={labels}
+        loading={false}
+        error={false}
+        onRetry={vi.fn()}
+        formatWhen={formatWhen}
+        formatMoney={formatMoney}
+        renderAction={() => <button type="button">Enrol</button>}
+      />
+    );
+    await settle();
+
+    expect(container.textContent).toContain('Weekly Badminton');
+    expect(screen.queryByText('Open the pod')).not.toBeInTheDocument();
+  });
+});
+
+describe('AutoPodCategoryFilter', () => {
+  const categoriesMock = (
+    hostCategories: readonly Record<string, unknown>[] | null,
+  ): MockedResponse => ({
+    request: { query: MY_HOST_CATEGORIES_FOR_AUTO_POD },
+    result: {
+      data: {
+        myHost: hostCategories
+          ? { __typename: 'Host', id: 'host-1', host_categories: hostCategories }
+          : null,
+      },
+    },
+  });
+
+  const category = (over: Record<string, unknown> = {}) => ({
+    __typename: 'HostCategory',
+    sub_category_id: 'sub-1',
+    sub_category_name: 'Badminton',
+    category_name: 'Racket',
+    super_category_name: 'Sports',
+    ...over,
+  });
+
+  const filter = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) =>
+    render(
+      <MockedProvider mocks={[...mocks]}>
+        <ThemeProvider theme={testTheme}>
+          <AutoPodCategoryFilter value="" onChange={vi.fn()} labels={labels} {...(props as never)} />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+
+  it('offers the host their own approvals, each as its full category path', async () => {
+    filter([categoriesMock([category()])]);
+    await settle();
+
+    fireEvent.mouseDown(screen.getByLabelText(labels.categoryLabel));
+    await settle();
+
+    expect(screen.getByRole('option', { name: 'Sports › Racket › Badminton' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: labels.allCategories })).toBeInTheDocument();
+  });
+
+  it('joins only the levels the row actually carries', async () => {
+    filter([categoriesMock([category({ super_category_name: '', category_name: '' })])]);
+    await settle();
+
+    fireEvent.mouseDown(screen.getByLabelText(labels.categoryLabel));
+    await settle();
+
+    expect(screen.getByRole('option', { name: 'Badminton' })).toBeInTheDocument();
+  });
+
+  it('reports the sub-category the host picked', async () => {
+    const onChange = vi.fn();
+    filter([categoriesMock([category()])], { onChange });
+    await settle();
+
+    fireEvent.mouseDown(screen.getByLabelText(labels.categoryLabel));
+    await settle();
+    fireEvent.click(screen.getByRole('option', { name: 'Sports › Racket › Badminton' }));
+    await settle();
+
+    expect(onChange).toHaveBeenCalledWith('sub-1');
+  });
+
+  // A host approved in nothing has nothing to filter by, and is told why rather
+  // than being handed an empty dropdown.
+  it('locks itself and says so for a host with no approvals at all', async () => {
+    filter([categoriesMock([])]);
+    await settle();
+
+    expect(screen.getByText(labels.noHostCategories)).toBeInTheDocument();
+  });
+
+  it('reads a host row that never answered the same way', async () => {
+    filter([categoriesMock(null)]);
+    await settle();
+
+    expect(screen.getByText(labels.noHostCategories)).toBeInTheDocument();
+  });
+
+  it('drops an approval with no sub-category behind it', async () => {
+    filter([categoriesMock([category({ sub_category_id: null })])]);
+    await settle();
+
+    expect(screen.getByText(labels.noHostCategories)).toBeInTheDocument();
+  });
+
+  it('renders at either size', async () => {
+    for (const size of ['small', 'medium'] as const) {
+      const { unmount } = filter([categoriesMock([category()])], { size });
+      await settle();
+      expect(screen.getByLabelText(labels.categoryLabel)).toBeInTheDocument();
+      unmount();
+    }
   });
 });

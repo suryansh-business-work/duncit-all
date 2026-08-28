@@ -124,6 +124,17 @@ describe('OtpLoginPanel', () => {
     expect(onSubmitCode).toHaveBeenCalledWith('asha@duncit.com', '123456');
   });
 
+  it('shows the signing-in state on the code step once busy takes over', async () => {
+    const { rerender } = await reachCodeStep();
+    fireEvent.change(codeField(), { target: { value: '123456' } });
+
+    rerender(<OtpLoginPanel onRequestCode={vi.fn()} onSubmitCode={vi.fn()} busy />);
+
+    const button = screen.getByRole('button', { name: /Signing in…/i });
+    expect(button).toBeDisabled();
+    expect(document.body.querySelector('.MuiCircularProgress-root')).not.toBeNull();
+  });
+
   it('lets a typo in the address be corrected, and forgets the code when it is', async () => {
     await reachCodeStep();
     fireEvent.change(codeField(), { target: { value: '123456' } });

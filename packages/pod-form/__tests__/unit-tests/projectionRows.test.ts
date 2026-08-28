@@ -31,7 +31,11 @@ const waterfall = (over: Partial<EarningsWaterfall> = {}): EarningsWaterfall => 
 });
 
 function rows(venue: VenueStanding, productCost = 0, w: EarningsWaterfall = waterfall()) {
-  const statement = buildEarningsStatement(w, { has_venue: venue === 'slot', symbol: '₹' });
+  const statement = buildEarningsStatement(w, {
+    has_venue: venue === 'slot',
+    symbol: '₹',
+    t,
+  });
   return projectionRows({ statement, waterfall: w, venue, productCost, money, t });
 }
 

@@ -25,4 +25,17 @@ describe('SidebarUserCard', () => {
     render(<SidebarUserCard user={{ user_id: 'u1', full_name: 'Ada Lovelace' } as DuncitUser} fallbackName="P" />);
     expect(screen.queryByText('ada@x.test')).not.toBeInTheDocument();
   });
+
+  it('shrinks to the avatar alone with the name in its tooltip, when collapsed', () => {
+    const { container } = render(
+      <SidebarUserCard
+        user={{ user_id: 'u1', first_name: 'Ada', last_name: 'Lovelace', email: 'ada@x.test' } as DuncitUser}
+        fallbackName="P"
+        collapsed
+      />,
+    );
+    expect(screen.getByText('AL')).toBeInTheDocument();
+    expect(screen.queryByText('ada@x.test')).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-label="Ada Lovelace"]')).toBeInTheDocument();
+  });
 });

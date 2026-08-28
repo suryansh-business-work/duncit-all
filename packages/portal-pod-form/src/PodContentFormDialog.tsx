@@ -73,11 +73,14 @@ export default function PodContentFormDialog({
   const canEdit = (field: PodField) => editableFields.includes(field);
   const imagesDisabled = !canEdit('pod_images_and_videos');
 
-  const addImage = async () => {
-    if (!onPickImage) return;
-    const url = await onPickImage();
-    if (url) append({ url, type: 'IMAGE' });
-  };
+  // Built only when the caller can pick — the button below renders off the same
+  // value, so the handler never has to re-check that it exists.
+  const addImage = onPickImage
+    ? async () => {
+        const url = await onPickImage();
+        if (url) append({ url, type: 'IMAGE' });
+      }
+    : undefined;
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -142,7 +145,7 @@ export default function PodContentFormDialog({
                 }}>
                   {t('shell.podContent.images')}
                 </Typography>
-                {!imagesDisabled && onPickImage && (
+                {!imagesDisabled && addImage && (
                   <DuncitButton size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addImage}>
                     {t('shell.podContent.addImage')}
                   </DuncitButton>

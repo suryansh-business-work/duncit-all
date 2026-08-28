@@ -285,12 +285,17 @@ describe('makeNativeParityPodConfig', () => {
 });
 
 describe('constants', () => {
-  it('exposes option lists', () => {
+  // The VALUE is the stored enum and is a contract with the server; the name
+  // beside it is a catalogue key, resolved where the menu is drawn (rule 38).
+  it('exposes option lists keyed to their copy', () => {
     expect(POD_TYPES.length).toBeGreaterThan(0);
     expect(OCCURRENCES.length).toBeGreaterThan(0);
+    for (const option of [...POD_TYPES, ...OCCURRENCES, ...POD_MODES]) {
+      expect(option.labelKey.startsWith('podForm.')).toBe(true);
+    }
     expect(POD_MODES).toEqual([
-      { value: 'PHYSICAL', label: 'Physical' },
-      { value: 'VIRTUAL', label: 'Virtual' },
+      { value: 'PHYSICAL', labelKey: 'podForm.podMode.physical' },
+      { value: 'VIRTUAL', labelKey: 'podForm.podMode.virtual' },
     ]);
   });
 });
@@ -408,5 +413,27 @@ describe('autoPodToFormValues', () => {
     expect(values.what_this_pod_offers).toEqual([]);
     expect(values.available_perks).toEqual([]);
     expect(values.place_charges).toEqual([{ label: 'Entry', amount: 0, note: '' }]);
+  });
+
+  // Auto Pods written before these columns were required come back with nulls
+  // where the schema now promises strings. The form still has to open on them.
+  it('opens on a legacy row whose text columns came back null', () => {
+    const values = autoPodToFormValues({
+      pod_title: null,
+      pod_description: null,
+      pod_images_and_videos: null,
+      super_category_id: null,
+      sub_category_id: null,
+      pod_amount: 300,
+      no_of_spots: 12,
+      place_charges: [{ label: null, amount: 50 }],
+    } as unknown as AutoPodTemplateRow);
+
+    expect(values.pod_title).toBe('');
+    expect(values.pod_description).toBe('');
+    expect(values.super_category_id).toBe('');
+    expect(values.sub_category_id).toBe('');
+    expect(values.media_text).toBe('');
+    expect(values.place_charges).toEqual([{ label: '', amount: 50, note: '' }]);
   });
 });

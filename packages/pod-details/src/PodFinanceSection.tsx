@@ -55,6 +55,7 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
         breakdown.waterfall,
         breakdown.currency_symbol,
         breakdown.has_venue,
+        t,
         breakdown.collected_total
       )
     : [];
@@ -65,8 +66,12 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
       title={t('podDetailsPanel.podFinanceSection.finance')}
       tone="success"
       loading={loading && !breakdown}
-      error={error ? 'Finance breakdown is not available for this pod.' : null}
-      empty={!error && !loading && !breakdown ? 'No settlement recorded for this pod yet.' : null}
+      error={error ? t('podDetailsPanel.podFinanceSection.breakdownUnavailable') : null}
+      empty={
+        !error && !loading && !breakdown
+          ? t('podDetailsPanel.podFinanceSection.noSettlement')
+          : null
+      }
       action={
         breakdown && (
           <Stack direction="row" spacing={1}>

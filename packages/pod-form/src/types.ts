@@ -133,6 +133,18 @@ export interface PodOption {
   label: string;
 }
 
+/**
+ * A picker option whose name is OUR copy rather than server data.
+ *
+ * Separate from `PodOption` on purpose: a meeting platform's label is typed by
+ * whoever configured it and is shown as they wrote it, while these three lists
+ * are fixed menus this package owns — so their names are catalogue keys.
+ */
+export interface PodKeyedOption {
+  value: string;
+  labelKey: string;
+}
+
 /** Input for the optional server-backed meeting-link generator. */
 export interface GenerateMeetingLinkInput {
   platform: string;
@@ -184,26 +196,31 @@ export interface PodFormData {
   editingPodDocId?: string;
 }
 
-export const POD_TYPES: PodOption[] = [
-  { value: 'NATIVE_FREE', label: 'Native · Free' },
-  { value: 'NATIVE_PAID', label: 'Native · Paid' },
-  { value: 'NATIVE_PAID_PREMIUM', label: 'Native · Paid Premium' },
-  { value: 'NON_NATIVE_FREE', label: 'Non-native · Free' },
-  { value: 'NON_NATIVE_PAID', label: 'Non-native · Paid' },
+/**
+ * The picker options. The VALUE is the stored enum; the name a person reads is
+ * a catalogue key resolved where the menu is drawn (rule 38), written out in
+ * full because `verify-translation-keys.mjs` greps for the literal.
+ */
+export const POD_TYPES: PodKeyedOption[] = [
+  { value: 'NATIVE_FREE', labelKey: 'podForm.podType.nativeFree' },
+  { value: 'NATIVE_PAID', labelKey: 'podForm.podType.nativePaid' },
+  { value: 'NATIVE_PAID_PREMIUM', labelKey: 'podForm.podType.nativePaidPremium' },
+  { value: 'NON_NATIVE_FREE', labelKey: 'podForm.podType.nonNativeFree' },
+  { value: 'NON_NATIVE_PAID', labelKey: 'podForm.podType.nonNativePaid' },
 ];
 
-export const OCCURRENCES: PodOption[] = [
-  { value: 'ONE_TIME', label: 'One time' },
-  { value: 'DAILY', label: 'Daily' },
-  { value: 'WEEKLY', label: 'Weekly' },
-  { value: 'MONTHLY', label: 'Monthly' },
-  { value: 'ALTERNATE_DAY', label: 'Alternate day' },
-  { value: 'WEEKENDS_ONLY', label: 'Weekends only' },
+export const OCCURRENCES: PodKeyedOption[] = [
+  { value: 'ONE_TIME', labelKey: 'podForm.occurrence.oneTime' },
+  { value: 'DAILY', labelKey: 'podForm.occurrence.daily' },
+  { value: 'WEEKLY', labelKey: 'podForm.occurrence.weekly' },
+  { value: 'MONTHLY', labelKey: 'podForm.occurrence.monthly' },
+  { value: 'ALTERNATE_DAY', labelKey: 'podForm.occurrence.alternateDay' },
+  { value: 'WEEKENDS_ONLY', labelKey: 'podForm.occurrence.weekends' },
 ];
 
-export const POD_MODES: PodOption[] = [
-  { value: 'PHYSICAL', label: 'Physical' },
-  { value: 'VIRTUAL', label: 'Virtual' },
+export const POD_MODES: PodKeyedOption[] = [
+  { value: 'PHYSICAL', labelKey: 'podForm.podMode.physical' },
+  { value: 'VIRTUAL', labelKey: 'podForm.podMode.virtual' },
 ];
 
 /** The AutoPod's own pod_type — physical, and never free. */

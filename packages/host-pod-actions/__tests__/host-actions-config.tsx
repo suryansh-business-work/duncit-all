@@ -13,15 +13,28 @@ import { vi } from 'vitest';
 import type { HostPodActionsConfig } from '../src/HostPodActionsProvider';
 import { mwebHostPodLabels } from '../src/labels';
 
-/** Echoes the key back, so assertions read as the key that was rendered. */
-const t = (key: string) => key;
+/**
+ * Echoes the key back, so assertions read as the key that was rendered — with
+ * the vars appended, because a sentence that names the pod only names it
+ * through them: the shipped copy's placeholders are not in the key.
+ */
+const t = (key: string, options?: { vars?: Record<string, string | number> }) => {
+  const vars = Object.values(options?.vars ?? {});
+  return vars.length ? `${key} ${vars.join(' ')}` : key;
+};
+
+/** The same labels the provider hands the dialogs, for asserting against. */
+export const labelsFor = () => mwebHostPodLabels(t);
 
 export const hostActionsConfig = (
   over: Partial<HostPodActionsConfig> = {},
 ): HostPodActionsConfig => ({
   labels: mwebHostPodLabels(t),
-  renderMediaField: ({ value, onChange }) => (
-    <textarea aria-label="media" value={value} onChange={(event) => onChange(event.target.value)} />
+  renderMediaField: ({ value, onChange, error }) => (
+    <>
+      <textarea aria-label="media" value={value} onChange={(event) => onChange(event.target.value)} />
+      {error ? <span role="alert">{error}</span> : null}
+    </>
   ),
   onViewProfile: vi.fn(),
   linkBaseUrl: 'https://duncit.com',

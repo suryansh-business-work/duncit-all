@@ -10,15 +10,18 @@ export interface TourStep {
    * find the same element.
    */
   anchor: string;
-  title: string;
-  body: string;
+  /** Catalogue key for the step's heading. */
+  titleKey: string;
+  /** Catalogue key for the step's body. */
+  bodyKey: string;
 }
 
 export interface TourDefinition {
   id: TourId;
-  /** Row label in the Tour Guide centre. */
-  title: string;
-  caption: string;
+  /** Catalogue key for the row label in the Tour Guide centre. */
+  titleKey: string;
+  /** Catalogue key for the line under that label. */
+  captionKey: string;
   /**
    * Where starting this tour sends the user. MUST be a screen that opens with
    * no params: navigating to a screen that needs them (PodDetails wants a

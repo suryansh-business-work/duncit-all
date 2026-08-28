@@ -14,6 +14,17 @@ vi.mock('@fontsource/nunito/800.css', () => ({}));
 vi.mock('react-dom/client', () => ({ default: { createRoot: createRootSpy }, createRoot: createRootSpy }));
 vi.mock('@duncit/logs', () => logs);
 
+const sessionSocket = vi.hoisted(() => ({ factory: null as (() => unknown) | null }));
+vi.mock('@duncit/user-context', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/user-context')>()),
+  configureSessionSocket: (next: () => unknown) => {
+    sessionSocket.factory = next;
+  },
+}));
+
+const ioSpy = vi.hoisted(() => vi.fn(() => 'socket-instance'));
+vi.mock('socket.io-client', () => ({ io: ioSpy }));
+
 import { mountPortal } from '../src/mountPortal';
 import { getGoogleClientId, setGoogleClientId } from '../src/lib/google-client-id';
 import type { MountPortalOptions } from '../src/types';
@@ -174,5 +185,27 @@ describe('mountPortal', () => {
     await mounted();
     expect(getGoogleClientId()).toBe('');
     expect(findClientId(renderSpy.mock.calls[0][0])).toBeNull();
+  });
+
+  it('wires the session socket factory to skip connecting with no token, and to connect once one is set', async () => {
+    const root = document.createElement('div');
+    root.id = 'root';
+    document.body.appendChild(root);
+    ioSpy.mockClear();
+
+    mountPortal(baseOpts());
+    await mounted();
+
+    localStorage.removeItem('tok_key');
+    expect(sessionSocket.factory?.()).toBeNull();
+    expect(ioSpy).not.toHaveBeenCalled();
+
+    localStorage.setItem('tok_key', 'jwt');
+    expect(sessionSocket.factory?.()).toBe('socket-instance');
+    expect(ioSpy).toHaveBeenCalledWith('https://api.test', {
+      path: '/socket.io',
+      auth: { token: 'jwt' },
+      transports: ['websocket', 'polling'],
+    });
   });
 });

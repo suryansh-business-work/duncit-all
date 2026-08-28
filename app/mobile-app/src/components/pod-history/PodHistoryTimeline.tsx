@@ -12,6 +12,7 @@ import {
 
 import type { PodMembership } from '@/utils/pod-history';
 import { formatDateTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -31,7 +32,8 @@ const TONE: Record<TimelineCopy['tone'], { name: IconName; color: string }> = {
  * "why was I not refunded" is a question only the shape answers.
  */
 function TimelineNode({ node, depth }: Readonly<{ node: PodTimelineNode; depth: number }>) {
-  const copy = timelineCopy(node);
+  const { t } = useTranslation();
+  const copy = timelineCopy(node, t);
   const icon = TONE[copy.tone];
   const children = node.children ?? [];
 

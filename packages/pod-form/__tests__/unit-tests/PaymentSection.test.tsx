@@ -3,6 +3,7 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { UseFormReturn } from 'react-hook-form';
 import PaymentSection from '../../src/sections/PaymentSection';
+import EarningsProjection from '../../src/components/EarningsProjection';
 import { Harness, makeConfig, makeData } from './helpers';
 import type { PodFormData, PodFormValues } from '../../src/types';
 
@@ -63,6 +64,32 @@ function renderPayment(data: PodFormData, defaults: Partial<PodFormValues> = {})
   );
   return methodsRef;
 }
+
+/** The projection on its own — PaymentSection only mounts it once a price is
+ * typed, so an empty box is only reachable from here. */
+function renderProjection(defaults: Partial<PodFormValues> = {}) {
+  render(
+    <Harness data={makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE })} defaultValues={defaults}>
+      <EarningsProjection productCost={0} />
+    </Harness>,
+  );
+}
+
+describe('EarningsProjection on its own', () => {
+  it('asks for a price rather than projecting one when the amount is not a number', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    renderProjection({ pod_type: 'NATIVE_PAID', pod_amount: '' as unknown as number, no_of_spots: 10 });
+
+    expect(screen.getByText(/Enter a ticket price and at least 2 spots/)).toBeInTheDocument();
+  });
+
+  it('asks for a price when the spots box is empty too', () => {
+    apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
+    renderProjection({ pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: '' as unknown as number });
+
+    expect(screen.getByText(/Enter a ticket price and at least 2 spots/)).toBeInTheDocument();
+  });
+});
 
 describe('PaymentSection', () => {
   it('changes the pod type and zeroes the amount for a free type', async () => {

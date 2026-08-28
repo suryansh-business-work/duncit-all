@@ -14,7 +14,12 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { glass } from './glass';
-import { PORTALS, PORTAL_CATEGORIES, resolvePortalUrl } from './portals';
+import {
+  PORTALS,
+  PORTAL_CATEGORIES,
+  resolvePortalUrl,
+  type PortalCategory,
+} from './portals';
 import { sessionT, type SessionTranslate } from '../i18n';
 
 interface Props {
@@ -26,17 +31,21 @@ interface Props {
 
 export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Readonly<Props>) {
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<string>('All');
+  const [category, setCategory] = useState<PortalCategory | 'All'>('All');
 
+  // Searched against the words on screen, so a reader can type what they see —
+  // which means the filter has to re-run when the language changes.
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     return PORTALS.filter((p) => {
       const matchesCat = category === 'All' || p.category === category;
       const matchesQuery =
-        !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        t(p.descriptionKey).toLowerCase().includes(q);
       return matchesCat && matchesQuery;
     });
-  }, [query, category]);
+  }, [query, category, t]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
@@ -71,14 +80,22 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
           }}
         />
         <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-          {['All', ...PORTAL_CATEGORIES].map((cat) => (
+          <Chip
+            label={t('session.portals.all')}
+            size="small"
+            color={category === 'All' ? 'primary' : 'default'}
+            variant={category === 'All' ? 'filled' : 'outlined'}
+            onClick={() => setCategory('All')}
+            sx={{ fontWeight: 700 }}
+          />
+          {PORTAL_CATEGORIES.map((option) => (
             <Chip
-              key={cat}
-              label={cat === 'All' ? t('session.portals.all') : cat}
+              key={option.key}
+              label={t(option.labelKey)}
               size="small"
-              color={category === cat ? 'primary' : 'default'}
-              variant={category === cat ? 'filled' : 'outlined'}
-              onClick={() => setCategory(cat)}
+              color={category === option.key ? 'primary' : 'default'}
+              variant={category === option.key ? 'filled' : 'outlined'}
+              onClick={() => setCategory(option.key)}
               sx={{ fontWeight: 700 }}
             />
           ))}
@@ -115,7 +132,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
                         color: "text.secondary",
                         display: 'block'
                       }}>
-                      {p.description}
+                      {t(p.descriptionKey)}
                     </Typography>
                   </Box>
                 </Stack>

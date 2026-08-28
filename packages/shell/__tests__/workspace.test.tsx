@@ -21,6 +21,7 @@ import FloatingWindow from '../src/floating-window';
 import { AgentDockTab } from '../src/chrome/agent/AgentDockTab';
 import { Taskbar } from '../src/workspace/Taskbar';
 import { WorkspaceProvider } from '../src/workspace/WorkspaceProvider';
+import { useWorkspace, type WorkspaceWindow } from '../src/workspace/context';
 import { deviceTimeZone, supportedTimeZones, withSeconds } from '../src/workspace/clock';
 
 const testTheme = createTheme();
@@ -62,6 +63,51 @@ const settle = async () => {
     await Promise.resolve();
   });
 };
+
+/** Registers one window on demand, so a test can drive `register()` directly
+ * rather than through a real window's own mount/update cycle. */
+function RegisterProbe({ window }: Readonly<{ window: WorkspaceWindow }>) {
+  const workspace = useWorkspace();
+  return (
+    <>
+      <button onClick={() => workspace?.register(window)}>register</button>
+      <div data-testid="count">{workspace?.windows.length ?? 0}</div>
+      <div data-testid="title">{workspace?.windows[0]?.title ?? ''}</div>
+    </>
+  );
+}
+
+describe('the workspace window registry', () => {
+  it('leaves the list alone when the same window registers again with identical details, and updates it when details change', async () => {
+    mount(<RegisterProbe window={{ id: 'w1', title: 'One', subtitle: 'Sub', icon: 'CALL' }} />);
+    await settle();
+
+    fireEvent.click(screen.getByText('register'));
+    await settle();
+    expect(screen.getByTestId('count')).toHaveTextContent('1');
+    expect(screen.getByTestId('title')).toHaveTextContent('One');
+
+    // Registering the exact same details again must not disturb the entry.
+    fireEvent.click(screen.getByText('register'));
+    await settle();
+    expect(screen.getByTestId('count')).toHaveTextContent('1');
+    expect(screen.getByTestId('title')).toHaveTextContent('One');
+  });
+
+  it('updates an existing entry in place when a re-registration changes its details', async () => {
+    const { rerender } = mount(<RegisterProbe window={{ id: 'w1', title: 'One', subtitle: 'Sub', icon: 'CALL' }} />);
+    await settle();
+    fireEvent.click(screen.getByText('register'));
+    await settle();
+
+    rerender(wrap(<RegisterProbe window={{ id: 'w1', title: 'Two', subtitle: 'Sub', icon: 'CALL' }} />));
+    fireEvent.click(screen.getByText('register'));
+    await settle();
+
+    expect(screen.getByTestId('count')).toHaveTextContent('1');
+    expect(screen.getByTestId('title')).toHaveTextContent('Two');
+  });
+});
 
 describe('the clock helpers', () => {
   it('puts seconds where the minutes are, not on the end', () => {
@@ -125,6 +171,27 @@ describe('a window on the taskbar', () => {
       <Taskbar />
     </>
   );
+
+  it('names itself on the bar by title alone, for a window with no subtitle', async () => {
+    mount(
+      <>
+        <FloatingWindow
+          id="demo-plain"
+          open
+          title="A window with no subtitle"
+          icon="WINDOW"
+          initial={{ x: 40, y: 40, width: 400, height: 300 }}
+          onClose={vi.fn()}
+        >
+          <div>plain content</div>
+        </FloatingWindow>
+        <Taskbar />
+      </>,
+    );
+    await settle();
+
+    expect(screen.getByRole('button', { name: /Minimise A window with no subtitle/ })).toBeInTheDocument();
+  });
 
   it('announces itself to the bar while it is open', async () => {
     mount(openWindow());

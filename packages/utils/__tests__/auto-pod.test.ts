@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   autoPodActionable,
+  autoPodCityLabel,
   autoPodEnrolledCount,
+  autoPodHostNeedsLocation,
   autoPodModeCount,
   autoPodTicks,
   autoPodWaitingOn,
@@ -103,25 +105,26 @@ describe('autoPodActionable', () => {
     expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'club')).toBe(false);
   });
 
-  // Nothing can happen until a venue commits a date, so the venue acts on OPEN
-  // rows only; once a venue has claimed, the row moves on and the button goes.
-  it('lets a venue act on an OPEN row that has no venue yet', () => {
+  // Enrolment is ANY-ORDER: a role's own empty tick is the whole condition, so
+  // the venue's button is there on an untouched OPEN row and on a CLAIMING one
+  // that a host or club got to first. Its own claim is what takes it away.
+  it('lets a venue act on any pre-live row that has no venue yet', () => {
     expect(autoPodActionable(row(), 'venue')).toBe(true);
+    expect(autoPodActionable(row({ stage: 'CLAIMING', host_claim: hostClaim }), 'venue')).toBe(true);
     expect(autoPodActionable(row({ venue_claim: venueClaim }), 'venue')).toBe(false);
-    expect(autoPodActionable(row({ stage: 'CLAIMING' }), 'venue')).toBe(false);
   });
 
-  it('lets a host act on a CLAIMING row that has no host yet', () => {
+  it('lets a host act on any pre-live row that has no host yet, venue or not', () => {
     expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim }), 'host')).toBe(true);
     expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim }), 'host')).toBe(false);
-    // Still OPEN: no venue has committed a date, so the host cannot enrol yet.
-    expect(autoPodActionable(row(), 'host')).toBe(false);
+    // Nothing has been enrolled yet — the host may still be the one to start it.
+    expect(autoPodActionable(row(), 'host')).toBe(true);
   });
 
-  it('lets a club act on a CLAIMING row that has no club yet', () => {
+  it('lets a club act on any pre-live row that has no club yet, venue or not', () => {
     expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim }), 'club')).toBe(true);
     expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, club_claim: clubClaim }), 'club')).toBe(false);
-    expect(autoPodActionable(row(), 'club')).toBe(false);
+    expect(autoPodActionable(row(), 'club')).toBe(true);
   });
 
   // Host and Club Admin enrol in parallel once a venue has committed: one of
@@ -236,5 +239,59 @@ describe('autoPodModeCount', () => {
     const partial = { venue: 3 } as unknown as typeof counts;
     expect(autoPodModeCount(partial, 'HOST')).toBe(0);
     expect(autoPodModeCount(partial, 'VENUE')).toBe(3);
+  });
+});
+
+describe('autoPodHostNeedsLocation', () => {
+  const pinned = {
+    location: {
+      location_id: 'loc-1',
+      location_name: 'Bengaluru',
+      country: 'India',
+      state: 'Karnataka',
+      city: 'Bengaluru',
+      bound_by: 'VENUE' as const,
+      bound_at: '2026-08-20T10:00:00.000Z',
+    },
+  };
+
+  // An unpinned offer takes its city FROM the host, so there has to be one.
+  it('asks the host for a city only on an offer nobody has pinned yet', () => {
+    expect(autoPodHostNeedsLocation({ location: null }, '')).toBe(true);
+    expect(autoPodHostNeedsLocation({ location: null }, 'loc-1')).toBe(false);
+  });
+
+  it('never asks once the first enrolment pinned the city', () => {
+    expect(autoPodHostNeedsLocation(pinned, '')).toBe(false);
+    expect(autoPodHostNeedsLocation(pinned, 'loc-9')).toBe(false);
+  });
+});
+
+describe('autoPodCityLabel', () => {
+  const location = {
+    location_id: 'loc-1',
+    location_name: 'Bengaluru Urban',
+    country: 'India',
+    state: 'Karnataka',
+    city: 'Bengaluru',
+    bound_by: 'HOST' as const,
+    bound_at: '2026-08-20T10:00:00.000Z',
+  };
+
+  it('names the pinned city and its state, the way every card reads', () => {
+    expect(autoPodCityLabel(location)).toBe('Bengaluru, Karnataka');
+  });
+
+  it('falls back to the admin location row when the city column is blank', () => {
+    expect(autoPodCityLabel({ ...location, city: '' })).toBe('Bengaluru Urban, Karnataka');
+  });
+
+  it('drops the missing half rather than trailing a comma', () => {
+    expect(autoPodCityLabel({ ...location, state: '' })).toBe('Bengaluru');
+  });
+
+  it('is empty for an offer nobody has pinned yet', () => {
+    expect(autoPodCityLabel(null)).toBe('');
+    expect(autoPodCityLabel(undefined)).toBe('');
   });
 });

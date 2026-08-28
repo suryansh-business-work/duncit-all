@@ -16,6 +16,12 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
         'Hosts approved in this sub-category and clubs carrying it are the ones offered the pod.',
       categoryRequired: 'Select a category',
       categoryLocked: 'Locked — a host or club has already enrolled on this category.',
+      // The same picker, used to NARROW the club list on an ordinary pod rather
+      // than to stand in for a club on a template.
+      filterHint:
+        'Pick the category first — the club list below is narrowed to it. Leave blank to see every club.',
+      noClubs:
+        'No clubs in this category yet. Clear the category, or create a club for it first.',
       // The template's own rules, mirroring the server's validateTemplate.
       priceRange: 'Ticket price must be between 1 and 1999',
       priceHint: 'GROSS price per person (incl. fee + GST). 1 – 1999 — an Auto Pod is never free.',
@@ -37,6 +43,8 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
     },
     common: {
       amount: 'Amount (₹)',
+      // Offered on create only, and never for an Auto Pod.
+      saveAsDraft: 'Save as Draft',
       availablePerks: 'Available perks',
       cancel: 'Cancel',
       description: 'Description',
@@ -61,6 +69,10 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
     },
     mediaField: {
       addImage: 'Add image',
+      // `{action}` is the Add image button's own name, drawn in bold inside the
+      // sentence — so the whole line stays ONE thing to translate rather than a
+      // prefix and a suffix a translator cannot reorder.
+      empty: 'No images yet. Click {action} to upload or pick from Pexels.',
     },
     mediaRow: {
       moveDown: 'Move down',
@@ -79,7 +91,65 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       eGFreeWifiParkingPet: 'e.g. Free WiFi, Parking, Pet Friendly',
       pressEnterToAddAChip: 'Press Enter to add a chip. Keep each chip short.',
     },
+    // The named options the two pickers offer. The stored VALUE stays an
+    // enum in @duncit/pod-form; only the words a person reads are here.
+    occurrence: {
+      alternateDay: 'Alternate day',
+      daily: 'Daily',
+      monthly: 'Monthly',
+      oneTime: 'One time',
+      weekends: 'Weekends only',
+      weekly: 'Weekly',
+    },
+    podMode: {
+      physical: 'Physical',
+      virtual: 'Virtual',
+    },
+    podType: {
+      nativeFree: 'Native · Free',
+      nativePaid: 'Native · Paid',
+      nativePaidPremium: 'Native · Paid Premium',
+      nonNativeFree: 'Non-native · Free',
+      nonNativePaid: 'Non-native · Paid',
+    },
+    // Every message the form's Zod schema can raise. A validation error is the
+    // sentence a person is stopped by, so it translates like any other.
+    validation: {
+      amountMax: 'Amount cannot exceed 1999',
+      amountNegative: 'Amount cannot be negative',
+      amountNumber: 'Amount must be a number',
+      clubRequired: 'Select a club',
+      descriptionRequired: 'Description required',
+      descriptionShort: 'Add a longer description',
+      endAfterStart: 'End must be after start',
+      endRequiredVirtual: 'End date/time is required for a virtual pod',
+      freeAmountZero: 'Free pods must have amount 0',
+      hostRequired: 'Add at least one host',
+      imageRequired: 'At least one image is required',
+      labelRequired: 'Label required',
+      meetingLinkInvalid: 'Meeting link must be a valid http(s) URL',
+      meetingLinkRequired: 'Meeting link is required',
+      meetingNotesMax: 'Meeting notes must be 1000 characters or fewer',
+      meetingPlatformMax: 'Meeting platform must be 80 characters or fewer',
+      modeRequired: 'Select pod mode',
+      productRequired: 'Please select a product to continue.',
+      quantityRequired: 'Quantity required',
+      reelInvalid: 'Reel video must be a valid http(s) URL',
+      singleHost: 'Select only one host',
+      slotRequired: 'Pick an available slot',
+      spotsNumber: 'Spots must be a number',
+      startInPast: 'Start date/time must be after current date/time',
+      startRequired: 'Start date/time required',
+      titleRequired: 'Title required',
+      titleShort: 'Title is too short',
+      venueRequired: 'Select a venue',
+      virtualNoProducts: 'A virtual pod cannot carry products',
+    },
     paymentSection: {
+      // The spots control's hint. The numbers are the activity's own minimum
+      // and the booked space's capacity, so they are passed in.
+      boundsHintMin: 'This activity needs at least {min} people.',
+      boundsHintRange: 'This activity needs at least {min}, and the space booked holds {max}.',
       noOfSpots: 'No. of spots',
       occurrence: 'Occurrence',
       optionalVenueSideChargesEntryTable: 'Optional venue-side charges (entry, table, etc.) shown separately to users.',
@@ -91,16 +161,20 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       perksAttendeesUnlockByJoining: 'Perks attendees unlock by joining.',
     },
     placeChargesField: {
+      addCharge: 'Add charge',
       label: 'Label',
       note: 'Note',
+      title: 'Place charges',
     },
     podSections: {
       aboutThisPod: 'About this Pod',
       approvedProducts: 'Approved Products',
       availablePerks: 'Available Perks',
       basicInformation: 'Basic Information',
+      collapseAll: 'Collapse all',
       collapseAllSections: 'Collapse all sections',
       coverImageFirstRestBecomeA: 'Cover image first; rest become a gallery.',
+      expandAll: 'Expand all',
       expandAllSections: 'Expand all sections',
       imagesAndVideos: 'Images & videos',
       meetingDetails: 'Meeting Details',
@@ -149,7 +223,12 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
         'Projected at today’s Finance rates with every payable spot sold. A host’s or a venue’s own commission rate applies once they are on the pod.',
     },
     reelField: {
+      // Same shape as mediaField.empty — `{action}` is the Pick video button.
+      empty: 'No reel yet. Click {action} to upload or pick from Pexels.',
+      helper: 'Shows in Explore while the pod is live.',
       pickVideo: 'Pick video',
+      removeReel: 'Remove reel',
+      replaceVideo: 'Replace video',
       podReel: 'Pod Reel',
       reelVideoUrl: 'Reel video URL',
     },

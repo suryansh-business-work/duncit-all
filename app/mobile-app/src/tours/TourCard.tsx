@@ -51,10 +51,10 @@ export function TourCard({
       backgroundColor="$surface"
     >
       <Text fontSize={16} fontWeight="700" color="$color">
-        {step.title}
+        {t(step.titleKey)}
       </Text>
       <Text fontSize={13.5} lineHeight={19} color="$muted">
-        {step.body}
+        {t(step.bodyKey)}
       </Text>
       <XStack alignItems="center" justifyContent="space-between" paddingTop={4}>
         <Text testID="tour-progress" fontSize={11.5} fontWeight="700" color="$muted">
@@ -71,7 +71,7 @@ export function TourCard({
             pressStyle={PRESS_STYLE.row}
           >
             <Text fontSize={12.5} fontWeight="600" color="$muted">
-              Skip
+              {t('mweb.tours.skip')}
             </Text>
           </XStack>
           {isFirstStep ? null : (
@@ -88,14 +88,14 @@ export function TourCard({
               pressStyle={PRESS_STYLE.row}
             >
               <Text fontSize={12.5} fontWeight="600" color="$color">
-                Previous
+                {t('mweb.tours.previous')}
               </Text>
             </XStack>
           )}
           <XStack
             testID="tour-next"
             role="button"
-            aria-label={isLastStep ? 'Finish tour' : 'Next step'}
+            aria-label={isLastStep ? t('mweb.tours.finishTour') : t('mweb.tours.nextStep')}
             onPress={isLastStep ? handleStop : handleNext}
             paddingVertical={8}
             paddingHorizontal={14}
@@ -104,7 +104,7 @@ export function TourCard({
             pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
-              {isLastStep ? 'Finish' : 'Next'}
+              {isLastStep ? t('mweb.tours.finish') : t('mweb.tours.next')}
             </Text>
           </XStack>
         </XStack>

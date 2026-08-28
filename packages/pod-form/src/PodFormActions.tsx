@@ -28,7 +28,7 @@ export default function PodFormActions({
       <DuncitButton onClick={onCancel}>{t('podForm.common.cancel')}</DuncitButton>
       {showDraft && (
         <DuncitButton variant="outlined" type="button" disabled={disabled} onClick={onDraft}>
-          Save as Draft
+          {t('podForm.common.saveAsDraft')}
         </DuncitButton>
       )}
       <DuncitButton variant="contained" type="submit" disabled={disabled} onClick={onPublish}>

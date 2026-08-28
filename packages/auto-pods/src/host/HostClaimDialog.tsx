@@ -15,6 +15,7 @@ import {
   type AutoPodLabels,
 } from '@duncit/utils';
 import { HOST_ASSIGN_AUTO_POD } from '../queries';
+import { enrolmentFailure } from '../failure-message';
 
 export interface HostClaimDialogProps {
   row: AutoPodRow | null;
@@ -72,7 +73,7 @@ export function HostClaimDialog({
       onAssigned();
       handleClose();
     } catch (err) {
-      setFailure(err instanceof Error ? err.message : labels.claimedElsewhere);
+      setFailure(enrolmentFailure(err, labels.claimedElsewhere));
     }
   };
 

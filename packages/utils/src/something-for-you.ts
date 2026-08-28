@@ -43,29 +43,33 @@ export interface SomethingForYouItem {
  * short — the places a promotion sends somebody — rather than every route that
  * exists. Adding one means adding it here AND confirming both surfaces route
  * it (app/mweb/src/App.tsx, app/mobile-app/src/navigation/linking.ts).
+ *
+ * The name is a catalogue key, not a word: the picker is a screen an admin
+ * reads, so it translates like every other (rule 38). The key is written out
+ * in full because `verify-translation-keys.mjs` greps for the literal.
  */
-export const SOMETHING_FOR_YOU_ROUTES: readonly { label: string; path: string }[] = [
-  { label: 'Home', path: '/' },
-  { label: 'Explore', path: '/explore' },
-  { label: 'Clubs', path: '/clubs' },
-  { label: 'Pod Shop', path: '/shop' },
-  { label: 'Cart', path: '/cart' },
-  { label: 'Orders', path: '/orders' },
-  { label: 'Saved pods', path: '/saved' },
-  { label: 'Pod history', path: '/pod-history' },
-  { label: 'Refer and earn', path: '/referral' },
-  { label: 'Duncit Coin', path: '/duncit-coin' },
-  { label: 'Earn with Duncit', path: '/earn' },
-  { label: 'Become a host', path: '/become-host' },
-  { label: 'Create a pod', path: '/create-pod' },
-  { label: 'Register a venue', path: '/register-venue' },
-  { label: 'Pod ideas', path: '/pod-ideas' },
-  { label: 'Share feedback', path: '/support/feedback' },
-  { label: 'Support', path: '/support' },
-  { label: 'FAQs', path: '/faqs' },
-  { label: 'Pod plans', path: '/pod-plans' },
-  { label: 'Account', path: '/account' },
-  { label: 'Profile', path: '/profile' },
+export const SOMETHING_FOR_YOU_ROUTES: readonly { labelKey: string; path: string }[] = [
+  { labelKey: 'admin.somethingForYou.routes.home', path: '/' },
+  { labelKey: 'admin.somethingForYou.routes.explore', path: '/explore' },
+  { labelKey: 'admin.somethingForYou.routes.clubs', path: '/clubs' },
+  { labelKey: 'admin.somethingForYou.routes.shop', path: '/shop' },
+  { labelKey: 'admin.somethingForYou.routes.cart', path: '/cart' },
+  { labelKey: 'admin.somethingForYou.routes.orders', path: '/orders' },
+  { labelKey: 'admin.somethingForYou.routes.saved', path: '/saved' },
+  { labelKey: 'admin.somethingForYou.routes.podHistory', path: '/pod-history' },
+  { labelKey: 'admin.somethingForYou.routes.referral', path: '/referral' },
+  { labelKey: 'admin.somethingForYou.routes.duncitCoin', path: '/duncit-coin' },
+  { labelKey: 'admin.somethingForYou.routes.earn', path: '/earn' },
+  { labelKey: 'admin.somethingForYou.routes.becomeHost', path: '/become-host' },
+  { labelKey: 'admin.somethingForYou.routes.createPod', path: '/create-pod' },
+  { labelKey: 'admin.somethingForYou.routes.registerVenue', path: '/register-venue' },
+  { labelKey: 'admin.somethingForYou.routes.podIdeas', path: '/pod-ideas' },
+  { labelKey: 'admin.somethingForYou.routes.feedback', path: '/support/feedback' },
+  { labelKey: 'admin.somethingForYou.routes.support', path: '/support' },
+  { labelKey: 'admin.somethingForYou.routes.faqs', path: '/faqs' },
+  { labelKey: 'admin.somethingForYou.routes.podPlans', path: '/pod-plans' },
+  { labelKey: 'admin.somethingForYou.routes.account', path: '/account' },
+  { labelKey: 'admin.somethingForYou.routes.profile', path: '/profile' },
 ];
 
 /**
@@ -116,7 +120,7 @@ const TRAILING = new Set([' ', '\t', '\n', '.', ',', ';', ':', '!', '-']);
  */
 function stripTrailingPunctuation(value: string): string {
   let end = value.length;
-  while (end > 0 && TRAILING.has(value[end - 1] ?? '')) end -= 1;
+  while (end > 0 && TRAILING.has(value.charAt(end - 1))) end -= 1;
   return value.slice(0, end);
 }
 

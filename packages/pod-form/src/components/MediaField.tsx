@@ -3,7 +3,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import { DuncitButton } from '@duncit/buttons';
 import MediaRow from './MediaRow';
-import { useTranslation } from '../i18n/useTranslation';
+import { splitAroundAction, useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   label: string;
@@ -25,6 +25,7 @@ interface Props {
  */
 export default function MediaField({ label, value, onChange, helperText, error, required, onPickImage }: Readonly<Props>) {
   const { t } = useTranslation();
+  const [emptyBefore, emptyAfter] = splitAroundAction(t('podForm.mediaField.empty'));
   const items = value
     .split('\n')
     .map((s) => s.trim())
@@ -86,7 +87,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
           {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}
         </Typography>
         <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => pickInto('new')}>
-          Add image
+          {t('podForm.mediaField.addImage')}
         </DuncitButton>
       </Stack>
       {(error || helperText) && (
@@ -100,7 +101,9 @@ export default function MediaField({ label, value, onChange, helperText, error, 
         >
           <ImageIcon sx={{ opacity: 0.5 }} />
           <Typography variant="caption" sx={{ display: 'block' }}>
-            No images yet. Click <b>{t('podForm.mediaField.addImage')}</b> to upload or pick from Pexels.
+            {emptyBefore}
+            <b>{t('podForm.mediaField.addImage')}</b>
+            {emptyAfter}
           </Typography>
         </Box>
       ) : (

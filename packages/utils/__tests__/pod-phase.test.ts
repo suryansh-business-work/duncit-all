@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   POD_LIVE_TAIL_MS,
+  canCompletePod,
   podPhase,
   splitPodsByPhase,
   type PodPhaseFields,
@@ -72,5 +73,28 @@ describe('splitPodsByPhase', () => {
   it('reads the clock when no `now` is passed', () => {
     const future = new Date(Date.now() + HOUR).toISOString();
     expect(splitPodsByPhase([{ pod_date_time: future }]).upcoming).toHaveLength(1);
+  });
+});
+
+describe('canCompletePod', () => {
+  // Completing settles the payout off the seats scanned in, so it is offered
+  // only once the door is shut — a pod still running would freeze the answer
+  // while guests are still arriving.
+  it('offers Complete on a pod that is over', () => {
+    expect(canCompletePod({ pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) }, NOW)).toBe(
+      true,
+    );
+  });
+
+  it('offers nothing on a pod that has not started', () => {
+    expect(canCompletePod({ pod_date_time: at(2 * HOUR) }, NOW)).toBe(false);
+  });
+
+  it('offers nothing while the pod is running', () => {
+    expect(canCompletePod({ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }, NOW)).toBe(false);
+  });
+
+  it('reads the clock when no `now` is passed', () => {
+    expect(canCompletePod({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe(false);
   });
 });

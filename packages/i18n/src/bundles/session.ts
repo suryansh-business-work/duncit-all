@@ -42,6 +42,35 @@ export const SESSION_BUNDLE: NestedCatalogue = {
       search: 'Search portals…',
       all: 'All',
       noMatch: 'No portals match “{query}”.',
+      // The launcher's category filter.
+      categories: {
+        contentAi: 'Content & AI',
+        growth: 'Growth',
+        operations: 'Operations',
+        partners: 'Partners',
+        people: 'People',
+      },
+      // One line per console, saying what it is for. The console NAMES are
+      // brand marks and stay as they are; these sentences are not.
+      descriptions: {
+        admin: 'Platform administration — users, catalog and access control.',
+        ads: 'Advertising creatives and campaign delivery.',
+        ai: 'Models, prompts and AI tooling.',
+        challenge: 'Create and manage challenges across categories.',
+        crm: 'Leads, contacts and customer conversations.',
+        developers: 'API keys and venue APIs — slots, availability and bookings.',
+        employee: 'Profile, payslips and self-service requests.',
+        finance: 'Payments, payouts, invoices and reconciliation.',
+        hr: 'Directory, leave and HR operations.',
+        legal: 'Policies, agreements and compliance records.',
+        marketing: 'Campaigns, notifications and audiences.',
+        onboarding: 'Welcome, verify and activate new members and partners.',
+        partners: 'Host and venue onboarding and management.',
+        products: 'Catalog, inventory and product roadmap.',
+        support: 'Tickets, live chat and customer support.',
+        tech: 'Environment, feature flags and platform config.',
+        websiteApp: 'Site content, careers, newsroom and blog.',
+      },
     },
     /** The right-hand promo card. */
     promo: {

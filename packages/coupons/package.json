@@ -50,7 +50,7 @@
     "zod": "^3.25.76"
   },
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/coupons"
   }

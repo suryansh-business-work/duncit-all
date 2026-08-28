@@ -32,7 +32,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
   // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
   const money = (value: number) => formatStatementMoney(value, symbol);
   const statement = waterfall
-    ? buildEarningsStatement(waterfall, { has_venue: venuePicked, symbol })
+    ? buildEarningsStatement(waterfall, { has_venue: venuePicked, symbol, t })
     : null;
 
   return (

@@ -59,7 +59,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
     }
     // Every number below is a server waterfall value — the statement builder
     // only groups them and spells out the formulas.
-    const statement = buildEarningsStatement(w, { has_venue: hasVenue, symbol: currency });
+    const statement = buildEarningsStatement(w, { has_venue: hasVenue, symbol: currency, t });
     return (
       <Stack spacing={1.25}>
         <Stack spacing={0.25}>

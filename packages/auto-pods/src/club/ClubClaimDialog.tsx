@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import { DuncitButton } from '@duncit/buttons';
 import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import { CLUB_CLAIM_AUTO_POD, MY_ADMIN_CLUBS_FOR_AUTO_POD } from '../queries';
+import { enrolmentFailure } from '../failure-message';
 
 interface ClubOption {
   id: string;
@@ -84,7 +85,7 @@ export function ClubClaimDialog({
       onClaimed();
       handleClose();
     } catch (err) {
-      setFailure(err instanceof Error ? err.message : labels.claimedElsewhere);
+      setFailure(enrolmentFailure(err, labels.claimedElsewhere));
     }
   };
 

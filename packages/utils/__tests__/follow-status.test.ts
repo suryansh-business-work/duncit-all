@@ -4,9 +4,12 @@ import {
   canFollowBack,
   followActionFor,
   followBackLabelKey,
+  followButtonLabelKey,
+  followOutcomeLabelKey,
   followRequestRowState,
   followStatusFrom,
   nextFollowStatus,
+  offersFollowBack,
   readFollowStatus,
   type FollowStatus,
 } from '../src/follow-status';
@@ -261,5 +264,85 @@ describe('canFollowBack', () => {
     for (const followBackStatus of settled) {
       expect(canFollowBack(followBackStatus)).toBe(false);
     }
+  });
+});
+
+describe('followButtonLabelKey', () => {
+  // Only the resting state changes: somebody who already follows you is offered
+  // "Follow Back", the same words the inbox uses, so the two never disagree.
+  it('offers Follow Back to a viewer who is already followed by this profile', () => {
+    expect(followButtonLabelKey('NONE', true)).toBe('mweb.follow.followBack');
+  });
+
+  it('reads as plain Follow when the other direction is not there', () => {
+    expect(followButtonLabelKey('NONE', false)).toBe(FOLLOW_LABEL_KEY.NONE);
+    expect(followButtonLabelKey('NONE', null)).toBe(FOLLOW_LABEL_KEY.NONE);
+    expect(followButtonLabelKey('NONE')).toBe(FOLLOW_LABEL_KEY.NONE);
+  });
+
+  it('leaves REQUESTED and FOLLOWING reading as they always have', () => {
+    expect(followButtonLabelKey('REQUESTED', true)).toBe(FOLLOW_LABEL_KEY.REQUESTED);
+    expect(followButtonLabelKey('FOLLOWING', true)).toBe(FOLLOW_LABEL_KEY.FOLLOWING);
+  });
+});
+
+describe('followRequestRowState on a new-follower row', () => {
+  const newFollower = (over: Partial<RequestRow> = {}): RequestRow => ({
+    actionType: 'NEW_FOLLOWER',
+    requestId: null,
+    status: null,
+    followBackStatus: 'NONE',
+    actorId: 'user-7',
+    ...over,
+  });
+
+  it('turns the whole row into the offer to follow back', () => {
+    expect(followRequestRowState(newFollower())).toBe('FOLLOW_BACK');
+    expect(followRequestRowState(newFollower({ followBackStatus: 'REQUESTED' }))).toBe('FOLLOW_BACK');
+  });
+
+  it('hides it once the viewer follows them back', () => {
+    expect(followRequestRowState(newFollower({ followBackStatus: 'FOLLOWING' }))).toBe('HIDDEN');
+  });
+
+  // Rows written before the actor column existed have nobody to act on.
+  it('stays inert on a row with no actor rather than offering a button with no target', () => {
+    expect(followRequestRowState(newFollower({ actorId: null }))).toBe('HIDDEN');
+    expect(followRequestRowState(newFollower({ actorId: undefined }))).toBe('HIDDEN');
+  });
+});
+
+describe('offersFollowBack', () => {
+  it('offers the button on a new-follower row that names who it is about', () => {
+    expect(
+      offersFollowBack({ actionType: 'NEW_FOLLOWER', actorId: 'user-7', followBackStatus: 'NONE' }),
+    ).toBe(true);
+  });
+
+  it('offers nothing on a row that is not a follow-back row', () => {
+    expect(offersFollowBack(requestRow({ actorId: 'user-7' }))).toBe(false);
+    expect(
+      offersFollowBack({ actionType: 'NEW_FOLLOWER', actorId: 'user-7', followBackStatus: 'FOLLOWING' }),
+    ).toBe(false);
+  });
+
+  it('offers nothing when there is nobody to follow', () => {
+    expect(offersFollowBack({ actionType: 'NEW_FOLLOWER', actorId: null })).toBe(false);
+  });
+});
+
+describe('followOutcomeLabelKey', () => {
+  it('states the answer a settled request landed on', () => {
+    expect(followOutcomeLabelKey('ACCEPTED')).toBe('mweb.follow.accepted');
+    expect(followOutcomeLabelKey('REJECTED')).toBe('mweb.follow.rejected');
+    expect(followOutcomeLabelKey('DENIED')).toBe('mweb.follow.rejected');
+  });
+
+  it('states nothing while the request is open, withdrawn, or never was one', () => {
+    expect(followOutcomeLabelKey('PENDING')).toBeNull();
+    expect(followOutcomeLabelKey('CANCELLED')).toBeNull();
+    expect(followOutcomeLabelKey(null)).toBeNull();
+    expect(followOutcomeLabelKey(undefined)).toBeNull();
+    expect(followOutcomeLabelKey()).toBeNull();
   });
 });

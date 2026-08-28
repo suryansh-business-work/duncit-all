@@ -131,13 +131,15 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
             <Controller
               control={control}
               name="no_of_spots"
-              render={({ field, fieldState }) => (
+              // No error slot: the stepper clamps to the SAME server range the
+              // schema checks, so this is the one field on the form that cannot
+              // come back refused.
+              render={({ field }) => (
                 <PodSpotsField
                   limits={limits}
                   labels={labels}
                   value={Number(field.value) || limits.current}
                   onChange={field.onChange}
-                  error={fieldState.error?.message}
                 />
               )}
             />

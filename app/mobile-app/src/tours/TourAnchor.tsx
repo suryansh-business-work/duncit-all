@@ -4,6 +4,7 @@ import { TourGuideZone } from 'rn-tourguide';
 import type { TourId } from '@duncit/tours';
 
 import { useToursStore } from '@/stores/tours.store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Extra clearance above a target in the screen's lower half, in px. */
 const TOOLTIP_LIFT = 72;
@@ -35,6 +36,7 @@ interface Props {
  * all, so an idle tour costs nothing in layout terms.
  */
 export function TourAnchor({ tour, anchor, style, children }: Readonly<Props>) {
+  const { t } = useTranslation();
   const activeTourId = useToursStore((s) => s.activeTourId);
   const activeSteps = useToursStore((s) => s.activeSteps);
   const registerAnchor = useToursStore((s) => s.registerAnchor);
@@ -54,7 +56,7 @@ export function TourAnchor({ tour, anchor, style, children }: Readonly<Props>) {
       tourKey={tour}
       // Zones are 1-based, and `zone` doubles as the step's sort order.
       zone={index + 1}
-      text={step.body}
+      text={t(step.bodyKey)}
       style={style}
       // The tooltip is parked a fixed distance above a target that sits in the
       // lower half of the screen. Our card carries a title, body and a button

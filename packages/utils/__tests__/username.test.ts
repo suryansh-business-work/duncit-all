@@ -196,6 +196,15 @@ describe('scheduleUsernameCheck', () => {
     expect(onState).toHaveBeenCalledWith(IDLE_USERNAME_CHECK);
   });
 
+  // Even the no-op path hands back a cleanup, because the caller is a React
+  // effect and an effect that sometimes returns nothing is a warning.
+  it('hands back a cleanup that does nothing for a value that never left the device', () => {
+    const cancel = schedule(CURRENT);
+
+    expect(cancel()).toBeUndefined();
+    expect(ask).not.toHaveBeenCalled();
+  });
+
   it('debounces, then reports the answer', async () => {
     ask.mockResolvedValue({ available: true, reason: null });
     schedule('ravi-plays');
@@ -263,6 +272,28 @@ describe('scheduleUsernameCheck', () => {
     cancel();
     await vi.advanceTimersByTimeAsync(10);
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  // Cancelled AFTER the ask went out, so the rejection lands on a field that
+  // has moved on. Reporting it would put an error under a value nobody typed.
+  it('drops a failure that arrives after the field moved on', async () => {
+    let fail: (error: unknown) => void = () => undefined;
+    ask.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        fail = reject;
+      }),
+    );
+    const cancel = schedule('ravi-plays');
+    await vi.advanceTimersByTimeAsync(USERNAME_CHECK_DEBOUNCE_MS);
+    expect(ask).toHaveBeenCalledWith('ravi-plays');
+    cancel();
+    onState.mockReset();
+
+    fail(new Error('offline'));
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(onState).not.toHaveBeenCalled();
   });
 });
 

@@ -102,6 +102,21 @@ export interface HostPodActionLabels {
   completeHint: string;
   venueBillAmount: string;
   venueBillRequired: string;
+  /**
+   * The settlement waterfall in the HOST's voice. `@duncit/ui` writes the same
+   * numbers for staff — "Host receives", the venue commission spelled out —
+   * which is the right voice in a console and the wrong one on the screen where
+   * a host is completing their own pod.
+   */
+  sharePreviewHint: string;
+  sharePaid: string;
+  shareGst: (pct: number) => string;
+  sharePlatformFee: (pct: number) => string;
+  sharePool: string;
+  shareVenueSlot: string;
+  shareVenueReceives: string;
+  shareYouReceive: string;
+  shareDuncitRevenue: string;
   podMedia: string;
   completing: string;
   cancelNoOthers: string;
@@ -214,6 +229,15 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     completeHint: t('mweb.hostPodActions.completeHint'),
     venueBillAmount: t('mweb.hostPodActions.venueBillAmount'),
     venueBillRequired: t('mweb.hostPodActions.venueBillRequired'),
+    sharePreviewHint: t('mweb.hostShare.previewHint'),
+    sharePaid: t('mweb.hostShare.customerPaid'),
+    shareGst: (pct) => t('mweb.hostShare.gst', { vars: { pct } }),
+    sharePlatformFee: (pct) => t('mweb.hostShare.platformFee', { vars: { pct } }),
+    sharePool: t('mweb.hostShare.pool'),
+    shareVenueSlot: t('mweb.hostShare.venueSlotPrice'),
+    shareVenueReceives: t('mweb.hostShare.venueReceives'),
+    shareYouReceive: t('mweb.hostShare.youReceive'),
+    shareDuncitRevenue: t('mweb.hostShare.duncitRevenue'),
     podMedia: t('mweb.hostPodActions.podMedia'),
     completing: t('mweb.hostPodActions.completing'),
     cancelNoOthers: t('mweb.hostPodActions.cancelNoOthers'),
@@ -303,6 +327,15 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     completeHint: t('shell.hostPodActions.completeHint'),
     venueBillAmount: t('shell.hostPodActions.venueBillAmount'),
     venueBillRequired: t('shell.hostPodActions.venueBillRequired'),
+    sharePreviewHint: t('shell.hostShare.previewHint'),
+    sharePaid: t('shell.hostShare.customerPaid'),
+    shareGst: (pct) => t('shell.hostShare.gst', { vars: { pct } }),
+    sharePlatformFee: (pct) => t('shell.hostShare.platformFee', { vars: { pct } }),
+    sharePool: t('shell.hostShare.pool'),
+    shareVenueSlot: t('shell.hostShare.venueSlotPrice'),
+    shareVenueReceives: t('shell.hostShare.venueReceives'),
+    shareYouReceive: t('shell.hostShare.youReceive'),
+    shareDuncitRevenue: t('shell.hostShare.duncitRevenue'),
     podMedia: t('shell.hostPodActions.podMedia'),
     completing: t('shell.hostPodActions.completing'),
     cancelNoOthers: t('shell.hostPodActions.cancelNoOthers'),

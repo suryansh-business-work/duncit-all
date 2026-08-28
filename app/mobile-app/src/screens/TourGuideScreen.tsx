@@ -46,7 +46,7 @@ export function TourGuideScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={12} padding={16} paddingBottom={40}>
           <Text fontSize={13} color="$muted">
-            Take a guided walkthrough of any screen, as often as you like.
+            {t('mweb.tourGuide.intro')}
           </Text>
           {tours.map((tour) => {
             const done = isTourCompleted(completed, tour.id);
@@ -55,7 +55,11 @@ export function TourGuideScreen() {
                 key={tour.id}
                 testID={`tour-row-${tour.id}`}
                 role="button"
-                aria-label={`${done ? 'Restart' : 'Start'} the ${tour.title} tour`}
+                aria-label={
+                  done
+                    ? t('mweb.tourGuide.restartAria', { vars: { name: t(tour.titleKey) } })
+                    : t('mweb.tourGuide.startAria', { vars: { name: t(tour.titleKey) } })
+                }
                 onPress={() => run(tour)}
                 alignItems="center"
                 gap={12}
@@ -69,10 +73,10 @@ export function TourGuideScreen() {
                 <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={22} color={primary} />
                 <YStack flex={1} gap={2}>
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    {tour.title}
+                    {t(tour.titleKey)}
                   </Text>
                   <Text fontSize={12} color="$muted">
-                    {tour.caption}
+                    {t(tour.captionKey)}
                   </Text>
                 </YStack>
                 {done ? (
@@ -82,7 +86,7 @@ export function TourGuideScreen() {
                     fontWeight="600"
                     color="$muted"
                   >
-                    Completed
+                    {t('mweb.tourGuide.completed')}
                   </Text>
                 ) : null}
                 <MaterialIcons name="chevron-right" size={20} color={muted} />

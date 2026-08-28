@@ -55,12 +55,15 @@ export function splitDraftsByExpiry<T extends ExpiringDraft>(
   drafts: readonly T[],
   now: number = Date.now()
 ): { expiring: T[]; rest: T[] } {
-  const expiring: T[] = [];
+  // Sorted on the milliseconds the bucketing already read, so the comparator
+  // never has to re-derive a value it would then have to handle being null.
+  const expiring: { draft: T; left: number }[] = [];
   const rest: T[] = [];
   for (const draft of drafts) {
-    if (isDraftExpiringSoon(draft, now)) expiring.push(draft);
+    const left = draftMsLeft(draft, now);
+    if (left !== null && isDraftExpiringSoon(draft, now)) expiring.push({ draft, left });
     else rest.push(draft);
   }
-  expiring.sort((a, b) => (draftMsLeft(a, now) ?? 0) - (draftMsLeft(b, now) ?? 0));
-  return { expiring, rest };
+  expiring.sort((a, b) => a.left - b.left);
+  return { expiring: expiring.map((entry) => entry.draft), rest };
 }

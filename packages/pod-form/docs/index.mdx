@@ -225,7 +225,7 @@ and place charges at build time even though the form values still hold them.
 A `product_id` with no catalogue match contributes `0` rather than throwing — an unapproved product
 quietly prices as free, so validate the ids before trusting the total.
 
-### `makePodSchema(config).safeParse(...)` on a half-filled form
+### `makePodSchema(config, t).safeParse(...)` on a half-filled form
 
 Parsing `{ ...blankPodFormValues, pod_title: 'Su', club_id: '…a3b', pod_description: 'Too short', venue_id: '…a4c' }`:
 
@@ -320,7 +320,7 @@ both surfaces render can be asserted without mounting either.
 | Export | Signature | Returns |
 | --- | --- | --- |
 | `makeNativeParityPodConfig` | `({ showProducts }: { showProducts: boolean }) => PodFormConfig` | The native-parity flag set. |
-| `makePodSchema` | `(config: PodFormConfig) => PodSchema` | A Zod object with config-gated `superRefine`s. |
+| `makePodSchema` | `(config: PodFormConfig, t: Translate) => PodSchema` | A Zod object with config-gated `superRefine`s. Every message comes from `podForm.validation.*`, so the schema is rebuilt when the language changes. |
 | `buildPodInput` | `(values: PodFormValues, { draft?, config }) => Record<string, unknown>` | The GraphQL create/update input. |
 | `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted. |
 | `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list. |
@@ -397,7 +397,7 @@ Copy that reads on every console must not live in a finance-gated section.
 
 ## `makePodSchema` and `buildPodInput` are a pair
 
-The schema is built from the same config (`makePodSchema(config)`), so a field that the form hides
+The schema is built from the same config (`makePodSchema(config, t)`), so a field that the form hides
 is also a field the schema stops requiring. `buildPodInput` then nulls out exactly what the mode
 and the flags disabled — virtual pods null `venue_id`/`location_id`, physical pods null the meeting
 fields, `pod_hosts_id` becomes `[]` when `showHosts` is off, products only ride along when the pod
@@ -448,7 +448,7 @@ What `autoPod: true` changes:
 | `pod_type` select | Fixed to `AUTO_POD_TYPE` (`'PAID'`) — an Auto Pod is physical and never free. |
 | "Save as Draft" | Gone; the template is either saved or not. |
 
-`makePodSchema(config)` swaps the club/venue/host/date rules for the template's own: a category is
+`makePodSchema(config, t)` swaps the club/venue/host/date rules for the template's own: a category is
 required, the ticket price floor is 1, spots are 2–999 (the host attends free, so two is the fewest
 that bill anyone) and at least one image. `lockCategory: true` shows the category read-only — a
 Club Admin opening one for their club, or a template a host or club has already enrolled on (the

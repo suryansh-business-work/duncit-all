@@ -8,19 +8,24 @@
  */
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { mwebAttendanceLabels } from '@duncit/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodAttendanceView from '../src/attendance/PodAttendanceView';
 import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
-import { POD_ATTENDANCE_BOARD } from '../src/attendance/queries';
+import { FORCE_ATTENDANCE, HOST_MARK_ATTENDANCE, POD_ATTENDANCE_BOARD } from '../src/attendance/queries';
 import { hostActionsConfig } from './host-actions-config';
 
 const POD_ID = 'pod-1';
 
 /** Echoes the key back, so the assertions read as the key that was rendered. */
-const labels = mwebAttendanceLabels((key: string) => key);
+const labels = mwebAttendanceLabels(
+  (key: string, options?: { vars?: Record<string, string | number> }) => {
+    const vars = Object.values(options?.vars ?? {});
+    return vars.length ? `${key} ${vars.join(' ')}` : key;
+  },
+);
 
 /**
  * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
@@ -225,5 +230,222 @@ describe('PodAttendanceView', () => {
 
     expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
     expect(container.innerHTML).not.toBe('');
+  });
+});
+
+/**
+ * Marking, end to end through the board.
+ *
+ * Every write re-reads the board rather than patching a row: the counts, the
+ * lock and the roster move together, and a client that edited one of them would
+ * be the thing that disagrees with the payout.
+ */
+describe('PodAttendanceView marking', () => {
+  const markMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
+    ({
+      request: {
+        query: HOST_MARK_ATTENDANCE,
+        variables: { pod_doc_id: POD_ID, membership_id: 'm-1', otp_challenge_id: null },
+      },
+      result: { data: { hostMarkPodAttendance: board({ marked_count: 2 }) } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+      ...over,
+    }) as MockedResponse;
+
+  const forceMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
+    ({
+      request: {
+        query: FORCE_ATTENDANCE,
+        variables: { pod_doc_id: POD_ID, membership_id: 'm-1' },
+      },
+      result: {
+        data: {
+          clubAdminForceAttendance: {
+            __typename: 'Ticket',
+            id: 't-1',
+            status: 'CHECKED_IN',
+            checked_in_at: '2026-08-30T12:45:00.000Z',
+          },
+        },
+      },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+      ...over,
+    }) as MockedResponse;
+
+  const mountWith = (
+    mocks: MockedResponse[],
+    spies: { notifySuccess?: ReturnType<typeof vi.fn>; notifyError?: ReturnType<typeof vi.fn> } = {},
+  ) =>
+    render(
+      <MockedProvider mocks={mocks}>
+        <ThemeProvider theme={testTheme}>
+          <HostPodActionsProvider {...hostActionsConfig()}>
+            <PodAttendanceView
+              podId={POD_ID}
+              labels={labels}
+              formatDateTime={(iso) => `at:${iso}`}
+              notifySuccess={spies.notifySuccess ?? vi.fn()}
+              notifyError={spies.notifyError ?? vi.fn()}
+            />
+          </HostPodActionsProvider>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+
+  const markButton = () =>
+    screen.getAllByRole('button', { name: labels.markButton })[0];
+
+  // The admin setting is off, so a scan is not the only proof and the host may
+  // mark straight away.
+  it('writes the mark straight away when no code is required', async () => {
+    const notifySuccess = vi.fn();
+    mountWith([boardMock({ otp_required: false }), markMock()], { notifySuccess });
+    await settle();
+
+    fireEvent.click(markButton());
+    await settle();
+    await settle();
+
+    expect(notifySuccess).toHaveBeenCalledWith('Asha Rao');
+  });
+
+  it('states the reason when the mark was refused', async () => {
+    const notifyError = vi.fn();
+    mountWith(
+      [
+        boardMock({ otp_required: false }),
+        markMock({ result: undefined, error: new Error('That pod is already settled') }),
+      ],
+      { notifyError },
+    );
+    await settle();
+
+    fireEvent.click(markButton());
+    await settle();
+    await settle();
+
+    expect(notifyError).toHaveBeenCalledWith('That pod is already settled');
+  });
+
+  it('asks for a code first when the admin setting requires one', async () => {
+    mountWith([boardMock()]);
+    await settle();
+
+    fireEvent.click(markButton());
+    await settle();
+
+    expect(screen.getByText(labels.otpTitle)).toBeInTheDocument();
+  });
+
+  it('closes the code sheet without marking anybody', async () => {
+    const notifySuccess = vi.fn();
+    mountWith([boardMock()], { notifySuccess });
+    await settle();
+    fireEvent.click(markButton());
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: labels.otpCancel }));
+    await settle();
+
+    await waitFor(() => expect(screen.queryByText(labels.otpTitle)).not.toBeInTheDocument());
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  // A Club Admin never proves anything — their path is the override, and it
+  // asks for a confirmation instead.
+  it('asks a Club Admin to confirm the override rather than for a code', async () => {
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' })]);
+    await settle();
+
+    fireEvent.click(markButton());
+    await settle();
+
+    expect(screen.getByText(labels.forceTitle)).toBeInTheDocument();
+    expect(screen.queryByText(labels.otpTitle)).not.toBeInTheDocument();
+  });
+
+  it('writes the override once the Club Admin has confirmed it', async () => {
+    const notifySuccess = vi.fn();
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' }), forceMock()], { notifySuccess });
+    await settle();
+    fireEvent.click(markButton());
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
+    await settle();
+    await settle();
+
+    expect(notifySuccess).toHaveBeenCalledWith('Asha Rao');
+  });
+
+  it('writes nothing when the Club Admin backed out of the override', async () => {
+    const notifySuccess = vi.fn();
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' }), forceMock()], { notifySuccess });
+    await settle();
+    fireEvent.click(markButton());
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: labels.forceCancel }));
+    await settle();
+
+    await waitFor(() => expect(screen.queryByText(labels.forceTitle)).not.toBeInTheDocument());
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('says the roster is done once every attendee is marked', async () => {
+    mountWith([
+      boardMock({
+        rows: [
+          row({
+            attended: true,
+            attended_at: '2026-08-30T12:40:00.000Z',
+            marked_method: 'HOST_SCAN',
+          }),
+        ],
+        marked_count: 1,
+        total_count: 1,
+        marked_seats: 2,
+        total_seats: 2,
+      }),
+    ]);
+    await settle();
+
+    expect(screen.getByText(labels.allMarked)).toBeInTheDocument();
+  });
+
+  // Only the host has a door to scan at; a virtual pod has none, and a Club
+  // Admin reading the same board is fixing a record after the fact.
+  it('offers the scanner to a host running a physical pod', async () => {
+    mountWith([boardMock()]);
+    await settle();
+
+    expect(screen.getByRole('button', { name: labels.scanCta })).toBeInTheDocument();
+  });
+
+  it('offers no scanner on a virtual pod, nor to a Club Admin', async () => {
+    mountWith([boardMock({ pod_mode: 'VIRTUAL' })]);
+    await settle();
+    expect(screen.queryByRole('button', { name: labels.scanCta })).not.toBeInTheDocument();
+
+    cleanup();
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' })]);
+    await settle();
+    expect(screen.queryByRole('button', { name: labels.scanCta })).not.toBeInTheDocument();
+  });
+
+  it('re-reads the board when the scanner closes, so a scan is never one behind', async () => {
+    mountWith([boardMock()]);
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: labels.scanCta }));
+    await settle();
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+
+    fireEvent.keyDown(document.body.querySelector('[role="dialog"]') as HTMLElement, {
+      key: 'Escape',
+    });
+    await settle();
+
+    expect(screen.getByText('Asha Rao')).toBeInTheDocument();
   });
 });

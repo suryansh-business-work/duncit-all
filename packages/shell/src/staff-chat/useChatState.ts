@@ -27,29 +27,27 @@ const DEFAULT_PANEL: PanelState = {
   camLabel: '',
 };
 
-const toSettings = (state?: StaffChatState | null): ChatSettings =>
-  state
-    ? {
-        density: state.density as ChatSettings['density'],
-        bubbleColor: state.bubble_color as ChatSettings['bubbleColor'],
-        fontSize: state.font_size,
-        timeZone: state.time_zone,
-        enterToSend: state.enter_to_send,
-      }
-    : DEFAULT_CHAT_SETTINGS;
+// Called only once the effect below has confirmed the server's answer is in
+// — staffChatState is non-nullable on the schema, so there is no "state came
+// back empty" case to convert, only "hasn't arrived yet", which the DEFAULT_*
+// useState initializers already cover.
+const toSettings = (state: StaffChatState): ChatSettings => ({
+  density: state.density as ChatSettings['density'],
+  bubbleColor: state.bubble_color as ChatSettings['bubbleColor'],
+  fontSize: state.font_size,
+  timeZone: state.time_zone,
+  enterToSend: state.enter_to_send,
+});
 
-const toPanel = (state?: StaffChatState | null): PanelState =>
-  state
-    ? {
-        panelOpen: state.panel_open,
-        role: state.role_filter,
-        openPeerId: state.open_peer_id,
-        micId: state.mic_id,
-        camId: state.cam_id,
-        micLabel: state.mic_label,
-        camLabel: state.cam_label,
-      }
-    : DEFAULT_PANEL;
+const toPanel = (state: StaffChatState): PanelState => ({
+  panelOpen: state.panel_open,
+  role: state.role_filter,
+  openPeerId: state.open_peer_id,
+  micId: state.mic_id,
+  camId: state.cam_id,
+  micLabel: state.mic_label,
+  camLabel: state.cam_label,
+});
 
 /** Client key to the server's field name — one place, so they cannot drift. */
 const SETTING_FIELD: Record<keyof ChatSettings, string> = {

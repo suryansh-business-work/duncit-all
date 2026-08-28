@@ -6,6 +6,7 @@ import {
   GRIEVANCE_OPTIONAL_FIELDS,
   GRIEVANCE_STATUSES,
   grievanceFieldLabelKey,
+  grievanceSupportTicketOptions,
   isGrievanceFieldRequired,
   isGrievanceOpen,
   type GrievanceField,
@@ -137,5 +138,49 @@ describe('isGrievanceOpen', () => {
   it('stops the clock once a grievance is resolved or rejected', () => {
     expect(isGrievanceOpen('RESOLVED')).toBe(false);
     expect(isGrievanceOpen('REJECTED')).toBe(false);
+  });
+});
+
+describe('grievanceSupportTicketOptions', () => {
+  it('labels each ticket with its number and title, which is how the officer finds it', () => {
+    const rows = [
+      { ticket_no: 'ST-A1B2C3', title: 'Refund not received' },
+      { ticket_no: 'ST-D4E5F6', title: 'Host did not mark attendance' },
+    ];
+
+    expect(grievanceSupportTicketOptions(rows)).toEqual([
+      { value: 'ST-A1B2C3', label: 'ST-A1B2C3 · Refund not received' },
+      { value: 'ST-D4E5F6', label: 'ST-D4E5F6 · Host did not mark attendance' },
+    ]);
+  });
+
+  it('falls back to the number alone for a ticket with no title', () => {
+    expect(grievanceSupportTicketOptions([{ ticket_no: 'ST-A1B2C3', title: '   ' }])).toEqual([
+      { value: 'ST-A1B2C3', label: 'ST-A1B2C3' },
+    ]);
+  });
+
+  // An option storing an empty reference is the same as not choosing one, and
+  // the whole point of the field is the ticket behind it.
+  it('drops a row with no ticket number rather than offering a blank option', () => {
+    const rows = [
+      { ticket_no: '', title: 'Refund not received' },
+      { ticket_no: '   ', title: 'Another' },
+      { ticket_no: 'ST-A1B2C3', title: 'Kept' },
+    ];
+
+    expect(grievanceSupportTicketOptions(rows)).toEqual([
+      { value: 'ST-A1B2C3', label: 'ST-A1B2C3 · Kept' },
+    ]);
+  });
+
+  it('trims the stored reference, so a pasted number still matches the ticket', () => {
+    expect(grievanceSupportTicketOptions([{ ticket_no: '  ST-A1B2C3  ', title: '  Refund  ' }])).toEqual([
+      { value: 'ST-A1B2C3', label: 'ST-A1B2C3 · Refund' },
+    ]);
+  });
+
+  it('offers nothing to a user with no support history', () => {
+    expect(grievanceSupportTicketOptions([])).toEqual([]);
   });
 });

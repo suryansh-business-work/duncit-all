@@ -17,25 +17,20 @@ import { MockedProvider } from '@apollo/client/testing';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { createRef } from 'react';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import DeviceUploadTab from '../src/DeviceUploadTab';
 import ImageCropStep from '../src/ImageCropStep';
 import FileDetails, { useMediaDimensions } from '../src/FileDetails';
 import { useDeviceUpload } from '../src/useDeviceUpload';
+// Spied on rather than mocked wholesale: the hook under test is what decides
+// WHICH of the two journeys a file takes, and that decision is the subject.
+import * as uploadModule from '../src/upload';
+import * as directUploadModule from '../src/useImagekitDirectUpload';
+import * as compressionModule from '../src/videoCompression';
 import type { UploadCropPreset, UploadSettings } from '../src/types';
 
 const testTheme = createTheme();
-
-beforeAll(() => {
-  globalThis.ResizeObserver ??= class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
-  globalThis.URL.createObjectURL ??= () => 'blob:preview';
-  globalThis.URL.revokeObjectURL ??= () => undefined;
-});
 
 const settle = async () => {
   await act(async () => {
@@ -357,5 +352,168 @@ describe('useDeviceUpload', () => {
     await settle();
 
     expect(result.current.settings).toBeNull();
+  });
+});
+
+/**
+ * The upload itself: what a picked file actually does.
+ *
+ * The two halves are deliberately different journeys — a video streams DIRECTLY
+ * to ImageKit with real byte progress and is then compressed server-side, while
+ * an image goes through the server in one crop-then-compress pass. Neither may
+ * report a URL it did not get.
+ */
+describe('useDeviceUpload uploading', () => {
+  const UPLOADED_IMAGE = 'https://ik.imagekit.io/duncit/pods/court.png';
+  const RAW_VIDEO = 'https://ik.imagekit.io/duncit/pods/reel-raw.mp4';
+  const COMPRESSED_VIDEO = 'https://ik.imagekit.io/duncit/pods/reel.mp4';
+
+  const mp4File = () =>
+    new File([new Uint8Array([1, 2, 3])], 'reel.mp4', { type: 'video/mp4' });
+
+  const args = (over: Record<string, unknown> = {}) => ({
+    open: true,
+    folder: 'pods',
+    surface: 'POD',
+    allowImage: true,
+    allowVideo: true,
+    allowDocuments: false,
+    onPicked: vi.fn(),
+    onClose: vi.fn(),
+    clearAfterUpload: false,
+    setError: vi.fn(),
+    ...over,
+  });
+
+  const hook = (over: Record<string, unknown> = {}) =>
+    renderHook(() => useDeviceUpload(args(over) as never), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={[]} addTypename={false}>
+          <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
+        </MockedProvider>
+      ),
+    });
+
+  const pickAnd = async (
+    result: { current: ReturnType<typeof useDeviceUpload> },
+    file: File,
+  ) => {
+    await act(async () => {
+      result.current.onPickFile({ target: { files: [file] } } as never);
+    });
+    await act(async () => {
+      await result.current.uploadFromDevice();
+    });
+  };
+
+  it('does nothing at all with no file picked', async () => {
+    const onPicked = vi.fn();
+    const { result } = hook({ onPicked });
+    await settle();
+
+    await act(async () => {
+      await result.current.uploadFromDevice();
+    });
+
+    expect(onPicked).not.toHaveBeenCalled();
+    expect(result.current.uploading).toBe(false);
+  });
+
+  it('sends an image through the server and reports the stored URL', async () => {
+    vi.spyOn(uploadModule, 'uploadImageToImagekit').mockResolvedValue({
+      url: UPLOADED_IMAGE,
+    } as never);
+    const onPicked = vi.fn();
+    const onClose = vi.fn();
+    const { result } = hook({ onPicked, onClose });
+    await settle();
+
+    await pickAnd(result, pngFile());
+
+    expect(onPicked).toHaveBeenCalledWith(UPLOADED_IMAGE);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(result.current.uploading).toBe(false);
+  });
+
+  // Crop only travels for a preset that actually crops — No Crop must not send
+  // a rect the server would then apply.
+  it('sends no crop rect for the No Crop preset', async () => {
+    const upload = vi
+      .spyOn(uploadModule, 'uploadImageToImagekit')
+      .mockResolvedValue({ url: UPLOADED_IMAGE } as never);
+    const { result } = hook();
+    await settle();
+
+    await pickAnd(result, pngFile());
+
+    expect(upload.mock.calls[0][2]).toMatchObject({ crop: null, cropPreset: null });
+  });
+
+  it('streams a video straight to ImageKit, then compresses it server-side', async () => {
+    const direct = vi
+      .spyOn(directUploadModule, 'directUploadToImagekit')
+      .mockResolvedValue(RAW_VIDEO);
+    const compress = vi
+      .spyOn(compressionModule, 'compressUploadedVideo')
+      .mockResolvedValue(COMPRESSED_VIDEO);
+    const onPicked = vi.fn();
+    const { result } = hook({ onPicked });
+    await settle();
+
+    await pickAnd(result, mp4File());
+
+    expect(direct).toHaveBeenCalled();
+    expect(compress).toHaveBeenCalledWith(
+      expect.anything(),
+      RAW_VIDEO,
+      'pods',
+      'POD',
+      expect.any(Function),
+    );
+    expect(onPicked).toHaveBeenCalledWith(COMPRESSED_VIDEO);
+  });
+
+  it('reports the failure rather than a URL it never got', async () => {
+    vi.spyOn(uploadModule, 'uploadImageToImagekit').mockRejectedValue(
+      new Error('That image failed the content scan'),
+    );
+    const onPicked = vi.fn();
+    const onClose = vi.fn();
+    const setError = vi.fn();
+    const { result } = hook({ onPicked, onClose, setError });
+    await settle();
+
+    await pickAnd(result, pngFile());
+
+    expect(setError).toHaveBeenCalledWith('That image failed the content scan');
+    expect(onPicked).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(result.current.uploading).toBe(false);
+  });
+
+  // The input keeps its value, so re-choosing the SAME file would fire no
+  // change event and the tab would look dead.
+  it('clears the picked file afterwards when the caller asked it to', async () => {
+    vi.spyOn(uploadModule, 'uploadImageToImagekit').mockResolvedValue({
+      url: UPLOADED_IMAGE,
+    } as never);
+    const { result } = hook({ clearAfterUpload: true });
+    await settle();
+
+    await pickAnd(result, pngFile());
+
+    expect(result.current.picked).toBeNull();
+  });
+
+  it('keeps the picked file when the caller did not', async () => {
+    vi.spyOn(uploadModule, 'uploadImageToImagekit').mockResolvedValue({
+      url: UPLOADED_IMAGE,
+    } as never);
+    const { result } = hook({ clearAfterUpload: false });
+    await settle();
+
+    await pickAnd(result, pngFile());
+
+    expect(result.current.picked?.name).toBe('court.png');
   });
 });

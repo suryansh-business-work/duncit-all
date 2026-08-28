@@ -23,22 +23,23 @@ const card = (over: Partial<SomethingForYouItem> = {}): SomethingForYouItem => (
 });
 
 describe('SOMETHING_FOR_YOU_ROUTES', () => {
-  it('offers only in-app destinations: every entry is an absolute path with a label', () => {
+  it('offers only in-app destinations: every entry is an absolute path with a name', () => {
     expect(SOMETHING_FOR_YOU_ROUTES.length).toBeGreaterThan(0);
     for (const route of SOMETHING_FOR_YOU_ROUTES) {
       expect(route.path.startsWith('/')).toBe(true);
       expect(route.path).not.toMatch(/^https?:/);
-      expect(route.label.trim().length).toBeGreaterThan(0);
+      // A catalogue key, never a word: the picker is a screen an admin reads.
+      expect(route.labelKey.startsWith('admin.somethingForYou.routes.')).toBe(true);
     }
   });
 
   // The admin picks from a labelled menu; two entries for one screen, or one
   // label for two screens, would make that menu ambiguous.
-  it('never lists the same destination or the same label twice', () => {
+  it('never lists the same destination or the same name twice', () => {
     const paths = SOMETHING_FOR_YOU_ROUTES.map((r) => r.path);
-    const labels = SOMETHING_FOR_YOU_ROUTES.map((r) => r.label);
+    const keys = SOMETHING_FOR_YOU_ROUTES.map((r) => r.labelKey);
     expect(new Set(paths).size).toBe(paths.length);
-    expect(new Set(labels).size).toBe(labels.length);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
   // mWeb's router and the app's linking config match these paths verbatim, so

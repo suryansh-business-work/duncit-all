@@ -16,11 +16,7 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/**'],
       exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/index.ts'],
-      // branches capped at the achieved 20/21 (95.23%): PodContentFormDialog.tsx:68
-      // `if (!onPickImage) return;` is an unreachable defensive guard — addImage is
-      // only ever invoked from the "Add image" button, which already only renders
-      // when onPickImage is truthy, so the true branch can't be hit without editing src.
-      thresholds: { statements: 100, branches: 95, functions: 100, lines: 100 },
+      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },
 });

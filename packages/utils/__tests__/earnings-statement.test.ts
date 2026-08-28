@@ -2,8 +2,48 @@ import { describe, expect, it } from 'vitest';
 import {
   buildEarningsStatement,
   formatStatementMoney,
+  type EarningsTranslate,
   type EarningsWaterfall,
 } from '../src/earnings-statement';
+
+/**
+ * The shipped `earnings.statement.*` templates, as a fixture.
+ *
+ * This package is dependency-free — it cannot import @duncit/i18n even to
+ * test — so the templates are mirrored here and interpolated the way the real
+ * translator does. That keeps every assertion below about the ARITHMETIC and
+ * the sentence shape: a formula whose var name drifts from the bundle's
+ * placeholder shows up as a literal `{net}` left in the row.
+ */
+const TEMPLATES: Record<string, string> = {
+  'earnings.statement.taxesTitle': 'Taxes',
+  'earnings.statement.taxableLabel': 'Taxable Amount',
+  'earnings.statement.taxableFormula': '{amount} − {gst} GST (prices are GST-inclusive)',
+  'earnings.statement.gstLabel': 'GST @{pct}%',
+  'earnings.statement.gstFormula': '{net} × {pct}%',
+  'earnings.statement.platformTitle': 'Platform Charges',
+  'earnings.statement.platformFeeLabel': 'Platform Fee @{pct}%',
+  'earnings.statement.platformFeeFormula': '{net} × {pct}%',
+  'earnings.statement.duncitCommissionLabel': 'Duncit Commission @{pct}%',
+  'earnings.statement.commissionFormula': '{host} × {pct}% (your remainder)',
+  'earnings.statement.noCommissionFormula': 'No commission — host remainder is not positive',
+  'earnings.statement.clubTitle': 'Club Charges',
+  'earnings.statement.clubAdminLabel': 'Club Admin Fee @{pct}%',
+  'earnings.statement.clubAdminFormula': '{pool} × {pct}%',
+  'earnings.statement.venueTitle': 'Venue Charges',
+  'earnings.statement.venueSlotLabel': 'Venue Slot Price',
+  'earnings.statement.venueSlotFormula': 'Fixed booked slot price (deducted once per pod)',
+  'earnings.statement.venueCommissionLabel': 'Duncit Commission from Venue @{pct}%',
+  'earnings.statement.venueCommissionFormula':
+    '{venue} × {pct}% of the slot price above — the venue receives {receives}',
+  'earnings.statement.collectionLabel': 'Total collection',
+  'earnings.statement.includedGstNote': 'Includes GST {gst} — prices are GST-inclusive',
+};
+
+const t: EarningsTranslate = (key, options) =>
+  (TEMPLATES[key] ?? `<missing ${key}>`).replaceAll(/\{(\w+)\}/g, (match, name: string) =>
+    String(options?.vars?.[name] ?? match),
+  );
 
 // The user's canonical example: ₹897 collection @ GST 18 / fee 5 / commission 10,
 // venue slot ₹499 — the exact server waterfall for those inputs.
@@ -28,7 +68,7 @@ const venueWaterfall: EarningsWaterfall = {
   host_earn_pct: 22.39,
 };
 
-const statement = () => buildEarningsStatement(venueWaterfall, { has_venue: true, symbol: '₹' });
+const statement = () => buildEarningsStatement(venueWaterfall, { has_venue: true, symbol: '₹', t });
 
 describe('formatStatementMoney', () => {
   it('formats ₹X,XXX.XX with en-IN grouping', () => {
@@ -106,7 +146,7 @@ describe('buildEarningsStatement (venue pod)', () => {
   it('flags a statement that does not reconcile', () => {
     const broken = buildEarningsStatement(
       { ...venueWaterfall, host_receives: 300 },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     expect(broken.reconciled).toBe(false);
   });
@@ -124,7 +164,7 @@ describe('buildEarningsStatement (no venue / club cut)', () => {
         host_commission_amount: 72.22,
         host_receives: 649.94,
       },
-      { has_venue: false, symbol: '₹' },
+      { has_venue: false, symbol: '₹', t },
     );
     expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform']);
     const platform = s.sections.find((sec) => sec.key === 'platform')!;
@@ -156,7 +196,7 @@ describe('buildEarningsStatement (no venue / club cut)', () => {
         host_commission_amount: 20.15,
         host_receives: 181.35,
       },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     const club = s.sections.find((sec) => sec.key === 'club')!;
     expect(club.lines[0].label).toBe('Club Admin Fee @3%');
@@ -184,7 +224,7 @@ const NO_COMMISSION_NOTE = 'No commission — host remainder is not positive';
 
 describe('buildEarningsStatement (non-positive host remainder)', () => {
   it('charges no commission on a venue shortfall and passes the shortfall through whole', () => {
-    const s = buildEarningsStatement(shortfallWaterfall, { has_venue: true, symbol: '₹' });
+    const s = buildEarningsStatement(shortfallWaterfall, { has_venue: true, symbol: '₹', t });
     const platform = s.sections.find((sec) => sec.key === 'platform')!;
     expect(platform.lines.find((l) => l.key === 'duncit-commission')).toMatchObject({
       label: 'Duncit Commission @10%',
@@ -219,7 +259,7 @@ describe('buildEarningsStatement (non-positive host remainder)', () => {
         host_receives: 0,
         host_earn_pct: 0,
       },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     const commission = s.sections
       .flatMap((sec) => sec.lines)
@@ -247,7 +287,7 @@ describe('buildEarningsStatement (non-positive host remainder)', () => {
         host_receives: 0,
         host_earn_pct: 0,
       },
-      { has_venue: false, symbol: '₹' },
+      { has_venue: false, symbol: '₹', t },
     );
     expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform', 'club']);
     const platform = s.sections.find((sec) => sec.key === 'platform')!;
@@ -274,7 +314,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
         host_commission_amount: 20.15,
         host_receives: 181.35,
       },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform', 'club', 'venue']);
     expect(s.sections.map((sec) => sec.title)).toEqual([
@@ -313,7 +353,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
         host_receives: 0,
         host_earn_pct: 0,
       },
-      { has_venue: false, symbol: '₹' },
+      { has_venue: false, symbol: '₹', t },
     );
     expect(free.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform']);
     expect(free.sections.map((sec) => sec.total)).toEqual([0, 0]);
@@ -322,7 +362,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
   });
 
   it('renders every money figure in the caller\'s currency symbol', () => {
-    const s = buildEarningsStatement(venueWaterfall, { has_venue: true, symbol: '$' });
+    const s = buildEarningsStatement(venueWaterfall, { has_venue: true, symbol: '$', t });
     expect(s.collection).toEqual({
       label: 'Total collection',
       amount: 897,
@@ -342,7 +382,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
     // sections when a venue comes or goes.
     const withVenue = buildEarningsStatement(
       { ...venueWaterfall, club_admin_pct: 3, club_admin_amount: 21.66 },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     expect(withVenue.sections.flatMap((sec) => sec.lines.map((l) => l.key))).toEqual([
       'taxable',
@@ -353,7 +393,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
       'venue-slot',
       'venue-commission',
     ]);
-    const withoutVenue = buildEarningsStatement(venueWaterfall, { has_venue: false, symbol: '₹' });
+    const withoutVenue = buildEarningsStatement(venueWaterfall, { has_venue: false, symbol: '₹', t });
     expect(withoutVenue.sections.flatMap((sec) => sec.lines.map((l) => l.key))).toEqual([
       'taxable',
       'gst',
@@ -366,14 +406,14 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
     // Sections sum to 696.16; the server total is 897 − host_receives.
     const within = buildEarningsStatement(
       { ...venueWaterfall, host_receives: 200.82 },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     expect(within.total_deductions).toBe(696.18);
     expect(within.reconciled).toBe(true);
 
     const beyond = buildEarningsStatement(
       { ...venueWaterfall, host_receives: 200.81 },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     expect(beyond.total_deductions).toBe(696.19);
     expect(beyond.reconciled).toBe(false);
@@ -382,7 +422,7 @@ describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
   it('never reconciles a waterfall whose amount is not a number', () => {
     const s = buildEarningsStatement(
       { ...venueWaterfall, amount: Number.NaN },
-      { has_venue: true, symbol: '₹' },
+      { has_venue: true, symbol: '₹', t },
     );
     expect(Number.isNaN(s.total_deductions)).toBe(true);
     expect(s.reconciled).toBe(false);

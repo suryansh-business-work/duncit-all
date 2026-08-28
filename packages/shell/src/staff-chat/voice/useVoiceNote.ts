@@ -36,16 +36,24 @@ export function useVoiceNote() {
   const audio = useRef<{ context: AudioContext; raf: number } | null>(null);
   const startedAt = useRef(0);
 
-  const teardown = useCallback(() => {
+  /**
+   * Release the analyser and the microphone.
+   *
+   * The stream is passed in by the stop path, which has already cleared the recorder
+   * ref by the time it tears down — reading the ref there found nothing, so the
+   * browser kept its recording indicator on after a note was sent. Unmount
+   * still passes nothing and reads the live ref.
+   */
+  const teardown = useCallback((stream?: MediaStream) => {
     if (audio.current) {
       globalThis.cancelAnimationFrame(audio.current.raf);
       audio.current.context.close().catch(() => undefined);
       audio.current = null;
     }
-    recorder.current?.stream.getTracks().forEach((track) => track.stop());
+    (stream ?? recorder.current?.stream)?.getTracks().forEach((track) => track.stop());
   }, []);
 
-  useEffect(() => teardown, [teardown]);
+  useEffect(() => () => teardown(), [teardown]);
 
   const watchLevel = useCallback((stream: MediaStream) => {
     const Ctor =
@@ -124,7 +132,7 @@ export function useVoiceNote() {
 
       const blob = await finished;
       const took = Math.max(1, Math.round((Date.now() - startedAt.current) / 1000));
-      teardown();
+      teardown(media.stream);
       setLevel(0);
       if (!keep || blob.size === 0) return null;
       return { blob, seconds: took, peaks: condense(peaks.current, BAR_COUNT) };

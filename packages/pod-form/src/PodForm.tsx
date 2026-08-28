@@ -3,6 +3,7 @@ import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
 import { makePodSchema } from './schema';
+import { useTranslation } from './i18n/useTranslation';
 import { PodFormDataProvider } from './context';
 import CascadeEffect from './CascadeEffect';
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
@@ -82,7 +83,11 @@ export default function PodForm({
   hideDraftOnEdit = false,
   preview,
 }: Readonly<PodFormProps>) {
-  const schema = useMemo(() => makePodSchema(config), [config]);
+  const { t } = useTranslation();
+  // Rebuilt when the language changes: a Zod message is baked in at schema
+  // build time, so a schema memoised on `config` alone would keep showing the
+  // language that was active when the form first mounted.
+  const schema = useMemo(() => makePodSchema(config, t), [config, t]);
   const submitMode = useRef<'publish' | 'draft'>('publish');
   const methods = useForm<PodFormValues>({
     resolver: zodResolver(schema),

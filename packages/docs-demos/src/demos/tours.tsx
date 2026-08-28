@@ -35,7 +35,8 @@ export default defineDemos('tours', [
         'Tours in the registry': TOURS.length,
         'Offered to this viewer': offered.map((tour) => tour.id),
         'Hidden by role': TOURS.filter((tour) => !offered.includes(tour)).map((tour) => tour.id),
-        'findTour(open_tour)': findTour(mock.open_tour)?.title ?? 'no such tour',
+        // The registry names its copy; the overlay drawing the tour resolves it.
+        'findTour(open_tour)': findTour(mock.open_tour)?.titleKey ?? 'no such tour',
         'Home tour finished': isTourCompleted(mock.completed, HOME_TOUR_ID),
         'Auto-start the home tour': shouldAutoStartHomeTour(mock.completed, mock.is_first_signup),
       };

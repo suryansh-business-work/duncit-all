@@ -209,6 +209,14 @@ describe('Conversation', () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 
+  it('shows what is being answered above the composer, until it is cancelled', () => {
+    const onCancelReply = vi.fn();
+    show({ replyTo: message('m1', 'u1', 'Original text'), onCancelReply });
+
+    expect(screen.getByText('Replying to Asha Rao')).toBeInTheDocument();
+    expect(screen.getByText('Original text')).toBeInTheDocument();
+  });
+
   it('shows both sides of the conversation', () => {
     show({ messages: [message('m1', 'u1', 'did you see it'), message('m2', 'me', 'just now')] });
     expect(screen.getByText('did you see it')).toBeInTheDocument();
@@ -245,14 +253,26 @@ describe('useStaffSocket ping', () => {
   });
 
   /** A tiny host so the hook can be driven without the whole drawer. */
-  function Host({ meId, openPeerId }: Readonly<{ meId: string; openPeerId: string | null }>) {
-    useStaffSocket({
+  function Host({
+    meId,
+    openPeerId,
+    onMessageChanged,
+    onReady,
+  }: Readonly<{
+    meId: string;
+    openPeerId: string | null;
+    onMessageChanged?: (message: StaffMessage) => void;
+    onReady?: (result: ReturnType<typeof useStaffSocket>) => void;
+  }>) {
+    const result = useStaffSocket({
       graphqlUrl: 'https://server.test/graphql',
       token: 'tok',
       onMessage: vi.fn(),
+      onMessageChanged,
       meId,
       openPeerId,
     });
+    onReady?.(result);
     return null;
   }
 
@@ -287,5 +307,44 @@ describe('useStaffSocket ping', () => {
     );
     arrive('u1');
     await waitFor(() => expect(ping).not.toHaveBeenCalled());
+  });
+
+  it("forwards an edit or delete to the caller's own handler", async () => {
+    const onMessageChanged = vi.fn();
+    render(
+      <MockedProvider mocks={[]}>
+        <Host meId="me" openPeerId={null} onMessageChanged={onMessageChanged} />
+      </MockedProvider>
+    );
+    const edited = { id: 'm', from_user_id: 'u1', to_user_id: 'me', text: 'edited' };
+    socketOn.handlers.staff_message_changed?.(edited);
+
+    await waitFor(() => expect(onMessageChanged).toHaveBeenCalledWith(edited));
+  });
+
+  it('records when a peer reports they are typing', async () => {
+    let latest: ReturnType<typeof useStaffSocket> | undefined;
+    render(
+      <MockedProvider mocks={[]}>
+        <Host meId="me" openPeerId={null} onReady={(result) => { latest = result; }} />
+      </MockedProvider>
+    );
+    socketOn.handlers.staff_typing?.({ from_user_id: 'u1' });
+
+    await waitFor(() => expect(latest?.typingAt.u1).toBeGreaterThan(0));
+  });
+
+  it('emits a typing beacon to the peer, best-effort', async () => {
+    let latest: ReturnType<typeof useStaffSocket> | undefined;
+    render(
+      <MockedProvider mocks={[]}>
+        <Host meId="me" openPeerId={null} onReady={(result) => { latest = result; }} />
+      </MockedProvider>
+    );
+    await waitFor(() => expect(latest?.socket).not.toBeNull());
+
+    latest?.typing('u1');
+
+    expect(latest?.socket?.emit).toHaveBeenCalledWith('staff_typing', 'u1');
   });
 });

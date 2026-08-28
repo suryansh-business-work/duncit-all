@@ -49,12 +49,13 @@ describe('deriveCartEntry', () => {
     expect(deriveCartEntry(3, 'ProductCheckout').visible).toBe(false);
   });
 
-  it('shows count, badge and label when there is something to open', () => {
+  // The accessible name is the caller's: both header buttons render
+  // `mweb.cart.open` with this count, so no copy is derived here (rule 38).
+  it('shows count and badge when there is something to open', () => {
     expect(deriveCartEntry(5, '/home')).toEqual({
       visible: true,
       count: 5,
       badge: '5',
-      label: 'Open cart (5 items)',
     });
   });
 

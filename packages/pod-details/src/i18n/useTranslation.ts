@@ -3,8 +3,18 @@ import {
   createTranslator,
   flattenCatalogue,
   POD_DETAILS_BUNDLE,
+  POD_TIMELINE_BUNDLE,
+  UI_BUNDLE,
   useTranslation as useSharedTranslation,
 } from '@duncit/app-settings';
+
+/**
+ * This panel draws two things it does not own the words for: `@duncit/ui`'s
+ * money waterfall (`ui.waterfall.*`) and the participation timeline
+ * (`podTimeline.*`), both of which take THIS translator. Layered in so a portal
+ * resolves them — the alternative is a third copy of copy that already exists.
+ */
+const PANEL_CATALOGUE = { ...POD_DETAILS_BUNDLE, ...UI_BUNDLE, ...POD_TIMELINE_BUNDLE };
 
 /**
  * This package's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -14,7 +24,7 @@ import {
  * imports this package, which is what renders offline and before the API
  * answers.
  */
-export const PODDETAILSPANEL_FALLBACK_FLAT = flattenCatalogue(POD_DETAILS_BUNDLE);
+export const PODDETAILSPANEL_FALLBACK_FLAT = flattenCatalogue(PANEL_CATALOGUE);
 
 /** The `t` a component in this package receives. */
 export type Translate = ReturnType<typeof useTranslation>['t'];

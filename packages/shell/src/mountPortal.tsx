@@ -40,7 +40,7 @@ const identity = (node: ReactNode): ReactNode => node;
  * as a prop rather than calling the hook itself. This is the one component that
  * can hand it one: it renders inside the provider stack below.
  */
-function LocalizedPortalModeGate(props: Readonly<Omit<PortalModeGateProps, 't'>>) {
+export function LocalizedPortalModeGate(props: Readonly<Omit<PortalModeGateProps, 't'>>) {
   const { t } = useTranslation();
   return <PortalModeGate {...props} t={t} />;
 }

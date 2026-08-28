@@ -399,3 +399,275 @@ describe('SelectionTray', () => {
     for (const [url] of onRemove.mock.calls) expect(URLS).toContain(url);
   });
 });
+
+/**
+ * Paging, typing and the import failures — the parts a first page of results
+ * cannot reach on its own.
+ */
+describe('PexelsPhotosTab paging and failures', () => {
+  const tab = (over: Partial<Parameters<typeof PexelsPhotosTab>[0]> = {}, mocks?: MockedResponse[]) => {
+    const spies = { onPicked: vi.fn(), onClose: vi.fn(), setError: vi.fn() };
+    return {
+      spies,
+      ...wrap(<PexelsPhotosTab active open folder="pods" {...spies} {...over} />, mocks),
+    };
+  };
+
+  const loadMore = (container: HTMLElement) =>
+    [...container.querySelectorAll('button')].find((b) => b.textContent?.includes('Load more'));
+
+  it('appends the next page rather than replacing what is on screen', async () => {
+    const { container } = tab();
+    await settle();
+    await settle();
+    const first = container.querySelectorAll('img').length;
+
+    fireEvent.click(loadMore(container) as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(container.querySelectorAll('img').length).toBe(first * 2);
+  });
+
+  it('reads a page that came back with no photos as an empty one', async () => {
+    const { container } = tab({}, [
+      {
+        request: { query: PEXELS_SEARCH },
+        variableMatcher: () => true,
+        result: { data: { pexelsSearch: { page: 1, next_page: null, photos: null } } },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    expect(container.querySelectorAll('img')).toHaveLength(0);
+  });
+
+  it('says what went wrong when the import was refused', async () => {
+    const { container, spies } = tab({}, [
+      answering()[0],
+      {
+        request: { query: IMPORT_REMOTE },
+        variableMatcher: () => true,
+        error: new Error('ImageKit refused the file'),
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    fireEvent.click(container.querySelector('li') as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(spies.onPicked).not.toHaveBeenCalled();
+    expect(spies.setError).toHaveBeenCalled();
+  });
+
+  it('refuses an import that came back with no URL behind it', async () => {
+    const { container, spies } = tab({}, [
+      answering()[0],
+      {
+        request: { query: IMPORT_REMOTE },
+        variableMatcher: () => true,
+        result: { data: { importRemoteImageToImagekit: { url: null, fileId: null } } },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    fireEvent.click(container.querySelector('li') as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(spies.onPicked).not.toHaveBeenCalled();
+    expect(spies.setError).toHaveBeenCalledWith('No URL returned from server');
+  });
+});
+
+describe('PexelsVideosTab paging and failures', () => {
+  const tab = (over: Partial<Parameters<typeof PexelsVideosTab>[0]> = {}, mocks?: MockedResponse[]) => {
+    const spies = { onPicked: vi.fn(), onClose: vi.fn(), setError: vi.fn() };
+    return {
+      spies,
+      ...wrap(<PexelsVideosTab active open folder="pods" {...spies} {...over} />, mocks),
+    };
+  };
+
+  const searchBox = (container: HTMLElement) =>
+    container.querySelector('input[type="text"], input:not([type])') as HTMLInputElement;
+
+  it('searches what was typed when Enter is pressed', async () => {
+    const { container } = tab();
+    await settle();
+    await settle();
+
+    fireEvent.change(searchBox(container), { target: { value: 'badminton' } });
+    expect(searchBox(container)).toHaveValue('badminton');
+
+    fireEvent.keyDown(searchBox(container), { key: 'Enter' });
+    await settle();
+    await settle();
+
+    expect(container.querySelectorAll('li').length).toBeGreaterThan(0);
+  });
+
+  it('leaves the search alone for any other key', async () => {
+    const { container } = tab();
+    await settle();
+    await settle();
+    const before = container.querySelectorAll('li').length;
+
+    fireEvent.keyDown(searchBox(container), { key: 'a' });
+    await settle();
+
+    expect(container.querySelectorAll('li')).toHaveLength(before);
+  });
+
+  it('appends the next page rather than replacing what is on screen', async () => {
+    const { container } = tab();
+    await settle();
+    await settle();
+    const first = container.querySelectorAll('li').length;
+
+    const more = [...container.querySelectorAll('button')].find((b) =>
+      b.textContent?.includes('Load more'),
+    );
+    fireEvent.click(more as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(container.querySelectorAll('li').length).toBe(first * 2);
+  });
+
+  it('reads a page that came back with no videos as an empty one', async () => {
+    const { container } = tab({}, [
+      {
+        request: { query: PEXELS_VIDEO_SEARCH },
+        variableMatcher: () => true,
+        result: { data: { pexelsSearchVideos: { page: 1, next_page: null, videos: null } } },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    expect(container.querySelectorAll('li')).toHaveLength(0);
+  });
+
+  // Pexels occasionally lists a clip with no downloadable file. Nothing can be
+  // imported from it, so the reader is told rather than left on a dead click.
+  it('says so rather than importing a clip with no file behind it', async () => {
+    const { container, spies } = tab({}, [
+      {
+        request: { query: PEXELS_VIDEO_SEARCH },
+        variableMatcher: () => true,
+        result: {
+          data: {
+            pexelsSearchVideos: {
+              page: 1,
+              next_page: null,
+              videos: [{ ...video('v-9'), video_files: [] }],
+            },
+          },
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    fireEvent.click(container.querySelector('li') as HTMLElement);
+    await settle();
+
+    expect(spies.onPicked).not.toHaveBeenCalled();
+    expect(spies.setError).toHaveBeenCalled();
+  });
+
+  it('says what went wrong when the import was refused', async () => {
+    const { container, spies } = tab({}, [
+      answering()[1],
+      {
+        request: { query: IMPORT_REMOTE_MEDIA },
+        variableMatcher: () => true,
+        error: new Error('ImageKit refused the file'),
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    fireEvent.click(container.querySelector('li') as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(spies.onPicked).not.toHaveBeenCalled();
+    expect(spies.setError).toHaveBeenCalled();
+  });
+
+  it('refuses an import that came back with no URL behind it', async () => {
+    const { container, spies } = tab({}, [
+      answering()[1],
+      {
+        request: { query: IMPORT_REMOTE_MEDIA },
+        variableMatcher: () => true,
+        result: { data: { importRemoteMediaToImagekit: { url: null, fileId: null } } },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    fireEvent.click(container.querySelector('li') as HTMLElement);
+    await settle();
+    await settle();
+
+    expect(spies.setError).toHaveBeenCalledWith('No URL returned from server');
+  });
+
+  it('says what went wrong instead of showing an empty grid', async () => {
+    const { spies } = tab({}, [
+      {
+        request: { query: PEXELS_VIDEO_SEARCH },
+        variableMatcher: () => true,
+        error: new Error('Pexels is not configured'),
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await settle();
+
+    expect(spies.setError).toHaveBeenCalledWith(expect.stringContaining('Pexels'));
+  });
+});
+
+describe('Pexels card fallbacks', () => {
+  it('describes a photo by its photographer when Pexels gave it no alt text', () => {
+    const { container } = wrap(
+      <PexelsPhotoCard
+        photo={{ ...photo('p-9'), alt: '', avg_color: '' }}
+        picked={false}
+        importing={false}
+        anyImporting={false}
+        onPick={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector('img')).toHaveAttribute('alt', 'Asha Rao');
+  });
+
+  it('credits Pexels itself for a clip with no uploader name', () => {
+    const { container } = wrap(
+      <PexelsVideoCard
+        video={{ ...video('v-9'), user_name: '', preview: '' }}
+        importing={false}
+        anyImporting={false}
+        onPick={vi.fn()}
+      />,
+    );
+
+    expect(container.textContent).toContain('Pexels');
+  });
+});

@@ -18,13 +18,26 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { act, fireEvent, render } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { schemaMockLink } from './schema-mock';
 import ChatComposer from '../src/staff-chat/ChatComposer';
 import ChatSearchPanel from '../src/staff-chat/ChatSearchPanel';
 import LocationDialog from '../src/staff-chat/LocationDialog';
+import { PUBLIC_CLIENT_CONFIG } from '../src/staff-chat/queries';
 import type { ChatFormats } from '../src/staff-chat/useChatSettings';
+
+const voiceState = vi.hoisted(() => ({
+  recording: false,
+  seconds: 0,
+  level: 0,
+  error: null as string | null,
+  start: vi.fn(async () => undefined),
+  stop: vi.fn(async () => undefined as { blob: Blob; seconds: number; peaks: number[] } | undefined),
+}));
+vi.mock('../src/staff-chat/voice/useVoiceNote', () => ({
+  useVoiceNote: () => voiceState,
+}));
 
 const testTheme = createTheme();
 
@@ -59,6 +72,13 @@ const wrap = (ui: React.ReactNode) =>
       </ThemeProvider>
     </MockedProvider>
   );
+
+beforeEach(() => {
+  voiceState.recording = false;
+  voiceState.seconds = 0;
+  voiceState.level = 0;
+  voiceState.error = null;
+});
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -177,6 +197,127 @@ describe('ChatComposer', () => {
 
     expect(container.innerHTML).not.toBe('');
   });
+
+  it('picks a suggestion by clicking it, writing the mention into the draft', async () => {
+    const { box, container } = composer();
+
+    fireEvent.change(box, { target: { value: '@Vik' } });
+    await settle();
+    const item = container.querySelector('.MuiListItemButton-root') as HTMLElement;
+
+    fireEvent.mouseDown(item);
+    await settle();
+
+    expect(box.value.startsWith('@Vikram N')).toBe(true);
+  });
+
+  it('lets Enter pick the highlighted suggestion instead of sending it', async () => {
+    const { box, spies } = composer();
+
+    fireEvent.change(box, { target: { value: '@Vik' } });
+    await settle();
+    fireEvent.keyDown(box, { key: 'Enter' });
+
+    expect(spies.onSend).not.toHaveBeenCalled();
+    expect(box.value.startsWith('@Vikram N')).toBe(true);
+  });
+
+  it('falls back to the draft length for the caret once the box has vanished mid-suggestion', async () => {
+    const spies = {
+      onSend: vi.fn(),
+      onAttach: vi.fn(),
+      onVoiceNote: vi.fn(),
+      onTyping: vi.fn(),
+      onShareLocation: vi.fn(),
+    };
+    const tree = () => (
+      <ChatComposer
+        sending={false}
+        uploading={false}
+        mentionNames={['Vikram N', 'Asha Rao']}
+        enterToSend
+        {...spies}
+      />
+    );
+    const { container, rerender } = wrap(tree());
+    const box = container.querySelector('textarea') as HTMLTextAreaElement;
+    fireEvent.change(box, { target: { value: '@Vik' } });
+    await settle();
+    expect(container.querySelector('.MuiListItemButton-root')).not.toBeNull();
+
+    // Recording starts without the suggestion list being told to close — the
+    // box it was anchored to is gone, but the popup is still up.
+    voiceState.recording = true;
+    rerender(
+      <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={testTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>{tree()}</LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    const item = container.querySelector('.MuiListItemButton-root') as HTMLElement;
+
+    expect(() => {
+      fireEvent.mouseDown(item);
+    }).not.toThrow();
+  });
+
+  it('starts recording through the record button when the draft is empty', () => {
+    const { container } = composer();
+    const recordButton = container.querySelector('button[aria-label="Record a voice note"]') as HTMLElement;
+
+    fireEvent.click(recordButton);
+
+    expect(voiceState.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows an error banner from the voice recorder', () => {
+    voiceState.error = 'Microphone permission was denied';
+    const { container } = composer();
+
+    expect(container.textContent).toContain('Microphone permission was denied');
+  });
+
+  it('sends a recorded voice note with its waveform, once stopped', async () => {
+    voiceState.recording = true;
+    voiceState.stop.mockResolvedValueOnce({
+      blob: new Blob(['audio'], { type: 'audio/webm' }),
+      seconds: 7,
+      peaks: [1, 2, 3],
+    });
+    const { container, spies } = composer();
+
+    fireEvent.click(container.querySelector('[aria-label="Send voice note"]') as HTMLElement);
+    await settle();
+
+    expect(voiceState.stop).toHaveBeenCalledWith(true);
+    const [file, peaks, seconds] = spies.onVoiceNote.mock.calls[0];
+    expect((file as File).name).toBe('voice-note-7s.webm');
+    expect(peaks).toEqual([1, 2, 3]);
+    expect(seconds).toBe(7);
+  });
+
+  it('sends nothing when stopping the recording produced no note at all', async () => {
+    voiceState.recording = true;
+    voiceState.stop.mockResolvedValueOnce(undefined);
+    const { container, spies } = composer();
+
+    fireEvent.click(container.querySelector('[aria-label="Send voice note"]') as HTMLElement);
+    await settle();
+
+    expect(spies.onVoiceNote).not.toHaveBeenCalled();
+  });
+
+  it('discards a voice note on cancel, without sending anything', async () => {
+    voiceState.recording = true;
+    const { container, spies } = composer();
+
+    fireEvent.click(container.querySelector('[aria-label="Discard voice note"]') as HTMLElement);
+    await settle();
+
+    expect(voiceState.stop).toHaveBeenCalledWith(false);
+    expect(spies.onVoiceNote).not.toHaveBeenCalled();
+  });
 });
 
 describe('ChatSearchPanel', () => {
@@ -293,5 +434,87 @@ describe('LocationDialog', () => {
     for (const [text] of spies.onSend.mock.calls) {
       expect(String(text)).toContain('https://');
     }
+  });
+
+  it('does nothing on Enter with a blank or whitespace-only search', async () => {
+    dialog();
+    await settle();
+    const field = document.body.querySelector('input') as HTMLInputElement;
+
+    fireEvent.change(field, { target: { value: '   ' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    await settle();
+
+    expect(document.body.querySelector('iframe')).toBeNull();
+  });
+
+  it('finds itself and shows the two-coordinate point, on a successful locate', async () => {
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success({ coords: { latitude: 12.9716, longitude: 77.5946 } } as GeolocationPosition);
+    });
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    dialog();
+    await settle();
+
+    fireEvent.click(document.body.querySelectorAll('button')[1]);
+    await settle();
+
+    expect((document.body.querySelector('input') as HTMLInputElement).value).toBe('12.9716,77.5946');
+  });
+
+  it('reports why locating failed, rather than leaving the button stuck', async () => {
+    const getCurrentPosition = vi.fn(
+      (_success: PositionCallback, error: PositionErrorCallback) => {
+        error({ message: 'Location permission was denied' } as GeolocationPositionError);
+      }
+    );
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    dialog();
+    await settle();
+
+    fireEvent.click(document.body.querySelectorAll('button')[1]);
+    await settle();
+
+    expect(document.body.textContent).toContain('Location permission was denied');
+  });
+
+  it('does nothing, rather than throwing, on a browser with no geolocation at all', async () => {
+    Object.defineProperty(globalThis.navigator, 'geolocation', { configurable: true, value: undefined });
+    dialog();
+    await settle();
+
+    expect(() => {
+      fireEvent.click(document.body.querySelectorAll('button')[1]);
+    }).not.toThrow();
+  });
+
+  it('still lets a place be sent when the portal has no Maps key configured, just without a preview', async () => {
+    const noKeyMock = {
+      request: { query: PUBLIC_CLIENT_CONFIG },
+      result: { data: { publicClientConfig: { google_maps_api_key: '' } } },
+    };
+    render(
+      <MockedProvider mocks={[noKeyMock]}>
+        <ThemeProvider theme={testTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <LocationDialog open onClose={vi.fn()} onSend={vi.fn()} />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>
+    );
+    await settle();
+    const field = document.body.querySelector('input') as HTMLInputElement;
+    fireEvent.change(field, { target: { value: 'Church Street' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    await settle();
+
+    expect(document.body.querySelector('iframe')).toBeNull();
+    expect(document.body.textContent).toContain('You can still send the place.');
   });
 });

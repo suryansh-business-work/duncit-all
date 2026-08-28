@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildHostShareLines } from '../src/pod-complete/host-share-lines';
+import { mwebHostPodLabels } from '../src/labels';
 import type { PodSettlement } from '../src/types';
+
+/**
+ * Echoes the key back with its vars appended, so an assertion reads as the key
+ * that was rendered rather than as an English sentence this package no longer
+ * owns (rule 38). Same device as `host-actions-config.tsx`.
+ */
+const t = (key: string, options?: { vars?: Record<string, string | number> }) => {
+  const vars = Object.values(options?.vars ?? {});
+  return vars.length ? `${key} ${vars.join(' ')}` : key;
+};
+
+const labels = mwebHostPodLabels(t);
 
 const waterfall = {
   version: 1,
@@ -37,13 +50,14 @@ const settlement = (has_venue: boolean): PodSettlement =>
     waterfall
   }) as PodSettlement);
 
-const keys = (has_venue: boolean) => buildHostShareLines(settlement(has_venue)).map((l) => l.key);
+const keys = (has_venue: boolean) =>
+  buildHostShareLines(settlement(has_venue), labels).map((l) => l.key);
 
 describe('buildHostShareLines', () => {
   it('opens on the settlement basis — the money from the seats that were scanned in', () => {
-    const [first] = buildHostShareLines(settlement(false));
+    const [first] = buildHostShareLines(settlement(false), labels);
 
-    expect(first).toEqual({ key: 'paid', label: 'Customer Paid', value: 1000 });
+    expect(first).toEqual({ key: 'paid', label: 'mweb.hostShare.customerPaid', value: 1000 });
     // NOT collected_total: folding in seats nobody scanned would make every
     // line below fail to add up.
     expect(first?.value).not.toBe(1200);
@@ -54,28 +68,41 @@ describe('buildHostShareLines', () => {
   });
 
   it('spells the percentages into the deduction labels', () => {
-    const byKey = new Map(buildHostShareLines(settlement(false)).map((l) => [l.key, l]));
+    const byKey = new Map(buildHostShareLines(settlement(false), labels).map((l) => [l.key, l]));
 
-    expect(byKey.get('gst')?.label).toBe('− GST (18%)');
-    expect(byKey.get('fee')?.label).toBe('− Platform Fee (10%)');
+    // The percentage is a var, so it reaches the sentence rather than being
+    // baked into the key — a bundle whose placeholder drifts loses the number.
+    expect(byKey.get('gst')?.label).toBe('mweb.hostShare.gst 18');
+    expect(byKey.get('fee')?.label).toBe('mweb.hostShare.platformFee 10');
   });
 
   it('says "You receive", not "Host receives" — this is the host’s own screen', () => {
-    const host = buildHostShareLines(settlement(false)).find((l) => l.key === 'host');
+    const host = buildHostShareLines(settlement(false), labels).find((l) => l.key === 'host');
 
-    expect(host).toEqual({ key: 'host', label: 'You receive', value: 400, strong: true });
+    // `youReceive`, never @duncit/ui's `hostReceives` — a different key, and a
+    // different sentence, because this is the host's own screen.
+    expect(host).toEqual({
+      key: 'host',
+      label: 'mweb.hostShare.youReceive',
+      value: 400,
+      strong: true,
+    });
   });
 
   it('adds the venue lines only for a pod that has a venue', () => {
     expect(keys(true)).toEqual(['paid', 'gst', 'fee', 'pool', 'venue', 'venue-receives', 'host', 'duncit']);
-    expect(buildHostShareLines(settlement(true)).find((l) => l.key === 'venue')?.value).toBe(300);
-    expect(buildHostShareLines(settlement(true)).find((l) => l.key === 'venue-receives')?.value).toBe(285);
+    expect(buildHostShareLines(settlement(true), labels).find((l) => l.key === 'venue')?.value).toBe(
+      300,
+    );
+    expect(
+      buildHostShareLines(settlement(true), labels).find((l) => l.key === 'venue-receives')?.value,
+    ).toBe(285);
   });
 
   it('closes on what Duncit keeps', () => {
-    expect(buildHostShareLines(settlement(true)).at(-1)).toEqual({
+    expect(buildHostShareLines(settlement(true), labels).at(-1)).toEqual({
       key: 'duncit',
-      label: 'Duncit revenue',
+      label: 'mweb.hostShare.duncitRevenue',
       value: 197,
     });
   });

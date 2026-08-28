@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AttendanceMarkMethod, PodAttendanceLock } from '../src/pod-attendance';
 import {
   buildAttendanceLabels,
+  earningsBodyFor,
   mwebAttendanceLabels,
   shellAttendanceLabels,
   type AttendanceTranslate,
@@ -37,13 +38,19 @@ const catalogue =
       String(options?.vars?.[name] ?? match),
     );
 
-const METHODS: readonly AttendanceMarkMethod[] = ['HOST_SCAN', 'HOST_MANUAL', 'CLUB_ADMIN_FORCE', 'ADMIN'];
+const METHODS: readonly AttendanceMarkMethod[] = [
+  'HOST_SCAN',
+  'HOST_MANUAL',
+  'CLUB_ADMIN_FORCE',
+  'VIRTUAL_JOIN',
+  'ADMIN',
+];
 const LOCKS: readonly PodAttendanceLock[] = ['OPEN', 'COMPLETED', 'CANCELLED'];
 
 /** Label props that are plain strings, i.e. resolved once when the bundle is built. */
 const STATIC_PROPS = [
   'pageTitle', 'menuItem', 'markedHeading', 'unmarkedHeading', 'emptyRoster', 'allMarked',
-  'markButton', 'marking', 'markedChip', 'notMarkedChip', 'scanCta', 'earningsTitle', 'earningsBody',
+  'markButton', 'marking', 'markedChip', 'notMarkedChip', 'scanCta', 'earningsTitle', 'earningsBody', 'earningsBodyVirtual',
   'clubAdminTitle', 'clubAdminBody', 'clubAdminNone', 'contactEmail', 'contactPhone', 'contactWhatsapp',
   'retry', 'back', 'otpTitle', 'otpName', 'otpExtension', 'otpPhone', 'otpMediumLabel',
   'otpMediumWhatsapp', 'otpMediumSms', 'otpMediumRequired', 'otpNameRequired', 'otpExtensionInvalid',
@@ -59,7 +66,7 @@ const STATIC_PROPS = [
 const BUNDLE_KEYS = [
   ...STATIC_PROPS,
   'summary', 'seatsSummary', 'seats', 'companionsNeeded', 'markedBy', 'markedAt', 'verifiedPhone',
-  'methodScan', 'methodManual', 'methodClubAdmin', 'methodAdmin',
+  'methodScan', 'methodManual', 'methodClubAdmin', 'methodVirtualJoin', 'methodAdmin',
   'lockedCompletedTitle', 'lockedCompletedBody', 'lockedCancelledTitle', 'lockedCancelledBody',
   'otpBody', 'otpTestCode',
 ].toSorted((a, b) => a.localeCompare(b));
@@ -232,5 +239,21 @@ describe('mweb and shell namespaces', () => {
     expect(suffixes(mwebAttendanceLabels, 'mweb.attendance.')).toEqual(
       suffixes(shellAttendanceLabels, 'shell.attendance.'),
     );
+  });
+});
+
+describe('earningsBodyFor', () => {
+  const labels = { earningsBody: 'Unmarked seats are seats you are not paid for.', earningsBodyVirtual: 'A member who never opens the link is a seat you are not paid for.' };
+
+  it('words the payout rule for the kind of pod this is', () => {
+    expect(earningsBodyFor({ pod_mode: 'VIRTUAL' }, labels)).toBe(labels.earningsBodyVirtual);
+    expect(earningsBodyFor({ pod_mode: 'PHYSICAL' }, labels)).toBe(labels.earningsBody);
+  });
+
+  it('reads both wordings out of a built bundle rather than a literal', () => {
+    const built = mwebAttendanceLabels((key) => 't:' + key);
+
+    expect(earningsBodyFor({ pod_mode: 'PHYSICAL' }, built)).toBe('t:mweb.attendance.earningsBody');
+    expect(earningsBodyFor({ pod_mode: 'VIRTUAL' }, built)).toBe('t:mweb.attendance.earningsBodyVirtual');
   });
 });

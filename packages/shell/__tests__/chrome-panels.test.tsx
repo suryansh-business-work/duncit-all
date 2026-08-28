@@ -17,6 +17,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentChat } from '../src/chrome/agent/AgentChat';
 import { BotChat } from '../src/chrome/ask-bot/BotChat';
+import { ASK_BOT_CHAT } from '../src/chrome/ask-bot/queries';
 import { JumpToPortalDialog } from '../src/chrome/jump-to-portal/JumpToPortalDialog';
 
 /**
@@ -55,6 +56,10 @@ const pressEverything = async () => {
 afterEach(() => {
   vi.clearAllMocks();
 });
+
+// jsdom has no scrollIntoView at all — AgentChat's own auto-scroll effect
+// needs a real implementation to exercise its "element is there" branch.
+Element.prototype.scrollIntoView ??= vi.fn();
 
 describe('JumpToPortalDialog', () => {
   it('renders nothing while it is closed', () => {
@@ -135,6 +140,57 @@ describe('BotChat', () => {
 
     expect(document.body.innerHTML).not.toBe('');
   });
+
+  it('asks straight from one of its own starter chips', async () => {
+    wrap(<BotChat botKey="navigation" copy={copy} onRegisterRestart={vi.fn()} />);
+    await settle();
+
+    const chip = document.body.querySelector('.MuiChip-clickable') as HTMLElement;
+    expect(chip).not.toBeNull();
+    fireEvent.click(chip);
+    await settle();
+
+    expect(document.body.innerHTML).not.toBe('');
+  });
+
+  it('asks straight from a follow-up chip after a real reply', async () => {
+    const mocks = [
+      {
+        request: {
+          query: ASK_BOT_CHAT,
+          variables: { input: { bot_key: 'navigation', message: 'Where do I add a venue?', history: [] } },
+        },
+        result: {
+          data: {
+            askBotChat: { answer: 'Venues > Add venue.', links: [], followups: ['What about pricing?'] },
+          },
+        },
+      },
+    ];
+    render(
+      <MockedProvider mocks={mocks}>
+        <ThemeProvider theme={testTheme}>
+          <MemoryRouter initialEntries={['/']}>
+            <BotChat botKey="navigation" copy={copy} onRegisterRestart={vi.fn()} />
+          </MemoryRouter>
+        </ThemeProvider>
+      </MockedProvider>,
+    );
+    await settle();
+
+    fireEvent.click(document.body.querySelector('.MuiChip-clickable') as HTMLElement);
+    await settle();
+    await settle();
+    expect(document.body.textContent).toContain('What about pricing?');
+
+    const followupChip = [...document.body.querySelectorAll('.MuiChip-clickable')].find(
+      (chip) => chip.textContent === 'What about pricing?',
+    ) as HTMLElement;
+    fireEvent.click(followupChip);
+    await settle();
+
+    expect(document.body.innerHTML).not.toBe('');
+  });
 });
 
 describe('AgentChat', () => {
@@ -165,6 +221,18 @@ describe('AgentChat', () => {
     await settle();
 
     expect(onRegisterRestart).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it('asks straight from one of the suggestion chips', async () => {
+    wrap(<AgentChat isAvailable canAct onRegisterRestart={vi.fn()} />);
+    await settle();
+
+    const chip = document.body.querySelector('.MuiChip-clickable') as HTMLElement;
+    expect(chip).not.toBeNull();
+    fireEvent.click(chip);
+    await settle();
+
+    expect(document.body.innerHTML).not.toBe('');
   });
 
   it('survives an instruction being sent with nothing behind it', async () => {

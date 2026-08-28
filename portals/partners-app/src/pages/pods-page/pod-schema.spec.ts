@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { makeNativeParityPodConfig, makePodSchema } from '@duncit/pod-form';
+import { fallbackT, makeNativeParityPodConfig, makePodSchema } from '@duncit/pod-form';
 import { PARTNER_POD_CONFIG } from './partner-pod-config';
 
-const partnerPodSchema = makePodSchema(PARTNER_POD_CONFIG);
-const clubAdminPodSchema = makePodSchema(makeNativeParityPodConfig({ showProducts: true }));
+// The schema's messages come from the catalogue now, so it is built with the
+// package's provider-free translator outside the React tree.
+const partnerPodSchema = makePodSchema(PARTNER_POD_CONFIG, fallbackT);
+const clubAdminPodSchema = makePodSchema(
+  makeNativeParityPodConfig({ showProducts: true }),
+  fallbackT,
+);
 
 const validPod = {
   pod_title: 'Community breakfast meetup',

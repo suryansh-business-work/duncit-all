@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { makePodSchema } from '../../src/schema';
+import { fallbackT } from '../../src/i18n/useTranslation';
 import { blankPodFormValues, type PodFormConfig, type PodFormValues } from '../../src/types';
 
 const future = () => new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -40,7 +41,7 @@ const validValues = (over: Partial<PodFormValues> = {}): PodFormValues => {
 
 /** Collect the issue paths from a failed parse. */
 const errorPaths = (config: PodFormConfig, values: PodFormValues) => {
-  const res = makePodSchema(config).safeParse(values);
+  const res = makePodSchema(config, fallbackT).safeParse(values);
   expect(res.success).toBe(false);
   if (res.success) return [];
   return res.error.issues.map((i) => i.path.join('.'));
@@ -48,12 +49,12 @@ const errorPaths = (config: PodFormConfig, values: PodFormValues) => {
 
 describe('makePodSchema', () => {
   it('accepts a fully valid physical free pod', () => {
-    const res = makePodSchema(makeConfig()).safeParse(validValues());
+    const res = makePodSchema(makeConfig(), fallbackT).safeParse(validValues());
     expect(res.success).toBe(true);
   });
 
   it('accepts a valid physical pod with place charges and paid type', () => {
-    const res = makePodSchema(makeConfig({ showPlaceCharges: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showPlaceCharges: true }), fallbackT).safeParse(
       validValues({
         pod_type: 'NATIVE_PAID',
         pod_amount: 500,
@@ -69,14 +70,14 @@ describe('makePodSchema', () => {
   });
 
   it('does not require hosts when requireHosts is false', () => {
-    const res = makePodSchema(makeConfig({ showHosts: true, requireHosts: false })).safeParse(
+    const res = makePodSchema(makeConfig({ showHosts: true, requireHosts: false }), fallbackT).safeParse(
       validValues({ pod_hosts_id: [] }),
     );
     expect(res.success).toBe(true);
   });
 
   it('accepts hosts when supplied and required', () => {
-    const res = makePodSchema(makeConfig({ showHosts: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showHosts: true }), fallbackT).safeParse(
       validValues({ pod_hosts_id: ['u1'] }),
     );
     expect(res.success).toBe(true);
@@ -91,14 +92,14 @@ describe('makePodSchema', () => {
   });
 
   it('accepts exactly one host when singleHost is on', () => {
-    const res = makePodSchema(makeConfig({ showHosts: true, singleHost: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showHosts: true, singleHost: true }), fallbackT).safeParse(
       validValues({ pod_hosts_id: ['u1'] }),
     );
     expect(res.success).toBe(true);
   });
 
   it('allows several hosts when singleHost is off', () => {
-    const res = makePodSchema(makeConfig({ showHosts: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showHosts: true }), fallbackT).safeParse(
       validValues({ pod_hosts_id: ['u1', 'u2'] }),
     );
     expect(res.success).toBe(true);
@@ -119,7 +120,7 @@ describe('makePodSchema', () => {
   });
 
   it('does not require a slot when dates are already present (edit keeps booked slot)', () => {
-    const res = makePodSchema(makeConfig({ showVenueSlot: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(
       validValues({ venue_slot_id: '' }),
     );
     expect(res.success).toBe(true);
@@ -142,7 +143,7 @@ describe('makePodSchema', () => {
   });
 
   it('accepts a valid https meeting link for virtual pods', () => {
-    const res = makePodSchema(makeConfig()).safeParse(
+    const res = makePodSchema(makeConfig(), fallbackT).safeParse(
       validValues({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: 'https://meet.google.com/abc' }),
     );
     expect(res.success).toBe(true);
@@ -203,7 +204,7 @@ describe('makePodSchema', () => {
   });
 
   it('accepts a valid reel URL when reels are shown', () => {
-    const res = makePodSchema(makeConfig({ showReel: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showReel: true }), fallbackT).safeParse(
       validValues({ reel_url: 'https://cdn.example.com/reel.mp4' }),
     );
     expect(res.success).toBe(true);
@@ -212,7 +213,7 @@ describe('makePodSchema', () => {
   // `products_enabled` is derived from the rows (the switch is gone), so the
   // old switch-vs-rows rules no longer exist: no rows is simply "no products".
   it('accepts an empty product list whatever the derived flag says', () => {
-    const res = makePodSchema(makeConfig({ showProducts: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showProducts: true }), fallbackT).safeParse(
       validValues({ products_enabled: true, product_requests: [] }),
     );
     expect(res.success).toBe(true);
@@ -240,7 +241,7 @@ describe('makePodSchema', () => {
   });
 
   it('ignores product rows when the config hides products', () => {
-    const res = makePodSchema(makeConfig()).safeParse(
+    const res = makePodSchema(makeConfig(), fallbackT).safeParse(
       validValues({
         pod_mode: 'VIRTUAL',
         venue_id: '',
@@ -252,7 +253,7 @@ describe('makePodSchema', () => {
   });
 
   it('accepts enabled products with a valid request', () => {
-    const res = makePodSchema(makeConfig({ showProducts: true })).safeParse(
+    const res = makePodSchema(makeConfig({ showProducts: true }), fallbackT).safeParse(
       validValues({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
     );
     expect(res.success).toBe(true);
@@ -296,7 +297,7 @@ describe('makePodSchema (autoPod)', () => {
   });
 
   it('accepts a valid template with no club, venue, host or date', () => {
-    const res = makePodSchema(autoConfig).safeParse(template());
+    const res = makePodSchema(autoConfig, fallbackT).safeParse(template());
     expect(res.success).toBe(true);
   });
 

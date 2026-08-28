@@ -87,10 +87,10 @@ export default function PodSections() {
           justifyContent: "flex-end"
         }}>
         <DuncitButton size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
-          Expand all
+          {t('podForm.podSections.expandAll')}
         </DuncitButton>
         <DuncitButton size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0} aria-label={t('podForm.podSections.collapseAllSections')}>
-          Collapse all
+          {t('podForm.podSections.collapseAll')}
         </DuncitButton>
       </Stack>
       <Controller

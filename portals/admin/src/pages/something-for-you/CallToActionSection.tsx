@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { SOMETHING_FOR_YOU_ROUTES, type SomethingForYouAction } from '@duncit/utils';
+import { useMemo } from 'react';
 import type { SomethingForYouForm } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -16,12 +17,23 @@ interface Props {
   setForm: (next: SomethingForYouForm) => void;
 }
 
-const ROUTE_OPTIONS = SOMETHING_FOR_YOU_ROUTES.map((route) => ({
-  ...route,
-  // Searchable by either half: an admin looks for "referral" as often as
-  // for "Refer and earn".
-  search: `${route.label} ${route.path}`,
-}));
+/**
+ * The picker's options, built from the LIVE translator.
+ *
+ * A module-scope array would be frozen in whichever language happened to load
+ * first, so the menu is built per render instead and memoised on `t`.
+ */
+const routeOptions = (t: (key: string) => string) =>
+  SOMETHING_FOR_YOU_ROUTES.map((route) => {
+    const label = t(route.labelKey);
+    return {
+      ...route,
+      label,
+      // Searchable by either half: an admin looks for "referral" as often as
+      // for "Refer and earn".
+      search: `${label} ${route.path}`,
+    };
+  });
 
 /**
  * What the card does when somebody presses it.
@@ -38,7 +50,8 @@ const ROUTE_OPTIONS = SOMETHING_FOR_YOU_ROUTES.map((route) => ({
  */
 export default function CallToActionSection({ form, setForm }: Readonly<Props>) {
   const { t } = useTranslation();
-  const selectedRoute = ROUTE_OPTIONS.find((route) => route.path === form.link_path) ?? null;
+  const options = useMemo(() => routeOptions(t), [t]);
+  const selectedRoute = options.find((route) => route.path === form.link_path) ?? null;
 
   const chooseAction = (action: SomethingForYouAction | null) => {
     if (!action) return;
@@ -50,7 +63,7 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
       <Typography variant="subtitle2" sx={{
         fontWeight: 700
       }}>
-        Call to action
+        {t('admin.somethingForYou.callToAction')}
       </Typography>
 
       <ToggleButtonGroup
@@ -70,7 +83,7 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
 
       {form.action_type === 'ROUTE' && (
         <Autocomplete
-          options={ROUTE_OPTIONS}
+          options={options}
           value={selectedRoute}
           onChange={(_event, option) => setForm({ ...form, link_path: option?.path ?? '' })}
           getOptionLabel={(option) => option.label}

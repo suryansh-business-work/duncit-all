@@ -285,12 +285,17 @@ describe('makeNativeParityPodConfig', () => {
 });
 
 describe('constants', () => {
-  it('exposes option lists', () => {
+  // The VALUE is the stored enum and is a contract with the server; the name
+  // beside it is a catalogue key, resolved where the menu is drawn (rule 38).
+  it('exposes option lists keyed to their copy', () => {
     expect(POD_TYPES.length).toBeGreaterThan(0);
     expect(OCCURRENCES.length).toBeGreaterThan(0);
+    for (const option of [...POD_TYPES, ...OCCURRENCES, ...POD_MODES]) {
+      expect(option.labelKey.startsWith('podForm.')).toBe(true);
+    }
     expect(POD_MODES).toEqual([
-      { value: 'PHYSICAL', label: 'Physical' },
-      { value: 'VIRTUAL', label: 'Virtual' },
+      { value: 'PHYSICAL', labelKey: 'podForm.podMode.physical' },
+      { value: 'VIRTUAL', labelKey: 'podForm.podMode.virtual' },
     ]);
   });
 });

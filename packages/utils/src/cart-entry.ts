@@ -45,8 +45,6 @@ export interface CartEntry {
   count: number;
   /** Capped badge text. */
   badge: string;
-  /** Accessible name for the control. */
-  label: string;
 }
 
 /**
@@ -59,6 +57,5 @@ export function deriveCartEntry(count: number, route: string): CartEntry {
     visible: count > 0 && !isCartFlowRoute(route),
     count,
     badge: cartBadgeLabel(count),
-    label: `Open cart (${count} items)`,
   };
 }

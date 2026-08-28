@@ -214,7 +214,7 @@ And the Step-4 statement, identically in `app/mweb/.../price-panel/index.tsx` an
 ```ts
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
-const statement = buildEarningsStatement(waterfall, { has_venue: !!slotId, symbol });
+const statement = buildEarningsStatement(waterfall, { has_venue: !!slotId, symbol, t });
 ```
 
 ## Sample data
@@ -378,7 +378,7 @@ a caller use it directly as an effect guard without looping.
 ### The Step-4 earnings statement
 
 ```ts
-const statement = buildEarningsStatement(waterfall, { has_venue: true, symbol: '₹' });
+const statement = buildEarningsStatement(waterfall, { has_venue: true, symbol: '₹', t });
 ```
 
 Returns, exactly:
@@ -520,7 +520,7 @@ BOOKED, so `venueAvailableSlots` no longer returns it, and the seats already sol
 the floor — were never on the client at all. The type lives here so mWeb, the portals' pod form
 and the native app read one definition; each still writes its own literal GraphQL document,
 because native's codegen refuses an interpolated one.
-| `buildEarningsStatement` | `(w: EarningsWaterfall, o: EarningsStatementOptions) => EarningsStatement` | Formats the server waterfall; adds no math. |
+| `buildEarningsStatement` | `(w: EarningsWaterfall, o: EarningsStatementOptions) => EarningsStatement` | Formats the server waterfall; adds no math. `o.t` resolves the copy from `earnings.statement.*`. |
 | `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |
 | `EarningsStatementOptions.symbol` | `string` (required) | Symbol used inside the formula strings. |
 
@@ -537,7 +537,7 @@ because native's codegen refuses an interpolated one.
 
 | Export | Signature | Default | Meaning |
 | --- | --- | --- | --- |
-| `deriveCartEntry` | `(count: number, route: string) => CartEntry` | — | `{ visible, count, badge, label }` for the header entry point. |
+| `deriveCartEntry` | `(count: number, route: string) => CartEntry` | — | `{ visible, count, badge }` for the header entry point; the accessible name is the caller's `mweb.cart.open`. |
 | `cartBadgeLabel` | `(count: number) => string` | — | Capped badge text. |
 | `isCartFlowRoute` | `(route: string) => boolean` | — | True on cart / checkout / product-checkout, web path or native name. |
 | `CART_BADGE_MAX` | `99` | — | Cap before `99+`. |

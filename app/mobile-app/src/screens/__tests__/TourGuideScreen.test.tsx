@@ -4,6 +4,7 @@ import { toursForRoles } from '@duncit/tours';
 import { TourGuideScreen } from '@/screens/TourGuideScreen';
 import { useMe } from '@/hooks/useMe';
 import { useToursStore } from '@/stores/tours.store';
+import { fallbackT } from '@/i18n/fallback';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
@@ -32,7 +33,7 @@ describe('TourGuideScreen', () => {
     renderWithProviders(<TourGuideScreen />);
     for (const tour of toursForRoles([])) {
       expect(screen.getByTestId(`tour-row-${tour.id}`)).toBeOnTheScreen();
-      expect(screen.getByText(tour.title)).toBeOnTheScreen();
+      expect(screen.getByText(fallbackT(tour.titleKey))).toBeOnTheScreen();
     }
   });
 

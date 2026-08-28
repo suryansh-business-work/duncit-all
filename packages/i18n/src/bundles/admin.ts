@@ -577,6 +577,33 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       ctaLinkHint: 'Opens this address',
       screenSearchHint: 'Search by name or path. The app opens the screen; mWeb opens the same page.',
       linkHint: 'Include https://. The app hands this to the browser; mWeb opens a new tab.',
+      callToAction: 'Call to action',
+      // The named in-app destinations an admin may point a card at. The paths
+      // themselves live in @duncit/utils beside the routing rules; only the
+      // names a person reads are here.
+      routes: {
+        account: 'Account',
+        becomeHost: 'Become a host',
+        cart: 'Cart',
+        clubs: 'Clubs',
+        createPod: 'Create a pod',
+        duncitCoin: 'Duncit Coin',
+        earn: 'Earn with Duncit',
+        explore: 'Explore',
+        faqs: 'FAQs',
+        feedback: 'Share feedback',
+        home: 'Home',
+        orders: 'Orders',
+        podHistory: 'Pod history',
+        podIdeas: 'Pod ideas',
+        podPlans: 'Pod plans',
+        profile: 'Profile',
+        referral: 'Refer and earn',
+        registerVenue: 'Register a venue',
+        saved: 'Saved pods',
+        shop: 'Pod Shop',
+        support: 'Support',
+      },
     },
 
     uploads: {

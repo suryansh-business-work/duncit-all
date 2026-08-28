@@ -29,6 +29,16 @@ export interface WaterfallLine {
 }
 
 /**
+ * The calling surface's translator. Every word below is `ui.waterfall.*`
+ * (rule 38); the keys are written out in full because
+ * `verify-translation-keys.mjs` greps source for the literal string.
+ */
+export type WaterfallTranslate = (
+  key: string,
+  options?: { vars?: Record<string, string | number> },
+) => string;
+
+/**
  * Flattens a waterfall into simple display lines:
  * Customer Paid → − GST → − Platform Fee → Remaining Pool →
  * Venue price (booked slot, when the pod has a venue) →
@@ -38,35 +48,51 @@ export function buildWaterfallLines(
   waterfall: PodFinanceWaterfall,
   symbol: string,
   hasVenue: boolean,
+  t: WaterfallTranslate,
   collectedTotal?: number
 ): WaterfallLine[] {
   const lines: WaterfallLine[] = [
-    { key: 'paid', label: 'Customer Paid', value: collectedTotal ?? waterfall.amount },
-    { key: 'gst', label: `− GST (${waterfall.gst_pct}%)`, value: waterfall.gst_amount },
+    {
+      key: 'paid',
+      label: t('ui.waterfall.customerPaid'),
+      value: collectedTotal ?? waterfall.amount,
+    },
+    {
+      key: 'gst',
+      label: t('ui.waterfall.gst', { vars: { pct: waterfall.gst_pct } }),
+      value: waterfall.gst_amount,
+    },
     {
       key: 'fee',
-      label: `− Platform Fee (${waterfall.platform_fee_pct}%)`,
+      label: t('ui.waterfall.platformFee', { vars: { pct: waterfall.platform_fee_pct } }),
       value: waterfall.platform_fee_amount,
     },
-    { key: 'pool', label: 'Remaining Pool', value: waterfall.pool_amount },
+    { key: 'pool', label: t('ui.waterfall.pool'), value: waterfall.pool_amount },
   ];
   if (hasVenue) {
     lines.push({
       key: 'venue',
-      label: 'Venue price',
+      label: t('ui.waterfall.venuePrice'),
       value: waterfall.venue_amount,
-      secondary: `booked slot price − ${waterfall.venue_commission_pct}% commission → venue receives ${symbol}${waterfall.venue_receives.toFixed(2)}`,
+      secondary: t('ui.waterfall.venueSecondary', {
+        vars: {
+          pct: waterfall.venue_commission_pct,
+          receives: `${symbol}${waterfall.venue_receives.toFixed(2)}`,
+        },
+      }),
     });
   }
   lines.push(
     {
       key: 'host',
-      label: 'Host receives',
+      label: t('ui.waterfall.hostReceives'),
       value: waterfall.host_receives,
       strong: true,
-      secondary: `remainder − ${waterfall.host_commission_pct}% commission`,
+      secondary: t('ui.waterfall.hostSecondary', {
+        vars: { pct: waterfall.host_commission_pct },
+      }),
     },
-    { key: 'duncit', label: 'Duncit revenue', value: waterfall.duncit_revenue }
+    { key: 'duncit', label: t('ui.waterfall.duncitRevenue'), value: waterfall.duncit_revenue }
   );
   return lines;
 }

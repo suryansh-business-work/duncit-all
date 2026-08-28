@@ -38,7 +38,7 @@ interface NodeProps {
  */
 function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Readonly<NodeProps>) {
   const { t } = useTranslation();
-  const copy = timelineCopy(node);
+  const copy = timelineCopy(node, t);
   const children = node.children ?? [];
   const isThisRequest = !!highlightBackoutNo && node.backoutNo === highlightBackoutNo;
 

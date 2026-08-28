@@ -27,24 +27,24 @@ describe('TOURS registry', () => {
     expect(TOURS[0].id).toBe(HOME_TOUR_ID);
   });
 
-  it('gives every tour a title, a route on both surfaces and at least one step', () => {
+  it('gives every tour a copy key, a route on both surfaces and at least one step', () => {
     for (const tour of TOURS) {
-      expect(tour.title).not.toBe('');
-      expect(tour.caption).not.toBe('');
+      expect(tour.titleKey.startsWith('mweb.tours.')).toBe(true);
+      expect(tour.captionKey.startsWith('mweb.tours.')).toBe(true);
       expect(tour.path.startsWith('/')).toBe(true);
       expect(tour.nativeRoute).not.toBe('');
       expect(tour.steps.length).toBeGreaterThan(0);
     }
   });
 
-  it('gives every step a unique anchor and real copy', () => {
+  it('gives every step a unique anchor and a pair of copy keys', () => {
     const anchors = TOURS.flatMap((t) => t.steps.map((s) => s.anchor));
     expect(new Set(anchors).size).toBe(anchors.length);
     for (const tour of TOURS) {
       for (const step of tour.steps) {
         expect(step.anchor).not.toBe('');
-        expect(step.title).not.toBe('');
-        expect(step.body.length).toBeGreaterThan(20);
+        expect(step.titleKey.startsWith('mweb.tours.')).toBe(true);
+        expect(step.bodyKey.endsWith('.body')).toBe(true);
       }
     }
   });
@@ -124,7 +124,7 @@ describe('TOURS registry', () => {
   });
 
   it('resolves a tour by id and shrugs off an unknown one', () => {
-    expect(findTour('club')?.title).toBe('Club Page');
+    expect(findTour('club')?.titleKey).toBe('mweb.tours.club.title');
     expect(findTour('retired-tour')).toBeUndefined();
   });
 });

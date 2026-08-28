@@ -34,9 +34,13 @@ export default function PaymentSection() {
   const spots = useSpotsBounds();
   const boundsHint = (() => {
     if (spots.slidable) {
-      return `This activity needs at least ${spots.min}, and the space booked holds ${spots.max}.`;
+      return t('podForm.paymentSection.boundsHintRange', {
+        vars: { min: spots.min, max: spots.max },
+      });
     }
-    return spots.min > 0 ? `This activity needs at least ${spots.min} people.` : undefined;
+    return spots.min > 0
+      ? t('podForm.paymentSection.boundsHintMin', { vars: { min: spots.min } })
+      : undefined;
   })();
   // The control clamps what it DISPLAYS to the activity's minimum, so without
   // this the form could still hold a smaller number than the admin was shown and
@@ -75,8 +79,10 @@ export default function PaymentSection() {
             }}
             fullWidth
           >
-            {POD_TYPES.map((t) => (
-              <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
+            {POD_TYPES.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {t(option.labelKey)}
+              </MenuItem>
             ))}
           </TextField>
         )}
@@ -87,8 +93,10 @@ export default function PaymentSection() {
           onChange={(event) => setValue('pod_occurrence', event.target.value)}
           fullWidth
         >
-          {OCCURRENCES.map((o) => (
-            <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+          {OCCURRENCES.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {t(option.labelKey)}
+            </MenuItem>
           ))}
         </TextField>
       </Stack>
@@ -113,7 +121,7 @@ export default function PaymentSection() {
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>
-              No. of spots
+              {t('podForm.paymentSection.noOfSpots')}
             </Typography>
             <Slider
               value={Math.max(spots.min, Math.min(spots.max, Number(noOfSpots) || 0))}

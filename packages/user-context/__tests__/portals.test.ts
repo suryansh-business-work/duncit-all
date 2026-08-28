@@ -19,8 +19,20 @@ describe('portals registry', () => {
   });
 
   it('categorises portals within the known category set', () => {
+    const known = PORTAL_CATEGORIES.map((option) => option.key);
     for (const p of PORTALS) {
-      expect(PORTAL_CATEGORIES).toContain(p.category);
+      expect(known).toContain(p.category);
+    }
+  });
+
+  // The launcher is a screen staff read, so the console's one-liner and the
+  // filter chips are catalogue keys — only the console NAME is a brand mark.
+  it('names its copy rather than carrying it', () => {
+    for (const p of PORTALS) {
+      expect(p.descriptionKey.startsWith('session.portals.descriptions.')).toBe(true);
+    }
+    for (const option of PORTAL_CATEGORIES) {
+      expect(option.labelKey.startsWith('session.portals.categories.')).toBe(true);
     }
   });
 });

@@ -8,108 +8,115 @@ export const HOME_TOUR_ID: TourId = 'home';
  * screen is one entry here plus the matching `data-tour` / registered anchors —
  * no change to either overlay, which is the "extensible for future screens"
  * requirement.
+ *
+ * Structure only: which element a step points at, where the tour lands and who
+ * may see it. The words live in `mweb.tours.*` (CLAUDE.md rule 38) and are
+ * resolved by whichever overlay is drawing — so mWeb and native cannot describe
+ * the same screen differently, and a tour translates like everything else.
+ * Keys are written out in full because `verify-translation-keys.mjs` greps
+ * source for the literal string; a key built from `id` would read as unrendered.
  */
 export const TOURS: readonly TourDefinition[] = [
   {
     id: 'home',
-    title: 'Home',
-    caption: 'Pods, clubs, search and everything on your home screen',
+    titleKey: 'mweb.tours.home.title',
+    captionKey: 'mweb.tours.home.caption',
     path: '/',
     nativeRoute: 'Home',
     steps: [
       {
         anchor: 'home-pods',
-        title: 'What are Pods?',
-        body: 'Pods are the meetups you can join — a game, a class, a jam. Tap one to see the details and book a spot.',
+        titleKey: 'mweb.tours.home.pods.title',
+        bodyKey: 'mweb.tours.home.pods.body',
       },
       {
         anchor: 'home-clubs',
-        title: 'What are Clubs?',
-        body: 'Clubs are the communities that run pods. Follow a club to keep seeing what it puts on.',
+        titleKey: 'mweb.tours.home.clubs.title',
+        bodyKey: 'mweb.tours.home.clubs.body',
       },
       {
         anchor: 'home-search',
-        title: 'Search',
-        body: 'Look for a pod, a club or a place by name whenever you know what you are after.',
+        titleKey: 'mweb.tours.home.search.title',
+        bodyKey: 'mweb.tours.home.search.body',
       },
       {
         anchor: 'home-categories',
-        title: 'Categories',
-        body: 'Browse by interest — sports, music, food and the rest. Picking one narrows everything below.',
+        titleKey: 'mweb.tours.home.categories.title',
+        bodyKey: 'mweb.tours.home.categories.body',
       },
       {
         anchor: 'home-filters',
-        title: 'Filters',
-        body: 'Narrow the list by date, price and distance to find something that actually fits your week.',
+        titleKey: 'mweb.tours.home.filters.title',
+        bodyKey: 'mweb.tours.home.filters.body',
       },
       {
         anchor: 'home-notifications',
-        title: 'Notifications',
-        body: 'Booking confirmations, reminders and club updates land here.',
+        titleKey: 'mweb.tours.home.notifications.title',
+        bodyKey: 'mweb.tours.home.notifications.body',
       },
       {
         anchor: 'home-profile',
-        title: 'Your profile',
-        body: 'Your bookings, saved pods, account settings and the ways to earn with Duncit all live behind this.',
+        titleKey: 'mweb.tours.home.profile.title',
+        bodyKey: 'mweb.tours.home.profile.body',
       },
     ],
   },
   {
     id: 'club',
-    title: 'Club Page',
-    caption: 'Following a club and finding its pods — open any club to start',
+    titleKey: 'mweb.tours.club.title',
+    captionKey: 'mweb.tours.club.caption',
     path: '/clubs',
     nativeRoute: 'Home',
     nativeTab: 'Clubs',
     steps: [
       {
-        anchor: 'club-header',
         // The follower count is a clause this step used to promise and only mWeb
         // could keep: on native it sits below the Follow pill, so covering it
         // would have swallowed the next step's target.
-        title: 'The club',
-        body: 'Who runs it and what it is about, in the club’s own words.',
+        anchor: 'club-header',
+        titleKey: 'mweb.tours.club.header.title',
+        bodyKey: 'mweb.tours.club.header.body',
       },
       {
         anchor: 'club-follow',
-        title: 'Follow',
-        body: 'Following puts this club’s new pods in front of you as they are published.',
+        titleKey: 'mweb.tours.club.follow.title',
+        bodyKey: 'mweb.tours.club.follow.body',
       },
       {
         anchor: 'club-pods',
-        title: 'Its pods',
-        body: 'Everything this club has coming up. Tap any pod to book.',
+        titleKey: 'mweb.tours.club.pods.title',
+        bodyKey: 'mweb.tours.club.pods.body',
       },
     ],
   },
   {
     id: 'pod-details',
-    title: 'Pod Details',
-    caption: 'Reading a pod and booking a spot — open any pod to start',
+    titleKey: 'mweb.tours.podDetails.title',
+    captionKey: 'mweb.tours.podDetails.caption',
     path: '/',
     nativeRoute: 'Home',
     steps: [
       {
         anchor: 'pod-summary',
-        title: 'The essentials',
-        body: 'When it runs, where it is and what a spot costs.',
+        titleKey: 'mweb.tours.podDetails.summary.title',
+        bodyKey: 'mweb.tours.podDetails.summary.body',
       },
       {
         anchor: 'pod-spots',
-        title: 'Spots left',
-        body: 'How many places are still open. Popular pods fill up, so this moves.',
+        titleKey: 'mweb.tours.podDetails.spots.title',
+        bodyKey: 'mweb.tours.podDetails.spots.body',
       },
       {
         anchor: 'pod-book',
-        title: 'Book your spot',
-        body: 'Reserve a place here. You will get a ticket by email with a link straight back to this pod.',
+        titleKey: 'mweb.tours.podDetails.book.title',
+        bodyKey: 'mweb.tours.podDetails.book.body',
       },
     ],
   },
   {
     id: 'create-pod',
-    title: 'Create Pod',
-    caption: 'Hosting your own pod, step by step',
+    titleKey: 'mweb.tours.createPod.title',
+    captionKey: 'mweb.tours.createPod.caption',
     path: '/create-pod',
     nativeRoute: 'CreatePod',
     requiredRole: 'HOST',
@@ -126,25 +133,25 @@ export const TOURS: readonly TourDefinition[] = [
     steps: [
       {
         anchor: 'create-pod-steps',
-        title: 'Four steps',
-        body: 'The basics, then where it happens, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+        titleKey: 'mweb.tours.createPod.steps.title',
+        bodyKey: 'mweb.tours.createPod.steps.body',
       },
       {
         anchor: 'create-pod-basics',
-        title: 'Name it well',
-        body: 'This is the line people read first. A description and a cover photo follow it, and both are checked before your pod goes live.',
+        titleKey: 'mweb.tours.createPod.basics.title',
+        bodyKey: 'mweb.tours.createPod.basics.body',
       },
       {
         anchor: 'create-pod-publish',
-        title: 'Pricing, then publish',
-        body: 'This carries you through to the last step, where you set a ticket price and see what you take home after fees. Nothing is published until you press Create Pod.',
+        titleKey: 'mweb.tours.createPod.publish.title',
+        bodyKey: 'mweb.tours.createPod.publish.body',
       },
     ],
   },
   {
     id: 'profile',
-    title: 'Profile',
-    caption: 'Your account, bookings and ways to earn',
+    titleKey: 'mweb.tours.profile.title',
+    captionKey: 'mweb.tours.profile.caption',
     // The menu, not the account screen. Pod history and Earn have never lived on
     // /account — they are menu tiles — so two of these three steps had nothing
     // to point at and the tour did nothing but navigate. The menu is a real
@@ -154,25 +161,25 @@ export const TOURS: readonly TourDefinition[] = [
     steps: [
       {
         anchor: 'profile-details',
-        title: 'Your profile',
-        body: 'Your name and photo. Tap through for the profile other people see, and to keep your details current.',
+        titleKey: 'mweb.tours.profile.details.title',
+        bodyKey: 'mweb.tours.profile.details.body',
       },
       {
         anchor: 'profile-history',
-        title: 'Pod history',
-        body: 'Everything you have booked, past and upcoming, with your tickets.',
+        titleKey: 'mweb.tours.profile.history.title',
+        bodyKey: 'mweb.tours.profile.history.body',
       },
       {
         anchor: 'profile-earn',
-        title: 'Earn with Duncit',
-        body: 'Host a pod, register a venue, list a product or run a club.',
+        titleKey: 'mweb.tours.profile.earn.title',
+        bodyKey: 'mweb.tours.profile.earn.body',
       },
     ],
   },
   {
     id: 'booking',
-    title: 'Booking Flow',
-    caption: 'From holding a spot to holding a ticket — open any booking to start',
+    titleKey: 'mweb.tours.booking.title',
+    captionKey: 'mweb.tours.booking.caption',
     path: '/pod-history',
     nativeRoute: 'PodHistory',
     /*
@@ -185,18 +192,18 @@ export const TOURS: readonly TourDefinition[] = [
     steps: [
       {
         anchor: 'booking-summary',
-        title: 'Your booking',
-        body: 'The pod you booked, when it runs and what the spot cost you.',
+        titleKey: 'mweb.tours.booking.summary.title',
+        bodyKey: 'mweb.tours.booking.summary.body',
       },
       {
         anchor: 'booking-ticket',
-        title: 'Your ticket',
-        body: 'Download your ticket here. The QR code inside it is what gets scanned at the door.',
+        titleKey: 'mweb.tours.booking.ticket.title',
+        bodyKey: 'mweb.tours.booking.ticket.body',
       },
       {
         anchor: 'booking-backout',
-        title: 'Changed your mind?',
-        body: 'You can back out of a pod you have joined. If you paid for it, your refund is released once someone takes the spot.',
+        titleKey: 'mweb.tours.booking.backout.title',
+        bodyKey: 'mweb.tours.booking.backout.body',
       },
     ],
   },

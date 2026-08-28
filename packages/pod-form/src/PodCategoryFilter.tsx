@@ -1,5 +1,6 @@
 import { Alert, Box } from '@mui/material';
 import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
+import { useTranslation } from './i18n/useTranslation';
 
 interface Props {
   value: AdminCategoryValue;
@@ -20,6 +21,7 @@ interface Props {
  * the first time it is opened instead of re-filtering underneath the admin.
  */
 export default function PodCategoryFilter({ value, onChange, matchCount, clubCount }: Readonly<Props>) {
+  const { t } = useTranslation();
   const filtering = !!(value.super_id && value.sub_id);
   return (
     <Box data-testid="pod-category-filter">
@@ -27,12 +29,12 @@ export default function PodCategoryFilter({ value, onChange, matchCount, clubCou
         value={value}
         onChange={onChange}
         direction={{ xs: 'column', md: 'row' }}
-        legend="Pod category"
-        hint="Pick the category first — the club list below is narrowed to it. Leave blank to see every club."
+        legend={t('podForm.autoPod.categoryLegend')}
+        hint={t('podForm.autoPod.filterHint')}
       />
       {filtering && matchCount === 0 && clubCount > 0 && (
         <Alert severity="warning" sx={{ mt: 1 }} data-testid="pod-category-no-clubs">
-          No clubs in this category yet. Clear the category, or create a club for it first.
+          {t('podForm.autoPod.noClubs')}
         </Alert>
       )}
     </Box>

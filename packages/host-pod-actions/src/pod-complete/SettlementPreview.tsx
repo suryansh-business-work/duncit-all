@@ -5,6 +5,7 @@ import { FinanceWaterfallList } from '@duncit/ui';
 import AttendanceRoster from './AttendanceRoster';
 import { buildHostShareLines } from './host-share-lines';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
+import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodSettlement } from '../types';
 
 interface Props {
@@ -53,6 +54,7 @@ export default function SettlementPreview({
   onScan,
   refreshToken,
 }: Readonly<Props>) {
+  const { labels } = useHostPodActionsConfig();
   const [amount, setAmount] = useState(venueBillAmount);
   useEffect(() => {
     const timer = setTimeout(() => setAmount(venueBillAmount), 350);
@@ -77,7 +79,7 @@ export default function SettlementPreview({
       if (loading) return <CircularProgress size={18} />;
       // Show the server's reason instead of silently hiding the calculation.
       const reason =
-        error?.graphQLErrors[0]?.message ?? error?.message ?? 'Enter a bill to preview your share.';
+        error?.graphQLErrors[0]?.message ?? error?.message ?? labels.sharePreviewHint;
       return (
         <Typography
           variant="caption"
@@ -101,7 +103,7 @@ export default function SettlementPreview({
         <AttendanceNote settlement={settlement} />
         <FinanceWaterfallList
           symbol={settlement.currency_symbol}
-          lines={buildHostShareLines(settlement)}
+          lines={buildHostShareLines(settlement, labels)}
         />
         {settlement.waterfall.host_receives < 0 && (
           <Typography variant="caption" color="error" data-testid="settlement-shortfall">

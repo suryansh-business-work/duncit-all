@@ -41,9 +41,14 @@ export type {
   PodFormFinance,
   PodHostOption,
   SearchPodHosts,
+  PodKeyedOption,
   PodMode,
   PodOption,
   PodPlaceCharge,
   PodProductRequest,
   GenerateMeetingLinkInput,
 } from './types';
+// The provider-free translator, for a caller building the schema outside the
+// React tree (a demo, a test, a server-side check).
+export { fallbackT } from './i18n/useTranslation';
+export type { Translate } from './i18n/useTranslation';

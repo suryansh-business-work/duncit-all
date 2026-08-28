@@ -22,6 +22,23 @@ export const UI_BUNDLE: NestedCatalogue = {
     language: {
       label: 'Language',
     },
+    /**
+     * The money waterfall for one pod, line by line. Staff read it in the
+     * portals and the host reads the same shape on their own share, so it is
+     * one set of words rather than two.
+     */
+    waterfall: {
+      customerPaid: 'Customer Paid',
+      duncitRevenue: 'Duncit revenue',
+      gst: '− GST ({pct}%)',
+      hostReceives: 'Host receives',
+      hostSecondary: 'remainder − {pct}% commission',
+      platformFee: '− Platform Fee ({pct}%)',
+      pool: 'Remaining Pool',
+      venuePrice: 'Venue price',
+      venueSecondary:
+        'booked slot price − {pct}% commission → venue receives {receives}',
+    },
     /** A pod's door attendance, as "N/M scanned". */
     attendance: {
       notScanned: 'Not scanned',

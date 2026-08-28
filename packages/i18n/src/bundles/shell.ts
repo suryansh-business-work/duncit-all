@@ -1083,6 +1083,19 @@ export const SHELL_BUNDLE: NestedCatalogue = {
      * and the four dialogs it opens (scan, complete, edit, cancel), plus the
      * edit-and-resubmit flow for a venue-declined pod.
      */
+    // Word-for-word identical to `mweb.hostShare` — the same component draws
+    // both, and the server stores one row per key path so they cannot merge.
+    hostShare: {
+      customerPaid: 'Customer Paid',
+      duncitRevenue: 'Duncit revenue',
+      gst: '− GST ({pct}%)',
+      platformFee: '− Platform Fee ({pct}%)',
+      pool: 'Pool',
+      previewHint: 'Enter a bill to preview your share.',
+      venueReceives: 'Venue receives',
+      venueSlotPrice: 'Venue slot price',
+      youReceive: 'You receive',
+    },
     hostPodActions: {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',

@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 import AttendanceChip from '../src/AttendanceChip';
 import FinanceWaterfallList from '../src/finance-waterfall/FinanceWaterfallList';
 import { buildWaterfallLines, type PodFinanceWaterfall } from '../src/finance-waterfall/waterfall-lines';
+import { fallbackT } from '../src/i18n/useTranslation';
 
 const waterfall: PodFinanceWaterfall = {
   version: 1,
@@ -37,7 +38,7 @@ const waterfall: PodFinanceWaterfall = {
 };
 
 const keys = (hasVenue: boolean, collected?: number) =>
-  buildWaterfallLines(waterfall, '₹', hasVenue, collected).map((line) => line.key);
+  buildWaterfallLines(waterfall, '₹', hasVenue, fallbackT, collected).map((line) => line.key);
 
 describe('buildWaterfallLines', () => {
   it('runs in the order a reader follows the money', () => {
@@ -49,37 +50,37 @@ describe('buildWaterfallLines', () => {
   });
 
   it('leads with what was collected when the caller knows it', () => {
-    const [first] = buildWaterfallLines(waterfall, '₹', false, 1200);
+    const [first] = buildWaterfallLines(waterfall, '₹', false, fallbackT, 1200);
 
     expect(first?.value).toBe(1200);
   });
 
   it('falls back to the settlement basis when nothing was collected separately', () => {
-    const [first] = buildWaterfallLines(waterfall, '₹', false);
+    const [first] = buildWaterfallLines(waterfall, '₹', false, fallbackT);
 
     expect(first?.value).toBe(1000);
   });
 
   it('treats a collected total of zero as a real figure, not as absent', () => {
-    expect(buildWaterfallLines(waterfall, '₹', false, 0)[0]?.value).toBe(0);
+    expect(buildWaterfallLines(waterfall, '₹', false, fallbackT, 0)[0]?.value).toBe(0);
   });
 
   it('spells the percentages into the deduction labels', () => {
-    const byKey = new Map(buildWaterfallLines(waterfall, '₹', true).map((line) => [line.key, line]));
+    const byKey = new Map(buildWaterfallLines(waterfall, '₹', true, fallbackT).map((line) => [line.key, line]));
 
     expect(byKey.get('gst')?.label).toBe('− GST (18%)');
     expect(byKey.get('fee')?.label).toBe('− Platform Fee (10%)');
   });
 
   it('explains the venue line in the caller’s currency', () => {
-    const venue = buildWaterfallLines(waterfall, '$', true).find((line) => line.key === 'venue');
+    const venue = buildWaterfallLines(waterfall, '$', true, fallbackT).find((line) => line.key === 'venue');
 
     expect(venue?.secondary).toContain('5% commission');
     expect(venue?.secondary).toContain('$285.00');
   });
 
   it('marks the host line as the one to read first', () => {
-    const host = buildWaterfallLines(waterfall, '₹', true).find((line) => line.key === 'host');
+    const host = buildWaterfallLines(waterfall, '₹', true, fallbackT).find((line) => line.key === 'host');
 
     expect(host?.strong).toBe(true);
     expect(host?.value).toBe(400);
@@ -94,7 +95,7 @@ describe('buildWaterfallLines', () => {
 
 describe('FinanceWaterfallList', () => {
   it('renders every line with its money', () => {
-    render(<FinanceWaterfallList lines={buildWaterfallLines(waterfall, '₹', true)} symbol="₹" />);
+    render(<FinanceWaterfallList lines={buildWaterfallLines(waterfall, '₹', true, fallbackT)} symbol="₹" />);
 
     expect(screen.getByText('Customer Paid')).toBeInTheDocument();
     expect(screen.getByText('Duncit revenue')).toBeInTheDocument();

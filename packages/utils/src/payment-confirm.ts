@@ -123,7 +123,11 @@ async function readQuietly<T>(
     // this block other than the return below is fetchStatus throwing where it
     // stands — before a deadline was ever armed, which is why the cleanup sits
     // on the settled path rather than in a finally.
-    let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
+    // Definite assignment, not `| undefined`: the executor below runs
+    // synchronously, so by the time the race settles there IS a timer. React
+    // Native's clearTimeout takes a required id, so a widened type here fails
+    // the mobile typecheck even though the DOM lib tolerates it.
+    let timer!: ReturnType<typeof globalThis.setTimeout>;
     const read = fetchStatus().catch(() => null);
     const deadline = new Promise<null>((resolve) => {
       timer = globalThis.setTimeout(() => resolve(null), timeoutMs);

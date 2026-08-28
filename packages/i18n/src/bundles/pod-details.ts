@@ -36,6 +36,8 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       ratings: 'Ratings',
     },
     podFinanceSection: {
+      breakdownUnavailable: 'Finance breakdown is not available for this pod.',
+      noSettlement: 'No settlement recorded for this pod yet.',
       bookings: 'Bookings',
       collectedTotal: 'Collected total',
       finance: 'Finance',

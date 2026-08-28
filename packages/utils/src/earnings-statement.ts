@@ -82,11 +82,26 @@ const TOLERANCE = 0.02;
 const sumDeductions = (lines: StatementLine[]) =>
   round2(lines.filter((line) => line.deduction).reduce((total, line) => total + line.amount, 0));
 
+/**
+ * The calling surface's translator.
+ *
+ * Every word below — the section titles, the row labels and the formulas that
+ * make a row hand-verifiable — lives in `earnings.statement.*` (rule 38). The
+ * keys are written out in full rather than composed, because
+ * `verify-translation-keys.mjs` greps source for the literal string.
+ */
+export type EarningsTranslate = (
+  key: string,
+  options?: { vars?: Record<string, string | number> },
+) => string;
+
 export interface EarningsStatementOptions {
   /** Whether a venue slot is attached (renders the Venue Charges section). */
   has_venue: boolean;
   /** Currency symbol used inside formula strings, e.g. '₹'. */
   symbol: string;
+  /** Resolves the statement's copy in the reader's language. */
+  t: EarningsTranslate;
 }
 
 /**
@@ -98,33 +113,46 @@ export function buildEarningsStatement(
   w: EarningsWaterfall,
   options: EarningsStatementOptions
 ): EarningsStatement {
+  const { t } = options;
   const money = (value: number) => formatStatementMoney(value, options.symbol);
   // The engine (breakdown.math.ts) charges no commission when host_amount <= 0.
   const commissionFormula =
     w.host_amount > 0
-      ? `${money(w.host_amount)} × ${w.host_commission_pct}% (your remainder)`
-      : 'No commission — host remainder is not positive';
+      ? t('earnings.statement.commissionFormula', {
+          vars: { host: money(w.host_amount), pct: w.host_commission_pct },
+        })
+      : t('earnings.statement.noCommissionFormula');
   // Duncit's cut of the VENUE's money is charged on the venue's slot price and
   // is already inside it, so the host's statement states it without deducting
   // it a second time: `venue_receives` is what the venue is left with.
-  const venueCommissionFormula = `${money(w.venue_amount)} × ${w.venue_commission_pct}% of the slot price above — the venue receives ${money(w.venue_receives)}`;
+  const venueCommissionFormula = t('earnings.statement.venueCommissionFormula', {
+    vars: {
+      venue: money(w.venue_amount),
+      pct: w.venue_commission_pct,
+      receives: money(w.venue_receives),
+    },
+  });
 
   const taxes: StatementSection = {
     key: 'taxes',
-    title: 'Taxes',
+    title: t('earnings.statement.taxesTitle'),
     lines: [
       {
         key: 'taxable',
-        label: 'Taxable Amount',
+        label: t('earnings.statement.taxableLabel'),
         amount: w.net_amount,
-        formula: `${money(w.amount)} − ${money(w.gst_amount)} GST (prices are GST-inclusive)`,
+        formula: t('earnings.statement.taxableFormula', {
+          vars: { amount: money(w.amount), gst: money(w.gst_amount) },
+        }),
         deduction: false,
       },
       {
         key: 'gst',
-        label: `GST @${w.gst_pct}%`,
+        label: t('earnings.statement.gstLabel', { vars: { pct: w.gst_pct } }),
         amount: w.gst_amount,
-        formula: `${money(w.net_amount)} × ${w.gst_pct}%`,
+        formula: t('earnings.statement.gstFormula', {
+          vars: { net: money(w.net_amount), pct: w.gst_pct },
+        }),
         deduction: true,
       },
     ],
@@ -133,18 +161,22 @@ export function buildEarningsStatement(
 
   const platform: StatementSection = {
     key: 'platform',
-    title: 'Platform Charges',
+    title: t('earnings.statement.platformTitle'),
     lines: [
       {
         key: 'platform-fee',
-        label: `Platform Fee @${w.platform_fee_pct}%`,
+        label: t('earnings.statement.platformFeeLabel', { vars: { pct: w.platform_fee_pct } }),
         amount: w.platform_fee_amount,
-        formula: `${money(w.net_amount)} × ${w.platform_fee_pct}%`,
+        formula: t('earnings.statement.platformFeeFormula', {
+          vars: { net: money(w.net_amount), pct: w.platform_fee_pct },
+        }),
         deduction: true,
       },
       {
         key: 'duncit-commission',
-        label: `Duncit Commission @${w.host_commission_pct}%`,
+        label: t('earnings.statement.duncitCommissionLabel', {
+          vars: { pct: w.host_commission_pct },
+        }),
         amount: w.host_commission_amount,
         formula: commissionFormula,
         deduction: true,
@@ -158,13 +190,15 @@ export function buildEarningsStatement(
   if (w.club_admin_amount > 0) {
     sections.push({
       key: 'club',
-      title: 'Club Charges',
+      title: t('earnings.statement.clubTitle'),
       lines: [
         {
           key: 'club-admin',
-          label: `Club Admin Fee @${w.club_admin_pct}%`,
+          label: t('earnings.statement.clubAdminLabel', { vars: { pct: w.club_admin_pct } }),
           amount: w.club_admin_amount,
-          formula: `${money(w.pool_amount)} × ${w.club_admin_pct}%`,
+          formula: t('earnings.statement.clubAdminFormula', {
+            vars: { pool: money(w.pool_amount), pct: w.club_admin_pct },
+          }),
           deduction: true,
         },
       ],
@@ -176,9 +210,9 @@ export function buildEarningsStatement(
     const venueLines: StatementLine[] = [
       {
         key: 'venue-slot',
-        label: 'Venue Slot Price',
+        label: t('earnings.statement.venueSlotLabel'),
         amount: w.venue_amount,
-        formula: 'Fixed booked slot price (deducted once per pod)',
+        formula: t('earnings.statement.venueSlotFormula'),
         deduction: true,
       },
     ];
@@ -187,13 +221,20 @@ export function buildEarningsStatement(
     if (w.venue_commission_amount > 0) {
       venueLines.push({
         key: 'venue-commission',
-        label: `Duncit Commission from Venue @${w.venue_commission_pct}%`,
+        label: t('earnings.statement.venueCommissionLabel', {
+          vars: { pct: w.venue_commission_pct },
+        }),
         amount: w.venue_commission_amount,
         formula: venueCommissionFormula,
         deduction: false,
       });
     }
-    sections.push({ key: 'venue', title: 'Venue Charges', lines: venueLines, total: 0 });
+    sections.push({
+      key: 'venue',
+      title: t('earnings.statement.venueTitle'),
+      lines: venueLines,
+      total: 0,
+    });
   }
 
   for (const section of sections) {
@@ -209,9 +250,11 @@ export function buildEarningsStatement(
 
   return {
     collection: {
-      label: 'Total collection',
+      label: t('earnings.statement.collectionLabel'),
       amount: w.amount,
-      included_gst_note: `Includes GST ${money(w.gst_amount)} — prices are GST-inclusive`,
+      included_gst_note: t('earnings.statement.includedGstNote', {
+        vars: { gst: money(w.gst_amount) },
+      }),
     },
     sections,
     total_deductions: totalDeductions,

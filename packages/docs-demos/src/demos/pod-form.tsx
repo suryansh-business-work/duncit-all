@@ -11,6 +11,7 @@ import {
   makePodSchema,
   type PodFormConfig,
   type PodFormValues,
+  fallbackT,
 } from '@duncit/pod-form';
 import { defineDemo, defineDemos } from '../types';
 
@@ -71,12 +72,14 @@ export default defineDemos('pod-form', [
       ],
     },
     compute: (mock) => {
-      const schema = makePodSchema(mock.config);
+      const schema = makePodSchema(mock.config, fallbackT);
       const parsed = schema.safeParse(mock.values);
       return {
-        'Pod types offered': POD_TYPES.map((option) => option.label),
-        'Occurrences': OCCURRENCES.map((option) => option.label),
-        'Modes': POD_MODES.map((option) => option.label),
+        // The menus name their copy rather than carrying it (rule 38), so a
+        // reader sees the same words the form draws.
+        'Pod types offered': POD_TYPES.map((option) => fallbackT(option.labelKey)),
+        'Occurrences': OCCURRENCES.map((option) => fallbackT(option.labelKey)),
+        'Modes': POD_MODES.map((option) => fallbackT(option.labelKey)),
         'This draft is valid': parsed.success,
         'What is still missing': issueLines(parsed),
         'Venue extras total': getProductRequestTotal(mock.requests, mock.products),
@@ -113,7 +116,7 @@ export default defineDemos('pod-form', [
       },
     },
     compute: (mock) => {
-      const parsed = makePodSchema(mock.config).safeParse(mock.values);
+      const parsed = makePodSchema(mock.config, fallbackT).safeParse(mock.values);
       return {
         'Pod type is fixed to': AUTO_POD_TYPE,
         'This template is valid': parsed.success,

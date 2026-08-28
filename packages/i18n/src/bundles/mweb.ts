@@ -2235,6 +2235,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
      * and the four dialogs it opens (scan, complete, edit, cancel), plus the
      * edit-and-resubmit flow for a venue-declined pod.
      */
+    // The settlement waterfall in the HOST's voice, on the screen where they
+    // complete their own pod. `shell.hostShare` below must stay word-for-word
+    // identical — the same component draws both.
+    hostShare: {
+      customerPaid: 'Customer Paid',
+      duncitRevenue: 'Duncit revenue',
+      gst: '− GST ({pct}%)',
+      platformFee: '− Platform Fee ({pct}%)',
+      pool: 'Pool',
+      previewHint: 'Enter a bill to preview your share.',
+      venueReceives: 'Venue receives',
+      venueSlotPrice: 'Venue slot price',
+      youReceive: 'You receive',
+    },
     hostPodActions: {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',
@@ -3446,11 +3460,139 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       ticketDetails: 'Ticket Details',
     },
     tourGuide: {
+      back: 'Back',
       completed: 'Completed',
+      intro: 'Take a guided walkthrough of any screen, as often as you like.',
+      restart: 'Restart',
+      restartAria: 'Restart the {name} tour',
+      start: 'Start',
+      startAria: 'Start the {name} tour',
       tourGuide: 'Tour Guide',
     },
+    // Every guided walkthrough. @duncit/tours holds the structure (anchors,
+    // routes, roles) and points at these keys; the copy lives here so both
+    // overlays — mWeb's Joyride and the native tour guide — read one wording.
     tours: {
+      booking: {
+        backout: {
+          body: 'You can back out of a pod you have joined. If you paid for it, your refund is released once someone takes the spot.',
+          title: 'Changed your mind?',
+        },
+        caption: 'From holding a spot to holding a ticket — open any booking to start',
+        summary: {
+          body: 'The pod you booked, when it runs and what the spot cost you.',
+          title: 'Your booking',
+        },
+        ticket: {
+          body: 'Download your ticket here. The QR code inside it is what gets scanned at the door.',
+          title: 'Your ticket',
+        },
+        title: 'Booking Flow',
+      },
+      club: {
+        caption: 'Following a club and finding its pods — open any club to start',
+        follow: {
+          body: 'Following puts this club’s new pods in front of you as they are published.',
+          title: 'Follow',
+        },
+        header: {
+          body: 'Who runs it and what it is about, in the club’s own words.',
+          title: 'The club',
+        },
+        pods: {
+          body: 'Everything this club has coming up. Tap any pod to book.',
+          title: 'Its pods',
+        },
+        title: 'Club Page',
+      },
+      close: 'Close',
+      createPod: {
+        basics: {
+          body: 'This is the line people read first. A description and a cover photo follow it, and both are checked before your pod goes live.',
+          title: 'Name it well',
+        },
+        caption: 'Hosting your own pod, step by step',
+        publish: {
+          body: 'This carries you through to the last step, where you set a ticket price and see what you take home after fees. Nothing is published until you press Create Pod.',
+          title: 'Pricing, then publish',
+        },
+        steps: {
+          body: 'The basics, then where it happens, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+          title: 'Four steps',
+        },
+        title: 'Create Pod',
+      },
+      finish: 'Finish',
+      finishTour: 'Finish tour',
+      home: {
+        caption: 'Pods, clubs, search and everything on your home screen',
+        categories: {
+          body: 'Browse by interest — sports, music, food and the rest. Picking one narrows everything below.',
+          title: 'Categories',
+        },
+        clubs: {
+          body: 'Clubs are the communities that run pods. Follow a club to keep seeing what it puts on.',
+          title: 'What are Clubs?',
+        },
+        filters: {
+          body: 'Narrow the list by date, price and distance to find something that actually fits your week.',
+          title: 'Filters',
+        },
+        notifications: {
+          body: 'Booking confirmations, reminders and club updates land here.',
+          title: 'Notifications',
+        },
+        pods: {
+          body: 'Pods are the meetups you can join — a game, a class, a jam. Tap one to see the details and book a spot.',
+          title: 'What are Pods?',
+        },
+        profile: {
+          body: 'Your bookings, saved pods, account settings and the ways to earn with Duncit all live behind this.',
+          title: 'Your profile',
+        },
+        search: {
+          body: 'Look for a pod, a club or a place by name whenever you know what you are after.',
+          title: 'Search',
+        },
+        title: 'Home',
+      },
+      next: 'Next',
+      nextStep: 'Next step',
+      podDetails: {
+        book: {
+          body: 'Reserve a place here. You will get a ticket by email with a link straight back to this pod.',
+          title: 'Book your spot',
+        },
+        caption: 'Reading a pod and booking a spot — open any pod to start',
+        spots: {
+          body: 'How many places are still open. Popular pods fill up, so this moves.',
+          title: 'Spots left',
+        },
+        summary: {
+          body: 'When it runs, where it is and what a spot costs.',
+          title: 'The essentials',
+        },
+        title: 'Pod Details',
+      },
+      previous: 'Previous',
       previousStep: 'Previous step',
+      profile: {
+        caption: 'Your account, bookings and ways to earn',
+        details: {
+          body: 'Your name and photo. Tap through for the profile other people see, and to keep your details current.',
+          title: 'Your profile',
+        },
+        earn: {
+          body: 'Host a pod, register a venue, list a product or run a club.',
+          title: 'Earn with Duncit',
+        },
+        history: {
+          body: 'Everything you have booked, past and upcoming, with your tickets.',
+          title: 'Pod history',
+        },
+        title: 'Profile',
+      },
+      skip: 'Skip',
       skipTour: 'Skip tour',
     },
     venueDetailsPage: {

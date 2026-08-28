@@ -41,15 +41,23 @@ describe('readToken', () => {
   });
 
   it('answers null rather than throwing when localStorage itself is unavailable', () => {
-    const original = globalThis.localStorage.getItem;
-    globalThis.localStorage.getItem = () => {
-      throw new Error('storage is disabled');
-    };
+    // jsdom's `localStorage` is Proxy-backed — overriding just `.getItem` on
+    // the instance is silently ignored, so the global binding itself has to
+    // be swapped out to force a genuine throw.
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: () => {
+          throw new Error('storage is disabled');
+        },
+      },
+    });
 
     try {
       expect(readToken({ graphqlUrl: 'https://api.test/graphql', tokenKey: 'tok_key' })).toBeNull();
     } finally {
-      globalThis.localStorage.getItem = original;
+      if (original) Object.defineProperty(globalThis, 'localStorage', original);
     }
   });
 });

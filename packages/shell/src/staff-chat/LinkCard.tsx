@@ -18,7 +18,7 @@ interface Props {
 /** Which console this page belongs to, from its own address. */
 function currentPortal(): string {
   const host = globalThis.window?.location?.hostname ?? '';
-  return host.replace(/^staging\./, '').split('.')[0] ?? '';
+  return host.replace(/^staging\./, '').split('.')[0];
 }
 
 /**

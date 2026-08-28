@@ -31,6 +31,7 @@ const validClub: ClubFormValues = {
   what_we_do: ['We hike every Sunday'],
   perks: ['Free trail snacks'],
   values: ['Leave no trace'],
+  admin_user_ids: ['admin-1'],
 };
 
 const messagesFor = (input: ClubFormValues) => {

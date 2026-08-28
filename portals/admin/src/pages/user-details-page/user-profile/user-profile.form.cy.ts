@@ -58,9 +58,11 @@ describe('toUpdateUserInput', () => {
     expect(input.assigned_zones).toEqual(['HSR', 'Indiranagar', 'Whitefield']);
   });
 
-  it('omits empty optional fields', () => {
+  it('omits empty optional location fields, but sends a blanked email rather than dropping it', () => {
     const input = toUpdateUserInput({ ...valid, email: '', city: '', zone: '', bio: '', profile_photo: '' });
-    expect(input.email).toBeUndefined();
+    // Email is a contact field like phone/WhatsApp: sent whatever it holds, blank
+    // included, so clearing it on the form actually clears it on the server.
+    expect(input.email).toBe('');
     expect(input.city).toBeUndefined();
     expect(input.bio).toBeUndefined();
   });

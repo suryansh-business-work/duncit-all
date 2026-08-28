@@ -55,6 +55,7 @@ describe('getUsersColumns / column set', () => {
       'role',
       'last_login_provider',
       'status',
+      'google_email',
       'city',
       'zone',
       'last_login_at',
@@ -64,16 +65,17 @@ describe('getUsersColumns / column set', () => {
 
   it('labels the headers the grid shows', () => {
     expect(Object.fromEntries(buildColumns().map((c) => [c.field, c.headerName]))).toEqual({
-      first_name: 'User',
-      phone_number: 'Contact',
-      roles: 'Roles',
-      role: 'Role',
-      last_login_provider: 'Login Method',
-      status: 'Status',
-      city: 'City',
-      zone: 'Zone',
-      last_login_at: 'Last Login',
-      created_at: 'Created',
+      first_name: 'admin.users.colUser',
+      phone_number: 'admin.users.colContact',
+      roles: 'admin.roles.title',
+      role: 'admin.users.colRole',
+      last_login_provider: 'admin.users.colLoginMethod',
+      status: 'shell.common.status',
+      google_email: 'admin.users.googleAccount',
+      city: 'admin.profile.city',
+      zone: 'admin.profile.zone',
+      last_login_at: 'admin.users.colLastLogin',
+      created_at: 'shell.common.created',
     });
   });
 
@@ -82,7 +84,7 @@ describe('getUsersColumns / column set', () => {
       buildColumns()
         .filter((c) => c.hide)
         .map((c) => c.field),
-    ).toEqual(['role', 'city', 'zone', 'last_login_at']);
+    ).toEqual(['role', 'google_email', 'city', 'zone', 'last_login_at']);
   });
 
   it('feeds the injected role catalog into the Role filter', () => {
@@ -104,8 +106,8 @@ describe('getUsersColumns / column set', () => {
     expect(columnBy('last_login_provider').filter).toEqual({
       type: 'select',
       options: [
-        { value: 'GOOGLE', label: 'Google' },
-        { value: 'EMAIL', label: 'Email' },
+        { value: 'GOOGLE', label: 'admin.users.google' },
+        { value: 'EMAIL', label: 'shell.common.email' },
       ],
     });
   });

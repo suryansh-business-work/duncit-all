@@ -50,6 +50,15 @@ describe('OtherPortalsDialog', () => {
     expect(screen.queryByText('Admin')).not.toBeInTheDocument();
   });
 
+  it('clears the category filter when "All" is clicked again', async () => {
+    render(<OtherPortalsDialog open onClose={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Growth' }));
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'All' }));
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('CRM')).toBeInTheDocument();
+  });
+
   it('navigates to the resolved portal URL when a card is clicked', async () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     render(<OtherPortalsDialog open onClose={vi.fn()} />);

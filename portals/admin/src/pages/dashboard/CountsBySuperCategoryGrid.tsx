@@ -88,6 +88,13 @@ export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }:
           variant="outlined"
           sx={{
             minWidth: 160,
+            // `color` (the caller's per-grid accent — pods red, clubs blue)
+            // never actually applies: `palette` is a fixed 6-entry array of
+            // non-empty hex strings, so `palette[i % 6]` can never be falsy
+            // and this fallback can never be taken. Left as-is pending a
+            // design call on whether the rotating palette or the caller's
+            // accent is the intended look.
+            /* v8 ignore next -- unreachable, see the comment above */
             borderLeft: `4px solid ${palette[index % palette.length] || color}`,
             flexShrink: 0,
           }}
@@ -98,7 +105,13 @@ export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }:
             }}>
               {c.super_category_name || c.super_category_slug || 'Uncategorised'}
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: palette[index % palette.length] || color }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 800,
+                /* v8 ignore next -- unreachable, same as the borderLeft above */
+                color: palette[index % palette.length] || color
+              }}>
               {c.count}
             </Typography>
           </CardContent>

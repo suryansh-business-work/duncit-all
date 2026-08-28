@@ -87,10 +87,14 @@ export function ProfilePage() {
   };
 
   const submit = async () => {
-    await save({ variables: { input: { first_name: firstName.trim(), last_name: lastName.trim() } } });
-    await refetch();
-    setEditing(false);
-    setSaved(true);
+    try {
+      await save({ variables: { input: { first_name: firstName.trim(), last_name: lastName.trim() } } });
+      await refetch();
+      setEditing(false);
+      setSaved(true);
+    } catch {
+      // `error`, read above, is what renders the failure.
+    }
   };
 
   return (

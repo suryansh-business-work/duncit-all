@@ -96,6 +96,8 @@ describe('CategoriesPage', () => {
         description: '',
         media: [],
         sort_order: 0,
+        gift_card_image_front: '',
+        gift_card_image_back: '',
       }),
       superList([human, catNode({ id: 's2', name: 'Bird', level: 'SUPER' })]),
     ]);
@@ -110,7 +112,7 @@ describe('CategoriesPage', () => {
     expect(await screen.findByText('Saved')).toBeTruthy();
     await waitFor(() => expect(screen.queryByText('New Super Category')).toBeNull());
     // The refetch put the new row in the column.
-    expect(screen.getByText('Bird')).toBeTruthy();
+    expect(await screen.findByText('Bird')).toBeTruthy();
   });
 
   it('opens an existing row prefilled and updates it', async () => {
@@ -133,6 +135,8 @@ describe('CategoriesPage', () => {
         media: [{ url: 'https://cdn.test/a.jpg', type: 'IMAGE' }],
         sort_order: 4,
         is_active: true,
+        gift_card_image_front: '',
+        gift_card_image_back: '',
       }),
       superList([catNode({ id: 's1', name: 'Humans', level: 'SUPER' })]),
     ]);
@@ -170,6 +174,8 @@ describe('CategoriesPage', () => {
               description: '',
               media: [],
               sort_order: 0,
+              gift_card_image_front: '',
+              gift_card_image_back: '',
             },
           },
         },
@@ -267,6 +273,8 @@ describe('CategoriesPage', () => {
         media: [],
         sort_order: 0,
         is_active: true,
+        gift_card_image_front: '',
+        gift_card_image_back: '',
         allow_co_hosts: false,
         max_co_hosts: 1,
         // A null min_pax from the server reads as "no minimum" in the form.

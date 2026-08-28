@@ -103,10 +103,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
-      # The two compile-time gates above (fallback icons, translation keys) are
-      # NOT tests and stay on; only the package suites are paused.
-      #
       # No --no-bail and no continue-on-error: a package that misses its own
       # declared threshold must fail the build, which is the whole point.
       #
@@ -117,8 +113,8 @@ jobs:
       # push event and failed on the pull_request event. Serialising costs a
       # little wall-clock on a gate that is nowhere near the critical path, and
       # buys a signal that means what it says.
-      # - name: Package suites + coverage thresholds
-      #   run: pnpm --workspace-concurrency=1 --filter "./packages/**" --if-present test:coverage
+      - name: Package suites + coverage thresholds
+        run: pnpm --workspace-concurrency=1 --filter "./packages/**" --if-present test:coverage
 
       # The docs site reads packages/*/docs/index.mdx through a strict content
       # collection, so this is also what validates that frontmatter. Without it

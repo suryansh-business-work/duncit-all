@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makePodSchema, type PodFormConfig } from '@duncit/pod-form';
+import { fallbackT, makePodSchema, type PodFormConfig } from '@duncit/pod-form';
 
 const adminConfig: PodFormConfig = {
   showHosts: true,
@@ -15,7 +15,7 @@ const adminConfig: PodFormConfig = {
   showReel: true,
 };
 
-const podFormSchema = makePodSchema(adminConfig);
+const podFormSchema = makePodSchema(adminConfig, fallbackT);
 
 const base = {
   pod_title: 'Sunday Hike',

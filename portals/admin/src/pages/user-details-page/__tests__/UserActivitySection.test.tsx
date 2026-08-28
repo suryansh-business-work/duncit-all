@@ -156,7 +156,9 @@ describe('UserActivitySection — year summary', () => {
     await waitFor(() =>
       expect(screen.getByText(`12 visits recorded in ${YEAR}.`)).toBeInTheDocument(),
     );
-    fireEvent.mouseDown(screen.getByLabelText('Year'));
+    // Not getByLabelText: the "Delete Day" DateField's own Year section carries
+    // an identical aria-label="Year", so only the role narrows it to this select.
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Year' }));
     fireEvent.click(within(screen.getByRole('listbox')).getByText(String(YEAR - 1)));
 
     await waitFor(() =>

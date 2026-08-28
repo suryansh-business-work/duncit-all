@@ -31,9 +31,18 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  // App.tsx pulls in the entire router and every page behind it, so on a cold
+  // Vite transform (the very first import of most of this workspace) it alone
+  // can take longer than the default 5s test timeout — that is genuinely how
+  // long the transform takes, not a hang, so the fix is a longer budget rather
+  // than a smaller check.
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    45000
+  );
 });

@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { formatDateTime } from '@duncit/app-settings';
 import EventTicketsTable from '../EventTicketsTable';
 import type { EventTicketRow } from '../queries';
 
@@ -10,8 +11,7 @@ const WHEN = '2026-04-11T13:45:00.000Z';
 const CHECKED = '2026-04-11T14:02:00.000Z';
 const CREATED = '2026-04-01T07:00:00.000Z';
 
-const humanDate = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+const humanDate = (iso: string) => formatDateTime(iso);
 
 const makeTicket = (over: Partial<EventTicketRow> = {}): EventTicketRow => ({
   id: 't1',

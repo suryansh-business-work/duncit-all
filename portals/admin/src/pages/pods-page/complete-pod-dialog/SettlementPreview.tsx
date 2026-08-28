@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import type { SettlementPreviewProps } from './complete-pod.types';
 
 /** Live waterfall preview of the settlement for the pod being completed. */
 export default function SettlementPreview({ podId, venueBillAmount, hostUserId }: Readonly<SettlementPreviewProps>) {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState(venueBillAmount);
   useEffect(() => {
     const timer = setTimeout(() => setAmount(venueBillAmount), 350);
@@ -30,7 +32,7 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
         </Typography>
       );
     }
-    const lines = buildWaterfallLines(s.waterfall, s.currency_symbol, s.has_venue, s.collected_total);
+    const lines = buildWaterfallLines(s.waterfall, s.currency_symbol, s.has_venue, t, s.collected_total);
     return (
       <Stack spacing={1}>
         <FinanceWaterfallList symbol={s.currency_symbol} lines={lines} />

@@ -80,7 +80,9 @@ function offsetMinutes(shortOffset: string): number {
   const match = GMT_OFFSET.exec(shortOffset);
   // 'GMT' and 'UTC' are the zero offset, written without one.
   if (!match) return 0;
-  const total = Number.parseInt(match[2] ?? '0', 10) * 60 + Number.parseInt(match[3] ?? '0', 10);
+  // match[2] is mandatory in the pattern above — only the minutes group is
+  // optional, for a whole-hour offset like 'GMT+14'.
+  const total = Number.parseInt(match[2], 10) * 60 + Number.parseInt(match[3] ?? '0', 10);
   return match[1] === '-' ? -total : total;
 }
 

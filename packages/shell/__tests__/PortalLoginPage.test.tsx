@@ -14,21 +14,38 @@ vi.mock('react-router-dom', async (orig) => {
 });
 
 type LoginProps = {
-  config: { brandName: string; contactEmail?: string };
+  config: { brandName: string; contactEmail?: string; tagline: string };
   errorMessage?: string | null;
   loading?: boolean;
   onSubmit: (v: { email: string; password: string }) => void;
   footerSlot?: ReactNode;
 };
 vi.mock('@duncit/user-context', () => ({
-  LoginScreen: ({ config, errorMessage, loading, onSubmit, footerSlot }: LoginProps) => (
+  LoginScreen: ({ config, errorMessage, loading, onSubmit, footerSlot, altSlot }: LoginProps & { altSlot?: ReactNode }) => (
     <div>
       <span data-testid="brand">{config.brandName}</span>
       <span data-testid="contact">{config.contactEmail ?? ''}</span>
+      <span data-testid="tagline">{config.tagline}</span>
       <span data-testid="err">{errorMessage}</span>
       <span data-testid="loading">{String(!!loading)}</span>
       <button onClick={() => onSubmit({ email: 'a@b.c', password: 'pw' })}>submit</button>
       <div data-testid="footer">{footerSlot}</div>
+      <div data-testid="alt">{altSlot}</div>
+    </div>
+  ),
+}));
+
+type OtpProps = {
+  onRequestCode: (email: string) => Promise<void>;
+  onSubmitCode: (email: string, otp: string) => Promise<void>;
+  errorMessage?: string | null;
+};
+vi.mock('../src/portal-login/OtpLoginPanel', () => ({
+  default: ({ onRequestCode, onSubmitCode, errorMessage }: OtpProps) => (
+    <div>
+      <span data-testid="otp-err">{errorMessage}</span>
+      <button onClick={() => onRequestCode('a@b.c').catch(() => undefined)}>request-code</button>
+      <button onClick={() => onSubmitCode('a@b.c', '123456')}>submit-code</button>
     </div>
   ),
 }));
@@ -148,6 +165,14 @@ describe('PortalLoginPage', () => {
     expect(session.setToken).toHaveBeenCalledWith('T');
   });
 
+  it('resolves the tagline through the translator once a key is given, rather than the literal', () => {
+    mockMutation.mockReturnValue([vi.fn(), { loading: false }] as never);
+    renderPage({ appConfig: { ...appConfig, taglineKey: 'shell.chat.thread.today' } });
+
+    // A real key resolves through the catalogue, not the config's own literal.
+    expect(screen.getByTestId('tagline')).not.toHaveTextContent(appConfig.tagline);
+  });
+
   it('renders the ?denied=1 banner while the gate is active', () => {
     mockMutation.mockReturnValue([vi.fn(), { loading: false }] as never);
     renderPage({}, ['/login?denied=1']);
@@ -158,5 +183,69 @@ describe('PortalLoginPage', () => {
     mockMutation.mockReturnValue([vi.fn(), { loading: false }] as never);
     renderPage({ skipAccessGate: true }, ['/login?denied=1']);
     expect(screen.getByTestId('err')).toBeEmptyDOMElement();
+  });
+
+  it('requests a login code successfully, without touching the error banner', async () => {
+    const u = userEvent.setup();
+    const requestOtp = vi.fn().mockResolvedValue({ data: { requestPortalLoginOtp: { ok: true } } });
+    mockMutation
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never)
+      .mockReturnValueOnce([requestOtp, { loading: false }] as never)
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never);
+    renderPage({});
+
+    await u.click(screen.getByText('request-code'));
+
+    expect(requestOtp).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('otp-err')).toBeEmptyDOMElement();
+  });
+
+  it('requests a login code, and reports plus rethrows a failure to request one', async () => {
+    const u = userEvent.setup();
+    const requestOtp = vi.fn().mockRejectedValue(new Error('too many requests'));
+    mockMutation
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never)
+      .mockReturnValueOnce([requestOtp, { loading: false }] as never)
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never);
+    renderPage({});
+
+    await u.click(screen.getByText('request-code'));
+
+    expect(requestOtp).toHaveBeenCalledWith({ variables: { input: { email: 'a@b.c', portal_key: 'crm' } } });
+    expect(await screen.findByTestId('otp-err')).toHaveTextContent('DEF:too many requests');
+  });
+
+  it('logs in with a submitted code, the same way a password would', async () => {
+    const u = userEvent.setup();
+    const otpLogin = vi.fn().mockResolvedValue({ data: { loginWithPortalOtp: { token: 'T', user: { roles: ['ADMIN'] } } } });
+    mockMutation
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never)
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never)
+      .mockReturnValueOnce([otpLogin, { loading: false }] as never);
+    const session = makeSession(true);
+    renderPage({ session });
+
+    await u.click(screen.getByText('submit-code'));
+
+    expect(otpLogin).toHaveBeenCalledWith({
+      variables: { input: { email: 'a@b.c', otp: '123456', portal_key: 'crm' } },
+    });
+    expect(session.setToken).toHaveBeenCalledWith('T');
+    expect(navSpy).toHaveBeenCalledWith('/', { replace: true });
+  });
+
+  it('reports a submitted code that the server refuses, without rethrowing it', async () => {
+    const u = userEvent.setup();
+    const otpLogin = vi.fn().mockRejectedValue(new Error('wrong code'));
+    mockMutation
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never)
+      .mockReturnValueOnce([vi.fn(), { loading: false }] as never)
+      .mockReturnValueOnce([otpLogin, { loading: false }] as never);
+    renderPage({});
+
+    await expect(u.click(screen.getByText('submit-code'))).resolves.toBeUndefined();
+
+    expect(await screen.findByTestId('otp-err')).toHaveTextContent('DEF:wrong code');
+    expect(navSpy).not.toHaveBeenCalled();
   });
 });

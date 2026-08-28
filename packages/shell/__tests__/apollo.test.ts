@@ -53,10 +53,12 @@ vi.mock('@apollo/client/link/retry', () => ({
 vi.mock('@duncit/user-core', () => ({
   getOrCreateDuid: () => 'DUID-1',
   SURFACE_HEADER: 'x-duncit-surface',
+  APP_HEADER: 'x-duncit-app',
   NO_REDIS_HEADER: 'x-no-redis',
-  resolveNoRedisFlag: () => false,
+  resolveNoRedisFlag: vi.fn(() => false),
 }));
 
+import { resolveNoRedisFlag } from '@duncit/user-core';
 import { apolloErrorLink, createApolloClient } from '../src/lib/apollo';
 
 describe('apolloErrorLink', () => {
@@ -105,6 +107,23 @@ describe('createApolloClient', () => {
   it('sends the surface a caller declares (admin) instead of the PORTAL default', () => {
     createApolloClient({ graphqlUrl: 'u', getToken: () => null, includeDuid: false, surface: 'ADMIN_PORTAL' });
     expect(cap.authFn?.({}, {})?.headers).toEqual({ 'x-duncit-surface': 'ADMIN_PORTAL' });
+  });
+
+  it('sends the console key as x-duncit-app when the caller declares one', () => {
+    createApolloClient({ graphqlUrl: 'u', getToken: () => null, includeDuid: false, app: 'crm' });
+    expect(cap.authFn?.({}, {})?.headers).toEqual({
+      'x-duncit-surface': 'PORTAL',
+      'x-duncit-app': 'crm',
+    });
+  });
+
+  it('sends x-no-redis when the tab has the ?noRedis flag set', () => {
+    vi.mocked(resolveNoRedisFlag).mockReturnValueOnce(true);
+    createApolloClient({ graphqlUrl: 'u', getToken: () => null, includeDuid: false });
+    expect(cap.authFn?.({}, {})?.headers).toEqual({
+      'x-duncit-surface': 'PORTAL',
+      'x-no-redis': 'true',
+    });
   });
 
   describe('retryIf', () => {

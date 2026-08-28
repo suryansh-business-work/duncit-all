@@ -194,6 +194,18 @@ describe('buildChatExport', () => {
     expect(text).toContain('answered, 2m 5s');
   });
 
+  it('drops the minutes for a call under a minute long', () => {
+    const text = buildChatExport({ me, peer, messages: [], calls: [call({ duration_seconds: 45 })] });
+
+    expect(text).toContain('answered, 45s');
+  });
+
+  it('reads an unknown time rather than crashing on a call with no timestamp', () => {
+    const text = buildChatExport({ me, peer, messages: [], calls: [call({ started_at: undefined })] });
+
+    expect(text).toContain('[unknown time]');
+  });
+
   it('names any other outcome without a duration', () => {
     const text = buildChatExport({ me, peer, messages: [], calls: [call({ outcome: 'MISSED' })] });
 

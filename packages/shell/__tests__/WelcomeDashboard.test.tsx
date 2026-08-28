@@ -58,6 +58,33 @@ describe('WelcomeDashboard', () => {
     expect(screen.getByText('Payroll')).toBeInTheDocument();
   });
 
+  it('translates a module carrying keys instead of literal copy', () => {
+    set({
+      data: { me: { first_name: 'Ada', roles: ['ADMIN'] } },
+      loading: false,
+      error: undefined,
+    });
+    render(
+      <WelcomeDashboard
+        dashboardId="hr.overview"
+        name="HR"
+        tagline="Welcome"
+        modules={[
+          {
+            title: 'literal title',
+            titleKey: 'hr.welcome.payrollTitle',
+            description: 'literal description',
+            descriptionKey: 'hr.welcome.payrollDescription',
+            icon: 'payments',
+          },
+        ]}
+      />,
+    );
+    expect(screen.queryByText('literal title')).not.toBeInTheDocument();
+    expect(screen.queryByText('literal description')).not.toBeInTheDocument();
+    expect(screen.getByText('hr.welcome.payrollTitle')).toBeInTheDocument();
+  });
+
   it('derives the first name from full_name and omits the modules grid', () => {
     set({ data: { me: { full_name: 'Grace Hopper' } }, loading: false, error: undefined });
     render(<WelcomeDashboard dashboardId="hr.overview" name="HR" tagline="Hi" />);

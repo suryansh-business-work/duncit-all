@@ -46,6 +46,9 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleDeleteComment = async () => {
+    /* v8 ignore next -- unreachable: the Delete button only exists inside the
+       confirm Dialog below, which MUI fully unmounts while confirmDeleteId is
+       falsy, so this handler is never invoked with a falsy id */
     if (!confirmDeleteId) return;
     await deleteCommentMut({ variables: { id, commentId: confirmDeleteId } });
     setConfirmDeleteId(null);

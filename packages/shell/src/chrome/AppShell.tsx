@@ -214,8 +214,10 @@ export function AppShell({
                   // Optional on the panel, which defaults it to []. `showChat`
                   // already implies a matching `roles` array, so the fallback
                   // never applies — but asserting that with `!` tells the reader
-                  // nothing the type did not already allow.
-                  meRoles={user?.roles}
+                  // nothing the type did not already allow. `roles` is nullable
+                  // on the session and the prop is not, so a null is mapped onto
+                  // the absence the prop already means rather than asserted away.
+                  meRoles={user?.roles ?? undefined}
                   onClose={closeChat}
                   onRequestOpen={openChat}
                 />

@@ -50,6 +50,29 @@ export function defaultFor(headerFormat: string, defaults: WaDefaults): SendMedi
 }
 
 /**
+ * The assets ONE send has of its own — the pod's picture, that booking's ticket
+ * PDF — one per header kind, exactly as the platform defaults are.
+ *
+ * A call site knows what its message is ABOUT; it does not know what kind of
+ * header the campaign's template carries, and it should not have to. So it
+ * offers what it has and the send path picks the one that fits, which is the
+ * only place that knows the header kind.
+ */
+export type SendAssets = Partial<WaDefaults>;
+
+/**
+ * This send's own asset for a header, or null.
+ *
+ * It outranks every stand-in below it. A picture of THIS pod is what the
+ * message is about; the scenario override and the platform default exist
+ * because, until now, there was nothing better to send.
+ */
+export function assetFor(headerFormat: string, assets?: SendAssets | null): SendMedia {
+  const kind = defaultKindFor(headerFormat);
+  return kind ? assets?.[kind] ?? null : null;
+}
+
+/**
  * What WhatsApp shows on a document header.
  *
  * The recipient reads this name and its extension is what tells WhatsApp the

@@ -7,6 +7,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
+import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 
 /** A pod or user id, however the caller happens to be holding it. */
 type PodRef = string | Types.ObjectId;
@@ -93,6 +94,7 @@ async function announcePodFilled(pod: any, gained: number): Promise<void> {
     entityId: String(pod._id),
     user: host,
     name: hostName,
+    assets: podImageAssets(pod.pod_images_and_videos),
     params: [
       hostName,
       pod.pod_title,

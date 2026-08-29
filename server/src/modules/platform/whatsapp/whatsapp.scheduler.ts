@@ -42,6 +42,8 @@ import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 // opted out of or changed phone on.
 import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 import { trimTrailingSlash } from '@utils/url';
+import { podImageAssets } from './whatsapp.assets';
+import type { StoredMedia } from '@utils/media';
 
 const HOUR_MS = 60 * 60_000;
 const SWEEP_INTERVAL_MS = 30 * 60_000;
@@ -78,6 +80,9 @@ interface SweptPod {
   pod_hosts_id?: any[];
   club_id?: any;
   venue_id?: any;
+  /** The pod's own pictures. Every pod-shaped message headed by one instead of
+   * the platform placeholder — so every projection that feeds a send selects it. */
+  pod_images_and_videos?: StoredMedia[];
 }
 
 interface SweptSlot {
@@ -190,6 +195,7 @@ function podReminders(
       entityId: String(pod._id),
       user,
       name,
+      assets: podImageAssets(pod.pod_images_and_videos),
       params: [
         name,
         hours,
@@ -213,7 +219,7 @@ async function remindAttendees(now: number, cutoff: Date, mwebUrl: string) {
     is_active: true,
     pod_date_time: crossing(now + POD_REMINDER_LEAD_MS, cutoff),
   })
-    .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id')
+    .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const slugById = await loadPodClubSlugMap(pods);
@@ -235,7 +241,7 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
     completed_at: null,
     pod_date_time: crossing(now - COMPLETE_REMINDER_AFTER_MS, cutoff),
   })
-    .select('pod_id pod_title pod_date_time pod_hosts_id')
+    .select('pod_id pod_title pod_date_time pod_hosts_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const users = await waUsers(pods.map(firstHostId));
@@ -248,6 +254,7 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
         entityId: String(pod._id),
         user: host,
         name,
+        assets: podImageAssets(pod.pod_images_and_videos),
         params: [name, pod.pod_title, dateLabel(pod.pod_date_time), timeLabel(pod.pod_date_time)],
       };
     })
@@ -273,7 +280,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date) {
     .lean<SweptSlot[]>();
   if (slots.length === 0) return;
   const pods = await PodModel.find({ _id: { $in: slots.map((slot) => slot.booked_by_pod_id) } })
-    .select('pod_id pod_title pod_hosts_id')
+    .select('pod_id pod_title pod_hosts_id pod_images_and_videos')
     .lean<SweptPod[]>();
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
   const users = await waUsers([...slots.map((slot) => slot.owner_user_id), ...pods.map(firstHostId)]);
@@ -287,6 +294,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date) {
         entityId: String(slot._id),
         user: owner,
         name,
+        assets: podImageAssets(pod?.pod_images_and_videos),
         params: [
           name,
           hoursUntil(slot.start_at),
@@ -312,7 +320,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date) {
  */
 async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: string) {
   const pods = await PodModel.find({ pod_date_time: crossing(now, cutoff) })
-    .select('pod_id pod_title pod_date_time club_id')
+    .select('pod_id pod_title pod_date_time club_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const requests = await BackoutRequestModel.find({
@@ -342,6 +350,7 @@ async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: str
           entityId: String(request._id),
           user,
           name,
+          assets: podImageAssets(pod.pod_images_and_videos),
           params: [
             name,
             pod.pod_title,
@@ -372,6 +381,7 @@ function feedbackAsk(
     entityId: String(pod._id),
     user,
     name,
+    assets: podImageAssets(pod.pod_images_and_videos),
     params: [
       name,
       pod.pod_title,
@@ -398,7 +408,7 @@ async function endedPods(now: number, cutoff: Date): Promise<SweptPod[]> {
     is_active: true,
     $or: [{ pod_end_date_time: ended }, { pod_end_date_time: null, pod_date_time: ended }],
   })
-    .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id venue_id')
+    .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id venue_id pod_images_and_videos')
     .lean<SweptPod[]>();
 }
 

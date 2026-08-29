@@ -23,6 +23,7 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { breakdownService, bucketForPod } from '@modules/finance/finance/breakdown.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import {
   sendHostPodAutoCancelledEmail,
@@ -823,6 +824,7 @@ async function whatsappPodCancellation(
       entityId: String(doc._id),
       user: attendee.user,
       name: attendee.name,
+      assets: podImageAssets(doc.pod_images_and_videos),
       params: [
         attendee.name,
         doc.pod_title,
@@ -861,6 +863,7 @@ async function whatsappHostCancellationRequested(doc: any, hostUserId: string) {
     entityId: String(doc._id),
     user: host,
     name: hostName,
+    assets: podImageAssets(doc.pod_images_and_videos),
     params: [
       hostName,
       doc.pod_title,
@@ -1004,6 +1007,7 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       entityId: String(slot._id),
       user: owner,
       name: ownerName,
+      assets: podImageAssets(pod.pod_images_and_videos),
       params: [
         ownerName,
         pod.pod_title,

@@ -9,9 +9,11 @@ import {
 } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
 import {
+  assetFor,
   defaultFor,
   defaultKindFor,
   mediaPair,
+  type SendAssets,
   type SendMedia,
   type WaDefaults,
 } from './whatsapp.media';
@@ -50,8 +52,20 @@ export interface WaSendInput {
   /** One value per placeholder, in the order the registry declares. */
   params: readonly (string | number | null | undefined)[];
   /** A header image or document. AiSensy fetches the URL itself, so it must be
-   * publicly reachable. */
+   * publicly reachable. Unconditional: it travels whatever the header kind is,
+   * so only use it where the caller already knows the template wants it.
+   * `assets` is the general answer. */
   media?: { url: string; filename: string } | null;
+  /**
+   * What this send has of its OWN — the pod's picture, that booking's ticket
+   * PDF — one per header kind.
+   *
+   * The call site knows what its message is about; it does not know whether the
+   * campaign's template carries an IMAGE or a FILE header, and should not have
+   * to. It offers what it has, and the header kind decides which one travels.
+   * Anything not covered here still falls back to the platform default.
+   */
+  assets?: SendAssets | null;
 }
 
 export interface WaSendOutcome {
@@ -323,12 +337,25 @@ async function resolveMedia(
   input: WaSendInput,
   switches: Switches
 ): Promise<ResolvedMedia> {
-  const own = input.media ?? switches.media;
-  if (own) return { media: own, header_format: switches.header_format };
+  // An explicit asset is unconditional — the caller has already decided.
+  if (input.media) return { media: input.media, header_format: switches.header_format };
 
+  // Binding is what LEARNS the header kind, and the header kind is what decides
+  // which of this send's assets fits — so it happens before the choice rather
+  // than after it. Still one catalogue read per scenario, ever: the stamp is
+  // written whatever the answer was.
   const bound = switches.media_synced ? null : await bindCampaignMedia(event);
   const header_format = bound?.header_format ?? switches.header_format;
-  if (bound?.media) return { media: bound.media, header_format };
+
+  // This send's own asset outranks every stand-in below it. A picture of THIS
+  // pod, or THIS booking's ticket, is what the message is about; the scenario
+  // override and the platform default are what a send falls back on when it has
+  // nothing of its own, which until now was every send there was.
+  const own = assetFor(header_format, input.assets);
+  if (own) return { media: own, header_format };
+
+  const stored = switches.media ?? bound?.media;
+  if (stored) return { media: stored, header_format };
 
   return { media: defaultFor(header_format, switches.defaults), header_format };
 }
@@ -382,20 +409,24 @@ interface Recovery {
 function recoveryFor(
   error: unknown,
   resolved: ResolvedMedia,
+  assets: SendAssets | null | undefined,
   defaults: WaDefaults
 ): Recovery | null {
   if (resolved.media || !isMediaMissing(error)) return null;
   const known = resolved.header_format.trim().toUpperCase();
   if (known) {
-    const media = defaultFor(known, defaults);
+    const media = assetFor(known, assets) ?? defaultFor(known, defaults);
     return media ? { media, format: known } : null;
   }
   // Nobody has learned this template's header kind: reading it needs the
   // Project API, a second credential the send does not otherwise have. An image
-  // is what 54 of the 59 media templates carry, so it is offered first — and a
-  // platform that has only set a document default gets that rather than nothing.
-  if (defaults.IMAGE) return { media: defaults.IMAGE, format: 'IMAGE' };
-  return defaults.DOCUMENT ? { media: defaults.DOCUMENT, format: 'FILE' } : null;
+  // is what 54 of the 59 media templates carry, so it is offered first — this
+  // send's own before the platform's — and a platform that has only set a
+  // document default gets that rather than nothing.
+  const image = assets?.IMAGE ?? defaults.IMAGE;
+  if (image) return { media: image, format: 'IMAGE' };
+  const document = assets?.DOCUMENT ?? defaults.DOCUMENT;
+  return document ? { media: document, format: 'FILE' } : null;
 }
 
 /** What the Logs console shows for a failure. */
@@ -473,7 +504,7 @@ async function postWithMediaRecovery(
   const first = await postOnce(event, input, destination, params, resolved.media);
   if (!first.error) return { ...first, reason: '' };
 
-  const recovery = recoveryFor(first.error, resolved, defaults);
+  const recovery = recoveryFor(first.error, resolved, input.assets, defaults);
   if (!recovery) return { ...first, reason: failureReason(first.error, resolved.media, header) };
 
   const second = await postOnce(event, input, destination, params, recovery.media);

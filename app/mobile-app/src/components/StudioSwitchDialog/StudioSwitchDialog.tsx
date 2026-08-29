@@ -31,6 +31,8 @@ const switchButtonLabel = (changed: boolean, mode: StudioMode) =>
 interface Props {
   open: boolean;
   roles: string[];
+  /** `is_product_visible` — off, and the E-commerce bubble is not offered. */
+  showProducts?: boolean;
   current: StudioMode;
   onClose: () => void;
   onSelect: (mode: StudioMode) => void;
@@ -40,7 +42,14 @@ interface Props {
  * and expands into the big primary card below. Picking a bubble only stages the
  * choice; nothing switches until the Switch button below is pressed.
  * Identical to mWeb's StudioSwitchDialog (B3-5). */
-export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: Readonly<Props>) {
+export function StudioSwitchDialog({
+  open,
+  roles,
+  showProducts = true,
+  current,
+  onClose,
+  onSelect,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { color, onPrimary, muted } = useThemeColors();
   const [pending, setPending] = useState<StudioMode>(current);
@@ -83,14 +92,14 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
                 Switch role
               </Text>
               <XStack justifyContent="center" gap={16} paddingBottom={14}>
-                {availableModes(roles).map((option) => {
+                {availableModes(roles, { products: showProducts }).map((option) => {
                   const selected = option.mode === pending;
                   return (
                     <YStack
                       key={option.mode}
                       testID={`studio-switch-${option.mode}`}
                       role="button"
-                      aria-label={option.label}
+                      aria-label={STUDIO_LABEL[option.mode]}
                       aria-pressed={selected}
                       onPress={() => setPending(option.mode)}
                       width={52}

@@ -9,6 +9,7 @@ import { Separator, Text, XStack, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { useAccount } from '@/hooks/useAccount';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { PRODUCT_VISIBILITY_FLAG } from '@/hooks/useProductVisibility';
 import { useLogout } from '@/hooks/useLogout';
 import { useMe } from '@/hooks/useMe';
 import { usePublicPolicies } from '@/hooks/usePolicies';
@@ -59,10 +60,14 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const showGiftCards = useFeatureFlag('gift_cards');
   const showTourGuide = useFeatureFlag('tour_guide');
   const showAutoPods = useFeatureFlag('auto_pods');
+  const showProducts = useFeatureFlag(PRODUCT_VISIBILITY_FLAG);
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
-  const effectiveMode = resolveMode(studioMode, roles);
-  const canSwitch = availableModes(roles).length > 1;
+  // Products off drops the E-commerce studio from the switcher AND from a
+  // persisted mode, so nobody is left sitting in a studio whose screens are gated.
+  const studioAccess = { products: showProducts };
+  const effectiveMode = resolveMode(studioMode, roles, studioAccess);
+  const canSwitch = availableModes(roles, studioAccess).length > 1;
   const logout = useLogout();
   const scheme = useThemeStore((s) => s.scheme);
   const toggleTheme = useThemeStore((s) => s.toggle);
@@ -148,6 +153,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               showGiftCards={showGiftCards}
               showTourGuide={showTourGuide}
               showAutoPods={showAutoPods}
+              showProducts={showProducts}
               onNavigate={go}
             />
           )}
@@ -228,6 +234,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
       <StudioSwitchDialog
         open={switchOpen}
         roles={roles}
+        showProducts={showProducts}
         current={effectiveMode}
         onClose={() => setSwitchOpen(false)}
         onSelect={(next) => {

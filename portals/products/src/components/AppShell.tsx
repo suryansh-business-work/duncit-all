@@ -4,7 +4,7 @@ import { useUserData } from '@duncit/user-context';
 import { AppShell as ShellAppShell } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { clearToken, hasAppAccess } from '../lib/session';
-import { useFeatureFlag } from '@duncit/app-settings';
+import { useProductVisibility } from '@duncit/app-settings';
 
 /**
  * Thin adapter over the shared @duncit/shell chrome: wires this portal's
@@ -16,7 +16,7 @@ import { useFeatureFlag } from '@duncit/app-settings';
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const { user, loading, logout: ctxLogout } = useUserData();
-  const showProducts = useFeatureFlag('is_product_visible');
+  const { visible: showProducts } = useProductVisibility();
   const nav = showProducts ? appConfig.nav : appConfig.nav.filter((item) => item.to === '/');
 
   const logout = () => {

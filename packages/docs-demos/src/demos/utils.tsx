@@ -13,6 +13,8 @@ import {
   statusLabel,
   trackingUrl,
   authMessageCardState,
+  availableModes,
+  resolveMode,
   autoPodActionable,
   autoPodCityLabel,
   autoPodEnrolledCount,
@@ -81,6 +83,12 @@ import {
   type UsernameRejection,
 } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+
+interface StudioModeMock {
+  roles: string[];
+  saved_mode: 'USER' | 'HOST' | 'VENUE' | 'ECOMM' | 'CLUB';
+  is_product_visible: boolean;
+}
 
 /** One pending pod as the rating prompt receives it, plus the guest's answers. */
 interface PodFeedbackMock {
@@ -894,6 +902,26 @@ export default defineDemos('utils', [
         'Order has stopped moving': isTerminalFulfilment(mock.fulfilment_status),
         'Track it at': trackingUrl(mock.awb) || '(no AWB yet — the caller shows no link)',
         'An unknown status': statusLabel('AWAITING_QUANTUM_TUNNEL', t),
+      };
+    },
+  }),
+  defineDemo<StudioModeMock>({
+    id: 'studio-modes',
+    title: 'Which studios a partner may switch into',
+    note:
+      'Set is_product_visible to false: the ecomm bubble leaves the switcher AND the saved ECOMM mode falls back to USER, so nobody is left sitting in a studio whose pages are gated. Drop ECOMM_MANAGER from roles for the same effect by a different route — a revoked role. mWeb and the native app both read exactly this, so their switchers cannot disagree.',
+    mock: {
+      roles: ['HOST', 'ECOMM_MANAGER'],
+      saved_mode: 'ECOMM',
+      is_product_visible: true,
+    },
+    compute: (mock) => {
+      const access = { products: mock.is_product_visible };
+      return {
+        'Bubbles in the switcher': availableModes(mock.roles, access).map((o) => o.mode),
+        'The mode actually in effect': resolveMode(mock.saved_mode, mock.roles, access),
+        'If products were on': resolveMode(mock.saved_mode, mock.roles, { products: true }),
+        'Can switch at all': availableModes(mock.roles, access).length > 1,
       };
     },
   }),

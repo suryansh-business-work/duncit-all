@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { AppHeader } from '@/components/AppHeader';
 import { useCartStore, type CartLine } from '@/stores/cart.store';
+import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -55,10 +56,18 @@ const seedCart = (quantity: number) => {
   useCartStore.setState({ lines: [line], hydrated: true });
 };
 
+/** The cart entry point and the studio badge both ride on the product system
+ * flag, so the flag set is seeded the way the cart lines are. */
+const seedProducts = (enabled: boolean) =>
+  useFeatureFlagsStore.setState({
+    data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] },
+  });
+
 beforeEach(() => {
   jest.clearAllMocks();
   useStudioModeStore.setState({ mode: 'USER' });
   useCartStore.setState({ lines: [], hydrated: true });
+  seedProducts(true);
   mockUseMe.mockReturnValue({ data: { me: { roles: ['HOST'] } } });
 });
 

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { MockedProvider } from '@apollo/client/testing';
 import AppHeader from '../AppHeader';
+import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { CartProvider, type CartLine } from '../../cart/CartContext';
 import {
   HEADER_DATA,
@@ -145,6 +146,14 @@ const policiesMock = {
   result: { data: { publicPolicies: [{ id: 'p1', slug: 'privacy', title: 'Privacy' }] } },
 };
 
+/** The header and its cart button both read the product system flag, so the
+ * answer has to be available to every consumer of the one query. */
+const flagsMock = (enabled: boolean) => ({
+  request: { query: PUBLIC_FEATURE_FLAGS },
+  result: { data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
 const setLocationMock = (locationId: string) => ({
   request: { query: SET_MY_SELECTED_LOCATION, variables: { locationId } },
   result: { data: { setMySelectedLocation: { user_id: 'u1', selected_location_id: locationId } } },
@@ -177,7 +186,7 @@ function seedCart(quantity: number) {
   localStorage.setItem('mweb_cart_lines', JSON.stringify([line]));
 }
 
-function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock]) {
+function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock, flagsMock(true)]) {
   const merged = { ...baseProps, onSuperCategoryChange: vi.fn(), onLocationChange: vi.fn(), onZoneChange: vi.fn(), ...props };
   const utils = render(
     <MockedProvider mocks={mocks} addTypename={false}>
@@ -327,6 +336,13 @@ describe('AppHeader', () => {
     await screen.findByTestId('greeting');
     fireEvent.click(screen.getByRole('button', { name: 'Open cart (3 items)' }));
     expect(mockNavigate).toHaveBeenCalledWith('/cart');
+  });
+
+  it('drops the cart entry point entirely once products are switched off', async () => {
+    seedCart(3);
+    renderHeader({}, [headerMock(), policiesMock, flagsMock(false)]);
+    await screen.findByTestId('greeting');
+    expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
   });
 
   it('shows no cart entry point while the cart is empty', async () => {

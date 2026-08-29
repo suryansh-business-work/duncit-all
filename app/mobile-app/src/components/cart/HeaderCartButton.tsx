@@ -7,6 +7,7 @@ import { navigationRef } from '@/navigation/navigationRef';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useProductVisibility } from '@/hooks/useProductVisibility';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The active screen's route name, or '' before the container has settled. */
@@ -22,6 +23,9 @@ function currentRouteName(): string {
  * RN twin of mWeb's HeaderCartButton: both read `deriveCartEntry` from
  * @duncit/utils, so the badge, the visibility rule and the accessible name
  * cannot drift apart (rule 27).
+ *
+ * With the product system flag off there is nothing to buy, so the cart is not
+ * an empty screen to visit — the whole entry point goes, badge and caption with it.
  */
 export function HeaderCartButton({ label }: Readonly<{ label?: string }> = {}) {
   const totalCount = useCartStore(selectCartCount);
@@ -38,8 +42,9 @@ export function HeaderCartButton({ label }: Readonly<{ label?: string }> = {}) {
     return navigationRef.addListener('state', sync);
   }, []);
 
+  const { visible: productsVisible } = useProductVisibility();
   const entry = deriveCartEntry(totalCount, routeName);
-  if (!entry.visible) return null;
+  if (!productsVisible || !entry.visible) return null;
 
   // The caption ships inside the component so it hides together with the
   // button — a wrapper-provided label would float alone while the cart is empty.

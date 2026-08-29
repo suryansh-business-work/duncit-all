@@ -2,6 +2,8 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { MockedProvider } from '@apollo/client/testing';
+import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import HeaderCartButton from '../HeaderCartButton';
 import { CartProvider, type CartLine } from '../CartContext';
 
@@ -31,16 +33,25 @@ function LocationProbe() {
   return <div data-testid="pathname">{pathname}</div>;
 }
 
-function renderAt(initialPath: string) {
+/** The button rides on the product system flag — off, and there is no cart. */
+const flagsMock = (enabled: boolean) => ({
+  request: { query: PUBLIC_FEATURE_FLAGS },
+  result: { data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
+function renderAt(initialPath: string, productsVisible = true) {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <CartProvider>
-        <Routes>
-          <Route path="*" element={<HeaderCartButton />} />
-        </Routes>
-        <LocationProbe />
-      </CartProvider>
-    </MemoryRouter>,
+    <MockedProvider mocks={[flagsMock(productsVisible)]}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <CartProvider>
+          <Routes>
+            <Route path="*" element={<HeaderCartButton />} />
+          </Routes>
+          <LocationProbe />
+        </CartProvider>
+      </MemoryRouter>
+    </MockedProvider>,
   );
 }
 
@@ -75,32 +86,40 @@ describe('HeaderCartButton', () => {
     expect(screen.queryByRole('button', { name: /open cart/i })).not.toBeInTheDocument();
   });
 
-  it('renders the button with the aggregated item count and badge when populated', () => {
+  it('renders nothing at all once products are switched off', async () => {
+    seedCart([makeLine({ quantity: 2 })]);
+    renderAt('/home', false);
+    // Given a tick to settle, so this is the answered flag and not the pending one.
+    expect(await screen.findByTestId('pathname')).toHaveTextContent('/home');
+    expect(screen.queryByRole('button', { name: /open cart/i })).not.toBeInTheDocument();
+  });
+
+  it('renders the button with the aggregated item count and badge when populated', async () => {
     seedCart([makeLine({ quantity: 2 }), makeLine({ product_id: 'prod-2', quantity: 3 })]);
     renderAt('/home');
-    const button = screen.getByRole('button', { name: 'Open cart (5 items)' });
+    const button = await screen.findByRole('button', { name: 'Open cart (5 items)' });
     expect(button).toBeInTheDocument();
     // Badge content reflects the total count.
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
-  it('caps the badge at 99+', () => {
+  it('caps the badge at 99+', async () => {
     seedCart([makeLine({ quantity: 120, max_quantity: 200 })]);
     renderAt('/home');
-    expect(screen.getByText('99+')).toBeInTheDocument();
+    expect(await screen.findByText('99+')).toBeInTheDocument();
   });
 
-  it('now also shows on the Pod Shop, which no longer owns a cart of its own', () => {
+  it('now also shows on the Pod Shop, which no longer owns a cart of its own', async () => {
     seedCart([makeLine({ quantity: 1 })]);
     renderAt('/shop');
-    expect(screen.getByRole('button', { name: 'Open cart (1 items)' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Open cart (1 items)' })).toBeInTheDocument();
   });
 
-  it('navigates to /cart when clicked', () => {
+  it('navigates to /cart when clicked', async () => {
     seedCart([makeLine({ quantity: 1 })]);
     renderAt('/home');
     expect(screen.getByTestId('pathname')).toHaveTextContent('/home');
-    fireEvent.click(screen.getByRole('button', { name: /open cart/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /open cart/i }));
     expect(screen.getByTestId('pathname')).toHaveTextContent('/cart');
   });
 });

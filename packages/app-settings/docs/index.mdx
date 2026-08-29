@@ -19,6 +19,8 @@ exports:
   - 'PUBLIC_APP_SETTINGS'
   - 'useFeatureFlag'
   - 'PUBLIC_FEATURE_FLAGS'
+  - 'useProductVisibility'
+  - 'PRODUCT_VISIBILITY_FLAG'
   - 'LocaleProvider'
   - 'AppLocaleProvider'
   - 'useTranslation'
@@ -175,6 +177,41 @@ useFeatureFlag('shop.pod_shop', true)       // true
 An unknown key and a still-loading query both return `defaultValue`. Default to `false` for
 anything that must not flash on before the server confirms it.
 
+### `useProductVisibility`
+
+`is_product_visible` is the one system flag that owns every product surface — the Pod Shop
+on a pod, the cart, the catalogue, brand and ShipRocket warehouse registration, product
+orders and the E-commerce studio. It ships OFF, and the server refuses product operations
+while it is off, so hiding a button is never the only thing holding the line.
+
+```ts
+const { pending, visible } = useProductVisibility();
+
+// flags still in flight:
+pending   // true
+visible   // false  — nothing product-shaped ever flashes on
+
+// server says is_product_visible: true
+pending   // false
+visible    // true
+```
+
+Read `visible` to SHOW or HIDE (false while loading is the answer you want). Wait on
+`pending` before you REDIRECT — acting on the loading beat bounces every bookmarked
+`/shop` link home even with the feature switched on:
+
+```tsx
+function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
+  const { pending, visible } = useProductVisibility();
+  if (pending) return null;
+  if (!visible) return <Navigate to="/" replace />;
+  return children;
+}
+```
+
+`PRODUCT_VISIBILITY_FLAG` is the key itself (`'is_product_visible'`), for a caller that
+already has the whole flag map from `useFeatureFlags()`.
+
 ### `useTranslation`
 
 ```tsx
@@ -217,6 +254,7 @@ Pass the bundle. Calling `useTranslation()` bare outside a provider renders raw 
 | --- | --- | --- | --- |
 | `useDateFormat` | `(options?: { timeZoneAware?: boolean }) => DateFormatter` | `timeZoneAware: false` | Formatter driven by `publicAppSettings`. |
 | `useFeatureFlag` | `(key: string, defaultValue?: boolean) => boolean` | `false` | Returns `defaultValue` while loading and for unknown keys. |
+| `useProductVisibility` | `() => { pending: boolean; visible: boolean }` | `{ pending: true, visible: false }` | The product kill switch. Hide on `visible`; wait on `pending` before redirecting. |
 | `useTranslation` | `(fallback?: FlatCatalogue) => LocaleContextValue` | — | `{ t, has, locale, isRtl, locales, setLocale }`. Never throws. |
 
 ### Providers

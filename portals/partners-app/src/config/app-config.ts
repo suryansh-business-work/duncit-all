@@ -1,5 +1,5 @@
 import type { AppNavItem } from '@duncit/shell';
-import { hasPartnerRole, PARTNER_SECTIONS, type PartnerSection } from './partner-sections';
+import { hasPartnerRole, PARTNER_SECTIONS, visibleSections, type PartnerSection } from './partner-sections';
 
 /**
  * Per-app configuration for the Duncit Partners console. Reusable configuration
@@ -82,8 +82,8 @@ function withAutoPods(section: PartnerSection, enabled: boolean): AppNavItem {
  * access yet lands on Earn with Duncit — the page that says how to get it, and
  * the one entry their sidebar shows besides the account pages.
  */
-export function landingPath(roles?: readonly string[] | null): string {
-  const first = PARTNER_SECTIONS.find((section) => hasPartnerRole(roles, section.role));
+export function landingPath(roles?: readonly string[] | null, productsVisible = true): string {
+  const first = visibleSections(roles, productsVisible)[0];
   return first?.nav.children?.[0]?.to ?? '/earn';
 }
 
@@ -91,6 +91,9 @@ export interface BuildNavOptions {
   /** The `auto_pods` feature flag. Off by default, so the three Auto Pod
    * entries stay hidden until an admin turns the feature on. */
   autoPods?: boolean;
+  /** The `is_product_visible` system flag. Off by default, so the E-Commerce
+   * Brand area — listings, warehouses, ShipRocket — is absent from the sidebar. */
+  products?: boolean;
 }
 
 /**
@@ -105,8 +108,12 @@ export function buildNav(
   options?: Readonly<BuildNavOptions>,
 ): AppNavItem[] {
   const autoPods = options?.autoPods === true;
-  const held = PARTNER_SECTIONS.filter((section) => hasPartnerRole(roles, section.role));
-  const sections = held.map((section) => withAutoPods(section, autoPods));
-  const wallet = held.length > 0 ? [WALLET_NAV] : [];
+  const shown = visibleSections(roles, options?.products === true);
+  const sections = shown.map((section) => withAutoPods(section, autoPods));
+  // Wallet follows the ROLE, not the product switch: an e-commerce partner with
+  // earnings already banked must still be able to withdraw them after the shop
+  // is switched off.
+  const earns = PARTNER_SECTIONS.some((section) => hasPartnerRole(roles, section.role));
+  const wallet = earns ? [WALLET_NAV] : [];
   return [...sections, ...wallet, ...appConfig.nav];
 }

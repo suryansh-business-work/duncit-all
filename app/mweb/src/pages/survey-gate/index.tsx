@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
+import { useProductVisibility } from '@duncit/app-settings';
 import {
   ACTIVE_SURVEY_FOR,
   REQUEST_MEETING,
@@ -34,7 +35,12 @@ export default function SurveyGatePage() {
   const params = useParams<{ kind: string }>();
   const navigate = useNavigate();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
-  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
+  // "List your product" is a product surface: with the system flag off the
+  // journey does not exist, so the gate treats ECOMM as an unknown kind rather
+  // than booking an onboarding meeting for a feature nobody can reach.
+  const { pending: productsPending, visible: productsVisible } = useProductVisibility();
+  const knownKind = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
+  const valid = knownKind && (kind !== 'ECOMM' || productsVisible);
   const [step, setStep] = useState<Step>('loading');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
@@ -50,6 +56,9 @@ export default function SurveyGatePage() {
   const [requestMeeting, { loading: requesting }] = useMutation(REQUEST_MEETING);
 
   useEffect(() => {
+    // Nothing is decided until the flag set lands — redirecting on the first
+    // paint would bounce a valid ECOMM gate that is merely still loading.
+    if (productsPending) return;
     if (!valid) { navigate('/hosts-venues', { replace: true }); return; }
     // Restore an in-progress draft (category + survey answers + step) so a Back
     // navigation returns here instead of restarting. Always walk the full gate —
@@ -65,7 +74,7 @@ export default function SurveyGatePage() {
     } else {
       setStep('category');
     }
-  }, [valid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [valid, productsPending]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist the draft while the user is inside the gate; clear it once booked.
   useEffect(() => {

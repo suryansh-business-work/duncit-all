@@ -17,6 +17,7 @@ jest.mock('@modules/pods/ticket/ticket.service', () => ({
 
 import { Types } from 'mongoose';
 import { paymentService } from '../../payment.service';
+import { enableProducts } from '@test/feature-flags';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { invoiceArgsForPayment } from '@test/deferred-payment';
@@ -65,6 +66,9 @@ const buyInput = (podId: Types.ObjectId, selected: any[]) => ({
 });
 
 describe('invoice itemization with products', () => {
+  // The shop is a flagged feature; this suite is the server with it on.
+  beforeEach(enableProducts);
+
   it('adds an Event ticket line + one line per product, summing to the subtotal', async () => {
     const user = await seedUser();
     const { pod, p1, p2 } = await seedPodWithProducts();

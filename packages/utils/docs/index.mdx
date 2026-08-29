@@ -149,6 +149,9 @@ exports:
   - 'autoPodHostNeedsLocation'
   - 'autoPodCityLabel'
   - 'autoPodModeCount'
+  - 'STUDIO_OPTIONS'
+  - 'availableModes'
+  - 'resolveMode'
   - 'mwebAutoPodLabels'
   - 'shellAutoPodLabels'
   - 'shellPodKindLabels'
@@ -759,6 +762,35 @@ twin cannot disagree on what an offer is waiting for.
 | `autoPodHostNeedsLocation` | `(row, locationId) => boolean` | True when the offer is unpinned AND the host has no city selected — their "Assign Myself" must wait. |
 | `autoPodCityLabel` | `(location) => string` | `"Bengaluru, Karnataka"`; `''` for an unpinned offer. |
 | `autoPodModeCount` | `(counts, mode) => number` | How many offers wait on a studio mode (`HOST` / `VENUE` / `CLUB`); 0 for any other. |
+
+### Studio modes
+
+Which studios exist, and which a person may switch into. mWeb draws the switcher in MUI and
+the native app in Tamagui, but the RULE is one thing and lives here — the two apps cannot end
+up disagreeing about whether a studio exists (rules 27 + 40). Each app keeps its own landing
+map beside its re-export: mWeb has paths, native has route names, and each keeps
+its own `STUDIO_LABEL` — no user-facing word lives in this package.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `STUDIO_OPTIONS` | `readonly StudioOption[]` | The catalogue, in switcher order: `USER`, `HOST`, `VENUE`, `ECOMM`, `CLUB`, each with the role behind it. |
+| `availableModes` | `(roles, access?) => StudioOption[]` | The modes those roles unlock. USER is always in. |
+| `resolveMode` | `(mode, roles, access?) => StudioMode` | A persisted mode, or `'USER'` once the user no longer qualifies for it. |
+
+`access.products` is the `is_product_visible` system flag. Off, and the E-commerce studio is
+not offered at all — its landing page is gated, so switching in would only bounce the partner
+home. It defaults to on, so a caller with no reason to know about products is unaffected.
+
+```ts
+const roles = ['HOST', 'ECOMM_MANAGER'];
+
+availableModes(roles).map((o) => o.mode)                      // ['USER', 'HOST', 'ECOMM']
+availableModes(roles, { products: false }).map((o) => o.mode) // ['USER', 'HOST']
+
+resolveMode('ECOMM', roles)                    // 'ECOMM'
+resolveMode('ECOMM', roles, { products: false })  // 'USER' — the saved studio is gone
+resolveMode('VENUE', roles)                    // 'USER' — never held the role
+```
 | `mwebAutoPodLabels` / `shellAutoPodLabels` | `(t) => AutoPodLabels` | Every word the queue renders — `mweb.autoPods.*` for mWeb + native, `shell.autoPods.*` for the portals, word-for-word identical. |
 | `shellPodKindLabels` | `(t) => PodKindLabels` | The "Normal Pod or Auto Pod?" question a portal's New Pod button asks. |
 

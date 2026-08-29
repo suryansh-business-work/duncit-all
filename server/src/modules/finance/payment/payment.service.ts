@@ -27,6 +27,10 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
+import {
+  isFeatureEnabled,
+  PRODUCT_VISIBILITY_FLAG,
+} from '@modules/platform/settings/featureFlag.gate';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -292,6 +296,14 @@ async function resolveProductLines(pod: any, selectedProducts: any[] = []): Prom
   );
   const merged = mergeProductSelections(selectedProducts);
   if (merged.size === 0) return EMPTY_PRODUCT_RESOLUTION;
+  // Both pod-checkout paths land here, so this is the one place a ticket can
+  // pick up add-on products — and the one place the product kill switch has to
+  // be honoured for a booking that carries a shop line.
+  if (!(await isFeatureEnabled(PRODUCT_VISIBILITY_FLAG))) {
+    throw new GraphQLError('Products are currently unavailable', {
+      extensions: { code: 'FEATURE_DISABLED', flag: PRODUCT_VISIBILITY_FLAG },
+    });
+  }
 
   const productIds = Array.from(new Set(Array.from(merged.values(), (r) => r.product_id))).filter(
     (id) => Types.ObjectId.isValid(id)

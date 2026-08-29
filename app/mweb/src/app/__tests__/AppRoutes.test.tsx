@@ -3,6 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MockedProvider } from '@apollo/client/testing';
+import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import AppRoutes from '../AppRoutes';
 
 // Bypass the real auth guards so route elements render directly.
@@ -20,6 +22,7 @@ vi.mock('../../pages/HomePage', () => ({
   ),
 }));
 vi.mock('../../pages/LoginPage', () => ({ default: () => <div>LoginPageStub</div> }));
+vi.mock('../../pages/shop-page', () => ({ default: () => <div>ShopPageStub</div> }));
 vi.mock('../../pages/NotFoundPage', () => ({ default: () => <div>NotFoundStub</div> }));
 vi.mock('../../pages/support-hub', () => ({
   SupportHubPage: () => <div>SupportHubStub</div>,
@@ -37,12 +40,22 @@ function LocationProbe() {
 
 const props = { superCategory: 'nightlife', locationId: 'loc-1', zoneName: 'Zone A' };
 
-function renderAt(path: string) {
+/** The product routes read the `is_product_visible` system flag before they
+ * render anything — see RequireProducts. */
+const flagsMock = (enabled: boolean) => ({
+  request: { query: PUBLIC_FEATURE_FLAGS },
+  result: { data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
+function renderAt(path: string, mocks: unknown[] = []) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <AppRoutes {...props} />
-      <LocationProbe />
-    </MemoryRouter>,
+    <MockedProvider mocks={mocks as never[]}>
+      <MemoryRouter initialEntries={[path]}>
+        <AppRoutes {...props} />
+        <LocationProbe />
+      </MemoryRouter>
+    </MockedProvider>,
   );
 }
 
@@ -82,6 +95,28 @@ describe('AppRoutes', () => {
     renderAt('/support/chat');
     expect(await screen.findByText('LiveTicketsStub')).toBeInTheDocument();
     expect(screen.getByTestId('pathname')).toHaveTextContent('/support/live');
+  });
+
+  it('opens a product route once the product system flag is on', async () => {
+    renderAt('/shop', [flagsMock(true)]);
+    expect(await screen.findByText('ShopPageStub')).toBeInTheDocument();
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/shop');
+  });
+
+  it('sends every product route home while the flag is off', async () => {
+    for (const path of ['/shop', '/cart', '/orders', '/product-checkout', '/products/manage']) {
+      const view = renderAt(path, [flagsMock(false)]);
+      await waitFor(() => expect(screen.getByTestId('pathname')).toHaveTextContent('/'));
+      expect(screen.queryByText('ShopPageStub')).toBeNull();
+      view.unmount();
+    }
+  });
+
+  it('waits for the flag rather than bouncing a bookmarked product link', async () => {
+    // No mock for the flags query, so it never resolves within this assertion:
+    // the gate must sit on the loading state instead of redirecting.
+    renderAt('/shop', []);
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/shop');
   });
 
   it('redirects a partner route to the partners app via window.location.replace', async () => {

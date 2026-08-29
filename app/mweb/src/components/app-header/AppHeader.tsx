@@ -16,6 +16,7 @@ import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
 import { useAutoPodCounts } from '../../hooks/useAutoPodCounts';
 import { STUDIO_LABEL, resolveMode, studioSwitchPath } from '../../studio-mode';
+import { useProductVisibility } from '@duncit/app-settings';
 
 interface AppHeaderProps {
   minimal?: boolean;
@@ -50,11 +51,12 @@ export default function AppHeader({
   const [draftZone, setDraftZone] = useState('');
   const [toast, setToast] = useState<{ title?: string; body?: string } | null>(null);
   const { mode: studioMode, setMode: setStudioMode } = useStudioMode();
+  const { visible: showProducts } = useProductVisibility();
   const [studioSwitchOpen, setStudioSwitchOpen] = useState(false);
 
   const branding = data?.branding;
   const me = data?.me;
-  const effectiveStudio = resolveMode(studioMode, me?.roles ?? []);
+  const effectiveStudio = resolveMode(studioMode, me?.roles ?? [], { products: showProducts });
   // The shared <UserProvider> auto-mounts a global "User data not loaded"
   // dialog when the `me` query fails, so we no longer render a local one
   // here. Keeping `me`/`loading` for the rest of the header's logic.
@@ -216,6 +218,7 @@ export default function AppHeader({
             <StudioSwitchDialog
               open={studioSwitchOpen}
               roles={me?.roles ?? []}
+              showProducts={showProducts}
               current={effectiveStudio}
               onClose={() => setStudioSwitchOpen(false)}
               onSelect={(next) => {

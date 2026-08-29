@@ -17,6 +17,7 @@ import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { STUDIO_LABEL, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
+import { useProductVisibility } from '@/hooks/useProductVisibility';
 
 import { HeaderGreeting } from './HeaderGreeting';
 import { HeaderLocationRow } from './HeaderLocationRow';
@@ -40,7 +41,8 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const roles = me?.roles ?? [];
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
-  const effectiveStudio = resolveMode(studioMode, roles);
+  const { visible: showProducts } = useProductVisibility();
+  const effectiveStudio = resolveMode(studioMode, roles, { products: showProducts });
   const [switchOpen, setSwitchOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const showBrowseActions = !minimal && effectiveStudio === 'USER';
@@ -148,6 +150,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
       <StudioSwitchDialog
         open={switchOpen}
         roles={roles}
+        showProducts={showProducts}
         current={effectiveStudio}
         onClose={() => setSwitchOpen(false)}
         onSelect={(next) => {

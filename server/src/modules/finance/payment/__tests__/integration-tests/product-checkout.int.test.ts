@@ -10,6 +10,7 @@ jest.mock('../../razorpay.gateway', () => ({
 
 import { Types } from 'mongoose';
 import { paymentService } from '../../payment.service';
+import { disableProducts, enableProducts } from '@test/feature-flags';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -73,6 +74,25 @@ const cartInput = (items: any[], over: Record<string, any> = {}) => ({
 const ordersFor = (paymentId: string) => ProductOrderModel.find({ payment_id: new Types.ObjectId(paymentId) });
 
 describe('standalone product checkout', () => {
+  // The shop is a flagged feature; this suite is the server with it on.
+  beforeEach(enableProducts);
+
+  it('refuses the whole cart while the product system flag is off', async () => {
+    await disableProducts();
+    const user = await seedUser();
+    const warehouse = await seedWarehouse('WH-off', '110001');
+    const product = await seedShipProduct(warehouse._id);
+    const pod = await seedPodFor(product._id);
+
+    await expect(
+      paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 1 }]),
+        String(user._id),
+      ),
+    ).rejects.toThrow(/unavailable/i);
+    expect(await ProductOrderModel.countDocuments()).toBe(0);
+  });
+
   it('charges products + fallback delivery, marks the payment PRODUCT, does NOT book the pod, and splits per warehouse', async () => {
     const user = await seedUser();
     const wh = await seedWarehouse('WH-A', '110001');
@@ -428,6 +448,8 @@ describe('standalone product checkout', () => {
 });
 
 describe('payment-receipt-product', () => {
+  beforeEach(enableProducts);
+
   it('names the order and what was in it, not the checkout description', async () => {
     const user = await seedUser();
     const wh = await seedWarehouse('WH-RCPT', '110009');

@@ -430,6 +430,14 @@ export {
   type UsernameTranslate,
 } from './username';
 export {
+  STUDIO_OPTIONS,
+  availableModes,
+  resolveMode,
+  type StudioMode,
+  type StudioModeAccess,
+  type StudioOption,
+} from './studio-mode';
+export {
   AUTO_POD_ROLES,
   autoPodActionable,
   autoPodCityLabel,

@@ -1,6 +1,7 @@
 import { JSX, Suspense, lazy, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
+import { useProductVisibility } from '@duncit/app-settings';
 import { RedirectIfAuthed, RequireAuth } from './AuthGuards';
 
 // Route-level code splitting: every page is loaded on demand so the initial
@@ -132,6 +133,26 @@ const routeFallback = (
   </Box>
 );
 
+/**
+ * Product routes exist only while the `is_product_visible` system flag is on.
+ * With it off they are not 404s — they are pages the app currently has no
+ * feature for — so they send the visitor home instead of to Not Found.
+ *
+ * It waits on `pending`: the flag set arrives a beat after the first paint, and
+ * redirecting on that beat would bounce every bookmarked /shop link home even
+ * when products are switched on.
+ */
+function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
+  const { pending, visible } = useProductVisibility();
+  if (pending) return routeFallback;
+  if (!visible) return <Navigate to="/" replace />;
+  return children;
+}
+
+/** Signed-in AND products on — every product page needs both. */
+const withProducts = (element: JSX.Element) => withAuth(<RequireProducts>{element}</RequireProducts>);
+
+
 export default function AppRoutes({ superCategory, locationId, zoneName }: Readonly<Props>) {
   return (
     <Suspense fallback={routeFallback}>
@@ -183,7 +204,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/host/pod-pending/:podId" element={withAuth(<PodPendingPage />)} />
         <Route path="/earn" element={withAuth(<EarnPage />)} />
         <Route path="/tour-guide" element={withAuth(<TourGuidePage />)} />
-        <Route path="/products/manage" element={withAuth(<ProductsManagePage />)} />
+        <Route path="/products/manage" element={withProducts(<ProductsManagePage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />
@@ -250,11 +271,11 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/signup-referral" element={withAuth(<SignupReferralPage />)} />
         <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
         <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
-        <Route path="/product-checkout" element={withAuth(<ProductCheckoutPage />)} />
-        <Route path="/cart" element={withAuth(<CartPage />)} />
-        <Route path="/shop" element={withAuth(<ShopPage />)} />
-        <Route path="/product/:productId" element={withAuth(<ProductDetailPage />)} />
-        <Route path="/orders" element={withAuth(<OrdersHistoryPage />)} />
+        <Route path="/product-checkout" element={withProducts(<ProductCheckoutPage />)} />
+        <Route path="/cart" element={withProducts(<CartPage />)} />
+        <Route path="/shop" element={withProducts(<ShopPage />)} />
+        <Route path="/product/:productId" element={withProducts(<ProductDetailPage />)} />
+        <Route path="/orders" element={withProducts(<OrdersHistoryPage />)} />
         <Route path="/address-book" element={withAuth(<AddressBookPage />)} />
         <Route
           path="/explore"

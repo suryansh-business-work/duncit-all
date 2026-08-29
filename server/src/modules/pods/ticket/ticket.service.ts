@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
 import { markTicketPresent } from './attendance.service';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
+import { ticketPdfFilename, ticketPdfUrl } from './ticket.download';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -223,12 +224,22 @@ async function podHostName(podId: Types.ObjectId): Promise<string> {
  */
 async function whatsappBookingConfirmed(t: ITicket, bookingUrl: string): Promise<void> {
   try {
-    const [user, hostName] = await Promise.all([ticketRecipient(t), podHostName(t.pod_id)]);
+    const [user, hostName, pdfUrl] = await Promise.all([
+      ticketRecipient(t),
+      podHostName(t.pod_id),
+      ticketPdfUrl(String(t._id)),
+    ]);
     await whatsappService.send({
       event: 'USER_BOOKING_SUCCESSFUL',
       entityId: String(t._id),
       user,
       name: t.snapshot?.user_name,
+      // This message IS the ticket, so it carries the ticket. The campaign's
+      // template has a DOCUMENT header and a send that names no asset falls all
+      // the way back to the platform default — a shared placeholder that
+      // arrived beside real bookings as a file the attendee could not open.
+      // The same PDF the email attaches, behind a signed link AiSensy can fetch.
+      media: { url: pdfUrl, filename: ticketPdfFilename(t.ticket_code) },
       params: [
         t.snapshot?.user_name,
         t.snapshot?.pod_title,
@@ -569,13 +580,28 @@ export const ticketService = {
       },
       attachments: [
         {
-          filename: `ticket-${t.ticket_code}.pdf`,
+          filename: ticketPdfFilename(t.ticket_code),
           content: pdf,
           contentType: 'application/pdf',
         },
       ],
     });
     await whatsappBookingConfirmed(t, bookingUrl);
+  },
+
+  /**
+   * The ticket PDF behind a public, signed link.
+   *
+   * It takes no requester because there is none: by the time this is called the
+   * link has already been proved ours and unexpired, which is the whole
+   * authorisation (see ticket.download.ts). A ticket that is gone answers null
+   * rather than throwing — the route turns every failure into the same 404.
+   */
+  async pdfForLink(ticketDocId: string): Promise<{ pdf: Buffer; filename: string } | null> {
+    if (!Types.ObjectId.isValid(ticketDocId)) return null;
+    const t = await TicketModel.findById(ticketDocId);
+    if (!t) return null;
+    return { pdf: await pdfFor(t), filename: ticketPdfFilename(t.ticket_code) };
   },
 
   async pdfBase64(ticketDocId: string, requesterId: string, isAdmin: boolean) {

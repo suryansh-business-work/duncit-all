@@ -23,6 +23,7 @@ import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.sche
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
+import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
@@ -580,6 +581,12 @@ async function bootstrap() {
   // is this route, behind a signed link that names one backup and lives for
   // minutes. See dbBackup.router.ts.
   app.use('/db-backups', buildDbBackupRouter());
+
+  // The ticket PDF for a WhatsApp booking confirmation. AiSensy fetches a
+  // document header from a URL on its own servers, so the file has to be
+  // reachable with no session — behind a signed link that names one ticket and
+  // lives for half an hour. See ticket.router.ts.
+  app.use('/tickets', buildTicketRouter());
 
   app.use('/status', buildStatusProbeRouter());
 

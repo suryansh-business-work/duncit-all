@@ -16,6 +16,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import { sendBackoutSpotFilledEmail, sendPodRefundEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import {
@@ -316,6 +317,7 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
     const { appUrl } = await getUrlConfigs();
     await whatsappService.send({
       event: 'USER_REPLACEMENT_FOUND',
+      assets: podImageAssets(pod.pod_images_and_videos),
       // The RELEASE, not the pod: a booking can give back seats twice and have
       // each release filled separately, and keying on the pod would swallow the
       // second notice.

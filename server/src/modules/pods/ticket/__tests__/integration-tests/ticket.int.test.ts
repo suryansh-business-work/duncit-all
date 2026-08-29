@@ -1,10 +1,16 @@
 jest.mock('@services/email/email.service', () => ({ sendEmail: jest.fn().mockResolvedValue(undefined) }));
+jest.mock('@modules/platform/whatsapp/whatsapp.service', () => ({
+  whatsappService: { send: jest.fn().mockResolvedValue({ status: 'SENT', reason: '', message_id: 'm1' }) },
+}));
 
 import { Types } from 'mongoose';
 import { ticketService } from '../../ticket.service';
 import { TicketModel } from '../../ticket.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { signTicketToken } from '../../ticket.token';
+import { verifyTicketPdfToken } from '../../ticket.download';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 
 const podId = new Types.ObjectId();
 const userId = new Types.ObjectId();
@@ -149,6 +155,52 @@ describe('ticketService integration', () => {
       expect(opts.vars.booking_url).toMatch(new RegExp(`/booking/${String(membership_id)}$`));
       // Templates cached in the DB still render the old {{app_url}} CTA.
       expect(opts.vars.app_url).toBe(opts.vars.booking_url);
+    });
+  });
+
+  // A send that names no asset falls back to the platform default, which is how
+  // a shared placeholder arrived on WhatsApp in place of the ticket. The
+  // booking offers BOTH kinds, so whichever header the campaign's template
+  // carries is answered with something that belongs to this booking.
+  describe('WhatsApp booking confirmation', () => {
+    it('carries this ticket as a PDF, not the platform default', async () => {
+      (whatsappService.send as jest.Mock).mockClear();
+      const ticket = await makeTicket({ ticket_code: 'TKT-WA001' });
+
+      await ticketService.email(ticket as never);
+
+      const [input] = (whatsappService.send as jest.Mock).mock.calls.at(-1) as [Record<string, any>];
+      expect(input.event).toBe('USER_BOOKING_SUCCESSFUL');
+      expect(input.assets.DOCUMENT.filename).toBe('ticket-TKT-WA001.pdf');
+      expect(input.assets.DOCUMENT.url).toMatch(/\/tickets\/[^/]+\/ticket\.pdf$/);
+      // The link names THIS ticket, and nothing else about it is in the URL.
+      const token = input.assets.DOCUMENT.url.split('/tickets/')[1].replace('/ticket.pdf', '');
+      expect(verifyTicketPdfToken(token)).toBe(String(ticket._id));
+      expect(input.assets.DOCUMENT.url).not.toContain('TKT-WA001');
+    });
+
+    it('offers the pod picture for the same send, so an IMAGE header is answered too', async () => {
+      (whatsappService.send as jest.Mock).mockClear();
+      const podWithArt = new Types.ObjectId();
+      // Straight into the collection: the send only reads the media list, and
+      // filling every field the Pod schema requires would say nothing about it.
+      await PodModel.collection.insertOne({
+        _id: podWithArt,
+        pod_id: 'DUN-POD-4821',
+        pod_title: 'Jazz Night',
+        pod_images_and_videos: [
+          { url: 'https://ik.imagekit.io/duncit/pods/clip.mp4', type: 'VIDEO' },
+          { url: 'https://ik.imagekit.io/duncit/pods/jazz-night.jpg', type: 'IMAGE' },
+        ],
+      } as never);
+      const ticket = await makeTicket({ pod_id: podWithArt, ticket_code: 'TKT-WA002' });
+
+      await ticketService.email(ticket as never);
+
+      const [input] = (whatsappService.send as jest.Mock).mock.calls.at(-1) as [Record<string, any>];
+      // The picture, never the video that sits ahead of it in the list.
+      expect(input.assets.IMAGE.url).toBe('https://ik.imagekit.io/duncit/pods/jazz-night.jpg');
+      expect(input.assets.DOCUMENT.filename).toBe('ticket-TKT-WA002.pdf');
     });
   });
 });

@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
 import { markTicketPresent } from './attendance.service';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
+import { ticketPdfFilename, ticketPdfUrl } from './ticket.download';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -14,6 +15,8 @@ import type { InvoiceData } from '@services/invoice/invoice.pdf';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { invoiceDataForPayment } from '@modules/finance/payment/payment.invoice';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
+import type { StoredMedia } from '@utils/media';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -203,14 +206,23 @@ const ticketRecipient = (t: ITicket) =>
     'profile.first_name profile.last_name auth.phone communication.whatsapp'
   );
 
-/** The pod's host, named. Never blank, for the same reason as placeLabel. */
-async function podHostName(podId: Types.ObjectId): Promise<string> {
-  const pod = await PodModel.findById(podId).select('pod_hosts_id').lean();
+/** The pod's host named, and the pod's own picture — one read, because the WhatsApp
+ * leg needs both and they come off the same document. Host name is never blank,
+ * for the same reason as placeLabel. */
+async function podHostAndImage(
+  podId: Types.ObjectId
+): Promise<{ hostName: string; media: StoredMedia[] }> {
+  const pod = await PodModel.findById(podId)
+    .select('pod_hosts_id pod_images_and_videos')
+    .lean();
   const host = await UserModel.findById((pod as any)?.pod_hosts_id?.[0])
     .select('profile.first_name profile.last_name')
     .lean();
   const profile = (host as any)?.profile;
-  return `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() || 'A host';
+  return {
+    hostName: `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() || 'A host',
+    media: ((pod as any)?.pod_images_and_videos ?? []) as StoredMedia[],
+  };
 }
 
 /**
@@ -223,12 +235,27 @@ async function podHostName(podId: Types.ObjectId): Promise<string> {
  */
 async function whatsappBookingConfirmed(t: ITicket, bookingUrl: string): Promise<void> {
   try {
-    const [user, hostName] = await Promise.all([ticketRecipient(t), podHostName(t.pod_id)]);
+    const [user, pod, pdfUrl] = await Promise.all([
+      ticketRecipient(t),
+      podHostAndImage(t.pod_id),
+      ticketPdfUrl(String(t._id)),
+    ]);
     await whatsappService.send({
       event: 'USER_BOOKING_SUCCESSFUL',
       entityId: String(t._id),
       user,
       name: t.snapshot?.user_name,
+      // This message IS the ticket, so it carries the ticket — and the picture
+      // of the pod it admits you to, for the day the template's header turns
+      // out to be an image rather than a file. A send that names neither falls
+      // all the way back to the platform default, which is the shared
+      // placeholder that arrived beside real bookings as a file nobody could
+      // open. The PDF is the same one the email attaches, behind a signed link
+      // AiSensy can fetch.
+      assets: {
+        ...podImageAssets(pod.media),
+        DOCUMENT: { url: pdfUrl, filename: ticketPdfFilename(t.ticket_code) },
+      },
       params: [
         t.snapshot?.user_name,
         t.snapshot?.pod_title,
@@ -236,7 +263,7 @@ async function whatsappBookingConfirmed(t: ITicket, bookingUrl: string): Promise
         dateOnly(t.snapshot?.pod_date_time),
         timeOnly(t.snapshot?.pod_date_time),
         bookingUrl,
-        hostName,
+        pod.hostName,
       ],
     });
   } catch (err) {
@@ -325,7 +352,9 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
       import('@modules/engagement/notification/notification.service'),
       import('@modules/pods/pod/pod.model'),
     ]);
-    const pod = await PodModel.findById(ticket.pod_id).select('pod_title').lean();
+    const pod = await PodModel.findById(ticket.pod_id)
+      .select('pod_title pod_images_and_videos')
+      .lean();
     await notificationService.create({
       title: 'Attendance marked',
       body: `Your attendance is marked for ${(pod as any)?.pod_title ?? 'this pod'}.`,
@@ -358,6 +387,9 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
       entityId: String(ticket._id),
       user,
       name: ticket.snapshot?.user_name,
+      // The pod this attendance is for, pictured — the same asset every other
+      // pod-shaped message carries, rather than the platform placeholder.
+      assets: podImageAssets((pod as any)?.pod_images_and_videos),
       params: [
         ticket.snapshot?.user_name,
         ticket.snapshot?.pod_title,
@@ -569,13 +601,28 @@ export const ticketService = {
       },
       attachments: [
         {
-          filename: `ticket-${t.ticket_code}.pdf`,
+          filename: ticketPdfFilename(t.ticket_code),
           content: pdf,
           contentType: 'application/pdf',
         },
       ],
     });
     await whatsappBookingConfirmed(t, bookingUrl);
+  },
+
+  /**
+   * The ticket PDF behind a public, signed link.
+   *
+   * It takes no requester because there is none: by the time this is called the
+   * link has already been proved ours and unexpired, which is the whole
+   * authorisation (see ticket.download.ts). A ticket that is gone answers null
+   * rather than throwing — the route turns every failure into the same 404.
+   */
+  async pdfForLink(ticketDocId: string): Promise<{ pdf: Buffer; filename: string } | null> {
+    if (!Types.ObjectId.isValid(ticketDocId)) return null;
+    const t = await TicketModel.findById(ticketDocId);
+    if (!t) return null;
+    return { pdf: await pdfFor(t), filename: ticketPdfFilename(t.ticket_code) };
   },
 
   async pdfBase64(ticketDocId: string, requesterId: string, isAdmin: boolean) {

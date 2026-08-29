@@ -35,6 +35,7 @@ import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
+import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import type { GiftCardPurchaseFacts } from '@modules/finance/giftcard/giftcard.service';
 
 /**
@@ -783,7 +784,7 @@ const timeOnly = (value?: Date | null) =>
 async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
   if (!payment.pod_id) return { status: 'SKIPPED', detail: NO_POD_DETAIL };
   const pod = await PodModel.findById(payment.pod_id).select(
-    'pod_id pod_title pod_date_time pod_hosts_id club_id'
+    'pod_id pod_title pod_date_time pod_hosts_id club_id pod_images_and_videos'
   );
   if (!pod) return { status: 'SKIPPED', detail: 'The pod no longer exists' };
   const [{ mwebUrl }, club, buyer, host] = await Promise.all([
@@ -808,6 +809,7 @@ async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
     entityId: String(payment._id),
     user: buyer,
     name,
+    assets: podImageAssets(pod.pod_images_and_videos),
     params: [
       name,
       pod.pod_title,

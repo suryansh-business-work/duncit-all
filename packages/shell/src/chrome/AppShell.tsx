@@ -89,7 +89,12 @@ export function AppShell({
   const closeChat = useCallback(() => setChatOpen(false), []);
   const toggleChat = useCallback(() => setChatOpen((current) => !current), []);
   const features = usePortalAppFeatures(config.key);
-  const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
+  // Read ONCE. `roles` is nullable on the session and not on the chat panel's
+  // prop, and narrowing it twice would be a second branch saying the same thing
+  // — one nobody can reach, because `showChat` below already implies a
+  // non-empty array by the time the panel is rendered.
+  const roles = user?.roles ?? [];
+  const isStaff = roles.some((role) => STAFF_CHAT_ROLES.has(role));
   // The panel is mounted whether or not it shows, so turning chat off has to
   // unmount it here too — otherwise the socket keeps ringing on a console that
   // no longer offers chat.
@@ -211,11 +216,11 @@ export function AppShell({
                   open={chatOpen}
                   meId={user?.user_id ?? ''}
                   meName={user?.full_name ?? user?.first_name ?? undefined}
-                  // `showChat` already means `isStaff`, which only holds for a
-                  // user with a non-empty, matching `roles` array — the empty
-                  // fallback `.some()` needs to stay safe for everyone else can
-                  // never actually apply here.
-                  meRoles={user!.roles!}
+                  // Optional on the panel, which defaults it to []. `showChat`
+                  // already implies a matching `roles` array, so the fallback
+                  // never applies — but asserting that with `!` tells the reader
+                  // nothing the narrowing above did not already do.
+                  meRoles={roles}
                   onClose={closeChat}
                   onRequestOpen={openChat}
                 />

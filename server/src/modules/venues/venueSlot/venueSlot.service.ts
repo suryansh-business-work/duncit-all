@@ -11,6 +11,8 @@ import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.se
 import { venueSideOf } from '@modules/finance/finance/breakdown.math';
 import { resolveEffectiveRates } from '@modules/finance/finance/settlement.service';
 import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
+import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
+import type { SendAssets } from '@modules/platform/whatsapp/whatsapp.media';
 import { getUrlConfigs } from '@config/url-configs';
 
 function fail(code: string, msg: string): never {
@@ -484,6 +486,9 @@ interface SlotDecisionFacts {
   time: string;
   hosts: any[];
   owner: any;
+  /** The pod's own pictures — the header asset every message below carries, so
+   * a slot decision is headed by the pod rather than by a placeholder. */
+  assets: SendAssets;
 }
 
 /** The club admin the pod is handed to. */
@@ -508,6 +513,7 @@ function hostDecisionSends(facts: SlotDecisionFacts, approved: boolean): NotifyI
       entityId: facts.entityId,
       user: host,
       name,
+      assets: facts.assets,
       params: [name, facts.podTitle, facts.podTitle, facts.date, facts.time, facts.venueName, facts.podTitle],
     };
   });
@@ -518,7 +524,7 @@ function hostDecisionSends(facts: SlotDecisionFacts, approved: boolean): NotifyI
 async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): Promise<NotifyInput[]> {
   if (!facts.owner) return [];
   const name = contactName(facts.owner);
-  const to = { entityId: facts.entityId, user: facts.owner, name };
+  const to = { entityId: facts.entityId, user: facts.owner, name, assets: facts.assets };
   if (approved) {
     // The Partners portal's venue home, the same surface the slot-request email
     // sends them to — mWeb's `/venues/manage` does not exist over there.
@@ -567,6 +573,7 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
       entityId: facts.entityId,
       user: facts.owner,
       name: ownerName,
+      assets: facts.assets,
       params: [ownerName, ...details],
     });
   }
@@ -577,6 +584,7 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
       entityId: facts.entityId,
       user: host,
       name: facts.hostName,
+      assets: facts.assets,
       params: [facts.hostName, ...details],
     });
   }
@@ -607,6 +615,7 @@ async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolea
       time,
       hosts,
       owner,
+      assets: podImageAssets(pod.pod_images_and_videos),
     };
     const sends = [
       ...hostDecisionSends(facts, approved),

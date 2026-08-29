@@ -1,4 +1,5 @@
 import { Box } from '@mui/material';
+import { useProductVisibility } from '@duncit/app-settings';
 import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
@@ -58,6 +59,10 @@ function autoPodsTile(
  * into a partner mode — that role's own menu, ending in Withdrawal. */
 export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, showAutoPods = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
+  // The Shop group is the drawer's whole e-commerce entry point, so it lives
+  // and dies with the product system flag rather than being listed as four
+  // destinations that redirect straight back home.
+  const { visible: productsVisible } = useProductVisibility();
   const percent = profileCompletion(me ?? {});
   const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t));
   // Built here rather than in profileSections so the label is translated —
@@ -115,7 +120,9 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       {partnerMenus.map((menu) => (
         <ManageAccountList key={menu.key} title={menu.title} items={menu.items} onNavigate={onNavigate} />
       ))}
-      <ManageAccountList title={t('mweb.common.shop')} items={SHOP_ITEMS} onNavigate={onNavigate} />
+      {productsVisible && (
+        <ManageAccountList title={t('mweb.common.shop')} items={SHOP_ITEMS} onNavigate={onNavigate} />
+      )}
     </>
   );
 }

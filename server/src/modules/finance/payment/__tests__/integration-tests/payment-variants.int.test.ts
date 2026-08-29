@@ -20,6 +20,7 @@ jest.mock('@modules/pods/ticket/ticket.service', () => ({
 
 import { Types } from 'mongoose';
 import { paymentService } from '../../payment.service';
+import { enableProducts } from '@test/feature-flags';
 import { PaymentModel } from '../../payment.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -88,6 +89,9 @@ const buyInput = (podId: Types.ObjectId, selected: any[], extra: Record<string, 
 });
 
 describe('variant-aware checkout pricing', () => {
+  // The shop is a flagged feature; this suite is the server with it on.
+  beforeEach(enableProducts);
+
   it('charges the chosen variant price and snapshots it onto product_lines', async () => {
     const user = await seedUser();
     const product = await seedVariantProduct();

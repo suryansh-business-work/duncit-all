@@ -1,25 +1,23 @@
-import { autoPodModeCount, type AutoPodActionCounts } from '@duncit/utils';
+import { autoPodModeCount, type AutoPodActionCounts, type StudioMode } from '@duncit/utils';
 
-/** Studio "modes" the account drawer + header switch between. Each non-USER mode
- * maps to a role the user must hold. The active mode drives the sidebar menu and
- * the header studio badge — the RN twin of mWeb's `studio-mode.ts`. */
-export type StudioMode = 'USER' | 'HOST' | 'VENUE' | 'ECOMM' | 'CLUB';
+/**
+ * The mode rules themselves — which studios exist, which a person may switch
+ * into, and how a persisted mode falls back — live in @duncit/utils, so mWeb and
+ * the native app cannot disagree about whether a studio exists (rules 27 + 40).
+ * Re-exported here so every existing import of this module keeps working; what
+ * stays below is the half that genuinely differs: native lands on route names.
+ */
+export {
+  STUDIO_OPTIONS,
+  availableModes,
+  resolveMode,
+  type StudioMode,
+  type StudioModeAccess,
+  type StudioOption,
+} from '@duncit/utils';
 
-export interface StudioOption {
-  mode: StudioMode;
-  label: string;
-  /** Role required to access this mode (USER has none). */
-  role?: string;
-}
-
-export const STUDIO_OPTIONS: readonly StudioOption[] = [
-  { mode: 'USER', label: 'User' },
-  { mode: 'HOST', label: 'Host Studio', role: 'HOST' },
-  { mode: 'VENUE', label: 'Venue Studio', role: 'VENUE_OWNER' },
-  { mode: 'ECOMM', label: 'ecomm', role: 'ECOMM_MANAGER' },
-  { mode: 'CLUB', label: 'Club Admin', role: 'CLUB_ADMIN' },
-];
-
+/** The words beside each mode — the header badge, the switcher bubbles and the
+ * drawer title all read this map. */
 export const STUDIO_LABEL: Record<StudioMode, string> = {
   USER: 'User',
   HOST: 'Host Studio',
@@ -27,16 +25,6 @@ export const STUDIO_LABEL: Record<StudioMode, string> = {
   ECOMM: 'ecomm',
   CLUB: 'Club Admin',
 };
-
-/** Modes a user with these roles can switch into (always includes USER). */
-export function availableModes(roles: string[]): StudioOption[] {
-  return STUDIO_OPTIONS.filter((option) => !option.role || roles.includes(option.role));
-}
-
-/** Falls a persisted mode back to USER when the user no longer qualifies for it. */
-export function resolveMode(mode: StudioMode, roles: string[]): StudioMode {
-  return availableModes(roles).some((option) => option.mode === mode) ? mode : 'USER';
-}
 
 /** Landing screen for each mode — switching roles jumps straight to its dashboard. */
 export const STUDIO_HOME_ROUTE = {

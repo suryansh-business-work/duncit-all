@@ -19,6 +19,7 @@ import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
 import { useAutoPodCounts } from '../../../hooks/useAutoPodCounts';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
+import { PRODUCT_VISIBILITY_FLAG } from '@duncit/app-settings';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
@@ -69,14 +70,18 @@ export default function MenuPanel({
   const showGiftCards = useFeatureFlag('gift_cards');
   const showTourGuide = useFeatureFlag('tour_guide');
   const showAutoPods = useFeatureFlag('auto_pods');
+  const showProducts = useFeatureFlag(PRODUCT_VISIBILITY_FLAG);
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
   // Fetched with the menu, not with the dialog, so the switch below already
   // knows whether an Auto Pod is waiting on the role being switched into.
   const autoPods = useAutoPodCounts(roles);
-  const effectiveMode = resolveMode(mode, roles);
-  const canSwitch = availableModes(roles).length > 1;
+  // Products off drops the E-commerce studio from the switcher AND from a
+  // persisted mode, so nobody is left sitting in a studio whose pages are gated.
+  const studioAccess = { products: showProducts };
+  const effectiveMode = resolveMode(mode, roles, studioAccess);
+  const canSwitch = availableModes(roles, studioAccess).length > 1;
   // Leaving the menu REPLACES its history entry, so Back from the destination
   // returns to the page the menu was opened from — never through the menu
   // again. Native pops the menu before navigating for the same reason.
@@ -193,6 +198,7 @@ export default function MenuPanel({
       <StudioSwitchDialog
         open={switchOpen}
         roles={roles}
+        showProducts={showProducts}
         current={effectiveMode}
         onClose={() => setSwitchOpen(false)}
         onSelect={(next) => {

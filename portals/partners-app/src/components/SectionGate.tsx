@@ -1,7 +1,8 @@
 import type { JSX } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
-import { hasPartnerRole, sectionRoleFor } from '../config/partner-sections';
+import { useProductVisibility } from '@duncit/app-settings';
+import { hasPartnerRole, sectionFor } from '../config/partner-sections';
 
 /**
  * Keeps each partner area's routes to the people who hold its role.
@@ -11,15 +12,21 @@ import { hasPartnerRole, sectionRoleFor } from '../config/partner-sections';
  * role), so a typed-in URL would still open an empty Venue Owner dashboard for
  * somebody the Onboarding or Admin portal never approved. Whoever lacks the role
  * goes back to `/`, which lands them where their own access says.
+ *
+ * The same is true of the product system flag: the E-Commerce Brand area — its
+ * listings, its warehouses and their ShipRocket registration — is gone while the
+ * flag is off, not merely absent from the sidebar.
  */
 export default function SectionGate({ children }: Readonly<{ children: JSX.Element }>) {
   const { pathname } = useLocation();
   const { user } = useUserData();
-  const role = sectionRoleFor(pathname);
-  if (!role) return children;
-  // No user yet (the first load after sign-in): there is no role to judge, so
-  // nothing renders until it arrives — the portal chrome around it stays up.
-  if (!user) return null;
-  if (!hasPartnerRole(user.roles, role)) return <Navigate to="/" replace />;
+  const { pending: productsPending, visible: productsVisible } = useProductVisibility();
+  const section = sectionFor(pathname);
+  if (!section) return children;
+  // Nothing is decided until both answers land: judging early would bounce a
+  // bookmarked partner page on the first paint. The portal chrome stays up.
+  if (!user || productsPending) return null;
+  if (!hasPartnerRole(user.roles, section.role)) return <Navigate to="/" replace />;
+  if (section.products && !productsVisible) return <Navigate to="/" replace />;
   return children;
 }

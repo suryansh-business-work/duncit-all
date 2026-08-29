@@ -11,6 +11,11 @@ export type PartnerRole = 'CLUB_ADMIN' | 'VENUE_OWNER' | 'HOST' | 'ECOMM_MANAGER
 
 export interface PartnerSection {
   role: PartnerRole;
+  /** True for an area the `is_product_visible` system flag owns — with the flag
+   * off it is not in the sidebar, its routes do not render, and `/` never lands
+   * on it. E-Commerce Brand is the whole of it: listings, warehouses (ShipRocket
+   * registration) and the brand dashboard. */
+  products?: boolean;
   /** Route prefixes that belong to the area; `SectionGate` keeps them to the role. */
   paths: readonly string[];
   /** The sidebar group. Its first child is where `/` lands this role. */
@@ -65,6 +70,7 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
   },
   {
     role: 'ECOMM_MANAGER',
+    products: true,
     paths: ['/ecomm', '/ecomm-brand'],
     nav: {
       label: 'E-Commerce Brand',
@@ -82,8 +88,23 @@ export const hasPartnerRole = (roles: readonly string[] | null | undefined, role
 
 const underPath = (pathname: string, prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
 
+/** The section a route belongs to, or `null` for the pages every signed-in user may open. */
+export function sectionFor(pathname: string): PartnerSection | null {
+  return PARTNER_SECTIONS.find((entry) => entry.paths.some((prefix) => underPath(pathname, prefix))) ?? null;
+}
+
 /** The role a route needs, or `null` for the pages every signed-in user may open. */
 export function sectionRoleFor(pathname: string): PartnerRole | null {
-  const section = PARTNER_SECTIONS.find((entry) => entry.paths.some((prefix) => underPath(pathname, prefix)));
-  return section?.role ?? null;
+  return sectionFor(pathname)?.role ?? null;
+}
+
+/** The partner areas a user may see: the ones they hold a role for, minus the
+ * product area while the system flag is off. */
+export function visibleSections(
+  roles: readonly string[] | null | undefined,
+  productsVisible: boolean,
+): PartnerSection[] {
+  return PARTNER_SECTIONS.filter(
+    (section) => hasPartnerRole(roles, section.role) && (productsVisible || !section.products),
+  );
 }

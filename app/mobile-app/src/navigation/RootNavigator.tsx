@@ -89,6 +89,7 @@ import { ListProductScreen } from '@/screens/ListProductScreen';
 import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
 import { ClubManageScreen } from '@/screens/ClubManageScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
+import { withProductGate } from '@/navigation/withProductGate';
 import { useAuthStore } from '@/stores/auth.store';
 import { reportJourneyStep } from '@/services/short-link-attribution';
 import { consumePendingBooking } from './pendingBooking';
@@ -105,6 +106,20 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  *   token + survey done → the app (Home + account-menu destinations)
  * Swapping the rendered screen set is React Navigation's documented auth pattern.
  */
+
+/**
+ * Every product screen behind the one system flag. Built at module scope: a
+ * wrapper made during render is a fresh component type each time and remounts
+ * the screen under it (S6478).
+ */
+const GatedProductCheckoutScreen = withProductGate(ProductCheckoutScreen);
+const GatedCartScreen = withProductGate(CartScreen);
+const GatedShopScreen = withProductGate(ShopScreen);
+const GatedProductDetailScreen = withProductGate(ProductDetailScreen);
+const GatedOrdersHistoryScreen = withProductGate(OrdersHistoryScreen);
+const GatedProductsManageScreen = withProductGate(ProductsManageScreen);
+const GatedListProductScreen = withProductGate(ListProductScreen);
+
 export function RootNavigator() {
   const token = useAuthStore((s) => s.token);
   const surveyCompleted = useAuthStore((s) => s.surveyCompleted);
@@ -175,10 +190,10 @@ export function RootNavigator() {
       <Stack.Screen name="HostAutoPods" component={HostAutoPodsScreen} />
       <Stack.Screen name="ClubAutoPods" component={ClubAutoPodsScreen} />
       <Stack.Screen name="Earn" component={EarnScreen} />
-      <Stack.Screen name="ListProduct" component={ListProductScreen} />
+      <Stack.Screen name="ListProduct" component={GatedListProductScreen} />
       <Stack.Screen name="BeClubAdmin" component={BeClubAdminScreen} />
       <Stack.Screen name="ClubManage" component={ClubManageScreen} />
-      <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
+      <Stack.Screen name="ProductsManage" component={GatedProductsManageScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Sos" component={SosScreen} />
       <Stack.Screen name="Callback" component={CallbackScreen} />
@@ -211,11 +226,11 @@ export function RootNavigator() {
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
-      <Stack.Screen name="ProductCheckout" component={ProductCheckoutScreen} />
-      <Stack.Screen name="Cart" component={CartScreen} />
-      <Stack.Screen name="Shop" component={ShopScreen} />
-      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      <Stack.Screen name="OrdersHistory" component={OrdersHistoryScreen} />
+      <Stack.Screen name="ProductCheckout" component={GatedProductCheckoutScreen} />
+      <Stack.Screen name="Cart" component={GatedCartScreen} />
+      <Stack.Screen name="Shop" component={GatedShopScreen} />
+      <Stack.Screen name="ProductDetail" component={GatedProductDetailScreen} />
+      <Stack.Screen name="OrdersHistory" component={GatedOrdersHistoryScreen} />
       <Stack.Screen name="AddressBook" component={AddressBookScreen} />
       <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Stack.Screen name="Membership" component={MembershipScreen} />

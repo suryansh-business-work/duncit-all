@@ -15,6 +15,7 @@ import {
   DEFAULT_REOPEN_ZONE,
 } from "@modules/support/reopenWindow";
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, MAX_ACCOUNT_AGE_YEARS } from "@utils/age";
+import { invalidateFeatureFlagCache } from "./featureFlag.gate";
 
 /** Minimum joining age when the admin hasn't set an explicit value. */
 const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
@@ -309,10 +310,13 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    // The one system kill switch for e-commerce. Off, and the server refuses
+    // every product operation as well — hiding a button is never the only thing
+    // holding the line. Seeded OFF: a fresh install ships without a shop.
     key: "is_product_visible",
     name: "Product Features Visible",
     description:
-      "Show all product features (Pod Shop, product management, Create-a-Pod products step, product nav) across apps and portals.",
+      "Show every product feature — the Pod Shop on a pod, the cart, the catalogue, the Create-a-Pod products step, brand and ShipRocket warehouse registration, product orders and the E-commerce studio — across the apps and the portals. Off, and product operations are refused server-side too.",
     enabled: false,
   },
   {
@@ -573,6 +577,7 @@ export const settingsService = {
       description: input.description ?? "",
       enabled: !!input.enabled,
     });
+    invalidateFeatureFlagCache();
     return toFlagPub(created);
   },
 
@@ -584,6 +589,7 @@ export const settingsService = {
       new: true,
     });
     if (!updated) notFound("FeatureFlag");
+    invalidateFeatureFlagCache();
     return toFlagPub(updated);
   },
 
@@ -594,6 +600,7 @@ export const settingsService = {
       { new: true },
     );
     if (!updated) notFound("FeatureFlag");
+    invalidateFeatureFlagCache();
     return toFlagPub(updated);
   },
 
@@ -652,6 +659,7 @@ export const settingsService = {
       });
     }
     await f!.deleteOne();
+    invalidateFeatureFlagCache();
     return true;
   },
 
@@ -818,16 +826,24 @@ export const settingsService = {
       await FeatureFlagModel.updateOne(
         { key: f.key },
         {
+          // `is_system` is $set, not $setOnInsert: a key in this catalogue is a
+          // system flag even when the row already exists because an operator
+          // created it by hand before the feature shipped. Left insert-only it
+          // stayed `false` forever on exactly those servers, and the flag that
+          // gates a whole feature stayed deletable from the Admin table.
+          $set: { is_system: true },
+          // `enabled`, `name` and `description` stay insert-only — the seed
+          // names a default, never the switch position an operator chose.
           $setOnInsert: {
             key: f.key,
             name: f.name,
             description: f.description,
             enabled: f.enabled,
-            is_system: true,
           },
         },
         { upsert: true },
       );
     }
+    invalidateFeatureFlagCache();
   },
 };

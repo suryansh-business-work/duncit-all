@@ -3,6 +3,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { ShopScreen, sortShopProducts, type ShopProduct } from '@/screens/ShopScreen';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore } from '@/stores/cart.store';
+import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
@@ -51,6 +52,10 @@ beforeEach(() => {
   mockRefNavigate.mockClear();
   mockRequest.mockReset();
   useCartStore.setState({ lines: [], hydrated: true });
+  // The header cart button rides on the product system flag.
+  useFeatureFlagsStore.setState({
+    data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled: true }] },
+  });
   mockCategories = [
     { id: 'sup1', name: 'Lifestyle', level: 'SUPER', parent_id: null },
     { id: 'sup2', name: 'Food', level: 'SUPER', parent_id: null },

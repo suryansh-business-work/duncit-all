@@ -5,10 +5,12 @@ import App from '../../src/App';
 import { setToken, clearToken } from '../../src/lib/session';
 import { renderWithProviders } from '../testkit';
 
-const flag = vi.hoisted(() => ({ value: true }));
+const flag = vi.hoisted(() => ({ value: true, pending: false }));
 vi.mock('@duncit/app-settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/app-settings')>()),
-  useFeatureFlag: () => flag.value,
+  // `pending` is always false here: these cases are about the answered flag,
+  // and the wait-before-redirecting rule has its own case below.
+  useProductVisibility: () => ({ pending: flag.pending, visible: flag.value }),
 }));
 
 vi.mock('../../src/components/AppShell', () => ({
@@ -58,6 +60,7 @@ vi.mock('@duncit/shell', async (importOriginal) => ({
 afterEach(() => {
   clearToken();
   flag.value = true;
+  flag.pending = false;
 });
 
 const REVIEW_AND_CATALOG_ROUTES: [string, string][] = [
@@ -94,6 +97,17 @@ describe('App routing', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/orders'] });
     expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
+    expect(screen.queryByText('ORDERS PAGE')).not.toBeInTheDocument();
+  });
+
+  it('waits for the flag rather than bouncing a bookmarked product route', () => {
+    // Products read as hidden while the flag set is in flight; redirecting on
+    // that beat sends every bookmarked /orders link to the dashboard.
+    flag.pending = true;
+    flag.value = false;
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/orders'] });
+    expect(screen.queryByText('WELCOME PAGE')).not.toBeInTheDocument();
     expect(screen.queryByText('ORDERS PAGE')).not.toBeInTheDocument();
   });
 

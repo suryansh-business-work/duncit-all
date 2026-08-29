@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { createAuthed, ProfilePage } from '@duncit/shell';
-import { useFeatureFlag } from '@duncit/app-settings';
+import { useProductVisibility } from '@duncit/app-settings';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import InventoryPage from './pages/inventory-page/InventoryPage';
@@ -22,10 +22,17 @@ import PodShopSliderPage from './pages/settings/PodShopSliderPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
-/** Gates the product routes: when products are hidden they redirect home. */
+/**
+ * Gates the product routes: when products are hidden they redirect home.
+ *
+ * It waits on `pending` — the flag set lands a beat after the first paint, and
+ * redirecting on that beat sends every bookmarked /inventory link to the
+ * dashboard even with the feature switched on.
+ */
 function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
-  const showProducts = useFeatureFlag('is_product_visible');
-  if (!showProducts) return <Navigate to="/" replace />;
+  const { pending, visible } = useProductVisibility();
+  if (pending) return null;
+  if (!visible) return <Navigate to="/" replace />;
   return children;
 }
 

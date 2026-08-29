@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appConfig, buildNav } from './app-config';
+import { appConfig, buildNav, landingPath } from './app-config';
 
 describe('buildNav', () => {
   it('shows only the common tail to a user with no partner role', () => {
@@ -29,6 +29,21 @@ describe('buildNav', () => {
       expect(walletIndex).toBeGreaterThanOrEqual(0);
       expect(walletIndex).toBeLessThan(faqIndex);
     }
+  });
+
+  it('hides the E-Commerce Brand section until products are switched on', () => {
+    const off = buildNav(['ECOMM_MANAGER']);
+    expect(off.some((i) => i.label === 'E-Commerce Brand')).toBe(false);
+    // The role still earns, so Withdrawal stays reachable.
+    expect(off.some((i) => i.to === '/wallet')).toBe(true);
+
+    const on = buildNav(['ECOMM_MANAGER'], { products: true });
+    expect(on.some((i) => i.label === 'E-Commerce Brand')).toBe(true);
+  });
+
+  it('lands an e-commerce-only partner on Earn while products are off', () => {
+    expect(landingPath(['ECOMM_MANAGER'], false)).toBe('/earn');
+    expect(landingPath(['ECOMM_MANAGER'], true)).toBe('/ecomm/dashboard');
   });
 
   it('adds both Club Admin tools and Wallet for a club admin', () => {

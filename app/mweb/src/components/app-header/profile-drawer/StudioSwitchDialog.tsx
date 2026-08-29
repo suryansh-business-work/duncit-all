@@ -27,6 +27,8 @@ const switchButtonLabel = (changed: boolean, mode: StudioMode) =>
 interface Props {
   open: boolean;
   roles: string[];
+  /** `is_product_visible` — off, and the E-commerce bubble is not offered. */
+  showProducts?: boolean;
   current: StudioMode;
   onClose: () => void;
   onSelect: (mode: StudioMode) => void;
@@ -35,8 +37,8 @@ interface Props {
 /** Bubble-style role switcher — one bubble per mode; the picked one lifts up
  * and expands into the big primary card below. Picking a bubble only stages the
  * choice; nothing switches until the Switch button below is pressed. */
-export default function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: Readonly<Props>) {
-  const options = availableModes(roles);
+export default function StudioSwitchDialog({ open, roles, showProducts = true, current, onClose, onSelect }: Readonly<Props>) {
+  const options = availableModes(roles, { products: showProducts });
   const [pending, setPending] = useState<StudioMode>(current);
 
   // The dialog stays mounted between openings, so the staged pick is reset every
@@ -65,7 +67,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
             return (
               <ButtonBase
                 key={option.mode}
-                aria-label={option.label}
+                aria-label={STUDIO_LABEL[option.mode]}
                 aria-pressed={selected}
                 onClick={() => setPending(option.mode)}
                 sx={{

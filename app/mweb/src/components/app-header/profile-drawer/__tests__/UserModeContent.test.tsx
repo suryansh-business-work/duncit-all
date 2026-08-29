@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import UserModeContent from '../UserModeContent';
+import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { ACTIVE_ADS } from '../../../ads/useActiveAds';
 import type { StudioMode } from '../../../../studio-mode';
 
@@ -15,15 +16,23 @@ const adsMock = {
   result: { data: { activeAds: [] } },
 };
 
+/** The Shop group lives behind the product system flag. */
+const flagsMock = (enabled: boolean) => ({
+  request: { query: PUBLIC_FEATURE_FLAGS },
+  result: { data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
 function renderContent(props: {
   me: any;
   roles?: string[];
   mode?: StudioMode;
   showPodPlans: boolean;
   onNavigate: (to: string) => void;
+  showProducts?: boolean;
 }) {
   return render(
-    <MockedProvider mocks={[adsMock]}>
+    <MockedProvider mocks={[adsMock, flagsMock(props.showProducts !== false)]}>
       <UserModeContent
         me={props.me}
         roles={props.roles ?? []}
@@ -56,18 +65,28 @@ describe('UserModeContent', () => {
     mockBranding.mockReturnValue({ venuesCardVideoUrl: '' });
   });
 
-  it('renders identity, quick actions, venues, referral and manage list', () => {
+  it('renders identity, quick actions, venues, referral and manage list', async () => {
     renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn() });
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('jane@example.com')).toBeInTheDocument();
     expect(screen.getByText('Pod History')).toBeInTheDocument();
     expect(screen.getByText('Venues')).toBeInTheDocument();
     expect(screen.getByText('Refer & Earn')).toBeInTheDocument();
-    expect(screen.getByText('Pod Shop')).toBeInTheDocument();
     expect(screen.getByText('FAQs')).toBeInTheDocument();
-    // Shop section — the e-commerce group parallel to Manage Account.
+    // Shop section — the e-commerce group parallel to Manage Account. It waits
+    // on the flag query, so it lands a tick after the rest of the drawer.
+    expect(await screen.findByText('Pod Shop')).toBeInTheDocument();
     expect(screen.getByText('Address Book')).toBeInTheDocument();
     expect(screen.getByText('Cart')).toBeInTheDocument();
+  });
+
+  it('drops the whole Shop group when products are switched off', async () => {
+    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn(), showProducts: false });
+    // The rest of the drawer is unaffected — only the e-commerce group goes.
+    expect(await screen.findByText('Refer & Earn')).toBeInTheDocument();
+    expect(screen.queryByText('Pod Shop')).toBeNull();
+    expect(screen.queryByText('Cart')).toBeNull();
+    expect(screen.queryByText('My Product Order History')).toBeNull();
   });
 
   it('shows the incomplete banner when profile completion < 100%', () => {
@@ -135,9 +154,10 @@ describe('UserModeContent', () => {
     expect(onNavigate).toHaveBeenCalledWith('/account');
   });
 
-  it('navigates from quick action, venues, referral and manage rows', () => {
+  it('navigates from quick action, venues, referral and manage rows', async () => {
     const onNavigate = vi.fn();
     renderContent({ me: FULL_ME, showPodPlans: false, onNavigate });
+    await screen.findByText('Pod Shop');
 
     fireEvent.click(screen.getByRole('button', { name: 'Pod History' }));
     expect(onNavigate).toHaveBeenCalledWith('/pod-history');

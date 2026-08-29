@@ -42,6 +42,7 @@ describe('SidebarUserContent', () => {
         roles={[]}
         mode="USER"
         showPodPlans={false}
+        showProducts
         onNavigate={onNavigate}
       />,
     );

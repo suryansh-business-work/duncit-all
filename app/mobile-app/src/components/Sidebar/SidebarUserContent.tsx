@@ -37,6 +37,7 @@ export function SidebarUserContent({
   showGiftCards = false,
   showTourGuide = false,
   showAutoPods = false,
+  showProducts = false,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
@@ -62,6 +63,8 @@ export function SidebarUserContent({
   showTourGuide?: boolean;
   /** Server `auto_pods` feature flag — hides the partner Auto Pods row without it. */
   showAutoPods?: boolean;
+  /** Server `is_product_visible` flag — the whole Shop group hides without it. */
+  showProducts?: boolean;
   onNavigate: (route: MenuRoute) => void;
 }>) {
   const { t } = useTranslation();
@@ -166,7 +169,13 @@ export function SidebarUserContent({
           onNavigate={onNavigate}
         />
       ))}
-      <SidebarManageList title={t('mweb.common.shop')} items={SHOP_ITEMS} onNavigate={onNavigate} />
+      {showProducts ? (
+        <SidebarManageList
+          title={t('mweb.common.shop')}
+          items={SHOP_ITEMS}
+          onNavigate={onNavigate}
+        />
+      ) : null}
     </YStack>
   );
 }

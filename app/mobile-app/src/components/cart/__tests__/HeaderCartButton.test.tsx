@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { HeaderCartButton } from '@/components/cart/HeaderCartButton';
 import { useCartStore, type CartLine } from '@/stores/cart.store';
+import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/cart', () => ({
@@ -39,15 +40,30 @@ const line = (over: Partial<CartLine> = {}): CartLine => ({
   ...over,
 });
 
+/** The cart entry point rides on the product system flag, so the flag set is
+ * seeded on the store the same way the cart lines are. */
+const seedProducts = (enabled: boolean) =>
+  useFeatureFlagsStore.setState({
+    data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] },
+  });
+
 beforeEach(() => {
   mockNavigate.mockClear();
   mockReady = true;
   mockRouteName = 'Home';
   useCartStore.setState({ lines: [], hydrated: true });
+  seedProducts(true);
 });
 
 describe('HeaderCartButton', () => {
   it('renders nothing when the cart is empty', () => {
+    renderWithProviders(<HeaderCartButton />);
+    expect(screen.queryByTestId('header-cart')).toBeNull();
+  });
+
+  it('renders nothing at all once products are switched off', () => {
+    useCartStore.setState({ lines: [line()], hydrated: true });
+    seedProducts(false);
     renderWithProviders(<HeaderCartButton />);
     expect(screen.queryByTestId('header-cart')).toBeNull();
   });

@@ -123,10 +123,17 @@ describe('TypingIndicator', () => {
     vi.useFakeTimers();
     const { rerender, unmount } = render(<TypingIndicator at={Date.now()} name="Asha" />);
 
+    // A live bubble is a live timer; the rerender replaces it rather than
+    // stacking a second one.
+    expect(vi.getTimerCount()).toBe(1);
     rerender(<TypingIndicator at={Date.now() + 100} name="Asha" />);
-    unmount();
+    expect(vi.getTimerCount()).toBe(1);
 
-    // No assertion beyond "this does not throw" — the point is the cleanup path.
+    // The cleanup path is the point: nothing is left armed to fire at an
+    // unmounted component.
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+
     vi.useRealTimers();
   });
 });

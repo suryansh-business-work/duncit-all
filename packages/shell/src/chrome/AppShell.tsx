@@ -211,11 +211,11 @@ export function AppShell({
                   open={chatOpen}
                   meId={user?.user_id ?? ''}
                   meName={user?.full_name ?? user?.first_name ?? undefined}
-                  // `showChat` already means `isStaff`, which only holds for a
-                  // user with a non-empty, matching `roles` array — the empty
-                  // fallback `.some()` needs to stay safe for everyone else can
-                  // never actually apply here.
-                  meRoles={user!.roles!}
+                  // Optional on the panel, which defaults it to []. `showChat`
+                  // already implies a matching `roles` array, so the fallback
+                  // never applies — but asserting that with `!` tells the reader
+                  // nothing the type did not already allow.
+                  meRoles={user?.roles}
                   onClose={closeChat}
                   onRequestOpen={openChat}
                 />

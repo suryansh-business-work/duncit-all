@@ -56,6 +56,14 @@ minimumReleaseAgeExclude:
 # One vitest across the monorepo. Fifty workspaces declare it and its coverage
 # provider; without a single resolved version, two copies disagree about the
 # runner API and a suite fails in a way that points at neither.
+#
+# HELD AT 3: vitest 4's v8 provider remaps coverage through the AST instead of
+# the source map, and counts a branch or a function the old mapping folded into
+# the line around it. That is a stricter MEASUREMENT, not worse code — the same
+# tree drops from 100% to ~98% across a dozen packages, and shell alone gains
+# forty files with an uninvoked inline callback. Every package's 100/100/100/100
+# threshold was calibrated against the 3.x mapping. Moving to 4 is its own piece
+# of work: cover what it newly counts, THEN take the bump.
 overrides:
   # One Apollo client and one graphql in the tree. Several packages declare the
   # client as a loose peer (">=3"), and a loose range is how a SECOND copy gets

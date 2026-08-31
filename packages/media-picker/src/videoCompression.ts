@@ -64,13 +64,12 @@ export async function compressUploadedVideo(
         query: VIDEO_COMPRESSION_JOB,
         variables: { jobId: job.job_id },
         fetchPolicy: 'network-only',
+        // A failed poll rejects into the catch below, which is where a lost job
+        // is decided; v4 types `data` optional for the policies that resolve
+        // with errors instead, and this is not one of them.
+        errorPolicy: 'none',
       });
-      // v4 can answer with no data (an errored poll). A lost poll must not
-      // lose the uploaded video, which is what the catch below is for — so
-      // stop polling and fall through to the same decision it makes.
-      const next = polled.data?.videoCompressionJob;
-      if (!next) break;
-      job = next;
+      job = polled.data!.videoCompressionJob;
     }
   } catch {
     // A lost poll (e.g. server restart) must not lose the uploaded video.

@@ -49,7 +49,11 @@ export function WithdrawDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit, setValue, watch } = useForm<WithdrawValues, any, WithdrawValues>({
-    resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)) as unknown as Resolver<WithdrawValues, any, WithdrawValues>,
+    resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)) as unknown as Resolver<
+      WithdrawValues,
+      any,
+      WithdrawValues
+    >,
     defaultValues: blankWithdrawValues,
   });
   const method = watch('payout_method');

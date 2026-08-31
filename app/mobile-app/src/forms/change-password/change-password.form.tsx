@@ -29,7 +29,11 @@ export function CurrentPasswordForm({
   const { t } = useTranslation();
   const { control, handleSubmit } = useForm<CurrentPasswordValues, any, CurrentPasswordValues>({
     defaultValues: currentPasswordDefaults,
-    resolver: zodResolver(currentPasswordSchema) as unknown as Resolver<CurrentPasswordValues, any, CurrentPasswordValues>,
+    resolver: zodResolver(currentPasswordSchema) as unknown as Resolver<
+      CurrentPasswordValues,
+      any,
+      CurrentPasswordValues
+    >,
     mode: 'onBlur',
   });
 
@@ -69,7 +73,11 @@ export function NewPasswordForm({
   const { t } = useTranslation();
   const { control, handleSubmit } = useForm<NewPasswordValues, any, NewPasswordValues>({
     defaultValues: newPasswordDefaults,
-    resolver: zodResolver(newPasswordSchema) as unknown as Resolver<NewPasswordValues, any, NewPasswordValues>,
+    resolver: zodResolver(newPasswordSchema) as unknown as Resolver<
+      NewPasswordValues,
+      any,
+      NewPasswordValues
+    >,
     mode: 'onBlur',
   });
 

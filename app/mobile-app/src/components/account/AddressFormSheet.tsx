@@ -115,7 +115,11 @@ export function AddressFormSheet({
   );
   const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
-    resolver: zodResolver(addressSchema) as unknown as Resolver<AddressFormValues, any, AddressFormValues>,
+    resolver: zodResolver(addressSchema) as unknown as Resolver<
+      AddressFormValues,
+      any,
+      AddressFormValues
+    >,
     mode: 'onTouched',
   });
 

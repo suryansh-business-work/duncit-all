@@ -17,7 +17,9 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/**'],
       // Pure re-export barrels and the gql document strings — nothing executable.
-      exclude: ['src/index.ts', 'src/mui/index.ts', 'src/**/*.d.ts', 'src/mui/queries.ts'],
+      // A type-only module is erased by the compiler, so the file that reaches
+      // the runtime is empty and every line of the source reads as uncovered.
+      exclude: ['src/index.ts', 'src/mui/index.ts', 'src/**/*.d.ts', 'src/mui/queries.ts', 'src/**/types.ts'],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },

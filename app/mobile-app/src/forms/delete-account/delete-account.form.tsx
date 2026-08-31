@@ -29,7 +29,11 @@ export function DeleteAccountForm({
   const schema = useMemo(() => makeDeleteAccountSchema(t), [t]);
   const { control, handleSubmit } = useForm<DeleteAccountValues, any, DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
-    resolver: zodResolver(schema) as unknown as Resolver<DeleteAccountValues, any, DeleteAccountValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<
+      DeleteAccountValues,
+      any,
+      DeleteAccountValues
+    >,
     mode: 'onBlur',
   });
 

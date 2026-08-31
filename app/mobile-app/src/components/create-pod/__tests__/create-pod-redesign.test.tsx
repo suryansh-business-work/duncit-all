@@ -35,7 +35,11 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
 // Same resolver the stepper uses, so the rendered error is the schema's own copy.
 function PodTypeErrorHarness() {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
-    resolver: zodResolver(createPodSchema) as unknown as Resolver<CreatePodFormValues, any, CreatePodFormValues>,
+    resolver: zodResolver(createPodSchema) as unknown as Resolver<
+      CreatePodFormValues,
+      any,
+      CreatePodFormValues
+    >,
     defaultValues: { ...blankCreatePodForm, pod_mode: 'PHYSICAL', pod_type: 'FREE' },
   });
   return (
@@ -167,7 +171,9 @@ describe('SpotsStepper', () => {
 });
 
 function TermsHarness() {
-  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({ defaultValues: { ...blankCreatePodForm } });
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
+    defaultValues: { ...blankCreatePodForm },
+  });
   return (
     <>
       <TermsAgreement form={form} />

@@ -22,7 +22,9 @@ function Harness({
 
 /** Harness that forces a billing-field error so the accordion turns red + stays open. */
 function ErrorHarness() {
-  const { control, setError } = useForm<CheckoutFormValues, any, CheckoutFormValues>({ defaultValues: checkoutDefaults });
+  const { control, setError } = useForm<CheckoutFormValues, any, CheckoutFormValues>({
+    defaultValues: checkoutDefaults,
+  });
   useEffect(() => {
     setError('line1', { message: 'Address line 1 is required' });
   }, [setError]);

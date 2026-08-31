@@ -30,5 +30,4 @@ export const makeRecoveryLookupSchema = (
 
 export const recoveryCodeSchema = makeContactOtpSchema(fallbackT);
 
-export const makeRecoveryPasswordSchema = (t: Translate = fallbackT) =>
-  makePasswordPairSchema(t);
+export const makeRecoveryPasswordSchema = (t: Translate = fallbackT) => makePasswordPairSchema(t);

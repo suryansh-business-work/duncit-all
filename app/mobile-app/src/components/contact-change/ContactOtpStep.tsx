@@ -44,7 +44,11 @@ export function ContactOtpStep({
     formState: { isValid },
   } = useForm<ContactOtpValues, any, ContactOtpValues>({
     defaultValues: { otp: '' },
-    resolver: zodResolver(contactOtpSchema) as unknown as Resolver<ContactOtpValues, any, ContactOtpValues>,
+    resolver: zodResolver(contactOtpSchema) as unknown as Resolver<
+      ContactOtpValues,
+      any,
+      ContactOtpValues
+    >,
     mode: 'onChange',
   });
 

@@ -76,7 +76,11 @@ export function CheckoutForm({
   );
   const { control, handleSubmit } = useForm<CheckoutFormValues, any, CheckoutFormValues>({
     values: { ...checkoutDefaults, ...initialValues },
-    resolver: zodResolver(schema) as unknown as Resolver<CheckoutFormValues, any, CheckoutFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<
+      CheckoutFormValues,
+      any,
+      CheckoutFormValues
+    >,
     mode: 'onBlur',
   });
   const simulate = useController({ control, name: 'simulate_failure' });

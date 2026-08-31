@@ -24,7 +24,7 @@ const at = (h: number, m: number) =>
   setTimeOnDate(DAY, { hours: h, minutes: m, seconds: 0, milliseconds: 0 }).toISOString();
 
 let activeMocks: MockedResponse[] = [];
-let onDone: Mock<[], void>;
+let onDone: Mock<() => void>;
 
 function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
   return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={activeMocks}>{children}</MockedProvider>;
@@ -90,7 +90,7 @@ const HALL_AND_ROOF: CapacityItem[] = [
 
 beforeEach(() => {
   activeMocks = [];
-  onDone = vi.fn<[], void>();
+  onDone = vi.fn<() => void>();
 });
 
 describe('seedSpaces', () => {

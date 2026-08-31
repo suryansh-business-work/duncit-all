@@ -97,9 +97,7 @@ export function LoginScreen() {
     <AuthScaffold
       testID="login-screen"
       title={choosing ? t('mweb.login.title') : t('mweb.login.passwordStepTitle')}
-      accentWord={
-        choosing ? t('mweb.login.titleAccent') : t('mweb.login.passwordStepTitleAccent')
-      }
+      accentWord={choosing ? t('mweb.login.titleAccent') : t('mweb.login.passwordStepTitleAccent')}
       subtitle={choosing ? t('mweb.login.subtitle') : ''}
     >
       {choosing ? (

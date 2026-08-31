@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ApolloClient } from '@apollo/client';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
@@ -24,7 +25,12 @@ const VENUE_ID = 'venue-1';
 // a *rejecting* mutation would escape as an unhandled rejection and abort the
 // run. `errorPolicy: 'all'` lets a failing mutation resolve while still filling
 // the hook's `error`, which is exactly what drives the error Alerts under test.
-const MUTATION_ERROR_POLICY = { mutate: { errorPolicy: 'all' as const } };
+// v4 only accepts a client-wide default whose value is declared through
+// ApolloClient.DeclareDefaultOptions, and that augmentation is global — it
+// re-resolves useQuery for every file in the program, which is far too wide a
+// change to make for one test provider. The option itself is the documented
+// one; only its declaration is missing, so the cast says exactly that.
+const MUTATION_ERROR_POLICY = { mutate: { errorPolicy: 'all' } } as unknown as ApolloClient.DefaultOptions;
 
 function renderWithProviders(ui: ReactElement, mocks: MockedResponse[] = []) {
   return render(

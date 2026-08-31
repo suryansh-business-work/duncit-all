@@ -14,7 +14,9 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**'],
-      exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/index.ts'],
+      // Type-only modules: TypeScript erases them,
+      // so there is no line in them to cover.
+      exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/index.ts', 'src/**/types.ts'],
       thresholds: { lines: 100, statements: 100, functions: 100, branches: 100 },
     },
   },

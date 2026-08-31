@@ -18,13 +18,13 @@ const filled: BrandFormValues = {
 interface Handlers {
   onSave: Mock;
   onSubmitForReview: Mock;
-  onPickImage: Mock<[], Promise<string | null>>;
+  onPickImage: Mock<() => Promise<string | null>>;
 }
 
 const handlers = (pickedUrl: string | null = 'https://cdn.test/logo.png'): Handlers => ({
   onSave: vi.fn(),
   onSubmitForReview: vi.fn(),
-  onPickImage: vi.fn<[], Promise<string | null>>().mockResolvedValue(pickedUrl),
+  onPickImage: vi.fn<() => Promise<string | null>>().mockResolvedValue(pickedUrl),
 });
 
 function renderForm(

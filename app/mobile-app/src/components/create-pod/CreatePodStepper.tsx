@@ -89,7 +89,11 @@ export function CreatePodStepper({
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(() => makeCreatePodSchema(t), [t]);
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
-    resolver: zodResolver(schema) as unknown as Resolver<CreatePodFormValues, any, CreatePodFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<
+      CreatePodFormValues,
+      any,
+      CreatePodFormValues
+    >,
     defaultValues: initialValues,
     mode: 'onTouched',
   });

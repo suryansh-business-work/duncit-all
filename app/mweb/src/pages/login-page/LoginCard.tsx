@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
-import AuthLogo from '../../components/AuthLogo';
+import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { type LoginFormValues } from '../../forms/login';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -37,26 +37,13 @@ export default function LoginCard({
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
-        <Stack spacing={1.2} sx={{ alignItems: 'center' }}>
-          <AuthLogo />
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 700, textAlign: 'center', color: 'text.primary' }}
-          >
-            {choosing ? t('mweb.login.title') : t('mweb.login.passwordStepTitle')}{' '}
-            <Box component="span" sx={{ color: auth.accent }}>
-              {choosing ? t('mweb.login.titleAccent') : t('mweb.login.passwordStepTitleAccent')}
-            </Box>
-          </Typography>
-          {choosing && (
-            <Typography
-              variant="body2"
-              sx={{ textAlign: 'center', color: 'text.secondary', maxWidth: 300 }}
-            >
-              {t('mweb.login.subtitle')}
-            </Typography>
-          )}
-        </Stack>
+        <AuthHeading
+          title={choosing ? t('mweb.login.title') : t('mweb.login.passwordStepTitle')}
+          accent={
+            choosing ? t('mweb.login.titleAccent') : t('mweb.login.passwordStepTitleAccent')
+          }
+          subtitle={choosing ? t('mweb.login.subtitle') : undefined}
+        />
 
         {choosing && (
           <Stack

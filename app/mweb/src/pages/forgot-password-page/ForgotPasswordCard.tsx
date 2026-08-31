@@ -9,9 +9,10 @@ import {
   buildPasswordRecoveryLabels,
   passwordRecoveryStepIndex,
   previousRecoveryStep,
+  recoveryHeading,
   recoveryDestination,
 } from '@duncit/utils';
-import AuthLogo from '../../components/AuthLogo';
+import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { useTranslation } from '../../i18n/useTranslation';
 import RecoveryChannelStep from './RecoveryChannelStep';
@@ -23,24 +24,6 @@ interface Props {
   recovery: PasswordRecovery;
   /** Seconds left before another code may be asked for. Ticks in the page. */
   resendIn: number;
-}
-
-/** The heading each step carries, so the frame below stays one block. */
-function headingFor(
-  step: string,
-  labels: ReturnType<typeof buildPasswordRecoveryLabels>,
-): { title: string; accent: string; subtitle: string } {
-  if (step === 'CODE') {
-    return { title: labels.codeTitle, accent: labels.codeTitleAccent, subtitle: '' };
-  }
-  if (step === 'PASSWORD') {
-    return { title: labels.passwordTitle, accent: labels.passwordTitleAccent, subtitle: '' };
-  }
-  return {
-    title: labels.chooseTitle,
-    accent: labels.chooseTitleAccent,
-    subtitle: labels.chooseSubtitle,
-  };
 }
 
 /**
@@ -89,35 +72,21 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
     );
   }
 
-  const heading = headingFor(state.step, labels);
+  const heading = recoveryHeading(state.step, labels);
   const canGoBack = previousRecoveryStep(state.step) !== null;
 
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
-        <Stack spacing={1.2} sx={{ alignItems: 'center' }}>
-          <AuthLogo />
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 700, textAlign: 'center', color: 'text.primary' }}
-          >
-            {heading.title}{' '}
-            <Box component="span" sx={{ color: auth.accent }}>
-              {heading.accent}
-            </Box>
-          </Typography>
-          {heading.subtitle && (
-            <Typography
-              variant="body2"
-              sx={{ textAlign: 'center', color: 'text.secondary', maxWidth: 320 }}
-            >
-              {heading.subtitle}
-            </Typography>
+        <AuthHeading
+          title={heading.title}
+          accent={heading.accent}
+          subtitle={heading.subtitle}
+          caption={labels.stepOf(
+            passwordRecoveryStepIndex(state.step),
+            PASSWORD_RECOVERY_STEP_COUNT,
           )}
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {labels.stepOf(passwordRecoveryStepIndex(state.step), PASSWORD_RECOVERY_STEP_COUNT)}
-          </Typography>
-        </Stack>
+        />
 
         {state.step === 'CHANNEL' && (
           <RecoveryChannelStep

@@ -9,8 +9,15 @@ import {
   initialRecoveryState,
   passwordRecoveryStepIndex,
   previousRecoveryStep,
+  recoveryAfterComplete,
+  recoveryAfterSend,
+  recoveryAfterVerify,
+  recoveryBack,
   recoveryDestination,
+  recoveryHeading,
+  recoveryLookup,
   recoveryResendSeconds,
+  recoveryWithChannel,
   type PasswordRecoveryStep,
 } from '../src/password-recovery';
 
@@ -171,5 +178,95 @@ describe('buildPasswordRecoveryLabels', () => {
 describe('every step is reachable by the index helper', () => {
   it.each(PASSWORD_RECOVERY_STEPS)('%s has a position', (step: PasswordRecoveryStep) => {
     expect(passwordRecoveryStepIndex(step)).toBeGreaterThan(0);
+  });
+});
+
+describe('recoveryLookup', () => {
+  it('sends only the mailbox for an email recovery', () => {
+    expect(
+      recoveryLookup('EMAIL', { email: '  Ravi@Duncit.com ', extension: '+91', number: '98450' }),
+    ).toEqual({ channel: 'EMAIL', email: 'ravi@duncit.com' });
+  });
+
+  it('sends only the number for a phone recovery', () => {
+    expect(
+      recoveryLookup('PHONE', { email: 'ravi@duncit.com', extension: ' +91 ', number: ' 9845012345 ' }),
+    ).toEqual({ channel: 'PHONE', phone_extension: '+91', phone_number: '9845012345' });
+  });
+});
+
+describe('the transitions', () => {
+  const start = initialRecoveryState(emptyContactDraft());
+  const draft = { email: 'ravi@duncit.com', extension: '+91', number: '9845012345' };
+
+  it('switching channel keeps the draft — the account is the same one', () => {
+    const next = recoveryWithChannel({ ...start, draft }, 'PHONE');
+    expect(next.channel).toBe('PHONE');
+    expect(next.draft).toEqual(draft);
+    expect(next.step).toBe('CHANNEL');
+  });
+
+  it('a sent code moves to the code step and starts the cooldown', () => {
+    const next = recoveryAfterSend(start, draft, 45, 1_700_000_000_000);
+    expect(next.step).toBe('CODE');
+    expect(next.draft).toEqual(draft);
+    expect(next.lastSentAt).toBe(1_700_000_000_000);
+    expect(next.resendAfterSeconds).toBe(45);
+    // Copied, not aliased: the form keeps editing its own object.
+    expect(next.draft).not.toBe(draft);
+  });
+
+  it('defaults the send instant to now', () => {
+    const before = Date.now();
+    const next = recoveryAfterSend(start, draft, 30);
+    expect(next.lastSentAt).toBeGreaterThanOrEqual(before);
+  });
+
+  it('a verified code holds the grant and asks for the password', () => {
+    const next = recoveryAfterVerify(recoveryAfterSend(start, draft, 30), 'challenge.secret');
+    expect(next.step).toBe('PASSWORD');
+    expect(next.resetToken).toBe('challenge.secret');
+  });
+
+  it('a finished reset drops the grant it just spent', () => {
+    const verified = recoveryAfterVerify(start, 'challenge.secret');
+    const done = recoveryAfterComplete(verified);
+    expect(done.step).toBe('DONE');
+    expect(done.resetToken).toBe('');
+  });
+
+  it('goes back a step, and stays put where there is nowhere to go', () => {
+    expect(recoveryBack({ ...start, step: 'PASSWORD' }).step).toBe('CODE');
+    expect(recoveryBack({ ...start, step: 'CODE' }).step).toBe('CHANNEL');
+    expect(recoveryBack({ ...start, step: 'CHANNEL' }).step).toBe('CHANNEL');
+    expect(recoveryBack({ ...start, step: 'DONE' }).step).toBe('DONE');
+  });
+});
+
+describe('recoveryHeading', () => {
+  const t = (key: string) => key;
+  const labels = buildPasswordRecoveryLabels(t);
+
+  it('names each step, and only the ones whose own copy is silent carry a subtitle', () => {
+    expect(recoveryHeading('CHANNEL', labels)).toEqual({
+      title: 'mweb.passwordRecovery.chooseTitle',
+      accent: 'mweb.passwordRecovery.chooseTitleAccent',
+      subtitle: 'mweb.passwordRecovery.chooseSubtitle',
+    });
+    expect(recoveryHeading('CODE', labels)).toEqual({
+      title: 'mweb.passwordRecovery.codeTitle',
+      accent: 'mweb.passwordRecovery.codeTitleAccent',
+      subtitle: '',
+    });
+    expect(recoveryHeading('PASSWORD', labels)).toEqual({
+      title: 'mweb.passwordRecovery.passwordTitle',
+      accent: 'mweb.passwordRecovery.passwordTitleAccent',
+      subtitle: '',
+    });
+    expect(recoveryHeading('DONE', labels)).toEqual({
+      title: 'mweb.passwordRecovery.doneTitle',
+      accent: 'mweb.passwordRecovery.doneTitleAccent',
+      subtitle: 'mweb.passwordRecovery.doneSubtitle',
+    });
   });
 });

@@ -3,7 +3,12 @@ import { useMutation } from '@apollo/client/react';
 import {
   emptyContactDraft,
   initialRecoveryState,
-  previousRecoveryStep,
+  recoveryAfterComplete,
+  recoveryAfterSend,
+  recoveryAfterVerify,
+  recoveryBack,
+  recoveryLookup,
+  recoveryWithChannel,
   type ContactDraft,
   type PasswordRecoveryChannel,
   type PasswordRecoveryState,
@@ -16,15 +21,16 @@ import {
 } from './queries';
 
 /**
- * The three-step recovery flow, as one piece of state and four actions.
+ * The three-step recovery flow: the Apollo calls, and the shared state machine
+ * they move.
  *
  * The steps live in one hook rather than one route each because they are one
  * transaction: the grant step two earns is spent by step three and by nothing
  * else, so a reload between them has to start over anyway. Putting it in the
  * URL would only offer a step whose credential no longer exists.
  *
- * The native twin holds the same shape in its own screen (rule 27); the step
- * machine and every label they share come from `@duncit/utils` (rule 40).
+ * The native twin holds the same shape in its own screen (rule 27), and every
+ * transition below is `@duncit/utils`' — only the transport differs (rule 40).
  */
 export function usePasswordRecovery() {
   const [state, setState] = useState<PasswordRecoveryState>(() =>
@@ -42,22 +48,12 @@ export function usePasswordRecovery() {
   const [verifyCode, { loading: verifying }] = useMutation<any>(VERIFY_PASSWORD_RESET_CODE);
   const [completeReset, { loading: saving }] = useMutation<any>(COMPLETE_PASSWORD_RESET);
 
-  /** What identifies the account, in the shape all three mutations take. */
-  const lookupOf = (channel: PasswordRecoveryChannel, draft: Readonly<ContactDraft>) =>
-    channel === 'EMAIL'
-      ? { channel, email: draft.email.trim().toLowerCase() }
-      : {
-          channel,
-          phone_extension: draft.extension.trim(),
-          phone_number: draft.number.trim(),
-        };
-
   const setChannel = useCallback((channel: PasswordRecoveryChannel) => {
     // The refusal belonged to the value that earned it — keeping it across a
     // channel switch would flag a box nobody has typed in yet.
     setNotFound(false);
     setError(null);
-    setState((prev) => ({ ...prev, channel }));
+    setState((prev) => recoveryWithChannel(prev, channel));
   }, []);
 
   /**
@@ -71,22 +67,16 @@ export function usePasswordRecovery() {
       setNotFound(false);
       try {
         const res = await requestCode({
-          variables: { input: lookupOf(state.channel, draft) },
+          variables: { input: recoveryLookup(state.channel, draft) },
         });
         const result = res.data?.requestPasswordResetCode;
         if (!result?.registered) {
           setNotFound(true);
           return;
         }
-        setExpiresInMinutes(result.expires_in_minutes ?? 10);
+        setExpiresInMinutes(result.expires_in_minutes);
         setTestCode(result.test_code ?? null);
-        setState((prev) => ({
-          ...prev,
-          step: 'CODE',
-          draft: { ...draft },
-          lastSentAt: Date.now(),
-          resendAfterSeconds: result.resend_after_seconds ?? prev.resendAfterSeconds,
-        }));
+        setState((prev) => recoveryAfterSend(prev, draft, result.resend_after_seconds));
       } catch (e) {
         setError(parseApiError(e));
       }
@@ -99,11 +89,13 @@ export function usePasswordRecovery() {
       setError(null);
       try {
         const res = await verifyCode({
-          variables: { input: { ...lookupOf(state.channel, state.draft), otp: otp.trim() } },
+          variables: {
+            input: { ...recoveryLookup(state.channel, state.draft), otp: otp.trim() },
+          },
         });
         const token = res.data?.verifyPasswordResetCode?.reset_token;
         if (!token) return;
-        setState((prev) => ({ ...prev, step: 'PASSWORD', resetToken: token }));
+        setState((prev) => recoveryAfterVerify(prev, token));
       } catch (e) {
         setError(parseApiError(e));
       }
@@ -118,7 +110,7 @@ export function usePasswordRecovery() {
         await completeReset({
           variables: { input: { reset_token: state.resetToken, new_password: newPassword } },
         });
-        setState((prev) => ({ ...prev, step: 'DONE', resetToken: '' }));
+        setState(recoveryAfterComplete);
       } catch (e) {
         setError(parseApiError(e));
       }
@@ -128,10 +120,7 @@ export function usePasswordRecovery() {
 
   const goBack = useCallback(() => {
     setError(null);
-    setState((prev) => {
-      const step = previousRecoveryStep(prev.step);
-      return step ? { ...prev, step } : prev;
-    });
+    setState(recoveryBack);
   }, []);
 
   return {

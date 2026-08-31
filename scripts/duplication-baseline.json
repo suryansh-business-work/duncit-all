@@ -1,8 +1,8 @@
 {
   "maxPercent": 1.7,
   "areas": {
-    "app/mobile-app": 2567,
-    "app/mweb": 2750,
+    "app/mobile-app": 2642,
+    "app/mweb": 2783,
     "packages/ai-prompts": 15,
     "packages/app-settings": 17,
     "packages/auto-pods": 32,

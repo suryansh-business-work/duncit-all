@@ -2,8 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   emptyContactDraft,
   initialRecoveryState,
-  previousRecoveryStep,
+  recoveryAfterComplete,
+  recoveryAfterSend,
+  recoveryAfterVerify,
+  recoveryBack,
+  recoveryLookup,
   recoveryResendSeconds,
+  recoveryWithChannel,
   type ContactDraft,
   type PasswordRecoveryChannel,
   type PasswordRecoveryState,
@@ -13,13 +18,13 @@ import {
   completePasswordReset,
   requestPasswordResetCode,
   verifyPasswordResetCode,
-  type PasswordResetLookup,
 } from '@/services/auth.service';
 import { toErrorMessage } from '@/utils/errors';
 
 /**
- * The three-step recovery flow, as one piece of state and four actions.
- * Twin of mWeb's src/pages/forgot-password-page/usePasswordRecovery.ts.
+ * The three-step recovery flow. Twin of mWeb's
+ * src/pages/forgot-password-page/usePasswordRecovery.ts — same transitions out
+ * of `@duncit/utils`, different transport (rule 40).
  *
  * The steps live in one screen rather than one route each because they are one
  * transaction: the grant step two earns is spent by step three and by nothing
@@ -56,25 +61,12 @@ export function usePasswordRecovery(fallbackMessage: string) {
     return () => clearInterval(timer);
   }, [lastSentAt, resendAfterSeconds]);
 
-  /** What identifies the account, in the shape all three calls take. */
-  const lookupOf = (
-    channel: PasswordRecoveryChannel,
-    draft: Readonly<ContactDraft>,
-  ): PasswordResetLookup =>
-    channel === 'EMAIL'
-      ? { channel, email: draft.email.trim().toLowerCase() }
-      : {
-          channel,
-          phone_extension: draft.extension.trim(),
-          phone_number: draft.number.trim(),
-        };
-
   const setChannel = useCallback((channel: PasswordRecoveryChannel) => {
     // The refusal belonged to the value that earned it — keeping it across a
     // channel switch would flag a box nobody has typed in yet.
     setNotFound(false);
     setError(null);
-    setState((prev) => ({ ...prev, channel }));
+    setState((prev) => recoveryWithChannel(prev, channel));
   }, []);
 
   /**
@@ -88,20 +80,14 @@ export function usePasswordRecovery(fallbackMessage: string) {
       setNotFound(false);
       setBusy((b) => ({ ...b, requesting: true }));
       try {
-        const result = await requestPasswordResetCode(lookupOf(state.channel, draft));
+        const result = await requestPasswordResetCode(recoveryLookup(state.channel, draft));
         if (!result.registered) {
           setNotFound(true);
           return;
         }
         setExpiresInMinutes(result.expiresInMinutes);
         setTestCode(result.testCode);
-        setState((prev) => ({
-          ...prev,
-          step: 'CODE',
-          draft: { ...draft },
-          lastSentAt: Date.now(),
-          resendAfterSeconds: result.resendAfterSeconds,
-        }));
+        setState((prev) => recoveryAfterSend(prev, draft, result.resendAfterSeconds));
       } catch (e) {
         setError(toErrorMessage(e, fallbackMessage));
       } finally {
@@ -116,8 +102,11 @@ export function usePasswordRecovery(fallbackMessage: string) {
       setError(null);
       setBusy((b) => ({ ...b, verifying: true }));
       try {
-        const token = await verifyPasswordResetCode(lookupOf(state.channel, state.draft), otp);
-        setState((prev) => ({ ...prev, step: 'PASSWORD', resetToken: token }));
+        const token = await verifyPasswordResetCode(
+          recoveryLookup(state.channel, state.draft),
+          otp,
+        );
+        setState((prev) => recoveryAfterVerify(prev, token));
       } catch (e) {
         setError(toErrorMessage(e, fallbackMessage));
       } finally {
@@ -133,7 +122,7 @@ export function usePasswordRecovery(fallbackMessage: string) {
       setBusy((b) => ({ ...b, saving: true }));
       try {
         await completePasswordReset(state.resetToken, newPassword);
-        setState((prev) => ({ ...prev, step: 'DONE', resetToken: '' }));
+        setState(recoveryAfterComplete);
       } catch (e) {
         setError(toErrorMessage(e, fallbackMessage));
       } finally {
@@ -145,10 +134,7 @@ export function usePasswordRecovery(fallbackMessage: string) {
 
   const goBack = useCallback(() => {
     setError(null);
-    setState((prev) => {
-      const step = previousRecoveryStep(prev.step);
-      return step ? { ...prev, step } : prev;
-    });
+    setState(recoveryBack);
   }, []);
 
   return {

@@ -10,6 +10,7 @@ import {
   passwordRecoveryStepIndex,
   previousRecoveryStep,
   recoveryDestination,
+  recoveryHeading,
 } from '@duncit/utils';
 
 import { AuthScaffold } from '@/components/AuthScaffold';
@@ -53,7 +54,7 @@ export function ForgotPasswordScreen() {
     );
   }
 
-  const heading = headingFor(state.step, labels);
+  const heading = recoveryHeading(state.step, labels);
   const canGoBack = previousRecoveryStep(state.step) !== null;
 
   return (
@@ -160,22 +161,4 @@ export function ForgotPasswordScreen() {
       </YStack>
     </AuthScaffold>
   );
-}
-
-/** The heading each step carries. Module scope, never nested (S6478/S3358). */
-function headingFor(
-  step: string,
-  labels: ReturnType<typeof buildPasswordRecoveryLabels>,
-): { title: string; accent: string; subtitle: string } {
-  if (step === 'CODE') {
-    return { title: labels.codeTitle, accent: labels.codeTitleAccent, subtitle: '' };
-  }
-  if (step === 'PASSWORD') {
-    return { title: labels.passwordTitle, accent: labels.passwordTitleAccent, subtitle: '' };
-  }
-  return {
-    title: labels.chooseTitle,
-    accent: labels.chooseTitleAccent,
-    subtitle: labels.chooseSubtitle,
-  };
 }

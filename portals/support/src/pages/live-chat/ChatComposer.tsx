@@ -37,7 +37,6 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
         label={t('support.chat.attach')}
         max={3}
         accept={ATTACHMENT_ACCEPT_ALL}
-        maxBytes={100 * 1024 * 1024}
         allowDocuments
       />
       <Stack direction="row" spacing={1} sx={{

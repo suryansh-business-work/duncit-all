@@ -15,12 +15,14 @@ import { DuncitButton } from '@duncit/buttons';
 import PexelsSearchBar from './PexelsSearchBar';
 import { IMPORT_REMOTE, PEXELS_SEARCH } from './queries';
 import PexelsPhotoCard from './PexelsPhotoCard';
-import type { Orientation } from './types';
+import type { Orientation, UploadSurface } from './types';
 
 interface Props {
   active: boolean;
   open: boolean;
   folder: string;
+  /** Upload Settings surface — an import is capped and compressed like any upload. */
+  surface: UploadSurface;
   /** What to search before the user types — the pod's sub-category, say. */
   seedQuery?: string;
   /** Orientation to start on. A cover is wide, so callers pass 'landscape'. */
@@ -38,6 +40,7 @@ export default function PexelsPhotosTab({
   active,
   open,
   folder,
+  surface,
   seedQuery,
   defaultOrientation,
   multi,
@@ -131,7 +134,7 @@ export default function PexelsPhotosTab({
     try {
       const remote = photo.src_large || photo.src_medium;
       const res = await importMut({
-        variables: { remoteUrl: remote, folder },
+        variables: { remoteUrl: remote, folder, surface },
       });
       const url = res.data?.importRemoteImageToImagekit?.url;
       if (!url) throw new Error('No URL returned from server');

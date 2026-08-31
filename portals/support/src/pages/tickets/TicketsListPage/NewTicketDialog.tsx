@@ -86,7 +86,6 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
             onChange={setAttachments}
             folder="/support/tickets"
             accept={ATTACHMENT_ACCEPT_ALL}
-            maxBytes={100 * 1024 * 1024}
             allowDocuments
           />
         </Stack>

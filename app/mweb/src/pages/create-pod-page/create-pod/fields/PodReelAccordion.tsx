@@ -17,11 +17,10 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloClient } from '@apollo/client';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
-import { compressUploadedVideo, useImagekitDirectUpload } from '@duncit/media-picker';
+import { MB, compressUploadedVideo, useImagekitDirectUpload, useUploadCaps } from '@duncit/media-picker';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
 
-const REEL_MAX_BYTES = 100 * 1024 * 1024; // Reel videos are capped at 100 MB.
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
 const isVideoFile = (file: File) =>
@@ -40,6 +39,8 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const { upload, uploading } = useImagekitDirectUpload();
+  // The reel is a video like any other: Admin > Upload Settings sizes it.
+  const caps = useUploadCaps('MWEB');
   const fileRef = useRef<HTMLInputElement | null>(null);
   const reelUrl = form.watch('reel_url');
   const hasReel = !!reelUrl;
@@ -52,8 +53,12 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
       setError(t('mweb.createPod.reelNotVideo'));
       return;
     }
-    if (file.size > REEL_MAX_BYTES) {
-      setError(t('mweb.createPod.reelTooLarge'));
+    if (file.size > caps.maxVideoBytes) {
+      setError(
+        t('mweb.createPod.reelTooLarge', {
+          vars: { max: Math.round(caps.maxVideoBytes / MB) },
+        })
+      );
       return;
     }
     setError(null);
@@ -125,7 +130,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {t('mweb.createPod.reelHint')}
+            {t('mweb.createPod.reelHint', { vars: { max: Math.round(caps.maxVideoBytes / MB) } })}
           </Typography>
           <Box>
             <AiMonitoringChip />

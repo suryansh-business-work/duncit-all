@@ -141,6 +141,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
         onClose={() => setPickerOpen(false)}
         onPicked={(url) => setImageUrl(url)}
         folder="/posts"
+        surface="MWEB"
         title={t('mweb.profile.chooseImageForYourPost')}
       />
     </Dialog>

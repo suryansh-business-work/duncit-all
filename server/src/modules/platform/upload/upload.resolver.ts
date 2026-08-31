@@ -109,7 +109,7 @@ export const uploadResolvers = {
     },
     importRemoteImageToImagekit: (
       _p: unknown,
-      args: { remoteUrl: string; folder?: string; fileName?: string },
+      args: { remoteUrl: string; folder?: string; fileName?: string; surface?: string },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
@@ -117,11 +117,12 @@ export const uploadResolvers = {
         remoteUrl: args.remoteUrl,
         folder: args.folder,
         fileName: args.fileName,
+        surface: args.surface,
       });
     },
     importRemoteMediaToImagekit: (
       _p: unknown,
-      args: { remoteUrl: string; folder?: string; fileName?: string },
+      args: { remoteUrl: string; folder?: string; fileName?: string; surface?: string },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
@@ -129,6 +130,7 @@ export const uploadResolvers = {
         remoteUrl: args.remoteUrl,
         folder: args.folder,
         fileName: args.fileName,
+        surface: args.surface,
       });
     },
     uploadImageToImagekit: (

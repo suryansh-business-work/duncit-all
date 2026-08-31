@@ -15,7 +15,7 @@ import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitIconButton, DuncitRoundButton } from '@duncit/buttons';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { CREATE_PRODUCT_REVIEW, PRODUCT_REVIEWS, VOTE_PRODUCT_REVIEW } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -142,13 +142,15 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                   alt={t('mweb.podDetails.review')}
                   sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover' }}
                 />
-                <DuncitIconButton
+                <DuncitRoundButton
                   size="small"
+                  tone="paper"
+                  aria-label={t('mweb.common.removeAttachment')}
                   onClick={() => removeImage(url)}
-                  sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'background.paper', boxShadow: 1 }}
+                  sx={{ position: 'absolute', top: -8, right: -8 }}
                 >
-                  <CloseIcon sx={{ fontSize: 14 }} />
-                </DuncitIconButton>
+                  <CloseIcon />
+                </DuncitRoundButton>
               </Box>
             ))}
           </Stack>

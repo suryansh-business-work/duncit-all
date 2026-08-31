@@ -66,7 +66,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       enterOtp: 'Enter OTP',
       exploreVenues: 'Explore venues',
       facilities: 'Facilities',
-      fileIsTooLargeMax100: 'File is too large (max 100 MB)',
+      fileIsTooLargeMax: 'File is too large (max {max} MB)',
       filter: 'Filter',
       filterPodsByMonth: 'Filter pods by month',
       filters: 'Filters',
@@ -74,6 +74,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       groupChat: 'Group chat',
       guestsPerPodOverTime: 'Guests per pod over time.',
       hostEarnings: 'Host Earnings',
+      imageIsTooLargeMax: 'Image is too large (max {max} MB)',
       jumpToLatest: 'Jump to latest',
       lastName: 'Last name',
       lastUpdated: 'Last updated',
@@ -163,7 +164,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueSecurity: 'Venue Security',
       verification: 'Verification',
       verify: 'Verify',
-      videoIsTooLargeMax50: 'Video is too large (max 50 MB)',
+      videoIsTooLargeMax: 'Video is too large (max {max} MB)',
       viewPhoto: 'View photo',
       wallet: 'Wallet',
       whatsappNumber: 'WhatsApp number',
@@ -1795,7 +1796,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Native only — its card carries a subtitle under the title.
       reelSubtitle: 'A short video shown in Explore.',
       reelHint:
-        'Reel video shows in Explore while this pod is live. Optional — one video up to 100 MB.',
+        'Reel video shows in Explore while this pod is live. Optional — one video up to {max} MB.',
       reelUpload: 'Upload video',
       // mWeb only — native replaces a reel by removing it first.
       reelReplace: 'Replace video',
@@ -1805,7 +1806,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — the native picker only offers videos, so the wrong file
       // type can never be chosen.
       reelNotVideo: 'Please pick a video file (MP4, MOV or WebM)',
-      reelTooLarge: 'That video is over 100MB — pick a smaller reel.',
+      reelTooLarge: 'That video is over {max}MB — pick a smaller reel.',
       // Native only — the OS asks for media permission before the picker opens.
       reelPermission: 'Media access is needed to upload a reel.',
       uploadFailed: 'Upload failed',

@@ -32,9 +32,11 @@ describe('validateFile', () => {
     expect(validateFile(file('video/mp4', 5), IMAGES_ONLY)).toMatch(/image or video/i);
   });
 
-  it('accepts a PDF up to 50 MB only when documents are allowed', () => {
-    expect(validateFile(file('application/pdf', 49), IMAGES_AND_DOCS)).toBeNull();
-    expect(validateFile(file('application/pdf', 51), IMAGES_AND_DOCS)).toMatch(/max 50 MB/);
+  // 100 MB is the server's own document ceiling — a picker that stopped at 50
+  // refused files the upload would have taken.
+  it('accepts a PDF up to the server document ceiling only when documents are allowed', () => {
+    expect(validateFile(file('application/pdf', 99), IMAGES_AND_DOCS)).toBeNull();
+    expect(validateFile(file('application/pdf', 101), IMAGES_AND_DOCS)).toMatch(/max 100 MB/);
     expect(validateFile(file('application/pdf', 1), IMAGES_AND_VIDEO)).toMatch(/image or video/i);
   });
 

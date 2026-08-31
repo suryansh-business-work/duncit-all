@@ -12,6 +12,25 @@ vi.mock('../../../apollo', () => ({
   },
 }));
 
+const TEST_ACCEPT = 'image/*,video/*';
+vi.mock('@duncit/media-picker', () => ({
+  ATTACHMENT_ACCEPT_ALL: TEST_ACCEPT,
+  MB: 1024 * 1024,
+  useUploadCaps: () => ({
+    maxImageBytes: 4 * 1024 * 1024,
+    maxVideoBytes: 25 * 1024 * 1024,
+    maxDocumentBytes: 100 * 1024 * 1024,
+    validate: (file: File) => {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      if (!isImage && !isVideo) return 'Please choose an image or video file';
+      if (isImage && file.size > 4 * 1024 * 1024) return 'Image is too large (max 4 MB)';
+      if (isVideo && file.size > 25 * 1024 * 1024) return 'Video is too large (max 25 MB)';
+      return null;
+    },
+  }),
+}));
+
 vi.mock('../statusPipeline', () => ({
   mediaTypeOf: (file: File) => (file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'),
   uploadStatusMedia: (...args: unknown[]) => uploadStatusMedia(...args),
@@ -112,34 +131,36 @@ describe('StatusUploadProvider — file validation', () => {
     renderProvider();
     fireEvent.click(screen.getByText('open-profile'));
     fireEvent.change(fileInput(), { target: { files: [makeFile('a.txt', 'text/plain')] } });
-    expect(screen.getByText('Please choose a valid status media file')).toBeInTheDocument();
+    expect(screen.getByText('Please choose an image or video file')).toBeInTheDocument();
   });
 
-  it('rejects an oversized image', () => {
+  it("rejects an image over the admin's image cap", () => {
     renderProvider();
     fireEvent.click(screen.getByText('open-profile'));
     fireEvent.change(fileInput(), {
-      target: { files: [makeFile('big.png', 'image/png', 16 * 1024 * 1024)] },
+      target: { files: [makeFile('big.png', 'image/png', 5 * 1024 * 1024)] },
     });
-    expect(screen.getByText('Image is too large (max 15 MB)')).toBeInTheDocument();
+    expect(screen.getByText('Image is too large (max 4 MB)')).toBeInTheDocument();
   });
 
-  it('rejects an oversized story video (50 MB cap)', () => {
+  // A story and a pod status are the same upload now: one admin video cap,
+  // not a 50 MB story rule nobody could see or change.
+  it("rejects a video over the admin's video cap, whichever status it is for", () => {
     renderProvider();
     fireEvent.click(screen.getByText('open-profile'));
     fireEvent.change(fileInput(), {
-      target: { files: [makeFile('big.mp4', 'video/mp4', 60 * 1024 * 1024)] },
+      target: { files: [makeFile('big.mp4', 'video/mp4', 26 * 1024 * 1024)] },
     });
-    expect(screen.getByText('Video is too large (max 50 MB)')).toBeInTheDocument();
+    expect(screen.getByText('Video is too large (max 25 MB)')).toBeInTheDocument();
   });
 
-  it('rejects an oversized pod video (100 MB cap)', () => {
+  it('applies that same cap to a pod status', () => {
     renderProvider();
     fireEvent.click(screen.getByText('open-pod'));
     fireEvent.change(fileInput(), {
-      target: { files: [makeFile('big.mp4', 'video/mp4', 120 * 1024 * 1024)] },
+      target: { files: [makeFile('big.mp4', 'video/mp4', 26 * 1024 * 1024)] },
     });
-    expect(screen.getByText('Video is too large (max 100 MB)')).toBeInTheDocument();
+    expect(screen.getByText('Video is too large (max 25 MB)')).toBeInTheDocument();
   });
 
   it('ignores a change event with no file selected', () => {
@@ -276,7 +297,7 @@ describe('StatusUploadProvider — progress + errors', () => {
     renderProvider();
     fireEvent.click(screen.getByText('open-profile'));
     fireEvent.change(fileInput(), { target: { files: [makeFile('a.txt', 'text/plain')] } });
-    expect(screen.getByText('Please choose a valid status media file')).toBeInTheDocument();
+    expect(screen.getByText('Please choose an image or video file')).toBeInTheDocument();
     fireEvent.click(screen.getByText('OK'));
     // Snackbar begins closing; content is no longer asserted as present after close.
   });

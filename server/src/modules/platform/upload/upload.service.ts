@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { openAsBlob } from 'node:fs';
+import fsp from 'node:fs/promises';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
@@ -229,10 +230,10 @@ const megabytes = (mb: number) => mb * 1024 * 1024;
  * limits (max_image_mb / max_video_mb) so raising or lowering them in the admin
  * panel actually takes effect; documents keep the fixed attachment ceiling.
  */
-function assertUploadSize(fileBytes: Buffer, kind: UploadKind, setting: UploadSetting | null) {
+function assertUploadSize(bytes: number, kind: UploadKind, setting: UploadSetting | null) {
   if (kind.isVideo) {
     const maxMb = setting?.max_video_mb ?? FALLBACK_VIDEO_MAX_MB;
-    if (fileBytes.length > megabytes(maxMb)) {
+    if (bytes > megabytes(maxMb)) {
       throw new GraphQLError(`Video is too large (max ${maxMb} MB)`, {
         extensions: { code: 'BAD_USER_INPUT' },
       });
@@ -240,7 +241,7 @@ function assertUploadSize(fileBytes: Buffer, kind: UploadKind, setting: UploadSe
     return;
   }
   const maxMb = kind.isDocument ? DOCUMENT_MAX_MB : (setting?.max_image_mb ?? FALLBACK_IMAGE_MAX_MB);
-  if (fileBytes.length > megabytes(maxMb)) {
+  if (bytes > megabytes(maxMb)) {
     const label = kind.isDocument ? 'Document' : 'Image';
     throw new GraphQLError(`${label} is too large (max ${maxMb} MB)`, {
       extensions: { code: 'BAD_USER_INPUT' },
@@ -331,6 +332,97 @@ async function processImageForUpload(params: {
   return { fileBytes, safeName };
 }
 
+/**
+ * The mime a spooled upload would have had. The multipart body carries no
+ * reliable content type — React Native sends `application/octet-stream` for
+ * half the pickers — so the extension is what there is to classify on, and the
+ * image pipeline needs a mime to know what sharp can round-trip.
+ */
+const MIME_BY_EXT: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  avif: 'image/avif',
+  bmp: 'image/bmp',
+};
+
+const mimeFromName = (fileName: string): string => {
+  const ext = (/\.([a-z0-9]{2,5})$/i.exec(fileName)?.[1] ?? '').toLowerCase();
+  return MIME_BY_EXT[ext] ?? '';
+};
+
+const sanitizeUploadName = (fileName: string): string =>
+  (fileName || `upload-${Date.now()}`).replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 120);
+
+/**
+ * The streamed upload's half of the Upload Settings, so a file that came up the
+ * `/upload` route obeys the same admin rules as one that came through GraphQL.
+ *
+ * Both halves have always existed and only one of them enforced anything: the
+ * base64 mutation applied the surface's size caps, format allow-list and sharp
+ * compression, while everything that streams — every native pick, mWeb's
+ * support attachments and review photos, every direct video — was gated by the
+ * 300 MB nginx ceiling alone. Lowering `max_image_mb` in the admin panel simply
+ * did not reach the app.
+ *
+ * A video is uploaded straight from disk: it is capped and format-checked, but
+ * never read into memory, which is the whole reason the route spools to one. An
+ * image is small by definition — its own cap decides how small — so it is read,
+ * run through the same `processImageForUpload` the mutation uses, and uploaded
+ * from the processed bytes.
+ */
+export async function uploadSpooledFileToImagekit(opts: {
+  filePath: string;
+  fileName: string;
+  bytes: number;
+  folder?: string;
+  surface?: string;
+}): Promise<{ uploaded: ImagekitUploadResult; fileName: string; isImage: boolean }> {
+  const mimeType = mimeFromName(opts.fileName);
+  // Classified rather than gated: this route has always accepted whatever a
+  // picker handed it, and a file the extension cannot name (a pasted blob) is
+  // still a legitimate support attachment. So an unknown kind falls to the
+  // document bucket and is capped there, instead of being refused outright.
+  const isVideo = /^video\//i.test(mimeType) || VIDEO_EXT_RE.test(opts.fileName);
+  const isImage = !isVideo && /^image\//i.test(mimeType);
+  const kind = { isVideo, isImage, isDocument: !isVideo && !isImage };
+  let safeName = sanitizeUploadName(opts.fileName);
+
+  const setting = await getUploadSettingsSafe(opts.surface);
+  assertUploadSize(opts.bytes, kind, setting);
+  if (kind.isVideo && setting) {
+    assertVideoFormatAllowed(safeName, setting);
+  }
+  if (!kind.isImage || !setting) {
+    const streamed = await uploadFileToImagekit({
+      filePath: opts.filePath,
+      fileName: safeName,
+      folder: opts.folder,
+    });
+    return { uploaded: streamed, fileName: safeName, isImage: kind.isImage };
+  }
+
+  assertImageFormatAllowed(safeName, mimeType, setting);
+  const processed = await processImageForUpload({
+    fileBytes: await fsp.readFile(opts.filePath),
+    safeName,
+    mimeType,
+    setting,
+  });
+  safeName = processed.safeName;
+  const uploaded = await uploadToImagekit({
+    fileBytes: processed.fileBytes,
+    fileName: safeName,
+    folder: opts.folder,
+  });
+  return { uploaded, fileName: safeName, isImage: true };
+}
+
 export async function uploadBase64Image(opts: {
   fileBase64: string;
   fileName: string;
@@ -365,7 +457,7 @@ export async function uploadBase64Image(opts: {
   // Admin Upload Settings (size caps / crop / compression / formats). Settings
   // being unreadable (no DB) never blocks the upload — the file goes up as-is.
   const setting = await getUploadSettingsSafe(opts.surface);
-  assertUploadSize(fileBytes, { isVideo, isDocument, isImage }, setting);
+  assertUploadSize(fileBytes.length, { isVideo, isDocument, isImage }, setting);
   if (isVideo && setting) {
     assertVideoFormatAllowed(safeName, setting);
   }
@@ -434,6 +526,8 @@ export async function importRemoteImage(opts: {
   folder?: string;
   fileName?: string;
   tags?: string[];
+  /** Upload Settings surface of the caller (PORTALS | MOBILE | MWEB). */
+  surface?: string;
 }) {
   let parsed: URL;
   try {
@@ -470,20 +564,24 @@ export async function importRemoteImage(opts: {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   const buf = Buffer.from(await remote.arrayBuffer());
-  // 15 MB hard cap on remote pulls
-  if (buf.length > 15 * 1024 * 1024)
-    throw new GraphQLError('Remote image is too large (max 15 MB)', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
+  // An import is an upload: it obeys the surface's admin Upload Settings like
+  // any other. Two fixed ceilings used to sit here instead, which made this
+  // the one way to put an uncompressed original in the library after the
+  // admin had capped and compressed every other route to it.
+  const setting = await getUploadSettingsSafe(opts.surface);
+  assertUploadSize(buf.length, { isVideo: false, isDocument: false, isImage: true }, setting);
   const ext = (mime.split('/')[1] || 'jpg').replace('jpeg', 'jpg').split(';')[0];
   const fileName =
     (opts.fileName || `import-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`).replace(
       /[^a-zA-Z0-9_.-]/g,
       '_'
     ) + (opts.fileName?.includes('.') ? '' : `.${ext}`);
+  const processed = setting
+    ? await processImageForUpload({ fileBytes: buf, safeName: fileName, mimeType: mime, setting })
+    : { fileBytes: buf, safeName: fileName };
   return uploadToImagekit({
-    fileBytes: buf,
-    fileName,
+    fileBytes: processed.fileBytes,
+    fileName: processed.safeName,
     folder: opts.folder,
     tags: opts.tags,
   });
@@ -645,6 +743,8 @@ export async function importRemoteMedia(opts: {
   folder?: string;
   fileName?: string;
   tags?: string[];
+  /** Upload Settings surface of the caller (PORTALS | MOBILE | MWEB). */
+  surface?: string;
 }) {
   let parsed: URL;
   try {
@@ -683,12 +783,9 @@ export async function importRemoteMedia(opts: {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   const buf = Buffer.from(await remote.arrayBuffer());
-  const cap = isVideo ? 200 * 1024 * 1024 : 15 * 1024 * 1024;
-  if (buf.length > cap)
-    throw new GraphQLError(
-      isVideo ? 'Remote video is too large (max 200 MB)' : 'Remote image is too large (max 15 MB)',
-      { extensions: { code: 'BAD_USER_INPUT' } }
-    );
+  // Same admin Upload Settings as every other route in, per kind.
+  const setting = await getUploadSettingsSafe(opts.surface);
+  assertUploadSize(buf.length, { isVideo, isDocument: false, isImage }, setting);
   const ext = (mime.split('/')[1] || (isVideo ? 'mp4' : 'jpg'))
     .replace('jpeg', 'jpg')
     .split(';')[0];
@@ -697,9 +794,12 @@ export async function importRemoteMedia(opts: {
       /[^a-zA-Z0-9_.-]/g,
       '_'
     ) + (opts.fileName?.includes('.') ? '' : `.${ext}`);
+  const processed = isImage && setting
+    ? await processImageForUpload({ fileBytes: buf, safeName: fileName, mimeType: mime, setting })
+    : { fileBytes: buf, safeName: fileName };
   return uploadToImagekit({
-    fileBytes: buf,
-    fileName,
+    fileBytes: processed.fileBytes,
+    fileName: processed.safeName,
     folder: opts.folder,
     tags: opts.tags,
   });

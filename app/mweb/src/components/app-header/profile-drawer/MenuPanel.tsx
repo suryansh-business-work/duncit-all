@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
@@ -104,14 +104,13 @@ export default function MenuPanel({
           }}>
           {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
         </Typography>
-        <DuncitIconButton
-          size="small"
+        <DuncitRoundButton
+          tone="surface"
           onClick={onClose}
           aria-label={t('mweb.home.closeMenu')}
-          sx={{ bgcolor: 'action.hover' }}
         >
-          <CloseIcon fontSize="small" />
-        </DuncitIconButton>
+          <CloseIcon />
+        </DuncitRoundButton>
       </Box>
 
       <MenuRefreshBar active={refreshing} />

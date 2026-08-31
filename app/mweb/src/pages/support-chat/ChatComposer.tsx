@@ -3,13 +3,10 @@ import { Box, Chip, CircularProgress, Stack, TextField } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { useImagekitUpload } from '../../utils/imagekit';
-import { isVideoUpload } from '../../utils/attachment';
+import { useAttachmentGate } from '../../utils/uploadLimits';
 import { useTranslation } from '../../i18n/useTranslation';
-
-const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
-const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // Videos are capped tighter at 50 MB.
-const ACCEPT = 'image/*,video/*,application/pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx';
 
 interface Props {
   disabled?: boolean;
@@ -23,6 +20,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
   const [attachments, setAttachments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const { upload, uploading } = useImagekitUpload();
+  const gate = useAttachmentGate();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const lastTyping = useRef(0);
 
@@ -39,12 +37,9 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (isVideoUpload(file.name, file.type) && file.size > VIDEO_MAX_BYTES) {
-      setError(t('mweb.common.videoIsTooLargeMax50'));
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      setError(t('mweb.common.fileIsTooLargeMax100'));
+    const tooLarge = gate(file);
+    if (tooLarge) {
+      setError(tooLarge);
       return;
     }
     setError(null);
@@ -84,7 +79,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={pickFile} />
+        <input ref={fileRef} type="file" accept={ATTACHMENT_ACCEPT_ALL} hidden onChange={pickFile} />
         <DuncitIconButton
           aria-label={t('mweb.supportChat.attachFile')}
           disabled={disabled || uploading || attachments.length >= 5}

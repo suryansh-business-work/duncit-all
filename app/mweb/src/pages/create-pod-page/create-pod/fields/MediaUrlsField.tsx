@@ -4,7 +4,7 @@ import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternate
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
@@ -136,14 +136,15 @@ export default function MediaUrlsField({
               ) : (
                 <Box component="img" src={url} alt={t('mweb.createPod.mediaAlt')} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
-              <DuncitIconButton
+              <DuncitRoundButton
                 size="small"
+                tone="overlay"
                 aria-label={t('mweb.createPod.removeMedia')}
                 onClick={() => removeUrl(url)}
-                sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' } }}
+                sx={{ position: 'absolute', top: 2, right: 2 }}
               >
-                <CloseIcon sx={{ fontSize: 14 }} />
-              </DuncitIconButton>
+                <CloseIcon />
+              </DuncitRoundButton>
             </Box>
           ))}
           <Box
@@ -168,6 +169,7 @@ export default function MediaUrlsField({
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder={folder}
+        surface="MWEB"
         title={t('mweb.createPod.addPodMedia')}
         // The cover is a wide banner, and a pod is a group activity — so the
         // search opens on landscape photos of people doing this category.

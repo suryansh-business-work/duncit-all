@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 
+import { useUploadLimits } from '@/hooks/useUploadLimits';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
-
-// Videos cap at 50 MB; images and documents keep the 100 MB ceiling (support spec).
-const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
-const FILE_MAX_BYTES = 100 * 1024 * 1024;
-// The document picker often reports a generic mime — detect video by extension
-// too so the 50 MB cap can't be bypassed by an empty/unknown mimeType.
-const VIDEO_EXT_RE = /\.(mp4|mov|m4v|avi|webm|mkv|3gp|ts|flv|wmv|mpe?g)$/i;
 
 // Everything the support attachment control accepts: images, videos and the
 // document mime list (pdf / word / excel / powerpoint / text / csv).
@@ -29,11 +23,12 @@ const PICK_TYPES = [
 /**
  * Shared support-attachment picker + uploader used by the create-ticket field
  * and the ticket reply composer. Picks an image/video/document, enforces the
- * 50 MB video cap, uploads the file DIRECTLY to ImageKit (bypassing the API's
- * request-body size limit) and returns the hosted URL (or null on cancel /
- * too-large / failure).
+ * admin Upload Settings cap for that kind, uploads the file DIRECTLY to
+ * ImageKit (bypassing the API's request-body size limit) and returns the
+ * hosted URL (or null on cancel / too-large / failure).
  */
 export function useSupportUpload(folder: string) {
+  const limits = useUploadLimits();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
@@ -47,10 +42,9 @@ export function useSupportUpload(folder: string) {
     if (!asset) return null;
 
     const mimeType = asset.mimeType ?? 'application/octet-stream';
-    const isVideo = mimeType.startsWith('video/') || VIDEO_EXT_RE.test(asset.name ?? '');
-    const max = isVideo ? VIDEO_MAX_BYTES : FILE_MAX_BYTES;
-    if (typeof asset.size === 'number' && asset.size > max) {
-      setError(isVideo ? 'Video is too large (max 50 MB).' : 'File is too large (max 100 MB).');
+    const overCap = limits.tooLarge({ name: asset.name, mimeType, size: asset.size });
+    if (overCap) {
+      setError(overCap);
       return null;
     }
 

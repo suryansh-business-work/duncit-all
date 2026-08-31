@@ -12,6 +12,18 @@ import { shareTranscript } from '@/utils/transcript';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useSupportChat');
+// Attachment caps come from Admin > Upload Settings; pin a row so the assertions
+// are about the admin's numbers reaching the composer, not about a constant.
+jest.mock('@/hooks/useUploadSettings', () => ({
+  useUploadSettings: () => ({
+    max_image_mb: 8,
+    max_video_mb: 40,
+    allowed_image_formats: ['jpg', 'png'],
+    allowed_video_formats: ['mp4'],
+    default_crop_key: 'NO_CROP',
+    crop_presets: [],
+  }),
+}));
 jest.mock('@/hooks/useSupport', () => ({ useTickets: jest.fn() }));
 jest.mock('@/hooks/useUnifiedTickets', () => ({ useUnifiedTickets: jest.fn() }));
 jest.mock('@/hooks/useAppSettings', () => ({
@@ -351,7 +363,7 @@ describe('LiveChatScreen — send + attach', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('rejects an over-size image or document (100 MB cap)', async () => {
+  it("rejects an over-size image by the admin's cap, a document by the server ceiling", async () => {
     const uploadAttachment = jest.fn().mockResolvedValue('https://img/up.jpg');
     mockedChat.mockReturnValue({ ...chatBase(), uploadAttachment });
     renderWithProviders(<LiveChatScreen />);
@@ -364,7 +376,7 @@ describe('LiveChatScreen — send + attach', () => {
     });
     fireEvent.press(screen.getByTestId('support-chat-attach'));
     await waitFor(() =>
-      expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent(/max 100 MB/i),
+      expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent(/max 8 MB/i),
     );
     expect(uploadAttachment).not.toHaveBeenCalled();
 
@@ -379,7 +391,7 @@ describe('LiveChatScreen — send + attach', () => {
     expect(uploadAttachment).not.toHaveBeenCalled();
   });
 
-  it('rejects a video over the 50 MB cap', async () => {
+  it("rejects a video over the admin's video cap", async () => {
     const uploadAttachment = jest.fn().mockResolvedValue('https://img/clip.mp4');
     mockedChat.mockReturnValue({ ...chatBase(), uploadAttachment });
     renderWithProviders(<LiveChatScreen />);
@@ -387,12 +399,12 @@ describe('LiveChatScreen — send + attach', () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValueOnce({
       canceled: false,
-      assets: [{ base64: 'abc', type: 'video', fileSize: 51 * 1024 * 1024 }],
+      assets: [{ base64: 'abc', type: 'video', fileSize: 41 * 1024 * 1024 }],
     });
     fireEvent.press(screen.getByTestId('support-chat-attach'));
     await waitFor(() =>
       expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent(
-        'Video is too large (max 50 MB).',
+        'Video is too large (max 40 MB)',
       ),
     );
     expect(uploadAttachment).not.toHaveBeenCalled();

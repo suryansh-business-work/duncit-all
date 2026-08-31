@@ -4,15 +4,12 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
+import { ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { useImagekitUpload } from '../../utils/imagekit';
-import { describeAttachment, isVideoUpload, typeLabel } from '../../utils/attachment';
+import { useAttachmentGate } from '../../utils/uploadLimits';
+import { describeAttachment, typeLabel } from '../../utils/attachment';
 import { useTranslation } from '../../i18n/useTranslation';
-
-const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
-const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // Videos are capped tighter at 50 MB.
-const ACCEPT =
-  'image/*,video/*,application/pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx';
 
 interface Props {
   attachments: string[];
@@ -29,23 +26,15 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
   const info = describeAttachment(url);
   const removeButton = (
-    <DuncitIconButton
+    <DuncitRoundButton
       size="small"
+      tone="paper"
       aria-label={t('mweb.common.removeAttachment')}
       onClick={onRemove}
-      sx={{
-        position: 'absolute',
-        top: -8,
-        right: -8,
-        bgcolor: 'background.paper',
-        border: 1,
-        borderColor: 'divider',
-        width: 24,
-        height: 24,
-      }}
+      sx={{ position: 'absolute', top: -8, right: -8 }}
     >
-      <CloseIcon sx={{ fontSize: 14 }} />
-    </DuncitIconButton>
+      <CloseIcon />
+    </DuncitRoundButton>
   );
 
   if (info.kind === 'image') {
@@ -96,18 +85,16 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { upload, uploading } = useImagekitUpload();
+  const gate = useAttachmentGate();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const pickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (isVideoUpload(file.name, file.type) && file.size > VIDEO_MAX_BYTES) {
-      setError(t('mweb.common.videoIsTooLargeMax50'));
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      setError(t('mweb.common.fileIsTooLargeMax100'));
+    const tooLarge = gate(file);
+    if (tooLarge) {
+      setError(tooLarge);
       return;
     }
     setError(null);
@@ -146,7 +133,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
           Add files
         </DuncitButton>
       </Stack>
-      <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={pickFile} />
+      <input ref={fileRef} type="file" accept={ATTACHMENT_ACCEPT_ALL} hidden onChange={pickFile} />
       {error && (
         <Chip
           size="small"

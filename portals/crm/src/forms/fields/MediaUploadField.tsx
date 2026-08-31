@@ -5,7 +5,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
-import { useImagekitBase64Upload } from '@duncit/media-picker';
+import { MB, useImagekitBase64Upload, useUploadCaps } from '@duncit/media-picker';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 
@@ -35,8 +35,11 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { upload } = useImagekitBase64Upload();
+  const caps = useUploadCaps('PORTALS');
 
-  const maxBytes = kind === 'video' ? 100 * 1024 * 1024 : 8 * 1024 * 1024;
+  // Admin > Upload Settings (Portals) owns both caps — the field only picks
+  // which of the two this instance is judging by.
+  const maxBytes = kind === 'video' ? caps.maxVideoBytes : caps.maxImageBytes;
 
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -46,7 +49,11 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
     try {
       for (const file of Array.from(files)) {
         if (file.size > maxBytes) {
-          setError(`${file.name} exceeds the ${kind === 'video' ? '100MB' : '8MB'} limit and was skipped.`);
+          setError(
+            t('crm.forms.mediaTooLarge', {
+              vars: { name: file.name, max: Math.round(maxBytes / MB) },
+            })
+          );
           continue;
         }
         const { url } = await upload(file, {

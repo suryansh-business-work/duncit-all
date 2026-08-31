@@ -5,9 +5,7 @@ import type { PendingStoryVideo } from '@/components/status/StatusVideoPreviewSh
 import { useStatusStore, type StatusUploadAsset } from '@/stores/status.store';
 import type { VideoTrim } from '@/services/video-compression';
 import { scheduleLocalNotification } from '@/services/notifications.service';
-
-// Story videos are capped at 50 MB (Bug 3).
-const MAX_STORY_VIDEO_BYTES = 50 * 1024 * 1024;
+import { useUploadLimits } from '@/hooks/useUploadLimits';
 
 interface PendingVideoAsset extends PendingStoryVideo {
   fileName?: string | null;
@@ -19,6 +17,7 @@ interface PendingVideoAsset extends PendingStoryVideo {
  * clips over the 15s cap must be trimmed there before posting. Mirrors mWeb's
  * StatusUploadProvider. */
 export function useStatusUpload(options?: { clubId?: string | null }) {
+  const limits = useUploadLimits();
   const clubId = options?.clubId ?? null;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -64,8 +63,13 @@ export function useStatusUpload(options?: { clubId?: string | null }) {
     if (!asset) return;
 
     if (asset.type === 'video') {
-      if ((asset.fileSize ?? 0) > MAX_STORY_VIDEO_BYTES) {
-        setError('Video is too large (max 50 MB).');
+      const overCap = limits.tooLarge({
+        name: asset.fileName,
+        mimeType: asset.mimeType ?? 'video/mp4',
+        size: asset.fileSize,
+      });
+      if (overCap) {
+        setError(overCap);
         return;
       }
       // Videos pause on the preview sheet; over-length clips trim there (Bug 3).
@@ -75,6 +79,16 @@ export function useStatusUpload(options?: { clubId?: string | null }) {
         fileName: asset.fileName,
         mimeType: asset.mimeType,
       });
+      return;
+    }
+
+    const overCap = limits.tooLarge({
+      name: asset.fileName,
+      mimeType: asset.mimeType ?? 'image/jpeg',
+      size: asset.fileSize,
+    });
+    if (overCap) {
+      setError(overCap);
       return;
     }
 

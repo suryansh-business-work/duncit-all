@@ -169,6 +169,8 @@ export const uploadTypeDefs = /* GraphQL */ `
       remoteUrl: String!
       folder: String
       fileName: String
+      "Upload Settings surface of the caller (PORTALS | MOBILE | MWEB) — decides the size cap and the compression applied to the import."
+      surface: String
     ): UploadedImage!
 
     """
@@ -179,6 +181,8 @@ export const uploadTypeDefs = /* GraphQL */ `
       remoteUrl: String!
       folder: String
       fileName: String
+      "Upload Settings surface of the caller (PORTALS | MOBILE | MWEB) — decides the size cap and the compression applied to the import."
+      surface: String
     ): UploadedImage!
 
     """

@@ -7,6 +7,8 @@
  * - 'avatar'        = portals/crm ImageUploadField (avatar/square preview,
  *   Replace/Remove buttons, NO URL paste — everything goes through ImageKit).
  */
+import type { UploadSurface } from '../types';
+
 export type SingleImageVariant = 'url-adornment' | 'url-button' | 'avatar';
 
 export type AvatarShape = 'circle' | 'square';
@@ -25,8 +27,14 @@ export interface SingleImageUploadFieldProps {
   disabled?: boolean;
   /** File-input accept list. Default 'image/*'. */
   accept?: string;
-  /** Per-file size cap in bytes; null disables the cap. Default 15 MB. */
+  /**
+   * Per-file size cap in bytes. Omit it — Admin > Upload Settings for
+   * `surface` is the answer, and a number here overrides the admin; `null`
+   * disables the client-side cap (the server still has one).
+   */
   maxBytes?: number | null;
+  /** Which Upload Settings row supplies the cap. Default PORTALS. */
+  surface?: UploadSurface;
   /** Custom over-size message (e.g. crm's 'Max 8MB. Compress and try again.'). */
   oversizeMessage?: (file: File) => string;
   /** Fallback when the browser reports an empty file.type (crm used 'image/png'). */

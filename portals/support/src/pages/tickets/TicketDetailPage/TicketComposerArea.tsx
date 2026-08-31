@@ -95,7 +95,6 @@ export default function TicketComposerArea({
           folder="/support/tickets"
           label={t('support.chat.attach')}
           accept={ATTACHMENT_ACCEPT_ALL}
-          maxBytes={100 * 1024 * 1024}
           allowDocuments
         />
         <DuncitButton variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={onSend}>

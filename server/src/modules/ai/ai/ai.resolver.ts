@@ -218,7 +218,9 @@ async function pickPexelsImageKitUrl(query: string, folder: string, offset = 0):
     const photo = result.photos?.[offset % 12] || result.photos?.[0];
     const remote = photo?.src_large || photo?.src_medium;
     if (!remote) return null;
-    const imported = await importRemoteImage({ remoteUrl: remote, folder });
+    // A portal action (the AI content tools), so the PORTALS Upload Settings
+    // are the ones that cap and compress what it files away.
+    const imported = await importRemoteImage({ remoteUrl: remote, folder, surface: 'PORTALS' });
     return imported.url || null;
   } catch {
     return null;

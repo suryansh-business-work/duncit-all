@@ -30,6 +30,7 @@ exports:
   - 'uploadImageToImagekit'
   - 'compressUploadedVideo'
   - 'useUploadSettings'
+  - 'useUploadCaps'
   - 'validateFile'
   - 'describeAttachment'
 ---
@@ -124,6 +125,29 @@ export const portalCaps = {
   allowedVideoFormats: portalUploadSettings.allowed_video_formats,
 };
 ```
+
+## `useUploadCaps(surface)` — the settings as the numbers a picker works in
+
+`useUploadSettings` hands back the admin row; this turns it into byte caps and one
+`validate`, which is the shape every call site was writing for itself:
+
+```tsx
+const caps = useUploadCaps('MWEB');
+
+caps.maxImageBytes; // max_image_mb × 1 MB
+caps.maxVideoBytes; // max_video_mb × 1 MB
+caps.maxDocumentBytes; // the server's own document ceiling — not an admin setting
+caps.validate(file, { allowImage: true, allowVideo: true, allowDocuments: false });
+```
+
+Reach for it instead of a `const MAX_BYTES` at the top of a file. That constant is how a
+support form ended up judging a photo by a document ceiling, and how three surfaces
+advertised caps the admin panel had not shown in a year. `SingleImageUploadField` and
+`AttachmentUploadField` already call it: **omit `maxBytes` and the admin decides**, pass a
+number to override, pass `null` to leave the gate to the server alone.
+
+It is an enhancement, never a gate — until the query answers (and if it never does) the
+package floor applies: 15 MB image, 100 MB video, 100 MB document.
 
 ## Worked examples
 

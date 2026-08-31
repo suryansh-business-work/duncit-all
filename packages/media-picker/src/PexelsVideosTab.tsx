@@ -19,12 +19,14 @@ import { DuncitButton } from '@duncit/buttons';
 import { IMPORT_REMOTE_MEDIA, PEXELS_VIDEO_SEARCH } from './queries';
 import { pickBestVideoFile } from './utils';
 import PexelsVideoCard from './PexelsVideoCard';
-import type { Orientation } from './types';
+import type { Orientation, UploadSurface } from './types';
 
 interface Props {
   active: boolean;
   open: boolean;
   folder: string;
+  /** Upload Settings surface — an import is capped and compressed like any upload. */
+  surface: UploadSurface;
   onPicked: (url: string) => void;
   onClose: () => void;
   setError: (msg: string | null) => void;
@@ -34,6 +36,7 @@ export default function PexelsVideosTab({
   active,
   open,
   folder,
+  surface,
   onPicked,
   onClose,
   setError,
@@ -95,7 +98,7 @@ export default function PexelsVideosTab({
     setError(null);
     try {
       const res = await importMediaMut({
-        variables: { remoteUrl: file.link, folder },
+        variables: { remoteUrl: file.link, folder, surface },
       });
       const url = res.data?.importRemoteMediaToImagekit?.url;
       if (!url) throw new Error('No URL returned from server');

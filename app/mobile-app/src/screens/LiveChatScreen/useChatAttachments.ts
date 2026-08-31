@@ -3,12 +3,9 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import type { useSupportChat } from '@/hooks/useSupportChat';
 import { toErrorMessage } from '@/utils/errors';
+import { useUploadLimits } from '@/hooks/useUploadLimits';
 
 type Upload = ReturnType<typeof useSupportChat>['uploadAttachment'];
-
-// Videos cap at 50 MB; images and documents keep the 100 MB ceiling (support spec).
-const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
-const FILE_MAX_BYTES = 100 * 1024 * 1024;
 
 // Every document type accepted by the server (pdf / word / excel / powerpoint /
 // text) — mirrors the mWeb composer's `accept` list.
@@ -35,6 +32,7 @@ interface Deps {
  * of the screen so LiveChatScreen stays ≤200 lines. Uploaded files are staged
  * (previewed in the composer) rather than sent immediately. */
 export function useChatAttachments({ uploadAttachment, onStage, setBusy, setSendError }: Deps) {
+  const limits = useUploadLimits();
   const uploadAndStage = async (asset: Parameters<Upload>[0]) => {
     setBusy(true);
     setSendError('');
@@ -48,13 +46,11 @@ export function useChatAttachments({ uploadAttachment, onStage, setBusy, setSend
     }
   };
 
-  const tooLarge = (size: number | null | undefined, isVideo: boolean) => {
-    const max = isVideo ? VIDEO_MAX_BYTES : FILE_MAX_BYTES;
-    if (typeof size === 'number' && size > max) {
-      setSendError(isVideo ? 'Video is too large (max 50 MB).' : 'File is too large (max 100 MB).');
-      return true;
-    }
-    return false;
+  const tooLarge = (size: number | null | undefined, mimeType: string) => {
+    const overCap = limits.tooLarge({ mimeType, size });
+    if (!overCap) return false;
+    setSendError(overCap);
+    return true;
   };
 
   const attach = async () => {
@@ -69,7 +65,7 @@ export function useChatAttachments({ uploadAttachment, onStage, setBusy, setSend
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
-    if (tooLarge(asset.fileSize, asset.type === 'video')) return;
+    if (tooLarge(asset.fileSize, asset.type === 'video' ? 'video/mp4' : 'image/jpeg')) return;
     await uploadAndStage(asset);
   };
 
@@ -80,7 +76,7 @@ export function useChatAttachments({ uploadAttachment, onStage, setBusy, setSend
     });
     const doc = result.canceled ? undefined : result.assets[0];
     if (!doc) return;
-    if (tooLarge(doc.size, false)) return;
+    if (tooLarge(doc.size, doc.mimeType ?? 'application/octet-stream')) return;
     await uploadAndStage({ uri: doc.uri, fileName: doc.name, mimeType: doc.mimeType });
   };
 

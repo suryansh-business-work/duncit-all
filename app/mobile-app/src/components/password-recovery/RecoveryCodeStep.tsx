@@ -1,5 +1,5 @@
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { formResolver } from '../../utils/form-resolver';
+import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import type { PasswordRecoveryLabels } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -49,11 +49,7 @@ export function RecoveryCodeStep({
     formState: { isValid },
   } = useForm<RecoveryCodeValues, any, RecoveryCodeValues>({
     defaultValues: { otp: '' },
-    resolver: zodResolver(recoveryCodeSchema) as unknown as Resolver<
-      RecoveryCodeValues,
-      any,
-      RecoveryCodeValues
-    >,
+    resolver: formResolver<RecoveryCodeValues>(recoveryCodeSchema),
     mode: 'onChange',
   });
 

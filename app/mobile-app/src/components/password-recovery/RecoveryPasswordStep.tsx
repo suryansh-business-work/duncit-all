@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useMemo } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 import type { PasswordRecoveryLabels } from '@duncit/utils';
 
@@ -30,11 +30,7 @@ export function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<Props>) 
     formState: { isValid },
   } = useForm<RecoveryPasswordValues, any, RecoveryPasswordValues>({
     defaultValues: defaults,
-    resolver: zodResolver(schema) as unknown as Resolver<
-      RecoveryPasswordValues,
-      any,
-      RecoveryPasswordValues
-    >,
+    resolver: formResolver<RecoveryPasswordValues>(schema),
     mode: 'onChange',
   });
 

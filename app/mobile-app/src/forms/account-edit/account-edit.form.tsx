@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import { usernameBlocksSave, type ContactSnapshot, type UsernameStatus } from '@duncit/utils';
 
@@ -92,7 +92,7 @@ export function AccountEditForm({
     formState: { isDirty, isValid },
   } = useForm<AccountEditValues, any, AccountEditValues>({
     values: accountEditDefaults(me),
-    resolver: zodResolver(schema) as unknown as Resolver<AccountEditValues, any, AccountEditValues>,
+    resolver: formResolver<AccountEditValues>(schema),
     mode: 'onChange',
   });
 

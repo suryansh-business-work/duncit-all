@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useCallback, useState, type ReactNode } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -112,11 +112,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
-    resolver: zodResolver(buildPodCompleteSchema(hasVenue)) as unknown as Resolver<
-      PodCompleteValues,
-      any,
-      PodCompleteValues
-    >,
+    resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue)),
     defaultValues: blankPodCompleteValues,
   });
 

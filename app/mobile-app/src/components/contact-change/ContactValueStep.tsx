@@ -1,5 +1,5 @@
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { formResolver } from '../../utils/form-resolver';
+import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
   isPhoneChannel,
@@ -48,11 +48,7 @@ export function ContactValueStep({
     formState: { isValid },
   } = useForm<ContactValueValues, any, ContactValueValues>({
     defaultValues,
-    resolver: zodResolver(makeContactValueSchema(channel)) as unknown as Resolver<
-      ContactValueValues,
-      any,
-      ContactValueValues
-    >,
+    resolver: formResolver<ContactValueValues>(makeContactValueSchema(channel)),
     mode: 'onChange',
   });
 

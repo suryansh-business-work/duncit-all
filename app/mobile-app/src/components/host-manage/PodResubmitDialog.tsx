@@ -1,9 +1,9 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { Controller, useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -47,11 +47,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
     any,
     PodResubmitValues
   >({
-    resolver: zodResolver(podResubmitSchema) as unknown as Resolver<
-      PodResubmitValues,
-      any,
-      PodResubmitValues
-    >,
+    resolver: formResolver<PodResubmitValues>(podResubmitSchema),
     defaultValues: podResubmitInitialValues(pod),
   });
   const venueId = watch('venue_id');

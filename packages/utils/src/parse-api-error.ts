@@ -83,9 +83,9 @@ export function parseApiError(err: unknown, fallback: string = GENERIC_ERROR_MES
 
   // GraphQL-level errors (index access is guarded — the native app compiles
   // this source under noUncheckedIndexedAccess).
-  const firstGraphQLError = e.graphQLErrors?.[0] ?? e.errors?.[0];
-  if (firstGraphQLError) {
-    return firstGraphQLError.message;
+  const graphQLError = e.graphQLErrors?.[0] ?? e.errors?.[0];
+  if (graphQLError) {
+    return graphQLError.message;
   }
 
   // Plain Error or string

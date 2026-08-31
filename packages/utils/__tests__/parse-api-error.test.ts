@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   GENERIC_ERROR_MESSAGE,
   OFFLINE_MESSAGE,
+  firstGraphQLError,
   isNetworkFailureMessage,
   parseApiError,
 } from '../src/parse-api-error';
@@ -87,6 +88,10 @@ describe('parseApiError', () => {
     expect(parseApiError(false, 'Custom')).toBe('Custom');
   });
 
+  it('reads the v4 error list, which one thrown CombinedGraphQLErrors carries', () => {
+    expect(parseApiError({ errors: [{ message: 'Pod is full' }] })).toBe('Pod is full');
+  });
+
   it('falls back for a bare string error — it carries no .message', () => {
     expect(parseApiError('Boom')).toBe(GENERIC_ERROR_MESSAGE);
   });
@@ -101,5 +106,31 @@ describe('isNetworkFailureMessage', () => {
 
   it('does not match unrelated messages', () => {
     expect(isNetworkFailureMessage('Unauthorized')).toBe(false);
+  });
+});
+
+describe('firstGraphQLError', () => {
+  it('reads the v3 shape, where the errors hang off graphQLErrors', () => {
+    const err = { graphQLErrors: [{ message: 'Rejected', extensions: { code: 'CONTENT_REJECTED' } }] };
+
+    expect(firstGraphQLError(err)?.extensions?.code).toBe('CONTENT_REJECTED');
+  });
+
+  it('reads the v4 shape, where one thrown error carries them on errors', () => {
+    const err = { errors: [{ message: 'Rejected', extensions: { code: 'CONTENT_REJECTED' } }] };
+
+    expect(firstGraphQLError(err)?.message).toBe('Rejected');
+  });
+
+  it('prefers the v3 list when a client reports both', () => {
+    const err = { graphQLErrors: [{ message: 'v3' }], errors: [{ message: 'v4' }] };
+
+    expect(firstGraphQLError(err)?.message).toBe('v3');
+  });
+
+  it('answers undefined for anything that carries neither', () => {
+    expect(firstGraphQLError(null)).toBeUndefined();
+    expect(firstGraphQLError(new Error('plain'))).toBeUndefined();
+    expect(firstGraphQLError({ graphQLErrors: [] })).toBeUndefined();
   });
 });

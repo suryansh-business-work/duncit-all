@@ -1,6 +1,6 @@
+import { formResolver } from '../../../utils/form-resolver';
 import { useState } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Linking } from 'react-native';
 import { fireEvent, screen } from '@testing-library/react-native';
 import { Text, XStack } from 'tamagui';
@@ -35,11 +35,7 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
 // Same resolver the stepper uses, so the rendered error is the schema's own copy.
 function PodTypeErrorHarness() {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
-    resolver: zodResolver(createPodSchema) as unknown as Resolver<
-      CreatePodFormValues,
-      any,
-      CreatePodFormValues
-    >,
+    resolver: formResolver<CreatePodFormValues>(createPodSchema),
     defaultValues: { ...blankCreatePodForm, pod_mode: 'PHYSICAL', pod_type: 'FREE' },
   });
   return (

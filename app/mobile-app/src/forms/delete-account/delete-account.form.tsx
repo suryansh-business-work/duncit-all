@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useMemo } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -29,11 +29,7 @@ export function DeleteAccountForm({
   const schema = useMemo(() => makeDeleteAccountSchema(t), [t]);
   const { control, handleSubmit } = useForm<DeleteAccountValues, any, DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
-    resolver: zodResolver(schema) as unknown as Resolver<
-      DeleteAccountValues,
-      any,
-      DeleteAccountValues
-    >,
+    resolver: formResolver<DeleteAccountValues>(schema),
     mode: 'onBlur',
   });
 

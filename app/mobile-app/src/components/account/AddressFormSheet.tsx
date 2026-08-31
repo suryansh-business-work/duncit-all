@@ -1,8 +1,8 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo } from 'react';
 import { Modal } from 'react-native';
 import { z } from 'zod';
-import { Controller, useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
@@ -115,11 +115,7 @@ export function AddressFormSheet({
   );
   const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
-    resolver: zodResolver(addressSchema) as unknown as Resolver<
-      AddressFormValues,
-      any,
-      AddressFormValues
-    >,
+    resolver: formResolver<AddressFormValues>(addressSchema),
     mode: 'onTouched',
   });
 

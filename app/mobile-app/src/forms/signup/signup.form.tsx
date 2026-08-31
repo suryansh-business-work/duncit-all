@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useMemo } from 'react';
-import { Controller, useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -34,7 +34,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
   );
   const { control, handleSubmit, watch } = useForm<SignupFormValues, any, SignupFormValues>({
     defaultValues: signupDefaults,
-    resolver: zodResolver(schema) as unknown as Resolver<SignupFormValues, any, SignupFormValues>,
+    resolver: formResolver<SignupFormValues>(schema),
     mode: 'onBlur',
   });
 

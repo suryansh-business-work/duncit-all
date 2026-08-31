@@ -1,9 +1,9 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { formatMoney } from '@duncit/utils';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -49,11 +49,7 @@ export function WithdrawDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit, setValue, watch } = useForm<WithdrawValues, any, WithdrawValues>({
-    resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)) as unknown as Resolver<
-      WithdrawValues,
-      any,
-      WithdrawValues
-    >,
+    resolver: formResolver<WithdrawValues>(makeWithdrawSchema(maxAmount, minAmount, t)),
     defaultValues: blankWithdrawValues,
   });
   const method = watch('payout_method');

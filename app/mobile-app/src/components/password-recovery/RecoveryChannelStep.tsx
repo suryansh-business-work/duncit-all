@@ -1,5 +1,5 @@
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { formResolver } from '../../utils/form-resolver';
+import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
   PASSWORD_RECOVERY_CHANNELS,
@@ -93,11 +93,7 @@ export function RecoveryChannelStep({
     formState: { isValid },
   } = useForm<RecoveryLookupValues, any, RecoveryLookupValues>({
     defaultValues,
-    resolver: zodResolver(makeRecoveryLookupSchema(channel, t)) as unknown as Resolver<
-      RecoveryLookupValues,
-      any,
-      RecoveryLookupValues
-    >,
+    resolver: formResolver<RecoveryLookupValues>(makeRecoveryLookupSchema(channel, t)),
     mode: 'onChange',
   });
 

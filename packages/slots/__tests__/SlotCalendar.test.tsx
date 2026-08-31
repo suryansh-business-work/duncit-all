@@ -20,7 +20,29 @@ import SlotTimeGrid from '../src/mui/SlotTimeGrid';
 import { mwebSlotLabels } from '../src/labels';
 import type { CalendarSlot, SlotFormatter } from '../src/types';
 
-const testTheme = createTheme();
+/**
+ * Instantaneous transitions.
+ *
+ * MUI schedules a real `setTimeout` for every transition it runs, and the date
+ * picker runs several. At the default durations those timers outlive the test
+ * that started them, land after jsdom is torn down, and throw `window is not
+ * defined` — which fails the run with all 98 tests passing. At zero they
+ * resolve inside the `settle()` each test already awaits.
+ */
+const testTheme = createTheme({
+  transitions: {
+    create: () => 'none',
+    duration: {
+      shortest: 0,
+      shorter: 0,
+      short: 0,
+      standard: 0,
+      complex: 0,
+      enteringScreen: 0,
+      leavingScreen: 0,
+    },
+  },
+});
 const labels = mwebSlotLabels((key) => key);
 
 /** Fixed to UTC, standing in for `useDateFormat()`. */

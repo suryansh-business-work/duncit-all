@@ -43,7 +43,7 @@ export default function PlanFormDialog({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<MembershipPlanFormValues>({
+  const { control, handleSubmit, reset } = useForm<MembershipPlanFormValues, any, MembershipPlanFormValues>({
     defaultValues: toFormValues(editing),
     resolver: zodResolver(membershipPlanFormSchema),
     mode: 'onTouched',

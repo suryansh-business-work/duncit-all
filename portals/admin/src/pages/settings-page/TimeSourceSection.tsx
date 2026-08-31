@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -49,10 +50,10 @@ interface Props {
  * the date-based occasion icons across mobile, mWeb and every portal. */
 export default function TimeSourceSection({ onToast }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(APP_SETTINGS_CLOCK, {
+  const { data, loading, refetch } = useQuery<any>(APP_SETTINGS_CLOCK, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save] = useMutation(UPDATE_CLOCK, { refetchQueries: [{ query: PUBLIC_APP_SETTINGS }] });
+  const [save] = useMutation<any>(UPDATE_CLOCK, { refetchQueries: [{ query: PUBLIC_APP_SETTINGS }] });
 
   const [zone, setZone] = useState('Asia/Kolkata');
   const [source, setSource] = useState('SERVER');

@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -89,8 +90,7 @@ const slot = (over: Record<string, unknown> = {}) => ({
 /** Answers every VenueSlots range (month/week/day + refetches) and records the
  *  variables the page asked for, so the view range itself can be asserted. */
 const slotsMock = (rows: unknown[], seen: Record<string, any>[] = []): MockedResponse => ({
-  request: { query: VENUE_SLOTS },
-  variableMatcher: () => true,
+  request: { query: VENUE_SLOTS, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: (variables: Record<string, any>) => {
     seen.push(variables);
@@ -105,8 +105,7 @@ const templatesMock: MockedResponse = {
 };
 
 const capturingMock = (query: MockedResponse['request']['query'], data: unknown, capture: (v: any) => void): MockedResponse => ({
-  request: { query },
-  variableMatcher: () => true,
+  request: { query, variables: () => true },
   result: (variables: Record<string, any>) => {
     capture(variables);
     return { data } as any;
@@ -251,7 +250,7 @@ describe('VenueAvailabilityPage calendar', () => {
   it('surfaces a failing slots query', async () => {
     renderPage([
       venuesMock(),
-      { request: { query: VENUE_SLOTS }, variableMatcher: () => true, error: new Error('Slots are unavailable') },
+      { request: { query: VENUE_SLOTS, variables: () => true }, error: new Error('Slots are unavailable') },
     ]);
 
     await waitFor(() => expect(screen.getByText('Slots are unavailable')).toBeTruthy());
@@ -284,8 +283,7 @@ describe('VenueAvailabilityPage refresh', () => {
       slotsMock([], seen),
       templatesMock,
       {
-        request: { query: UPDATE_VENUE_SETTINGS },
-        variableMatcher: () => true,
+        request: { query: UPDATE_VENUE_SETTINGS, variables: () => true },
         result: { data: { updateVenueSettings: venue() } },
       },
     ]);

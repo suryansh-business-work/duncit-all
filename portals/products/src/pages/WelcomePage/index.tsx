@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
@@ -19,12 +19,12 @@ export default function WelcomePage() {
   const { user } = useUserData();
   const name = user?.first_name || user?.full_name || 'there';
 
-  const products = useQuery(INVENTORY_PRODUCTS, { fetchPolicy: 'cache-and-network' });
-  const orders = useQuery(PRODUCT_ORDERS, {
+  const products = useQuery<any>(INVENTORY_PRODUCTS, { fetchPolicy: 'cache-and-network' });
+  const orders = useQuery<any>(PRODUCT_ORDERS, {
     variables: { filter: {} },
     fetchPolicy: 'cache-and-network',
   });
-  const brands = useQuery(MARKETPLACE_BRANDS, { fetchPolicy: 'cache-and-network' });
+  const brands = useQuery<any>(MARKETPLACE_BRANDS, { fetchPolicy: 'cache-and-network' });
 
   const loading = products.loading || orders.loading || brands.loading;
   const error = products.error || orders.error || brands.error;

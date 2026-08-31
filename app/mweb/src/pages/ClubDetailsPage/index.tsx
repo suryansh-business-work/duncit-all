@@ -1,5 +1,5 @@
 import { useEntityPageMeta } from '../../app/pageMeta';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { isClubAdminOf } from '@duncit/utils';
@@ -33,7 +33,7 @@ export default function ClubDetailsPage() {
   const { format: pricingFormat } = usePricing();
   const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
 
-  const slugQuery = useQuery(CLUB_BY_SLUG, {
+  const slugQuery = useQuery<any>(CLUB_BY_SLUG, {
     variables: { slug: clubSlug },
     skip: !clubSlug,
     fetchPolicy: 'cache-and-network',
@@ -43,13 +43,13 @@ export default function ClubDetailsPage() {
   const clubId: string = club?.id ?? '';
   const { saved, saving: savingClub, toggleSaved } = useSavedClub(clubId);
 
-  const { data, loading, error } = useQuery(CLUB_DETAILS_RELATED, {
+  const { data, loading, error } = useQuery<any>(CLUB_DETAILS_RELATED, {
     variables: { id: clubId },
     skip: !clubId,
     fetchPolicy: 'cache-and-network',
   });
 
-  const { data: catData } = useQuery(CATEGORY_TREE, { fetchPolicy: 'cache-first' });
+  const { data: catData } = useQuery<any>(CATEGORY_TREE, { fetchPolicy: 'cache-first' });
 
   if (slugQuery.loading || (loading && !data)) return <ClubDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;

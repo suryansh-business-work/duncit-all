@@ -1,7 +1,8 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { gql } from '@apollo/client';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { PUBLIC_APP_SETTINGS, resetServerTimeStamp } from '@duncit/app-settings';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';

@@ -39,8 +39,7 @@ export const brandPickupLocationsMock = (
   locations: BrandPickupLocation[] = [],
   over: { error?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: BRAND_PICKUP_LOCATIONS },
-  variableMatcher: () => true,
+  request: { query: BRAND_PICKUP_LOCATIONS, variables: () => true },
   result: over.error
     ? { errors: [{ message: 'load failed' }] }
     : { data: { brandPickupLocations: locations } },
@@ -48,15 +47,13 @@ export const brandPickupLocationsMock = (
 });
 
 export const saveBrandPickupMock = (id = 'l1'): MockedResponse => ({
-  request: { query: SAVE_BRAND_PICKUP_LOCATION },
-  variableMatcher: () => true,
+  request: { query: SAVE_BRAND_PICKUP_LOCATION, variables: () => true },
   result: { data: { saveBrandPickupLocation: { __typename: 'BrandPickupLocation', id } } },
   maxUsageCount: 20,
 });
 
 export const deleteBrandPickupMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: DELETE_BRAND_PICKUP_LOCATION },
-  variableMatcher: () => true,
+  request: { query: DELETE_BRAND_PICKUP_LOCATION, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'delete failed' }] }
     : { data: { deleteBrandPickupLocation: true } },
@@ -64,8 +61,7 @@ export const deleteBrandPickupMock = (over: { fail?: boolean } = {}): MockedResp
 });
 
 export const registerBrandPickupMock = (id = 'l1'): MockedResponse => ({
-  request: { query: REGISTER_BRAND_PICKUP_WITH_SHIPROCKET },
-  variableMatcher: () => true,
+  request: { query: REGISTER_BRAND_PICKUP_WITH_SHIPROCKET, variables: () => true },
   result: {
     data: {
       registerBrandPickupWithShiprocket: {
@@ -80,8 +76,7 @@ export const registerBrandPickupMock = (id = 'l1'): MockedResponse => ({
 });
 
 export const setDefaultBrandPickupMock = (id = 'l1'): MockedResponse => ({
-  request: { query: SET_DEFAULT_BRAND_PICKUP_LOCATION },
-  variableMatcher: () => true,
+  request: { query: SET_DEFAULT_BRAND_PICKUP_LOCATION, variables: () => true },
   result: {
     data: {
       setDefaultBrandPickupLocation: {

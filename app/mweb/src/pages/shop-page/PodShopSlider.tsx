@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -93,7 +94,7 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
  * until media is configured. mWeb twin of the mobile PodShopSlider. */
 export default function PodShopSlider() {
   const navigate = useNavigate();
-  const { data } = useQuery(POD_SHOP_SLIDER, { fetchPolicy: 'cache-and-network' });
+  const { data } = useQuery<any>(POD_SHOP_SLIDER, { fetchPolicy: 'cache-and-network' });
   const media = [...(data?.branding?.pod_shop_slider ?? [])] as SliderMedia[];
   media.sort((a, b) => a.order - b.order);
 

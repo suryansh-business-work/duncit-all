@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useApolloTableFetch } from '@duncit/table';
@@ -26,13 +26,13 @@ export default function ClubAdminsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
 
-  const [approve] = useMutation(APPROVE_CLUB_ADMIN);
-  const [reject] = useMutation(REJECT_CLUB_ADMIN);
-  const [setCommission, { loading: savingCommission }] = useMutation(SET_CLUB_ADMIN_COMMISSION);
-  const [assignClubs, { loading: savingClubs }] = useMutation(ASSIGN_CLUB_ADMIN_CLUBS);
+  const [approve] = useMutation<any>(APPROVE_CLUB_ADMIN);
+  const [reject] = useMutation<any>(REJECT_CLUB_ADMIN);
+  const [setCommission, { loading: savingCommission }] = useMutation<any>(SET_CLUB_ADMIN_COMMISSION);
+  const [assignClubs, { loading: savingClubs }] = useMutation<any>(ASSIGN_CLUB_ADMIN_CLUBS);
   const lifecycle = useEntityLifecycle(SET_CLUB_ADMIN_ACTIVE, DELETE_CLUB_ADMIN, refresh);
 
-  const { data: defaultsData } = useQuery(DEFAULT_CLUB_ADMIN_COMMISSION, {
+  const { data: defaultsData } = useQuery<any>(DEFAULT_CLUB_ADMIN_COMMISSION, {
     fetchPolicy: 'cache-first',
   });
   const defaultCommissionPct: number | undefined = defaultsData?.defaultClubAdminCommissionPct;

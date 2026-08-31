@@ -1,4 +1,14 @@
-import type { ApolloError } from '@apollo/client';
+/**
+ * Structural, so it reads a v3-shaped error, a v4 `CombinedGraphQLErrors`
+ * (which carries `errors`) and a plain fetch failure without importing any of
+ * them.
+ */
+type ApiErrorShape = {
+  message?: string;
+  networkError?: { message?: string } | null;
+  graphQLErrors?: ReadonlyArray<{ message: string }>;
+  errors?: ReadonlyArray<{ message: string }>;
+};
 
 /**
  * Converts an Apollo / network error into a user-friendly message.
@@ -9,7 +19,7 @@ import type { ApolloError } from '@apollo/client';
 export function parseApiError(err: unknown): string {
   if (!err) return 'Something went wrong. Please try again.';
 
-  const e = err as ApolloError & { message?: string; networkError?: { message?: string } };
+  const e = err as ApiErrorShape;
 
   // Network-level error (server unreachable, no internet, etc.)
   if (e.networkError) {
@@ -21,8 +31,9 @@ export function parseApiError(err: unknown): string {
   }
 
   // GraphQL-level errors
-  if (e.graphQLErrors?.length) {
-    return e.graphQLErrors[0].message;
+  const firstGraphQLError = e.graphQLErrors?.[0] ?? e.errors?.[0];
+  if (firstGraphQLError) {
+    return firstGraphQLError.message;
   }
 
   // Plain Error or string

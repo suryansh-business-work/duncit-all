@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -35,9 +35,9 @@ interface Props {
 export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const [error, setError] = useState('');
-  const [updateHost, state] = useMutation(UPDATE_HOST);
+  const [updateHost, state] = useMutation<any>(UPDATE_HOST);
 
-  const methods = useForm<HostEditValues>({
+  const methods = useForm<HostEditValues, any, HostEditValues>({
     resolver: zodResolver(hostEditSchema),
     mode: 'onChange',
     defaultValues: hostEditInitialValues(host),

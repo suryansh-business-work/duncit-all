@@ -47,8 +47,7 @@ export const makeWithdrawalRow = (over: Partial<WithdrawalRowMock> = {}): Withdr
 export const reviewWithdrawalMock = (
   over: { fail?: boolean; delay?: number } = {},
 ): MockedResponse => ({
-  request: { query: REVIEW_WITHDRAWAL },
-  variableMatcher: () => true,
+  request: { query: REVIEW_WITHDRAWAL, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('review failed') }

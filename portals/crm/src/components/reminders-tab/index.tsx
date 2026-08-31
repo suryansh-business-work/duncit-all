@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Chip, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,8 +31,8 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
   const variables = { filter: { entity_type: entity, lead_id: leadId } };
   const { data, loading, error } = useQuery<{ crmReminders: CrmReminder[] }>(CRM_REMINDERS, { variables, fetchPolicy: 'cache-and-network' });
   const refetchQueries = [{ query: CRM_REMINDERS, variables }];
-  const [toggleMut] = useMutation(TOGGLE_CRM_REMINDER, { refetchQueries });
-  const [deleteMut, { loading: deleting }] = useMutation(DELETE_CRM_REMINDER, { refetchQueries });
+  const [toggleMut] = useMutation<any>(TOGGLE_CRM_REMINDER, { refetchQueries });
+  const [deleteMut, { loading: deleting }] = useMutation<any>(DELETE_CRM_REMINDER, { refetchQueries });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CrmReminder | null>(null);

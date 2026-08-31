@@ -26,7 +26,7 @@ export function ResetPasswordForm({
 }: Readonly<ResetPasswordFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeResetPasswordSchema(t), [t]);
-  const { control, handleSubmit } = useForm<ResetPasswordFormValues>({
+  const { control, handleSubmit } = useForm<ResetPasswordFormValues, any, ResetPasswordFormValues>({
     defaultValues: resetPasswordDefaults,
     resolver: zodResolver(schema),
     mode: 'onBlur',

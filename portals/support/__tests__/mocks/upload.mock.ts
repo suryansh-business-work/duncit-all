@@ -16,8 +16,7 @@ export type UploadedImageMock = Pick<UploadedImage, 'url'> & {
 
 /** A successful upload. `url === null` models the "no URL returned" failure path. */
 export const uploadMock = (url: string | null): MockedResponse => ({
-  request: { query: UPLOAD_IMAGE },
-  variableMatcher: () => true,
+  request: { query: UPLOAD_IMAGE, variables: () => true },
   result: {
     data: {
       uploadImageToImagekit:
@@ -28,7 +27,6 @@ export const uploadMock = (url: string | null): MockedResponse => ({
 
 /** A network failure during upload. */
 export const uploadErrorMock = (message = 'network down'): MockedResponse => ({
-  request: { query: UPLOAD_IMAGE },
-  variableMatcher: () => true,
+  request: { query: UPLOAD_IMAGE, variables: () => true },
   error: new Error(message),
 });

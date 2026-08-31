@@ -42,7 +42,7 @@ export function ContactOtpStep({
     control,
     handleSubmit,
     formState: { isValid },
-  } = useForm<ContactOtpValues>({
+  } = useForm<ContactOtpValues, any, ContactOtpValues>({
     defaultValues: { otp: '' },
     resolver: zodResolver(contactOtpSchema),
     mode: 'onChange',

@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import type { UseFormReturn } from 'react-hook-form';
 import { InfoRow } from '@duncit/ui';
@@ -16,12 +17,12 @@ const CATEGORY_NAMES = gql`
 
 function useCategoryPath(values: RegisterVenueValues) {
   // The cascade already fetched these lists, so these resolve from cache.
-  const supers = useQuery(CATEGORY_NAMES, { variables: { ids: { level: 'SUPER' } } });
-  const cats = useQuery(CATEGORY_NAMES, {
+  const supers = useQuery<any>(CATEGORY_NAMES, { variables: { ids: { level: 'SUPER' } } });
+  const cats = useQuery<any>(CATEGORY_NAMES, {
     variables: { ids: { level: 'CATEGORY', parent_id: values.super_category_id } },
     skip: !values.super_category_id,
   });
-  const subs = useQuery(CATEGORY_NAMES, {
+  const subs = useQuery<any>(CATEGORY_NAMES, {
     variables: { ids: { level: 'SUB', parent_id: values.category_id } },
     skip: !values.category_id,
   });

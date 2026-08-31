@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack, Typography } from '@mui/material';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
@@ -15,10 +15,10 @@ export default function SavedItemsPage() {
   const [filters, setFilters] = useState<SavedFilters>(DEFAULT_SAVED_FILTERS);
   const debouncedSearch = useDebouncedValue(searchText.trim());
 
-  const { data: catData } = useQuery(SAVED_CATEGORIES, { fetchPolicy: 'cache-first' });
+  const { data: catData } = useQuery<any>(SAVED_CATEGORIES, { fetchPolicy: 'cache-first' });
   const categories = catData?.categories ?? [];
 
-  const { data, loading, error } = useQuery(SAVED_ITEMS, {
+  const { data, loading, error } = useQuery<any>(SAVED_ITEMS, {
     variables: {
       search: debouncedSearch || null,
       categoryId: effectiveCategoryId(filters),

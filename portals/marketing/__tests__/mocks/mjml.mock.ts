@@ -18,8 +18,7 @@ export const aiMjmlMock = (
 ): MockedResponse => {
   if (over.throwMessage !== undefined) {
     return {
-      request: { query: AI_MJML },
-      variableMatcher: () => true,
+      request: { query: AI_MJML, variables: () => true },
       result: { errors: [{ message: over.throwMessage }] },
       maxUsageCount: 20,
     };
@@ -27,8 +26,7 @@ export const aiMjmlMock = (
   // Distinguish an explicit `null` (AI returned nothing) from an omitted value.
   const mjml = over.mjml === undefined ? '<mjml><mj-body/></mjml>' : over.mjml;
   return {
-    request: { query: AI_MJML },
-    variableMatcher: () => true,
+    request: { query: AI_MJML, variables: () => true },
     result: { data: { aiCreateOrUpdateMjml: mjml } },
     ...(over.pending ? { delay: Infinity } : {}),
     maxUsageCount: 20,

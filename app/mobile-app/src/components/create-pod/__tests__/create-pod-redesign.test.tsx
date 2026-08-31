@@ -21,7 +21,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { renderWithProviders } from '@/utils/test-utils';
 
 function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   return (
@@ -34,7 +34,7 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
 
 // Same resolver the stepper uses, so the rendered error is the schema's own copy.
 function PodTypeErrorHarness() {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: zodResolver(createPodSchema),
     defaultValues: { ...blankCreatePodForm, pod_mode: 'PHYSICAL', pod_type: 'FREE' },
   });
@@ -167,7 +167,7 @@ describe('SpotsStepper', () => {
 });
 
 function TermsHarness() {
-  const form = useForm<CreatePodFormValues>({ defaultValues: { ...blankCreatePodForm } });
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({ defaultValues: { ...blankCreatePodForm } });
   return (
     <>
       <TermsAgreement form={form} />
@@ -266,7 +266,7 @@ describe('VenueContactCard actions', () => {
 });
 
 function OptionalHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   return <OptionalSettingsCards form={form} />;

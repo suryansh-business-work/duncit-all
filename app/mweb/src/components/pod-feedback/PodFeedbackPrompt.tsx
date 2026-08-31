@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { logs } from '@duncit/logs';
 import {
   Alert,
@@ -52,10 +52,10 @@ export default function PodFeedbackPrompt() {
   const { data } = useQuery<{ myPendingPodFeedback: PendingPod | null }>(MY_PENDING_POD_FEEDBACK, {
     fetchPolicy: 'cache-and-network',
   });
-  const [submit, { loading }] = useMutation(SUBMIT_FEEDBACK, {
+  const [submit, { loading }] = useMutation<any>(SUBMIT_FEEDBACK, {
     refetchQueries: [{ query: MY_PENDING_POD_FEEDBACK }],
   });
-  const [remind] = useMutation(REMIND_POD_FEEDBACK);
+  const [remind] = useMutation<any>(REMIND_POD_FEEDBACK);
 
   const pod = data?.myPendingPodFeedback ?? null;
   const aspects = useMemo(() => orderedAspects(pod?.feedback_aspects), [pod?.feedback_aspects]);

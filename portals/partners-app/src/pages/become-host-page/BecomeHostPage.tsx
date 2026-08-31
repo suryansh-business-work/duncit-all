@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -26,7 +26,7 @@ type PickerKind = null | 'photo' | 'police';
 
 export default function BecomeHostPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(MY_HOST);
+  const { data, loading, refetch } = useQuery<any>(MY_HOST);
   const [step, setStep] = useState(0);
   const [s1, setS1] = useState(blankHostStep1);
   const [s2, setS2] = useState(blankHostStep2);
@@ -34,11 +34,11 @@ export default function BecomeHostPage() {
   const [err, setErr] = useState<string | null>(null);
   const [picker, setPicker] = useState<PickerKind>(null);
 
-  const [m1, m1State] = useMutation(STEP1);
-  const [m2, m2State] = useMutation(STEP2);
-  const [m3, m3State] = useMutation(STEP3);
-  const [mFinal, mFinalState] = useMutation(FINAL);
-  const [withdrawHost, withdrawState] = useMutation(WITHDRAW_HOST);
+  const [m1, m1State] = useMutation<any>(STEP1);
+  const [m2, m2State] = useMutation<any>(STEP2);
+  const [m3, m3State] = useMutation<any>(STEP3);
+  const [mFinal, mFinalState] = useMutation<any>(FINAL);
+  const [withdrawHost, withdrawState] = useMutation<any>(WITHDRAW_HOST);
   const account = data?.me;
   const accountEmail = account?.email || '';
   const accountName = account?.full_name || [account?.first_name, account?.last_name].filter(Boolean).join(' ');

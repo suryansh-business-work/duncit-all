@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -14,9 +14,9 @@ export default function PodPlansPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createMut, createState] = useMutation(CREATE_POD_PLAN);
-  const [updateMut, updateState] = useMutation(UPDATE_POD_PLAN);
-  const [deleteMut] = useMutation(DELETE_POD_PLAN);
+  const [createMut, createState] = useMutation<any>(CREATE_POD_PLAN);
+  const [updateMut, updateState] = useMutation<any>(UPDATE_POD_PLAN);
+  const [deleteMut] = useMutation<any>(DELETE_POD_PLAN);
   const confirm = useConfirm();
   const [editing, setEditing] = useState<PlanRow | null>(null);
   const [open, setOpen] = useState(false);

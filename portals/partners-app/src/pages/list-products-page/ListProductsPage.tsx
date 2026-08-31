@@ -1,5 +1,5 @@
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -16,7 +16,7 @@ export default function ListProductsPage() {
   const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
   const canManageProducts = canManageProductListings(data?.me?.roles);
 
   return (

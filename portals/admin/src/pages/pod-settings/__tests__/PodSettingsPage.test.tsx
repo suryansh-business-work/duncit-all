@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gql } from '@apollo/client';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';

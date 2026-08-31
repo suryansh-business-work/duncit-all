@@ -14,7 +14,7 @@ function Harness({
   // The contact-change dialog is where a country code is picked now: phone and
   // WhatsApp left the edit-profile form when each became its own verified
   // write behind a one-time code.
-  const { control, watch } = useForm<ContactValueValues>({
+  const { control, watch } = useForm<ContactValueValues, any, ContactValueValues>({
     defaultValues: (unset ? {} : { extension: initial }) as ContactValueValues,
   });
   return (

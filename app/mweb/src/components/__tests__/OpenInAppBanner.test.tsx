@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import { gql } from '@apollo/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -40,7 +40,7 @@ const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
 
 function renderBanner(mocks: unknown[], entries = ['/pods?ref=x']) {
   return render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       <MemoryRouter initialEntries={entries}>
         <OpenInAppBanner />
       </MemoryRouter>

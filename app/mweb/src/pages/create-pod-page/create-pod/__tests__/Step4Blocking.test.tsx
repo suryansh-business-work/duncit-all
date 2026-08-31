@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import {
   POTENTIAL_POD_EARNINGS,
@@ -71,7 +71,7 @@ function PreviewHarness({
 function renderPreview(podAmount: number, hostReceives: number, isFree = false) {
   const seen: EarningsPreview[] = [];
   render(
-    <MockedProvider mocks={[earningsMock(podAmount, hostReceives)]} addTypename={false}>
+    <MockedProvider mocks={[earningsMock(podAmount, hostReceives)]}>
       <PreviewHarness
         podAmount={podAmount}
         isFree={isFree}

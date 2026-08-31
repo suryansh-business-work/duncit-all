@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
@@ -28,7 +28,7 @@ export default function PublicApiKeyCard() {
   const { data } = useQuery<{ telemetrySettings: { public_api_key: string } }>(TELEMETRY_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [rotate, { loading }] = useMutation(ROTATE_TELEMETRY_API_KEY, {
+  const [rotate, { loading }] = useMutation<any>(ROTATE_TELEMETRY_API_KEY, {
     refetchQueries: [TELEMETRY_SETTINGS],
   });
   const key = data?.telemetrySettings?.public_api_key ?? '';

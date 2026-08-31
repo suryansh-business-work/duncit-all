@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -37,8 +37,8 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
   const [dueAt, setDueAt] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [createMut, { loading: creating }] = useMutation(CREATE_CRM_REMINDER, { refetchQueries });
-  const [updateMut, { loading: updating }] = useMutation(UPDATE_CRM_REMINDER, { refetchQueries });
+  const [createMut, { loading: creating }] = useMutation<any>(CREATE_CRM_REMINDER, { refetchQueries });
+  const [updateMut, { loading: updating }] = useMutation<any>(UPDATE_CRM_REMINDER, { refetchQueries });
   const loading = creating || updating;
 
   useEffect(() => {

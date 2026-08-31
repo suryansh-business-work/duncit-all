@@ -34,7 +34,7 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
     uriFormat: t('tech.dataClone.uriFormat'),
     databaseRequired: t('tech.dataClone.databaseRequired'),
   };
-  const { control, handleSubmit, reset } = useForm<DataCloneConnectionValues>({
+  const { control, handleSubmit, reset } = useForm<DataCloneConnectionValues, any, DataCloneConnectionValues>({
     defaultValues: { uri: '', database: connection.database },
     resolver: zodResolver(dataCloneConnectionSchema(connection.hasUri, messages)),
     mode: 'all',

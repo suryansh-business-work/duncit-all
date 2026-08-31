@@ -162,8 +162,7 @@ export const productOrderMock = (
 export const productOrdersListMock = (
   orders: ProductOrderMock[] = [],
 ): MockedResponse => ({
-  request: { query: PRODUCT_ORDERS },
-  variableMatcher: () => true,
+  request: { query: PRODUCT_ORDERS, variables: () => true },
   result: { data: { productOrders: orders } },
   maxUsageCount: 20,
 });
@@ -174,29 +173,25 @@ const orderMutationResult = (key: string, fail: boolean) =>
     : { data: { [key]: makeProductOrder() } };
 
 export const setFulfilmentMethodMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: SET_PRODUCT_ORDER_FULFILMENT_METHOD },
-  variableMatcher: () => true,
+  request: { query: SET_PRODUCT_ORDER_FULFILMENT_METHOD, variables: () => true },
   result: orderMutationResult('setProductOrderFulfilmentMethod', over.fail ?? false),
   maxUsageCount: 20,
 });
 
 export const advanceStatusMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: ADVANCE_PRODUCT_ORDER_STATUS },
-  variableMatcher: () => true,
+  request: { query: ADVANCE_PRODUCT_ORDER_STATUS, variables: () => true },
   result: orderMutationResult('advanceProductOrderStatus', over.fail ?? false),
   maxUsageCount: 20,
 });
 
 export const refreshTrackingMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: REFRESH_PRODUCT_ORDER_TRACKING },
-  variableMatcher: () => true,
+  request: { query: REFRESH_PRODUCT_ORDER_TRACKING, variables: () => true },
   result: orderMutationResult('refreshProductOrderTracking', over.fail ?? false),
   maxUsageCount: 20,
 });
 
 export const createShipmentMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: CREATE_PRODUCT_ORDER_SHIPMENT },
-  variableMatcher: () => true,
+  request: { query: CREATE_PRODUCT_ORDER_SHIPMENT, variables: () => true },
   result: orderMutationResult('createProductOrderShipment', over.fail ?? false),
   maxUsageCount: 20,
 });

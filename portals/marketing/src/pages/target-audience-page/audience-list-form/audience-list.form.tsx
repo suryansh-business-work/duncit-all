@@ -33,7 +33,7 @@ export default function AudienceListForm({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<AudienceListFormValues>({
+  const { control, handleSubmit } = useForm<AudienceListFormValues, any, AudienceListFormValues>({
     resolver: zodResolver(audienceListSchema),
     defaultValues: emptyAudienceList(defaultOwnerId),
     mode: 'onBlur',

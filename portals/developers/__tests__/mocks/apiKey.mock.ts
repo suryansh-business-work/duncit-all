@@ -62,8 +62,7 @@ export const makeRevokedApiKeyRow = (over: Partial<ApiKeyRow> = {}): ApiKeyRow =
 /* ---- Query + mutation builders ---- */
 
 export const myApiKeysTableMock = (rows: ApiKey[] = [makeApiKey()]): MockedResponse => ({
-  request: { query: MY_API_KEYS_TABLE },
-  variableMatcher: () => true,
+  request: { query: MY_API_KEYS_TABLE, variables: () => true },
   result: {
     data: { myApiKeysTable: { __typename: 'ApiKeyTablePage', total: rows.length, rows } },
   },
@@ -73,8 +72,7 @@ export const myApiKeysTableMock = (rows: ApiKey[] = [makeApiKey()]): MockedRespo
 export const createApiKeyMock = (
   over: { rawKey?: string; fail?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: CREATE_API_KEY },
-  variableMatcher: () => true,
+  request: { query: CREATE_API_KEY, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'create failed' }] }
     : { data: { createApiKey: makeCreatedApiKey({ raw_key: over.rawKey ?? RAW_API_KEY }) } },
@@ -83,8 +81,7 @@ export const createApiKeyMock = (
 
 /** Create that resolves with no key object — exercises the `?? null` fallback. */
 export const createApiKeyEmptyMock = (): MockedResponse => ({
-  request: { query: CREATE_API_KEY },
-  variableMatcher: () => true,
+  request: { query: CREATE_API_KEY, variables: () => true },
   result: { data: { createApiKey: null } },
   maxUsageCount: 20,
 });
@@ -92,8 +89,7 @@ export const createApiKeyEmptyMock = (): MockedResponse => ({
 export const revokeApiKeyMock = (
   over: { id?: string; fail?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: REVOKE_API_KEY },
-  variableMatcher: () => true,
+  request: { query: REVOKE_API_KEY, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'revoke failed' }] }
     : {

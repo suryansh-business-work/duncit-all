@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -56,14 +56,14 @@ export default function AttendanceOtpDialog({
   onClose,
   onVerified,
 }: Readonly<Props>) {
-  const { control, getValues, trigger, reset, setError, formState } = useForm<AttendanceOtpValues>({
+  const { control, getValues, trigger, reset, setError, formState } = useForm<AttendanceOtpValues, any, AttendanceOtpValues>({
     resolver: zodResolver(buildAttendanceOtpSchema(labels)),
     defaultValues: attendanceOtpInitialValues(row),
   });
   const [challengeId, setChallengeId] = useState('');
   const [testCode, setTestCode] = useState('');
-  const [request, requestState] = useMutation(REQUEST_ATTENDANCE_OTP);
-  const [verify, verifyState] = useMutation(VERIFY_ATTENDANCE_OTP);
+  const [request, requestState] = useMutation<any>(REQUEST_ATTENDANCE_OTP);
+  const [verify, verifyState] = useMutation<any>(VERIFY_ATTENDANCE_OTP);
 
   // A different attendee is a different challenge — never carry the previous
   // one's verified code onto somebody else's row.

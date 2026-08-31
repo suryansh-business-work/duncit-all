@@ -4,7 +4,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { DuncitButton } from '@duncit/buttons';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { isTourCompleted, toursForRoles } from '@duncit/tours';
 import { useTours } from '../../tours/useTours';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -30,7 +31,7 @@ export default function TourGuidePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { completed, startTour } = useTours();
-  const { data } = useQuery(TOUR_ROLES, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(TOUR_ROLES, { fetchPolicy: 'cache-first' });
   // Create Pod walks through a screen a non-host cannot open, so it is hidden
   // rather than offered as a dead end.
   const tours = toursForRoles(data?.me?.roles ?? []);

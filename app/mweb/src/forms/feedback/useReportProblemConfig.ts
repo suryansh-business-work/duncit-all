@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { FEEDBACK_CATEGORIES, REPORT_PROBLEM_CONFIG_SDL } from '@duncit/slack';
 
 export interface ReportProblemCategoryOption {
@@ -39,7 +40,7 @@ export function useReportProblemConfig(): {
   config: ReportProblemFormConfig;
   loading: boolean;
 } {
-  const { data, loading } = useQuery(REPORT_PROBLEM_CONFIG, { fetchPolicy: 'cache-and-network' });
+  const { data, loading } = useQuery<any>(REPORT_PROBLEM_CONFIG, { fetchPolicy: 'cache-and-network' });
 
   const remote = data?.reportProblemConfig;
   const active = (remote?.categories ?? []).filter((c: any) => c?.is_active);

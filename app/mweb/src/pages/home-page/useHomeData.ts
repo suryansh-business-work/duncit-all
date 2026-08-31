@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { splitPodsByPhase } from '@duncit/utils';
 import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
@@ -101,14 +101,14 @@ export function useHomeData({
     loading: staticLoading,
     error: staticError,
     refetch: refetchStatic,
-  } = useQuery(HOME_STATIC, { fetchPolicy: 'cache-and-network' });
+  } = useQuery<any>(HOME_STATIC, { fetchPolicy: 'cache-and-network' });
 
   const {
     data: liveData,
     loading: liveLoading,
     error: liveError,
     refetch: refetchLive,
-  } = useQuery(HOME_LIVE, {
+  } = useQuery<any>(HOME_LIVE, {
     variables: {
       podFilter: {
         location_id: locationId || undefined,
@@ -146,11 +146,11 @@ export function useHomeData({
     return () => globalThis.removeEventListener(HOME_REFRESH_EVENT, onRefresh);
   }, [refetch]);
 
-  const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const isHost = (headerData?.me?.roles ?? []).includes('HOST');
   const { ids: followedClubIds } = useFollowedClubs();
   const followingUserIds: string[] = headerData?.me?.following_user_ids ?? [];
-  const { data: followedUsersData } = useQuery(FOLLOWED_USERS, {
+  const { data: followedUsersData } = useQuery<any>(FOLLOWED_USERS, {
     variables: { userIds: followingUserIds },
     skip: followingUserIds.length === 0,
     fetchPolicy: 'cache-and-network',

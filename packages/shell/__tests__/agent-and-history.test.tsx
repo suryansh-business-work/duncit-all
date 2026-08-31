@@ -6,7 +6,8 @@
  * failed and why, or what a message used to say before it was walked back.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, render, screen } from '@testing-library/react';
 
 import { AgentResults } from '../src/chrome/agent/AgentResults';

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Alert, Box, Card, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -71,8 +71,8 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
  */
 export default function HostDashboardPage() {
   const { t } = useTranslation();
-  const dashboardQuery = useQuery(HOST_DASHBOARD, { fetchPolicy: 'cache-and-network' });
-  const insightsQuery = useQuery(HOST_INSIGHTS, {
+  const dashboardQuery = useQuery<any>(HOST_DASHBOARD, { fetchPolicy: 'cache-and-network' });
+  const insightsQuery = useQuery<any>(HOST_INSIGHTS, {
     variables: { months: 12 },
     fetchPolicy: 'cache-and-network',
   });

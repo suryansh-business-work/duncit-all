@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { makeCategoryMatcher } from '../../utils/category-match';
 import { SEARCH_DISCOVERY, SEARCH_CATEGORIES } from './queries';
 
@@ -16,7 +16,7 @@ export interface SearchCategory {
  * when there is nothing to search, so the page can show category quick-actions. */
 export function useSearchDiscovery(query: string, categoryId: string) {
   const active = query.length > 0 || categoryId.length > 0;
-  const { data, loading, refetch } = useQuery(SEARCH_DISCOVERY, {
+  const { data, loading, refetch } = useQuery<any>(SEARCH_DISCOVERY, {
     variables: { input: { query: query || undefined, category_id: categoryId || undefined } },
     skip: !active,
     fetchPolicy: 'cache-and-network',
@@ -33,7 +33,7 @@ export function useSearchDiscovery(query: string, categoryId: string) {
 
 /** Categories for the quick-action buttons + club-card labels. */
 export function useSearchCategories() {
-  const { data } = useQuery(SEARCH_CATEGORIES, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(SEARCH_CATEGORIES, { fetchPolicy: 'cache-first' });
   const all: SearchCategory[] = useMemo(() => data?.categories ?? [], [data]);
 
   const buttons = useMemo(() => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
@@ -19,7 +19,7 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
   const { t } = useTranslation();
   const [done, setDone] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [subscribe, { loading }] = useMutation(SUBSCRIBE_MEMBERSHIP_NEWS);
+  const [subscribe, { loading }] = useMutation<any>(SUBSCRIBE_MEMBERSHIP_NEWS);
   const isOnList = subscribed || done;
 
   const onSubscribe = async () => {

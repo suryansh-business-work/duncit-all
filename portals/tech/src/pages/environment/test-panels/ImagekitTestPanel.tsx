@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, Link, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import { DuncitButton } from '@duncit/buttons';
@@ -13,7 +13,7 @@ export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry 
   const [fileName, setFileName] = useState('');
   const [base64, setBase64] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
-  const [run, { loading }] = useMutation(TEST_ENV_IMAGEKIT);
+  const [run, { loading }] = useMutation<any>(TEST_ENV_IMAGEKIT);
 
   const onPick = async (file?: File) => {
     if (!file) return;

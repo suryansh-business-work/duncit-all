@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
@@ -27,11 +27,11 @@ export default function CoinSettingsPage() {
   const { data, loading, refetch } = useQuery<{ coinSettings: CoinSettings }>(COIN_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const { data: currencyData } = useQuery(COIN_CURRENCY);
-  const [save, { loading: saving }] = useMutation(UPDATE_COIN_SETTINGS);
+  const { data: currencyData } = useQuery<any>(COIN_CURRENCY);
+  const [save, { loading: saving }] = useMutation<any>(UPDATE_COIN_SETTINGS);
   const [error, setError] = useState<string | null>(null);
 
-  const { control, handleSubmit, reset, formState } = useForm<CoinSettingsForm>({
+  const { control, handleSubmit, reset, formState } = useForm<CoinSettingsForm, any, CoinSettingsForm>({
     resolver: zodResolver(coinSettingsSchema),
     defaultValues: BLANK_COIN_SETTINGS,
     mode: 'onBlur',

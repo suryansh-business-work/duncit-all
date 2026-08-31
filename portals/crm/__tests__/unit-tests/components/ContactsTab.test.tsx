@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import ContactsTab from '@/components/contacts-tab';
 import type { CrmContact } from '@/api/crm.types';
 
@@ -9,7 +9,7 @@ const contacts: CrmContact[] = [
   { name: 'Asha', role: 'Owner', mobile_number: '+919876543210', whatsapp_number: '', email: 'asha@x.com' },
 ];
 
-const wrap = (ui: JSX.Element) => render(<MockedProvider mocks={[]} addTypename={false}>{ui}</MockedProvider>);
+const wrap = (ui: JSX.Element) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
 
 describe('ContactsTab', () => {
   it('lists contacts and opens the compose window when a contact is called', () => {

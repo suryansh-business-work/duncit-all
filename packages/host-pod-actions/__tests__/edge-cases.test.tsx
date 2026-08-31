@@ -6,7 +6,8 @@
  * for — none of them are the happy path, and all of them reach a real host.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { mwebAttendanceLabels, mwebPodMediaLabels, type PodAttendanceRow } from '@duncit/utils';
@@ -49,7 +50,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]} addTypename={false}>
+    <MockedProvider mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>
@@ -59,7 +60,7 @@ const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
 const hookWrapper =
   (mocks: readonly MockedResponse[] = []) =>
   ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[...mocks]} addTypename={false}>
+    <MockedProvider mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{children}</HostPodActionsProvider>
       </ThemeProvider>
@@ -149,8 +150,7 @@ describe('an OTP sheet the server answered thinly', () => {
       />,
       [
         {
-          request: { query: REQUEST_ATTENDANCE_OTP },
-          variableMatcher: () => true,
+          request: { query: REQUEST_ATTENDANCE_OTP, variables: () => true },
           result: { data: { requestPodAttendanceOtp: null } },
           maxUsageCount: Number.POSITIVE_INFINITY,
         },
@@ -436,8 +436,7 @@ describe('a form that will not submit', () => {
   };
 
   const failedCheck: MockedResponse = {
-    request: { query: MODERATE_POD_CONTENT },
-    variableMatcher: () => true,
+    request: { query: MODERATE_POD_CONTENT, variables: () => true },
     error: new Error('The content check is unavailable'),
     maxUsageCount: Number.POSITIVE_INFINITY,
   };

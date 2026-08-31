@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import { TicketPriceField, type EarningsPreview } from '../price-panel';
 import { TICKET_PRICE_REQUIRED } from '../price-panel/pricingCopy';
@@ -46,7 +46,7 @@ const pricedStep4: CreatePodFormValues = {
 /** The real field on the real schema, so the blank default and the "user input
  * only" rule are exercised exactly as Step 4 renders them. */
 function Harness({ onValue }: Readonly<{ onValue: (value: number | null) => void }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: zodResolver(createPodSchema),
     defaultValues: pricedStep4,
     mode: 'onTouched',
@@ -58,7 +58,7 @@ function Harness({ onValue }: Readonly<{ onValue: (value: number | null) => void
 function renderField() {
   const seen: (number | null)[] = [];
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <Harness onValue={(value) => seen.push(value)} />
     </MockedProvider>,
   );

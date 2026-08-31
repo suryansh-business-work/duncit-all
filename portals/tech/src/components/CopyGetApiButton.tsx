@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Tooltip } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 import { DuncitButton } from '@duncit/buttons';

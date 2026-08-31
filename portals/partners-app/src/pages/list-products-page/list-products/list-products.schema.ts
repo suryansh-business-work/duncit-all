@@ -3,7 +3,7 @@ import { z } from 'zod';
 const requiredNumber = (message: string) =>
   z.preprocess(
     (value) => (value === '' || value === null || value === undefined ? Number.NaN : Number(value)),
-    z.number({ invalid_type_error: message }),
+    z.number({ error: message }),
   );
 
 const positiveDimension = (message: string) =>
@@ -65,7 +65,7 @@ export const productListingSchema = z.object({
   free_delivery_above: z.preprocess(
     (value) => (value === '' || value === null || value === undefined ? null : Number(value)),
     z
-      .number({ invalid_type_error: 'Enter a valid amount' })
+      .number({ error: 'Enter a valid amount' })
       .min(0, 'Amount cannot be negative')
       .max(1000000, 'Amount cannot exceed ₹10,00,000')
       .nullable(),

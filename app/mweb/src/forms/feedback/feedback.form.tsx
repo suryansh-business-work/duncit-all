@@ -35,7 +35,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
     () => buildFeedbackSchema(config.message_min_length),
     [config.message_min_length]
   );
-  const { control, handleSubmit, setValue, watch } = useForm<FeedbackValues>({
+  const { control, handleSubmit, setValue, watch } = useForm<FeedbackValues, any, FeedbackValues>({
     defaultValues: feedbackDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

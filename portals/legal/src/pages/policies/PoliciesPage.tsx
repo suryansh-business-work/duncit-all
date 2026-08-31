@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -42,10 +42,10 @@ export default function PoliciesPage() {
   const [notifyTarget, setNotifyTarget] = useState<Policy | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [createMut, { loading: creating }] = useMutation(CREATE_POLICY);
-  const [updateMut, { loading: updating }] = useMutation(UPDATE_POLICY);
-  const [deleteMut] = useMutation(DELETE_POLICY);
-  const [notifyMut, { loading: notifying }] = useMutation(NOTIFY_POLICY_ACCEPTED_USERS);
+  const [createMut, { loading: creating }] = useMutation<any>(CREATE_POLICY);
+  const [updateMut, { loading: updating }] = useMutation<any>(UPDATE_POLICY);
+  const [deleteMut] = useMutation<any>(DELETE_POLICY);
+  const [notifyMut, { loading: notifying }] = useMutation<any>(NOTIFY_POLICY_ACCEPTED_USERS);
   const saving = creating || updating;
 
   const openNew = () => {

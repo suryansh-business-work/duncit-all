@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AdTile from '../../components/ads/AdTile';
 import { useActiveAds } from '../../components/ads/useActiveAds';
@@ -45,9 +45,9 @@ export default function HomeStatusRail({
   const ad = ads[0];
   const adViewer = useMemo(() => (ad ? buildAdViewer(ad) : null), [ad]);
 
-  const [recordView] = useMutation(RECORD_STORY_VIEW);
-  const [toggleLike] = useMutation(TOGGLE_STORY_LIKE);
-  const [deleteStory] = useMutation(DELETE_STORY_POST, { refetchQueries: ['HomeFeed'] });
+  const [recordView] = useMutation<any>(RECORD_STORY_VIEW);
+  const [toggleLike] = useMutation<any>(TOGGLE_STORY_LIKE);
+  const [deleteStory] = useMutation<any>(DELETE_STORY_POST, { refetchQueries: ['HomeFeed'] });
 
   const buildEntries = useCallback(
     () => buildHomeStatusEntries({ followedClubs, hostPods, followedUsers, followedPosts, clubStories }),

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ReopenReasonDialog from '../../support-chat/ReopenReasonDialog';
@@ -34,11 +34,11 @@ export default function TicketDetailPage() {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
-  const [reply, { loading: replying }] = useMutation(REPLY_TO_TICKET, { onCompleted: () => refetch() });
-  const [reopenTicket, { loading: reopening }] = useMutation(REOPEN_TICKET, { onCompleted: () => refetch() });
-  const [resolveTicket, { loading: resolving }] = useMutation(RESOLVE_TICKET, { onCompleted: () => refetch() });
-  const [markTicketRead] = useMutation(MARK_TICKET_READ);
-  const [fetchTranscript] = useLazyQuery(TICKET_TRANSCRIPT, { fetchPolicy: 'network-only' });
+  const [reply, { loading: replying }] = useMutation<any>(REPLY_TO_TICKET, { onCompleted: () => refetch() });
+  const [reopenTicket, { loading: reopening }] = useMutation<any>(REOPEN_TICKET, { onCompleted: () => refetch() });
+  const [resolveTicket, { loading: resolving }] = useMutation<any>(RESOLVE_TICKET, { onCompleted: () => refetch() });
+  const [markTicketRead] = useMutation<any>(MARK_TICKET_READ);
+  const [fetchTranscript] = useLazyQuery<any>(TICKET_TRANSCRIPT, { fetchPolicy: 'network-only' });
   const { formatDateTime, formatTime, timeZone } = useDateFormat();
 
   // Mark the thread read on open (B12) so the agent's view shows the Seen tick.

@@ -57,7 +57,7 @@ export function CurrentPasswordForm({
   const { t } = useTranslation();
   const [show, setShow] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { control, handleSubmit } = useForm<CurrentPasswordValues>({
+  const { control, handleSubmit } = useForm<CurrentPasswordValues, any, CurrentPasswordValues>({
     defaultValues: currentPasswordDefaults,
     resolver: zodResolver(currentPasswordSchema),
     mode: 'onTouched',
@@ -114,7 +114,7 @@ export function NewPasswordForm({
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { control, handleSubmit } = useForm<NewPasswordValues>({
+  const { control, handleSubmit } = useForm<NewPasswordValues, any, NewPasswordValues>({
     defaultValues: newPasswordDefaults,
     resolver: zodResolver(newPasswordSchema),
     mode: 'onTouched',

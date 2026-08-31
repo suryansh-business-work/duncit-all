@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -30,10 +30,10 @@ export default function RateLimitRulesPage() {
   const { data, loading, error } = useQuery<{ rateLimitOptions: RateLimitOptionsData }>(OPTIONS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [createRule] = useMutation(CREATE_RULE);
-  const [updateRule] = useMutation(UPDATE_RULE);
-  const [setEnabled] = useMutation(SET_RULE_ENABLED);
-  const [deleteRule] = useMutation(DELETE_RULE);
+  const [createRule] = useMutation<any>(CREATE_RULE);
+  const [updateRule] = useMutation<any>(UPDATE_RULE);
+  const [setEnabled] = useMutation<any>(SET_RULE_ENABLED);
+  const [deleteRule] = useMutation<any>(DELETE_RULE);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

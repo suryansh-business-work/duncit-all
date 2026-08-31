@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { getTranslationGroupColumns } from './translation-group-columns';
 import { TRANSLATION_GROUPS, type LocaleRow, type TranslationGroupRow } from './queries';

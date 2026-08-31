@@ -41,7 +41,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
   const { t } = useTranslation();
   const isEdit = !!initial;
   const defaults = initial ? valuesFromEntry(initial) : emptyValues();
-  const { control, handleSubmit, reset } = useForm<EnvEntryFormValues>({
+  const { control, handleSubmit, reset } = useForm<EnvEntryFormValues, any, EnvEntryFormValues>({
     defaultValues: defaults,
     resolver: zodResolver(envEntrySchema(def, isEdit)),
     mode: 'all',

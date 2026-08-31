@@ -21,7 +21,7 @@ interface RequestProps {
 
 export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<RequestProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<WhatsAppOtpRequestValues>({
+  const { control, handleSubmit } = useForm<WhatsAppOtpRequestValues, any, WhatsAppOtpRequestValues>({
     defaultValues: whatsAppOtpRequestDefaults,
     resolver: zodResolver(whatsAppOtpRequestSchema),
     mode: 'onTouched',
@@ -73,7 +73,7 @@ export function WhatsAppVerifyForm({
   onSkip,
 }: Readonly<VerifyProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<WhatsAppOtpVerifyValues>({
+  const { control, handleSubmit } = useForm<WhatsAppOtpVerifyValues, any, WhatsAppOtpVerifyValues>({
     defaultValues: whatsAppOtpVerifyDefaults,
     resolver: zodResolver(whatsAppOtpVerifySchema),
     mode: 'onTouched',

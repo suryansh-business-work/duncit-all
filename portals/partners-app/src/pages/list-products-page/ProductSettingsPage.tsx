@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -30,7 +30,7 @@ import { useTranslation } from '@duncit/shell';
 
 const settingsSchema = z.object({
   low_stock_alert: z.coerce
-    .number({ invalid_type_error: 'Enter a whole number' })
+    .number({ error: 'Enter a whole number' })
     .int('Enter a whole number')
     .min(0, 'Cannot be negative')
     .max(1000000),
@@ -48,8 +48,8 @@ export default function ProductSettingsPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const { data: accessData, loading: accessLoading } = useQuery(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
-  const { data, loading } = useQuery(MY_PRODUCT_LISTINGS, {
+  const { data: accessData, loading: accessLoading } = useQuery<any>(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading } = useQuery<any>(MY_PRODUCT_LISTINGS, {
     variables: { brand_id: brandId },
     skip: Boolean(stateProduct),
     fetchPolicy: 'cache-and-network',
@@ -57,8 +57,8 @@ export default function ProductSettingsPage() {
   const canManageProducts = canManageProductListings(accessData?.me?.roles);
   const product = stateProduct || data?.myProductListings?.find((item: any) => item.id === productId) || null;
 
-  const [updateSettings, { loading: saving }] = useMutation(UPDATE_PRODUCT_SETTINGS);
-  const { control, handleSubmit, reset } = useForm<SettingsValues>({
+  const [updateSettings, { loading: saving }] = useMutation<any>(UPDATE_PRODUCT_SETTINGS);
+  const { control, handleSubmit, reset } = useForm<SettingsValues, any, SettingsValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: { low_stock_alert: 5, notify_low_stock: false },
   });

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { logs } from '@duncit/logs';
 import {
   MAIL_PREFERENCES_BY_TOKEN,
@@ -41,8 +41,8 @@ export function useMailPreferences(token: MailPreferenceToken | null) {
     { skip: !byToken, variables: token ?? { e: '', t: '' }, fetchPolicy: 'network-only' },
   );
 
-  const [setOne] = useMutation(byToken ? SET_MAIL_PREFERENCE_BY_TOKEN : SET_MY_MAIL_PREFERENCE);
-  const [setEvery] = useMutation(byToken ? UNSUBSCRIBE_ALL_BY_TOKEN : SET_ALL_MY_MAIL_PREFERENCES);
+  const [setOne] = useMutation<any>(byToken ? SET_MAIL_PREFERENCE_BY_TOKEN : SET_MY_MAIL_PREFERENCE);
+  const [setEvery] = useMutation<any>(byToken ? UNSUBSCRIBE_ALL_BY_TOKEN : SET_ALL_MY_MAIL_PREFERENCES);
 
   const active = byToken ? linked : mine;
   const preference = byToken

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { useCrmConfig } from '@/api/useCrmConfig';
 import { useSuperCategories } from '@/api/useSuperCategories';
 import { CRM_LEAD_CONFIG, SUPER_CATEGORIES } from '@/api/crm.gql';
 
 const wrapper = (mocks: any[]) =>
   (function Wrapper({ children }: { children: React.ReactNode }) {
-    return <MockedProvider mocks={mocks} addTypename={false}>{children}</MockedProvider>;
+    return <MockedProvider mocks={mocks}>{children}</MockedProvider>;
   });
 
 describe('useCrmConfig', () => {

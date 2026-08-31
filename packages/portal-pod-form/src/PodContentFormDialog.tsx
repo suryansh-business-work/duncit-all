@@ -60,7 +60,7 @@ export default function PodContentFormDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<PodContentValues>({
+  } = useForm<PodContentValues, any, PodContentValues>({
     resolver: zodResolver(buildPodContentSchema(t)),
     defaultValues,
   });

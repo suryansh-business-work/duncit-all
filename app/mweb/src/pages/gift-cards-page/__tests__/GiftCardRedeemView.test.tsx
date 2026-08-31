@@ -15,7 +15,8 @@
  * redeemed, expired, and cancelled. Each has to say which, because "this card
  * cannot be used" sends every one of them to support.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -50,8 +51,7 @@ const card = (over: Partial<GiftCard> = {}): GiftCard => ({
 });
 
 const redeemed: MockedResponse = {
-  request: { query: REDEEM_GIFT_CARD },
-  variableMatcher: () => true,
+  request: { query: REDEEM_GIFT_CARD, variables: () => true },
   result: {
     data: {
       redeemGiftCard: {
@@ -72,8 +72,7 @@ const redeemed: MockedResponse = {
 };
 
 const refused: MockedResponse = {
-  request: { query: REDEEM_GIFT_CARD },
-  variableMatcher: () => true,
+  request: { query: REDEEM_GIFT_CARD, variables: () => true },
   error: new Error('This card has already been redeemed'),
   maxUsageCount: Number.POSITIVE_INFINITY,
 };
@@ -88,7 +87,7 @@ const settle = async () => {
 
 const view = (over: Partial<GiftCard> = {}, mocks: MockedResponse[] = [redeemed]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <GiftCardRedeemView card={card(over)} currencySymbol="₹" />
@@ -161,8 +160,7 @@ describe('GiftCardRedeemView', () => {
   it('says so when the server answered nothing at all', async () => {
     const { container } = view({}, [
       {
-        request: { query: REDEEM_GIFT_CARD },
-        variableMatcher: () => true,
+        request: { query: REDEEM_GIFT_CARD, variables: () => true },
         result: { data: { redeemGiftCard: null } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -177,8 +175,7 @@ describe('GiftCardRedeemView', () => {
   it('reads a repeat redemption by the same holder as a no-op, not a second credit', async () => {
     const { container } = view({}, [
       {
-        request: { query: REDEEM_GIFT_CARD },
-        variableMatcher: () => true,
+        request: { query: REDEEM_GIFT_CARD, variables: () => true },
         result: {
           data: {
             redeemGiftCard: {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Avatar, Box, CircularProgress, Drawer, Stack, TextField, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';

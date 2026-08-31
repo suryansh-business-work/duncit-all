@@ -60,7 +60,7 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
     watch,
     setValue,
     formState: { errors },
-  } = useForm<LocaleFormValues>({ resolver: zodResolver(localeSchema), defaultValues: blank });
+  } = useForm<LocaleFormValues, any, LocaleFormValues>({ resolver: zodResolver(localeSchema), defaultValues: blank });
 
   useEffect(() => {
     if (!open) return;

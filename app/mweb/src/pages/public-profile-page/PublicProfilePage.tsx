@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Skeleton, Stack, Typography } from '@mui/material';
@@ -46,7 +47,7 @@ export default function PublicProfilePage() {
   // page passes it straight through.
   const { handle = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error, refetch } = useQuery(PUBLIC_PROFILE, {
+  const { data, loading, error, refetch } = useQuery<any>(PUBLIC_PROFILE, {
     variables: { user_id: handle },
     fetchPolicy: 'cache-and-network',
   });

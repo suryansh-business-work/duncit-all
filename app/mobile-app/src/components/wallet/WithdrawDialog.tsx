@@ -48,7 +48,7 @@ export function WithdrawDialog({
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { control, handleSubmit, setValue, watch } = useForm<WithdrawValues>({
+  const { control, handleSubmit, setValue, watch } = useForm<WithdrawValues, any, WithdrawValues>({
     resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)),
     defaultValues: blankWithdrawValues,
   });

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -40,7 +41,7 @@ const PUBLIC_FAQS = gql`
 
 export default function FaqsPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(PUBLIC_FAQS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(PUBLIC_FAQS, { fetchPolicy: 'cache-and-network' });
   const [params] = useSearchParams();
   const [activeSuper, setActiveSuper] = useState<string>(params.get('cat') ?? 'ALL');
   const [search, setSearch] = useState('');

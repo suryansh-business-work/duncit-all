@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { AppSidebar } from '../src/chrome/AppSidebar';
 import type { AppNavItem } from '../src/types';
 import type { DuncitUser } from '@duncit/user-context';

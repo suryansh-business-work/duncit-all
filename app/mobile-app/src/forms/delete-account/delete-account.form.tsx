@@ -27,7 +27,7 @@ export function DeleteAccountForm({
 }: Readonly<DeleteAccountFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeDeleteAccountSchema(t), [t]);
-  const { control, handleSubmit } = useForm<DeleteAccountValues>({
+  const { control, handleSubmit } = useForm<DeleteAccountValues, any, DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
     resolver: zodResolver(schema),
     mode: 'onBlur',

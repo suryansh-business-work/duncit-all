@@ -40,7 +40,7 @@ export default function PickupLocationForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const heading = title ?? t('products.pickup.formTitle');
-  const { control, handleSubmit, reset } = useForm<PickupLocationFormValues>({
+  const { control, handleSubmit, reset } = useForm<PickupLocationFormValues, any, PickupLocationFormValues>({
     defaultValues: initialValues ?? pickupLocationInitialValues,
     resolver: zodResolver(pickupLocationSchema),
     mode: 'onTouched',

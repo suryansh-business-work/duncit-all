@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ClubStoriesSection from '../ClubStoriesSection';
 import { RECORD_STORY_VIEW } from '../../home-page/queries';
@@ -42,7 +42,7 @@ describe('ClubStoriesSection', () => {
       },
     ];
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <DuncitLocalizationProvider>
           <ClubStoriesSection clubId="c1" canPost />
         </DuncitLocalizationProvider>

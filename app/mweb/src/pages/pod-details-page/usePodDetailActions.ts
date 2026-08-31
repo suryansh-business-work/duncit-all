@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { formatDateTime } from '../../utils/dateFormat';
 import { buildPodShareMessage, podMapLink, trackedPodShareLinks } from '@duncit/utils';
 import type { NavigateFunction } from 'react-router-dom';
@@ -65,12 +65,12 @@ export function usePodDetailActions({
   navigate,
 }: Args) {
   const { t } = useTranslation();
-  const [incHits] = useMutation(INC_HITS);
-  const [joinFree, joinState] = useMutation(JOIN_FREE);
-  const [backout, backoutState] = useMutation(BACKOUT);
-  const [cancelBackout, cancelBackoutState] = useMutation(CANCEL_BACKOUT);
-  const [redeem] = useMutation(REDEEM);
-  const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD_DETAIL);
+  const [incHits] = useMutation<any>(INC_HITS);
+  const [joinFree, joinState] = useMutation<any>(JOIN_FREE);
+  const [backout, backoutState] = useMutation<any>(BACKOUT);
+  const [cancelBackout, cancelBackoutState] = useMutation<any>(CANCEL_BACKOUT);
+  const [redeem] = useMutation<any>(REDEEM);
+  const [toggleSavedPod] = useMutation<any>(TOGGLE_SAVED_POD_DETAIL);
   // Seats the booking will take. Owned here because BOTH the free join and the
   // paid checkout need it, and the picker that sets it lives in the CTA row.
   const [seats, setSeats] = useState(1);

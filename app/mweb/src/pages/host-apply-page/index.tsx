@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -40,7 +40,7 @@ export default function HostApplyPage() {
   const takenQ = useQuery<{ myHostTakenCategoryIds: string[] }>(MY_HOST_TAKEN_CATEGORY_IDS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [submitRequest, { loading: submitting }] = useMutation(SUBMIT_HOST_REQUEST);
+  const [submitRequest, { loading: submitting }] = useMutation<any>(SUBMIT_HOST_REQUEST);
 
   const submit = async (picked: CategoryScope, answers: SurveyAnswerInput[], surveyId: string | null) => {
     const input: SubmitHostRequestInput = {

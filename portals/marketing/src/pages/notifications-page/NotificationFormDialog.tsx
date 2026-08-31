@@ -50,7 +50,7 @@ export default function NotificationFormDialog({
   totalUsers,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, setValue, watch, reset } = useForm<NotifForm>({
+  const { control, handleSubmit, setValue, watch, reset } = useForm<NotifForm, any, NotifForm>({
     defaultValues: form,
     resolver: zodResolver(notificationFormSchema),
     mode: 'onChange',

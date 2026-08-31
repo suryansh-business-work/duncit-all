@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
@@ -15,10 +15,10 @@ import { useTranslation } from '@duncit/shell';
  * the top of the platform-wide Pod Shop on the mobile app and mWeb. */
 export default function PodShopSliderPage() {
   const { t } = useTranslation();
-  const { data, loading } = useQuery(POD_SHOP_SLIDER, {
+  const { data, loading } = useQuery<any>(POD_SHOP_SLIDER, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save, { loading: saving }] = useMutation(UPDATE_POD_SHOP_SLIDER);
+  const [save, { loading: saving }] = useMutation<any>(UPDATE_POD_SHOP_SLIDER);
   const [media, setMedia] = useState<SliderMedia[]>([]);
 
   useEffect(() => {

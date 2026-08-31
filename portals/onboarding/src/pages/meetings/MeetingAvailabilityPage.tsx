@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -70,8 +71,8 @@ const days = (t: Translate) => [
 /** Global onboarding-meeting availability — drives the slot grid users book from. */
 export default function MeetingAvailabilityPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(AVAILABILITY, { fetchPolicy: 'cache-and-network' });
-  const [save, { loading: saving }] = useMutation(UPDATE);
+  const { data, loading, error } = useQuery<any>(AVAILABILITY, { fetchPolicy: 'cache-and-network' });
+  const [save, { loading: saving }] = useMutation<any>(UPDATE);
   const [weekDays, setWeekDays] = useState<number[]>([]);
   const [startTime, setStartTime] = useState('10:00');
   const [endTime, setEndTime] = useState('19:00');

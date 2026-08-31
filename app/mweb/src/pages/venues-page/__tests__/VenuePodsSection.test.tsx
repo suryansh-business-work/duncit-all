@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -88,7 +88,7 @@ const podsMock = (venueId: string, pods: unknown[]) => ({
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       {ui}
     </MockedProvider>,
   );

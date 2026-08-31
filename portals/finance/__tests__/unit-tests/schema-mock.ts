@@ -23,7 +23,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { ApolloLink, Observable } from '@apollo/client';
+import { ApolloLink } from '@apollo/client';
+import { Observable } from '@apollo/client/utilities';
 import {
   GraphQLEnumType,
   GraphQLInterfaceType,

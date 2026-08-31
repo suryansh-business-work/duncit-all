@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { EMAIL_SUPPORT_CHAT_TRANSCRIPT } from './queries';
@@ -17,7 +17,7 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
   const [email, setEmail] = useState(defaultEmail ?? '');
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [send, { loading }] = useMutation(EMAIL_SUPPORT_CHAT_TRANSCRIPT);
+  const [send, { loading }] = useMutation<any>(EMAIL_SUPPORT_CHAT_TRANSCRIPT);
 
   const handleSend = async () => {
     setError(null);

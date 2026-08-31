@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert } from '@mui/material';
 import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
 import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
@@ -13,7 +14,7 @@ const SUBMIT_APP_FEEDBACK = gql(SUBMIT_APP_FEEDBACK_SDL);
  * The server stamps the signed-in identity; the client only sends content. */
 export default function FeedbackPage() {
   const { t } = useTranslation();
-  const [submit, { loading }] = useMutation(SUBMIT_APP_FEEDBACK);
+  const [submit, { loading }] = useMutation<any>(SUBMIT_APP_FEEDBACK);
   const [sent, setSent] = useState(false);
 
   const onSubmit = async (values: FeedbackValues) => {

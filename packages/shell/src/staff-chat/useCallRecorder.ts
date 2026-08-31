@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { directUploadToImagekit } from '@duncit/media-picker';
 import { START_VIDEO_COMPRESSION, VIDEO_COMPRESSION_JOB } from './queries';
 
@@ -133,7 +133,7 @@ export function useCallRecorder(call: Readonly<CallSource>) {
   const awaitMp4 = useCallback(
     async (jobId: string): Promise<string> => {
       for (let tries = 0; tries < 150; tries += 1) {
-        const res = await client.query({
+        const res = await client.query<any>({
           query: VIDEO_COMPRESSION_JOB,
           variables: { jobId },
           fetchPolicy: 'network-only',
@@ -181,7 +181,7 @@ export function useCallRecorder(call: Readonly<CallSource>) {
 
       setStage('CONVERTING');
       setPct(0);
-      const job = await client.mutate({
+      const job = await client.mutate<any>({
         mutation: START_VIDEO_COMPRESSION,
         variables: { remoteUrl: raw, folder: RECORDING_FOLDER, surface: 'PORTALS' },
       });

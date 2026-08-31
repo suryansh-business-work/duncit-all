@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   AlertTitle,
@@ -73,17 +73,17 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
   // cache-and-network: a partner portal tab lives for hours, and a cached
   // penalty that an admin has since changed would warn about a number the
   // server will not actually deduct.
-  const penaltyQuery = useQuery(VENUE_CANCEL_PENALTY, { fetchPolicy: 'cache-and-network' });
+  const penaltyQuery = useQuery<any>(VENUE_CANCEL_PENALTY, { fetchPolicy: 'cache-and-network' });
   const penalty: number | null =
     penaltyQuery.data?.publicAppSettings?.venue_cancel_health_penalty ?? null;
-  const [cancelPod, state] = useMutation(VENUE_CANCEL_POD);
+  const [cancelPod, state] = useMutation<any>(VENUE_CANCEL_POD);
 
   const {
     control,
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<CancelPodValues>({
+  } = useForm<CancelPodValues, any, CancelPodValues>({
     resolver: zodResolver(cancelPodSchema),
     defaultValues: { reason: '' },
   });

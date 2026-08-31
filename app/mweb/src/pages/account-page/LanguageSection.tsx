@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Card,
@@ -28,7 +29,7 @@ const SET_MY_LOCALE = gql`
  */
 export default function LanguageSection() {
   const { t, locale, locales, setLocale } = useTranslation();
-  const [save, { loading: saving }] = useMutation(SET_MY_LOCALE);
+  const [save, { loading: saving }] = useMutation<any>(SET_MY_LOCALE);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 

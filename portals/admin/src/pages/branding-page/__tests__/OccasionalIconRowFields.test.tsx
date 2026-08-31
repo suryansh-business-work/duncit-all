@@ -5,7 +5,7 @@ import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
 import { parseLocalDateTimeInput, toLocalDateTimeInput } from '@duncit/datetime';
 import OccasionalIconRowFields, { toLocalInput } from '../OccasionalIconRowFields';
 import type { OccasionalIconRow } from '../queries';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
 /** The real field mounts the shared ImageKit/Pexels dialog (its own queries and

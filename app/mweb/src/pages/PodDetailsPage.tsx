@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Alert, Chip, Stack } from '@mui/material';
@@ -46,13 +46,13 @@ export default function PodDetailsPage() {
   const referralFromUrl = search.get('ref');
   const { compute: priceCompute, format: priceFormat, currency: priceCurrency } = usePricing();
   const showProducts = useFeatureFlag('is_product_visible');
-  const slugResolution = useQuery(POD_ID_BY_SLUGS, {
+  const slugResolution = useQuery<any>(POD_ID_BY_SLUGS, {
     variables: { clubSlug, podSlug },
     skip: !clubSlug || !podSlug,
     fetchPolicy: 'cache-and-network',
   });
   const id: string = slugResolution.data?.podBySlugs?.id ?? '';
-  const { data, loading, error, refetch } = useQuery(POD_DETAILS, {
+  const { data, loading, error, refetch } = useQuery<any>(POD_DETAILS, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
@@ -67,22 +67,22 @@ export default function PodDetailsPage() {
     ];
     return Array.from(new Set(ids.filter(Boolean)));
   }, [data?.pod]);
-  const { data: peopleData } = useQuery(POD_PEOPLE, {
+  const { data: peopleData } = useQuery<any>(POD_PEOPLE, {
     variables: { ids: peopleIds },
     skip: peopleIds.length === 0,
     fetchPolicy: 'cache-and-network',
   });
-  const { data: spotFillData } = useQuery(POD_SPOT_FILLS, {
+  const { data: spotFillData } = useQuery<any>(POD_SPOT_FILLS, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
-  const { data: seatData } = useQuery(POD_ATTENDEE_SEATS, {
+  const { data: seatData } = useQuery<any>(POD_ATTENDEE_SEATS, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
-  const [joinMeeting] = useMutation(JOIN_POD_MEETING);
+  const [joinMeeting] = useMutation<any>(JOIN_POD_MEETING);
   // One face per person; the seats they hold become a label beside their name.
   const seatsByUser = useMemo(
     () =>

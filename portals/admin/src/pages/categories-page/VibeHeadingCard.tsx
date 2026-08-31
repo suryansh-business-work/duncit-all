@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
@@ -13,8 +13,8 @@ import { useTranslation } from '@duncit/shell';
  */
 export default function VibeHeadingCard() {
   const { t } = useTranslation();
-  const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
+  const { data } = useQuery<any>(BRANDING, { fetchPolicy: 'cache-and-network' });
+  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const savedHeading: string = data?.branding?.home_vibe_heading ?? '';
   const savedSubheading: string = data?.branding?.home_vibe_subheading ?? '';

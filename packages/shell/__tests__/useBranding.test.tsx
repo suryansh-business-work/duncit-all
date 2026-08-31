@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 
 vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useBranding } from '../src/hooks/useBranding';
 import { FALLBACK_ICONS } from '../src/fallback-icons';
 

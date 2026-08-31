@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
 import { buildChatExport, downloadChatExport } from './export-chat';
@@ -117,15 +117,15 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     { skip: !open, fetchPolicy: 'network-only' }
   );
 
-  const [sendMessage, sendState] = useMutation(SEND_STAFF_MESSAGE);
-  const [editMessage] = useMutation(EDIT_STAFF_MESSAGE);
-  const [deleteMessage] = useMutation(DELETE_STAFF_MESSAGE);
-  const [reactToMessage] = useMutation(REACT_TO_STAFF_MESSAGE);
-  const [forwardMessage] = useMutation(FORWARD_STAFF_MESSAGE);
-  const [pinMessage] = useMutation(PIN_STAFF_MESSAGE);
-  const [markRead] = useMutation(MARK_THREAD_READ);
-  const [attachRecording] = useMutation(ATTACH_CALL_RECORDING);
-  const [clearThread] = useMutation(CLEAR_STAFF_THREAD);
+  const [sendMessage, sendState] = useMutation<any>(SEND_STAFF_MESSAGE);
+  const [editMessage] = useMutation<any>(EDIT_STAFF_MESSAGE);
+  const [deleteMessage] = useMutation<any>(DELETE_STAFF_MESSAGE);
+  const [reactToMessage] = useMutation<any>(REACT_TO_STAFF_MESSAGE);
+  const [forwardMessage] = useMutation<any>(FORWARD_STAFF_MESSAGE);
+  const [pinMessage] = useMutation<any>(PIN_STAFF_MESSAGE);
+  const [markRead] = useMutation<any>(MARK_THREAD_READ);
+  const [attachRecording] = useMutation<any>(ATTACH_CALL_RECORDING);
+  const [clearThread] = useMutation<any>(CLEAR_STAFF_THREAD);
 
   /**
    * Messages hidden on THIS device only.

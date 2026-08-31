@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
@@ -18,7 +18,7 @@ interface Props {
 export default function PodClubCard({ clubId }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(POD_CLUB_DETAIL, {
+  const { data, loading, error } = useQuery<any>(POD_CLUB_DETAIL, {
     variables: { id: clubId },
     skip: !clubId,
   });

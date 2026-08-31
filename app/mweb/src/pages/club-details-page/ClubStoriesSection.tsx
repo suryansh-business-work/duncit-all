@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import MomentLightbox from '../../components/moments/MomentLightbox';
@@ -40,8 +40,8 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
     // reload. The server filter is authoritative; this catches the boundary.
     pollInterval: 60_000,
   });
-  const [recordView] = useMutation(RECORD_STORY_VIEW);
-  const [deleteStory] = useMutation(DELETE_CLUB_STORY);
+  const [recordView] = useMutation<any>(RECORD_STORY_VIEW);
+  const [deleteStory] = useMutation<any>(DELETE_CLUB_STORY);
   // A story crossing its 24h boundary while this screen is open (or served
   // stale from the Apollo cache) must disappear, not linger until a reload.
   const stories = (data?.clubStories ?? []).filter((s) => isStoryLive(s.expires_at));

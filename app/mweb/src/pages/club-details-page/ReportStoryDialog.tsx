@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -44,7 +44,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
-  const [report, { loading }] = useMutation(REPORT_STORY);
+  const [report, { loading }] = useMutation<any>(REPORT_STORY);
 
   // Re-seed on every open: one dialog instance serves every story.
   useEffect(() => {

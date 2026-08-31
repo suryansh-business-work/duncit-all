@@ -2,7 +2,7 @@
  * The clock at the right end of the taskbar: two lines, and clicking it opens
  * the tray where the zone, seconds and language are set.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 

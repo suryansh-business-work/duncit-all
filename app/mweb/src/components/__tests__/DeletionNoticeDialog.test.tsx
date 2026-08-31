@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 import DeletionNoticeDialog from '../DeletionNoticeDialog';

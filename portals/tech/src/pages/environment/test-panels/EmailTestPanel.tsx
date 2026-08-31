@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { DuncitButton } from '@duncit/buttons';
@@ -12,7 +12,7 @@ export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>)
   const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
-  const [run, { loading }] = useMutation(TEST_ENV_EMAIL);
+  const [run, { loading }] = useMutation<any>(TEST_ENV_EMAIL);
 
   const send = async () => {
     setResult(null);

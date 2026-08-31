@@ -20,7 +20,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';

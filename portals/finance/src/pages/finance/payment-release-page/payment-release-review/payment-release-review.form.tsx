@@ -21,10 +21,11 @@ import { fallbackT, type Translate } from '@duncit/shell';
 export const paymentReleaseReviewSchema = (requestedAmount: number, t: Translate = fallbackT) =>
   z
     .object({
-      status: z.enum(['APPROVED', 'REJECTED'], { required_error: 'Status is required' }),
-      approval_type: z.enum(['FULL', 'PARTIAL'], { required_error: 'Release type is required' }),
+      status: z.enum(['APPROVED', 'REJECTED'], { error: 'Status is required' }),
+      approval_type: z.enum(['FULL', 'PARTIAL'], { error: 'Release type is required' }),
       approved_amount: z
-        .number({ invalid_type_error: 'Enter amount', required_error: 'Approved amount is required' })
+        // One message now covers both a missing amount and a non-numeric one.
+        .number({ error: 'Approved amount is required' })
         .min(0)
         .max(requestedAmount, 'Cannot exceed requested amount'),
       approval_reason: z.string().trim().max(1000).default(''),
@@ -49,7 +50,7 @@ export function toReviewInput(values: PaymentReleaseReviewValues, requestedAmoun
 export default function PaymentReleaseReviewForm({ request, busy, errorMessage, onClose, onSubmit }: Readonly<PaymentReleaseReviewFormProps>) {
   const { t } = useTranslation();
   const requestedAmount = Number(request?.amount_requested || 0);
-  const { control, handleSubmit, watch, setValue, reset } = useForm<PaymentReleaseReviewValues>({
+  const { control, handleSubmit, watch, setValue, reset } = useForm<PaymentReleaseReviewValues, any, PaymentReleaseReviewValues>({
     defaultValues: { status: 'APPROVED', approval_type: 'FULL', approved_amount: requestedAmount, approval_reason: '' },
     resolver: zodResolver(paymentReleaseReviewSchema(requestedAmount, t)),
   });

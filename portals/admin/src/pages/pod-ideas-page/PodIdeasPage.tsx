@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { useApolloTableFetch } from '@duncit/table';
@@ -19,8 +19,8 @@ export default function PodIdeasPage() {
 
   const fetchRows = useApolloTableFetch<IdeaRow>(client, POD_IDEAS_TABLE, 'podIdeasTable');
 
-  const [setStatusMut] = useMutation(SET_STATUS);
-  const [deleteMut] = useMutation(DELETE_IDEA);
+  const [setStatusMut] = useMutation<any>(SET_STATUS);
+  const [deleteMut] = useMutation<any>(DELETE_IDEA);
 
   const setStatus = async (id: string, status: Status) => {
     try {

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import {
@@ -65,15 +65,15 @@ export function useDeletionDetail(requestDocId: string | null, onChanged: () => 
   const [purgingAll, setPurgingAll] = useState(false);
   const [steps, setSteps] = useState<PurgeStep[]>([]);
 
-  const { data, loading, refetch } = useQuery(ACCOUNT_DELETION_DETAIL, {
+  const { data, loading, refetch } = useQuery<any>(ACCOUNT_DELETION_DETAIL, {
     variables: { request_doc_id: requestDocId },
     skip: !requestDocId,
     fetchPolicy: 'cache-and-network',
   });
 
-  const [purgeTrace] = useMutation(PURGE_ACCOUNT_TRACE);
-  const [purgeAll] = useMutation(PURGE_ACCOUNT_COMPLETELY);
-  const [reject] = useMutation(REJECT_ACCOUNT_DELETION);
+  const [purgeTrace] = useMutation<any>(PURGE_ACCOUNT_TRACE);
+  const [purgeAll] = useMutation<any>(PURGE_ACCOUNT_COMPLETELY);
+  const [reject] = useMutation<any>(REJECT_ACCOUNT_DELETION);
 
   const detail: DeletionDetail | null = data?.accountDeletionRequest ?? null;
 

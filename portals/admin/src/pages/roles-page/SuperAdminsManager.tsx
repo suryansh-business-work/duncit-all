@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Autocomplete,
@@ -23,14 +23,14 @@ const label = (u: any) => u.full_name || u.email || 'Unnamed user';
 
 export default function SuperAdminsManager() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(ADMINS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, refetch } = useQuery<any>(ADMINS, { fetchPolicy: 'cache-and-network' });
   const [search, setSearch] = useState('');
-  const { data: found, loading: searching } = useQuery(SEARCH_USERS, {
+  const { data: found, loading: searching } = useQuery<any>(SEARCH_USERS, {
     variables: { search },
     skip: search.trim().length < 2,
   });
-  const [grant] = useMutation(GRANT_ADMIN);
-  const [revoke] = useMutation(REVOKE_ADMIN);
+  const [grant] = useMutation<any>(GRANT_ADMIN);
+  const [revoke] = useMutation<any>(REVOKE_ADMIN);
   const confirm = useConfirm();
 
   const admins = data?.users ?? [];

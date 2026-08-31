@@ -131,8 +131,7 @@ export const adRequestMock = (
 export const myAdsTableMock = (
   rows: AdRequestRowMock[] = [makeAdRow()],
 ): MockedResponse => ({
-  request: { query: MY_ADS_TABLE },
-  variableMatcher: () => true,
+  request: { query: MY_ADS_TABLE, variables: () => true },
   result: {
     data: { myAdRequestsTable: { __typename: 'AdRequestTablePage', total: rows.length, rows } },
   },
@@ -146,15 +145,13 @@ export const submitAdRequestMock = (
     trace_id: 'AD-9',
   },
 ): MockedResponse => ({
-  request: { query: SUBMIT_AD_REQUEST },
-  variableMatcher: () => true,
+  request: { query: SUBMIT_AD_REQUEST, variables: () => true },
   result: { data: { submitAdRequest: result } },
   maxUsageCount: 20,
 });
 
 export const submitAdRequestErrorMock = (message = 'Server boom'): MockedResponse => ({
-  request: { query: SUBMIT_AD_REQUEST },
-  variableMatcher: () => true,
+  request: { query: SUBMIT_AD_REQUEST, variables: () => true },
   result: { errors: [new GraphQLError(message)] },
   maxUsageCount: 20,
 });

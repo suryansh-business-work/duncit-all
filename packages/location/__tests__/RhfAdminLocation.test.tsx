@@ -29,7 +29,7 @@ interface FormValues {
 }
 
 function TestForm({ defaultValue }: Readonly<{ defaultValue?: AdminLocationValue }>) {
-  const { control, setError } = useForm<FormValues>({ defaultValues: { location: defaultValue } });
+  const { control, setError } = useForm<FormValues, any, FormValues>({ defaultValues: { location: defaultValue } });
   const watched = useWatch({ control, name: 'location' });
   return (
     <>

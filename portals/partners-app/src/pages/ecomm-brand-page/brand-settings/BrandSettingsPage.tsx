@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -39,14 +39,14 @@ export default function BrandSettingsPage() {
   const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { data: brandsData, loading: brandsLoading } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
-  const { data, loading, error, refetch } = useQuery(MY_BRAND_WAREHOUSES, {
+  const { data: brandsData, loading: brandsLoading } = useQuery<any>(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error, refetch } = useQuery<any>(MY_BRAND_WAREHOUSES, {
     variables: { brand_doc_id: brandId },
     fetchPolicy: 'cache-and-network',
   });
-  const [saveWarehouse, saveState] = useMutation(SAVE_MY_WAREHOUSE);
-  const [deleteWarehouse, deleteState] = useMutation(DELETE_MY_WAREHOUSE);
-  const [setDefaultWarehouse, defaultState] = useMutation(SET_DEFAULT_MY_WAREHOUSE);
+  const [saveWarehouse, saveState] = useMutation<any>(SAVE_MY_WAREHOUSE);
+  const [deleteWarehouse, deleteState] = useMutation<any>(DELETE_MY_WAREHOUSE);
+  const [setDefaultWarehouse, defaultState] = useMutation<any>(SET_DEFAULT_MY_WAREHOUSE);
   const [editing, setEditing] = useState<Editing>(null);
   const [deleteTarget, setDeleteTarget] = useState<BrandWarehouse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
@@ -25,7 +25,7 @@ import { useTranslation } from '@duncit/shell';
 export default function PodsDashboardPage() {
   const { t } = useTranslation();
   const [days, setDays] = useState(30);
-  const { data, loading, error } = useQuery(POD_DASHBOARD, {
+  const { data, loading, error } = useQuery<any>(POD_DASHBOARD, {
     variables: { days },
     fetchPolicy: 'cache-and-network',
   });

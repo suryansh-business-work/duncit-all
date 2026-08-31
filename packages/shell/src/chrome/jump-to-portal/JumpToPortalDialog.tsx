@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -35,11 +35,11 @@ interface Props {
  */
 export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(MY_PORTAL_ACCESS, {
+  const { data, loading, error, refetch } = useQuery<any>(MY_PORTAL_ACCESS, {
     fetchPolicy: 'cache-and-network',
     skip: !open,
   });
-  const [requestAccess] = useMutation(REQUEST_PORTAL_ACCESS);
+  const [requestAccess] = useMutation<any>(REQUEST_PORTAL_ACCESS);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
 

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { CREATE_VENUE_LEAD, UPDATE_VENUE_LEAD, VENUE_LEAD } from '../../api/crm.gql';
@@ -17,9 +17,9 @@ export default function VenueLeadEditorPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { config, loading: cfgLoading } = useCrmConfig();
-  const { data, loading: leadLoading } = useQuery(VENUE_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
-  const [createLead, { loading: creating }] = useMutation(CREATE_VENUE_LEAD);
-  const [updateLead, { loading: updating }] = useMutation(UPDATE_VENUE_LEAD);
+  const { data, loading: leadLoading } = useQuery<any>(VENUE_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
+  const [createLead, { loading: creating }] = useMutation<any>(CREATE_VENUE_LEAD);
+  const [updateLead, { loading: updating }] = useMutation<any>(UPDATE_VENUE_LEAD);
   const lead = data?.venueLead as VenueLead | undefined;
   const aiPrefill = (location.state as { aiPrefill?: Partial<VenueLeadFormValues> } | null)?.aiPrefill;
 

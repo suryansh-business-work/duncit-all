@@ -44,8 +44,7 @@ const makeApiRow = (over: Record<string, unknown> = {}) => ({
 });
 
 const tableMock = (rows: unknown[], total = rows.length): MockedResponse => ({
-  request: { query: TRANSLATIONS_TABLE },
-  variableMatcher: () => true,
+  request: { query: TRANSLATIONS_TABLE, variables: () => true },
   result: {
     data: {
       translationsTable: {

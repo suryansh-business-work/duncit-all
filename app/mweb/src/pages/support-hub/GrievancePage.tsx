@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import GavelIcon from '@mui/icons-material/Gavel';
 import { DuncitButton } from '@duncit/buttons';
@@ -41,7 +42,7 @@ interface TicketRow {
  */
 export default function GrievancePage() {
   const { t } = useTranslation();
-  const [submit, { loading }] = useMutation(SUBMIT_GRIEVANCE);
+  const [submit, { loading }] = useMutation<any>(SUBMIT_GRIEVANCE);
   const { data } = useQuery<{ grievanceOfficer: PublicGrievanceOfficer }>(GRIEVANCE_OFFICER);
   const { data: ticketData, loading: ticketsLoading } = useQuery<{
     myUnifiedSupportTickets: TicketRow[];

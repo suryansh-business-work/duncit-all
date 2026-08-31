@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';

@@ -111,7 +111,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   const hasVenue = !!pod?.venue_id;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { control, handleSubmit, watch } = useForm<PodCompleteValues>({
+  const { control, handleSubmit, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
     resolver: zodResolver(buildPodCompleteSchema(hasVenue)),
     defaultValues: blankPodCompleteValues,
   });

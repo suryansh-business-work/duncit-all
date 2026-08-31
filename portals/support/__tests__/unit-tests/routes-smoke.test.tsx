@@ -14,7 +14,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';

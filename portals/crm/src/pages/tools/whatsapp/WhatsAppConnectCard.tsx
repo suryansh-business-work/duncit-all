@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -47,14 +47,14 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
   const connecting = connection.status === 'CONNECTING';
   const connected = connection.status === 'CONNECTED';
 
-  const [saveConfig, saveState] = useMutation(WA_SAVE_CONFIG);
-  const [connect, connectState] = useMutation(WA_CONNECT);
-  const [disconnect, disconnectState] = useMutation(WA_DISCONNECT);
-  const [generate, generateState] = useMutation(WA_GENERATE_API_KEY);
+  const [saveConfig, saveState] = useMutation<any>(WA_SAVE_CONFIG);
+  const [connect, connectState] = useMutation<any>(WA_CONNECT);
+  const [disconnect, disconnectState] = useMutation<any>(WA_DISCONNECT);
+  const [generate, generateState] = useMutation<any>(WA_GENERATE_API_KEY);
 
   // Poll the live status + QR only while a scan is pending.
-  const statusQuery = useQuery(WA_STATUS, { pollInterval: connecting ? 3000 : 0, skip: !connecting });
-  const qrQuery = useQuery(WA_QR, { pollInterval: connecting ? 3000 : 0, skip: !connecting });
+  const statusQuery = useQuery<any>(WA_STATUS, { pollInterval: connecting ? 3000 : 0, skip: !connecting });
+  const qrQuery = useQuery<any>(WA_QR, { pollInterval: connecting ? 3000 : 0, skip: !connecting });
   const polledStatus: string | undefined = statusQuery.data?.waStatus?.status;
   useEffect(() => {
     if (polledStatus && polledStatus !== 'CONNECTING') onChanged();

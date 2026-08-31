@@ -3,7 +3,7 @@ import { render, screen, act } from '@testing-library/react';
 
 vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { PortalBranding } from '../src/PortalBranding';
 
 const SPLASH_KEY = 'duncit_portal_splash_shown';

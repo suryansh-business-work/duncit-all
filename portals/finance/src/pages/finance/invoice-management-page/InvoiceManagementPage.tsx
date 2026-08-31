@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -26,8 +26,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * rendered on every invoice and ticket PDF; changes apply on the next document. */
 export default function InvoiceManagementPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(INVOICE_SETTINGS, { fetchPolicy: 'cache-and-network' });
-  const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_SETTINGS);
+  const { data, loading, refetch } = useQuery<any>(INVOICE_SETTINGS, { fetchPolicy: 'cache-and-network' });
+  const [updateMut, { loading: saving }] = useMutation<any>(UPDATE_INVOICE_SETTINGS);
   const [form, setForm] = useState<InvoiceSettingsForm>(EMPTY_INVOICE_SETTINGS);
   const [dummyMode, setDummyMode] = useState(true);
   const [error, setError] = useState<string | null>(null);

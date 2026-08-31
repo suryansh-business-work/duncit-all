@@ -1,7 +1,7 @@
 import '../helpers/agGridEnv';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import VenueLeadsPage from '@/pages/venue-leads/VenueLeadsPage';
 import HostLeadsPage from '@/pages/host-leads/HostLeadsPage';
@@ -21,7 +21,7 @@ const tableVars = {
 
 const wrap = (ui: React.ReactElement, mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <MemoryRouter>{ui}</MemoryRouter>
     </MockedProvider>
   );

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 
 vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider, type ColorMode } from '@duncit/theme';
 import { AuthSplitLayout } from '../src/chrome/AuthSplitLayout';
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLazyQuery, useMutation } from '@apollo/client';
+import { useLazyQuery, useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -43,12 +43,12 @@ export default function InventoryDeleteDialog({
   onDone,
 }: Readonly<InventoryDeleteDialogProps>) {
   const { t } = useTranslation();
-  const [loadLinkedPods, linkedPodsResult] = useLazyQuery(INVENTORY_LINKED_PODS, {
+  const [loadLinkedPods, linkedPodsResult] = useLazyQuery<any>(INVENTORY_LINKED_PODS, {
     fetchPolicy: 'network-only',
   });
-  const [archive, archiveResult] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
-  const [softDelete, softDeleteResult] = useMutation(DELETE_PRODUCT);
-  const [permanentlyDelete, permanentResult] = useMutation(
+  const [archive, archiveResult] = useMutation<any>(ARCHIVE_INVENTORY_PRODUCT);
+  const [softDelete, softDeleteResult] = useMutation<any>(DELETE_PRODUCT);
+  const [permanentlyDelete, permanentResult] = useMutation<any>(
     PERMANENT_DELETE_INVENTORY_PRODUCT
   );
 

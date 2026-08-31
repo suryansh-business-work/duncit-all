@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { IDLE_USERNAME_CHECK, scheduleUsernameCheck, type UsernameCheckState } from '@duncit/utils';
 import { logs } from '@duncit/logs';
 import { USERNAME_AVAILABILITY, type UsernameAvailability } from './queries';

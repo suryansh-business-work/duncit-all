@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import CountsBySuperCategoryGrid from './dashboard/CountsBySuperCategoryGrid';
@@ -21,8 +21,8 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const [superSlug, setSuperSlug] = useState('');
 
-  const { data: catsData } = useQuery(SUPER_CATS);
-  const { data: totalsData, loading: totalsLoading } = useQuery(TOTALS, {
+  const { data: catsData } = useQuery<any>(SUPER_CATS);
+  const { data: totalsData, loading: totalsLoading } = useQuery<any>(TOTALS, {
     variables: { slug: superSlug || null },
     fetchPolicy: 'cache-and-network',
   });

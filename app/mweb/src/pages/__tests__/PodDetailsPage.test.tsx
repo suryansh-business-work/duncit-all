@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // --- router mocks -------------------------------------------------------
@@ -204,7 +204,7 @@ const peopleMock = {
 
 const setup = (mocks: unknown[], ui: ReactElement = <PodDetailsPage />) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       {ui}
     </MockedProvider>,
   );

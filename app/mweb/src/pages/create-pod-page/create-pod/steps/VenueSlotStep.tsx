@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Controller } from 'react-hook-form';
 import { Alert, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import VenueMapPreview from '../../../../components/VenueMapPreview';

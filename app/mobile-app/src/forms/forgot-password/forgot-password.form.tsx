@@ -29,7 +29,7 @@ export function ForgotPasswordForm({
 }: Readonly<ForgotPasswordFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeForgotPasswordSchema(t), [t]);
-  const { control, handleSubmit } = useForm<ForgotPasswordValues>({
+  const { control, handleSubmit } = useForm<ForgotPasswordValues, any, ForgotPasswordValues>({
     defaultValues: forgotPasswordDefaults,
     resolver: zodResolver(schema),
     mode: 'onBlur',

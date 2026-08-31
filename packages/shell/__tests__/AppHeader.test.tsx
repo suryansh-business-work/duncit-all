@@ -9,7 +9,7 @@ vi.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider, type ColorMode } from '@duncit/theme';
 import { AppHeader } from '../src/chrome/AppHeader';
 import type { AppNavItem } from '../src/types';

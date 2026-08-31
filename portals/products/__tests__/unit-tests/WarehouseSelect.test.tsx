@@ -10,7 +10,7 @@ import { renderWithProviders } from '../testkit';
 import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pickup.mock';
 
 function Harness({ children, value = '' }: Readonly<{ children: ReactNode; value?: string }>) {
-  const methods = useForm<InventoryProductFormValues>({
+  const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
     defaultValues: { ...blankProductForm, pickup_location_id: value },
     resolver: zodResolver(productSchema),
     mode: 'onChange',

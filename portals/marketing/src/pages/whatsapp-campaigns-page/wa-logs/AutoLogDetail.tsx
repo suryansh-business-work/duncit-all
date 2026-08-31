@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Chip,

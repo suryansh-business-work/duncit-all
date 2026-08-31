@@ -37,7 +37,7 @@ export function buildSessionMeQuery(
  * a network-only fetch of `me` resolving to the user or `null`.
  */
 export function createSessionUserLoader<TCacheShape>(
-  client: ApolloClient<TCacheShape>,
+  client: ApolloClient,
   options: SessionUserLoaderOptions = {},
 ): () => Promise<DuncitUser | null> {
   const query = options.query ?? buildSessionMeQuery(options.operationName, options.extraFields);

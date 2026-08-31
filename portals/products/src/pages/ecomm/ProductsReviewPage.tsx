@@ -1,4 +1,4 @@
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,

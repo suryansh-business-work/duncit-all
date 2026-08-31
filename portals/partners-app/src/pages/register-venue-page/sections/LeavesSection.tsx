@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Alert, Chip, Stack, Typography } from '@mui/material';
@@ -26,7 +26,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
   const [dates, setDates] = useState<string[]>(holidays);
   const [picked, setPicked] = useState<Date | null>(null);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
-  const [save, saveState] = useMutation(UPDATE_VENUE_HOLIDAYS);
+  const [save, saveState] = useMutation<any>(UPDATE_VENUE_HOLIDAYS);
 
   useEffect(() => setDates(holidays), [holidays]);
   const dirty = JSON.stringify(dates) !== JSON.stringify(holidays);

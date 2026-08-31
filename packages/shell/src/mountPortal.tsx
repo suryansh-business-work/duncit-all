@@ -7,7 +7,7 @@ import '@fontsource/nunito/700.css';
 import '@fontsource/nunito/800.css';
 import React, { type ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AppLocaleProvider, DuncitLocalizationProvider } from '@duncit/app-settings';
 import { SHELL_FALLBACK_FLAT } from './i18n/fallback';

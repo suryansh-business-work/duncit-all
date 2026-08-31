@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -34,10 +34,10 @@ const isCancelled = (pod: PartnerPodRow) => !!pod.is_deleted;
  */
 function HostPodsContent() {
   const { t } = useTranslation();
-  const { data, error } = useQuery(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+  const { data, error } = useQuery<any>(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createPod, createState] = useMutation(CREATE_PARTNER_POD);
+  const [createPod, createState] = useMutation<any>(CREATE_PARTNER_POD);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useUserData } from '@duncit/user-context';
 import { AppIcon, useTranslation } from '@duncit/shell';
 import { PageHeader, StatCard } from '@duncit/ui';

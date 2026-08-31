@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';

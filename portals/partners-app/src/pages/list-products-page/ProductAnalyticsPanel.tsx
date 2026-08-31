@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -41,7 +41,7 @@ function Metric({ label, value }: Readonly<{ label: string; value: string | numb
  * per-variant purchases (from order data), and forward-tracked views/clicks. */
 export default function ProductAnalyticsPanel({ productId }: Readonly<{ productId: string }>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_PRODUCT_ANALYTICS, {
+  const { data, loading, error } = useQuery<any>(MY_PRODUCT_ANALYTICS, {
     variables: { product_doc_id: productId },
     fetchPolicy: 'cache-and-network',
   });

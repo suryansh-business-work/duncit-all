@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -41,8 +41,8 @@ export default function ServicesOfferedPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<CrmServiceOfferedRow | null>(null);
   const [toEdit, setToEdit] = useState<CrmServiceOfferedRow | null>(null);
-  const [createMut, { loading: creating }] = useMutation(CREATE_CRM_SERVICES_OFFERED);
-  const [deleteMut, { loading: deleting }] = useMutation(DELETE_CRM_SERVICE_OFFERED);
+  const [createMut, { loading: creating }] = useMutation<any>(CREATE_CRM_SERVICES_OFFERED);
+  const [deleteMut, { loading: deleting }] = useMutation<any>(DELETE_CRM_SERVICE_OFFERED);
 
   const targetValid = draft.applies_to_venue || draft.applies_to_host;
 

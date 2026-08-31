@@ -49,10 +49,10 @@ export const buildAdRequestSchema = (t: Translate) =>
   z.object({
     ad_title: requiredText(t('adRequest.form.title'), 3, 120),
     ad_description: requiredText(t('adRequest.form.description'), 10, 1000),
-    ad_type: z.enum(AD_MEDIA_TYPE_VALUES, { required_error: t('adRequest.errors.typeRequired') }),
+    ad_type: z.enum(AD_MEDIA_TYPE_VALUES, { error: t('adRequest.errors.typeRequired') }),
     media_url: z.string().trim().min(1, t('adRequest.errors.mediaRequired')),
     position: z.enum(AD_POSITION_VALUES, {
-      required_error: t('adRequest.errors.positionRequired'),
+      error: t('adRequest.errors.positionRequired'),
     }),
     start_at: z
       .string()
@@ -64,7 +64,7 @@ export const buildAdRequestSchema = (t: Translate) =>
       )
       .refine(isTodayOrLater, t('adRequest.errors.startPast')),
     duration_days: z
-      .number({ invalid_type_error: t('adRequest.errors.durationNumber') })
+      .number({ error: t('adRequest.errors.durationNumber') })
       .int(t('adRequest.errors.durationWhole'))
       .min(1, t('adRequest.errors.durationMin')),
     redirect_url: z

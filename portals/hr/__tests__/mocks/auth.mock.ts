@@ -52,14 +52,13 @@ export const makeLoginPayload = (over: Partial<LoginPayloadFields> = {}): LoginP
 /**
  * `MockedResponse` for a login attempt. An empty `token` drives the
  * "login failed" branch; a non-empty token with a given role set drives the
- * success / access-gate branches. `variableMatcher` accepts any input so the
+ * success / access-gate branches. a `variables` predicate accepts any input so the
  * spec doesn't have to restate the `portal_key`-augmented variables.
  */
 export const loginMock = (over: { token?: string; roles?: string[] } = {}): MockedResponse => {
   const { token = 'session-token', roles = ['HR_MANAGER'] } = over;
   return {
-    request: { query: CONSOLE_LOGIN },
-    variableMatcher: () => true,
+    request: { query: CONSOLE_LOGIN, variables: () => true },
     result: { data: { login: makeLoginPayload({ token, user: makeAuthUser({ roles }) }) } },
   };
 };

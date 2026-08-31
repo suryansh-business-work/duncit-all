@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { TextField } from '@mui/material';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { parseLocalDateTimeInput, toLocalDateTimeInput } from '@duncit/datetime';
 import OccasionalIconsSection from '../OccasionalIconsSection';
 import { OCCASIONAL_ICONS, UPDATE_OCCASIONAL_ICONS, type OccasionalIconRow } from '../queries';
@@ -137,8 +138,7 @@ describe('OccasionalIconsSection — add and remove', () => {
 
 describe('OccasionalIconsSection — saving', () => {
   const captureSave = (sent: { variables?: Record<string, unknown> }): MockedResponse => ({
-    request: { query: UPDATE_OCCASIONAL_ICONS },
-    variableMatcher: () => true,
+    request: { query: UPDATE_OCCASIONAL_ICONS, variables: () => true },
     result: (variables) => {
       sent.variables = variables;
       return { data: { updateOccasionalIcons: [] } };
@@ -237,8 +237,7 @@ describe('OccasionalIconsSection — saving', () => {
     renderSection([
       iconsQuery([savedRow()]),
       {
-        request: { query: UPDATE_OCCASIONAL_ICONS },
-        variableMatcher: () => true,
+        request: { query: UPDATE_OCCASIONAL_ICONS, variables: () => true },
         error: new Error('Occasion windows overlap'),
       },
     ]);

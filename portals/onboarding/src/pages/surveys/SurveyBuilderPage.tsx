@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
@@ -45,8 +45,8 @@ export default function SurveyBuilderPage() {
   const isDefaultMode = searchParams.get('default') === '1';
 
   const { data, loading } = useQuery<{ surveyById: Survey | null }>(SURVEY_BY_ID, { variables: { id }, skip: isNew, fetchPolicy: 'cache-and-network' });
-  const [createSurvey, { loading: creating }] = useMutation(CREATE_SURVEY);
-  const [updateSurvey, { loading: updating }] = useMutation(UPDATE_SURVEY);
+  const [createSurvey, { loading: creating }] = useMutation<any>(CREATE_SURVEY);
+  const [updateSurvey, { loading: updating }] = useMutation<any>(UPDATE_SURVEY);
 
   const [kind, setKind] = useState<SurveyKind>(() => initialKind(searchParams.get('kind')));
   const [scope, setScope] = useState<Scope>(emptyScope);

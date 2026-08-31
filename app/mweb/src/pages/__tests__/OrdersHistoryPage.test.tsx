@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { GraphQLError } from 'graphql';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import OrdersHistoryPage from '../OrdersHistoryPage';
 import { MY_PRODUCT_ORDERS, type ProductOrder } from '../pod-history-page/productOrders';
 
@@ -42,7 +42,7 @@ const ordersMock = (orders: ProductOrder[]) => ({
 
 const renderPage = (mocks: readonly unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       <OrdersHistoryPage />
     </MockedProvider>,
   );

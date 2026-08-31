@@ -178,11 +178,10 @@ describe('AutoPodsPage / cancel an offer', () => {
   it('sends the typed reason, trimmed, and reloads the grid on success', async () => {
     let sentVariables: unknown;
     const mock: MockedResponse = {
-      request: { query: CANCEL_AUTO_POD },
-      variableMatcher: (variables) => {
+      request: { query: CANCEL_AUTO_POD, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: {
         data: {
           cancelAutoPod: {
@@ -210,11 +209,10 @@ describe('AutoPodsPage / cancel an offer', () => {
   it('sends null when no reason was typed', async () => {
     let sentVariables: unknown;
     const mock: MockedResponse = {
-      request: { query: CANCEL_AUTO_POD },
-      variableMatcher: (variables) => {
+      request: { query: CANCEL_AUTO_POD, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: {
         data: {
           cancelAutoPod: { __typename: 'AutoPod', id: 'doc1', stage: 'CANCELLED', cancel_reason: null, cancelled_at: null },
@@ -231,8 +229,7 @@ describe('AutoPodsPage / cancel an offer', () => {
 
   it('notifies with the server error and does not reload the grid when the mutation fails', async () => {
     const mock: MockedResponse = {
-      request: { query: CANCEL_AUTO_POD },
-      variableMatcher: () => true,
+      request: { query: CANCEL_AUTO_POD, variables: () => true },
       result: { errors: [new GraphQLError('This Auto Pod can no longer be cancelled')] },
     };
     renderPage([mock]);

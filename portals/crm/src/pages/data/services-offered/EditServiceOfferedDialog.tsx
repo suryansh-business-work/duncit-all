@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -36,7 +36,7 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
   const [venue, setVenue] = useState(true);
   const [host, setHost] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
-  const [updateMut, { loading }] = useMutation(UPDATE_CRM_SERVICE_OFFERED, {
+  const [updateMut, { loading }] = useMutation<any>(UPDATE_CRM_SERVICE_OFFERED, {
     refetchQueries: [{ query: CRM_SERVICES_OFFERED }],
   });
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -46,14 +46,14 @@ export default function PickupLocationsPanel({
   const noneYet = emptyHint ?? t('products.pickup.emptyHint');
   const brandDocId = owner.brandId ?? null;
   const variables = { owner_kind: owner.owner_kind, brand_doc_id: brandDocId };
-  const { data, loading, error, refetch } = useQuery(BRAND_PICKUP_LOCATIONS, {
+  const { data, loading, error, refetch } = useQuery<any>(BRAND_PICKUP_LOCATIONS, {
     variables,
     fetchPolicy: 'cache-and-network',
   });
-  const [save, { loading: saving }] = useMutation(SAVE_BRAND_PICKUP_LOCATION);
-  const [remove, { loading: removing }] = useMutation(DELETE_BRAND_PICKUP_LOCATION);
-  const [setDefault, { loading: settingDefault }] = useMutation(SET_DEFAULT_BRAND_PICKUP_LOCATION);
-  const [register, { loading: registering }] = useMutation(REGISTER_BRAND_PICKUP_WITH_SHIPROCKET);
+  const [save, { loading: saving }] = useMutation<any>(SAVE_BRAND_PICKUP_LOCATION);
+  const [remove, { loading: removing }] = useMutation<any>(DELETE_BRAND_PICKUP_LOCATION);
+  const [setDefault, { loading: settingDefault }] = useMutation<any>(SET_DEFAULT_BRAND_PICKUP_LOCATION);
+  const [register, { loading: registering }] = useMutation<any>(REGISTER_BRAND_PICKUP_WITH_SHIPROCKET);
 
   const [editing, setEditing] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);

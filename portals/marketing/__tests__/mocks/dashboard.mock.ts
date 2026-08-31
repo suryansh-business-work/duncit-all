@@ -83,8 +83,7 @@ export const marketingDashboardMock = (
   over: Partial<MarketingDashboard> = {},
   opts: { pending?: boolean; failWith?: string } = {},
 ): MockedResponse => ({
-  request: { query: MARKETING_DASHBOARD },
-  variableMatcher: () => true,
+  request: { query: MARKETING_DASHBOARD, variables: () => true },
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : { result: { data: { marketingDashboard: typed(makeMarketingDashboard(over)) } } }),

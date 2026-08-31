@@ -2,7 +2,8 @@ import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { gql } from '@apollo/client';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -158,8 +159,7 @@ const surveysMock = (): MockedResponse => ({
 });
 
 const healthMock = (): MockedResponse => ({
-  request: { query: USER_ACCOUNT_HEALTH },
-  variableMatcher: () => true,
+  request: { query: USER_ACCOUNT_HEALTH, variables: () => true },
   result: {
     data: {
       userAccountHealth: {
@@ -179,8 +179,7 @@ const healthMock = (): MockedResponse => ({
 });
 
 const activityMock = (): MockedResponse => ({
-  request: { query: USER_ACTIVITY_YEAR },
-  variableMatcher: () => true,
+  request: { query: USER_ACTIVITY_YEAR, variables: () => true },
   result: {
     data: {
       userActivityYear: {

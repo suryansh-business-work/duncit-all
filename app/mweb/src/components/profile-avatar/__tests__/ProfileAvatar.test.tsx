@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 import { useEffect } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import ProfileAvatar from '../ProfileAvatar';
 import { MY_STORIES, UPDATE_PROFILE_PHOTO } from '../queries';

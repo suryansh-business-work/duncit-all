@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useSearchParams } from 'react-router-dom';
@@ -20,7 +20,7 @@ export default function CoinTransactionsPage() {
 
   // The ledger is counted in coins; only the joined order total is money, and
   // its symbol is admin-configured rather than assumed.
-  const { data: currencyData } = useQuery(COIN_CURRENCY, { fetchPolicy: 'cache-first' });
+  const { data: currencyData } = useQuery<any>(COIN_CURRENCY, { fetchPolicy: 'cache-first' });
   const currencySymbol = currencyData?.publicFinanceSettings?.currency_symbol ?? '₹';
 
   const fetchTable = useApolloTableFetch<CoinTxnRow>(

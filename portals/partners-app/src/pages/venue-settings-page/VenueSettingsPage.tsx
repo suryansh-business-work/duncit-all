@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -35,10 +35,10 @@ export default function VenueSettingsPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { data, loading, refetch } = useQuery(MY_VENUES_SETTINGS, {
+  const { data, loading, refetch } = useQuery<any>(MY_VENUES_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [saveSettings, saveState] = useMutation(UPDATE_VENUE_CANCELLATION);
+  const [saveSettings, saveState] = useMutation<any>(UPDATE_VENUE_CANCELLATION);
 
   const venues: VenueSettingsVenue[] = data?.myVenues ?? [];
   const selected = venues.find((venue) => venue.id === venueId) ?? null;

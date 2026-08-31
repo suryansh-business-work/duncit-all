@@ -5,7 +5,7 @@
  * pod's page, with the pod locked. Same dialog on purpose — two copies would be
  * two answers to "what does this code do".
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';

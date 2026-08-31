@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DuncitButton } from '@duncit/buttons';
@@ -23,8 +23,8 @@ export default function EventTicketsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [token, setToken] = useState('');
   const [verifyResult, setVerifyResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [verifyQr] = useMutation(VERIFY_EVENT_TICKET);
-  const [checkIn, checkInState] = useMutation(CHECK_IN_EVENT_TICKET);
+  const [verifyQr] = useMutation<any>(VERIFY_EVENT_TICKET);
+  const [checkIn, checkInState] = useMutation<any>(CHECK_IN_EVENT_TICKET);
   // The multi-seat ticket whose group still needs naming, if any.
   const [group, setGroup] = useState<{ ticket: EventTicketRow; required: number } | null>(null);
 
@@ -32,7 +32,7 @@ export default function EventTicketsPage() {
 
   const onDownload = async (t: EventTicketRow) => {
     try {
-      const res = await client.query({ query: EVENT_TICKET_PDF, variables: { id: t.id }, fetchPolicy: 'no-cache' });
+      const res = await client.query<any>({ query: EVENT_TICKET_PDF, variables: { id: t.id }, fetchPolicy: 'no-cache' });
       downloadBase64File(res.data.eventTicketPdfBase64, `ticket-${t.ticket_code}.pdf`, 'application/pdf');
     } catch (e: any) {
       notifyError(e.message ?? 'Could not download ticket');

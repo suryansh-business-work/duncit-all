@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -27,9 +27,9 @@ import { useTranslation } from '@duncit/shell';
 /** Locales — the languages/country locales the platform can render in. */
 export default function LocalesPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(LOCALES, { fetchPolicy: 'cache-and-network' });
-  const [upsert] = useMutation(UPSERT_LOCALE, { refetchQueries: ['Locales'] });
-  const [remove] = useMutation(DELETE_LOCALE, { refetchQueries: ['Locales'] });
+  const { data, loading, error } = useQuery<any>(LOCALES, { fetchPolicy: 'cache-and-network' });
+  const [upsert] = useMutation<any>(UPSERT_LOCALE, { refetchQueries: ['Locales'] });
+  const [remove] = useMutation<any>(DELETE_LOCALE, { refetchQueries: ['Locales'] });
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<LocaleRow | null>(null);

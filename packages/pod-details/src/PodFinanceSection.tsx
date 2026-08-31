@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
 import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
@@ -42,7 +42,7 @@ function SummaryRow({ label, value }: Readonly<{ label: string; value: string | 
 /** "Finance" card on the pod detail page: settlement status + money waterfall. */
 export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(POD_FINANCE_BREAKDOWN, {
+  const { data, loading, error } = useQuery<any>(POD_FINANCE_BREAKDOWN, {
     variables: { pod_id: podId },
     skip: !podId,
     fetchPolicy: 'cache-and-network',

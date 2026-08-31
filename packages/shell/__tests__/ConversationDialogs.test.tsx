@@ -3,7 +3,7 @@
  * picker and the clear-conversation confirm — grouped here only because none
  * of it belongs to the thread's own layout.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -42,7 +42,7 @@ export default function AdjustHealthDialog({
   const [magnitude, setMagnitude] = useState<number>(5);
   const [remark, setRemark] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [save, { loading }] = useMutation(ADJUST_HEALTH);
+  const [save, { loading }] = useMutation<any>(ADJUST_HEALTH);
 
   useEffect(() => {
     if (open) {

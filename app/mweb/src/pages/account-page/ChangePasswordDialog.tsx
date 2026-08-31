@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -31,8 +31,8 @@ export default function ChangePasswordDialog({ open, onClose, onChanged }: Reado
   const [step, setStep] = useState<1 | 2>(1);
   const [currentPassword, setCurrentPassword] = useState('');
   const [info, setInfo] = useState<string | null>(null);
-  const [requestOtp, { loading: requesting }] = useMutation(REQUEST_PASSWORD_CHANGE_OTP);
-  const [changePassword, { loading: changing }] = useMutation(CHANGE_PASSWORD_WITH_OTP);
+  const [requestOtp, { loading: requesting }] = useMutation<any>(REQUEST_PASSWORD_CHANGE_OTP);
+  const [changePassword, { loading: changing }] = useMutation<any>(CHANGE_PASSWORD_WITH_OTP);
 
   const close = () => {
     setStep(1);

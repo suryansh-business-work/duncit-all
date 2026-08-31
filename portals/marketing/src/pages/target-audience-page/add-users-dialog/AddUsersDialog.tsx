@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -60,7 +60,7 @@ export default function AddUsersDialog({ open, listId, onClose, onAdded }: Reado
     skip: !open,
   });
 
-  const [addMembers, { loading: saving }] = useMutation(ADD_AUDIENCE_LIST_MEMBERS);
+  const [addMembers, { loading: saving }] = useMutation<any>(ADD_AUDIENCE_LIST_MEMBERS);
 
   // A new search starts at the first page; staying on page 4 of the old result
   // would show an empty list for a search that does have matches.

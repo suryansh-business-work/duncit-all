@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { USER_SURVEY_RESPONSES, type SurveyKind, type UserSurveyResponse } from './queries';
 import { useTranslation } from '@duncit/app-settings';

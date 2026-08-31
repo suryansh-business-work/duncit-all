@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Chip, Stack, TableCell, TableRow, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -29,7 +29,7 @@ interface Props {
 /** One website-page row with its own "Fetch content" action + view/delete. */
 export default function WebsitePageRow({ page, onView, onDelete, onError }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [fetchContent, { loading }] = useMutation(FETCH_CRM_WEBSITE_PAGE_CONTENT);
+  const [fetchContent, { loading }] = useMutation<any>(FETCH_CRM_WEBSITE_PAGE_CONTENT);
   const fetched = page.status === 'FETCHED';
 
   const run = async () => {

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
@@ -38,7 +38,7 @@ export default function AiMonitoringSettingsPage() {
   const { data, loading, error } = useQuery<Data>(AI_MONITORING_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save, { loading: saving }] = useMutation(UPDATE_AI_MONITORING_SETTINGS);
+  const [save, { loading: saving }] = useMutation<any>(UPDATE_AI_MONITORING_SETTINGS);
 
   const settings = data?.aiMonitoringSettings;
   const initialValues = useMemo(

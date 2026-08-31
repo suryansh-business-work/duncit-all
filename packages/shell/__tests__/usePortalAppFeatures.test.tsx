@@ -3,7 +3,7 @@
  * Fails open — a server blip or an unregistered portal must not silently
  * strip the chat/apps buttons.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';

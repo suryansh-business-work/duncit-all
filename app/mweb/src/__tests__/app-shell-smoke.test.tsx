@@ -10,7 +10,7 @@
  * The routed page underneath is React.lazy, so what is asserted here is the
  * chrome around the Suspense boundary rather than the page inside it.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';

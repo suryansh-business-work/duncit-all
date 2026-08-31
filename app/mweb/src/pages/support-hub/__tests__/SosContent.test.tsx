@@ -16,7 +16,8 @@
  *  - Once one is live the screen stops offering another and reports the state of
  *    the one already out — awaiting response, or acknowledged by the team.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -36,8 +37,7 @@ const POD: SupportPodOption = {
 };
 
 const activeSos = (status: 'PENDING' | 'ACKNOWLEDGED' | null): MockedResponse => ({
-  request: { query: MY_ACTIVE_SOS },
-  variableMatcher: () => true,
+  request: { query: MY_ACTIVE_SOS, variables: () => true },
   result: {
     data: {
       myActiveBouncerSos: status
@@ -55,8 +55,7 @@ const activeSos = (status: 'PENDING' | 'ACKNOWLEDGED' | null): MockedResponse =>
 });
 
 const raiseOk: MockedResponse = {
-  request: { query: RAISE_SOS },
-  variableMatcher: () => true,
+  request: { query: RAISE_SOS, variables: () => true },
   result: {
     data: {
       raiseBouncerSos: {
@@ -71,8 +70,7 @@ const raiseOk: MockedResponse = {
 };
 
 const raiseFails: MockedResponse = {
-  request: { query: RAISE_SOS },
-  variableMatcher: () => true,
+  request: { query: RAISE_SOS, variables: () => true },
   error: new Error('The alert could not be sent'),
   maxUsageCount: Number.POSITIVE_INFINITY,
 };
@@ -87,7 +85,7 @@ const settle = async () => {
 
 const sos = (selected: SupportPodOption | null, mocks: MockedResponse[] = [activeSos(null), raiseOk]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <SosContent selected={selected} />
       </ThemeProvider>

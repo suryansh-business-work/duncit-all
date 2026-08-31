@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Autocomplete, Box, Chip, Divider, Stack, TextField, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -86,8 +86,8 @@ export default function FileDetailsView({
   const setTab = tabs.onChange;
   const [name, setName] = useState(file.name);
   const [tags, setTags] = useState<string[]>(file.tags);
-  const [rename, renameState] = useMutation(RENAME_MEDIA_FILE);
-  const [update, updateState] = useMutation(UPDATE_MEDIA_FILE);
+  const [rename, renameState] = useMutation<any>(RENAME_MEDIA_FILE);
+  const [update, updateState] = useMutation<any>(UPDATE_MEDIA_FILE);
 
   useEffect(() => {
     setTab('info');

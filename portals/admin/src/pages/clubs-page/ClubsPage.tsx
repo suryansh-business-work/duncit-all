@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useConfirm, notifyError } from '@duncit/dialogs';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -19,8 +19,8 @@ export default function ClubsPage() {
   const legacyEditId = params.get('edit') ?? '';
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const { data: catData } = useQuery(CATEGORIES);
-  const [deleteMut] = useMutation(DELETE);
+  const { data: catData } = useQuery<any>(CATEGORIES);
+  const [deleteMut] = useMutation<any>(DELETE);
   const confirm = useConfirm();
 
   const [toast, setToast] = useState<string | null>(null);

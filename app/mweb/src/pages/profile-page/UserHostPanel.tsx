@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -119,7 +120,7 @@ function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
 
 export default function UserHostPanel() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_HOST, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(MY_HOST, { fetchPolicy: 'cache-and-network' });
   const host = data?.myHost;
   const myUserId: string | undefined = data?.me?.user_id || host?.user_id;
   const isHost = (data?.me?.roles ?? []).includes('HOST');
@@ -127,7 +128,7 @@ export default function UserHostPanel() {
   const completed = Math.min(host?.step_completed ?? 0, 4);
   const labels = ['Profile', 'Docs', 'Skills', 'Submit'];
 
-  const podsQuery = useQuery(HOST_PODS, {
+  const podsQuery = useQuery<any>(HOST_PODS, {
     variables: { host_user_id: myUserId },
     skip: !isApproved || !myUserId,
     fetchPolicy: 'cache-and-network',

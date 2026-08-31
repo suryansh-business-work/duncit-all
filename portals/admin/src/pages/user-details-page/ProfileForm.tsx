@@ -21,7 +21,7 @@ interface Props {
 
 export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, setValue, watch, formState } = useForm<EditForm>({
+  const { control, handleSubmit, reset, setValue, watch, formState } = useForm<EditForm, any, EditForm>({
     defaultValues: form,
     resolver: zodResolver(userProfileSchema),
     mode: 'onChange',

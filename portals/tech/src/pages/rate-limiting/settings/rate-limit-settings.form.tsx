@@ -74,7 +74,7 @@ export default function RateLimitSettingsForm({
       }),
     [t],
   );
-  const { control, handleSubmit, reset } = useForm<Values>({
+  const { control, handleSubmit, reset } = useForm<Values, any, Values>({
     resolver: zodResolver(schema),
     defaultValues: toSettingsForm(settings),
   });

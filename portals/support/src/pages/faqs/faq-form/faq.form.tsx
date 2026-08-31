@@ -70,7 +70,7 @@ export default function FaqForm({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<FaqFormValues>({
+  const { control, handleSubmit, reset } = useForm<FaqFormValues, any, FaqFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(buildFaqSchema(t, !categoryEmptyLabel)),
     mode: 'onTouched',

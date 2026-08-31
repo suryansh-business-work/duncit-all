@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useTranslation } from './useTranslation';
 
 const SET_MY_LOCALE = gql`
@@ -33,7 +34,7 @@ export interface LocalePreference {
  */
 export function useLocalePreference(): LocalePreference {
   const { t, locale, locales, setLocale } = useTranslation();
-  const [save] = useMutation(SET_MY_LOCALE);
+  const [save] = useMutation<any>(SET_MY_LOCALE);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 

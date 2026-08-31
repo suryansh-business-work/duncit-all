@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';

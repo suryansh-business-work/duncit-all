@@ -42,7 +42,7 @@ export function useAttendanceOtp(
   row: PodAttendanceRow | null,
   labels: PodAttendanceLabels,
 ) {
-  const form = useForm<AttendanceOtpValues>({
+  const form = useForm<AttendanceOtpValues, any, AttendanceOtpValues>({
     resolver: zodResolver(buildAttendanceOtpSchema(labels)),
     defaultValues: attendanceOtpInitialValues(row),
   });

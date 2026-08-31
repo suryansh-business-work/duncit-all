@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
@@ -39,7 +39,7 @@ export default function UserLeadsPage() {
   const [toast, setToast] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [importLeads, importState] = useMutation(WA_IMPORT_USER_LEADS);
+  const [importLeads, importState] = useMutation<any>(WA_IMPORT_USER_LEADS);
 
   const bumpAll = () => {
     refetchRef.current?.();
@@ -48,7 +48,7 @@ export default function UserLeadsPage() {
 
   const fetchRows = useCallback(
     async (q: TableQueryState) => {
-      const { data } = await client.query({
+      const { data } = await client.query<any>({
         query: WA_USER_LEADS,
         variables: {
           input: { search: q.search || null, page: q.page, page_size: q.pageSize, sort_by: q.sortBy, sort_dir: q.sortDir },
@@ -71,7 +71,7 @@ export default function UserLeadsPage() {
 
   // The table's search box is internal to DuncitTable now, so the xlsx export always covers all leads.
   const onExport = async () => {
-    const res = await client.query({
+    const res = await client.query<any>({
       query: WA_EXPORT_USER_LEADS,
       variables: { search: null },
       fetchPolicy: 'network-only',

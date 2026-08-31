@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Skeleton, Stack } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';

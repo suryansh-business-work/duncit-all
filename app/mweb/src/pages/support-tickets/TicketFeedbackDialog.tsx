@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import EmojiFeedbackDialog from '../support-chat/EmojiFeedbackDialog';
 import { SUBMIT_TICKET_FEEDBACK } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -24,7 +24,7 @@ export default function TicketFeedbackDialog({
   onSubmitted,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [submit, { loading }] = useMutation(SUBMIT_TICKET_FEEDBACK);
+  const [submit, { loading }] = useMutation<any>(SUBMIT_TICKET_FEEDBACK);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (value: number, note: string) => {

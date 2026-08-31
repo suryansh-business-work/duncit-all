@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogTitle } from '@mui/material';
 import CreateTemplateForm from './CreateTemplateForm';
 import { CREATE, STARTER } from './queries';
@@ -13,7 +13,7 @@ interface Props {
 
 export default function CreateTemplateDialog({ open, onClose, onCreated, onError }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [createTpl] = useMutation(CREATE);
+  const [createTpl] = useMutation<any>(CREATE);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">

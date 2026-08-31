@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   AlertTitle,
@@ -58,11 +58,11 @@ export default function DeletionNoticeDialog() {
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(alreadySeen);
   const [error, setError] = useState<string | null>(null);
-  const { data, refetch } = useQuery(MY_ACCOUNT_DELETION_REQUEST, {
+  const { data, refetch } = useQuery<any>(MY_ACCOUNT_DELETION_REQUEST, {
     fetchPolicy: 'cache-and-network',
     skip: dismissed,
   });
-  const [cancelRequest, { loading: cancelling }] = useMutation(CANCEL_MY_ACCOUNT_DELETION_REQUEST);
+  const [cancelRequest, { loading: cancelling }] = useMutation<any>(CANCEL_MY_ACCOUNT_DELETION_REQUEST);
 
   const pending: PendingRequest | null = data?.myAccountDeletionRequest ?? null;
 

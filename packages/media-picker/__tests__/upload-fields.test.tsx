@@ -8,7 +8,7 @@
  * (N+1)th and failing at the server.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 // Deep import through @duncit/tabs' own node_modules on purpose: this package

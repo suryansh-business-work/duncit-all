@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { useSearchParams } from 'react-router-dom';
@@ -16,7 +16,7 @@ export default function CoinDashboardPage() {
   const [params, setParams] = useSearchParams();
   const months = Number(params.get('months')) || 12;
 
-  const { data, loading, error } = useQuery(COIN_ADMIN_STATS, {
+  const { data, loading, error } = useQuery<any>(COIN_ADMIN_STATS, {
     variables: { months },
     fetchPolicy: 'cache-and-network',
   });

@@ -57,7 +57,7 @@ interface Props {
 /** Create/edit one navigation link for a marketing website. */
 export default function NavItemDialog({ open, item, defaultSite, onClose, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
-  const form = useForm<NavItemValues>({
+  const form = useForm<NavItemValues, any, NavItemValues>({
     resolver: zodResolver(navItemSchema),
     defaultValues: blankValues,
     mode: 'onBlur',

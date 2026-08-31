@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import type { Path, UseFormSetError } from 'react-hook-form';
 import type { BlockedViolation } from '@duncit/ui';
 import type { ProductListingValues } from './list-products.types';
@@ -30,7 +31,7 @@ interface CheckArgs {
  * submit; on violations it sets inline RHF errors, jumps to the earliest
  * offending step and surfaces the blocked-dialog list. Returns whether clean. */
 export function useProductModeration(stepTitles: string[]) {
-  const [moderate, { loading }] = useMutation(MODERATE_PRODUCT_CONTENT);
+  const [moderate, { loading }] = useMutation<any>(MODERATE_PRODUCT_CONTENT);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
 
   const check = useCallback(

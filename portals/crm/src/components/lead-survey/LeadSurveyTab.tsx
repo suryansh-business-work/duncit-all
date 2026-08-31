@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -56,9 +56,9 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
     variables: { entity, lead_id: leadId, category_id: categoryId || null, sub_category_id: subCategoryId || null },
     fetchPolicy: 'cache-and-network',
   });
-  const [generate, { loading: generating }] = useMutation(GENERATE_LEAD_SURVEY_LINK);
-  const [revoke, { loading: revoking }] = useMutation(REVOKE_LEAD_SURVEY_LINK);
-  const [del, { loading: deleting }] = useMutation(DELETE_LEAD_SURVEY_ENTRY);
+  const [generate, { loading: generating }] = useMutation<any>(GENERATE_LEAD_SURVEY_LINK);
+  const [revoke, { loading: revoking }] = useMutation<any>(REVOKE_LEAD_SURVEY_LINK);
+  const [del, { loading: deleting }] = useMutation<any>(DELETE_LEAD_SURVEY_ENTRY);
 
   const survey = data?.leadSurvey?.survey ?? null;
   const entries = data?.leadSurvey?.entries ?? [];

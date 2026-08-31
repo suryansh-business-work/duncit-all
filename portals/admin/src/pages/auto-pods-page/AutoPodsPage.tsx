@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -35,8 +35,8 @@ export default function AutoPodsPage() {
   const cancelReasonRef = useRef('');
 
   const labels = useMemo(() => shellAutoPodLabels(t), [t]);
-  const [cancelMutation] = useMutation(CANCEL_AUTO_POD);
-  const [deleteMutation] = useMutation(DELETE_AUTO_POD);
+  const [cancelMutation] = useMutation<any>(CANCEL_AUTO_POD);
+  const [deleteMutation] = useMutation<any>(DELETE_AUTO_POD);
 
   const setCancelReason = useCallback((value: string) => {
     cancelReasonRef.current = value;

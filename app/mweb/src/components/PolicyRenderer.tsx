@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
 import 'react-quill/dist/quill.snow.css';
 import PolicyPdfButton from './PolicyPdfButton';
@@ -33,7 +34,7 @@ interface PolicyRendererProps {
  * NOTE: HTML comes from a trusted admin-only authoring surface.
  */
 export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonly<PolicyRendererProps>) {
-  const { data, loading, error } = useQuery(POLICY_BY_SLUG, {
+  const { data, loading, error } = useQuery<any>(POLICY_BY_SLUG, {
     variables: { slug },
     fetchPolicy: 'cache-and-network',
   });

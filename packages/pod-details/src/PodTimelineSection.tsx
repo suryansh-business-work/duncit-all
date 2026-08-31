@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import type { StatusColorMap } from '@duncit/ui';
@@ -50,7 +50,7 @@ interface Props {
 export default function PodTimelineSection({ pod }: Readonly<Props>) {
   const { t } = useTranslation();
   const scopeDocs = usePodDetailsScope();
-  const { data, loading, error } = useQuery(scopeDocs.auditTrail, {
+  const { data, loading, error } = useQuery<any>(scopeDocs.auditTrail, {
     variables: { id: pod.id },
     fetchPolicy: 'cache-and-network',
   });

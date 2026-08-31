@@ -18,7 +18,8 @@
  * rather than a real button, so Enter and Space are wired by hand and are
  * exactly the kind of thing that silently stops working.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -35,20 +36,17 @@ const testTheme = createTheme();
 
 const answering: MockedResponse[] = [
   {
-    request: { query: ANSWER_FOLLOW_REQUEST },
-    variableMatcher: () => true,
+    request: { query: ANSWER_FOLLOW_REQUEST, variables: () => true },
     result: { data: { answerFollowRequest: { id: 'fr-1', status: 'ACCEPTED' } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: REJECT_FOLLOW_REQUEST },
-    variableMatcher: () => true,
+    request: { query: REJECT_FOLLOW_REQUEST, variables: () => true },
     result: { data: { rejectFollowRequest: { id: 'fr-1', status: 'DENIED' } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: FOLLOW_USER },
-    variableMatcher: () => true,
+    request: { query: FOLLOW_USER, variables: () => true },
     result: { data: { followUser: { id: 'u-peer', follow_status: 'REQUESTED' } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -56,8 +54,7 @@ const answering: MockedResponse[] = [
 
 const refusing: MockedResponse[] = [
   {
-    request: { query: ANSWER_FOLLOW_REQUEST },
-    variableMatcher: () => true,
+    request: { query: ANSWER_FOLLOW_REQUEST, variables: () => true },
     error: new Error('That request has already been answered'),
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -73,7 +70,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode, mocks: MockedResponse[] = answering) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );

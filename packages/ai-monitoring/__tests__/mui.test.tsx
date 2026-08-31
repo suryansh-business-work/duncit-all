@@ -6,7 +6,7 @@
  * it. The dialog is pure presentation of the copy the caller resolved, which is
  * what keeps the MUI and Tamagui halves saying the same sentences.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';

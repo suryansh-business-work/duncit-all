@@ -36,7 +36,7 @@ export default function LoginForm({
   const [showPwd, setShowPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeLoginSchema(t), [t]);
-  const { control, handleSubmit } = useForm<LoginFormValues>({
+  const { control, handleSubmit } = useForm<LoginFormValues, any, LoginFormValues>({
     defaultValues: initialValues ?? loginDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

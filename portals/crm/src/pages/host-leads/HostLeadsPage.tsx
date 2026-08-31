@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -34,7 +34,7 @@ export default function HostLeadsPage() {
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<HostLead | null>(null);
 
-  const [deleteLead, { loading: deleting }] = useMutation(DELETE_HOST_LEAD);
+  const [deleteLead, { loading: deleting }] = useMutation<any>(DELETE_HOST_LEAD);
 
   const fetchRows = useApolloTableFetch<HostLead>(client, HOST_LEADS_TABLE, 'hostLeadsTable');
 

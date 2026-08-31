@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ShopPage from '../index';
@@ -60,7 +61,7 @@ const categoriesMock: MockedResponse = {
 
 function renderPage(mocks: MockedResponse[] = [productsMock, categoriesMock]) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <CartProvider>
         <MemoryRouter initialEntries={['/shop']}>
           <ShopPage />

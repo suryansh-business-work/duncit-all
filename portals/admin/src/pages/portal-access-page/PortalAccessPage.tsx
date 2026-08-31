@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import LockPersonIcon from '@mui/icons-material/LockPerson';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
@@ -29,8 +29,8 @@ export default function PortalAccessPage() {
 
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [approveMut] = useMutation(APPROVE_PORTAL_ACCESS);
-  const [denyMut] = useMutation(DENY_PORTAL_ACCESS);
+  const [approveMut] = useMutation<any>(APPROVE_PORTAL_ACCESS);
+  const [denyMut] = useMutation<any>(DENY_PORTAL_ACCESS);
 
   // The whole page is one request type; the status toggle narrows it further.
   const fetchRows = useApolloTableFetch<PortalAccessRequest>(

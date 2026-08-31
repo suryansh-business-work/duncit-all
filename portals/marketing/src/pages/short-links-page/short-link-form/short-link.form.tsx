@@ -29,7 +29,7 @@ export default function ShortLinkForm({
   onSubmit,
 }: Readonly<ShortLinkFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, formState } = useForm<ShortLinkFormValues>({
+  const { control, handleSubmit, formState } = useForm<ShortLinkFormValues, any, ShortLinkFormValues>({
     defaultValues: blankShortLinkValues(),
     resolver: zodResolver(shortLinkSchema(t)),
     mode: 'onChange',

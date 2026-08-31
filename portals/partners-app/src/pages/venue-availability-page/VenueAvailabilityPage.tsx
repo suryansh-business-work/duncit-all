@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Card, CardContent, CircularProgress, Stack } from '@mui/material';
 import { addDays, format, startOfDay } from 'date-fns';
@@ -38,7 +38,7 @@ export default function VenueAvailabilityPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [recurringOpen, setRecurringOpen] = useState(false);
 
-  const { data: venuesData } = useQuery(MY_VENUES, { fetchPolicy: 'cache-first' });
+  const { data: venuesData } = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
   const venue = (venuesData?.myVenues ?? []).find((v: any) => v.id === venueId);
   const isApproved = venue?.status === 'APPROVED';
   const venueHolidays: string[] = venue?.settings?.holidays ?? [];
@@ -55,9 +55,9 @@ export default function VenueAvailabilityPage() {
     skip: !venueId,
   });
 
-  const [createSlots] = useMutation(CREATE_VENUE_SLOTS);
-  const [updateSlot] = useMutation(UPDATE_VENUE_SLOT);
-  const [deleteSlot] = useMutation(DELETE_VENUE_SLOT);
+  const [createSlots] = useMutation<any>(CREATE_VENUE_SLOTS);
+  const [updateSlot] = useMutation<any>(UPDATE_VENUE_SLOT);
+  const [deleteSlot] = useMutation<any>(DELETE_VENUE_SLOT);
 
   // REPLACE only ever arrives after the drawer's overwrite warning; FAIL keeps
   // an accidental clash a refusal rather than a silent deletion.

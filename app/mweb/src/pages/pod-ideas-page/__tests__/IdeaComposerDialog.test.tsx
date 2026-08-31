@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import IdeaComposerDialog from '../IdeaComposerDialog';
 import { EMPTY_CATEGORY_SCOPE, type CategoryScope } from '../CategoryCascade';
@@ -39,7 +39,7 @@ const baseProps: Props = {
 
 const renderDialog = (over: Partial<Props> = {}) =>
   render(
-    <MockedProvider mocks={[superMock]} addTypename={false}>
+    <MockedProvider mocks={[superMock]}>
       <IdeaComposerDialog {...baseProps} {...over} />
     </MockedProvider>,
   );

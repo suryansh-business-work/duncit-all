@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import PricePanel, {
@@ -90,7 +90,7 @@ const venueMocks = [
 
 function setup(podAmount: number, noOfSpots = 0) {
   return render(
-    <MockedProvider mocks={venueMocks} addTypename={false}>
+    <MockedProvider mocks={venueMocks}>
       <Harness slotPrice={300} podAmount={podAmount} noOfSpots={noOfSpots} venueId="v1" isPhysical />
     </MockedProvider>,
   );
@@ -234,7 +234,6 @@ describe('PricePanel (auditable earnings statement)', () => {
             result: { data: { potentialPodEarnings: clubProjection } },
           },
         ]}
-        addTypename={false}
       >
         <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical />
       </MockedProvider>,
@@ -263,7 +262,6 @@ describe('PricePanel (auditable earnings statement)', () => {
             result: { data: { potentialPodEarnings: onlineProjection } },
           },
         ]}
-        addTypename={false}
       >
         <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical={false} />
       </MockedProvider>,

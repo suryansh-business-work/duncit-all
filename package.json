@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Full Stack Monorepo (React + GraphQL + Node.js)",
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@11.24.0",
   "scripts": {
     "deps:check": "node scripts/deps.mjs check --all",
     "deps:update": "node scripts/deps.mjs update --all",
@@ -113,29 +113,15 @@
     "dup:update": "node scripts/verify-duplication.mjs --update"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/coverage-v8": "^4.1.11",
     "husky": "^9.1.7",
-    "jscpd": "4.3.0",
-    "lint-staged": "^15.5.2",
+    "jscpd": "5.1.0",
+    "lint-staged": "^17.4.1",
     "npm-check-updates": "^23.1.0",
-    "typescript": "^5.9.3",
-    "vitest": "^1.6.1"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md,yml,yaml}": []
-  },
-  "pnpm": {
-    "neverBuiltDependencies": [
-      "mongodb-memory-server"
-    ],
-    "overrides": {
-      "vitest": "1.6.1",
-      "@vitest/coverage-v8": "1.6.1",
-      "@vitest/expect": "1.6.1",
-      "@vitest/spy": "1.6.1",
-      "@vitest/utils": "1.6.1",
-      "@vitest/runner": "1.6.1",
-      "@vitest/snapshot": "1.6.1"
-    }
   }
 }

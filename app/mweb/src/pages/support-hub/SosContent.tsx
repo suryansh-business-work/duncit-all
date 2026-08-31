@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, Paper, Stack, TextField, Typography } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -46,14 +46,14 @@ export default function SosContent({ selected }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const { data, refetch } = useQuery(MY_ACTIVE_SOS, {
+  const { data, refetch } = useQuery<any>(MY_ACTIVE_SOS, {
     variables: { pod_id: selected?.podDocId ?? '' },
     skip: !selected,
     fetchPolicy: 'cache-and-network',
   });
   const active = data?.myActiveBouncerSos ?? null;
 
-  const [raise, { loading }] = useMutation(RAISE_SOS);
+  const [raise, { loading }] = useMutation<any>(RAISE_SOS);
 
   const handleRaise = async () => {
     if (!selected) return;

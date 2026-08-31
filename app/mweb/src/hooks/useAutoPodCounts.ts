@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { AUTO_POD_ACTION_COUNTS } from '@duncit/auto-pods';
 import type { AutoPodActionCounts } from '@duncit/utils';
 import { useFeatureFlag } from './useFeatureFlag';

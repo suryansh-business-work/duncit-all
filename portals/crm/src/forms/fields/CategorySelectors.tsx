@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Autocomplete, Skeleton, Stack, TextField } from '@mui/material';
 import { CATEGORIES_BY_PARENT, CATEGORIES_BY_LEVEL, type CategoryOption } from '../../api/data.gql';
 import { useTranslation } from '@duncit/shell';

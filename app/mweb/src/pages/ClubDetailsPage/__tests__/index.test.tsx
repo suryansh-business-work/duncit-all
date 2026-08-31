@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ClubDetailsPage from '../index';
 import { CLUB_BY_SLUG, CLUB_DETAILS_RELATED, CATEGORY_TREE } from '../clubDetailsQueries';
@@ -134,7 +134,7 @@ function relatedMock(overrides: Partial<{ error: boolean }> = {}) {
 
 function renderPage(mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <MemoryRouter initialEntries={['/club/chess']}>
         <Routes>
           <Route path="/club/:clubSlug" element={<ClubDetailsPage />} />

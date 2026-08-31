@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
@@ -30,7 +30,7 @@ interface Props {
 export default function LikesListDialog({ open, onClose, userIds }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading } = useQuery(POD_LIKERS, {
+  const { data, loading } = useQuery<any>(POD_LIKERS, {
     variables: { ids: userIds },
     skip: !open || userIds.length === 0,
     fetchPolicy: 'cache-and-network',

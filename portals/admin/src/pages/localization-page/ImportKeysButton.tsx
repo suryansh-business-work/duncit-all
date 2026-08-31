@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Tooltip } from '@mui/material';
 import DownloadingIcon from '@mui/icons-material/Downloading';
 import { DuncitButton } from '@duncit/buttons';
@@ -23,7 +23,7 @@ interface Props {
 export default function ImportKeysButton({ defaultLocale, onDone, onError }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
-  const [importKeys] = useMutation(IMPORT_TRANSLATION_KEYS);
+  const [importKeys] = useMutation<any>(IMPORT_TRANSLATION_KEYS);
   const [busy, setBusy] = useState(false);
 
   const run = async () => {

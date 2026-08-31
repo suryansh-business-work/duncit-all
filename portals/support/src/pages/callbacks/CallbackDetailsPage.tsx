@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -32,8 +32,8 @@ export default function CallbackDetailsPage() {
     BOUNCER_CALLBACK_REQUEST,
     { variables: { id }, fetchPolicy: 'cache-and-network', skip: !id }
   );
-  const [markContacted] = useMutation(MARK_CALLBACK_CONTACTED, { onCompleted: () => refetch() });
-  const [closeCb] = useMutation(CLOSE_CALLBACK, { onCompleted: () => refetch() });
+  const [markContacted] = useMutation<any>(MARK_CALLBACK_CONTACTED, { onCompleted: () => refetch() });
+  const [closeCb] = useMutation<any>(CLOSE_CALLBACK, { onCompleted: () => refetch() });
   const [busy, setBusy] = useState(false);
   const [durationMin, setDurationMin] = useState('');
   const [conclusion, setConclusion] = useState('');

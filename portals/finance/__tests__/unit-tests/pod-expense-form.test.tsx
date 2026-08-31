@@ -59,7 +59,7 @@ const EVERY_ERROR: readonly FieldError[] = [
  * is to put one there.
  */
 function FieldsHarness({ errors }: Readonly<{ errors: readonly FieldError[] }>) {
-  const { control, setError } = useForm<PodExpenseFormValues>({
+  const { control, setError } = useForm<PodExpenseFormValues, any, PodExpenseFormValues>({
     defaultValues: toFormValues(null),
   });
   useEffect(() => {

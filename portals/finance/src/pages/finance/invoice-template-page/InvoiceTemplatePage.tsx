@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -24,8 +24,8 @@ const BLANK = { label: '', terms: '', footer: '', note: '' };
 
 export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(INVOICE_TEMPLATES, { fetchPolicy: 'cache-and-network' });
-  const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_TEMPLATE);
+  const { data, loading, refetch } = useQuery<any>(INVOICE_TEMPLATES, { fetchPolicy: 'cache-and-network' });
+  const [updateMut, { loading: saving }] = useMutation<any>(UPDATE_INVOICE_TEMPLATE);
   const [form, setForm] = useState(BLANK);
   const [error, setError] = useState<string | null>(null);
   const meta = KIND_META[kind];

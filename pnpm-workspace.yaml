@@ -25,3 +25,48 @@ packages:
   - website/earnwith-website
   - docs-site
   - packages/*
+
+# pnpm 10 stopped running dependency install scripts unless they are named
+# here. Every one below either downloads the binary it IS (esbuild, cypress,
+# ffmpeg-static) or builds a native binding, so a blocked script does not fail
+# the install — it fails later, at the first vite build or the first image
+# upload, pointing at the wrong thing.
+allowBuilds:
+  '@apollo/protobufjs': true
+  '@parcel/watcher': true
+  cypress: true
+  esbuild: true
+  ffmpeg-static: true
+  # The one deliberate NO, carried over from the old neverBuiltDependencies:
+  # its postinstall downloads a mongod binary, and the suites that need one
+  # fetch it themselves at run time.
+  mongodb-memory-server: false
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - jscpd@5.1.0
+
+# pnpm 10 moved these out of package.json's "pnpm" field. pnpm 11 does not read
+# that field at all — it only WARNS that it ignored it — so an override left
+# behind there is silently not applied. Both settings below were in package.json
+# until the pnpm 9 -> 11 move and mean exactly what they meant there.
+
+# One vitest across the monorepo. Fifty workspaces declare it and its coverage
+# provider; without a single resolved version, two copies disagree about the
+# runner API and a suite fails in a way that points at neither.
+overrides:
+  # One Apollo client and one graphql in the tree. Several packages declare the
+  # client as a loose peer (">=3"), and a loose range is how a SECOND copy gets
+  # in: hooks then read a context the provider never created. graphql is pinned
+  # for the same reason, at the 16 line @apollo/server and graphql-ws require.
+  '@apollo/client': 4.2.12
+  graphql: 16.14.0
+  vitest: 4.1.11
+  '@vitest/coverage-v8': 4.1.11
+  '@vitest/expect': 4.1.11
+  '@vitest/spy': 4.1.11
+  '@vitest/utils': 4.1.11
+  '@vitest/runner': 4.1.11
+  '@vitest/snapshot': 4.1.11

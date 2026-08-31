@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { FinanceWaterfallList } from '@duncit/ui';
 import AttendanceRoster from './AttendanceRoster';
@@ -61,7 +61,7 @@ export default function SettlementPreview({
     return () => clearTimeout(timer);
   }, [venueBillAmount]);
 
-  const { data, loading, error, refetch } = useQuery(POD_SETTLEMENT_PREVIEW, {
+  const { data, loading, error, refetch } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
     variables: { pod_id: podId, venue_bill_amount: amount },
     fetchPolicy: 'cache-and-network',
   });
@@ -78,8 +78,9 @@ export default function SettlementPreview({
     if (!settlement) {
       if (loading) return <CircularProgress size={18} />;
       // Show the server's reason instead of silently hiding the calculation.
-      const reason =
-        error?.graphQLErrors[0]?.message ?? error?.message ?? labels.sharePreviewHint;
+      // Apollo 4 hands back ONE error whose message already carries the server's
+      // reason (a GraphQL failure arrives as CombinedGraphQLErrors, formatted).
+      const reason = error?.message ?? labels.sharePreviewHint;
       return (
         <Typography
           variant="caption"

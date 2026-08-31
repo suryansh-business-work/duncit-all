@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -145,7 +145,7 @@ const draftMock = (draftId: string) => ({
 
 const renderPage = (mocks: any[], entry = '/create-pod'): ReactElement =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/create-pod" element={<Page />} />

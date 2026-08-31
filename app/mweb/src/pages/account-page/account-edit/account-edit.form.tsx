@@ -86,7 +86,7 @@ export default function AccountEditForm({
     handleSubmit,
     reset,
     formState: { isDirty, isValid },
-  } = useForm<AccountEditValues>({
+  } = useForm<AccountEditValues, any, AccountEditValues>({
     defaultValues,
     resolver: zodResolver(schema),
     mode: 'onChange',

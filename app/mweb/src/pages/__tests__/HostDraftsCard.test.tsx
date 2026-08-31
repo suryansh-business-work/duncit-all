@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { gql } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
 import { MemoryRouter } from 'react-router-dom';
 import HostDraftsCard from '../HostDraftsCard';
@@ -58,7 +58,7 @@ const sampleDrafts = [
 
 function renderCard(mocks: unknown[]) {
   return render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       <MemoryRouter>
         <HostDraftsCard />
       </MemoryRouter>

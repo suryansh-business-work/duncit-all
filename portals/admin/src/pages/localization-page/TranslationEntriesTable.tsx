@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { DuncitTable, useApolloTableFetch, type TableFilterValue } from '@duncit/table';
 import { getTranslationColumns } from './translation-columns';
 import { TRANSLATIONS_TABLE, type LocaleRow, type TranslationRow } from './queries';

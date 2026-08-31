@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 export const VENUE_AVAILABLE_SLOTS = gql`
   query VenueAvailableSlotsForPicker($venue_id: ID!, $from: String) {

@@ -52,8 +52,15 @@ const NCU_MAX_BUFFER = 8 * 1024 * 1024;
 
 const args = process.argv.slice(2);
 const mode = args.find((a) => !a.startsWith('-')) ?? 'check';
-const passthrough = args.filter((a) => a.startsWith('-') && a !== '--all');
 const forceAll = args.includes('--all');
+/**
+ * Everything else goes to ncu untouched, VALUES INCLUDED. A filter that kept
+ * only the words starting with a dash turned `--target minor` into a dangling
+ * `--target` and ncu then failed on every manifest at once.
+ */
+const passthrough = args.filter((a) => a !== mode && a !== '--all');
+/** A caller who names a target means it: `--target minor` stays inside majors. */
+const hasOwnTarget = passthrough.some((a) => a === '--target' || a.startsWith('--target='));
 
 if (mode !== 'check' && mode !== 'update') {
   console.error(`deps: unknown mode '${mode}' — expected 'check' or 'update'.`);
@@ -95,8 +102,7 @@ async function inspect(manifest) {
     '--packageFile',
     manifest,
     '--jsonUpgraded',
-    '--target',
-    'latest',
+    ...(hasOwnTarget ? [] : ['--target', 'latest']),
     '--packageManager',
     'npm',
     '--registry',
@@ -180,8 +186,10 @@ for (const { manifest, upgrades, error } of results) {
 
 if (failed > 0) console.log(`\n${failed} manifest(s) could not be checked.`);
 
-if (behind === 0) {
+if (behind === 0 && failed === 0) {
   console.log('\nEverything is on its newest published version.');
+} else if (behind === 0) {
+  console.log('\nNothing to report from the manifests that could be checked.');
 } else if (mode === 'check') {
   console.log(`\n${behind} dependency range(s) behind. Rewrite them with: pnpm deps:update`);
 } else {

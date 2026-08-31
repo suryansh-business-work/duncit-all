@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
 import { useApolloTableFetch } from '@duncit/table';
@@ -42,8 +42,8 @@ export default function LiveAdsPage() {
   const [open, setOpen] = useState<AdRequestRow | null>(null);
   const [pending, setPending] = useState<Pending>(null);
   const [error, setError] = useState<string | null>(null);
-  const [stopAd, { loading: stopping }] = useMutation(STOP_AD_REQUEST);
-  const [deleteAd, { loading: deleting }] = useMutation(DELETE_AD_REQUEST);
+  const [stopAd, { loading: stopping }] = useMutation<any>(STOP_AD_REQUEST);
+  const [deleteAd, { loading: deleting }] = useMutation<any>(DELETE_AD_REQUEST);
 
   const fetchRows = useApolloTableFetch<AdRequestRow>(client, LIVE_ADS_TABLE, 'liveAdsTable');
 

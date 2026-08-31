@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { DuncitButton } from '@duncit/buttons';
@@ -23,7 +23,7 @@ export default function RateLimitBlockedPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const confirm = useConfirm();
-  const [clearEvents] = useMutation(CLEAR_EVENTS);
+  const [clearEvents] = useMutation<any>(CLEAR_EVENTS);
 
   const fetchRows = useApolloTableFetch<RateLimitEventRow>(
     client,

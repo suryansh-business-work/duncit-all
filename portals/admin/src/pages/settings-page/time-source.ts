@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   PUBLIC_APP_SETTINGS,
   createDateFormatter,
@@ -65,7 +65,7 @@ interface PreviewInput {
  * which is how an admin can tell a custom clock is running, not frozen.
  */
 export function useClockPreview({ zone, source, customTime, saved }: Readonly<PreviewInput>): string {
-  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   // Re-render trigger only: the preview is recomputed from the clock on every
   // render, so bumping this each second is what makes it visibly move. This is
   // useReducer rather than useState because the counter's VALUE is never read —

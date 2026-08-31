@@ -39,7 +39,7 @@ export default function ReportIssueForm({
   const schema = useMemo(() => buildReportSchema(t), [t]);
   const captcha = useCaptcha(GRAPHQL_URL);
   const screenshots = useScreenshots(t);
-  const { control, handleSubmit, formState, resetField, setError } = useForm<ReportIssueValues>({
+  const { control, handleSubmit, formState, resetField, setError } = useForm<ReportIssueValues, any, ReportIssueValues>({
     resolver: zodResolver(schema),
     defaultValues: REPORT_DEFAULTS,
     mode: 'onTouched',

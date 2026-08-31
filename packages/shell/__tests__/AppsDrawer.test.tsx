@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import FolderIcon from '@mui/icons-material/Folder';
 import { AppsDrawer } from '../src/chrome/AppsDrawer';
 

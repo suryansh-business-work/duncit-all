@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Container, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -21,7 +21,7 @@ interface Props {
 export default function InterviewBookingPage({ type }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [createMut] = useMutation(CREATE_INTERVIEW);
+  const [createMut] = useMutation<any>(CREATE_INTERVIEW);
   const isHost = type === 'HOST';
 
   const [anchor, setAnchor] = useState(() => new Date());

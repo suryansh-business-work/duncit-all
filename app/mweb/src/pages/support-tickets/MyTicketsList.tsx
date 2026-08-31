@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';

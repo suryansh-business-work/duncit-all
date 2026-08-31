@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -47,7 +48,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [filling, setFilling] = useState(false);
-  const [run, { loading: generating }] = useMutation(AI_FILL);
+  const [run, { loading: generating }] = useMutation<any>(AI_FILL);
   const loading = generating || filling;
 
   const open = Boolean(anchorEl);

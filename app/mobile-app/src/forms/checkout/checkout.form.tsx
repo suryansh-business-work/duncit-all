@@ -74,7 +74,7 @@ export function CheckoutForm({
     () => (addressRequired ? makeProductCheckoutSchema(t) : makeCheckoutSchema(t)),
     [addressRequired, t],
   );
-  const { control, handleSubmit } = useForm<CheckoutFormValues>({
+  const { control, handleSubmit } = useForm<CheckoutFormValues, any, CheckoutFormValues>({
     values: { ...checkoutDefaults, ...initialValues },
     resolver: zodResolver(schema),
     mode: 'onBlur',

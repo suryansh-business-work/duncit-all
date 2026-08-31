@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { createLogger } from '@duncit/logs';
 import { AGENT_CHAT, type AgentReply, type AgentResultItem } from './queries';
 

@@ -44,7 +44,7 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
   const submitLabelText = submitLabel ?? t('crm.forms.saveEcommLead');
 
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const methods = useForm<EcommLeadFormValues>({
+  const methods = useForm<EcommLeadFormValues, any, EcommLeadFormValues>({
     resolver: zodResolver(ecommLeadSchema, undefined, { raw: true }),
     mode: 'onChange',
     defaultValues: initialValues ?? ecommLeadInitialValues,

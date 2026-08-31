@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import SurveyGatePage from '../index';
 import { ACTIVE_SURVEY_FOR, REQUEST_MEETING, SUBMIT_SURVEY_RESPONSE } from '../queries';
 import { clearGateDraft } from '../draft';
@@ -106,7 +106,7 @@ const meetingMock = (ok = true) => ({
 
 const renderGate = (mocks: unknown[], kind = 'venue') =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       <MemoryRouter initialEntries={[`/gate/${kind}`]}>
         <Routes>
           <Route path="/gate/:kind" element={<SurveyGatePage />} />

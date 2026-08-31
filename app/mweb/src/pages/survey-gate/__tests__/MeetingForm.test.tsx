@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import MeetingForm from '../MeetingForm';
 import { MEETING_SLOTS } from '../queries';
@@ -52,7 +52,7 @@ const populatedSlots = [
 
 const renderForm = (mocks: unknown[], props: Partial<React.ComponentProps<typeof MeetingForm>> = {}) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       <DuncitLocalizationProvider>
         <MemoryRouter>
           <MeetingForm kind="VENUE" submitting={false} onSubmit={vi.fn()} {...props} />

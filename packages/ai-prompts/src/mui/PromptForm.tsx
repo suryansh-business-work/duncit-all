@@ -47,7 +47,7 @@ export function PromptForm({
 }: Readonly<PromptFormProps>) {
   const copy = usePromptCopy();
   const schema = useMemo(() => promptFormSchema(variables), [variables]);
-  const { control, handleSubmit, watch, formState } = useForm<PromptFormValues>({
+  const { control, handleSubmit, watch, formState } = useForm<PromptFormValues, any, PromptFormValues>({
     defaultValues: { ...promptInitialValues, ...initialValues },
     resolver: zodResolver(schema),
     mode: 'onChange',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -55,8 +55,8 @@ function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Reado
 
 export default function BrandingPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
+  const { data, loading, error } = useQuery<any>(BRANDING, { fetchPolicy: 'cache-and-network' });
+  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const [form, setForm] = useState<BrandingFormState>(emptyBrandingForm);
   const [busy, setBusy] = useState(false);

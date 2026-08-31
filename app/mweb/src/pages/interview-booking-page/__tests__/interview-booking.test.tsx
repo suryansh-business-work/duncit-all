@@ -16,7 +16,8 @@
  * not, and asks a different question about why they want to host. One page, two
  * genuinely different applications.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -31,8 +32,7 @@ import { buildMonth, isPastDay, isSameDay, slotKey, TIME_OPTIONS, type Slot } fr
 const testTheme = createTheme();
 
 const created: MockedResponse = {
-  request: { query: CREATE_INTERVIEW },
-  variableMatcher: () => true,
+  request: { query: CREATE_INTERVIEW, variables: () => true },
   result: { data: { createInterview: { id: 'iv-1', status: 'REQUESTED' } } },
   maxUsageCount: Number.POSITIVE_INFINITY,
 };
@@ -47,7 +47,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode, mocks: MockedResponse[] = [created]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>

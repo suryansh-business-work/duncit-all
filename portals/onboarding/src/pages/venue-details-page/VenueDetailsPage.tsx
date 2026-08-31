@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Stack } from '@mui/material';
 import { BackHeader, QueryGuard } from '@duncit/ui';

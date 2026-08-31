@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChatRoomPage from '../ChatRoomPage';
 import {
@@ -107,7 +107,6 @@ function renderPage(extraMocks: any[] = [], pod = podActive, messages = [otherMs
   return render(
     <MockedProvider
       mocks={[messagesMock(pod, messages), participantsMock, ...extraMocks]}
-      addTypename={false}
     >
       <ChatRoomPage />
     </MockedProvider>,

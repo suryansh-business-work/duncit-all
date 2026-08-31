@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import ManageDynamicFieldsPage from '@/pages/ManageDynamicFieldsPage';
 import { CRM_DYNAMIC_FIELDS } from '@/api/crm.gql';
 
@@ -33,7 +33,7 @@ const listMock = () => ({
 
 const wrap = (mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ManageDynamicFieldsPage />
     </MockedProvider>
   );

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { logs } from '@duncit/logs';
 import {
   MY_WHATSAPP_PREFERENCE,
@@ -26,8 +26,8 @@ export function useWhatsAppPreferences() {
     { fetchPolicy: 'cache-and-network' },
   );
 
-  const [setOne] = useMutation(SET_MY_WHATSAPP_PREFERENCE);
-  const [setEvery] = useMutation(SET_ALL_MY_WHATSAPP_PREFERENCES);
+  const [setOne] = useMutation<any>(SET_MY_WHATSAPP_PREFERENCE);
+  const [setEvery] = useMutation<any>(SET_ALL_MY_WHATSAPP_PREFERENCES);
 
   const preference = data?.myWhatsappPreference ?? null;
 

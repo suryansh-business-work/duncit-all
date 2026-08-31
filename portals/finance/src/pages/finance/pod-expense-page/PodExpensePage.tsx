@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Divider, Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';

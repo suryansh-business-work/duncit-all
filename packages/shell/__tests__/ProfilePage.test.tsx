@@ -12,7 +12,7 @@ vi.mock('../src/hooks/useBranding', () => ({
   useBranding: () => ({ appName: branding.appName, logoUrl: '', loading: false }),
 }));
 
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { ProfilePage } from '../src/chrome/ProfilePage';
 
 const mockMutation = vi.mocked(useMutation);

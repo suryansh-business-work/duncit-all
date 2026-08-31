@@ -35,7 +35,7 @@ export default function GrievanceOfficerForm({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, formState } = useForm<GrievanceOfficerFormValues>({
+  const { control, handleSubmit, reset, formState } = useForm<GrievanceOfficerFormValues, any, GrievanceOfficerFormValues>({
     resolver: zodResolver(grievanceOfficerSchema),
     defaultValues: EMPTY_GRIEVANCE_OFFICER,
     mode: 'onTouched',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Typography } from '@mui/material';
 import { ADMIN_ME, getAdminDisplayName, type AdminSessionUser } from '../../adminSession';
 

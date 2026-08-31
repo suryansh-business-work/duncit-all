@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Paper, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
@@ -46,7 +46,7 @@ interface Props {
  * carries only the scalars, so the rewards list is left untouched. */
 export default function PointsPerActionCard({ settings }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [save] = useMutation(ADMIN_UPDATE_LEADERBOARD_SETTINGS, {
+  const [save] = useMutation<any>(ADMIN_UPDATE_LEADERBOARD_SETTINGS, {
     refetchQueries: ['AdminLeaderboardSettings'],
   });
   const [form, setForm] = useState<PointsFormState>(() => toFormState(settings));

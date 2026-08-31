@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
@@ -28,7 +28,7 @@ export default function BackoutRefundPage() {
   const { data, error } = useQuery<SettingsData>(BACKOUT_FINANCE_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [processRefund, { loading: refunding }] = useMutation(PROCESS_BACKOUT_REFUND);
+  const [processRefund, { loading: refunding }] = useMutation<any>(PROCESS_BACKOUT_REFUND);
   const [refundFor, setRefundFor] = useState<BackoutRefundRequest | null>(null);
 
   const sym = data?.publicFinanceSettings?.currency_symbol ?? '';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -36,7 +36,7 @@ const fmtDate = (iso: string) => {
 };
 
 export default function WalletPage() {
-  const { data, loading, error, refetch } = useQuery(MY_WALLET, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error, refetch } = useQuery<any>(MY_WALLET, { fetchPolicy: 'cache-and-network' });
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
 

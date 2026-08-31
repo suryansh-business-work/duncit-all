@@ -23,7 +23,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeDeleteAccountSchema(t), [t]);
-  const { control, handleSubmit } = useForm<DeleteAccountValues>({
+  const { control, handleSubmit } = useForm<DeleteAccountValues, any, DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { StatCard } from '@duncit/ui';

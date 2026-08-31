@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import BrandingPage from '../index';
 import { BRANDING, OCCASIONAL_ICONS, UPDATE_BRANDING } from '../queries';
@@ -76,8 +77,7 @@ const renderPage = (mocks: MockedResponse[]) =>
   );
 
 const captureSave = (sent: { variables?: Record<string, unknown> }): MockedResponse => ({
-  request: { query: UPDATE_BRANDING },
-  variableMatcher: () => true,
+  request: { query: UPDATE_BRANDING, variables: () => true },
   result: (variables) => {
     sent.variables = variables;
     return { data: { updateBranding: branding } };
@@ -182,8 +182,7 @@ describe('BrandingPage — saving', () => {
       brandingQuery,
       iconsQuery,
       {
-        request: { query: UPDATE_BRANDING },
-        variableMatcher: () => true,
+        request: { query: UPDATE_BRANDING, variables: () => true },
         error: new Error('primary_color must be a hex value'),
       },
     ]);

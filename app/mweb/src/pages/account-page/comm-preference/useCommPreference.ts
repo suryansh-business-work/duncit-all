@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { logs } from '@duncit/logs';
 import {
   MY_COMM_PREFERENCE,
@@ -24,7 +24,7 @@ export function useCommPreference() {
     MY_COMM_PREFERENCE,
     { fetchPolicy: 'cache-and-network' },
   );
-  const [setChannel] = useMutation(SET_MY_OTP_CHANNEL);
+  const [setChannel] = useMutation<any>(SET_MY_OTP_CHANNEL);
 
   const preference = data?.myCommunicationPreference ?? null;
 

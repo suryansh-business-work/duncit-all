@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
 import type { TableQueryState } from '@duncit/table';

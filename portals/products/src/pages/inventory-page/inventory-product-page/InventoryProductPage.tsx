@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, CircularProgress, Container, Snackbar, Stack } from '@mui/material';
@@ -33,30 +33,30 @@ export default function InventoryProductPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const productQuery = useQuery(INVENTORY_PRODUCT_DETAIL, {
+  const productQuery = useQuery<any>(INVENTORY_PRODUCT_DETAIL, {
     variables: { id },
     skip: isNew,
     fetchPolicy: 'cache-and-network',
   });
-  const categoriesQuery = useQuery(INVENTORY_CATEGORIES, { fetchPolicy: 'cache-first' });
-  const logsQuery = useQuery(INVENTORY_ACTIVITY_LOGS, {
+  const categoriesQuery = useQuery<any>(INVENTORY_CATEGORIES, { fetchPolicy: 'cache-first' });
+  const logsQuery = useQuery<any>(INVENTORY_ACTIVITY_LOGS, {
     variables: { id },
     skip: isNew,
     fetchPolicy: 'cache-and-network',
   });
-  const movementsQuery = useQuery(INVENTORY_STOCK_MOVEMENTS, {
+  const movementsQuery = useQuery<any>(INVENTORY_STOCK_MOVEMENTS, {
     variables: { id },
     skip: isNew,
     fetchPolicy: 'cache-and-network',
   });
-  const analyticsQuery = useQuery(INVENTORY_ANALYTICS, {
+  const analyticsQuery = useQuery<any>(INVENTORY_ANALYTICS, {
     variables: { id },
     skip: isNew,
     fetchPolicy: 'cache-and-network',
   });
 
-  const [createProduct] = useMutation(CREATE_PRODUCT);
-  const [updateProduct] = useMutation(UPDATE_PRODUCT);
+  const [createProduct] = useMutation<any>(CREATE_PRODUCT);
+  const [updateProduct] = useMutation<any>(UPDATE_PRODUCT);
 
   const initialValues = useMemo(
     () => toFormValues(productQuery.data?.inventoryProduct),
@@ -66,7 +66,7 @@ export default function InventoryProductPage() {
     (c: any) => c.level !== 'SUPER'
   );
 
-  const methods = useForm<InventoryProductFormValues>({
+  const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
     resolver: zodResolver(productSchema),
     mode: 'onChange',
     defaultValues: initialValues,

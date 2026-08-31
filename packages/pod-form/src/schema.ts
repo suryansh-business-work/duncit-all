@@ -32,7 +32,7 @@ const placeChargeSchema = (t: Translate) =>
     amount: z.preprocess(
       toNumber,
       z
-        .number({ invalid_type_error: t('podForm.validation.amountNumber') })
+        .number({ error: t('podForm.validation.amountNumber') })
         .min(0)
         .max(100000),
     ),
@@ -45,7 +45,7 @@ const productRequestSchema = (t: Translate) =>
     quantity: z.preprocess(
       toNumber,
       z
-        .number({ invalid_type_error: t('podForm.validation.quantityRequired') })
+        .number({ error: t('podForm.validation.quantityRequired') })
         .min(1)
         .max(10000),
     ),
@@ -207,7 +207,7 @@ export function makePodSchema(config: PodFormConfig, t: Translate) {
       super_category_id: z.string().default(''),
       sub_category_id: z.string().default(''),
       pod_mode: z.enum(['PHYSICAL', 'VIRTUAL'], {
-        required_error: t('podForm.validation.modeRequired'),
+        error: t('podForm.validation.modeRequired'),
       }),
       venue_id: z.string().default(''),
       venue_slot_id: z.string().default(''),
@@ -231,14 +231,14 @@ export function makePodSchema(config: PodFormConfig, t: Translate) {
         .min(10, t('podForm.validation.descriptionShort'))
         .min(1, t('podForm.validation.descriptionRequired')),
       pod_date_time: z
-        .date({ invalid_type_error: t('podForm.validation.startRequired') })
+        .date({ error: t('podForm.validation.startRequired') })
         .nullable(),
       pod_end_date_time: z.date().nullable(),
       pod_type: z.string().min(1),
       pod_amount: z.preprocess(
         toNumber,
         z
-          .number({ invalid_type_error: t('podForm.validation.amountNumber') })
+          .number({ error: t('podForm.validation.amountNumber') })
           .min(0, t('podForm.validation.amountNegative'))
           .max(1999, t('podForm.validation.amountMax')),
       ),
@@ -246,7 +246,7 @@ export function makePodSchema(config: PodFormConfig, t: Translate) {
       no_of_spots: z.preprocess(
         toNumber,
         z
-          .number({ invalid_type_error: t('podForm.validation.spotsNumber') })
+          .number({ error: t('podForm.validation.spotsNumber') })
           .min(0)
           .max(10000),
       ),

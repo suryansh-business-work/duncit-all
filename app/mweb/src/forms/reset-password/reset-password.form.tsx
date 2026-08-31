@@ -47,7 +47,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeResetPasswordSchema(t), [t]);
-  const { control, handleSubmit } = useForm<ResetPasswordValues>({
+  const { control, handleSubmit } = useForm<ResetPasswordValues, any, ResetPasswordValues>({
     defaultValues: resetPasswordDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

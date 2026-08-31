@@ -26,7 +26,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeForgotPasswordSchema(t), [t]);
-  const { control, handleSubmit } = useForm<ForgotPasswordValues>({
+  const { control, handleSubmit } = useForm<ForgotPasswordValues, any, ForgotPasswordValues>({
     defaultValues: initialValues ?? forgotPasswordDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

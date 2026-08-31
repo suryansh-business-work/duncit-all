@@ -38,7 +38,7 @@ import LocationClubStep from './steps/LocationClubStep';
 import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
 import PricingStep from './steps/PricingStep';
 import { useEarningsPreview } from './price-panel';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
@@ -84,7 +84,7 @@ export default function CreatePodStepper({
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(() => makeCreatePodSchema(t), [t]);
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: zodResolver(schema),
     defaultValues: initialValues,
     mode: 'onTouched',

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -84,11 +84,11 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
     reset,
     watch,
     formState: { errors },
-  } = useForm<PodCompleteValues>({
+  } = useForm<PodCompleteValues, any, PodCompleteValues>({
     resolver: zodResolver(buildPodCompleteSchema(hasVenue, labels)),
     defaultValues: blankPodCompleteValues,
   });
-  const [complete, completeState] = useMutation(COMPLETE_POD);
+  const [complete, completeState] = useMutation<any>(COMPLETE_POD);
   const [scanOpen, setScanOpen] = useState(false);
   // Bumped when the scanner closes so the preview re-reads: a scan changes who
   // attended, and the payout is computed from exactly that.

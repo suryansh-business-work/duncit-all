@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import ForgotPasswordCard from '../ForgotPasswordCard';
 
 function renderCard(props: Partial<React.ComponentProps<typeof ForgotPasswordCard>> = {}) {
   const onSubmit = props.onSubmit ?? vi.fn().mockResolvedValue(undefined);
   const utils = render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <MemoryRouter>
         <ForgotPasswordCard
           loading={props.loading ?? false}

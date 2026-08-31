@@ -50,7 +50,7 @@ vi.mock('../src/portal-login/OtpLoginPanel', () => ({
   ),
 }));
 
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider } from '@duncit/theme';
 import PortalLoginPage from '../src/portal-login/PortalLoginPage';
 import type { PortalLoginPageProps } from '../src/portal-login/portal-login.types';

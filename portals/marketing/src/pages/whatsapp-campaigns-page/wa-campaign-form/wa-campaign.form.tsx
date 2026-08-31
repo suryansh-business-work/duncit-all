@@ -71,7 +71,7 @@ export default function WaCampaignForm({
     setValue,
     watch,
     formState: { isValid },
-  } = useForm<WaCampaignValues>({
+  } = useForm<WaCampaignValues, any, WaCampaignValues>({
     defaultValues: emptyValues(),
     resolver: zodResolver(schema),
     mode: 'onChange',

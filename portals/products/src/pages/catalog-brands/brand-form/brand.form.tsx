@@ -135,7 +135,7 @@ interface Props {
 export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const groups = useMemo(() => brandFieldGroups(t), [t]);
-  const { control, handleSubmit, reset } = useForm<BrandFormValues>({
+  const { control, handleSubmit, reset } = useForm<BrandFormValues, any, BrandFormValues>({
     defaultValues: initialValues ?? brandInitialValues,
     resolver: zodResolver(brandSchema),
     mode: 'onTouched',

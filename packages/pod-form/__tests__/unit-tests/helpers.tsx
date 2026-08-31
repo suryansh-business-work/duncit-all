@@ -76,7 +76,7 @@ export interface HarnessProps {
 
 /** Wraps children in an RHF FormProvider + PodFormDataProvider for section/field tests. */
 export function Harness({ data, defaultValues, methodsRef, children }: Readonly<HarnessProps>) {
-  const methods = useForm<PodFormValues>({
+  const methods = useForm<PodFormValues, any, PodFormValues>({
     defaultValues: { ...blankPodFormValues, ...defaultValues },
   });
   if (methodsRef) methodsRef.current = methods;

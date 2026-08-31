@@ -10,7 +10,8 @@
  * the pod and the field goes back to empty, so the grid below is always the one
  * true answer to "what is on this pod".
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { mwebPodMediaLabels } from '@duncit/utils';

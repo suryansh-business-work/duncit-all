@@ -6,7 +6,7 @@
  * answered by a local translator — but only the keys the provider has never
  * heard of, so a translated entry still reaches the screen.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render, screen } from '@testing-library/react';
 import { LocaleProvider } from '@duncit/app-settings';
 import { describe, expect, it } from 'vitest';

@@ -113,7 +113,7 @@ export function AddressFormSheet({
     () => ({ ...blankAddressValues, label: t('mweb.account.addressLabelDefault') }),
     [t],
   );
-  const { control, handleSubmit, reset } = useForm<AddressFormValues>({
+  const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
     resolver: zodResolver(addressSchema),
     mode: 'onTouched',

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import AuthBackground from '../../components/AuthBackground';
 import { type ForgotPasswordValues } from '../../forms/forgot-password';
@@ -9,7 +9,7 @@ import ForgotPasswordCard from './ForgotPasswordCard';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const [requestOtp, { loading, error }] = useMutation(REQUEST_PASSWORD_RESET_OTP);
+  const [requestOtp, { loading, error }] = useMutation<any>(REQUEST_PASSWORD_RESET_OTP);
   const [unregistered, setUnregistered] = useState(false);
 
   const handleSubmit = async (values: ForgotPasswordValues) => {

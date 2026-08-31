@@ -6,7 +6,8 @@
  * room, both error chromes, both upload strategies failing loudly rather than
  * silently, and the URL list only ever growing through onChange.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -22,8 +23,7 @@ const UPLOADED = 'https://ik.imagekit.io/duncit/support/new-upload.jpg';
 
 const uploadAnswers: MockedResponse[] = [
   {
-    request: { query: UPLOAD_IMAGE },
-    variableMatcher: () => true,
+    request: { query: UPLOAD_IMAGE, variables: () => true },
     result: { data: { uploadImageToImagekit: { url: UPLOADED, fileId: 'ik-9', thumbnailUrl: null } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -31,7 +31,7 @@ const uploadAnswers: MockedResponse[] = [
 
 const wrap = (ui: React.ReactElement, mocks: MockedResponse[] = uploadAnswers) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -168,8 +168,7 @@ describe('AttachmentUploadField picking', () => {
   it('surfaces a failed upload as a readable message, not a silent nothing', async () => {
     wrap(<AttachmentUploadField value={[]} onChange={vi.fn()} />, [
       {
-        request: { query: UPLOAD_IMAGE },
-        variableMatcher: () => true,
+        request: { query: UPLOAD_IMAGE, variables: () => true },
         error: new Error('boom'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -183,8 +182,7 @@ describe('AttachmentUploadField picking', () => {
   it('reports the direct strategy being unavailable instead of swallowing it', async () => {
     wrap(<AttachmentUploadField value={[]} onChange={vi.fn()} strategy="direct" />, [
       {
-        request: { query: GET_IMAGEKIT_AUTH },
-        variableMatcher: () => true,
+        request: { query: GET_IMAGEKIT_AUTH, variables: () => true },
         result: { data: { getImagekitAuth: null } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },

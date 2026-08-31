@@ -118,7 +118,7 @@ export interface PortalBootConfig {
 export interface MountPortalOptions {
   config: PortalBootConfig;
   /** The portal's configured Apollo client. */
-  apolloClient: ApolloClient<unknown>;
+  apolloClient: ApolloClient;
   /** Server GraphQL URL — also used to derive the `/logs` ingest + PortalModeGate. */
   graphqlUrl: string;
   /**

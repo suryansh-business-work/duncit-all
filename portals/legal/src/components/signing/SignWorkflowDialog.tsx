@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -77,8 +77,8 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
   const base64 = pdfData?.[ops.pdfField] ?? '';
   const pdfUrl = base64 ? toPdfUrl(base64) : '';
 
-  const [signMut, { loading: signing }] = useMutation(ops.signMutation);
-  const [shareMut, { loading: sharing }] = useMutation(ops.shareMutation);
+  const [signMut, { loading: signing }] = useMutation<any>(ops.signMutation);
+  const [shareMut, { loading: sharing }] = useMutation<any>(ops.shareMutation);
 
   // A signed record opens straight on the last step: there is nothing left to
   // do but read it, keep it or send it.

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -48,7 +48,7 @@ export default function ColumnPanel({
   onDelete,
 }: Readonly<Props>) {
   const enabled = level === 'SUPER' || !!parentId;
-  const { data, loading, error } = useQuery(CATEGORIES, {
+  const { data, loading, error } = useQuery<any>(CATEGORIES, {
     variables: { filter: { level, parent_id: parentId ?? null } },
     skip: !enabled,
     fetchPolicy: 'cache-and-network',

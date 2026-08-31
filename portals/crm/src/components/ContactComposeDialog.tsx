@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Stack, TextField } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
@@ -63,7 +63,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
   const [providerId, setProviderId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const [runMutation, { loading }] = useMutation(mutationFor(entity, mode));
+  const [runMutation, { loading }] = useMutation<any>(mutationFor(entity, mode));
 
   useEffect(() => {
     if (!open || !lead) return;

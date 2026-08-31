@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -28,7 +28,7 @@ export default function ContactSubmissionsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [updateStatus] = useMutation(UPDATE_CONTACT_STATUS, {
+  const [updateStatus] = useMutation<any>(UPDATE_CONTACT_STATUS, {
     onCompleted: () => refetchRef.current?.(),
   });
   const { formatDateTime } = useDateFormat();

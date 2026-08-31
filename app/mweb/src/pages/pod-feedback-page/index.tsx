@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import {
   buildPodFeedbackInput,
@@ -37,7 +37,7 @@ export default function PodFeedbackPage() {
     variables: { pod_id: podId },
     fetchPolicy: 'cache-and-network',
   });
-  const [submit, { loading: saving }] = useMutation(SUBMIT_FEEDBACK, {
+  const [submit, { loading: saving }] = useMutation<any>(SUBMIT_FEEDBACK, {
     refetchQueries: [
       { query: POD_FEEDBACK_FORM, variables: { pod_id: podId } },
       { query: MY_PENDING_POD_FEEDBACK },

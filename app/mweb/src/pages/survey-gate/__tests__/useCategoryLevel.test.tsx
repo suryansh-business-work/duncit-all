@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useCategoryLevel } from '../useCategoryLevel';
@@ -8,7 +8,7 @@ import { CATEGORIES, type CategoryOption } from '../queries';
 const makeWrapper =
   (mocks: readonly object[]) =>
   ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks as any} addTypename={false}>
+    <MockedProvider mocks={mocks as any}>
       {children}
     </MockedProvider>
   );

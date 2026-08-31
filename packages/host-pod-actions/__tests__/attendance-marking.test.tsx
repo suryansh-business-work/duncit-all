@@ -6,7 +6,8 @@
  * override — which has no scan and no code behind it — names the person before
  * it will confirm.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mwebAttendanceLabels, type PodAttendanceRow } from '@duncit/utils';
@@ -65,7 +66,7 @@ const row = (over: Partial<PodAttendanceRow> = {}): PodAttendanceRow =>
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]} addTypename={false}>
+    <MockedProvider mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -420,8 +421,7 @@ describe('AttendanceOtpDialog', () => {
 
   const requestMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
-      request: { query: REQUEST_ATTENDANCE_OTP },
-      variableMatcher: () => true,
+      request: { query: REQUEST_ATTENDANCE_OTP, variables: () => true },
       result: { data: { requestPodAttendanceOtp: CHALLENGE } },
       maxUsageCount: Number.POSITIVE_INFINITY,
       ...over,
@@ -429,8 +429,7 @@ describe('AttendanceOtpDialog', () => {
 
   const verifyMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
-      request: { query: VERIFY_ATTENDANCE_OTP },
-      variableMatcher: () => true,
+      request: { query: VERIFY_ATTENDANCE_OTP, variables: () => true },
       result: { data: { verifyPodAttendanceOtp: true } },
       maxUsageCount: Number.POSITIVE_INFINITY,
       ...over,
@@ -580,7 +579,7 @@ describe('AttendanceOtpDialog', () => {
     expect(screen.getByLabelText(labels.otpCode)).toBeInTheDocument();
 
     rerender(
-      <MockedProvider mocks={[requestMock()]} addTypename={false}>
+      <MockedProvider mocks={[requestMock()]}>
         <ThemeProvider theme={testTheme}>
           <AttendanceOtpDialog
             podId="pod-1"

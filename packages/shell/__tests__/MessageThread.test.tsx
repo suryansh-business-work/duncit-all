@@ -18,7 +18,7 @@
  * clock: the whole point of `settings.timeZone` is that two people in different
  * places read the same message under the same time.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';

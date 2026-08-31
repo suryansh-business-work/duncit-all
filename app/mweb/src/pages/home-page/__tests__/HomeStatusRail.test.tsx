@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import HomeStatusRail from '../HomeStatusRail';
 import { DELETE_STORY_POST, RECORD_STORY_VIEW, TOGGLE_STORY_LIKE } from '../queries';
 
@@ -179,7 +179,7 @@ function renderRail(props: Partial<Parameters<typeof HomeStatusRail>[0]> = {}) {
     ...props,
   };
   return render(
-    <MockedProvider mocks={mutationMocks} addTypename={false}>
+    <MockedProvider mocks={mutationMocks}>
       <HomeStatusRail {...(merged as any)} />
     </MockedProvider>,
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -42,7 +42,7 @@ export default function CreateAudienceListPage() {
   const [matched, setMatched] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
-  const [createList, { loading: saving }] = useMutation(CREATE_AUDIENCE_LIST);
+  const [createList, { loading: saving }] = useMutation<any>(CREATE_AUDIENCE_LIST);
   const { data, loading: loadingOwners } = useQuery<{ audienceListOwners: OwnerOption[] }>(
     AUDIENCE_LIST_OWNERS,
     { fetchPolicy: 'cache-and-network' },

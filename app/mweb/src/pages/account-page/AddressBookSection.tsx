@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -58,11 +59,11 @@ const oneLine = (a: UserAddress) =>
  * selectable at checkout. Add/edit via the RHF+Zod dialog; delete inline. */
 export default function AddressBookSection() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(MY_ADDRESSES, {
+  const { data, loading, error, refetch } = useQuery<any>(MY_ADDRESSES, {
     fetchPolicy: 'cache-and-network',
   });
-  const [saveAddress, { loading: saving }] = useMutation(SAVE_MY_ADDRESS);
-  const [deleteAddress] = useMutation(DELETE_MY_ADDRESS);
+  const [saveAddress, { loading: saving }] = useMutation<any>(SAVE_MY_ADDRESS);
+  const [deleteAddress] = useMutation<any>(DELETE_MY_ADDRESS);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<UserAddress | null>(null);
   const [notice, setNotice] = useState<string | null>(null);

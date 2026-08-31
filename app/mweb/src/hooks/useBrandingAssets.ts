@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 const BRANDING_ASSETS = gql`
   query BrandingAssets {
@@ -20,7 +21,7 @@ const BRANDING_ASSETS = gql`
  * no bundled logo files.
  */
 export function useBrandingAssets() {
-  const { data, loading } = useQuery(BRANDING_ASSETS, { fetchPolicy: 'cache-first' });
+  const { data, loading } = useQuery<any>(BRANDING_ASSETS, { fetchPolicy: 'cache-first' });
   const b = data?.branding;
   return {
     loading: loading && !b,

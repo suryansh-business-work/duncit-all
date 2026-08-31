@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -23,11 +23,11 @@ export default function EcommBrandsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
-  const [approve] = useMutation(APPROVE_BRAND);
-  const [reject] = useMutation(REJECT_BRAND);
-  const [setBrandCommission, { loading: savingCommission }] = useMutation(SET_BRAND_COMMISSION);
+  const [approve] = useMutation<any>(APPROVE_BRAND);
+  const [reject] = useMutation<any>(REJECT_BRAND);
+  const [setBrandCommission, { loading: savingCommission }] = useMutation<any>(SET_BRAND_COMMISSION);
   const lifecycle = useEntityLifecycle(SET_ECOMM_BRAND_ACTIVE, DELETE_ECOMM_BRAND, refresh);
-  const { data: defaultsData } = useQuery(DEFAULT_PRODUCT_COMMISSION, {
+  const { data: defaultsData } = useQuery<any>(DEFAULT_PRODUCT_COMMISSION, {
     fetchPolicy: 'cache-first',
   });
   const defaultCommissionPct: number | undefined = defaultsData?.defaultProductCommissionPct;

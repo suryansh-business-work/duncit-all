@@ -7,7 +7,7 @@
  * fire their load events with known numbers — what is under test is that the
  * hook reports THOSE numbers, not zeros and not the previous file's.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { createRef } from 'react';
@@ -32,7 +32,7 @@ beforeAll(() => {
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );

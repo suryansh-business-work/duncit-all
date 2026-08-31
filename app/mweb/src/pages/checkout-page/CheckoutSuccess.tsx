@@ -1,4 +1,5 @@
-import { gql, useLazyQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client/react';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useState } from 'react';
 import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
@@ -52,9 +53,9 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   const isDark = theme.palette.mode === 'dark';
   const [confetti, setConfetti] = useState(true);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
-  const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery(INVOICE_PDF, { fetchPolicy: 'network-only' });
-  const [loadTicketForPod] = useLazyQuery(MY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
-  const [loadTicketPdf, { loading: ticketLoading }] = useLazyQuery(TICKET_PDF, { fetchPolicy: 'network-only' });
+  const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery<any>(INVOICE_PDF, { fetchPolicy: 'network-only' });
+  const [loadTicketForPod] = useLazyQuery<any>(MY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
+  const [loadTicketPdf, { loading: ticketLoading }] = useLazyQuery<any>(TICKET_PDF, { fetchPolicy: 'network-only' });
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const profileAction = profileLabel ?? t('mweb.checkout.myProfile');

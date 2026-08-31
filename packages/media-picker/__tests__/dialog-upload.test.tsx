@@ -8,7 +8,8 @@
  * reader says done. The refusal path matters too — a file the policy rules out
  * must surface as a dismissible error, not a dead Upload button.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 // Deep import through @duncit/tabs' own node_modules on purpose: this package
@@ -53,19 +54,16 @@ const URL_B = 'https://ik.imagekit.io/duncit/pods/pick-b.jpg';
 
 const mocks = (): MockedResponse[] => [
   {
-    request: { query: UPLOAD_SETTINGS },
-    variableMatcher: () => true,
+    request: { query: UPLOAD_SETTINGS, variables: () => true },
     result: { data: { uploadSettings: SETTINGS } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: UPLOAD_IMAGE },
-    variableMatcher: () => true,
+    request: { query: UPLOAD_IMAGE, variables: () => true },
     result: { data: { uploadImageToImagekit: { url: URL_A, fileId: 'ik-a', thumbnailUrl: null } } },
   },
   {
-    request: { query: UPLOAD_IMAGE },
-    variableMatcher: () => true,
+    request: { query: UPLOAD_IMAGE, variables: () => true },
     result: { data: { uploadImageToImagekit: { url: URL_B, fileId: 'ik-b', thumbnailUrl: null } } },
   },
 ];
@@ -75,7 +73,7 @@ const mount = (props: Partial<MediaPickerDialogProps> = {}) => {
   const onPicked = vi.fn();
   const result = render(
     <MemoryRouter>
-      <MockedProvider mocks={mocks()} addTypename={false}>
+      <MockedProvider mocks={mocks()}>
         <ThemeProvider theme={testTheme}>
           <MediaPickerDialog open onClose={onClose} onPicked={onPicked} folder="/pods" {...props} />
         </ThemeProvider>

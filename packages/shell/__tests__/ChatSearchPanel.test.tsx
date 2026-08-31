@@ -3,7 +3,8 @@
  * the loaded page can still say "found, but scroll up first" instead of
  * quietly doing nothing when it is clicked.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -79,12 +80,11 @@ const panel = (mocks: readonly MockedResponse[], over: Partial<Parameters<typeof
 
 const searchMock = (variables: () => void, results: StaffMessage[]): MockedResponse =>
   ({
-    request: { query: SEARCH_STAFF_MESSAGES },
-    variableMatcher: (vars: unknown) => {
+    request: { query: SEARCH_STAFF_MESSAGES, variables: (vars: unknown) => {
       variables();
       Object.assign(lastVariables, vars as Record<string, unknown>);
       return true;
-    },
+    } },
     result: { data: { searchStaffMessages: results } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   }) as MockedResponse;

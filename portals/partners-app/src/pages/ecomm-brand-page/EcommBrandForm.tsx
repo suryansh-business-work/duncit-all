@@ -84,7 +84,7 @@ interface Props {
 
 export default function EcommBrandForm({ defaultValues, busy, locked, onSave, onSubmitForReview, onPickImage }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<BrandFormValues>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<BrandFormValues, any, BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues,
   });

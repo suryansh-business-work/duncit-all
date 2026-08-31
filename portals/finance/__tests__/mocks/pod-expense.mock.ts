@@ -158,8 +158,7 @@ export const podExpenseSummaryMock = (
   currencySymbol = '₹',
   maxUsageCount = 50,
 ): MockedResponse => ({
-  request: { query: POD_EXPENSE_SUMMARY },
-  variableMatcher: () => true,
+  request: { query: POD_EXPENSE_SUMMARY, variables: () => true },
   result: {
     data: {
       podExpenseSummary: summary,
@@ -173,8 +172,7 @@ export const podExpenseSummaryMock = (
 });
 
 export const podExpenseSummaryErrorMock = (): MockedResponse => ({
-  request: { query: POD_EXPENSE_SUMMARY },
-  variableMatcher: () => true,
+  request: { query: POD_EXPENSE_SUMMARY, variables: () => true },
   error: new Error('summary refresh failed'),
   maxUsageCount: 50,
 });
@@ -182,8 +180,7 @@ export const podExpenseSummaryErrorMock = (): MockedResponse => ({
 export const podExpensePodSummaryMock = (
   pod: PodExpensePodRowMock | null = makePodExpensePodRow(),
 ): MockedResponse => ({
-  request: { query: POD_EXPENSE_POD_SUMMARY },
-  variableMatcher: () => true,
+  request: { query: POD_EXPENSE_POD_SUMMARY, variables: () => true },
   result: { data: { podExpensePodSummary: pod } },
   maxUsageCount: 50,
 });
@@ -197,8 +194,7 @@ export const podExpensePodSummaryMock = (
  * sees.
  */
 export const createPodExpenseMock = (fail = false): MockedResponse => ({
-  request: { query: CREATE_POD_EXPENSE },
-  variableMatcher: () => true,
+  request: { query: CREATE_POD_EXPENSE, variables: () => true },
   result: fail
     ? { errors: [new GraphQLError('Expense amount must be greater than 0')] }
     : { data: { createPodExpense: makePodExpense() } },
@@ -206,15 +202,13 @@ export const createPodExpenseMock = (fail = false): MockedResponse => ({
 });
 
 export const updatePodExpenseMock = (): MockedResponse => ({
-  request: { query: UPDATE_POD_EXPENSE },
-  variableMatcher: () => true,
+  request: { query: UPDATE_POD_EXPENSE, variables: () => true },
   result: { data: { updatePodExpense: makePodExpense({ amount: 2100 }) } },
   maxUsageCount: 20,
 });
 
 export const deletePodExpenseMock = (fail = false): MockedResponse => ({
-  request: { query: DELETE_POD_EXPENSE },
-  variableMatcher: () => true,
+  request: { query: DELETE_POD_EXPENSE, variables: () => true },
   result: fail
     ? { errors: [new GraphQLError('Pod expense not found')] }
     : { data: { deletePodExpense: true } },

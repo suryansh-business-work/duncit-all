@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -36,11 +36,11 @@ const countedLabel = (text: string, count: number) => (
 );
 
 export default function HostsVenuesPage() {
-  const hostsQ = useQuery(PUBLIC_HOSTS, { fetchPolicy: 'cache-and-network' });
-  const venuesQ = useQuery(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
-  const [followUser] = useMutation(FOLLOW_USER);
-  const [unfollowUser] = useMutation(UNFOLLOW_USER);
-  const [cancelRequest] = useMutation(CANCEL_FOLLOW_REQUEST);
+  const hostsQ = useQuery<any>(PUBLIC_HOSTS, { fetchPolicy: 'cache-and-network' });
+  const venuesQ = useQuery<any>(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
+  const [followUser] = useMutation<any>(FOLLOW_USER);
+  const [unfollowUser] = useMutation<any>(UNFOLLOW_USER);
+  const [cancelRequest] = useMutation<any>(CANCEL_FOLLOW_REQUEST);
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
 
   const hosts: any[] = hostsQ.data?.publicHosts ?? [];

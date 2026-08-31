@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   APPROVED_HOSTS,
   APPROVED_VENUES,
@@ -12,13 +12,13 @@ import {
 
 /** Lookup datasets shared by the pods table (name columns) and the pod dialogs. */
 export default function usePodPageData() {
-  const { data: clubsData } = useQuery(CLUBS);
-  const { data: locsData } = useQuery(LOCATIONS);
-  const { data: venuesData } = useQuery(APPROVED_VENUES);
-  const { data: inventoryData } = useQuery(INVENTORY_PRODUCTS);
-  const { data: usersData } = useQuery(USERS);
-  const { data: approvedHostsData } = useQuery(APPROVED_HOSTS);
-  const { data: financeData } = useQuery(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
+  const { data: clubsData } = useQuery<any>(CLUBS);
+  const { data: locsData } = useQuery<any>(LOCATIONS);
+  const { data: venuesData } = useQuery<any>(APPROVED_VENUES);
+  const { data: inventoryData } = useQuery<any>(INVENTORY_PRODUCTS);
+  const { data: usersData } = useQuery<any>(USERS);
+  const { data: approvedHostsData } = useQuery<any>(APPROVED_HOSTS);
+  const { data: financeData } = useQuery<any>(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
 
   const clubs = clubsData?.clubs ?? [];
   const locations = locsData?.locations ?? [];

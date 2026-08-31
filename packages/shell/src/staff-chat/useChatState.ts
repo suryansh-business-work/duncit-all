@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { SAVE_STAFF_CHAT_STATE, STAFF_CHAT_STATE, type StaffChatState } from './queries';
 import { DEFAULT_CHAT_SETTINGS, type ChatSettings } from './useChatSettings';
@@ -75,7 +75,7 @@ export function useChatState() {
   const { data } = useQuery<{ staffChatState: StaffChatState }>(STAFF_CHAT_STATE, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save] = useMutation(SAVE_STAFF_CHAT_STATE);
+  const [save] = useMutation<any>(SAVE_STAFF_CHAT_STATE);
 
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_CHAT_SETTINGS);
   const [panel, setPanel] = useState<PanelState>(DEFAULT_PANEL);

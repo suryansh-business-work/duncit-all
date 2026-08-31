@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -34,15 +35,13 @@ function renderWithProviders(ui: ReactElement, mocks: MockedResponse[] = []) {
 }
 
 const failingMock = (query: MockedResponse['request']['query'], message: string, data: unknown = null): MockedResponse => ({
-  request: { query },
-  variableMatcher: () => true,
+  request: { query, variables: () => true },
   result: { data, errors: [new GraphQLError(message)] } as any,
 });
 
 /** Captures the variables a mutation was actually called with. */
 const capturingMock = (query: MockedResponse['request']['query'], data: unknown, capture: (v: any) => void): MockedResponse => ({
-  request: { query },
-  variableMatcher: () => true,
+  request: { query, variables: () => true },
   result: (variables: Record<string, any>) => {
     capture(variables);
     return { data } as any;

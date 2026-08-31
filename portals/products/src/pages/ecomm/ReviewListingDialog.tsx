@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -27,7 +27,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
   const [notes, setNotes] = useState('');
   const [commission, setCommission] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [review, { loading }] = useMutation(REVIEW_PRODUCT_LISTING);
+  const [review, { loading }] = useMutation<any>(REVIEW_PRODUCT_LISTING);
 
   useEffect(() => {
     if (!row) return;

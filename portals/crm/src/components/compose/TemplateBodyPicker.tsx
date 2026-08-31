@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { RENDER, TEMPLATES, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
@@ -88,7 +88,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
       // Merge lead values under the edited values so every matching slug binds.
       const merged = { ...variableValues, ...vars };
       try {
-        const res = await client.query({ query: RENDER, variables: { mjml: selected.mjml, vars: JSON.stringify(merged) }, fetchPolicy: 'network-only' });
+        const res = await client.query<any>({ query: RENDER, variables: { mjml: selected.mjml, vars: JSON.stringify(merged) }, fetchPolicy: 'network-only' });
         const renderedHtml = stripLeftover(res.data?.renderEmailTemplate?.html ?? '');
         setHtml(renderedHtml);
         setErrors(res.data?.renderEmailTemplate?.errors ?? []);

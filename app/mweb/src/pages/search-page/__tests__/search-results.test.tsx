@@ -17,7 +17,7 @@
  *  - an empty search says so rather than rendering an empty page, and says it
  *    differently from a search still running.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -62,7 +62,7 @@ const result = (over: Record<string, unknown> = {}) => ({
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
@@ -68,7 +68,7 @@ export default function ExplorePodCard({
   const [commentCount, setCommentCount] = useState<number>(pod.comment_count ?? 0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likersOpen, setLikersOpen] = useState(false);
-  const [toggleLike] = useMutation(TOGGLE_POD_LIKE);
+  const [toggleLike] = useMutation<any>(TOGGLE_POD_LIKE);
 
   // Re-sync to the latest server values when the feed refetches (e.g. after the
   // user liked/commented on the Pod Detail page) so the banner stays in sync.

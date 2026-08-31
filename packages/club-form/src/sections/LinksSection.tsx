@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Chip, CircularProgress, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useFormContext, useWatch } from 'react-hook-form';
@@ -22,7 +22,7 @@ function MatchedVenuesPanel() {
   const categoryId = useWatch({ control, name: 'category_id' });
   const ready = !!locationId;
 
-  const { data, loading, error } = useQuery(MATCHING_VENUES, {
+  const { data, loading, error } = useQuery<any>(MATCHING_VENUES, {
     skip: !ready,
     variables: {
       location_id: locationId,

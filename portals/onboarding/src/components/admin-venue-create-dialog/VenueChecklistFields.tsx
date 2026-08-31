@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { REGISTRATION_CONFIG, type Step1 } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -22,7 +22,7 @@ const groups = (t: Translate): { name: ChecklistKey; label: string; hint: string
  * (venueRegistrationConfig) and data shape as the partners-app register form. */
 export default function VenueChecklistFields({ s1, set }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data } = useQuery(REGISTRATION_CONFIG, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(REGISTRATION_CONFIG, { fetchPolicy: 'cache-first' });
   const config = data?.venueRegistrationConfig;
 
   const toggle = (name: ChecklistKey, option: string) => {

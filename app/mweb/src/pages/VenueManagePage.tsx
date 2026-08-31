@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
@@ -18,7 +18,7 @@ import { useTranslation } from '../i18n/useTranslation';
 
 export default function VenueManagePage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_VENUE_DETAILS, {
+  const { data, loading, error } = useQuery<any>(MY_VENUE_DETAILS, {
     fetchPolicy: 'cache-and-network',
   });
   const venue = data?.myVenue;
@@ -28,7 +28,7 @@ export default function VenueManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const health = healthData?.myVenueHealth ?? null;
-  const podsQ = useQuery(PODS_AT_VENUE, {
+  const podsQ = useQuery<any>(PODS_AT_VENUE, {
     variables: { venue_id: venue?.id ?? '' },
     skip: !venue?.id,
     fetchPolicy: 'cache-and-network',

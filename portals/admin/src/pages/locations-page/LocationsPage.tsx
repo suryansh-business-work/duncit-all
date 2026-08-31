@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -22,9 +22,9 @@ export default function LocationsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createMut] = useMutation(CREATE_LOCATION);
-  const [updateMut] = useMutation(UPDATE_LOCATION);
-  const [deleteMut] = useMutation(DELETE_LOCATION);
+  const [createMut] = useMutation<any>(CREATE_LOCATION);
+  const [updateMut] = useMutation<any>(UPDATE_LOCATION);
+  const [deleteMut] = useMutation<any>(DELETE_LOCATION);
   const confirm = useConfirm();
 
   const [dialogOpen, setDialogOpen] = useState(false);

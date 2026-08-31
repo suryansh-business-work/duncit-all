@@ -138,8 +138,7 @@ export const legalDocumentMock = (
 export const createLegalDocumentMock = (
   over: { id?: string | null } = {},
 ): MockedResponse => ({
-  request: { query: CREATE_LEGAL_DOCUMENT },
-  variableMatcher: () => true,
+  request: { query: CREATE_LEGAL_DOCUMENT, variables: () => true },
   // Keep an explicit `null` (drives the no-id refetch branch); default otherwise.
   result: {
     data: { createLegalDocument: { __typename: 'LegalDocument', id: over.id === undefined ? 'new-1' : over.id } },
@@ -147,8 +146,7 @@ export const createLegalDocumentMock = (
 });
 
 export const updateLegalDocumentMock = (id = 'doc-1'): MockedResponse => ({
-  request: { query: UPDATE_LEGAL_DOCUMENT },
-  variableMatcher: () => true,
+  request: { query: UPDATE_LEGAL_DOCUMENT, variables: () => true },
   result: {
     data: {
       updateLegalDocument: {

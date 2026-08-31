@@ -50,7 +50,7 @@ interface Props {
 export default function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   const schema = useMemo(() => buildSchema(labels), [labels]);
-  const { control, register, handleSubmit, formState } = useForm<CompanionValues>({
+  const { control, register, handleSubmit, formState } = useForm<CompanionValues, any, CompanionValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: {

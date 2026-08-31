@@ -11,7 +11,7 @@ interface FormApi {
 }
 
 function Harness({ apiRef }: Readonly<{ apiRef: { current: FormApi | null } }>) {
-  const { control, getValues, setValue } = useForm<ProductListingValues>({
+  const { control, getValues, setValue } = useForm<ProductListingValues, any, ProductListingValues>({
     defaultValues: { ...emptyValues },
   });
   useAutoVariants(control, getValues, setValue);

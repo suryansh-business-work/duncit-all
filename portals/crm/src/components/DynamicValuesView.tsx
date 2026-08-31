@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { CRM_DYNAMIC_FIELDS } from '../api/crm.gql';
 import type { CrmDynamicField } from '../api/crm.types';

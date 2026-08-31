@@ -14,7 +14,8 @@
  * click during an import is how two copies of the same photo used to end up in
  * the tray.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -69,28 +70,24 @@ const VIDEOS = [video('v-1'), video('v-2')];
  */
 const answering = (nextPage: string | null = 'https://api.pexels.com/v1/search?page=2'): MockedResponse[] => [
   {
-    request: { query: PEXELS_SEARCH },
-    variableMatcher: () => true,
+    request: { query: PEXELS_SEARCH, variables: () => true },
     result: { data: { pexelsSearch: { page: 1, next_page: nextPage, photos: PHOTOS } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: PEXELS_VIDEO_SEARCH },
-    variableMatcher: () => true,
+    request: { query: PEXELS_VIDEO_SEARCH, variables: () => true },
     result: { data: { pexelsSearchVideos: { page: 1, next_page: nextPage, videos: VIDEOS } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: IMPORT_REMOTE },
-    variableMatcher: () => true,
+    request: { query: IMPORT_REMOTE, variables: () => true },
     result: {
       data: { importRemoteImageToImagekit: { url: 'https://ik.imagekit.io/duncit/imported.jpg', fileId: 'ik-1' } },
     },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: IMPORT_REMOTE_MEDIA },
-    variableMatcher: () => true,
+    request: { query: IMPORT_REMOTE_MEDIA, variables: () => true },
     result: {
       data: { importRemoteMediaToImagekit: { url: 'https://ik.imagekit.io/duncit/imported.mp4', fileId: 'ik-2' } },
     },
@@ -108,7 +105,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode, mocks: MockedResponse[] = answering()) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -202,8 +199,7 @@ describe('PexelsPhotosTab', () => {
   it('says what went wrong instead of showing an empty grid', async () => {
     const { spies } = tab({}, [
       {
-        request: { query: PEXELS_SEARCH },
-        variableMatcher: () => true,
+        request: { query: PEXELS_SEARCH, variables: () => true },
         error: new Error('Pexels is not configured'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -432,8 +428,7 @@ describe('PexelsPhotosTab paging and failures', () => {
   it('reads a page that came back with no photos as an empty one', async () => {
     const { container } = tab({}, [
       {
-        request: { query: PEXELS_SEARCH },
-        variableMatcher: () => true,
+        request: { query: PEXELS_SEARCH, variables: () => true },
         result: { data: { pexelsSearch: { page: 1, next_page: null, photos: null } } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -448,8 +443,7 @@ describe('PexelsPhotosTab paging and failures', () => {
     const { container, spies } = tab({}, [
       answering()[0],
       {
-        request: { query: IMPORT_REMOTE },
-        variableMatcher: () => true,
+        request: { query: IMPORT_REMOTE, variables: () => true },
         error: new Error('ImageKit refused the file'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -469,8 +463,7 @@ describe('PexelsPhotosTab paging and failures', () => {
     const { container, spies } = tab({}, [
       answering()[0],
       {
-        request: { query: IMPORT_REMOTE },
-        variableMatcher: () => true,
+        request: { query: IMPORT_REMOTE, variables: () => true },
         result: { data: { importRemoteImageToImagekit: { url: null, fileId: null } } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -545,8 +538,7 @@ describe('PexelsVideosTab paging and failures', () => {
   it('reads a page that came back with no videos as an empty one', async () => {
     const { container } = tab({}, [
       {
-        request: { query: PEXELS_VIDEO_SEARCH },
-        variableMatcher: () => true,
+        request: { query: PEXELS_VIDEO_SEARCH, variables: () => true },
         result: { data: { pexelsSearchVideos: { page: 1, next_page: null, videos: null } } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -562,8 +554,7 @@ describe('PexelsVideosTab paging and failures', () => {
   it('says so rather than importing a clip with no file behind it', async () => {
     const { container, spies } = tab({}, [
       {
-        request: { query: PEXELS_VIDEO_SEARCH },
-        variableMatcher: () => true,
+        request: { query: PEXELS_VIDEO_SEARCH, variables: () => true },
         result: {
           data: {
             pexelsSearchVideos: {
@@ -590,8 +581,7 @@ describe('PexelsVideosTab paging and failures', () => {
     const { container, spies } = tab({}, [
       answering()[1],
       {
-        request: { query: IMPORT_REMOTE_MEDIA },
-        variableMatcher: () => true,
+        request: { query: IMPORT_REMOTE_MEDIA, variables: () => true },
         error: new Error('ImageKit refused the file'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -611,8 +601,7 @@ describe('PexelsVideosTab paging and failures', () => {
     const { container, spies } = tab({}, [
       answering()[1],
       {
-        request: { query: IMPORT_REMOTE_MEDIA },
-        variableMatcher: () => true,
+        request: { query: IMPORT_REMOTE_MEDIA, variables: () => true },
         result: { data: { importRemoteMediaToImagekit: { url: null, fileId: null } } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -630,8 +619,7 @@ describe('PexelsVideosTab paging and failures', () => {
   it('says what went wrong instead of showing an empty grid', async () => {
     const { spies } = tab({}, [
       {
-        request: { query: PEXELS_VIDEO_SEARCH },
-        variableMatcher: () => true,
+        request: { query: PEXELS_VIDEO_SEARCH, variables: () => true },
         error: new Error('Pexels is not configured'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },

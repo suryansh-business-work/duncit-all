@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Skeleton, Stack } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -37,7 +37,7 @@ interface Props {
  * EarnSurfaceProvider. */
 export default function EarnJourneyList({ showProducts }: Readonly<Props>) {
   const { openJourney, runCta } = useEarnSurface();
-  const { data, loading, refetch } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, refetch } = useQuery<any>(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
   const showSkeleton = loading && !data;

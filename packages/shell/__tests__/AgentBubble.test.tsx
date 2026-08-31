@@ -2,7 +2,7 @@
  * One turn of the Agent conversation: yours tinted and right, its report
  * plain and left, with whatever it created listed underneath.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 

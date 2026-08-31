@@ -65,7 +65,7 @@ export default function WaTestForm({
     setValue,
     watch,
     formState: { isValid },
-  } = useForm<WaTestValues>({
+  } = useForm<WaTestValues, any, WaTestValues>({
     defaultValues: emptyValues(''),
     resolver: zodResolver(schema),
     mode: 'onChange',

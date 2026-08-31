@@ -51,8 +51,7 @@ export const makeLocation = (
 export const locationsMock = (
   locations: LocationResp[] = [makeLocation('l1', 'Mumbai', ['North'])],
 ): MockedResponse => ({
-  request: { query: LOCATIONS_FOR_NOTIF },
-  variableMatcher: () => true,
+  request: { query: LOCATIONS_FOR_NOTIF, variables: () => true },
   result: { data: { locations } },
   maxUsageCount: 20,
 });
@@ -71,8 +70,7 @@ export const makeUser = (over: Partial<UserResp> = {}): UserResp => ({
 });
 
 export const usersMock = (users: UserResp[] = [makeUser()]): MockedResponse => ({
-  request: { query: USERS_FOR_NOTIF },
-  variableMatcher: () => true,
+  request: { query: USERS_FOR_NOTIF, variables: () => true },
   result: { data: { users } },
   maxUsageCount: 20,
 });
@@ -86,8 +84,7 @@ export const createNotificationMock = (
 ): MockedResponse => {
   if (over.throwMessage) {
     return {
-      request: { query: CREATE_NOTIFICATION },
-      variableMatcher: () => true,
+      request: { query: CREATE_NOTIFICATION, variables: () => true },
       result: { errors: [{ message: over.throwMessage }] },
     };
   }
@@ -100,8 +97,7 @@ export const createNotificationMock = (
         failed_count: over.failed ?? 2,
       };
   return {
-    request: { query: CREATE_NOTIFICATION },
-    variableMatcher: () => true,
+    request: { query: CREATE_NOTIFICATION, variables: () => true },
     result: { data: { createNotification: created } },
   };
 };
@@ -111,14 +107,12 @@ export const deleteNotificationMock = (
 ): MockedResponse =>
   over.throwMessage
     ? {
-        request: { query: DELETE_NOTIFICATION },
-        variableMatcher: () => true,
+        request: { query: DELETE_NOTIFICATION, variables: () => true },
         result: { errors: [{ message: over.throwMessage }] },
         maxUsageCount: 20,
       }
     : {
-        request: { query: DELETE_NOTIFICATION },
-        variableMatcher: () => true,
+        request: { query: DELETE_NOTIFICATION, variables: () => true },
         result: { data: { deleteNotification: true } },
         maxUsageCount: 20,
       };

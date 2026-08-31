@@ -7,7 +7,8 @@
  * that does not), and a cancel states who it affects and what it refunds before
  * the host confirms it.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -57,8 +58,7 @@ const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   );
 
 const cleanCheck: MockedResponse = {
-  request: { query: MODERATE_POD_CONTENT },
-  variableMatcher: () => true,
+  request: { query: MODERATE_POD_CONTENT, variables: () => true },
   result: { data: { moderatePodContent: { __typename: 'PodContentCheck', allowed: true, violations: [] } } },
   maxUsageCount: Number.POSITIVE_INFINITY,
 };
@@ -91,8 +91,7 @@ describe('PodEditDialog', () => {
 
   const saveMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
-      request: { query: HOST_UPDATE_POD },
-      variableMatcher: () => true,
+      request: { query: HOST_UPDATE_POD, variables: () => true },
       result: {
         data: {
           hostUpdatePod: {
@@ -164,8 +163,7 @@ describe('PodEditDialog', () => {
     const { props } = dialog([
       limitsMock(),
       {
-        request: { query: MODERATE_POD_CONTENT },
-        variableMatcher: () => true,
+        request: { query: MODERATE_POD_CONTENT, variables: () => true },
         result: {
           data: {
             moderatePodContent: {
@@ -261,8 +259,10 @@ describe('PodCancelDialog', () => {
 
   const deleteMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
-      request: { query: HOST_DELETE_POD },
-      variableMatcher: () => true,
+      request: { query: HOST_DELETE_POD, variables: (v: Record<string, unknown>) => {
+          variables.push(v);
+          return true;
+        } } variables: () => true },
       result: { data: { hostDeletePod: true } },
       maxUsageCount: Number.POSITIVE_INFINITY,
       ...over,
@@ -364,10 +364,6 @@ describe('PodCancelDialog', () => {
     const { props } = dialog([
       impactMock(),
       deleteMock({
-        variableMatcher: (v: Record<string, unknown>) => {
-          variables.push(v);
-          return true;
-        },
       }),
     ]);
     await settle();

@@ -78,7 +78,7 @@ beforeEach(() => {
 });
 
 function NoDefaults({ data }: Readonly<{ data: PodFormData }>) {
-  const methods = useForm<PodFormValues>();
+  const methods = useForm<PodFormValues, any, PodFormValues>();
   return (
     <FormProvider {...methods}>
       <PodFormDataProvider value={data}>

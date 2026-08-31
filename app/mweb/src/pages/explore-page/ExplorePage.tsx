@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import ExploreReels from './ExploreReels';
 import ExploreHeader from './ExploreHeader';
@@ -25,10 +25,10 @@ const DEFAULT_FILTERS: ExploreFilters = {
 
 export default function ExplorePage({ superCategorySlug, locationId, zoneName }: Readonly<ExplorePageProps>) {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(EXPLORE_PODS, {
+  const { data, loading, error, refetch } = useQuery<any>(EXPLORE_PODS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD);
+  const [toggleSavedPod] = useMutation<any>(TOGGLE_SAVED_POD);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<ExploreFilters>(DEFAULT_FILTERS);
   const [pendingSave, setPendingSave] = useState<Set<string>>(new Set());

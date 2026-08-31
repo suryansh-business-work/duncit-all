@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -13,8 +13,8 @@ export default function ApiKeysPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createKey, createState] = useMutation(CREATE_API_KEY);
-  const [revokeKey] = useMutation(REVOKE_API_KEY);
+  const [createKey, createState] = useMutation<any>(CREATE_API_KEY);
+  const [revokeKey] = useMutation<any>(REVOKE_API_KEY);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [rawKey, setRawKey] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);

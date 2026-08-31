@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { uploadImageToImagekit } from './upload';
 import { directUploadToImagekit } from './useImagekitDirectUpload';
 import { useUploadSettings } from './useUploadSettings';

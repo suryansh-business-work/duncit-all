@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog } from '@mui/material';
@@ -28,15 +28,15 @@ interface Props {
 
 export default function ContactActionDialog({ open, type, user, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [recordAction] = useMutation(RECORD_USER_CONTACT_ACTION);
-  const [startRecordedCall] = useMutation(START_RECORDED_USER_CALL);
+  const [recordAction] = useMutation<any>(RECORD_USER_CONTACT_ACTION);
+  const [startRecordedCall] = useMutation<any>(START_RECORDED_USER_CALL);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const target = useMemo(() => buildContactTarget(type, user), [type, user]);
   const schema = useMemo(() => buildContactActionSchema(type), [type]);
   const statusOptions = type === 'CALL' ? CALL_STATUSES : EMAIL_STATUSES;
 
-  const { control, watch, reset, handleSubmit } = useForm<ContactActionValues>({
+  const { control, watch, reset, handleSubmit } = useForm<ContactActionValues, any, ContactActionValues>({
     defaultValues: contactActionInitialValues,
     resolver: zodResolver(schema),
     mode: 'onTouched',

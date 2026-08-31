@@ -3,7 +3,7 @@
  * that minimises to an icon rail — the collapsed flag lives in the
  * workspace, so it reads the same everywhere a reader signs in.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';

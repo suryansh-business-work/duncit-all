@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { TECH_CONTAINER_LOGS } from './queries';

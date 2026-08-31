@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import { sortBadgeProgress } from '@duncit/utils';
 import BadgeProgressCard from './BadgeProgressCard';

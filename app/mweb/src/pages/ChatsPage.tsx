@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import {
@@ -56,7 +57,7 @@ interface ChatsPageProps {
 
 export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const navigate = useNavigate();
   const [filter, setFilter] = useState<ChatPodFilter>('ALL');
   const [q, setQ] = useState('');

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   allFallbackEntries,
   createTranslator,
@@ -112,7 +113,7 @@ export function LocaleProvider({
   children,
 }: Readonly<ProviderProps>) {
   const [override, setOverride] = useState<string | null>(null);
-  const { data: localeData } = useQuery(PUBLIC_LOCALES, { fetchPolicy: 'cache-first' });
+  const { data: localeData } = useQuery<any>(PUBLIC_LOCALES, { fetchPolicy: 'cache-first' });
   const locales: Locale[] = localeData?.publicLocales ?? [];
 
   const deviceLocale =
@@ -121,7 +122,7 @@ export function LocaleProvider({
   const active = resolveLocale(requested, locales);
   const code = active?.code ?? 'en-IN';
 
-  const { data: catalogueData } = useQuery(PUBLIC_TRANSLATIONS, {
+  const { data: catalogueData } = useQuery<any>(PUBLIC_TRANSLATIONS, {
     variables: { locale: code },
     fetchPolicy: 'cache-first',
     // Nothing to fetch until the platform has told us which locales exist.

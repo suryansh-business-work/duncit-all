@@ -69,7 +69,7 @@ export default function WaPricingForm({
   onSubmit,
 }: Readonly<WaPricingFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, watch, formState } = useForm<WaPricingValues>({
+  const { control, handleSubmit, reset, watch, formState } = useForm<WaPricingValues, any, WaPricingValues>({
     defaultValues: initialValues,
     resolver: zodResolver(waPricingSchema),
     mode: 'onChange',

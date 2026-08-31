@@ -43,7 +43,7 @@ interface Props {
 export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, setError, setValue } = useForm<PodEditValues>({
+  const { control, handleSubmit, reset, setError, setValue } = useForm<PodEditValues, any, PodEditValues>({
     resolver: zodResolver(podEditSchema),
     defaultValues: podEditInitialValues(pod),
   });

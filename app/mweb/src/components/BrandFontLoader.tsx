@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 const MWEB_FONT = gql`
   query MwebBrandFont {
@@ -13,7 +14,7 @@ const MWEB_FONT = gql`
  * injects the stylesheet + an #root override that outranks the MUI theme
  * family. Empty setting = the built-in Quicksand. */
 export default function BrandFontLoader() {
-  const { data } = useQuery(MWEB_FONT, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(MWEB_FONT, { fetchPolicy: 'cache-first' });
   const family: string = data?.branding?.mweb_font_family || '';
 
   useEffect(() => {

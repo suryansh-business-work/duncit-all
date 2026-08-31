@@ -14,7 +14,7 @@ interface WrapperProps {
 
 function Wrapper({ hint, fullWidth, withDefault = true, methodsRef }: Readonly<WrapperProps>) {
   const defaults = withDefault ? ({ pod_title: '' } as PodFormValues) : ({} as PodFormValues);
-  const methods = useForm<PodFormValues>({ defaultValues: defaults });
+  const methods = useForm<PodFormValues, any, PodFormValues>({ defaultValues: defaults });
   if (methodsRef) methodsRef.current = methods;
   return (
     <RhfTextField control={methods.control} name="pod_title" label="Title" hint={hint} fullWidth={fullWidth} />

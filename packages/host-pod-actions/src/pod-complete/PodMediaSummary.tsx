@@ -1,7 +1,7 @@
 import { Stack, Typography } from '@mui/material';
 import PhotoCameraBackIcon from '@mui/icons-material/PhotoCameraBack';
 import { DuncitButton } from '@duncit/buttons';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import PodMediaGrid from '../pod-media/PodMediaGrid';
 import { POD_MEDIA_BOARD, type PodMediaBoard } from '../pod-media/queries';

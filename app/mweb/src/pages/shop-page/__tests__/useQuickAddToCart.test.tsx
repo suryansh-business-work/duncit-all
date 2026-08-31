@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { renderHook, act } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CartProvider, useCart } from '../../../components/cart/CartContext';
 import { PODS_FOR_PRODUCT } from '../../ProductDetailPage';
@@ -31,7 +32,7 @@ const useCombined = () => ({ cart: useCart(), quick: useQuickAddToCart() });
 function renderCombined(mocks: MockedResponse[]) {
   return renderHook(() => useCombined(), {
     wrapper: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <CartProvider>{children}</CartProvider>
       </MockedProvider>
     ),

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
@@ -72,14 +73,14 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
     if (open) selectTab(initialTab);
   }, [open, initialTab, selectTab]);
 
-  const { data, loading, refetch } = useQuery(FOLLOW_LISTS, {
+  const { data, loading, refetch } = useQuery<any>(FOLLOW_LISTS, {
     variables: { userId },
     skip: !open || !userId,
     fetchPolicy: 'cache-and-network',
   });
-  const [followUser] = useMutation(FOLLOW_USER);
-  const [unfollowUser] = useMutation(UNFOLLOW_USER);
-  const [cancelRequest] = useMutation(CANCEL_FOLLOW_REQUEST);
+  const [followUser] = useMutation<any>(FOLLOW_USER);
+  const [unfollowUser] = useMutation<any>(UNFOLLOW_USER);
+  const [cancelRequest] = useMutation<any>(CANCEL_FOLLOW_REQUEST);
 
   const toggle = async (person: Person) => {
     const mutations = {

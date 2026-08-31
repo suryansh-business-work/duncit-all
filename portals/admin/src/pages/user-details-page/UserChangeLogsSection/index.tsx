@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type TableQueryState } from '@duncit/table';
 import { USER_CHANGE_LOGS_TABLE, type UserChangeLogRow } from '../queries';

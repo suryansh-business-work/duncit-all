@@ -34,7 +34,7 @@ export default function BackupScheduleCard({ settings, saving, error, onSave }: 
     reset,
     watch,
     formState: { errors, isDirty },
-  } = useForm<BackupSettingsForm>({
+  } = useForm<BackupSettingsForm, any, BackupSettingsForm>({
     resolver: zodResolver(backupSettingsSchema),
     defaultValues: settings,
   });

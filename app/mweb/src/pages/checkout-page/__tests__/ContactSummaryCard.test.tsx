@@ -14,7 +14,7 @@ const contact: CheckoutContact = {
 };
 
 function Harness({ contact: value, loading }: Readonly<{ contact: CheckoutContact | null; loading: boolean }>) {
-  const { control } = useForm<CheckoutForm>({ defaultValues: checkoutDefaults });
+  const { control } = useForm<CheckoutForm, any, CheckoutForm>({ defaultValues: checkoutDefaults });
   return <ContactSummaryCard control={control} contact={value} loading={loading} />;
 }
 

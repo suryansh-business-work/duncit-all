@@ -59,23 +59,20 @@ export const makeAdPricing = (over: Partial<AdPricing> = {}): AdPricing => ({
 });
 
 export const adPricingMock = (over: Partial<AdPricing> = {}): MockedResponse => ({
-  request: { query: AD_PRICING },
-  variableMatcher: () => true,
+  request: { query: AD_PRICING, variables: () => true },
   result: { data: { adPricing: makeAdPricing(over) } },
   maxUsageCount: 20,
 });
 
 export const adPricingErrorMock = (message = 'Pricing unavailable'): MockedResponse => ({
-  request: { query: AD_PRICING },
-  variableMatcher: () => true,
+  request: { query: AD_PRICING, variables: () => true },
   error: new Error(message),
   maxUsageCount: 20,
 });
 
 /** AD_PRICING that never resolves — keeps the page in its loading state. */
 export const adPricingLoadingMock = (): MockedResponse => ({
-  request: { query: AD_PRICING },
-  variableMatcher: () => true,
+  request: { query: AD_PRICING, variables: () => true },
   result: { data: { adPricing: makeAdPricing() } },
   delay: Infinity,
   maxUsageCount: 20,
@@ -86,14 +83,12 @@ export const updateAdPricingMock = (
 ): MockedResponse =>
   over.fail
     ? {
-        request: { query: UPDATE_AD_PRICING },
-        variableMatcher: () => true,
+        request: { query: UPDATE_AD_PRICING, variables: () => true },
         result: { errors: [{ message: over.message ?? 'Update failed' }] },
         maxUsageCount: 20,
       }
     : {
-        request: { query: UPDATE_AD_PRICING },
-        variableMatcher: () => true,
+        request: { query: UPDATE_AD_PRICING, variables: () => true },
         result: { data: { updateAdPricing: makeAdPricing() } },
         maxUsageCount: 20,
       };
@@ -117,14 +112,12 @@ export const reviewAdRequestMock = (
 ): MockedResponse =>
   over.fail
     ? {
-        request: { query: REVIEW_AD_REQUEST },
-        variableMatcher: () => true,
+        request: { query: REVIEW_AD_REQUEST, variables: () => true },
         result: { errors: [{ message: over.message ?? 'Review broke' }] },
         maxUsageCount: 20,
       }
     : {
-        request: { query: REVIEW_AD_REQUEST },
-        variableMatcher: () => true,
+        request: { query: REVIEW_AD_REQUEST, variables: () => true },
         result: { data: { reviewAdRequest: reviewedRow } },
         maxUsageCount: 20,
       };

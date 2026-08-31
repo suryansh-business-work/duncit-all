@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
@@ -28,7 +28,7 @@ export default function StartupDashboardPage() {
     variables: isoRange,
     fetchPolicy: 'cache-and-network',
   });
-  const [saveSetting, { loading: saving }] = useMutation(SAVE_FOUNDER_SETTING);
+  const [saveSetting, { loading: saving }] = useMutation<any>(SAVE_FOUNDER_SETTING);
 
   const dashboard = data?.founderDashboard;
   const settingsMap = useMemo(() => {

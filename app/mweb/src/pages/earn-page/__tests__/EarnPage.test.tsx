@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import { gql } from '@apollo/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -59,7 +59,7 @@ const makeMock = (roles: string[], meetings: unknown[]) => ({
 
 function setup(mock: ReturnType<typeof makeMock>) {
   return render(
-    <MockedProvider mocks={[mock]} addTypename={false}>
+    <MockedProvider mocks={[mock]}>
       <MemoryRouter>
         <EarnPage />
       </MemoryRouter>

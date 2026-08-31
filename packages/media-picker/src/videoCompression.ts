@@ -32,7 +32,7 @@ const TRIM_FAILED_MSG = 'Could not trim the video — please try again.';
  * never publish, so trim failures throw instead of falling back.
  */
 export async function compressUploadedVideo(
-  client: ApolloClient<object>,
+  client: ApolloClient,
   remoteUrl: string,
   folder: string,
   surface: UploadSurface,
@@ -65,7 +65,12 @@ export async function compressUploadedVideo(
         variables: { jobId: job.job_id },
         fetchPolicy: 'network-only',
       });
-      job = polled.data.videoCompressionJob;
+      // v4 can answer with no data (an errored poll). A lost poll must not
+      // lose the uploaded video, which is what the catch below is for — so
+      // stop polling and fall through to the same decision it makes.
+      const next = polled.data?.videoCompressionJob;
+      if (!next) break;
+      job = next;
     }
   } catch {
     // A lost poll (e.g. server restart) must not lose the uploaded video.

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Dialog,
   DialogActions,
@@ -29,9 +29,9 @@ export default function NavigationPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refetchTable = () => refetchRef.current?.();
-  const [createItem] = useMutation(CREATE_NAV_ITEM, { onCompleted: refetchTable });
-  const [updateItem] = useMutation(UPDATE_NAV_ITEM, { onCompleted: refetchTable });
-  const [deleteItem] = useMutation(DELETE_NAV_ITEM, { onCompleted: refetchTable });
+  const [createItem] = useMutation<any>(CREATE_NAV_ITEM, { onCompleted: refetchTable });
+  const [updateItem] = useMutation<any>(UPDATE_NAV_ITEM, { onCompleted: refetchTable });
+  const [deleteItem] = useMutation<any>(DELETE_NAV_ITEM, { onCompleted: refetchTable });
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<WebsiteNavItem | null>(null);

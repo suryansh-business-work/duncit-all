@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { apolloErrorLink } from '@duncit/shell';
-import { Observable } from '@apollo/client';
+import { Observable } from '@apollo/client/utilities';
 
 /**
  * `onError` returns an ApolloLink. We can drive its `request` method with a

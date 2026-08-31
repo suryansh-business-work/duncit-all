@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import { logs } from '@duncit/logs';
@@ -19,7 +19,7 @@ import WhatsAppApiKeyHelp from './WhatsAppApiKeyHelp';
  * session is CONNECTED.
  */
 export default function WhatsAppLeadGeneratorPage() {
-  const { data, loading, error, refetch } = useQuery(WA_CONNECTION, {
+  const { data, loading, error, refetch } = useQuery<any>(WA_CONNECTION, {
     fetchPolicy: 'cache-and-network',
   });
   const connection: WaConnection | undefined = data?.waConnection;

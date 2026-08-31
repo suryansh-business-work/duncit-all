@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -23,7 +23,7 @@ export default function AudienceListsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [target, setTarget] = useState<AudienceListRow | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [deleteList, { loading: deleting }] = useMutation(DELETE_AUDIENCE_LIST);
+  const [deleteList, { loading: deleting }] = useMutation<any>(DELETE_AUDIENCE_LIST);
 
   const fetchRows = useApolloTableFetch<AudienceListRow>(
     client,

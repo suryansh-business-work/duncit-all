@@ -6,7 +6,8 @@
  * that the board closes once the pod is completed — at which point the payout
  * is already split, so a late mark would change money that has moved.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { mwebAttendanceLabels } from '@duncit/utils';

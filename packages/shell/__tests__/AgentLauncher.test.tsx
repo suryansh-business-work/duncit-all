@@ -4,7 +4,7 @@
  * whatever AgentChat registers.
  */
 import { act, fireEvent, render } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AgentLauncher } from '../src/chrome/agent/AgentLauncher';

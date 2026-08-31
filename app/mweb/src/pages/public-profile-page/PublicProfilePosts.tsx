@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Box,
   ImageList,
@@ -51,7 +52,7 @@ export default function PublicProfilePosts({
   name,
   photo,
 }: Readonly<Props>) {
-  const { data, loading } = useQuery(PUBLIC_USER_POSTS, {
+  const { data, loading } = useQuery<any>(PUBLIC_USER_POSTS, {
     variables: { id: userId },
     skip: !canView,
     fetchPolicy: 'cache-and-network',

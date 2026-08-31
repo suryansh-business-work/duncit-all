@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
@@ -25,10 +25,10 @@ const DEACTIVATE_MESSAGE =
 export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [setCommission, commissionState] = useMutation(SET_BRAND_COMMISSION);
-  const [setActive, activeState] = useMutation(SET_ECOMM_BRAND_ACTIVE);
+  const [setCommission, commissionState] = useMutation<any>(SET_BRAND_COMMISSION);
+  const [setActive, activeState] = useMutation<any>(SET_ECOMM_BRAND_ACTIVE);
 
-  const { control, handleSubmit, reset } = useForm<BrandCommissionFormValues>({
+  const { control, handleSubmit, reset } = useForm<BrandCommissionFormValues, any, BrandCommissionFormValues>({
     defaultValues: { product_commission_pct: String(brand.product_commission_pct) },
     resolver: zodResolver(brandCommissionSchema),
     mode: 'onTouched',

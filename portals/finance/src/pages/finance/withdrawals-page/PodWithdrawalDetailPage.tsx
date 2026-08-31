@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -41,7 +41,7 @@ export default function PodWithdrawalDetailPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [reject, setReject] = useState<RejectTarget | null>(null);
   const [payTarget, setPayTarget] = useState<WithdrawalRow | null>(null);
-  const [review, { loading: reviewing }] = useMutation(REVIEW_WITHDRAWAL);
+  const [review, { loading: reviewing }] = useMutation<any>(REVIEW_WITHDRAWAL);
 
   const { data, loading, error, refetch } = useQuery<SummaryData>(POD_WITHDRAWAL_SUMMARY, {
     variables: { pod_id: podId },

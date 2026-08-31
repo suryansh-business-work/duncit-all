@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import NumberSettingCard from './pod-settings/NumberSettingCard';
@@ -42,8 +43,8 @@ const UPDATE_POD_SETTINGS = gql`
  * Duncit Coin > Settings, with the rest of the coin payout rules.) */
 export default function PodSettingsPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(POD_SETTINGS, { fetchPolicy: 'cache-and-network' });
-  const [save] = useMutation(UPDATE_POD_SETTINGS, {
+  const { data, loading, refetch } = useQuery<any>(POD_SETTINGS, { fetchPolicy: 'cache-and-network' });
+  const [save] = useMutation<any>(UPDATE_POD_SETTINGS, {
     refetchQueries: [{ query: PUBLIC_APP_SETTINGS }],
   });
   const [toast, setToast] = useState<string | null>(null);

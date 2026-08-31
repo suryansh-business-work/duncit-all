@@ -8,7 +8,8 @@
  * writes is read the same way as one the preflight caught.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render, renderHook, screen, act } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -33,8 +34,7 @@ const moderateMock = (
   over: Partial<MockedResponse> = {},
 ): MockedResponse =>
   ({
-    request: { query: MODERATE_POD_CONTENT },
-    variableMatcher: () => true,
+    request: { query: MODERATE_POD_CONTENT, variables: () => true },
     result: { data: { moderatePodContent: result } },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
@@ -42,7 +42,7 @@ const moderateMock = (
 
 const mount = (mocks: readonly MockedResponse[], setFieldError = vi.fn()) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[...mocks]} addTypename={false}>
+    <MockedProvider mocks={[...mocks]}>
       {children}
     </MockedProvider>
   );

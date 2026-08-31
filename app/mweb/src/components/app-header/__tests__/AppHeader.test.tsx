@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import AppHeader from '../AppHeader';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { CartProvider, type CartLine } from '../../cart/CartContext';
@@ -189,7 +189,7 @@ function seedCart(quantity: number) {
 function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock, flagsMock(true)]) {
   const merged = { ...baseProps, onSuperCategoryChange: vi.fn(), onLocationChange: vi.fn(), onZoneChange: vi.fn(), ...props };
   const utils = render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <MemoryRouter initialEntries={['/']}>
         <CartProvider>
           <AppHeader {...merged} />

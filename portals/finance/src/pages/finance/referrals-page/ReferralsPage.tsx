@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
@@ -35,11 +35,11 @@ export default function ReferralsPage() {
     REFERRAL_SETTINGS,
     { fetchPolicy: 'cache-and-network' },
   );
-  const [updateMut, { loading: saving }] = useMutation(UPDATE_REFERRAL_SETTINGS);
+  const [updateMut, { loading: saving }] = useMutation<any>(UPDATE_REFERRAL_SETTINGS);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState<number | null>(null);
 
-  const { control, handleSubmit, reset, formState } = useForm<ReferralSettingsForm>({
+  const { control, handleSubmit, reset, formState } = useForm<ReferralSettingsForm, any, ReferralSettingsForm>({
     resolver: zodResolver(referralSettingsSchema),
     defaultValues: BLANK_SETTINGS,
     mode: 'onBlur',

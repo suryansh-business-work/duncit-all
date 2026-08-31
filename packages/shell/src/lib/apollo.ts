@@ -27,9 +27,9 @@ const FRIENDLY_NETWORK_MESSAGE = 'Unable to connect to server. Please check your
  * `utils/apolloErrorLink.ts` copy in all 17 portals; folded into
  * `createApolloClient` but also exported for clients built elsewhere (mWeb).
  */
-export const apolloErrorLink = onError(({ networkError }) => {
-  if (networkError && NETWORK_FAILURE_PATTERN.test(networkError.message)) {
-    networkError.message = FRIENDLY_NETWORK_MESSAGE;
+export const apolloErrorLink = onError(({ error }) => {
+  if (error && NETWORK_FAILURE_PATTERN.test(error.message)) {
+    error.message = FRIENDLY_NETWORK_MESSAGE;
   }
 });
 
@@ -64,7 +64,7 @@ export interface CreateApolloClientOptions {
  * `src/apollo.ts` copy: HttpLink + Bearer/`x-duid` auth headers + transient
  * transport retry + friendly network-error rewrite.
  */
-export function createApolloClient(options: Readonly<CreateApolloClientOptions>): ApolloClient<NormalizedCacheObject> {
+export function createApolloClient(options: Readonly<CreateApolloClientOptions>): ApolloClient {
   const { graphqlUrl, getToken, typePolicies, includeDuid = true, surface = 'PORTAL', app } = options;
 
   const httpLink = new HttpLink({ uri: graphqlUrl });

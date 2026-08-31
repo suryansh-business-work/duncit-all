@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';

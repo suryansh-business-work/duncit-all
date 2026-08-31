@@ -1,5 +1,5 @@
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ArticleIcon from '@mui/icons-material/Article';
 import { DuncitButton } from '@duncit/buttons';
@@ -10,7 +10,7 @@ import { useTranslation } from '@duncit/shell';
 export default function PartnerPoliciesPage() {
   const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
-  const { data, loading, error } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(PUBLIC_POLICIES, { fetchPolicy: 'cache-and-network' });
   const policies = data?.publicPolicies ?? [];
 
   if (!slug && policies.length > 0) return <Navigate to={`/policies/${policies[0].slug}`} replace />;

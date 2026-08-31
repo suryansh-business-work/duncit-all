@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AuthBackground from '../../components/AuthBackground';
 import AuthModeToggle from '../../components/AuthModeToggle';
@@ -21,9 +21,9 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [loginMutation, { loading, error }] = useMutation(LOGIN);
-  const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
-  const [linkGoogle, { loading: linking }] = useMutation(LINK_GOOGLE_ACCOUNT);
+  const [loginMutation, { loading, error }] = useMutation<any>(LOGIN);
+  const [loginGoogle, { loading: gLoading }] = useMutation<any>(LOGIN_GOOGLE);
+  const [linkGoogle, { loading: linking }] = useMutation<any>(LINK_GOOGLE_ACCOUNT);
   const [gError, setGError] = useState<string | null>(null);
   const [gNotice, setGNotice] = useState<{
     title: string;

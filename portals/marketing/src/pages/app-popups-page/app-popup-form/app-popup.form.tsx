@@ -33,7 +33,7 @@ export default function AppPopupForm({
   onSubmit,
 }: Readonly<AppPopupFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, formState } = useForm<AppPopupFormValues>({
+  const { control, handleSubmit, formState } = useForm<AppPopupFormValues, any, AppPopupFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(appPopupSchema(t)),
     mode: 'onChange',

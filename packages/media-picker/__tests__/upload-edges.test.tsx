@@ -5,7 +5,8 @@
  * file with no name, a store that answers with no reason, a picture whose
  * dimensions never resolve.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -37,7 +38,7 @@ const settle = async () => {
 const wrap = (ui: React.ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
     <MemoryRouter>
-      <MockedProvider mocks={[...mocks]} addTypename={false}>
+      <MockedProvider mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
       </MockedProvider>
     </MemoryRouter>
@@ -170,8 +171,7 @@ describe('useDeviceUpload with a croppable preset', () => {
   };
 
   const settingsMock: MockedResponse = {
-    request: { query: UPLOAD_SETTINGS },
-    variableMatcher: () => true,
+    request: { query: UPLOAD_SETTINGS, variables: () => true },
     result: {
       data: {
         uploadSettings: {
@@ -204,7 +204,7 @@ describe('useDeviceUpload with a croppable preset', () => {
         } as never),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={[settingsMock]} addTypename={false}>
+          <MockedProvider mocks={[settingsMock]}>
             <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
           </MockedProvider>
         ),
@@ -265,8 +265,7 @@ describe('single-image chromes while busy or disabled', () => {
     }
     vi.stubGlobal('FileReader', SlowReader);
     const uploadMock: MockedResponse = {
-      request: { query: UPLOAD_IMAGE },
-      variableMatcher: () => true,
+      request: { query: UPLOAD_IMAGE, variables: () => true },
       delay: 50,
       result: {
         data: { uploadImageToImagekit: { url: 'https://ik.imagekit.io/duncit/a.png', fileId: 'f-1' } },
@@ -485,8 +484,7 @@ describe('the last edges', () => {
       <SingleImageUploadField value="" onChange={vi.fn()} folder="/pods" variant="avatar" />,
       [
         {
-          request: { query: UPLOAD_IMAGE },
-          variableMatcher: () => true,
+          request: { query: UPLOAD_IMAGE, variables: () => true },
           delay: 50,
           result: {
             data: {
@@ -556,14 +554,12 @@ describe('the last edges', () => {
       <PexelsPhotosTab active open folder="pods" onPicked={onPicked} onClose={vi.fn()} setError={vi.fn()} />,
       [
         {
-          request: { query: PEXELS_SEARCH },
-          variableMatcher: () => true,
+          request: { query: PEXELS_SEARCH, variables: () => true },
           result: { data: { pexelsSearch: { page: 1, next_page: null, photos: [photo] } } },
           maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
-          request: { query: IMPORT_REMOTE },
-          variableMatcher: (variables: Record<string, unknown>) => {
+          request: { query: IMPORT_REMOTE, variables: (variables: Record<string }, unknown>) => {
             importCalls.push(variables);
             return true;
           },

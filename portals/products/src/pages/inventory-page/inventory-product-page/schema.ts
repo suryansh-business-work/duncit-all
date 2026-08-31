@@ -4,7 +4,7 @@ const SKU_PATTERN = /^[A-Z0-9-]*$/;
 
 const intField = (max?: number, min = 0) => {
   let schema = z
-    .number({ invalid_type_error: 'Number required' })
+    .number({ error: 'Number required' })
     .int()
     .min(min);
   if (max !== undefined) schema = schema.max(max);
@@ -12,7 +12,7 @@ const intField = (max?: number, min = 0) => {
 };
 
 const moneyField = z
-  .number({ invalid_type_error: 'Number required' })
+  .number({ error: 'Number required' })
   .min(0)
   .max(1000000);
 
@@ -62,13 +62,13 @@ export const productSchema = z
     supplier_contact: z.string().max(120),
 
     unit_cost: z
-      .number({ invalid_type_error: 'Cost is required' })
+      .number({ error: 'Cost is required' })
       .min(0)
       .max(1000000),
     purchase_price: moneyField,
     selling_price: moneyField,
-    tax_percent: z.number({ invalid_type_error: 'Number required' }).min(0).max(100),
-    discount_percent: z.number({ invalid_type_error: 'Number required' }).min(0).max(100),
+    tax_percent: z.number({ error: 'Number required' }).min(0).max(100),
+    discount_percent: z.number({ error: 'Number required' }).min(0).max(100),
 
     weight_volume: z.string().max(60),
     expiry_date: z.string(),
@@ -83,14 +83,14 @@ export const productSchema = z
     pod_available: z.boolean(),
     host_request_allowed: z.boolean(),
     delivery_available: z.boolean(),
-    delivery_charge: z.number({ invalid_type_error: 'Number required' }).min(0).max(100000),
+    delivery_charge: z.number({ error: 'Number required' }).min(0).max(100000),
     // Required for Duncit products only — see the ownership refine below.
     pickup_location_id: z.string(),
 
-    height_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
-    length_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
-    breadth_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
-    weight_kg: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
+    height_cm: z.number({ error: 'Number required' }).min(0).max(1000),
+    length_cm: z.number({ error: 'Number required' }).min(0).max(1000),
+    breadth_cm: z.number({ error: 'Number required' }).min(0).max(1000),
+    weight_kg: z.number({ error: 'Number required' }).min(0).max(1000),
   })
   .superRefine((values, ctx) => {
     /* v8 ignore next -- min/max always parse to numbers before this runs; the `?? 0` guards are defensive */

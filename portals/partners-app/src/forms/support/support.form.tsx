@@ -34,7 +34,7 @@ interface Props {
 export default function SupportForm({ initialValues, loading, errorMessage, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const defaults = { ...supportInitialValues, ...initialValues };
-  const { control, register, handleSubmit, reset, setError, formState } = useForm<SupportFormValues>({
+  const { control, register, handleSubmit, reset, setError, formState } = useForm<SupportFormValues, any, SupportFormValues>({
     resolver: zodResolver(buildSupportSchema(t)),
     defaultValues: defaults,
     mode: 'onBlur',

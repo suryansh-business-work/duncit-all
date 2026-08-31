@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProfileBadgesStrip from '../ProfileBadgesStrip';
 import { MY_BADGE_PROGRESS, type BadgeProgressRow } from '../../badges-page/queries';

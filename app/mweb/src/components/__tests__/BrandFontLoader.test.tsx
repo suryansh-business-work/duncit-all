@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, render, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import BrandFontLoader from '../BrandFontLoader';
@@ -36,7 +36,7 @@ afterEach(() => {
 describe('BrandFontLoader', () => {
   it('injects the Google Font stylesheet and #root override for a picked family', async () => {
     render(
-      <MockedProvider mocks={[fontMock('Roboto Slab')]} addTypename={false}>
+      <MockedProvider mocks={[fontMock('Roboto Slab')]}>
         <BrandFontLoader />
       </MockedProvider>,
     );
@@ -58,7 +58,7 @@ describe('BrandFontLoader', () => {
 
   it('removes injected nodes on unmount (cleanup)', async () => {
     const { unmount } = render(
-      <MockedProvider mocks={[fontMock('Inter')]} addTypename={false}>
+      <MockedProvider mocks={[fontMock('Inter')]}>
         <BrandFontLoader />
       </MockedProvider>,
     );
@@ -72,7 +72,7 @@ describe('BrandFontLoader', () => {
 
   it('injects nothing when the family is empty', async () => {
     render(
-      <MockedProvider mocks={[fontMock('')]} addTypename={false}>
+      <MockedProvider mocks={[fontMock('')]}>
         <BrandFontLoader />
       </MockedProvider>,
     );
@@ -93,7 +93,7 @@ describe('BrandFontLoader', () => {
 
   it('renders null (no DOM output of its own)', () => {
     const { container } = render(
-      <MockedProvider mocks={[fontMock(null)]} addTypename={false}>
+      <MockedProvider mocks={[fontMock(null)]}>
         <BrandFontLoader />
       </MockedProvider>,
     );

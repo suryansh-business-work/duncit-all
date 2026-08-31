@@ -66,7 +66,7 @@ export default function BenefitFormDialog({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<MembershipBenefitFormValues>({
+  const { control, handleSubmit, reset } = useForm<MembershipBenefitFormValues, any, MembershipBenefitFormValues>({
     defaultValues: toFormValues(editing, plans),
     resolver: zodResolver(membershipBenefitFormSchema),
     mode: 'onTouched',

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { BackButton } from '@duncit/ui';
@@ -39,11 +39,11 @@ export default function RegisterVenuePage() {
   const navigate = useNavigate();
   const currentMode = location.pathname.endsWith('/current');
 
-  const { data, loading, refetch } = useQuery(MY_VENUE, {
+  const { data, loading, refetch } = useQuery<any>(MY_VENUE, {
     variables: { venue_id: venueId ?? null },
     fetchPolicy: 'cache-and-network',
   });
-  const configQuery = useQuery(REGISTRATION_CONFIG);
+  const configQuery = useQuery<any>(REGISTRATION_CONFIG);
   const config: VenueRegistrationConfig = configQuery.data?.venueRegistrationConfig ?? {
     venue_types: [],
     doc_types: [],

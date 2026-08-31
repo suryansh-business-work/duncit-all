@@ -12,7 +12,7 @@ interface HostProps {
 }
 
 function Host({ hint, fullWidth, onMethods }: Readonly<HostProps>) {
-  const methods = useForm<ClubFormValues>({ defaultValues: {} });
+  const methods = useForm<ClubFormValues, any, ClubFormValues>({ defaultValues: {} });
   onMethods?.(methods);
   return (
     <RhfTextField

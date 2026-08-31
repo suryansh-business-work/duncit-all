@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -41,7 +42,7 @@ const genCaptcha = () =>
  */
 export default function SendAdminCredentials() {
   const { t } = useTranslation();
-  const [run, { loading, data, error }] = useMutation(SEND_CREDENTIALS);
+  const [run, { loading, data, error }] = useMutation<any>(SEND_CREDENTIALS);
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState(genCaptcha);
   const [entry, setEntry] = useState('');

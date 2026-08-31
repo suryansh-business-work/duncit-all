@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import CategoryStep, { type CategoryScope } from '../CategoryStep';
 import { CATEGORIES, type CategoryOption } from '../queries';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
@@ -31,7 +31,7 @@ const fullMocks = [
 const renderStep = (props: Partial<React.ComponentProps<typeof CategoryStep>> = {}, mocks = fullMocks) => {
   const onContinue = props.onContinue ?? vi.fn();
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <DuncitLocalizationProvider>
         <CategoryStep submitting={false} onContinue={onContinue} {...props} />
       </DuncitLocalizationProvider>
@@ -140,7 +140,7 @@ describe('CategoryStep', () => {
 
   it('disables the Continue button and shows the loading label while submitting', () => {
     render(
-      <MockedProvider mocks={fullMocks} addTypename={false}>
+      <MockedProvider mocks={fullMocks}>
         <DuncitLocalizationProvider>
           <CategoryStep submitting onContinue={vi.fn()} />
         </DuncitLocalizationProvider>

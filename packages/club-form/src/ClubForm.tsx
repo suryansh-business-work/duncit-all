@@ -44,7 +44,7 @@ export default function ClubForm({
 }: Readonly<ClubFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeClubSchema(config), [config]);
-  const methods = useForm<ClubFormValues>({
+  const methods = useForm<ClubFormValues, any, ClubFormValues>({
     resolver: zodResolver(schema),
     defaultValues: initialValues,
     mode: 'onBlur',

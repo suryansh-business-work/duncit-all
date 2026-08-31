@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
@@ -60,7 +60,7 @@ export default function ClubAutoPodEditor({ club, backTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
   const picker = useMediaPickerBridge();
-  const [createAutoPod] = useMutation(CLUB_ADMIN_CREATE_AUTO_POD);
+  const [createAutoPod] = useMutation<any>(CLUB_ADMIN_CREATE_AUTO_POD);
 
   const editor = useAutoPodEditorState({
     createDefaults: {

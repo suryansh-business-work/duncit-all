@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Dialog, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import ShortLinkForm, { toShortLinkInput, type ShortLinkFormValues } from './short-link-form';
@@ -23,7 +23,7 @@ export default function CreateShortLinkDialog({
   onCreated,
 }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
-  const [createLink, { loading }] = useMutation(CREATE_SHORT_LINK);
+  const [createLink, { loading }] = useMutation<any>(CREATE_SHORT_LINK);
   const { data: campaignsData } = useQuery<{ shortLinkCampaigns: CampaignChoice[] }>(
     CAMPAIGNS_FOR_SHORT_LINK,
     { fetchPolicy: 'cache-and-network' },

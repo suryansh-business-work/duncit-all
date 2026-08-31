@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -44,9 +44,9 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
   const { t } = useTranslation();
   const [user, setUser] = useState<CoinUserOption | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [adjust, { loading }] = useMutation(ADJUST_USER_COINS);
+  const [adjust, { loading }] = useMutation<any>(ADJUST_USER_COINS);
 
-  const { control, handleSubmit, reset } = useForm<CoinGrantForm>({
+  const { control, handleSubmit, reset } = useForm<CoinGrantForm, any, CoinGrantForm>({
     resolver: zodResolver(coinGrantSchema),
     defaultValues: BLANK_GRANT,
     mode: 'onBlur',

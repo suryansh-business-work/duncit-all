@@ -64,7 +64,7 @@ export default function CreateCampaignForm({
     handleSubmit,
     reset,
     formState: { isValid },
-  } = useForm<CreateCampaignValues>({
+  } = useForm<CreateCampaignValues, any, CreateCampaignValues>({
     defaultValues: emptyValues(),
     resolver: zodResolver(schema),
     mode: 'onChange',

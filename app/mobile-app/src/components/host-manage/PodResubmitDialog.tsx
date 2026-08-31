@@ -42,7 +42,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [venues, setVenues] = useState<ResubmitVenueOption[]>([]);
-  const { control, handleSubmit, reset, setValue, watch } = useForm<PodResubmitValues>({
+  const { control, handleSubmit, reset, setValue, watch } = useForm<PodResubmitValues, any, PodResubmitValues>({
     resolver: zodResolver(podResubmitSchema),
     defaultValues: podResubmitInitialValues(pod),
   });

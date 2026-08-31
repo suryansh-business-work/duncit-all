@@ -82,7 +82,7 @@ export default function AdsPricingForm({
   onSubmit,
 }: Readonly<AdsPricingFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, watch, formState } = useForm<AdsPricingFormValues>({
+  const { control, handleSubmit, reset, watch, formState } = useForm<AdsPricingFormValues, any, AdsPricingFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(adsPricingSchema(t)),
     mode: 'onChange',

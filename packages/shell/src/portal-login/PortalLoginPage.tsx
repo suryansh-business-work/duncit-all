@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useColorMode } from '@duncit/theme';
 import { parseApiError } from '@duncit/utils';
@@ -69,9 +70,9 @@ export default function PortalLoginPage({
     [mutationName, extraUserFields],
   );
   const otpLoginDocument = useMemo(() => buildOtpLoginMutation(extraUserFields), [extraUserFields]);
-  const [loginMutation, { loading }] = useMutation(loginDocument);
-  const [requestOtp, { loading: sendingOtp }] = useMutation(REQUEST_OTP);
-  const [otpLogin, { loading: verifyingOtp }] = useMutation(otpLoginDocument);
+  const [loginMutation, { loading }] = useMutation<any>(loginDocument);
+  const [requestOtp, { loading: sendingOtp }] = useMutation<any>(REQUEST_OTP);
+  const [otpLogin, { loading: verifyingOtp }] = useMutation<any>(otpLoginDocument);
   const [error, setError] = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
   const { mode, toggle } = useColorMode();

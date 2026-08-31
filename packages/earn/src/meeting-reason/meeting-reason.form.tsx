@@ -35,7 +35,7 @@ export default function MeetingReasonForm({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<MeetingReasonValues>({
+  } = useForm<MeetingReasonValues, any, MeetingReasonValues>({
     resolver: zodResolver(buildMeetingReasonSchema(labels)),
     defaultValues: blankMeetingReasonValues,
   });

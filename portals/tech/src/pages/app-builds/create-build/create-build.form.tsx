@@ -91,7 +91,7 @@ function ArtifactField({ control, kinds, label }: Readonly<ArtifactFieldProps>) 
 export default function CreateBuildForm({ platform, config, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const kinds = PLATFORM_ARTIFACTS[platform];
-  const { control, getValues, handleSubmit, watch, setValue } = useForm<CreateBuildValues>({
+  const { control, getValues, handleSubmit, watch, setValue } = useForm<CreateBuildValues, any, CreateBuildValues>({
     defaultValues: {
       app_env: 'PRODUCTION',
       artifacts: kinds,

@@ -25,7 +25,7 @@ const names: AddressFieldNames<Form> = {
 };
 
 function Harness({ required }: Readonly<{ required?: boolean }>) {
-  const { control } = useForm<Form>({
+  const { control } = useForm<Form, any, Form>({
     defaultValues: { line1: '', line2: '', landmark: '', city: '', state: '', pincode: '', country: 'India' },
   });
   return <AddressFields control={control} names={names} required={required} />;

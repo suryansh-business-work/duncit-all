@@ -67,7 +67,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
   const submitLabelText = submitLabel ?? t('crm.forms.saveVenueLead');
 
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const methods = useForm<VenueLeadFormValues>({
+  const methods = useForm<VenueLeadFormValues, any, VenueLeadFormValues>({
     resolver: zodResolver(venueLeadSchema, undefined, { raw: true }),
     mode: 'onChange',
     defaultValues: initialValues ?? venueLeadInitialValues,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { notify } from '@duncit/dialogs';
@@ -26,7 +26,7 @@ export default function DefaultMediaCard() {
     WHATSAPP_DEFAULT_MEDIA,
     { fetchPolicy: 'cache-and-network' }
   );
-  const [setDefaultMedia] = useMutation(SET_WHATSAPP_DEFAULT_MEDIA);
+  const [setDefaultMedia] = useMutation<any>(SET_WHATSAPP_DEFAULT_MEDIA);
   const [busy, setBusy] = useState(false);
   const saved = data?.whatsappDefaultMedia;
 

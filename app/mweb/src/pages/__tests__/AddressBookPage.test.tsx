@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AddressBookPage from '../AddressBookPage';
 import { MY_ADDRESSES } from '../account-page/AddressBookSection';

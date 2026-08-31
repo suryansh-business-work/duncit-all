@@ -3,7 +3,8 @@
  * the first URL. LinkCard sits right beside it because MessageText is the
  * only thing that renders one, and both need the same Apollo plumbing.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

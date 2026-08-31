@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Paper, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -34,7 +34,7 @@ interface Props {
  * replaces the server's list, so every kept row is submitted every time. */
 export default function RewardsEditor({ savedRewards }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [save] = useMutation(ADMIN_UPDATE_LEADERBOARD_SETTINGS, {
+  const [save] = useMutation<any>(ADMIN_UPDATE_LEADERBOARD_SETTINGS, {
     refetchQueries: ['AdminLeaderboardSettings'],
   });
   const [rows, setRows] = useState<EditableReward[]>([]);

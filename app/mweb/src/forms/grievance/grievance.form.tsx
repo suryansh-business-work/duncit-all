@@ -38,7 +38,7 @@ export default function GrievanceForm({
   const schema = useMemo(() => buildGrievanceSchema(t), [t]);
   const noTickets = !ticketsLoading && tickets.length === 0;
 
-  const { control, handleSubmit } = useForm<GrievanceValues>({
+  const { control, handleSubmit } = useForm<GrievanceValues, any, GrievanceValues>({
     defaultValues: grievanceDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Card, CircularProgress, ListItemIcon, Menu, MenuItem, Stack } from '@mui/material';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import MeetingDetailsDrawer from '../MeetingDetailsDrawer';
@@ -35,7 +35,7 @@ export default function MeetingCalendarPage() {
   const { data, loading, refetch } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter: {} }, fetchPolicy: 'cache-and-network' });
   const { data: avData } = useQuery<{ meetingAvailability: MeetingAvailability }>(MEETING_AVAILABILITY, { fetchPolicy: 'cache-and-network' });
   const { data: holData } = useQuery<{ meetingHolidays: MeetingHoliday[] }>(MEETING_HOLIDAYS, { fetchPolicy: 'cache-and-network' });
-  const [dismissMeeting] = useMutation(DISMISS_MEETING);
+  const [dismissMeeting] = useMutation<any>(DISMISS_MEETING);
 
   // Keep the "current time" line live without re-fetching meetings.
   useEffect(() => {

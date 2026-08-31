@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import { BackHeader } from '@duncit/ui';
@@ -26,8 +26,8 @@ export default function TicketDetailPage() {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
-  const [reply, { loading: replying }] = useMutation(REPLY_TO_TICKET, { onCompleted: () => refetch() });
-  const [markTicketRead] = useMutation(MARK_TICKET_READ);
+  const [reply, { loading: replying }] = useMutation<any>(REPLY_TO_TICKET, { onCompleted: () => refetch() });
+  const [markTicketRead] = useMutation<any>(MARK_TICKET_READ);
   const actions = useTicketActions(id, () => refetch());
 
   const [bodyHtml, setBodyHtml] = useState('');

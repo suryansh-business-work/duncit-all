@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -60,7 +60,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
   const [status, setStatus] = useState('APPROVED');
   const [submitError, setSubmitError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<VenueValidationErrors>({});
-  const [updateVenue, state] = useMutation(UPDATE_VENUE);
+  const [updateVenue, state] = useMutation<any>(UPDATE_VENUE);
 
   useEffect(() => {
     if (!venue) return;

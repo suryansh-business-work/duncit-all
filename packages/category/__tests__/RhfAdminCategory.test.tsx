@@ -41,7 +41,7 @@ interface TestFormProps {
 
 /** Hoisted so RhfAdminCategory is exercised through a real react-hook-form context (S6478). */
 function TestForm({ defaultValue, onSubmitSpy, errorMessage }: Readonly<TestFormProps>) {
-  const { control, setError, handleSubmit } = useForm<FormValues>({
+  const { control, setError, handleSubmit } = useForm<FormValues, any, FormValues>({
     defaultValues: { category: defaultValue },
   });
 

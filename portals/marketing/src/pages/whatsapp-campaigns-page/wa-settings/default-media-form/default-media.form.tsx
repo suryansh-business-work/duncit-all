@@ -41,7 +41,7 @@ export default function DefaultMediaForm({
     reset,
     watch,
     formState: { isValid },
-  } = useForm<DefaultMediaValues>({
+  } = useForm<DefaultMediaValues, any, DefaultMediaValues>({
     defaultValues: { url: savedUrl, filename: savedFilename },
     resolver: zodResolver(schema),
     mode: 'onChange',

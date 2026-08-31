@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import HostShareCard, { MY_HOST_PAYOUTS } from '../HostShareCard';
 
@@ -60,7 +60,7 @@ const mocks = [
 describe('HostShareCard', () => {
   it('renders v2 payouts as your-amount − commission = payout', async () => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <HostShareCard />
       </MockedProvider>,
     );

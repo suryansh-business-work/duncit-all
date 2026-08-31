@@ -23,7 +23,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<CallPromptFormValues>({
+  } = useForm<CallPromptFormValues, any, CallPromptFormValues>({
     resolver: zodResolver(callPromptSchema),
     mode: 'onChange',
     defaultValues: { ...callPromptDefaults, ...defaultValues },

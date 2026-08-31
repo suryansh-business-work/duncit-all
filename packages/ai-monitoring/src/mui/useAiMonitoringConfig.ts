@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   AI_MONITORING_CONFIG_QUERY,
   isAiMonitoringChipVisible,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import EmailLogDrawer from '../../src/pages/email-logs-page/EmailLogDrawer';
 import { EMAIL_LOG_ONE } from '../../src/pages/email-logs-page/queries';

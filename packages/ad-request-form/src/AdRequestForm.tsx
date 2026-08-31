@@ -57,7 +57,7 @@ export default function AdRequestForm({
     [window, t]
   );
 
-  const { control, handleSubmit, setValue, watch, formState } = useForm<AdRequestFormValues>({
+  const { control, handleSubmit, setValue, watch, formState } = useForm<AdRequestFormValues, any, AdRequestFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(schema),
     mode: 'onChange',

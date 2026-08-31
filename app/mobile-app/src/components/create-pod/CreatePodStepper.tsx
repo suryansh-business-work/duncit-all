@@ -88,7 +88,7 @@ export function CreatePodStepper({
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(() => makeCreatePodSchema(t), [t]);
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: zodResolver(schema),
     defaultValues: initialValues,
     mode: 'onTouched',

@@ -1,4 +1,4 @@
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client/react';
 import {
   isPodPast,
   participationInputFrom,
@@ -81,9 +81,9 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
   const { formatDateTime } = useDateFormat();
   const { t } = useTranslation();
   const { format, backoutDeductionPct } = usePricing();
-  const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
-  const [loadTicketForPod] = useLazyQuery(POD_HISTORY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
-  const [loadTicketPdf, ticketState] = useLazyQuery(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
+  const [loadInvoice, invoiceState] = useLazyQuery<any>(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
+  const [loadTicketForPod] = useLazyQuery<any>(POD_HISTORY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
+  const [loadTicketPdf, ticketState] = useLazyQuery<any>(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
   const pod = item.pod;
   const isDeleted = !!pod?.is_deleted;
   const imageUrl = pod?.pod_images_and_videos?.[0]?.url;

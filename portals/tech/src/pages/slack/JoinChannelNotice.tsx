@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, AlertTitle, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
@@ -25,7 +25,7 @@ interface Props {
 export default function JoinChannelNotice({ channel, onJoined }: Readonly<Props>) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
-  const [joinChannel] = useMutation(JOIN_SLACK_CHANNEL);
+  const [joinChannel] = useMutation<any>(JOIN_SLACK_CHANNEL);
 
   const join = async () => {
     setBusy(true);

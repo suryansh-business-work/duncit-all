@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack, Typography } from '@mui/material';
 import AnalyticsIcon from '@mui/icons-material/Analytics';

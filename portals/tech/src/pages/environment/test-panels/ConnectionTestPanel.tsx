@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Stack, TextField, Typography } from '@mui/material';
 import BoltIcon from '@mui/icons-material/Bolt';
 import { DuncitButton } from '@duncit/buttons';
@@ -37,7 +37,7 @@ export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
   const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [result, setResult] = useState<ConnectionTestResult | null>(null);
-  const [run, { loading }] = useMutation(TEST_ENV_CONNECTION);
+  const [run, { loading }] = useMutation<any>(TEST_ENV_CONNECTION);
 
   const needsDestination = entry.category === NEEDS_DESTINATION;
   const description =

@@ -18,7 +18,7 @@ export default function PodExpenseForm({
   onSubmit,
 }: Readonly<PodExpenseFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<PodExpenseFormValues>({
+  const { control, handleSubmit, reset } = useForm<PodExpenseFormValues, any, PodExpenseFormValues>({
     defaultValues: toFormValues(expense),
     resolver: zodResolver(podExpenseSchema(t)),
   });

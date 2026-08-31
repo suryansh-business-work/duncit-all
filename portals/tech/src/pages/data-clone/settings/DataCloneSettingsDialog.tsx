@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useMutation, useQuery, type ApolloCache } from '@apollo/client';
+import { type ApolloCache } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,

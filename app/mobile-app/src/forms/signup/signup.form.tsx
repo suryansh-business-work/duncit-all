@@ -32,7 +32,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
     () => makeSignupSchema(minSignupAge, t, requiredPolicyIds, datePlaceholder),
     [minSignupAge, t, requiredPolicyIds, datePlaceholder],
   );
-  const { control, handleSubmit, watch } = useForm<SignupFormValues>({
+  const { control, handleSubmit, watch } = useForm<SignupFormValues, any, SignupFormValues>({
     defaultValues: signupDefaults,
     resolver: zodResolver(schema),
     mode: 'onBlur',

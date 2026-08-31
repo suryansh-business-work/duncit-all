@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Chip, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';

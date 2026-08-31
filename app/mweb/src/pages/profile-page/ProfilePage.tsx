@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, CircularProgress, Snackbar, Stack } from '@mui/material';
 import { ME_AND_POSTS } from './queries';
@@ -13,7 +13,7 @@ import UploadDialog from './UploadDialog';
 export default function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data, loading, error, refetch } = useQuery(ME_AND_POSTS, {
+  const { data, loading, error, refetch } = useQuery<any>(ME_AND_POSTS, {
     fetchPolicy: 'cache-and-network',
   });
   const [openPostId, setOpenPostId] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -50,7 +50,7 @@ export default function LocationFormDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [aiError, setAiError] = useState<string | null>(null);
-  const [fillAreas, { loading: fillingAreas }] = useMutation(AI_FILL_LOCATION_AREAS);
+  const [fillAreas, { loading: fillingAreas }] = useMutation<any>(AI_FILL_LOCATION_AREAS);
   // Scroll the freshly-added Area row into view so the user doesn't have to hunt
   // for it at the bottom of the dialog (B20).
   const lastZoneRef = useRef<HTMLDivElement | null>(null);

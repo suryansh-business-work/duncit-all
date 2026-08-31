@@ -9,7 +9,7 @@
  * reaches the package.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { LocaleProvider } from '@duncit/app-settings';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

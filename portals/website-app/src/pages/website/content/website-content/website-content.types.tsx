@@ -33,7 +33,7 @@ export const websiteContentSchema = z.object({
   published_at: z.string().nullable(),
   is_published: z.boolean(),
   sort_order: z.coerce
-    .number({ invalid_type_error: 'Sort order must be a number' })
+    .number({ error: 'Sort order must be a number' })
     .int('Sort order must be a whole number')
     .min(0, 'Sort order must be 0 or greater')
     .max(9999, 'Sort order is too large'),

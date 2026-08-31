@@ -8,7 +8,8 @@
  * persisted, because this is a lookup, not a correspondence.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 
 import { AnswerLinks } from '../src/chrome/ask-bot/AnswerLinks';
@@ -67,8 +68,13 @@ const reply = (over: Record<string, unknown> = {}) => ({
 
 const chatMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   ({
-    request: { query: ASK_BOT_CHAT },
-    variableMatcher: () => true,
+    request: { query: ASK_BOT_CHAT, variables: () => (asked(), true) } variables: (v: Record<string, unknown>) => {
+          asked.push(v);
+          return true;
+        } } variables: (v: Record<string, unknown>) => {
+          asked.push(v);
+          return true;
+        } } variables: () => true },
     result: { data: { askBotChat: reply() } },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
@@ -267,10 +273,6 @@ describe('AskBotDialog', () => {
     open([
       botsMock([bot()]),
       chatMock({
-        variableMatcher: (v: Record<string, unknown>) => {
-          asked.push(v);
-          return true;
-        },
       }),
     ]);
     await settle();
@@ -350,10 +352,6 @@ describe('useAskBot', () => {
     const asked: Record<string, unknown>[] = [];
     const { result } = hook([
       chatMock({
-        variableMatcher: (v: Record<string, unknown>) => {
-          asked.push(v);
-          return true;
-        },
       }),
     ]);
 
@@ -369,7 +367,7 @@ describe('useAskBot', () => {
 
   it('sends nothing for a blank question', async () => {
     const asked = vi.fn();
-    const { result } = hook([chatMock({ variableMatcher: () => (asked(), true) })]);
+    const { result } = hook([chatMock({})]);
 
     await act(async () => result.current.send('   '));
     await settle();

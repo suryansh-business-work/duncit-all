@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -55,7 +55,7 @@ export default function ShortLinkDetailPage() {
     fetchPolicy: 'cache-and-network',
   });
   const [openJourney, setOpenJourney] = useState<ShortLinkJourneyRow | null>(null);
-  const [setActive, { loading: toggling }] = useMutation(SET_SHORT_LINK_ACTIVE);
+  const [setActive, { loading: toggling }] = useMutation<any>(SET_SHORT_LINK_ACTIVE);
 
   const fetchRows = useApolloTableFetch<ShortLinkClickRow>(
     client,

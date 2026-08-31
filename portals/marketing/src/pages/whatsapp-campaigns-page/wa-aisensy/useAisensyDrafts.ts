@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import { parseApiError } from '@duncit/utils';
@@ -27,9 +27,9 @@ import {
  */
 export function useAisensyDrafts(onChanged: () => void) {
   const { t } = useTranslation();
-  const [createTemplate, { loading: creatingTemplate }] = useMutation(CREATE_AISENSY_TEMPLATE);
-  const [createCampaign, { loading: creatingCampaign }] = useMutation(CREATE_AISENSY_CAMPAIGN);
-  const [deleteTemplate, { loading: deletingTemplate }] = useMutation(DELETE_AISENSY_TEMPLATE);
+  const [createTemplate, { loading: creatingTemplate }] = useMutation<any>(CREATE_AISENSY_TEMPLATE);
+  const [createCampaign, { loading: creatingCampaign }] = useMutation<any>(CREATE_AISENSY_CAMPAIGN);
+  const [deleteTemplate, { loading: deletingTemplate }] = useMutation<any>(DELETE_AISENSY_TEMPLATE);
 
   const submitTemplate = useCallback(
     async (input: CreateAisensyTemplateInput) => {

@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // lottie-react → lottie-web touches canvas getContext at import time (unavailable
 // in jsdom); the confetti/success screens pull it in. Stub it out.
 vi.mock('lottie-react', () => ({ default: () => null }));
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ProductCheckoutPage from '../index';
@@ -93,8 +94,7 @@ const couponsMock = (): MockedResponse => ({
 // Real server line shapes: one line per (pod, warehouse) group; free groups
 // carry courier_name '' (no rate lookup ever ran).
 const shippingMock = (): MockedResponse => ({
-  request: { query: PRODUCT_SHIPPING_QUOTE },
-  variableMatcher: () => true,
+  request: { query: PRODUCT_SHIPPING_QUOTE, variables: () => true },
   result: {
     data: {
       productShippingQuote: {
@@ -134,8 +134,7 @@ const couponPreviewMock = (): MockedResponse => ({
 });
 
 const dummyMock = (): MockedResponse => ({
-  request: { query: DUMMY_PRODUCT_CHECKOUT },
-  variableMatcher: () => true,
+  request: { query: DUMMY_PRODUCT_CHECKOUT, variables: () => true },
   result: {
     data: {
       dummyProductCheckout: {
@@ -154,7 +153,7 @@ const dummyMock = (): MockedResponse => ({
 
 function renderPage(mocks: MockedResponse[], lines: Array<{ meta: CartLineMeta; qty: number }> = []) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <CartProvider>
         <MemoryRouter initialEntries={['/product-checkout']}>
           <Seed lines={lines} />

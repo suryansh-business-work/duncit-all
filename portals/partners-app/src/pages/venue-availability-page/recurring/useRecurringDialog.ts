@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { generateRecurringSlots } from './generate-recurring-slots';
 import type { RecurringConfig } from './recurring.types';
 import { hhmmToDate, readVenueSettings, timeToHHMM } from './settings-map';
@@ -100,7 +100,7 @@ export function useRecurringDialog(
   const [form, setForm] = useState<RecurringForm>(() => initialRecurringForm(seed));
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [createSlots] = useMutation(CREATE_VENUE_SLOTS);
+  const [createSlots] = useMutation<any>(CREATE_VENUE_SLOTS);
 
   // The dialog mounts with the PAGE, long before `myVenues` answers, so its very
   // first seed is the whole-venue placeholder — which is how the owner of a

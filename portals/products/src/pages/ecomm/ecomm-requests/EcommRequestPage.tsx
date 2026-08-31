@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQuery, type DocumentNode } from '@apollo/client';
+import { type DocumentNode } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Divider, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import ChangeRequestList from './ChangeRequestList';
@@ -50,7 +51,7 @@ function buildDiff(fields: RequestField[], entity: any, form: Record<string, str
  * an approval hint), and submit the change for admin review (Task B item 2). */
 export default function EcommRequestPage({ config }: Readonly<{ config: EcommRequestConfig }>) {
   const { t } = useTranslation();
-  const { data } = useQuery(config.entitiesQuery, { fetchPolicy: 'cache-and-network' });
+  const { data } = useQuery<any>(config.entitiesQuery, { fetchPolicy: 'cache-and-network' });
   const entities: any[] = data?.[config.entitiesKey] ?? [];
   const [selectedId, setSelectedId] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export default function EcommRequestPage({ config }: Readonly<{ config: EcommReq
     resolver: zodResolver(schema),
     values: toValues(config.fields, selected),
   });
-  const [submit, { loading }] = useMutation(SUBMIT_ECOMM_CHANGE, {
+  const [submit, { loading }] = useMutation<any>(SUBMIT_ECOMM_CHANGE, {
     refetchQueries: [{ query: MY_ECOMM_CHANGE_REQUESTS, variables: { kind: config.kind } }],
   });
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import ChannelList from './ChannelList';
@@ -21,9 +21,9 @@ const PANE_HEIGHT = 'calc(100vh - 210px)';
  */
 export default function SlackSettingsPage() {
   const { t } = useTranslation();
-  const configured = useQuery(SLACK_CONFIGURED, { fetchPolicy: 'cache-and-network' });
+  const configured = useQuery<any>(SLACK_CONFIGURED, { fetchPolicy: 'cache-and-network' });
   const isConfigured = configured.data?.slackConfigured === true;
-  const { data, loading, error, refetch } = useQuery(SLACK_CHANNELS, {
+  const { data, loading, error, refetch } = useQuery<any>(SLACK_CHANNELS, {
     skip: !isConfigured,
     fetchPolicy: 'cache-and-network',
   });

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Chip,
@@ -35,7 +35,7 @@ interface Props {
  * pattern. */
 export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(POD_AUDIT_LOGS, {
+  const { data, loading, error } = useQuery<any>(POD_AUDIT_LOGS, {
     variables: { pod_doc_id: pod?.id },
     skip: !pod,
     fetchPolicy: 'cache-and-network',

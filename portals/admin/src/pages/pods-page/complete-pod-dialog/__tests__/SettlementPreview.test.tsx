@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import SettlementPreview from '../SettlementPreview';
 import { POD_SETTLEMENT_PREVIEW } from '../../queries';
 import { renderWithProviders } from '../../../../__tests__/testkit';
@@ -28,8 +29,7 @@ const waterfall = {
 };
 
 const previewMock = (over: Record<string, unknown> = {}): MockedResponse => ({
-  request: { query: POD_SETTLEMENT_PREVIEW },
-  variableMatcher: () => true,
+  request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: {
     data: {
@@ -69,11 +69,10 @@ describe('SettlementPreview', () => {
   it('sends host_user_id as null rather than an empty string', async () => {
     let sentVariables: unknown;
     const mock: MockedResponse = {
-      request: { query: POD_SETTLEMENT_PREVIEW },
-      variableMatcher: (variables) => {
+      request: { query: POD_SETTLEMENT_PREVIEW, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: { data: { podSettlementPreview: { __typename: 'PodSettlementPreview', currency_symbol: '₹', collected_total: 1000, has_venue: false, waterfall } } },
     };
     renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} hostUserId="" />, {
@@ -85,8 +84,7 @@ describe('SettlementPreview', () => {
 
   it('states the GraphQL error reason rather than a generic message', async () => {
     const mock: MockedResponse = {
-      request: { query: POD_SETTLEMENT_PREVIEW },
-      variableMatcher: () => true,
+      request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
       result: {
         errors: [{ message: 'Pod is not ready for settlement' } as never],
       },
@@ -99,8 +97,7 @@ describe('SettlementPreview', () => {
 
   it('states a network-error message when the query has no GraphQL errors of its own', async () => {
     const mock: MockedResponse = {
-      request: { query: POD_SETTLEMENT_PREVIEW },
-      variableMatcher: () => true,
+      request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
       error: new Error('offline'),
     };
     renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} hostUserId="u1" />, {
@@ -111,8 +108,7 @@ describe('SettlementPreview', () => {
 
   it('falls back to a generic message when the query settles with neither data nor an error', async () => {
     const mock: MockedResponse = {
-      request: { query: POD_SETTLEMENT_PREVIEW },
-      variableMatcher: () => true,
+      request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
       result: { data: { podSettlementPreview: null } },
     };
     renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} hostUserId="u1" />, {
@@ -140,11 +136,10 @@ describe('SettlementPreview', () => {
     vi.useFakeTimers();
     const seenAmounts: unknown[] = [];
     const mock: MockedResponse = {
-      request: { query: POD_SETTLEMENT_PREVIEW },
-      variableMatcher: (variables) => {
+      request: { query: POD_SETTLEMENT_PREVIEW, variables: (variables) => {
         seenAmounts.push(variables.venue_bill_amount);
         return true;
-      },
+      } },
       maxUsageCount: Number.POSITIVE_INFINITY,
       result: {
         data: {

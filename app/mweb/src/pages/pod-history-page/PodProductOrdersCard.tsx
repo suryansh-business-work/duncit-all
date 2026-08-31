@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import PodProductOrderItem from './PodProductOrderItem';
@@ -10,7 +10,7 @@ import { useTranslation } from '../../i18n/useTranslation';
  * orders (the common case), so it never clutters a plain booking. */
 export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: string }>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_PRODUCT_ORDERS_FOR_POD, {
+  const { data, loading, error } = useQuery<any>(MY_PRODUCT_ORDERS_FOR_POD, {
     variables: { podId: podId ?? '' },
     skip: !podId,
     fetchPolicy: 'cache-and-network',

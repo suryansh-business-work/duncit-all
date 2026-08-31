@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useConfirm, notifyError } from '@duncit/dialogs';
 import { DELETE, type PodRow } from './queries';
 
@@ -8,7 +8,7 @@ interface Args {
 
 /** Admin pod deletion: confirm, mutate, tell the list to reload. */
 export default function usePodDelete({ onChanged }: Args) {
-  const [deleteMut] = useMutation(DELETE);
+  const [deleteMut] = useMutation<any>(DELETE);
   const confirm = useConfirm();
 
   return async (p: PodRow) => {

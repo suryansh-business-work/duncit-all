@@ -13,7 +13,7 @@
  * MIME list rather than written per caller, so a PDF-only picker never invites
  * somebody to drop a video into it.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { createRef } from 'react';
@@ -42,7 +42,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -293,7 +293,7 @@ describe('useDeviceUpload', () => {
   const hook = (over: Record<string, unknown> = {}) =>
     renderHook(() => useDeviceUpload(args(over) as never), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={false}>
+        <MockedProvider mocks={[]}>
           <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
         </MockedProvider>
       ),
@@ -388,7 +388,7 @@ describe('useDeviceUpload uploading', () => {
   const hook = (over: Record<string, unknown> = {}) =>
     renderHook(() => useDeviceUpload(args(over) as never), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={false}>
+        <MockedProvider mocks={[]}>
           <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
         </MockedProvider>
       ),

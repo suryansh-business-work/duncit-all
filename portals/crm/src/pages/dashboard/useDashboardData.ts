@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { HOST_LEADS, VENUE_LEADS } from '../../api/crm.gql';
 import type { HostLead, VenueLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
@@ -36,8 +36,8 @@ interface DashboardData {
 export function useDashboardData(window: DateWindow): DashboardData {
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
-  const venueQ = useQuery(VENUE_LEADS, { variables: { filter: {} }, fetchPolicy: 'cache-and-network' });
-  const hostQ = useQuery(HOST_LEADS, { variables: { filter: {} }, fetchPolicy: 'cache-and-network' });
+  const venueQ = useQuery<any>(VENUE_LEADS, { variables: { filter: {} }, fetchPolicy: 'cache-and-network' });
+  const hostQ = useQuery<any>(HOST_LEADS, { variables: { filter: {} }, fetchPolicy: 'cache-and-network' });
 
   const allVenue: VenueLead[] = useMemo(() => venueQ.data?.venueLeads ?? [], [venueQ.data]);
   const allHost: HostLead[] = useMemo(() => hostQ.data?.hostLeads ?? [], [hostQ.data]);

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -20,8 +20,8 @@ export default function CouponsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const { data: podsData } = useQuery(COUPON_PODS, { fetchPolicy: 'cache-first' });
-  const [deleteCoupon] = useMutation(DELETE_COUPON);
+  const { data: podsData } = useQuery<any>(COUPON_PODS, { fetchPolicy: 'cache-first' });
+  const [deleteCoupon] = useMutation<any>(DELETE_COUPON);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();

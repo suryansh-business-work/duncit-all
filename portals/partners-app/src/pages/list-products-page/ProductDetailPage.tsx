@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
@@ -22,10 +22,10 @@ export default function ProductDetailPage() {
   const location = useLocation();
   const productsHome = `/ecomm-brand/${brandId}/products`;
   const stateProduct = (location.state as { product?: any } | null)?.product;
-  const { data: accessData, loading: accessLoading, error: accessError } = useQuery(PRODUCT_LISTING_ACCESS, {
+  const { data: accessData, loading: accessLoading, error: accessError } = useQuery<any>(PRODUCT_LISTING_ACCESS, {
     fetchPolicy: 'cache-and-network',
   });
-  const { data, loading, error } = useQuery(MY_PRODUCT_LISTINGS, {
+  const { data, loading, error } = useQuery<any>(MY_PRODUCT_LISTINGS, {
     variables: { brand_id: brandId },
     skip: Boolean(stateProduct),
     fetchPolicy: 'cache-and-network',

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import PricePanel, { SUGGESTED_TICKET_PRICES, type EarningsPreview } from '../price-panel';
@@ -108,7 +108,7 @@ describe('Step-4 pricing guards', () => {
 
   it('states the venue rule inside the Venue Charges section', async () => {
     render(
-      <MockedProvider mocks={[financeMock]} addTypename={false}>
+      <MockedProvider mocks={[financeMock]}>
         <PricePanel preview={previewWith({ venueShortfall: true, blocked: true })} />
       </MockedProvider>,
     );
@@ -119,7 +119,7 @@ describe('Step-4 pricing guards', () => {
 
   it('keeps the charges tree clean when the pod covers the venue', async () => {
     render(
-      <MockedProvider mocks={[financeMock]} addTypename={false}>
+      <MockedProvider mocks={[financeMock]}>
         <PricePanel preview={previewWith({})} />
       </MockedProvider>,
     );
@@ -146,7 +146,6 @@ function renderDialog(prices: { price: number; host_receives: number }[]) {
           result: { data: { suggestedTicketPrices: prices } },
         },
       ]}
-      addTypename={false}
     >
       <SuggestedPricesDialog
         open

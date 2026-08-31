@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import SendTestDialog from '../../src/pages/email-templates-page/SendTestDialog';
 import { SEND_TEST, type Tpl } from '../../src/pages/email-templates-page/queries';
 

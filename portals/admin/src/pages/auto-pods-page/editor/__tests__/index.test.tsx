@@ -398,11 +398,10 @@ describe('AdminAutoPodEditorPage / submit pipeline', () => {
   it('creates through the create mutation and announces the any-order opening', async () => {
     let sentVariables: unknown;
     const createMock: MockedResponse = {
-      request: { query: CREATE_AUTO_POD },
-      variableMatcher: (variables) => {
+      request: { query: CREATE_AUTO_POD, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: {
         data: {
           createAutoPod: {
@@ -451,11 +450,10 @@ describe('AdminAutoPodEditorPage / submit pipeline', () => {
       result: { data: { autoPod: makeEditRow({ id: 'ap1' }) } },
     };
     const updateMock: MockedResponse = {
-      request: { query: UPDATE_AUTO_POD },
-      variableMatcher: (variables) => {
+      request: { query: UPDATE_AUTO_POD, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: {
         data: {
           updateAutoPod: {

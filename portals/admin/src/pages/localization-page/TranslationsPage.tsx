@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Chip, Snackbar, Stack } from '@mui/material';
 import { BackHeader } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -24,8 +24,8 @@ import { useTranslation } from '@duncit/shell';
 export default function TranslationsPage() {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
-  const { data: localeData } = useQuery(LOCALES, { fetchPolicy: 'cache-and-network' });
-  const [upsert] = useMutation(UPSERT_TRANSLATION);
+  const { data: localeData } = useQuery<any>(LOCALES, { fetchPolicy: 'cache-and-network' });
+  const [upsert] = useMutation<any>(UPSERT_TRANSLATION);
 
   /** The namespace being edited — null is the groups list. */
   const [group, setGroup] = useState<TranslationGroupRow | null>(null);

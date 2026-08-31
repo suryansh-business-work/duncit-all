@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
@@ -16,7 +16,7 @@ interface Props {
  * unaffected. Reports the outcome (success or API error) through onDone. */
 export default function ListingPauseDialog({ target, onClose, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [setListingActive, activeState] = useMutation(SET_LISTING_ACTIVE);
+  const [setListingActive, activeState] = useMutation<any>(SET_LISTING_ACTIVE);
   const activating = target ? target.is_active === false : false;
   const body = activating
     ? 'will be visible and purchasable in the shop again.'

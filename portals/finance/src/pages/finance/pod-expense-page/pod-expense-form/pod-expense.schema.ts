@@ -14,13 +14,12 @@ import type { PodExpenseRow } from '../queries';
  */
 export const podExpenseSchema = (t: Translate = fallbackT) =>
   z.object({
-    date: z.date({
-      required_error: t('finance.podExpense.pickASpendDate'),
-      invalid_type_error: t('finance.podExpense.pickASpendDate'),
-    }),
+    // zod 4 carries ONE message for both "missing" and "wrong type"; these two
+    // already said the same thing.
+    date: z.date({ error: t('finance.podExpense.pickASpendDate') }),
     category: z.string().min(1, t('finance.podExpense.pickACategory')),
     amount: z
-      .number({ invalid_type_error: t('finance.expenseManagement.enterAnAmountGreaterThan0') })
+      .number({ error: t('finance.expenseManagement.enterAnAmountGreaterThan0') })
       .positive(t('finance.expenseManagement.enterAnAmountGreaterThan0')),
     vendor_name: z.string().trim().max(200, t('finance.podExpense.tooLong')).default(''),
     payment_method: z.string().min(1, t('finance.podExpense.pickAPaymentMethod')),

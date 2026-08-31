@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   createDateFormatter,
   stampServerTime,
@@ -66,7 +67,7 @@ export interface UseDateFormatOptions {
  */
 export function useDateFormat(options?: Readonly<UseDateFormatOptions>): DateFormatter {
   const timeZoneAware = options?.timeZoneAware === true;
-  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   const settings = data?.publicAppSettings;
   const serverTime: string | null = settings?.server_time ?? null;
 

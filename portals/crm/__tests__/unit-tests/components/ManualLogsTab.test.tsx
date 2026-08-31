@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import ManualLogsTab from '@/components/ManualLogsTab';
 import type { CrmActivity } from '@/api/crm.types';
 

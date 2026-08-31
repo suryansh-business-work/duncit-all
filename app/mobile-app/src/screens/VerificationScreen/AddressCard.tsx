@@ -33,7 +33,7 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const schema = useMemo(() => makeAddressSchema(t), [t]);
-  const { control, handleSubmit } = useForm<AddressValues>({
+  const { control, handleSubmit } = useForm<AddressValues, any, AddressValues>({
     resolver: zodResolver(schema),
     defaultValues: addressValuesFrom(item),
   });

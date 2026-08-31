@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ClubPodsScheduleSection from '../club-details-page/ClubPodsScheduleSection';
@@ -36,7 +37,7 @@ export const VENUE_PODS = gql`
 export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
   const navigate = useNavigate();
   const { format } = usePricing();
-  const { data, loading } = useQuery(VENUE_PODS, {
+  const { data, loading } = useQuery<any>(VENUE_PODS, {
     variables: { venueId },
     fetchPolicy: 'cache-and-network',
   });

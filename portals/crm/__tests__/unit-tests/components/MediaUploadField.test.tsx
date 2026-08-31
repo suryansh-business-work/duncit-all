@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import MediaUploadField from '@/forms/fields/MediaUploadField';
 
@@ -17,7 +17,7 @@ function Harness({ initial, kind }: Readonly<{ initial: string; kind: 'image' | 
 
 const renderField = (initial: string, kind: 'image' | 'video' = 'image') =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <Harness initial={initial} kind={kind} />
     </MockedProvider>
   );

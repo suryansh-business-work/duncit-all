@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   CLUB_STUDIO_PODS,
   EMPTY_STUDIO_SUMMARY,
@@ -16,7 +16,7 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function ClubPodsSection() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(CLUB_STUDIO_PODS, {
+  const { data, loading, error, refetch } = useQuery<any>(CLUB_STUDIO_PODS, {
     fetchPolicy: 'cache-and-network',
   });
 

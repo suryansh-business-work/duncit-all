@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Dialog,
   DialogActions,
@@ -18,7 +18,7 @@ export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () 
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
-  const [clean, { loading }] = useMutation(WA_CLEAN_DATA);
+  const [clean, { loading }] = useMutation<any>(WA_CLEAN_DATA);
 
   const run = async () => {
     setOpen(false);

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -129,11 +130,11 @@ function ReviewRow({
 /** Seller view of a product's reviews with a reply box per review. */
 export default function ProductReviewsPanel({ productId }: Readonly<{ productId: string }>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(PRODUCT_REVIEWS, {
+  const { data, loading, refetch } = useQuery<any>(PRODUCT_REVIEWS, {
     variables: { id: productId },
     fetchPolicy: 'cache-and-network',
   });
-  const [replyMut] = useMutation(REPLY_TO_REVIEW);
+  const [replyMut] = useMutation<any>(REPLY_TO_REVIEW);
   const [error, setError] = useState<string | null>(null);
   const reviews: Review[] = data?.productReviews ?? [];
   const summary = data?.productReviewSummary;

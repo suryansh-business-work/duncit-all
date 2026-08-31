@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { useForm } from 'react-hook-form';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import { filterProductsForClub, pruneProductRequests } from '@duncit/utils';
 import PricingStep from '../steps/PricingStep';
@@ -42,7 +42,7 @@ const preview = {
 } as EarningsPreview;
 
 function Harness({ products }: Readonly<{ products: CreatePodProduct[] }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, products_enabled: true, product_requests: [{ product_id: '', quantity: 1 }] },
   });
   return (
@@ -58,7 +58,7 @@ function Harness({ products }: Readonly<{ products: CreatePodProduct[] }>) {
 
 const renderFor = (club: unknown) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <Harness products={filterProductsForClub(CATALOGUE, club) as CreatePodProduct[]} />
     </MockedProvider>,
   );

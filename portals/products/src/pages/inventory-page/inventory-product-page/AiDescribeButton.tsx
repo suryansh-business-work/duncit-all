@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { CircularProgress, Tooltip } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
@@ -14,7 +14,7 @@ interface AiDescribeButtonProps {
 
 export default function AiDescribeButton({ values, onApply, onError }: Readonly<AiDescribeButtonProps>) {
   const [busy, setBusy] = useState(false);
-  const [describe] = useMutation(AI_DESCRIBE_PRODUCT);
+  const [describe] = useMutation<any>(AI_DESCRIBE_PRODUCT);
   const disabled = !values.product_name.trim() || busy;
 
   const run = async () => {

@@ -63,15 +63,13 @@ export const websiteContentTableMock = (
 export const websiteContentListMock = (
   rows: WebsiteContentItemMock[] = [],
 ): MockedResponse => ({
-  request: { query: WEBSITE_CONTENT },
-  variableMatcher: () => true,
+  request: { query: WEBSITE_CONTENT, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { websiteContent: rows } },
 });
 
 export const createContentMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: CREATE_CONTENT },
-  variableMatcher: () => true,
+  request: { query: CREATE_CONTENT, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: over.fail
     ? { errors: [{ message: 'Boom failed' }] }
@@ -79,8 +77,7 @@ export const createContentMock = (over: { fail?: boolean } = {}): MockedResponse
 });
 
 export const updateContentMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: UPDATE_CONTENT },
-  variableMatcher: () => true,
+  request: { query: UPDATE_CONTENT, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: over.fail
     ? { errors: [{ message: 'Boom failed' }] }
@@ -88,8 +85,7 @@ export const updateContentMock = (over: { fail?: boolean } = {}): MockedResponse
 });
 
 export const deleteContentMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: DELETE_CONTENT },
-  variableMatcher: () => true,
+  request: { query: DELETE_CONTENT, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: over.fail
     ? { errors: [{ message: 'Boom failed' }] }

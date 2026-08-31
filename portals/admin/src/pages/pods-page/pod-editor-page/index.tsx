@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   PodEditorPage,
@@ -39,8 +39,8 @@ export default function AdminPodEditorPage() {
 
   const lookups = usePodPageData();
   const picker = useMediaPickerBridge();
-  const [createMut] = useMutation(CREATE);
-  const [updateMut] = useMutation(UPDATE);
+  const [createMut] = useMutation<any>(CREATE);
+  const [updateMut] = useMutation<any>(UPDATE);
 
   const productsFlag = useFeatureFlag('is_product_visible');
   // Native-parity base (venue slots, place charges, reel, hosts) + admin extras.
@@ -57,7 +57,7 @@ export default function AdminPodEditorPage() {
     [productsFlag],
   );
 
-  const podQuery = useQuery(POD_FOR_EDIT, {
+  const podQuery = useQuery<any>(POD_FOR_EDIT, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'network-only',

@@ -88,28 +88,24 @@ export const makeFounderDashboard = (
 export const founderDashboardMock = (
   dashboard: FounderDashboardMock | null = makeFounderDashboard(),
 ): MockedResponse => ({
-  request: { query: FOUNDER_DASHBOARD },
-  variableMatcher: () => true,
+  request: { query: FOUNDER_DASHBOARD, variables: () => true },
   result: { data: { founderDashboard: dashboard } },
   maxUsageCount: 20,
 });
 
 export const founderDashboardLoadingMock = (): MockedResponse => ({
-  request: { query: FOUNDER_DASHBOARD },
-  variableMatcher: () => true,
+  request: { query: FOUNDER_DASHBOARD, variables: () => true },
   result: { data: { founderDashboard: makeFounderDashboard() } },
   delay: 60_000,
 });
 
 export const founderDashboardErrorMock = (): MockedResponse => ({
-  request: { query: FOUNDER_DASHBOARD },
-  variableMatcher: () => true,
+  request: { query: FOUNDER_DASHBOARD, variables: () => true },
   error: new Error('boom'),
 });
 
 export const saveFounderSettingMock = (): MockedResponse => ({
-  request: { query: SAVE_FOUNDER_SETTING },
-  variableMatcher: () => true,
+  request: { query: SAVE_FOUNDER_SETTING, variables: () => true },
   result: { data: { saveFounderSetting: { __typename: 'FounderSettingKV', key: 'a', value: 7 } } },
   maxUsageCount: 20,
 });

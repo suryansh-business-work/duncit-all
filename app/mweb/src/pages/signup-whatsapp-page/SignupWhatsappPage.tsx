@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -21,9 +21,9 @@ import { REQUEST_OTP, SKIP, VERIFY_OTP } from './queries';
 
 export default function SignupWhatsappPage() {
   const navigate = useNavigate();
-  const [requestOtp, requestState] = useMutation(REQUEST_OTP);
-  const [verifyOtp, verifyState] = useMutation(VERIFY_OTP);
-  const [skip] = useMutation(SKIP);
+  const [requestOtp, requestState] = useMutation<any>(REQUEST_OTP);
+  const [verifyOtp, verifyState] = useMutation<any>(VERIFY_OTP);
+  const [skip] = useMutation<any>(SKIP);
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

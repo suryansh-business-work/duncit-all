@@ -50,7 +50,7 @@ export default function RejectWithdrawalDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<RejectFormValues>({
+  } = useForm<RejectFormValues, any, RejectFormValues>({
     resolver: zodResolver(rejectSchema),
     defaultValues: { reason: '' },
     mode: 'onSubmit',

@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, Stack, TextField, Tooltip } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import CodeIcon from '@mui/icons-material/Code';
@@ -27,7 +27,7 @@ export default function SlackComposer({ channelId, onSent }: Readonly<Props>) {
   const [text, setText] = useState('');
   const [blocks, setBlocks] = useState('');
   const [showBlocks, setShowBlocks] = useState(false);
-  const [send, { loading }] = useMutation(SEND_SLACK_MESSAGE);
+  const [send, { loading }] = useMutation<any>(SEND_SLACK_MESSAGE);
 
   const canSend = Boolean(channelId) && !loading && (text.trim() !== '' || blocks.trim() !== '');
 

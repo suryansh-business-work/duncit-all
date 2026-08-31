@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Routes } from 'react-router-dom';
 import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
@@ -20,9 +20,9 @@ const bandHint = (band?: HealthBand) => {
 export default function HostDashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const meQ = useQuery(HOST_DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
+  const meQ = useQuery<any>(HOST_DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
   const userId = meQ.data?.me?.user_id;
-  const podsQ = useQuery(HOST_DASHBOARD_PODS, {
+  const podsQ = useQuery<any>(HOST_DASHBOARD_PODS, {
     variables: { host_user_id: userId },
     skip: !userId,
     fetchPolicy: 'cache-and-network',

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { RECONCILE_CRM_CALL } from '../api/call.gql';
 import { isTerminalCallStatus, type CallStatus } from '../lib/callSocket';
 
@@ -10,7 +10,7 @@ import { isTerminalCallStatus, type CallStatus } from '../lib/callSocket';
  * once the call reaches a terminal status.
  */
 export function useCallReconcile(logId: string | null, onStatus: (status: CallStatus) => void) {
-  const [reconcile] = useMutation(RECONCILE_CRM_CALL);
+  const [reconcile] = useMutation<any>(RECONCILE_CRM_CALL);
   const cb = useRef(onStatus);
   cb.current = onStatus;
 

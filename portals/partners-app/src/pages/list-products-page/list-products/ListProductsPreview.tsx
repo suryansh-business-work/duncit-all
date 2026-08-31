@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Avatar, Box, Chip, Divider, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from '@mui/material';
@@ -50,7 +50,7 @@ interface Props {
 /** Final review step: everything the listing will submit, at a glance. */
 export default function ListProductsPreview({ values, brandId }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data } = useQuery(MY_BRAND_WAREHOUSES, {
+  const { data } = useQuery<any>(MY_BRAND_WAREHOUSES, {
     variables: { brand_doc_id: brandId },
     skip: !brandId,
   });

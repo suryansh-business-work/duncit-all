@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -35,9 +35,9 @@ interface Props {
 export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readonly<Props>) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
-  const { data, refetch } = useQuery(MY_SLOT_TEMPLATES, { variables: { venue_id: venueId } });
-  const [createTemplate, { loading: saving, error }] = useMutation(CREATE_SLOT_TEMPLATE);
-  const [deleteTemplate] = useMutation(DELETE_SLOT_TEMPLATE);
+  const { data, refetch } = useQuery<any>(MY_SLOT_TEMPLATES, { variables: { venue_id: venueId } });
+  const [createTemplate, { loading: saving, error }] = useMutation<any>(CREATE_SLOT_TEMPLATE);
+  const [deleteTemplate] = useMutation<any>(DELETE_SLOT_TEMPLATE);
   const templates = data?.mySlotTemplates ?? [];
 
   // Templates capture the schedule skeleton (weekdays + the first time range + a

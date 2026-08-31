@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Snackbar } from '@mui/material';
 import {
   CLAIM_SUPPORT_CHAT,
@@ -78,9 +78,9 @@ export default function LiveChatPage() {
     fetchPolicy: 'network-only',
   });
 
-  const [sendMessage, { loading: sending }] = useMutation(SEND_SUPPORT_CHAT_MESSAGE);
-  const [markRead] = useMutation(MARK_SUPPORT_CHAT_READ);
-  const [claimChat] = useMutation(CLAIM_SUPPORT_CHAT);
+  const [sendMessage, { loading: sending }] = useMutation<any>(SEND_SUPPORT_CHAT_MESSAGE);
+  const [markRead] = useMutation<any>(MARK_SUPPORT_CHAT_READ);
+  const [claimChat] = useMutation<any>(CLAIM_SUPPORT_CHAT);
   const actions = useChatActions(() => sessionsQuery.refetch());
 
   const socketRef = useSupportSocket({

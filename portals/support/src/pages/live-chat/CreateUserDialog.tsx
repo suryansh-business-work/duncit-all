@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -25,7 +25,7 @@ export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [done, setDone] = useState('');
-  const [createUser, { loading, error }] = useMutation(SUPPORT_CREATE_USER);
+  const [createUser, { loading, error }] = useMutation<any>(SUPPORT_CREATE_USER);
 
   const set = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));

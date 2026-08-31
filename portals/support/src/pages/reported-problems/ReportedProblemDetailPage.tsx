@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -40,7 +40,7 @@ export default function ReportedProblemDetailPage() {
     REPORTED_PROBLEM,
     { variables: { id }, skip: !id, fetchPolicy: 'cache-and-network' }
   );
-  const [setStatus, statusState] = useMutation(SET_REPORT_STATUS);
+  const [setStatus, statusState] = useMutation<any>(SET_REPORT_STATUS);
   const report = data?.reportedProblem;
 
   return (

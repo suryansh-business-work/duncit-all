@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useSearchParams } from 'react-router-dom';
 import AuthBackground from '../../components/AuthBackground';
 import { type ResetPasswordValues } from '../../forms/reset-password';
@@ -10,8 +10,8 @@ import ResetPasswordCard from './ResetPasswordCard';
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
   const email = params.get('email') ?? '';
-  const [resetPassword, { loading, error }] = useMutation(RESET_PASSWORD_WITH_OTP);
-  const [requestOtp, { loading: resending }] = useMutation(REQUEST_PASSWORD_RESET_OTP);
+  const [resetPassword, { loading, error }] = useMutation<any>(RESET_PASSWORD_WITH_OTP);
+  const [requestOtp, { loading: resending }] = useMutation<any>(REQUEST_PASSWORD_RESET_OTP);
   const [done, setDone] = useState(false);
 
   const handleSubmit = async (values: ResetPasswordValues) => {

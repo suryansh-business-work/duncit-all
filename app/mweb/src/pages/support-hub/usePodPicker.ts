@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MY_ACTIVE_SUPPORT_PODS, type SupportPodOption } from './queries';
 
 const DEFAULT_DURATION_MS = 4 * 60 * 60 * 1000;

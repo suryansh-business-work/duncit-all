@@ -65,7 +65,7 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
   const submitLabelText = submitLabel ?? t('crm.forms.saveHostLead');
 
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const methods = useForm<HostLeadFormValues>({
+  const methods = useForm<HostLeadFormValues, any, HostLeadFormValues>({
     resolver: zodResolver(hostLeadSchema, undefined, { raw: true }),
     mode: 'onChange',
     defaultValues: initialValues ?? hostLeadInitialValues,

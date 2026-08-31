@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 const RECORD_PING = gql`
   mutation RecordActivePing($slug: String) {
@@ -8,7 +9,7 @@ const RECORD_PING = gql`
 `;
 
 export function useActivePing(pathname: string, superCategory: string) {
-  const [recordPing] = useMutation(RECORD_PING);
+  const [recordPing] = useMutation<any>(RECORD_PING);
 
   useEffect(() => {
     recordPing({ variables: { slug: superCategory || null } }).catch(() => {});

@@ -71,7 +71,7 @@ export default function CompletePodDialog({
     notes: '',
   };
 
-  const { control, handleSubmit, watch, reset } = useForm<CompletePodValues>({
+  const { control, handleSubmit, watch, reset } = useForm<CompletePodValues, any, CompletePodValues>({
     defaultValues: initialValues,
     resolver: zodResolver(buildCompleteSchema(hasVenue, t)) as Resolver<CompletePodValues>,
     mode: 'onTouched',

@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, AlertTitle, Grid, Stack, Typography } from '@mui/material';
 import { BackHeader, QueryGuard, StatusChip } from '@duncit/ui';
 import { formatDateCell } from '@duncit/table';

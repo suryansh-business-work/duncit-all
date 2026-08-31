@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box } from '@mui/material';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';

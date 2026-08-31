@@ -8,7 +8,7 @@
  * control and the tray survive having no data — and that a closed dialog
  * renders nothing at all.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 // Deep import through @duncit/tabs' own node_modules on purpose: this package

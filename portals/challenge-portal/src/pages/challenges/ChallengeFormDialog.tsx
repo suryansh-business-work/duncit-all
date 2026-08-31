@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -38,8 +38,8 @@ export default function ChallengeFormDialog({ open, editing, onClose, onSaved }:
   const [cascade, setCascade] = useState<CascadeValue>(emptyCascade);
 
   const refetchQueries = [{ query: CHALLENGE_STATS }];
-  const [createChallenge, createState] = useMutation(CREATE_CHALLENGE, { refetchQueries });
-  const [updateChallenge, updateState] = useMutation(UPDATE_CHALLENGE, { refetchQueries });
+  const [createChallenge, createState] = useMutation<any>(CREATE_CHALLENGE, { refetchQueries });
+  const [updateChallenge, updateState] = useMutation<any>(UPDATE_CHALLENGE, { refetchQueries });
   const loading = createState.loading || updateState.loading;
   const error = createState.error ?? updateState.error;
 

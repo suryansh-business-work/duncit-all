@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Alert, LinearProgress, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -35,10 +35,10 @@ export default function EnvVariablesTab() {
   const [testing, setTesting] = useState<EnvEntry | null>(null);
 
   const { data: catData } = useQuery<{ envCategories: EnvCategoryDef[] }>(ENV_CATEGORIES, { fetchPolicy: 'cache-first' });
-  const [createMut, createState] = useMutation(CREATE_ENV_ENTRY);
-  const [updateMut, updateState] = useMutation(UPDATE_ENV_ENTRY);
-  const [deleteMut] = useMutation(DELETE_ENV_ENTRY);
-  const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
+  const [createMut, createState] = useMutation<any>(CREATE_ENV_ENTRY);
+  const [updateMut, updateState] = useMutation<any>(UPDATE_ENV_ENTRY);
+  const [deleteMut] = useMutation<any>(DELETE_ENV_ENTRY);
+  const [setDefaultMut] = useMutation<any>(SET_DEFAULT_ENV_ENTRY);
 
   // The server's catalogue is the ONLY source of tabs and form fields, so a
   // category added server-side shows up here with no portal change.

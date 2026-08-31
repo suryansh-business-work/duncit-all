@@ -1,5 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useRef, useState } from 'react';
@@ -29,7 +29,7 @@ export default function InventoryPage() {
     product: { id: string; product_name: string };
   } | null>(null);
   const [pauseTarget, setPauseTarget] = useState<InventoryProductRow | null>(null);
-  const [setProductActive, pauseState] = useMutation(SET_INVENTORY_PRODUCT_ACTIVE);
+  const [setProductActive, pauseState] = useMutation<any>(SET_INVENTORY_PRODUCT_ACTIVE);
 
   const activating = pauseTarget?.is_active === false;
   const pauseLabel = activating ? 'Reactivate' : 'Deactivate';

@@ -44,11 +44,10 @@ export const makeFeatureFlagRow = (over: Partial<FeatureFlagRow> = {}): FeatureF
   };
 };
 
-/* ---- Mutation builders (variableMatcher: any-vars, so tests stay terse) ---- */
+/* ---- Mutation builders (variables predicate: any-vars, so tests stay terse) ---- */
 
 export const setFlagMock = (over: { error?: string } = {}): MockedResponse => ({
-  request: { query: SET_FLAG },
-  variableMatcher: () => true,
+  request: { query: SET_FLAG, variables: () => true },
   result: over.error
     ? { errors: [{ message: over.error }] }
     : { data: { setFeatureFlag: { __typename: 'FeatureFlag', id: 'f1', enabled: false } } },
@@ -56,8 +55,7 @@ export const setFlagMock = (over: { error?: string } = {}): MockedResponse => ({
 });
 
 export const createFlagMock = (over: { error?: string } = {}): MockedResponse => ({
-  request: { query: CREATE_FLAG },
-  variableMatcher: () => true,
+  request: { query: CREATE_FLAG, variables: () => true },
   result: over.error
     ? { errors: [{ message: over.error }] }
     : { data: { createFeatureFlag: { __typename: 'FeatureFlag', id: 'new-1' } } },
@@ -65,8 +63,7 @@ export const createFlagMock = (over: { error?: string } = {}): MockedResponse =>
 });
 
 export const updateFlagMock = (over: { error?: string } = {}): MockedResponse => ({
-  request: { query: UPDATE_FLAG },
-  variableMatcher: () => true,
+  request: { query: UPDATE_FLAG, variables: () => true },
   result: over.error
     ? { errors: [{ message: over.error }] }
     : { data: { updateFeatureFlag: { __typename: 'FeatureFlag', id: 'f2' } } },
@@ -74,8 +71,7 @@ export const updateFlagMock = (over: { error?: string } = {}): MockedResponse =>
 });
 
 export const deleteFlagMock = (over: { error?: string } = {}): MockedResponse => ({
-  request: { query: DELETE_FLAG },
-  variableMatcher: () => true,
+  request: { query: DELETE_FLAG, variables: () => true },
   result: over.error ? { errors: [{ message: over.error }] } : { data: { deleteFeatureFlag: true } },
   maxUsageCount: 20,
 });

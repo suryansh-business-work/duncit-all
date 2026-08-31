@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -41,14 +41,14 @@ export default function CatalogBrandProductsPage() {
   const [lifecycleTarget, setLifecycleTarget] = useState<CatalogBrandProductRow | null>(null);
   const [pauseTarget, setPauseTarget] = useState<CatalogBrandProductRow | null>(null);
 
-  const brandQuery = useQuery(CATALOG_BRAND, {
+  const brandQuery = useQuery<any>(CATALOG_BRAND, {
     variables: { id: brandId },
     fetchPolicy: 'cache-and-network',
   });
-  const [archiveProduct, archiveState] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
-  const [restoreProduct, restoreState] = useMutation(RESTORE_INVENTORY_PRODUCT);
-  const [duplicateProduct] = useMutation(DUPLICATE_INVENTORY_PRODUCT);
-  const [setProductActive, pauseState] = useMutation(SET_INVENTORY_PRODUCT_ACTIVE);
+  const [archiveProduct, archiveState] = useMutation<any>(ARCHIVE_INVENTORY_PRODUCT);
+  const [restoreProduct, restoreState] = useMutation<any>(RESTORE_INVENTORY_PRODUCT);
+  const [duplicateProduct] = useMutation<any>(DUPLICATE_INVENTORY_PRODUCT);
+  const [setProductActive, pauseState] = useMutation<any>(SET_INVENTORY_PRODUCT_ACTIVE);
 
   const productsBase = `/catalog/brands/${brandId}/products`;
 

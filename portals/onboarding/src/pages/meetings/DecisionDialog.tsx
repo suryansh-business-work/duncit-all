@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -28,7 +28,7 @@ interface Props {
  * no admin round-trip. */
 export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [decideMeeting, { loading }] = useMutation(DECIDE_MEETING);
+  const [decideMeeting, { loading }] = useMutation<any>(DECIDE_MEETING);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
 

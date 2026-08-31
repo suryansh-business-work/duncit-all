@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import HostInsights from '../HostInsights';
 import { HOST_INSIGHTS } from '../queries';
@@ -42,8 +42,7 @@ const insightsResult = {
 
 // `to` is a live timestamp (new Date().toISOString()) so match variables loosely.
 const mock = {
-  request: { query: HOST_INSIGHTS },
-  variableMatcher: () => true,
+  request: { query: HOST_INSIGHTS, variables: () => true },
   result: insightsResult,
 };
 
@@ -59,7 +58,7 @@ const pods = [
 
 function setup(withData: boolean, podList = pods) {
   return render(
-    <MockedProvider mocks={withData ? [mock] : []} addTypename={false}>
+    <MockedProvider mocks={withData ? [mock] : []}>
       <HostInsights pods={podList} currency="₹" />
     </MockedProvider>,
   );

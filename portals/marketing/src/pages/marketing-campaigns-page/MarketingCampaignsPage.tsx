@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -31,8 +31,8 @@ export default function MarketingCampaignsPage() {
   const [viewing, setViewing] = useState<string | null>(null);
   const [target, setTarget] = useState<MarketingCampaignRow | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sendCampaign, { loading: sending }] = useMutation(SEND_MARKETING_CAMPAIGN);
-  const [deleteCampaign, { loading: deleting }] = useMutation(DELETE_MARKETING_CAMPAIGN);
+  const [sendCampaign, { loading: sending }] = useMutation<any>(SEND_MARKETING_CAMPAIGN);
+  const [deleteCampaign, { loading: deleting }] = useMutation<any>(DELETE_MARKETING_CAMPAIGN);
   const { data: listsData } = useQuery<{ audienceLists: CampaignAudienceList[] }>(
     AUDIENCE_LISTS_FOR_CAMPAIGN,
     { fetchPolicy: 'cache-and-network' },

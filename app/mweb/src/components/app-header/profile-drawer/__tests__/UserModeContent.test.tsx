@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import UserModeContent from '../UserModeContent';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { ACTIVE_ADS } from '../../../ads/useActiveAds';

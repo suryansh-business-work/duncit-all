@@ -27,7 +27,7 @@ export function CurrentPasswordForm({
   onSubmit,
 }: Readonly<StepProps<CurrentPasswordValues>>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<CurrentPasswordValues>({
+  const { control, handleSubmit } = useForm<CurrentPasswordValues, any, CurrentPasswordValues>({
     defaultValues: currentPasswordDefaults,
     resolver: zodResolver(currentPasswordSchema),
     mode: 'onBlur',
@@ -67,7 +67,7 @@ export function NewPasswordForm({
   onSubmit,
 }: Readonly<StepProps<NewPasswordValues>>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<NewPasswordValues>({
+  const { control, handleSubmit } = useForm<NewPasswordValues, any, NewPasswordValues>({
     defaultValues: newPasswordDefaults,
     resolver: zodResolver(newPasswordSchema),
     mode: 'onBlur',

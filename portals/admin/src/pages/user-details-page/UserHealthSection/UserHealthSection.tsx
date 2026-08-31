@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import HealthScoreCard from './HealthScoreCard';
 import { USER_ACCOUNT_HEALTH, type AdminHealthScore } from './queries';

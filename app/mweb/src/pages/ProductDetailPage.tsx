@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -42,12 +43,12 @@ export default function ProductDetailPage() {
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const { lines, setLine } = useCart();
-  const { data, loading, error } = useQuery(PUBLIC_PRODUCT, {
+  const { data, loading, error } = useQuery<any>(PUBLIC_PRODUCT, {
     variables: { id: productId },
     skip: !productId,
     fetchPolicy: 'cache-first',
   });
-  const { data: podData } = useQuery(PODS_FOR_PRODUCT, {
+  const { data: podData } = useQuery<any>(PODS_FOR_PRODUCT, {
     variables: { id: productId },
     skip: !productId,
     fetchPolicy: 'cache-and-network',

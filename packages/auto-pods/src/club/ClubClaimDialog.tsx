@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -65,7 +65,7 @@ export function ClubClaimDialog({
   const noClubInCity =
     !!pinnedLocationId && !clubsQuery.loading && clubs.length === 0 && !!row;
 
-  const [claim, claimState] = useMutation(CLUB_CLAIM_AUTO_POD);
+  const [claim, claimState] = useMutation<any>(CLUB_CLAIM_AUTO_POD);
 
   // One eligible club is not a choice — preselect it.
   useEffect(() => {

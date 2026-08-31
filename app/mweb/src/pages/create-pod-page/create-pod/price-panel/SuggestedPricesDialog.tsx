@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Box,
   CircularProgress,
@@ -44,7 +44,7 @@ export default function SuggestedPricesDialog({
   const theme = useTheme();
   const { t } = useTranslation();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const { data, loading, error } = useQuery(SUGGESTED_TICKET_PRICES, {
+  const { data, loading, error } = useQuery<any>(SUGGESTED_TICKET_PRICES, {
     variables: { no_of_spots: noOfSpots, venue_id: venueId, venue_amount: venueAmount },
     skip: !open,
     fetchPolicy: 'cache-and-network',

@@ -1,6 +1,6 @@
 import { useTranslation } from '../i18n/useTranslation';
 import { useMemo, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import PostDialog from './profile-page/post-dialog/PostDialog';
@@ -30,7 +30,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
   const tabs = useTabParam<FollowingFeedSource>({ items: sourceTabs(t), fallback: 'CLUBS' });
   const tab = tabs.value;
   const [openPostId, setOpenPostId] = useState<string | null>(null);
-  const meQuery = useQuery(FOLLOW_ME, { fetchPolicy: 'cache-and-network' });
+  const meQuery = useQuery<any>(FOLLOW_ME, { fetchPolicy: 'cache-and-network' });
   const clubsQuery = useQuery<FeedClubsData>(FEED_CLUBS, {
     skip: tab !== 'CLUBS',
     fetchPolicy: 'cache-and-network',

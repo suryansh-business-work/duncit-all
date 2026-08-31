@@ -48,7 +48,7 @@ export default function CreateUserDialog({
   roles,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, setValue } = useForm<CreateForm>({
+  const { control, handleSubmit, reset, setValue } = useForm<CreateForm, any, CreateForm>({
     defaultValues: form,
     resolver: zodResolver(createUserSchema),
     mode: 'onTouched',

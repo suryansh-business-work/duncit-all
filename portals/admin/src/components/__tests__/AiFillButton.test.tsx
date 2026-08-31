@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { gql } from '@apollo/client';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AiFillButton, { type AiDummyEntity } from '../AiFillButton';

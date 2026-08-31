@@ -4,7 +4,7 @@
  * docked — none of which a plain schema-mocked render ever reaches. useCall,
  * useCallRecorder and useWorkspaceWindow are stubbed here for exactly that.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';

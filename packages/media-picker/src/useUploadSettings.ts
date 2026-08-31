@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { UPLOAD_SETTINGS } from './queries';
 import type { UploadSettings, UploadSurface } from './types';
 

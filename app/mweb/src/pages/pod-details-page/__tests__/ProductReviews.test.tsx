@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ProductReviews from '../ProductReviews';
 import { CREATE_PRODUCT_REVIEW, PRODUCT_REVIEWS, VOTE_PRODUCT_REVIEW } from '../queries';
@@ -59,8 +60,7 @@ const emptySummaryMock: MockedResponse = {
 };
 
 const authMock: MockedResponse = {
-  request: { query: GET_IMAGEKIT_AUTH },
-  variableMatcher: () => true,
+  request: { query: GET_IMAGEKIT_AUTH, variables: () => true },
   result: {
     data: {
       getImagekitAuth: {

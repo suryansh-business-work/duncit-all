@@ -27,7 +27,7 @@ interface Props {
 
 export default function WebsiteContentForm({ type, item, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<WebsiteContentFormValues>({
+  const { control, handleSubmit } = useForm<WebsiteContentFormValues, any, WebsiteContentFormValues>({
     defaultValues: item ? toFormValues(item) : blankValues(),
     resolver: zodResolver(websiteContentSchema),
     mode: 'onTouched',

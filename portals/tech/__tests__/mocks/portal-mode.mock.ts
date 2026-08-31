@@ -38,8 +38,7 @@ export const makePortalModeRow = (over: Partial<PortalModeRow> = {}): PortalMode
 };
 
 export const setPortalModeMock = (over: { error?: string } = {}): MockedResponse => ({
-  request: { query: SET_PORTAL_MODE },
-  variableMatcher: () => true,
+  request: { query: SET_PORTAL_MODE, variables: () => true },
   result: over.error
     ? { errors: [{ message: over.error }] }
     : {

@@ -19,7 +19,7 @@ vi.mock('@duncit/dashboard', () => ({
   ),
 }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { WelcomeDashboard } from '../src/dashboard/WelcomeDashboard';
 
 const mockQuery = vi.mocked(useQuery);

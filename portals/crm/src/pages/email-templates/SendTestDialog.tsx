@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -29,7 +29,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
   const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [sendTest, { loading }] = useMutation(SEND_TEST);
+  const [sendTest, { loading }] = useMutation<any>(SEND_TEST);
   const valid = EMAIL_RE.test(to.trim());
 
   useEffect(() => {

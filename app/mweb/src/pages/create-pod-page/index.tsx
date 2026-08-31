@@ -1,4 +1,5 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
@@ -118,11 +119,11 @@ export default function CreatePodPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
-  const options = useQuery(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
-  const draftQuery = useQuery(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
-  const [saveMut] = useMutation(SAVE_POD_DRAFT);
-  const [publishMut] = useMutation(PUBLISH_POD_DRAFT);
-  const [moderateMut] = useMutation(MODERATE_POD_CONTENT);
+  const options = useQuery<any>(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
+  const draftQuery = useQuery<any>(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
+  const [saveMut] = useMutation<any>(SAVE_POD_DRAFT);
+  const [publishMut] = useMutation<any>(PUBLISH_POD_DRAFT);
+  const [moderateMut] = useMutation<any>(MODERATE_POD_CONTENT);
 
   // Host access mirrors the server's createForPartner check: the cached HOST
   // role OR an approved, active host profile (legacy/HOSTREQ hosts may lack the

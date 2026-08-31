@@ -34,7 +34,7 @@ interface Props {
  * CONFLICT error is surfaced via apiError. */
 export default function WarehouseForm({ defaultValues, busy, apiError = null, onSave, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<WarehouseFormValues>({
+  const { control, handleSubmit, reset } = useForm<WarehouseFormValues, any, WarehouseFormValues>({
     resolver: zodResolver(warehouseSchema),
     defaultValues: defaultValues ?? emptyWarehouseValues,
     mode: 'onBlur',

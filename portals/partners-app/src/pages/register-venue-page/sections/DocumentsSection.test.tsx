@@ -45,7 +45,7 @@ interface HarnessProps {
 }
 
 function Harness({ mode, defaults, lockedDocCount, docTypes, formRef }: Readonly<HarnessProps>) {
-  const form = useForm<RegisterVenueValues>({
+  const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
     resolver: zodResolver(registerVenueSchema),
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',

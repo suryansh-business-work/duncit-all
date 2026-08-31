@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useSearchParams } from 'react-router-dom';
 import {
   DELETE,
@@ -36,8 +36,8 @@ export function useEmailTemplateEditor() {
   const { data: usageData, refetch: refetchUsage } = useQuery<{
     emailTemplateUsage: TemplateUsage[];
   }>(TEMPLATE_USAGE, { fetchPolicy: 'cache-and-network' });
-  const [updateTpl] = useMutation(UPDATE);
-  const [deleteTpl] = useMutation(DELETE);
+  const [updateTpl] = useMutation<any>(UPDATE);
+  const [deleteTpl] = useMutation<any>(DELETE);
   const client = useApolloClient();
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -108,7 +108,7 @@ export function useEmailTemplateEditor() {
     if (!draft) return [];
     setPreviewLoading(true);
     try {
-      const res = await client.query({
+      const res = await client.query<any>({
         query: RENDER,
         variables: { mjml: draft.mjml, vars: varsJson, fragment: draft.fragment_key ?? null },
         fetchPolicy: 'network-only',

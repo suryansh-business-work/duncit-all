@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Dialog,
   DialogActions,
@@ -31,7 +31,7 @@ export default function ChallengesPage() {
   const [editing, setEditing] = useState<Challenge | null>(null);
   const [deleting, setDeleting] = useState<Challenge | null>(null);
 
-  const [deleteChallenge, deleteState] = useMutation(DELETE_CHALLENGE, {
+  const [deleteChallenge, deleteState] = useMutation<any>(DELETE_CHALLENGE, {
     refetchQueries: [{ query: CHALLENGE_STATS }],
   });
 

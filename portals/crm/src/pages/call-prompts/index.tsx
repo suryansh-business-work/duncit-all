@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -27,7 +27,7 @@ export default function CallPromptsPage() {
   const [editing, setEditing] = useState<CrmCallPrompt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toDelete, setToDelete] = useState<CrmCallPrompt | null>(null);
-  const [deletePrompt, { loading: deleting }] = useMutation(DELETE_CRM_CALL_PROMPT);
+  const [deletePrompt, { loading: deleting }] = useMutation<any>(DELETE_CRM_CALL_PROMPT);
 
   const fetchRows = useApolloTableFetch<CrmCallPrompt>(client, CRM_CALL_PROMPTS_TABLE, 'crmCallPromptsTable');
 

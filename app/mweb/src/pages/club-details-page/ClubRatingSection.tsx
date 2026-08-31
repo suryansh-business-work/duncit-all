@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Avatar,
   Box,
@@ -36,13 +36,13 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
   const [stars, setStars] = useState<number | null>(null);
   const [comment, setComment] = useState('');
 
-  const { data: ratingsData } = useQuery(CLUB_RATINGS, {
+  const { data: ratingsData } = useQuery<any>(CLUB_RATINGS, {
     variables: { id: clubId },
     skip: !clubId,
     fetchPolicy: 'cache-and-network',
   });
 
-  const [addRating, { loading: submitting }] = useMutation(ADD_CLUB_RATING, {
+  const [addRating, { loading: submitting }] = useMutation<any>(ADD_CLUB_RATING, {
     refetchQueries: [{ query: CLUB_RATINGS, variables: { id: clubId } }],
   });
 

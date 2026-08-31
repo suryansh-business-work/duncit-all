@@ -9,7 +9,8 @@
  * these hold: with nothing answering, no callback fires.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mwebAutoPodLabels, type AutoPodLocation, type AutoPodRow } from '@duncit/utils';

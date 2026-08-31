@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { createLogger } from '@duncit/logs';
 import { ASK_BOT_CHAT, type AskBotLink, type AskBotReply } from './queries';
 

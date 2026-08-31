@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -56,13 +56,13 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
   const { can } = useSession();
   const confirm = useConfirm();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const { data, loading, refetch } = useQuery(ACCOUNT_DELETION_CRON, {
+  const { data, loading, refetch } = useQuery<any>(ACCOUNT_DELETION_CRON, {
     fetchPolicy: 'cache-and-network',
     skip: !can('SUPER_ADMIN'),
   });
-  const [saveRetention] = useMutation(UPDATE_RETENTION_DAYS);
-  const [saveCron] = useMutation(UPDATE_ACCOUNT_DELETION_CRON);
-  const [runNow, { loading: running }] = useMutation(RUN_DELETION_PURGE_NOW);
+  const [saveRetention] = useMutation<any>(UPDATE_RETENTION_DAYS);
+  const [saveCron] = useMutation<any>(UPDATE_ACCOUNT_DELETION_CRON);
+  const [runNow, { loading: running }] = useMutation<any>(RUN_DELETION_PURGE_NOW);
 
   const current: CronSettings | undefined = data?.accountDeletionCronSettings;
   const dueCount: number = data?.accountDeletionDueCount ?? 0;
@@ -73,7 +73,7 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<DeletionSettingsValues>({
+  } = useForm<DeletionSettingsValues, any, DeletionSettingsValues>({
     resolver: zodResolver(deletionSettingsSchema),
     // `values` rather than `defaultValues`: the card re-seeds from the server
     // whenever the query answers, so a save elsewhere is not overwritten by a

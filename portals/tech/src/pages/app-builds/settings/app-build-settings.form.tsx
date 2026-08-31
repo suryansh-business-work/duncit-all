@@ -135,7 +135,7 @@ export default function AppBuildSettingsForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const messages = { channelFormat: t('tech.appBuilds.channelFormat') };
-  const { control, handleSubmit, reset } = useForm<AppBuildSettingsValues>({
+  const { control, handleSubmit, reset } = useForm<AppBuildSettingsValues, any, AppBuildSettingsValues>({
     defaultValues: {
       android_channel: settings.android_channel ?? '',
       ios_channel: settings.ios_channel ?? '',

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -39,12 +39,12 @@ const fmtDate = (iso: string | null) => {
 export default function WarehouseApprovalPage() {
   const { t } = useTranslation();
   const [status, setStatus] = useState('PENDING');
-  const { data, loading, error, refetch } = useQuery(WAREHOUSE_APPROVAL_REQUESTS, {
+  const { data, loading, error, refetch } = useQuery<any>(WAREHOUSE_APPROVAL_REQUESTS, {
     variables: { status: status === 'ALL' ? null : status },
     fetchPolicy: 'cache-and-network',
   });
-  const [approve] = useMutation(APPROVE_WAREHOUSE_REQUEST);
-  const [deny] = useMutation(DENY_WAREHOUSE_REQUEST);
+  const [approve] = useMutation<any>(APPROVE_WAREHOUSE_REQUEST);
+  const [deny] = useMutation<any>(DENY_WAREHOUSE_REQUEST);
   const rows: WarehouseApprovalRow[] = data?.warehouseApprovalRequests ?? [];
 
   const decide = (fn: typeof approve, id: string) => {

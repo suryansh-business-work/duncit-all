@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router-dom';
 import { GraphQLError } from 'graphql';
 import ForgotPasswordPage from '../ForgotPasswordPage';
@@ -36,7 +36,7 @@ function errorMock(email: string) {
 
 function renderPage(mocks: readonly unknown[]) {
   return render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       <MemoryRouter>
         <ForgotPasswordPage />
       </MemoryRouter>

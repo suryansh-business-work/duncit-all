@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { notifyError, useConfirm } from '@duncit/dialogs';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -24,10 +24,10 @@ export default function FeatureFlagsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [setFlag] = useMutation(SET_FLAG);
-  const [createFlag] = useMutation(CREATE_FLAG);
-  const [updateFlag] = useMutation(UPDATE_FLAG);
-  const [deleteFlag] = useMutation(DELETE_FLAG);
+  const [setFlag] = useMutation<any>(SET_FLAG);
+  const [createFlag] = useMutation<any>(CREATE_FLAG);
+  const [updateFlag] = useMutation<any>(UPDATE_FLAG);
+  const [deleteFlag] = useMutation<any>(DELETE_FLAG);
   const confirm = useConfirm();
 
   const [editOpen, setEditOpen] = useState(false);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { useDateFormat } from '@duncit/app-settings';
 import { publicAppSettingsMock, publicAppSettingsNullMock } from '../mocks/common.mock';
 

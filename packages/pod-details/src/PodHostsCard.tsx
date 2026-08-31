@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Chip, Link, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
@@ -24,7 +24,7 @@ function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProp
   const { t } = useTranslation();
   const navigate = useNavigate();
   const scopeDocs = usePodDetailsScope();
-  const { data } = useQuery(scopeDocs.hostProfile, {
+  const { data } = useQuery<any>(scopeDocs.hostProfile, {
     variables: { user_id: userId, pod_id: podId },
   });
   const profile = data?.hostByUser;

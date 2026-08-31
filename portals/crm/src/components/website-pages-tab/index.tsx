@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -44,14 +44,14 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
     variables,
     fetchPolicy: 'cache-and-network',
   });
-  const [scrapeMut, { loading: scraping }] = useMutation(SCRAPE_CRM_WEBSITE_PAGES, {
+  const [scrapeMut, { loading: scraping }] = useMutation<any>(SCRAPE_CRM_WEBSITE_PAGES, {
     refetchQueries: [{ query: CRM_WEBSITE_PAGES, variables }],
   });
-  const [deleteMut, { loading: deleting }] = useMutation(DELETE_CRM_WEBSITE_PAGE, {
+  const [deleteMut, { loading: deleting }] = useMutation<any>(DELETE_CRM_WEBSITE_PAGE, {
     refetchQueries: [{ query: CRM_WEBSITE_PAGES, variables }],
   });
 
-  const [fetchContent] = useMutation(FETCH_CRM_WEBSITE_PAGE_CONTENT);
+  const [fetchContent] = useMutation<any>(FETCH_CRM_WEBSITE_PAGE_CONTENT);
   const [scrapeOpen, setScrapeOpen] = useState(false);
   const [viewing, setViewing] = useState<CrmWebsitePage | null>(null);
   const [removing, setRemoving] = useState<CrmWebsitePage | null>(null);

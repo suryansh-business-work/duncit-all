@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BACKOUT,
@@ -53,7 +53,7 @@ function renderActions(overrides: Partial<Parameters<typeof usePodDetailActions>
   };
   const utils = renderHook(() => usePodDetailActions(args as any), {
     wrapper: ({ children }: { children: React.ReactNode }) => (
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         {children}
       </MockedProvider>
     ),

@@ -26,7 +26,7 @@ vi.mock('../src/i18n/useTranslation', async () => {
   };
 });
 
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { ProfileLanguage } from '../src/chrome/ProfileLanguage';
 
 const mockMutation = vi.mocked(useMutation);

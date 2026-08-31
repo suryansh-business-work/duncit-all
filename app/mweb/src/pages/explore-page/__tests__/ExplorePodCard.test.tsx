@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ExplorePodCard from '../ExplorePodCard';
 import { TOGGLE_POD_LIKE } from '../../pod-details-page/queries';
@@ -106,7 +106,7 @@ const likeMock = (id: string, result: { like_count: number; liked_by_me: boolean
 const setup = (props: Record<string, any> = {}, mocks: any[] = []) => {
   const { pod, ...rest } = props;
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <ExplorePodCard
         pod={basePod(pod)}
         club={{ club_name: 'Club' }}
@@ -265,7 +265,7 @@ describe('ExplorePodCard', () => {
 
   it('re-syncs like/comment state when the pod props change (feed refetch)', () => {
     const { rerender } = render(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mocks={[]}>
         <ExplorePodCard
           pod={basePod()}
           club={{}}
@@ -278,7 +278,7 @@ describe('ExplorePodCard', () => {
     );
     expect(screen.getByLabelText('btn-like')).toHaveTextContent('like:3');
     rerender(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mocks={[]}>
         <ExplorePodCard
           pod={basePod({ liked_by_me: true, like_count: 9, comment_count: 7 })}
           club={{}}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useSearchParams } from 'react-router-dom';
 import { useConfirm } from '@duncit/dialogs';
 import {
@@ -34,10 +34,10 @@ export function useEmailFragments() {
     FRAGMENT_TEMPLATE_USAGE,
     { fetchPolicy: 'cache-and-network' }
   );
-  const [updateFragment] = useMutation(UPDATE_FRAGMENT);
-  const [resetFragment] = useMutation(RESET_FRAGMENT);
-  const [createFragment] = useMutation(CREATE_FRAGMENT);
-  const [deleteFragment] = useMutation(DELETE_FRAGMENT);
+  const [updateFragment] = useMutation<any>(UPDATE_FRAGMENT);
+  const [resetFragment] = useMutation<any>(RESET_FRAGMENT);
+  const [createFragment] = useMutation<any>(CREATE_FRAGMENT);
+  const [deleteFragment] = useMutation<any>(DELETE_FRAGMENT);
   const client = useApolloClient();
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export function useEmailFragments() {
     setPreviewLoading(true);
     const id = setTimeout(async () => {
       try {
-        const res = await client.query({
+        const res = await client.query<any>({
           query: RENDER,
           variables: { mjml: previewDocument(draft.header_mjml, draft.footer_mjml) },
           fetchPolicy: 'network-only',

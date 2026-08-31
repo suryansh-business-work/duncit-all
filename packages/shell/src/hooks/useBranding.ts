@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { resolveIconSource } from '@duncit/fallback-icons';
 
 import { FALLBACK_ICONS } from '../fallback-icons';
@@ -40,7 +41,7 @@ export interface BrandingSummary {
  * (rule 39).
  */
 export function useBranding(): BrandingSummary {
-  const { data, loading } = useQuery(BRANDING_SUMMARY, { fetchPolicy: 'cache-first' });
+  const { data, loading } = useQuery<any>(BRANDING_SUMMARY, { fetchPolicy: 'cache-first' });
   const [failed, setFailed] = useState(false);
   const b = data?.branding;
   const { source, isFallback } = resolveIconSource(

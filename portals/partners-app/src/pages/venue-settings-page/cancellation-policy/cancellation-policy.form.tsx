@@ -37,7 +37,7 @@ export default function CancellationPolicyForm({
   t,
   onSubmit,
 }: Readonly<CancellationPolicyFormProps>) {
-  const { control, handleSubmit, reset, watch } = useForm<CancellationPolicyValues>({
+  const { control, handleSubmit, reset, watch } = useForm<CancellationPolicyValues, any, CancellationPolicyValues>({
     defaultValues: initialValues,
     resolver: zodResolver(cancellationPolicySchema),
     mode: 'onTouched',

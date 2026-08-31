@@ -23,11 +23,11 @@
     "@fortawesome/fontawesome-free": "^7.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "animejs": "^4.5.0",
-    "astro": "^5.18.2",
+    "astro": "^7.2.9",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.1",
-    "vitest": "^1.6.1"
+    "@vitest/coverage-v8": "^4.1.11",
+    "vitest": "^4.1.11"
   }
 }

@@ -6,7 +6,7 @@
  * AND the validate() the picker gates on, and that a surface with no settings
  * yet still refuses what the server would refuse rather than nothing at all.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 

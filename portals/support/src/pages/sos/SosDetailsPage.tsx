@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -158,8 +158,8 @@ export default function SosDetailsPage() {
     BOUNCER_SOS_ALERT,
     { variables: { id }, fetchPolicy: 'cache-and-network', skip: !id },
   );
-  const [ack] = useMutation(ACK_SOS, { onCompleted: () => refetch() });
-  const [resolve] = useMutation(RESOLVE_SOS, { onCompleted: () => refetch() });
+  const [ack] = useMutation<any>(ACK_SOS, { onCompleted: () => refetch() });
+  const [resolve] = useMutation<any>(RESOLVE_SOS, { onCompleted: () => refetch() });
   const [busy, setBusy] = useState(false);
 
   const alert = data?.bouncerSosAlert ?? undefined;

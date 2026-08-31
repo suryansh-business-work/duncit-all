@@ -89,7 +89,7 @@ export default function PodForm({
   // language that was active when the form first mounted.
   const schema = useMemo(() => makePodSchema(config, t), [config, t]);
   const submitMode = useRef<'publish' | 'draft'>('publish');
-  const methods = useForm<PodFormValues>({
+  const methods = useForm<PodFormValues, any, PodFormValues>({
     resolver: zodResolver(schema),
     defaultValues: initialValues,
     mode: 'onBlur',

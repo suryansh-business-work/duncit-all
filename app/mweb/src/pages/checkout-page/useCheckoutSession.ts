@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -59,21 +59,21 @@ interface Args {
  */
 export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddress = false }: Args) {
   const { t } = useTranslation();
-  const { data: financeData, loading: financeLoading } = useQuery(PUBLIC_FINANCE);
-  const { data: meData, loading: meLoading } = useQuery(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
-  const { data: couponsData } = useQuery(AVAILABLE_COUPONS, {
+  const { data: financeData, loading: financeLoading } = useQuery<any>(PUBLIC_FINANCE);
+  const { data: meData, loading: meLoading } = useQuery<any>(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
+  const { data: couponsData } = useQuery<any>(AVAILABLE_COUPONS, {
     variables: { pod_id: couponPodId || null },
     fetchPolicy: 'cache-and-network',
   });
   // The loyalty balance a buyer may spend on this bill. Read here so both the
   // pod and the product checkout share one source of truth.
-  const { data: coinData } = useQuery(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
-  const [doVerifyRazorpay] = useMutation(VERIFY_RAZORPAY_PAYMENT);
-  const [doUpdateProfile] = useMutation(UPDATE_MY_PROFILE);
-  const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
+  const { data: coinData } = useQuery<any>(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
+  const [doVerifyRazorpay] = useMutation<any>(VERIFY_RAZORPAY_PAYMENT);
+  const [doUpdateProfile] = useMutation<any>(UPDATE_MY_PROFILE);
+  const [runPreviewCoupon] = useLazyQuery<any>(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
   // Every poll must reach the server — a cached answer would report the status
   // we already know is stale.
-  const [runMyPayment] = useLazyQuery(MY_PAYMENT, { fetchPolicy: 'no-cache' });
+  const [runMyPayment] = useLazyQuery<any>(MY_PAYMENT, { fetchPolicy: 'no-cache' });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +96,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     [requireAddress, t],
   );
 
-  const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm>({
+  const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm, any, CheckoutForm>({
     defaultValues: checkoutDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

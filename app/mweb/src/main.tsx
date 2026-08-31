@@ -3,7 +3,8 @@
 import '@fontsource-variable/quicksand/wght.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ApolloProvider, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import { BrowserRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { io } from 'socket.io-client';
@@ -71,7 +72,7 @@ const ME_QUERY = buildSessionMeQuery('MwebSessionMe', ['following_user_ids']);
 const isAuthed = () => !!localStorage.getItem('token');
 
 const loadUser = async () => {
-  const { data } = await apolloClient.query({ query: ME_QUERY, fetchPolicy: 'network-only' });
+  const { data } = await apolloClient.query<any>({ query: ME_QUERY, fetchPolicy: 'network-only' });
   const me = data?.me ?? null;
   // The provider only asks with a token attached, so a null answer is the
   // server refusing it — a deleted, blocked or no-longer-verifiable session
@@ -167,7 +168,7 @@ function mount() {
 // the Tech-portal client id. Render regardless on failure (env fallback applies)
 // — and never block first paint on a hung/slow API: cap the wait at 3s.
 const configReady = apolloClient
-  .query({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
+  .query<any>({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
   .then(({ data }) => {
     const c = data?.publicClientConfig;
     if (c) setRuntimeConfig({ googleClientId: c.google_client_id, googleMapsApiKey: c.google_maps_api_key });

@@ -31,7 +31,7 @@ vi.mock('../src/staff-chat', () => ({
   ),
 }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { AppShell } from '../src/chrome/AppShell';
 import type { AppNavItem } from '../src/types';

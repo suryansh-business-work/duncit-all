@@ -67,7 +67,7 @@ export function makeApolloTableFetch<Row>(
     }
     const base = buildVariables ? buildVariables(state) : tableQueryToGql(state);
     const variables = extraVariables ? { ...base, ...extraVariables } : base;
-    const { data } = await client.query({ query, variables, fetchPolicy });
+    const { data } = await client.query<any>({ query, variables, fetchPolicy });
     const payload = (data as Record<string, { rows: unknown[]; total: number }>)[resultKey];
     const rows = mapRow ? payload.rows.map(mapRow) : (payload.rows as Row[]);
     return { rows, total: payload.total };

@@ -90,7 +90,7 @@ export function AccountEditForm({
     handleSubmit,
     reset,
     formState: { isDirty, isValid },
-  } = useForm<AccountEditValues>({
+  } = useForm<AccountEditValues, any, AccountEditValues>({
     values: accountEditDefaults(me),
     resolver: zodResolver(schema),
     mode: 'onChange',

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useParams } from 'react-router-dom';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -18,7 +18,7 @@ export default function PublicSurveyPage() {
     fetchPolicy: 'network-only',
   });
   const { data: brandingData } = useQuery<PublicBranding>(PUBLIC_BRANDING, { fetchPolicy: 'cache-first' });
-  const [submit, { loading: submitting }] = useMutation(SUBMIT_LEAD_SURVEY_BY_TOKEN);
+  const [submit, { loading: submitting }] = useMutation<any>(SUBMIT_LEAD_SURVEY_BY_TOKEN);
   const [done, setDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 

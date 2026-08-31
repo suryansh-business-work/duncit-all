@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DuncitButton } from '@duncit/buttons';
@@ -41,7 +41,7 @@ export default function PackageUpdatesPage() {
     PACKAGE_UPDATES,
     { fetchPolicy: 'cache-and-network' },
   );
-  const [refresh] = useMutation(REFRESH_PACKAGE_UPDATES);
+  const [refresh] = useMutation<any>(REFRESH_PACKAGE_UPDATES);
 
   const report = data?.techPackageUpdates;
   const packages = report?.packages ?? NO_PACKAGES;

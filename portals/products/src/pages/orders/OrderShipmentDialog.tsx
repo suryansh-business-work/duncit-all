@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -34,7 +34,7 @@ function derivePickupOwner(order: any) {
 export default function OrderShipmentDialog({ open, order, submitting, onClose, onConfirm }: Readonly<Props>) {
   const { t } = useTranslation();
   const variables = derivePickupOwner(order);
-  const { data, loading } = useQuery(BRAND_PICKUP_LOCATIONS, {
+  const { data, loading } = useQuery<any>(BRAND_PICKUP_LOCATIONS, {
     variables,
     skip: !open,
     fetchPolicy: 'cache-and-network',

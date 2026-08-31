@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { describe, expect, it, beforeEach } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
@@ -33,7 +33,7 @@ function Seed({ lines }: Readonly<{ lines: Array<{ meta: CartLineMeta; qty: numb
 
 const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       <CartProvider>
         <MemoryRouter initialEntries={['/cart']}>
           <Seed lines={lines} />

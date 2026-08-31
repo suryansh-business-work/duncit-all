@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -39,7 +39,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
     skip: !open,
     fetchPolicy: 'network-only',
   });
-  const [rescheduleMut, { loading: rescheduling }] = useMutation(RESCHEDULE_MY_MEETING);
+  const [rescheduleMut, { loading: rescheduling }] = useMutation<any>(RESCHEDULE_MY_MEETING);
   const slots = data?.meetingSlots ?? [];
 
   const submit = async (reason: string) => {

@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 // lottie-react → lottie-web touches canvas getContext at import time (unavailable
 // in jsdom); the confetti overlay on the success screen pulls it in. Stub it out.
 vi.mock('lottie-react', () => ({ default: () => null }));
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import CheckoutPage from '../CheckoutPage';
@@ -102,7 +103,7 @@ const couponsMock = (pod_id: string | null): MockedResponse => ({
 
 function renderCheckout(mocks: MockedResponse[], path = `/checkout/${POD_ID}`) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <CartProvider>
         <MemoryRouter initialEntries={[path]}>
           <Routes>
@@ -172,8 +173,7 @@ describe('CheckoutPage', () => {
 
   it('applies a valid coupon and shows the applied state', async () => {
     const previewMock: MockedResponse = {
-      request: { query: PREVIEW_COUPON },
-      variableMatcher: () => true,
+      request: { query: PREVIEW_COUPON, variables: () => true },
       result: {
         data: {
           previewCoupon: {
@@ -205,8 +205,7 @@ describe('CheckoutPage', () => {
 
   it('completes a dummy-gateway payment and shows the success screen', async () => {
     const checkoutMock: MockedResponse = {
-      request: { query: DUMMY_CHECKOUT },
-      variableMatcher: () => true,
+      request: { query: DUMMY_CHECKOUT, variables: () => true },
       result: {
         data: {
           dummyCheckout: {

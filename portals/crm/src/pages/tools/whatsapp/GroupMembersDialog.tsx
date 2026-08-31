@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   CircularProgress,
   Dialog,
@@ -20,7 +20,7 @@ export default function GroupMembersDialog({
   onClose,
 }: Readonly<{ group: GroupRef | null; onClose: () => void }>) {
   const { t } = useTranslation();
-  const { data, loading } = useQuery(WA_GROUP_MEMBERS, {
+  const { data, loading } = useQuery<any>(WA_GROUP_MEMBERS, {
     variables: { group_jid: group?.jid },
     skip: !group,
   });

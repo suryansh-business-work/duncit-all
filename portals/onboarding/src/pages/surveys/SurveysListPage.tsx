@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -37,7 +37,7 @@ export default function SurveysListPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [scope, setScope] = useState<Scope>(emptyScope);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [deleteSurvey, { loading: deleting }] = useMutation(DELETE_SURVEY);
+  const [deleteSurvey, { loading: deleting }] = useMutation<any>(DELETE_SURVEY);
 
   // Kind-default (unscoped) surveys are managed via the Default Survey button and
   // must never surface in this table. The server cannot filter on "scoped", so

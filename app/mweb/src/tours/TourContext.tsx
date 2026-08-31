@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   HOME_TOUR_ID,
   markTourCompleted,
@@ -58,7 +59,7 @@ interface ProviderProps {
  * and nothing is written for them.
  */
 export function TourProvider({ children, userId: userIdProp, storage }: Readonly<ProviderProps>) {
-  const { data } = useQuery(TOUR_VIEWER, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(TOUR_VIEWER, { fetchPolicy: 'cache-first' });
   const userId = userIdProp ?? data?.me?.user_id ?? 'anon';
   const store = storage ?? globalThis.localStorage;
   const [completed, setCompleted] = useState<TourId[]>(() => loadCompleted(store, userId));

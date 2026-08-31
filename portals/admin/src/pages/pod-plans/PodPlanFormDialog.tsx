@@ -39,7 +39,7 @@ const toFormValues = (editing: (PodPlanFormValues & { id?: string }) | null): Po
 
 export default function PodPlanFormDialog({ open, editing, loading, onClose, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<PodPlanFormValues>({
+  const { control, handleSubmit, reset } = useForm<PodPlanFormValues, any, PodPlanFormValues>({
     defaultValues: toFormValues(editing),
     resolver: zodResolver(podPlanFormSchema),
     mode: 'onTouched',

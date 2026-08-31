@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -27,8 +27,8 @@ export default function UsersPage() {
   const [opError, setOpError] = useState<string | null>(null);
   const { formatDate, formatDateTime } = useDateFormat();
 
-  const { data: rolesData } = useQuery(ROLES);
-  const [createUser] = useMutation(CREATE_USER);
+  const { data: rolesData } = useQuery<any>(ROLES);
+  const [createUser] = useMutation<any>(CREATE_USER);
   const roles = rolesData?.roles ?? [];
 
   const fetchRows = useApolloTableFetch<UserRow>(client, USERS_TABLE, 'usersTable');

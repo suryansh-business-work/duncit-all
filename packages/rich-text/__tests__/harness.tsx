@@ -9,7 +9,8 @@
  */
 import { StrictMode, act, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { afterEach, vi } from 'vitest';
 

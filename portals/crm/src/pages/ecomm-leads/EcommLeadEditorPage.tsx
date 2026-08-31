@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { CREATE_ECOMM_LEAD, ECOMM_LEAD, UPDATE_ECOMM_LEAD } from '../../api/crm.gql';
@@ -15,9 +15,9 @@ export default function EcommLeadEditorPage() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { config, loading: cfgLoading } = useCrmConfig();
-  const { data, loading: leadLoading } = useQuery(ECOMM_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
-  const [createLead, { loading: creating }] = useMutation(CREATE_ECOMM_LEAD);
-  const [updateLead, { loading: updating }] = useMutation(UPDATE_ECOMM_LEAD);
+  const { data, loading: leadLoading } = useQuery<any>(ECOMM_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
+  const [createLead, { loading: creating }] = useMutation<any>(CREATE_ECOMM_LEAD);
+  const [updateLead, { loading: updating }] = useMutation<any>(UPDATE_ECOMM_LEAD);
   const lead = data?.ecommLead as EcommLead | undefined;
 
   const initialValues = useMemo<EcommLeadFormValues>(

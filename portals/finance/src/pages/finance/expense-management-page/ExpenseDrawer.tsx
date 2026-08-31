@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -44,11 +44,11 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
   const [date, setDate] = useState<Date | null>(new Date());
   const [form, setForm] = useState(BLANK);
   const [error, setError] = useState<string | null>(null);
-  const [create, createState] = useMutation(CREATE_EXPENSE);
-  const [update, updateState] = useMutation(UPDATE_EXPENSE);
-  const [addRefund] = useMutation(ADD_REFUND);
-  const [removeRefund] = useMutation(REMOVE_REFUND);
-  const [del] = useMutation(DELETE_EXPENSE);
+  const [create, createState] = useMutation<any>(CREATE_EXPENSE);
+  const [update, updateState] = useMutation<any>(UPDATE_EXPENSE);
+  const [addRefund] = useMutation<any>(ADD_REFUND);
+  const [removeRefund] = useMutation<any>(REMOVE_REFUND);
+  const [del] = useMutation<any>(DELETE_EXPENSE);
   const editing = !!current;
   const saving = createState.loading || updateState.loading;
 

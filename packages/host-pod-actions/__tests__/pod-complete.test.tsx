@@ -6,7 +6,8 @@
  * preview has to say which seats produced the figure, and the roster it sits
  * over is the evidence for it.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -325,8 +326,7 @@ describe('PodCompleteDialog settlement', () => {
       previewMock(),
       mediaBoardMock(),
       {
-        request: { query: COMPLETE_POD },
-        variableMatcher: () => true,
+        request: { query: COMPLETE_POD, variables: () => true },
         result: { data: { completePod: { __typename: 'Pod', id: 'pod-1' } } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -345,8 +345,7 @@ describe('PodCompleteDialog settlement', () => {
       previewMock(),
       mediaBoardMock(),
       {
-        request: { query: COMPLETE_POD },
-        variableMatcher: () => true,
+        request: { query: COMPLETE_POD, variables: () => true },
         error: new Error('This pod has already been completed'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },

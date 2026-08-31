@@ -36,7 +36,7 @@ COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile
 
 # Copy source and build server
@@ -79,7 +79,7 @@ COPY --from=builder /repo/portals/ai/package.json ./portals/ai/
 COPY --from=builder /repo/portals/products/package.json ./portals/products/
 COPY --from=builder /repo/portals/marketing/package.json ./portals/marketing/
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate \
+RUN corepack enable && corepack prepare pnpm@11.24.0 --activate \
     && pnpm install --prod --frozen-lockfile --filter server
 
 COPY --from=builder /repo/server/dist ./server/dist

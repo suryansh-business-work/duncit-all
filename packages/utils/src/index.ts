@@ -107,8 +107,10 @@ export {
 export {
   GENERIC_ERROR_MESSAGE,
   OFFLINE_MESSAGE,
+  firstGraphQLError,
   isNetworkFailureMessage,
   parseApiError,
+  type GraphQLErrorLike,
 } from './parse-api-error';
 export { formatINR, formatMoney, type FormatMoneyOptions } from './format-money';
 export { base64ToBlob, downloadBase64File, downloadBlob, downloadTextFile } from './download';

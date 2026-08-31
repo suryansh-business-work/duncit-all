@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Card, Chip, Stack, Typography } from '@mui/material';
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import { MY_HOST_CATEGORIES, formatCategoryPath, type HostCategory } from './queries';

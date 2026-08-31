@@ -18,7 +18,7 @@ export interface LoginFormProps {
 export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeLoginSchema(t), [t]);
-  const { control, handleSubmit } = useForm<LoginFormValues>({
+  const { control, handleSubmit } = useForm<LoginFormValues, any, LoginFormValues>({
     defaultValues: loginDefaults,
     resolver: zodResolver(schema),
     mode: 'onBlur',

@@ -14,7 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitIconButton } from '@duncit/buttons';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { STORY_VIEWERS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -30,7 +30,7 @@ export default function StoryViewersDialog({
   onClose,
 }: Readonly<{ storyId: string | null; onClose: () => void }>) {
   const { t } = useTranslation();
-  const { data, loading } = useQuery(STORY_VIEWERS, {
+  const { data, loading } = useQuery<any>(STORY_VIEWERS, {
     variables: { id: storyId },
     skip: !storyId,
     fetchPolicy: 'cache-and-network',

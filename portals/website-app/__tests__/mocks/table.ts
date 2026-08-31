@@ -17,8 +17,7 @@ export const tablePageMock = <Row extends { __typename: string }>(
   pageTypename: string,
   rows: Row[],
 ): MockedResponse => ({
-  request: { query },
-  variableMatcher: () => true,
+  request: { query, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { [resultKey]: { __typename: pageTypename, total: rows.length, rows } } },
 });

@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -138,7 +139,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
 /** "Host Share" — every completion payout this host has earned, with status. */
 export default function HostShareCard() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_HOST_PAYOUTS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(MY_HOST_PAYOUTS, { fetchPolicy: 'cache-and-network' });
   const payouts = data?.myHostPayouts ?? [];
   const symbol = data?.publicFinanceSettings?.currency_symbol ?? '₹';
 

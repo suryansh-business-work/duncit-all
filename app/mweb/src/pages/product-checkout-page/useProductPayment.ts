@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   CREATE_RAZORPAY_PRODUCT_ORDER,
   DUMMY_PRODUCT_CHECKOUT,
@@ -33,8 +33,8 @@ interface Args {
  */
 export function useProductPayment({ session, items, coins, onPaymentFailure }: Args) {
   const { t } = useTranslation();
-  const [doDummy] = useMutation(DUMMY_PRODUCT_CHECKOUT);
-  const [doRazorpay] = useMutation(CREATE_RAZORPAY_PRODUCT_ORDER);
+  const [doDummy] = useMutation<any>(DUMMY_PRODUCT_CHECKOUT);
+  const [doRazorpay] = useMutation<any>(CREATE_RAZORPAY_PRODUCT_ORDER);
 
   return async (values: CheckoutForm) => {
     session.setError(null);

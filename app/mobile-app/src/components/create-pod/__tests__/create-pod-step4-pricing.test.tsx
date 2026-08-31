@@ -202,7 +202,7 @@ describe('usePodPricing', () => {
 });
 
 function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   const pricing = usePodPricing({
@@ -377,7 +377,7 @@ describe('Step 4 products — category empty state', () => {
   // category has nothing to attach — not that the catalogue is empty.
   const renderProducts = (products: unknown[]) => {
     const { result } = renderHook(() =>
-      useForm<CreatePodFormValues>({
+      useForm<CreatePodFormValues, any, CreatePodFormValues>({
         defaultValues: { ...blankCreatePodForm, ...paidPod, products_enabled: true },
       }),
     );

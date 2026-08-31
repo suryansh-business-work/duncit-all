@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Autocomplete, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import { useDebouncedValue } from '@duncit/ui';
 import {
@@ -38,14 +38,14 @@ export default function PodPicker({ value, onChange }: Readonly<Props>) {
   // id. Skipped once the pod is already in hand — picking one in the UI seeds
   // `chosen`, and the newest pods arrive with the search page anyway.
   const seeded = !value || chosen.some((pod) => pod.id === value);
-  const { data: seedData } = useQuery(COIN_POD_BY_ID, {
+  const { data: seedData } = useQuery<any>(COIN_POD_BY_ID, {
     variables: { pod_doc_id: value },
     skip: seeded,
     fetchPolicy: 'cache-first',
   });
   const seedPod = seedData?.pod as PodOption | null | undefined;
 
-  const { data, loading } = useQuery(COIN_POD_PICKER, {
+  const { data, loading } = useQuery<any>(COIN_POD_PICKER, {
     variables: {
       query: {
         search: term || null,

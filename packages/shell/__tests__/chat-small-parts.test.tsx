@@ -4,7 +4,8 @@
  * entry point.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import ReplyStrip from '../src/staff-chat/ReplyStrip';

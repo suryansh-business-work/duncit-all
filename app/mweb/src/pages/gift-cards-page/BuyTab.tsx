@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { EMAIL } from '@duncit/regex';
@@ -31,7 +31,7 @@ export default function BuyTab() {
     GIFT_CARD_CATEGORIES,
     { fetchPolicy: 'cache-first' },
   );
-  const { data: financeData } = useQuery(PUBLIC_FINANCE);
+  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
 
   const [scopeType, setScopeType] = useState<GiftCardScopeType>('SHOP');
   const [scopeCategory, setScopeCategory] = useState<GiftCardCategory | null>(null);

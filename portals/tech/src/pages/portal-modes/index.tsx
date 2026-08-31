@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import { useApolloTableFetch } from '@duncit/table';
@@ -21,7 +21,7 @@ export default function PortalModesPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [setModeMut] = useMutation(SET_PORTAL_MODE);
+  const [setModeMut] = useMutation<any>(SET_PORTAL_MODE);
 
   const fetchRows = useApolloTableFetch<PortalModeRow>(client, PORTAL_MODES_TABLE, 'portalModesTable');
 

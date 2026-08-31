@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Typography } from '@mui/material';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { ENV_ENTRIES, type EnvEntry } from './queries';
@@ -20,8 +20,8 @@ export default function PortalMappingTab() {
   const fetchRows = useCallback(
     async (q: TableQueryState) => {
       const [portalsRes, entriesRes] = await Promise.all([
-        client.query({ query: PORTAL_MODES_TABLE_FOR_ENV, variables: tableQueryToGql(q), fetchPolicy: 'network-only' }),
-        client.query({ query: ENV_ENTRIES, variables: { filter: {} }, fetchPolicy: 'network-only' }),
+        client.query<any>({ query: PORTAL_MODES_TABLE_FOR_ENV, variables: tableQueryToGql(q), fetchPolicy: 'network-only' }),
+        client.query<any>({ query: ENV_ENTRIES, variables: { filter: {} }, fetchPolicy: 'network-only' }),
       ]);
       const entries = entriesRes.data.envEntries as EnvEntry[];
       const page = portalsRes.data.portalModesTable;

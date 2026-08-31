@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
@@ -67,7 +67,7 @@ export default function ShopPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
   const { all, matchesCategory } = useSearchCategories();
   const { addingId, add } = useQuickAddToCart();
   const products = useMemo<ShopProduct[]>(() => data?.availablePodProducts ?? [], [data]);

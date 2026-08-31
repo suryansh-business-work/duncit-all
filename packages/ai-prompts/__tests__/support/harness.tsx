@@ -4,7 +4,8 @@
  * jsdom layout the grid needs before it will mount a single row.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { DuncitLocalizationProvider, PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render } from '@testing-library/react';
@@ -41,7 +42,7 @@ const appSettingsMock: MockedResponse = {
  */
 export const renderInPortal = (ui: ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[appSettingsMock, ...mocks]} addTypename={false}>
+    <MockedProvider mocks={[appSettingsMock, ...mocks]}>
       <ThemeProvider theme={createTheme()}>
         <DuncitLocalizationProvider>{ui}</DuncitLocalizationProvider>
       </ThemeProvider>

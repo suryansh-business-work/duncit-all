@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useQuery, type DocumentNode } from '@apollo/client';
+import { type DocumentNode } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import type { AutoPodQueueVariables } from '@duncit/auto-pods';
 import { formatMoney, mwebAutoPodLabels, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 import { useTranslation } from '../i18n/useTranslation';

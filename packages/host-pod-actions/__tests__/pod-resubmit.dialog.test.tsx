@@ -7,7 +7,8 @@
  * one, and the rewritten copy is screened like any other edit (a rejected pod
  * is exactly where a host is most tempted to reword the details).
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 // The slot calendar is MUI X, which refuses to render without its own
 // localization context — the surface supplies one; here it does not.
@@ -82,8 +83,7 @@ const slot = (over: Record<string, unknown> = {}) => ({
 });
 
 const cleanCheck: MockedResponse = {
-  request: { query: MODERATE_POD_CONTENT },
-  variableMatcher: () => true,
+  request: { query: MODERATE_POD_CONTENT, variables: () => true },
   result: {
     data: { moderatePodContent: { __typename: 'PodContentCheck', allowed: true, violations: [] } },
   },
@@ -92,8 +92,10 @@ const cleanCheck: MockedResponse = {
 
 const resubmitMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   ({
-    request: { query: HOST_RESUBMIT_POD },
-    variableMatcher: () => true,
+    request: { query: HOST_RESUBMIT_POD, variables: (v: Record<string, unknown>) => {
+          variables.push(v);
+          return true;
+        } } variables: () => true },
     result: {
       data: {
         hostResubmitPod: {
@@ -184,10 +186,6 @@ describe('PodResubmitDialog', () => {
       slotsMock('v-2', [slot({ id: 'slot-9', space_label: 'Court 9' })]),
       cleanCheck,
       resubmitMock({
-        variableMatcher: (v: Record<string, unknown>) => {
-          variables.push(v);
-          return true;
-        },
       }),
     ]);
     await settle();
@@ -224,8 +222,7 @@ describe('PodResubmitDialog', () => {
       venuesMock,
       slotsMock('v-1', [slot()]),
       {
-        request: { query: MODERATE_POD_CONTENT },
-        variableMatcher: () => true,
+        request: { query: MODERATE_POD_CONTENT, variables: () => true },
         result: {
           data: {
             moderatePodContent: {

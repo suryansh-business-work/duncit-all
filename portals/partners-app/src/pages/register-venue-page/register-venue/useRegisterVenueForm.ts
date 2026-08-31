@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTabParam } from '@duncit/tabs';
@@ -63,7 +63,7 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
   // Documents the venue already had — those rows are append-only after approval.
   const originalDocCount = venue?.documents?.length ?? 0;
 
-  const form = useForm<RegisterVenueValues>({
+  const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
     resolver: zodResolver(registerVenueSchema),
     defaultValues: blankRegisterVenueValues,
     mode: 'onBlur',
@@ -83,11 +83,11 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
     if (!adoptingFreshSave) form.reset(venueToValues(venue, locations, account));
   }, [venue, locations, account, form]);
 
-  const [saveStep1, s1] = useMutation(STEP1);
-  const [saveStep2, s2] = useMutation(STEP2);
-  const [saveStep3, s3] = useMutation(STEP3);
-  const [submitFinal, sf] = useMutation(FINAL);
-  const [saveApproved, sa] = useMutation(UPDATE_APPROVED_VENUE);
+  const [saveStep1, s1] = useMutation<any>(STEP1);
+  const [saveStep2, s2] = useMutation<any>(STEP2);
+  const [saveStep3, s3] = useMutation<any>(STEP3);
+  const [submitFinal, sf] = useMutation<any>(FINAL);
+  const [saveApproved, sa] = useMutation<any>(UPDATE_APPROVED_VENUE);
   const busy = s1.loading || s2.loading || s3.loading || sf.loading || sa.loading;
 
   // Live section completion for the rail: map zod issue paths back to sections.

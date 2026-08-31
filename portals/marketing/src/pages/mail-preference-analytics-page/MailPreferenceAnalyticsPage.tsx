@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import UnsubscribeIcon from '@mui/icons-material/Unsubscribe';
 import DoNotDisturbOnIcon from '@mui/icons-material/DoNotDisturbOn';

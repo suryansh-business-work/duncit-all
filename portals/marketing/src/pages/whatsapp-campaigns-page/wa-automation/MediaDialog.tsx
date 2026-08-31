@@ -48,7 +48,7 @@ export default function MediaDialog({ scenario, saving, onClose, onSave }: Reado
       }),
     [t]
   );
-  const { control, handleSubmit, reset } = useForm<MediaFormValues>({
+  const { control, handleSubmit, reset } = useForm<MediaFormValues, any, MediaFormValues>({
     resolver: zodResolver(schema),
     defaultValues: { url: '', filename: '' },
   });

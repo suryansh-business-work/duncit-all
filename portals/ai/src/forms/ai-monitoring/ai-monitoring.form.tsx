@@ -46,7 +46,7 @@ export default function AiMonitoringForm({
   const { t } = useTranslation();
   const blankHint = t('ai.settings.blankHint');
   const schema = useMemo(() => buildAiMonitoringSchema(t), [t]);
-  const { control, handleSubmit, watch, reset, formState } = useForm<AiMonitoringFormValues>({
+  const { control, handleSubmit, watch, reset, formState } = useForm<AiMonitoringFormValues, any, AiMonitoringFormValues>({
     defaultValues: { ...aiMonitoringInitialValues, ...initialValues },
     resolver: zodResolver(schema),
     mode: 'onChange',

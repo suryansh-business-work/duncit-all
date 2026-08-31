@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -37,8 +37,8 @@ const prettyDate = (ymd: string) => {
 export default function MeetingHolidaysCard() {
   const { t } = useTranslation();
   const { data, refetch } = useQuery<{ meetingHolidays: MeetingHoliday[] }>(MEETING_HOLIDAYS, { fetchPolicy: 'cache-and-network' });
-  const [addHoliday, { loading: adding }] = useMutation(ADD_MEETING_HOLIDAY);
-  const [removeHoliday] = useMutation(REMOVE_MEETING_HOLIDAY);
+  const [addHoliday, { loading: adding }] = useMutation<any>(ADD_MEETING_HOLIDAY);
+  const [removeHoliday] = useMutation<any>(REMOVE_MEETING_HOLIDAY);
   const [date, setDate] = useState<Date | null>(null);
   const [name, setName] = useState('');
   const [type, setType] = useState<HolidayType>('PUBLIC_HOLIDAY');

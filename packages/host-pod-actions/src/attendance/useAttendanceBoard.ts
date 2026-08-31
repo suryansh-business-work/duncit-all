@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { needsOtp, type PodAttendanceBoard, type PodAttendanceRow } from '@duncit/utils';
 import { FORCE_ATTENDANCE, HOST_MARK_ATTENDANCE, POD_ATTENDANCE_BOARD } from './queries';
 import { writeFailure } from '../write-failure';
@@ -42,13 +42,13 @@ export function useAttendanceBoard(
   notifySuccess: (message: string) => void,
   notifyError: (message: string) => void
 ): AttendanceBoardApi {
-  const { data, loading, error, refetch } = useQuery(POD_ATTENDANCE_BOARD, {
+  const { data, loading, error, refetch } = useQuery<any>(POD_ATTENDANCE_BOARD, {
     variables: { pod_doc_id: podId },
     skip: !podId,
     fetchPolicy: 'cache-and-network',
   });
-  const [markAttendance] = useMutation(HOST_MARK_ATTENDANCE);
-  const [forceAttendance] = useMutation(FORCE_ATTENDANCE);
+  const [markAttendance] = useMutation<any>(HOST_MARK_ATTENDANCE);
+  const [forceAttendance] = useMutation<any>(FORCE_ATTENDANCE);
   const [busyId, setBusyId] = useState('');
   const [otpRow, setOtpRow] = useState<PodAttendanceRow | null>(null);
   const [forceRow, setForceRow] = useState<PodAttendanceRow | null>(null);

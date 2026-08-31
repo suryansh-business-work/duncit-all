@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
@@ -67,7 +67,7 @@ export default function FaqSubmissionsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [updateStatus] = useMutation(UPDATE_FAQ_SUBMISSION_STATUS, {
+  const [updateStatus] = useMutation<any>(UPDATE_FAQ_SUBMISSION_STATUS, {
     onCompleted: () => refetchRef.current?.(),
   });
   const { formatDateTime } = useDateFormat();

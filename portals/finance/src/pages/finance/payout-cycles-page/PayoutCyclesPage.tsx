@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -29,8 +29,8 @@ const dateToTime = (d: Date | null) =>
 
 export default function PayoutCyclesPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(PAYOUT_SETTINGS, { fetchPolicy: 'cache-and-network' });
-  const [updateMut, { loading: saving }] = useMutation(UPDATE_PAYOUT_SETTINGS);
+  const { data, loading, refetch } = useQuery<any>(PAYOUT_SETTINGS, { fetchPolicy: 'cache-and-network' });
+  const [updateMut, { loading: saving }] = useMutation<any>(UPDATE_PAYOUT_SETTINGS);
   const [venueMode, setVenueMode] = useState('IMMEDIATE');
   const [hostMode, setHostMode] = useState('IMMEDIATE');
   const [day, setDay] = useState(1);

@@ -37,7 +37,7 @@ export default function CreateTemplateForm({ open, busy, onClose, onSubmit }: Re
     reset,
     watch,
     formState: { isValid },
-  } = useForm<CreateTemplateValues>({
+  } = useForm<CreateTemplateValues, any, CreateTemplateValues>({
     defaultValues: emptyValues(),
     resolver: zodResolver(schema),
     mode: 'onChange',

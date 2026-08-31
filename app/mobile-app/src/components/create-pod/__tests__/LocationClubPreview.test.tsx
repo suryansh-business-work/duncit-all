@@ -58,7 +58,7 @@ function Harness({
   initial?: Partial<CreatePodFormValues>;
   categories?: CreatePodHostCategory[];
 }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   // The category picker moved above the page title, so the stepper renders it

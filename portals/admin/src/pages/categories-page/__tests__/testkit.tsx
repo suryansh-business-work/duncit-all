@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { BRANDING } from '../../branding-page/queries';
 import { CATEGORIES, type Level } from '../queries';

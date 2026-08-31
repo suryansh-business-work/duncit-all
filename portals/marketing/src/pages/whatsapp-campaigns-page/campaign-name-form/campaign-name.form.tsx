@@ -21,7 +21,7 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
     handleSubmit,
     reset,
     formState: { isValid },
-  } = useForm<CampaignNameValues>({
+  } = useForm<CampaignNameValues, any, CampaignNameValues>({
     defaultValues: emptyValues(),
     resolver: zodResolver(campaignNameSchema),
     mode: 'onChange',

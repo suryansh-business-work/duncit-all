@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { InMemoryCache } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProductDetailPage, { PODS_FOR_PRODUCT } from '../ProductDetailPage';
 import { PUBLIC_PRODUCT, PRODUCT_REVIEWS, PUBLIC_BRAND } from '../pod-details-page/queries';
@@ -108,7 +108,6 @@ function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[]
   return render(
     <MockedProvider
       mocks={[...mocks, podsMock, podsMock] as never}
-      addTypename={false}
       cache={cache}
     >
       <CartProvider>

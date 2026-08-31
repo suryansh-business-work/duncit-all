@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { subDays, subMonths, startOfMonth } from 'date-fns';
 import { useApolloTableFetch } from '@duncit/table';
@@ -50,7 +50,7 @@ export default function ClubAdminDashboardPage() {
     return start ? start.toISOString() : null;
   }, [range]);
 
-  const { data, loading, error } = useQuery(CLUB_ADMIN_DASHBOARD, {
+  const { data, loading, error } = useQuery<any>(CLUB_ADMIN_DASHBOARD, {
     variables: { from, to: null },
     fetchPolicy: 'cache-and-network',
   });

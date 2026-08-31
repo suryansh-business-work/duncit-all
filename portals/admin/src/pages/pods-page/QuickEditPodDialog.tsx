@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { podContentRejectionMessage } from '@duncit/utils';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
 import { UPDATE } from './queries';
@@ -24,7 +24,7 @@ export default function QuickEditPodDialog({
   onPickImage,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [updateMut] = useMutation(UPDATE);
+  const [updateMut] = useMutation<any>(UPDATE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

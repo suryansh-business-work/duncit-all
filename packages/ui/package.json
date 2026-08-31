@@ -22,21 +22,21 @@
     "react-router-dom": ">=6"
   },
   "devDependencies": {
-    "@mui/icons-material": "^9.3.1",
-    "@mui/material": "^9.3.1",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.10.0",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
-    "@vitest/coverage-v8": "^2.1.9",
-    "jsdom": "^25.0.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "jsdom": "^30.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^6.30.6",
-    "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "react-router-dom": "^7.18.3",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",

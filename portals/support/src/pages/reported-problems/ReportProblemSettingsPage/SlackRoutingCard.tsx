@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Card,
@@ -57,7 +57,7 @@ export default function SlackRoutingCard() {
   const { data, loading, error } = useQuery<{
     reportProblemSlackSettings: ReportProblemSlackSettings;
   }>(REPORT_PROBLEM_SLACK, { fetchPolicy: 'cache-and-network' });
-  const [save, saveState] = useMutation(UPDATE_REPORT_PROBLEM_SLACK);
+  const [save, saveState] = useMutation<any>(UPDATE_REPORT_PROBLEM_SLACK);
 
   const settings = data?.reportProblemSlackSettings;
   const [enabled, setEnabled] = useState(true);

@@ -60,7 +60,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
     () => makeRegisterSchema(minAge, t, requiredPolicyIds),
     [minAge, t, requiredPolicyIds],
   );
-  const { control, handleSubmit } = useForm<RegisterFormValues>({
+  const { control, handleSubmit } = useForm<RegisterFormValues, any, RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',

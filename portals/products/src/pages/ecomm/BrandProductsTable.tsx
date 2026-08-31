@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Avatar, Chip } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatMoney } from '@duncit/utils';

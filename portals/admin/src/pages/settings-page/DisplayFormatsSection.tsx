@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -51,10 +52,10 @@ interface Props {
 
 export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(APP_SETTINGS_FORMATS, {
+  const { data, loading, refetch } = useQuery<any>(APP_SETTINGS_FORMATS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save] = useMutation(UPDATE, { refetchQueries: [{ query: PUBLIC_APP_SETTINGS }] });
+  const [save] = useMutation<any>(UPDATE, { refetchQueries: [{ query: PUBLIC_APP_SETTINGS }] });
 
   const [dateFmt, setDateFmt] = useState('dd MMM yyyy');
   const [timeFmt, setTimeFmt] = useState('hh:mm a');

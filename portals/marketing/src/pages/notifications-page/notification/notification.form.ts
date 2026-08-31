@@ -16,7 +16,7 @@ export const notificationFormSchema = z
     body: requiredText('Body', 5, 1000),
     image_url: optionalUrl('Image URL', false, { defaultEmpty: true }),
     link_url: optionalUrl('Link URL', true, { defaultEmpty: true }),
-    scope: z.enum(scopes, { required_error: 'Audience is required' }),
+    scope: z.enum(scopes, { error: 'Audience is required' }),
     silent: z.boolean(),
     location_id: z.string().default(''),
     zone_name: z.string().default(''),

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useApolloTableFetch, type TableQueryState } from '@duncit/table';
@@ -16,7 +16,7 @@ export default function GiftCardLogsPage() {
   const { formatDateTime } = useDateFormat();
 
   // Ledger amounts are rupees; the symbol is admin-configured rather than assumed.
-  const { data: currencyData } = useQuery(GIFT_CARD_CURRENCY, { fetchPolicy: 'cache-first' });
+  const { data: currencyData } = useQuery<any>(GIFT_CARD_CURRENCY, { fetchPolicy: 'cache-first' });
   const currencySymbol = currencyData?.publicFinanceSettings?.currency_symbol ?? '₹';
 
   const fetchTable = useApolloTableFetch<GiftCardTxnRow>(

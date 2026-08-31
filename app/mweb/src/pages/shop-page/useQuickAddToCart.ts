@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { useCart } from '../../components/cart/CartContext';
 import { PODS_FOR_PRODUCT } from '../ProductDetailPage';
 import type { ShopProduct } from './queries';

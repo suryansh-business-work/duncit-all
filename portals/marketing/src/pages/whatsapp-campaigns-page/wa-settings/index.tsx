@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -37,7 +37,7 @@ export default function WaSettings({
   const { data, loading, error, refetch } = useQuery<{ waPricing: WaPricing }>(WA_PRICING, {
     fetchPolicy: 'cache-and-network',
   });
-  const [updatePricing] = useMutation(UPDATE_WA_PRICING);
+  const [updatePricing] = useMutation<any>(UPDATE_WA_PRICING);
   const [busy, setBusy] = useState(false);
 
   const initialValues = useMemo(

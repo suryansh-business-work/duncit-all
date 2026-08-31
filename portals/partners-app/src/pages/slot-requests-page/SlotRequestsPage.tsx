@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Card, MenuItem, Skeleton, Stack, TextField, Typography } from '@mui/material';
 import { MY_VENUES } from '../register-venue-page/queries';
 import { APPROVE_SLOT_REQUEST, DECLINE_SLOT_REQUEST, VENUE_SLOT_REQUESTS, type SlotRequestRow } from './queries';
@@ -13,13 +13,13 @@ export default function SlotRequestsPage() {
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
 
-  const venuesQuery = useQuery(MY_VENUES, { fetchPolicy: 'cache-first' });
-  const requestsQuery = useQuery(VENUE_SLOT_REQUESTS, {
+  const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
+  const requestsQuery = useQuery<any>(VENUE_SLOT_REQUESTS, {
     variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
     fetchPolicy: 'cache-and-network',
   });
-  const [approve, approveState] = useMutation(APPROVE_SLOT_REQUEST);
-  const [decline, declineState] = useMutation(DECLINE_SLOT_REQUEST);
+  const [approve, approveState] = useMutation<any>(APPROVE_SLOT_REQUEST);
+  const [decline, declineState] = useMutation<any>(DECLINE_SLOT_REQUEST);
 
   const venues = venuesQuery.data?.myVenues ?? [];
   const requests: SlotRequestRow[] = requestsQuery.data?.venueSlotRequests ?? [];

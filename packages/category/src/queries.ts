@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import type { CategoryDoc } from './types';
 
 /** The admin-managed category tree — the single source the picker reads from. */

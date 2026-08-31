@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const navigate = vi.fn();
@@ -81,7 +81,7 @@ const baseVars = { location_id: 'loc-1', search: null, super_category_id: null }
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mocks={mocks as never}>
       {ui}
     </MockedProvider>,
   );

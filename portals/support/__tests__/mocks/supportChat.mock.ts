@@ -161,8 +161,7 @@ export const anySessionsMock = (
   items: SupportChatSessionMock[],
   total: number,
 ): MockedResponse => ({
-  request: { query: SUPPORT_CHAT_SESSIONS },
-  variableMatcher: () => true,
+  request: { query: SUPPORT_CHAT_SESSIONS, variables: () => true },
   result: {
     data: {
       supportChatSessions: {
@@ -223,8 +222,7 @@ export const markReadMock = (sessionId: string): MockedResponse => ({
 export const sendMessageMock = (
   over: { message?: SupportChatMessageMock | null; onVars?: (vars: Record<string, unknown>) => void } = {},
 ): MockedResponse => ({
-  request: { query: SEND_SUPPORT_CHAT_MESSAGE },
-  variableMatcher: (vars) => {
+  request: { query: SEND_SUPPORT_CHAT_MESSAGE, variables: (vars) => { },
     over.onVars?.(vars);
     return true;
   },

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import HostDashboardPage from '../index';
 import { HOST_DASHBOARD_ME, HOST_DASHBOARD_PODS } from '../queries';
@@ -76,7 +76,7 @@ const podsMock = {
 
 function setup(mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <MemoryRouter>
         <HostDashboardPage />
       </MemoryRouter>

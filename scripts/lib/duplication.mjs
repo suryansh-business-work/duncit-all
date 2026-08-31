@@ -94,7 +94,12 @@ function stageCorpus(root) {
 function runJscpd(root) {
   const corpus = stageCorpus(root);
   const out = mkdtempSync(join(tmpdir(), "jscpd-"));
-  const bin = resolve(root, "node_modules/jscpd/bin/jscpd");
+  // Read the entry from the package rather than assuming a path: jscpd 5
+  // replaced `bin/jscpd` with a launcher beside its manifest.
+  const manifest = resolve(root, "node_modules/jscpd/package.json");
+  const declared = JSON.parse(readFileSync(manifest, "utf8")).bin;
+  const entry = typeof declared === "string" ? declared : declared.jscpd;
+  const bin = resolve(dirname(manifest), entry);
   try {
     execFileSync(
       process.execPath,

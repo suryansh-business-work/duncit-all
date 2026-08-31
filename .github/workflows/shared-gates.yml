@@ -28,6 +28,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # Even though every gate below is a plain node script, setup-node reads the
+      # repo's packageManager field and wants the tool it names on PATH.
+      - uses: pnpm/action-setup@v4.4.0
+
       - name: Setup Node
         uses: actions/setup-node@v5
         with:

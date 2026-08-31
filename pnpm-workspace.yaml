@@ -46,8 +46,44 @@ allowBuilds:
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
-  - jscpd@5.1.0
+  - jscpd@5.1.0 || 5.1.1
   - nodemailer@9.1.0
+  - '@tiptap/core@3.30.6'
+  - '@tiptap/extension-blockquote@3.30.6'
+  - '@tiptap/extension-bold@3.30.6'
+  - '@tiptap/extension-bubble-menu@3.30.6'
+  - '@tiptap/extension-bullet-list@3.30.6'
+  - '@tiptap/extension-code-block@3.30.6'
+  - '@tiptap/extension-code@3.30.6'
+  - '@tiptap/extension-document@3.30.6'
+  - '@tiptap/extension-dropcursor@3.30.6'
+  - '@tiptap/extension-floating-menu@3.30.6'
+  - '@tiptap/extension-gapcursor@3.30.6'
+  - '@tiptap/extension-hard-break@3.30.6'
+  - '@tiptap/extension-heading@3.30.6'
+  - '@tiptap/extension-horizontal-rule@3.30.6'
+  - '@tiptap/extension-italic@3.30.6'
+  - '@tiptap/extension-link@3.30.6'
+  - '@tiptap/extension-list-item@3.30.6'
+  - '@tiptap/extension-list-keymap@3.30.6'
+  - '@tiptap/extension-list@3.30.6'
+  - '@tiptap/extension-ordered-list@3.30.6'
+  - '@tiptap/extension-paragraph@3.30.6'
+  - '@tiptap/extension-placeholder@3.30.6'
+  - '@tiptap/extension-strike@3.30.6'
+  - '@tiptap/extension-text@3.30.6'
+  - '@tiptap/extension-underline@3.30.6'
+  - '@tiptap/extensions@3.30.6'
+  - '@tiptap/pm@3.30.6'
+  - '@tiptap/react@3.30.6'
+  - '@tiptap/starter-kit@3.30.6'
+  - jscpd-darwin-arm64@5.1.1
+  - jscpd-darwin-x64@5.1.1
+  - jscpd-linux-arm64-gnu@5.1.1
+  - jscpd-linux-x64-gnu@5.1.1
+  - jscpd-linux-x64-musl@5.1.1
+  - jscpd-windows-arm64-msvc@5.1.1
+  - jscpd-windows-x64-msvc@5.1.1
 
 # pnpm 10 moved these out of package.json's "pnpm" field. pnpm 11 does not read
 # that field at all — it only WARNS that it ignored it — so an override left

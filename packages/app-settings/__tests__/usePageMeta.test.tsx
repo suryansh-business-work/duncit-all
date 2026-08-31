@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { cleanup, renderHook } from '@testing-library/react';
+
+afterEach(() => {
+  // `globals: false` means Testing Library registers no cleanup of its own, so
+  // a hook left mounted can still have React work queued when jsdom is torn
+  // down — which throws `window is not defined` and fails a green run.
+  cleanup();
+});
 
 const { applyPageMeta, pageTitle, usePageMeta } = await import('../src/usePageMeta');
 

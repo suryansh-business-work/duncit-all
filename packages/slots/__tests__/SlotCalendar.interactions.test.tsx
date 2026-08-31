@@ -10,7 +10,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import SlotCalendar from '../src/mui/SlotCalendar';
@@ -63,6 +63,10 @@ const settle = async () => {
 };
 
 afterEach(() => {
+  // Unmount FIRST — see SlotCalendar.test.tsx: with `globals: false` nothing
+  // registers Testing Library's own cleanup, and React work left queued when
+  // jsdom is torn down throws `window is not defined` after the run.
+  cleanup();
   vi.clearAllMocks();
 });
 

@@ -1,12 +1,11 @@
 import { Stack } from '@mui/material';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useSingleImageUpload } from './single-image/useSingleImageUpload';
+import { useUploadCaps } from './useUploadCaps';
 import UrlAdornmentVariant from './single-image/UrlAdornmentVariant';
 import UrlButtonVariant from './single-image/UrlButtonVariant';
 import AvatarVariant from './single-image/AvatarVariant';
 import type { SingleImageUploadFieldProps } from './single-image/types';
-
-const DEFAULT_MAX_BYTES = 15 * 1024 * 1024;
 
 /**
  * Single-image ImageKit upload field: pick a device file → upload via the
@@ -26,16 +25,19 @@ export default function SingleImageUploadField({
   error: externalError,
   disabled = false,
   accept = 'image/*',
-  maxBytes = DEFAULT_MAX_BYTES,
+  maxBytes,
+  surface = 'PORTALS',
   oversizeMessage,
   fallbackMimeType,
   shape = 'square',
   uploadTestId,
   buttonLabel = 'Upload',
 }: Readonly<SingleImageUploadFieldProps>) {
+  // The admin's image cap, unless this call site named its own.
+  const caps = useUploadCaps(surface);
   const state = useSingleImageUpload({
     folder,
-    maxBytes,
+    maxBytes: maxBytes === undefined ? caps.maxImageBytes : maxBytes,
     oversizeMessage,
     fallbackMimeType,
     onChange,

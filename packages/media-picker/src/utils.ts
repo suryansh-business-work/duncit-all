@@ -1,8 +1,22 @@
 import type { FilePolicy } from './types';
 
-const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-const MAX_DOCUMENT_BYTES = 50 * 1024 * 1024;
+/** One megabyte, so a cap reads in the unit the admin panel is written in. */
+export const MB = 1024 * 1024;
+
+/**
+ * What a picker allows until Upload Settings answer — and if they never do.
+ * Admin > Upload Settings is the real source for images and videos; these are
+ * the floor under a settings outage, never a second opinion about the rule.
+ */
+export const DEFAULT_IMAGE_MAX_MB = 15;
+export const DEFAULT_VIDEO_MAX_MB = 100;
+/**
+ * Documents are not an admin setting, so this is the server's own ceiling
+ * (`DOCUMENT_MAX_MB` in upload.service.ts). It lives here so every picker
+ * refuses exactly what the upload would refuse, rather than each inventing a
+ * smaller number and rejecting files the server would have taken.
+ */
+export const DEFAULT_DOCUMENT_MAX_MB = 100;
 
 export function pickBestVideoFile(v: any) {
   const files = (v.video_files || []) as any[];
@@ -41,16 +55,16 @@ const validateVideoFile = (file: File, caps: Readonly<FileCaps>): string | null 
   if (!formatAllowed(file.name, caps.allowedVideoFormats)) {
     return `Video format not allowed (allowed: ${caps.allowedVideoFormats?.join(', ')})`;
   }
-  const maxMb = caps.maxVideoMb ?? MAX_VIDEO_BYTES / (1024 * 1024);
-  return file.size > maxMb * 1024 * 1024 ? `Video is too large (max ${maxMb} MB)` : null;
+  const maxMb = caps.maxVideoMb ?? DEFAULT_VIDEO_MAX_MB;
+  return file.size > maxMb * MB ? `Video is too large (max ${maxMb} MB)` : null;
 };
 
 const validateImageFile = (file: File, caps: Readonly<FileCaps>): string | null => {
   if (!formatAllowed(file.name, caps.allowedImageFormats)) {
     return `Image format not allowed (allowed: ${caps.allowedImageFormats?.join(', ')})`;
   }
-  const maxMb = caps.maxImageMb ?? MAX_IMAGE_BYTES / (1024 * 1024);
-  return file.size > maxMb * 1024 * 1024 ? `Image is too large (max ${maxMb} MB)` : null;
+  const maxMb = caps.maxImageMb ?? DEFAULT_IMAGE_MAX_MB;
+  return file.size > maxMb * MB ? `Image is too large (max ${maxMb} MB)` : null;
 };
 
 /**
@@ -85,7 +99,9 @@ export function validateFile(
     return validateVideoFile(file, caps);
   }
   if (isPdf) {
-    return file.size > MAX_DOCUMENT_BYTES ? 'Document is too large (max 50 MB)' : null;
+    return file.size > DEFAULT_DOCUMENT_MAX_MB * MB
+      ? `Document is too large (max ${DEFAULT_DOCUMENT_MAX_MB} MB)`
+      : null;
   }
   return validateImageFile(file, caps);
 }

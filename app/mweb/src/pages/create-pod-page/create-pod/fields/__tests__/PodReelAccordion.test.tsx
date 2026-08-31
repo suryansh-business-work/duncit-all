@@ -12,6 +12,9 @@ let uploadingState = false;
 vi.mock('@duncit/media-picker', () => ({
   useImagekitDirectUpload: () => ({ upload: uploadMock, uploading: uploadingState }),
   compressUploadedVideo: (...args: unknown[]) => compressMock(...args),
+  MB: 1024 * 1024,
+  // A reel is a video like any other — Admin > Upload Settings sizes it.
+  useUploadCaps: () => ({ maxVideoBytes: 25 * 1024 * 1024 }),
 }));
 
 import PodReelAccordion from '../PodReelAccordion';
@@ -90,12 +93,12 @@ describe('PodReelAccordion', () => {
     expect(uploadMock).not.toHaveBeenCalled();
   });
 
-  it('rejects a file larger than 100 MB', async () => {
+  it("rejects a reel over the admin's video cap", async () => {
     setup('');
     fireEvent.change(fileInput(), {
-      target: { files: [makeFile('big.mp4', 'video/mp4', 200 * 1024 * 1024)] },
+      target: { files: [makeFile('big.mp4', 'video/mp4', 26 * 1024 * 1024)] },
     });
-    expect(await screen.findByText('Video is too large (max 100 MB)')).toBeInTheDocument();
+    expect(await screen.findByText(/over 25MB/)).toBeInTheDocument();
     expect(uploadMock).not.toHaveBeenCalled();
   });
 

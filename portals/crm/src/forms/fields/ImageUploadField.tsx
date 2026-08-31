@@ -1,5 +1,5 @@
 import { useController, useFormContext } from 'react-hook-form';
-import { SingleImageUploadField } from '@duncit/media-picker';
+import { MB, SingleImageUploadField, useUploadCaps } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -14,8 +14,10 @@ interface Props {
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const MAX_BYTES = 8 * 1024 * 1024;
-const oversizeMessage = (t: Translate) => t('crm.emailTemplates.max8mbCompressAndTryAgain');
+const oversizeMessage = (t: Translate, maxBytes: number) =>
+  t('crm.emailTemplates.maxSizeCompressAndTryAgain', {
+    vars: { max: Math.round(maxBytes / MB) },
+  });
 
 /**
  * Upload-an-image field bound to react-hook-form. Stores the resulting ImageKit
@@ -32,6 +34,7 @@ export default function ImageUploadField({
   const { t } = useTranslation();
   const labelText = label ?? t('crm.forms.image');
   const { control } = useFormContext();
+  const caps = useUploadCaps('PORTALS');
   const { field } = useController({ control, name });
 
   return (
@@ -43,8 +46,7 @@ export default function ImageUploadField({
       folder={folder}
       helperText={helperText}
       shape={shape}
-      maxBytes={MAX_BYTES}
-      oversizeMessage={() => oversizeMessage(t)}
+      oversizeMessage={() => oversizeMessage(t, caps.maxImageBytes)}
       fallbackMimeType="image/png"
       uploadTestId={`upload-${name}`}
     />

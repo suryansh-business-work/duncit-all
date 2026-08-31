@@ -5,6 +5,18 @@ import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { useSupportUpload } from '@/hooks/useSupportUpload';
 
 jest.mock('@/services/imagekit-upload', () => ({ uploadToImagekitDirect: jest.fn() }));
+// The caps are the admin's, so the suite pins an Upload Settings row and asserts
+// THOSE numbers come back — a fixed 50/100 here would pass whatever the hook read.
+jest.mock('@/hooks/useUploadSettings', () => ({
+  useUploadSettings: () => ({
+    max_image_mb: 8,
+    max_video_mb: 40,
+    allowed_image_formats: ['jpg', 'png'],
+    allowed_video_formats: ['mp4'],
+    default_crop_key: 'NO_CROP',
+    crop_presets: [],
+  }),
+}));
 
 const pickDoc = DocumentPicker.getDocumentAsync as jest.Mock;
 const mockUpload = uploadToImagekitDirect as jest.Mock;
@@ -56,13 +68,13 @@ describe('useSupportUpload', () => {
     expect(file.name).toMatch(/^support-\d+/);
   });
 
-  it('rejects a video over the 50 MB cap', async () => {
+  it("rejects a video over the admin's video cap", async () => {
     pickDoc.mockResolvedValueOnce(
-      pick({ uri: 'file://v.mp4', mimeType: 'video/mp4', size: 51 * 1024 * 1024 }),
+      pick({ uri: 'file://v.mp4', mimeType: 'video/mp4', size: 41 * 1024 * 1024 }),
     );
     const { url, result } = await run();
     expect(url).toBeNull();
-    expect(result.current.error).toBe('Video is too large (max 50 MB).');
+    expect(result.current.error).toBe('Video is too large (max 40 MB)');
     expect(mockUpload).not.toHaveBeenCalled();
   });
 
@@ -72,22 +84,38 @@ describe('useSupportUpload', () => {
         uri: 'file://v.mkv',
         name: 'v.mkv',
         mimeType: 'application/octet-stream',
-        size: 51 * 1024 * 1024,
+        size: 41 * 1024 * 1024,
       }),
     );
     const { url, result } = await run();
     expect(url).toBeNull();
-    expect(result.current.error).toBe('Video is too large (max 50 MB).');
+    expect(result.current.error).toBe('Video is too large (max 40 MB)');
     expect(mockUpload).not.toHaveBeenCalled();
   });
 
-  it('rejects a non-video file over the 100 MB cap', async () => {
+  // An image is judged by the IMAGE cap, not by the document ceiling it used to
+  // share — that was the bug: a 90 MB photo passed a 100 MB "file" check.
+  it("rejects an image over the admin's image cap", async () => {
     pickDoc.mockResolvedValueOnce(
-      pick({ uri: 'file://big.png', mimeType: 'image/png', size: 101 * 1024 * 1024 }),
+      pick({ uri: 'file://big.png', mimeType: 'image/png', size: 9 * 1024 * 1024 }),
     );
     const { url, result } = await run();
     expect(url).toBeNull();
-    expect(result.current.error).toBe('File is too large (max 100 MB).');
+    expect(result.current.error).toBe('Image is too large (max 8 MB)');
+  });
+
+  it('judges a document by the server document ceiling', async () => {
+    pickDoc.mockResolvedValueOnce(
+      pick({
+        uri: 'file://big.pdf',
+        name: 'big.pdf',
+        mimeType: 'application/pdf',
+        size: 101 * 1024 * 1024,
+      }),
+    );
+    const { url, result } = await run();
+    expect(url).toBeNull();
+    expect(result.current.error).toBe('File is too large (max 100 MB)');
   });
 
   it('reports Error and non-Error upload failures', async () => {

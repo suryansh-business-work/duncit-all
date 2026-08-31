@@ -2,6 +2,18 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+// The caps are Admin > Upload Settings; pin a row so the assertions are about
+// the admin's numbers reaching the field, per kind.
+vi.mock('@duncit/media-picker', () => ({
+  ATTACHMENT_ACCEPT_ALL:
+    'image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv',
+  MB: 1024 * 1024,
+  useUploadCaps: () => ({
+    maxImageBytes: 4 * 1024 * 1024,
+    maxVideoBytes: 25 * 1024 * 1024,
+    maxDocumentBytes: 100 * 1024 * 1024,
+  }),
+}));
 import ChatComposer from '../ChatComposer';
 import { GET_IMAGEKIT_AUTH } from '../../../utils/imagekit';
 
@@ -44,15 +56,15 @@ function setup(mocks: MockedResponse[] = []) {
 }
 
 describe('ChatComposer — attachment size guards', () => {
-  it('rejects a video larger than 50 MB', () => {
+  it("rejects a video over the admin's video cap", () => {
     setup();
     fireEvent.change(fileInput(), {
-      target: { files: [fileOf('clip.mp4', 'video/mp4', 51 * 1024 * 1024)] },
+      target: { files: [fileOf('clip.mp4', 'video/mp4', 26 * 1024 * 1024)] },
     });
-    expect(screen.getByText('Video is too large (max 50 MB)')).toBeInTheDocument();
+    expect(screen.getByText('Video is too large (max 25 MB)')).toBeInTheDocument();
   });
 
-  it('rejects a non-video file larger than 100 MB', () => {
+  it('judges a document by the server ceiling instead', () => {
     setup();
     fireEvent.change(fileInput(), {
       target: { files: [fileOf('big.pdf', 'application/pdf', 101 * 1024 * 1024)] },

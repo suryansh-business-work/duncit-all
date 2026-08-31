@@ -9,7 +9,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
@@ -308,14 +308,14 @@ export default function HomeStatusViewer({
               )}
             </Box>
             {isVideo && (
-              <DuncitIconButton
+              <DuncitRoundButton
+                tone="overlay"
                 onClick={() => setMuted((value) => !value)}
                 aria-label={muted ? t('mweb.status.unmuteVideo') : t('mweb.status.muteVideo')}
                 data-testid="status-mute"
-                sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
-                {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
-              </DuncitIconButton>
+                {muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+              </DuncitRoundButton>
             )}
             {onToggleLike && currentId && (
               <Stack
@@ -325,14 +325,15 @@ export default function HomeStatusViewer({
                   alignItems: "center",
                   color: '#fff'
                 }}>
-                <DuncitIconButton
+                <DuncitRoundButton
+                  tone="overlay"
                   onClick={toggleLike}
                   aria-label={liked ? 'Unlike story' : 'Like story'}
                   data-testid="status-like"
-                  sx={{ color: liked ? '#ff4f73' : '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
+                  sx={{ color: liked ? '#ff4f73' : '#fff' }}
                 >
-                  {liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
-                </DuncitIconButton>
+                  {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                </DuncitRoundButton>
                 {likeCount > 0 && (
                   <Typography variant="caption" sx={{ fontWeight: 700, minWidth: 12 }}>
                     {likeCount}
@@ -341,24 +342,24 @@ export default function HomeStatusViewer({
               </Stack>
             )}
             {onViewers && currentId && (
-              <DuncitIconButton
+              <DuncitRoundButton
+                tone="overlay"
                 onClick={() => onViewers(currentId)}
                 aria-label={t('mweb.common.seeWhoViewedThisStory')}
                 data-testid="status-viewers"
-                sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
-                <VisibilityIcon fontSize="small" />
-              </DuncitIconButton>
+                <VisibilityIcon />
+              </DuncitRoundButton>
             )}
             {onDelete && currentId && (
-              <DuncitIconButton
+              <DuncitRoundButton
+                tone="overlay"
                 onClick={(event) => setMenuAnchor(event.currentTarget)}
                 aria-label={t('mweb.home.storyOptions')}
                 data-testid="status-kebab"
-                sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
-                <MoreVertIcon fontSize="small" />
-              </DuncitIconButton>
+                <MoreVertIcon />
+              </DuncitRoundButton>
             )}
             {onDelete && currentId && (
               <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
@@ -375,9 +376,9 @@ export default function HomeStatusViewer({
                 </MenuItem>
               </Menu>
             )}
-            <DuncitIconButton onClick={onClose} aria-label={t('mweb.common.closeStatus')} sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
-              <CloseIcon fontSize="small" />
-            </DuncitIconButton>
+            <DuncitRoundButton tone="overlay" onClick={onClose} aria-label={t('mweb.common.closeStatus')}>
+              <CloseIcon />
+            </DuncitRoundButton>
           </Stack>
         </Stack>
 

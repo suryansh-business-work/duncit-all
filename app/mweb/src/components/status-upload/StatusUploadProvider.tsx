@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { Alert, Box, LinearProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import type { CropRect, VideoTrim } from '@duncit/media-picker';
+import { useUploadCaps, type CropRect, type VideoTrim } from '@duncit/media-picker';
 import { apolloClient } from '../../apollo';
 import { ADD_POD_STATUS, CREATE_STATUS_POST } from './queries';
 import StatusCropDialog from './StatusCropDialog';
@@ -32,25 +32,15 @@ interface PendingPick {
 
 const StatusUploadContext = createContext<StatusUploadContextValue | null>(null);
 const IDLE: StatusUploadState = { active: false, kind: null, progress: 0, message: '' };
-const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-// Story videos are capped at 50 MB; pod status keeps the general video cap.
-const MAX_STORY_VIDEO_BYTES = 50 * 1024 * 1024;
-
-function validateFile(file: File, kind: StatusUploadKind) {
-  const isImage = file.type.startsWith('image/');
-  const isVideo = file.type.startsWith('video/');
-  if (!isImage && !isVideo) return 'Please choose a valid status media file';
-  if (isImage && file.size > MAX_IMAGE_BYTES) return 'Image is too large (max 15 MB)';
-  if (isVideo) {
-    const cap = kind === 'pod' ? MAX_VIDEO_BYTES : MAX_STORY_VIDEO_BYTES;
-    if (file.size > cap) return `Video is too large (max ${Math.round(cap / (1024 * 1024))} MB)`;
-  }
-  return null;
-}
+/** A status is a photo or a clip; the sizes are the admin's to set. */
+const STATUS_MEDIA = { allowImage: true, allowVideo: true, allowDocuments: false };
 
 export function StatusUploadProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { t } = useTranslation();
+  // Asked for on the first picker open rather than on mount: the query needs a
+  // signed-in caller and this provider wraps every page, signed out included.
+  const [armed, setArmed] = useState(false);
+  const caps = useUploadCaps('MWEB', { skip: !armed });
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pendingRef = useRef<PendingPick | null>(null);
   const [accept, setAccept] = useState('image/*');
@@ -64,6 +54,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
   const openPicker = (pending: PendingPick) => {
     if (upload.active) return setNotice('Please wait, status upload is in progress.');
     pendingRef.current = pending;
+    setArmed(true);
     setAccept('image/*,video/*');
     inputRef.current?.click();
   };
@@ -122,7 +113,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     const pending = pendingRef.current;
     pendingRef.current = null;
     if (!file || !pending) return;
-    const fileError = validateFile(file, pending.kind);
+    const fileError = caps.validate(file, STATUS_MEDIA);
     if (fileError) return setNotice(fileError);
 
     if (mediaTypeOf(file) === 'VIDEO') {

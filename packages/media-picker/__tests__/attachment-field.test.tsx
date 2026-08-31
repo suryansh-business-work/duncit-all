@@ -120,6 +120,24 @@ describe('AttachmentUploadField picking', () => {
     expect(await screen.findByText(/Video is too large \(max 0 MB\)/)).toBeInTheDocument();
   });
 
+  // `null` is how a field says "the server decides" — a 300 MB build artifact
+  // has no business being refused by a picker.
+  it('takes any size when the cap is explicitly null', async () => {
+    const onChange = vi.fn();
+    wrap(
+      <AttachmentUploadField
+        value={[]}
+        onChange={onChange}
+        maxBytes={null}
+        videoMaxBytes={null}
+      />
+    );
+
+    chooseFiles([new File([new Uint8Array(4)], 'clip.mp4', { type: 'video/mp4' })]);
+
+    expect(screen.queryByText(/too large/)).toBeNull();
+  });
+
   it('lets the caller word the video refusal', async () => {
     wrap(
       <AttachmentUploadField

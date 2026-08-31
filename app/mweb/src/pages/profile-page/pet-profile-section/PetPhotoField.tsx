@@ -72,6 +72,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder="/pets"
+        surface="MWEB"
         title={t('mweb.profile.uploadPetPhoto')}
         onPicked={(url) => onChange(url)}
       />

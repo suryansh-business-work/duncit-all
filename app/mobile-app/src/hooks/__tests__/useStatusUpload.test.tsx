@@ -12,6 +12,18 @@ jest.mock('expo-image-picker', () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
 }));
+// The story caps are the admin's (Upload Settings > Mobile App), so the suite
+// pins a row and asserts those numbers reach the message.
+jest.mock('@/hooks/useUploadSettings', () => ({
+  useUploadSettings: () => ({
+    max_image_mb: 8,
+    max_video_mb: 40,
+    allowed_image_formats: ['jpg', 'png'],
+    allowed_video_formats: ['mp4'],
+    default_crop_key: 'NO_CROP',
+    crop_presets: [],
+  }),
+}));
 const mockNotify = jest.fn().mockResolvedValue('id');
 jest.mock('@/services/notifications.service', () => ({
   scheduleLocalNotification: (...args: unknown[]) => mockNotify(...args),
@@ -136,18 +148,35 @@ describe('useStatusUpload', () => {
     expect(result.current.pendingVideo?.durationSeconds).toBe(0);
   });
 
-  it('rejects a story video over the 50 MB cap (Bug 3)', async () => {
+  it("rejects a story video over the admin's video cap", async () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValue({
       canceled: false,
-      assets: [{ uri: 'file://big.mp4', type: 'video', fileSize: 51 * 1024 * 1024 }],
+      assets: [{ uri: 'file://big.mp4', type: 'video', fileSize: 41 * 1024 * 1024 }],
     });
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
       await result.current.pickAndUpload();
     });
-    expect(result.current.error).toContain('50 MB');
+    expect(result.current.error).toContain('40 MB');
     expect(result.current.pendingVideo).toBeNull();
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  // A photo is capped too — it used to go up whatever its size.
+  it("rejects a story image over the admin's image cap", async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [
+        { uri: 'file://big.png', type: 'image', mimeType: 'image/png', fileSize: 9 * 1024 * 1024 },
+      ],
+    });
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(result.current.error).toContain('8 MB');
     expect(mockPublish).not.toHaveBeenCalled();
   });
 

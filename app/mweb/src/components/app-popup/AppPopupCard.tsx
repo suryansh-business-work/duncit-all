@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 
 export interface AppPopupCardProps {
   imageUrl: string;
@@ -16,8 +16,6 @@ export interface AppPopupCardProps {
   onCta: () => void;
   onImageLoad: (size: { width: number; height: number }) => void;
 }
-
-const CLOSE_SIZE = 34;
 
 /**
  * The campaign card: the artwork, the ✕ floating over its top-right corner, and
@@ -64,23 +62,14 @@ export default function AppPopupCard({
           }}
         />
         {showClose && (
-          <DuncitIconButton
+          <DuncitRoundButton
             aria-label={closeLabel}
             onClick={onClose}
-            size="small"
-            sx={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              width: CLOSE_SIZE,
-              height: CLOSE_SIZE,
-              bgcolor: 'rgba(0,0,0,0.55)',
-              color: '#fff',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
-            }}
+            tone="overlay"
+            sx={{ position: 'absolute', top: 10, right: 10 }}
           >
-            <CloseIcon fontSize="small" />
-          </DuncitIconButton>
+            <CloseIcon />
+          </DuncitRoundButton>
         )}
       </Box>
 

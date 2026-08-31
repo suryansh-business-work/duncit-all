@@ -180,6 +180,7 @@ export default function MediaPickerDialog({
             active={tab === 'photos' && allowImage}
             open={open}
             folder={folder}
+            surface={surface}
             seedQuery={seedQuery}
             defaultOrientation={orientation}
             multi={multi}
@@ -195,6 +196,7 @@ export default function MediaPickerDialog({
             active={tab === 'videos' && allowVideo}
             open={open}
             folder={folder}
+            surface={surface}
             onPicked={handlePicked}
             onClose={closeAfterPick}
             setError={setError}

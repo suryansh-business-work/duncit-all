@@ -8,12 +8,13 @@ import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { compressUploadedVideo } from '@/services/video-compression';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { MB, useUploadLimits } from '@/hooks/useUploadLimits';
 import { ReelPanelBody } from './ReelPanelBody';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** Reels stream directly to ImageKit (multipart) — the 100MB cap is checked
- * client-side from the picked asset before any bytes leave the device. */
-const MAX_REEL_BYTES = 100 * 1024 * 1024;
+/** Reels stream directly to ImageKit (multipart) — the cap is the admin's
+ * `max_video_mb` for the app, checked client-side from the picked asset
+ * before any bytes leave the device. */
 const REEL_FOLDER = '/pods/reels';
 
 interface Props {
@@ -33,6 +34,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
   const [error, setError] = useState<string | undefined>();
   const { color, onPrimary } = useThemeColors();
   const { t } = useTranslation();
+  const limits = useUploadLimits();
   const podReel = t('mweb.createPod.podReel');
 
   const pickAndUpload = async () => {
@@ -46,9 +48,13 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'] });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
-    // fileSize can be missing on some pickers — skip the cap check then.
-    if (asset.fileSize != null && asset.fileSize > MAX_REEL_BYTES) {
-      setError(t('mweb.createPod.reelTooLarge'));
+    // fileSize can be missing on some pickers — the cap check is skipped then.
+    if (asset.fileSize != null && asset.fileSize > limits.maxVideoBytes) {
+      setError(
+        t('mweb.createPod.reelOverCap', {
+          vars: { max: Math.round(limits.maxVideoBytes / MB) },
+        }),
+      );
       return;
     }
     setUploading(true);

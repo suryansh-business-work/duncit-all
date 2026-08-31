@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { logs } from '@observability/log';
-import { uploadFileToImagekit } from '@modules/platform/upload/upload.service';
+import { uploadSpooledFileToImagekit } from '@modules/platform/upload/upload.service';
 import { spendUploadTicket } from '@modules/platform/upload/uploadTicket';
 import { mediaScanService } from '@modules/ai/aiMonitoring/aiMonitoring.service';
 import {
@@ -40,12 +40,6 @@ import { backupPath, ensureBackupsDir } from '@modules/platform/dbBackup/dbBacku
 
 /** Hard ceiling, shared with nginx. Per-surface Upload Settings gate the rest. */
 const MAX_BYTES = UPLOAD_MAX_BYTES;
-
-/** Extensions AI Monitoring reviews. The multipart body carries no reliable
- * mime type, so the name is what there is to go on. */
-const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i;
-
-const isImageUpload = (fileName: string) => IMAGE_EXT_RE.test(fileName);
 
 interface Spooled {
   fileName: string;
@@ -188,22 +182,27 @@ export function buildUploadRouter(): Router {
           res.json({ fileName: storedName });
           return;
         }
-        const uploaded = await uploadFileToImagekit({
+        // The surface's admin Upload Settings decide the size cap, the allowed
+        // formats and the compression, exactly as they do for the GraphQL upload
+        // — the surface rides on the ticket because the raw POST carries nothing
+        // else. The folder comes from the ticket too, not the request, or anyone
+        // holding a pass could write anywhere in the library.
+        const { uploaded, fileName: storedFileName, isImage } = await uploadSpooledFileToImagekit({
           filePath: destPath,
           fileName,
-          // The folder comes from the ticket, not the request — otherwise anyone
-          // holding a pass could write anywhere in the library.
+          bytes: spooled.bytes,
           folder: ticket.folder,
+          surface: ticket.surface,
         });
         // Images that come through here (support attachments, native picks)
         // never touched the GraphQL upload path, so this is the only place they
         // can be logged. Without it "every upload is checked" would be true of
         // one of the two routes a file can take. Videos are not AI-reviewed.
-        if (isImageUpload(fileName)) {
+        if (isImage) {
           mediaScanService
             .record({
               url: uploaded.url,
-              fileName,
+              fileName: storedFileName,
               folder: ticket.folder,
               surface: ticket.surface,
               userId: ticket.userId,
@@ -212,13 +211,21 @@ export function buildUploadRouter(): Router {
         }
         res.json(uploaded);
       } catch (error: any) {
-        logs.server.error('upload', 'proxy', {
-          error,
-          userId: ticket.userId,
-          fileName,
-          bytes: spooled.bytes,
-        });
-        res.status(502).json({ message: error?.message || 'Upload failed' });
+        // A file the admin's Upload Settings refuse (too large, a format that is
+        // not on the allow-list) is the uploader's problem rather than the
+        // upstream's: it comes back as a 400 carrying the reason — the same
+        // sentence the GraphQL upload answers with — instead of a 502, which
+        // reads as "try again" and never stops being true.
+        const rejected = error?.extensions?.code === 'BAD_USER_INPUT';
+        if (!rejected) {
+          logs.server.error('upload', 'proxy', {
+            error,
+            userId: ticket.userId,
+            fileName,
+            bytes: spooled.bytes,
+          });
+        }
+        res.status(rejected ? 400 : 502).json({ message: error?.message || 'Upload failed' });
       }
     } finally {
       // Always, except the one path that means to keep it — an artifact left in

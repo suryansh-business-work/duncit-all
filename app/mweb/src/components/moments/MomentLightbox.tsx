@@ -3,7 +3,7 @@ import { Box, Dialog, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export interface Moment {
@@ -117,36 +117,35 @@ export default function MomentLightbox({
           sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}
         >
           {actions}
-          <DuncitIconButton
+          <DuncitRoundButton
+            size="large"
+            tone="overlay"
             onClick={close}
             aria-label={t('mweb.moments.closePreview')}
-            sx={{
-              color: 'common.white',
-              bgcolor: 'rgba(0,0,0,0.4)',
-              minWidth: 44,
-              minHeight: 44,
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
-            }}
           >
             <CloseIcon />
-          </DuncitIconButton>
+          </DuncitRoundButton>
         </Stack>
         {moments.length > 1 && (
           <>
-            <DuncitIconButton
+            <DuncitRoundButton
+              size="large"
+              tone="overlay"
               onClick={prev}
               aria-label={t('mweb.moments.previousMoment')}
               sx={navBtn('left')}
             >
               <ChevronLeftIcon />
-            </DuncitIconButton>
-            <DuncitIconButton
+            </DuncitRoundButton>
+            <DuncitRoundButton
+              size="large"
+              tone="overlay"
               onClick={next}
               aria-label={t('mweb.moments.nextMoment')}
               sx={navBtn('right')}
             >
               <ChevronRightIcon />
-            </DuncitIconButton>
+            </DuncitRoundButton>
           </>
         )}
         <Stack
@@ -200,10 +199,5 @@ const navBtn = (side: 'left' | 'right') => ({
   top: '50%',
   [side]: 12,
   transform: 'translateY(-50%)',
-  color: 'common.white',
-  bgcolor: 'rgba(0,0,0,0.4)',
   zIndex: 2,
-  minWidth: 44,
-  minHeight: 44,
-  '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
 });

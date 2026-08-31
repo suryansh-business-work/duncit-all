@@ -17,6 +17,11 @@
  */
 export { DuncitButton, type DuncitButtonProps } from './DuncitButton';
 export { DuncitIconButton, type DuncitIconButtonProps } from './DuncitIconButton';
+export {
+  DuncitRoundButton,
+  type DuncitRoundButtonProps,
+  type RoundButtonTone,
+} from './DuncitRoundButton';
 export { withPress } from './components';
 export {
   pressCss,

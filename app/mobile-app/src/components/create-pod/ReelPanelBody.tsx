@@ -3,6 +3,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { MB, useUploadLimits } from '@/hooks/useUploadLimits';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
@@ -27,11 +28,12 @@ export function ReelPanelBody({
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
+  const limits = useUploadLimits();
   const fileName = value.slice(value.lastIndexOf('/') + 1);
   return (
     <YStack gap={10}>
       <Text fontSize={12} color="$muted">
-        {t('mweb.createPod.reelHint')}
+        {t('mweb.createPod.reelCapHint', { vars: { max: Math.round(limits.maxVideoBytes / MB) } })}
       </Text>
       {value ? (
         <XStack

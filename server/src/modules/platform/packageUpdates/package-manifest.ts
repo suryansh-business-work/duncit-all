@@ -258,6 +258,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "husky", range: "^9.1.7", kind: "devDependencies" },
       { name: "jscpd", range: "4.3.0", kind: "devDependencies" },
       { name: "lint-staged", range: "^15.5.2", kind: "devDependencies" },
+      { name: "npm-check-updates", range: "^23.1.0", kind: "devDependencies" },
       { name: "typescript", range: "^5.9.3", kind: "devDependencies" },
       { name: "vitest", range: "^1.6.1", kind: "devDependencies" },
     ],

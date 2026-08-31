@@ -18,7 +18,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
-import { useImagekitBase64Upload } from '@duncit/media-picker';
+import { MB, useImagekitBase64Upload, useUploadCaps } from '@duncit/media-picker';
 import {
   ADD_TEMPLATE_IMAGE,
   REMOVE_TEMPLATE_IMAGE,
@@ -46,13 +46,21 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const { upload } = useImagekitBase64Upload();
+  const caps = useUploadCaps('PORTALS');
   const [addImage] = useMutation(ADD_TEMPLATE_IMAGE);
   const [removeImage] = useMutation(REMOVE_TEMPLATE_IMAGE);
 
   const onFile = async (file: File | null) => {
     if (!file) return;
     setError(null);
-    if (file.size > 8 * 1024 * 1024) { setError(t('crm.emailTemplates.max8mbCompressAndTryAgain')); return; }
+    if (file.size > caps.maxImageBytes) {
+      setError(
+        t('crm.emailTemplates.maxSizeCompressAndTryAgain', {
+          vars: { max: Math.round(caps.maxImageBytes / MB) },
+        })
+      );
+      return;
+    }
     setBusy(true);
     try {
       const { url } = await upload(file, { folder: 'crm/email-templates', fallbackMimeType: 'image/png' });

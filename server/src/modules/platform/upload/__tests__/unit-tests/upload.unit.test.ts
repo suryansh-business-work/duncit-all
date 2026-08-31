@@ -40,8 +40,15 @@ jest.mock('../../mediaProcessing', () => {
 });
 
 import { getUploadSettingsSafe } from '../../mediaProcessing';
-import { getImagekitAuth, uploadBase64Image } from '../../upload.service';
+import {
+  getImagekitAuth,
+  uploadBase64Image,
+  uploadSpooledFileToImagekit,
+} from '../../upload.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import fsp from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 const mockSettings = getUploadSettingsSafe as jest.Mock;
 const mockEnv = getRuntimeEnvValue as jest.Mock;
@@ -273,5 +280,110 @@ describe('upload unit', () => {
     } finally {
       fetchMock.mockRestore();
     }
+  });
+
+  /**
+   * The streamed route (native picks, mWeb attachments, every direct video).
+   * It went to ImageKit gated by the nginx ceiling alone, so lowering a cap in
+   * the admin panel changed nothing for the app — these are that gap.
+   */
+  describe('spooled uploads obey the same Upload Settings', () => {
+    const spool = async (name: string, bytes: number) => {
+      const file = path.join(os.tmpdir(), `duncit-spool-test-${Date.now()}-${name}`);
+      await fsp.writeFile(file, Buffer.alloc(bytes));
+      return file;
+    };
+
+    it('refuses a video over the admin cap before a byte reaches ImageKit', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ max_video_mb: 40 }));
+      const file = await spool('clip.mp4', 8);
+      const fetchMock = mockImagekitOk();
+      try {
+        await expect(
+          uploadSpooledFileToImagekit({
+            filePath: file,
+            fileName: 'clip.mp4',
+            bytes: 41 * MB,
+            surface: 'MOBILE',
+          })
+        ).rejects.toThrow('Video is too large (max 40 MB)');
+        expect(fetchMock).not.toHaveBeenCalled();
+      } finally {
+        fetchMock.mockRestore();
+        await fsp.unlink(file).catch(() => undefined);
+      }
+    });
+
+    it('refuses an image over the admin cap, by the IMAGE cap', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ max_image_mb: 2 }));
+      const file = await spool('shot.png', 8);
+      try {
+        await expect(
+          uploadSpooledFileToImagekit({
+            filePath: file,
+            fileName: 'shot.png',
+            bytes: 3 * MB,
+            surface: 'MWEB',
+          })
+        ).rejects.toThrow('Image is too large (max 2 MB)');
+      } finally {
+        await fsp.unlink(file).catch(() => undefined);
+      }
+    });
+
+    it('refuses a format the admin removed from the allow-list', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ allowed_video_formats: ['mp4'] }));
+      const file = await spool('clip.mov', 8);
+      try {
+        await expect(
+          uploadSpooledFileToImagekit({
+            filePath: file,
+            fileName: 'clip.mov',
+            bytes: 1024,
+            surface: 'MOBILE',
+          })
+        ).rejects.toThrow('Video format .mov is not allowed');
+      } finally {
+        await fsp.unlink(file).catch(() => undefined);
+      }
+    });
+
+    it('streams a video that fits, and returns the stored name', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting());
+      const file = await spool('ok.mp4', 32);
+      const fetchMock = mockImagekitOk();
+      try {
+        const res = await uploadSpooledFileToImagekit({
+          filePath: file,
+          fileName: 'ok.mp4',
+          bytes: 32,
+          surface: 'MOBILE',
+        });
+        expect(res.uploaded.url).toBe('https://cdn/out');
+        expect(res.fileName).toBe('ok.mp4');
+        expect(res.isImage).toBe(false);
+      } finally {
+        fetchMock.mockRestore();
+        await fsp.unlink(file).catch(() => undefined);
+      }
+    });
+
+    it('sanitises the name and uploads a document when settings cannot be read', async () => {
+      mockSettings.mockResolvedValueOnce(null);
+      const file = await spool('gst.pdf', 16);
+      const fetchMock = mockImagekitOk();
+      try {
+        const res = await uploadSpooledFileToImagekit({
+          filePath: file,
+          fileName: 'my invoice!.pdf',
+          bytes: 16,
+        });
+        expect(res.fileName).toBe('my_invoice_.pdf');
+        expect(res.isImage).toBe(false);
+      } finally {
+        fetchMock.mockRestore();
+        await fsp.unlink(file).catch(() => undefined);
+      }
+    });
   });
 });

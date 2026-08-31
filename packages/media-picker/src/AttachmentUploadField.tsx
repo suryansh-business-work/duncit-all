@@ -8,6 +8,9 @@ import { DuncitButton } from '@duncit/buttons';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { parseApiError } from '@duncit/utils';
 import { isVideoUpload } from './attachment';
+import { useUploadCaps } from './useUploadCaps';
+import { MB } from './utils';
+import type { UploadSurface } from './types';
 import { useImagekitBase64Upload } from './upload';
 import { useImagekitDirectUpload } from './useImagekitDirectUpload';
 import AttachmentPreview from './AttachmentPreview';
@@ -26,10 +29,16 @@ export interface AttachmentUploadFieldProps {
   disabled?: boolean;
   /** File-input accept list. Default 'image/*' (use ATTACHMENT_ACCEPT_ALL for docs). */
   accept?: string;
-  /** Per-file size cap in bytes. Default 15 MB. */
-  maxBytes?: number;
-  /** Optional tighter cap for videos (mWeb support = 50 MB). */
-  videoMaxBytes?: number;
+  /**
+   * Per-file cap for images and documents, in bytes. Omit it — Admin > Upload
+   * Settings for `surface` is the answer, and a number here overrides the
+   * admin. `null` means no client-side cap at all (the server still has one).
+   */
+  maxBytes?: number | null;
+  /** Same for videos: omit it and the admin's video cap applies. */
+  videoMaxBytes?: number | null;
+  /** Which Upload Settings row supplies the caps. Default PORTALS. */
+  surface?: UploadSurface;
   /** Let the server accept PDF/office documents (base64 strategy). */
   allowDocuments?: boolean;
   /** 'base64' = server mutation; 'direct' = signed direct-to-ImageKit (large files). */
@@ -49,27 +58,25 @@ export interface AttachmentUploadFieldProps {
 }
 
 interface SizeGate {
-  maxBytes: number;
-  videoMaxBytes?: number;
+  /** Images and documents; null = no client-side cap. */
+  maxBytes: number | null;
+  videoMaxBytes: number | null;
   oversizeMessage?: (file: File) => string;
   videoOversizeMessage?: string;
 }
 
+/** A file is judged by the cap for ITS kind, never by a single number for
+ * all three — that is how a photo ended up sharing a document ceiling. */
 function sizeProblem(file: File, gate: Readonly<SizeGate>): string | null {
-  if (
-    gate.videoMaxBytes != null &&
-    isVideoUpload(file.name, file.type) &&
-    file.size > gate.videoMaxBytes
-  ) {
-    const mb = Math.round(gate.videoMaxBytes / (1024 * 1024));
+  if (isVideoUpload(file.name, file.type)) {
+    if (gate.videoMaxBytes == null || file.size <= gate.videoMaxBytes) return null;
+    const mb = Math.round(gate.videoMaxBytes / MB);
     return gate.videoOversizeMessage ?? `Video is too large (max ${mb} MB)`;
   }
-  if (file.size > gate.maxBytes) {
-    if (gate.oversizeMessage) return gate.oversizeMessage(file);
-    const mb = Math.round(gate.maxBytes / (1024 * 1024));
-    return `${file.name} is too large (max ${mb} MB)`;
-  }
-  return null;
+  if (gate.maxBytes == null || file.size <= gate.maxBytes) return null;
+  if (gate.oversizeMessage) return gate.oversizeMessage(file);
+  const mb = Math.round(gate.maxBytes / MB);
+  return `${file.name} is too large (max ${mb} MB)`;
 }
 
 /**
@@ -85,8 +92,9 @@ export default function AttachmentUploadField({
   label,
   disabled = false,
   accept = 'image/*',
-  maxBytes = 15 * 1024 * 1024,
+  maxBytes,
   videoMaxBytes,
+  surface = 'PORTALS',
   allowDocuments = false,
   strategy = 'base64',
   multiple = true,
@@ -99,6 +107,10 @@ export default function AttachmentUploadField({
   buttonSx,
 }: Readonly<AttachmentUploadFieldProps>) {
   const { t } = useTranslation();
+  // The admin's caps, unless this call site named its own.
+  const caps = useUploadCaps(surface);
+  const imageOrDocCap = maxBytes === undefined ? caps.maxImageBytes : maxBytes;
+  const videoCap = videoMaxBytes === undefined ? caps.maxVideoBytes : videoMaxBytes;
   // Resolved here, not as default parameters: a hook cannot run in the
   // parameter list, and a caller-supplied label must still win.
   const heading = label ?? t('media.picker.attachFiles');
@@ -126,7 +138,12 @@ export default function AttachmentUploadField({
     try {
       const urls: string[] = [];
       for (const f of slice) {
-        const problem = sizeProblem(f, { maxBytes, videoMaxBytes, oversizeMessage, videoOversizeMessage });
+        const problem = sizeProblem(f, {
+          maxBytes: imageOrDocCap,
+          videoMaxBytes: videoCap,
+          oversizeMessage,
+          videoOversizeMessage,
+        });
         if (problem) {
           setError(problem);
           continue;

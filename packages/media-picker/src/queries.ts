@@ -128,8 +128,8 @@ export const PEXELS_SEARCH = gql`
 `;
 
 export const IMPORT_REMOTE = gql`
-  mutation ImportRemoteImage($remoteUrl: String!, $folder: String) {
-    importRemoteImageToImagekit(remoteUrl: $remoteUrl, folder: $folder) {
+  mutation ImportRemoteImage($remoteUrl: String!, $folder: String, $surface: String) {
+    importRemoteImageToImagekit(remoteUrl: $remoteUrl, folder: $folder, surface: $surface) {
       url
       fileId
     }
@@ -162,8 +162,8 @@ export const PEXELS_VIDEO_SEARCH = gql`
 `;
 
 export const IMPORT_REMOTE_MEDIA = gql`
-  mutation ImportRemoteMedia($remoteUrl: String!, $folder: String) {
-    importRemoteMediaToImagekit(remoteUrl: $remoteUrl, folder: $folder) {
+  mutation ImportRemoteMedia($remoteUrl: String!, $folder: String, $surface: String) {
+    importRemoteMediaToImagekit(remoteUrl: $remoteUrl, folder: $folder, surface: $surface) {
       url
       fileId
     }

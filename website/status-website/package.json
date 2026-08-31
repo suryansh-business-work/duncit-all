@@ -4,6 +4,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "deps:check": "node ../../scripts/deps.mjs check",
+    "deps:update": "node ../../scripts/deps.mjs update",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",

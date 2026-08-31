@@ -1,6 +1,13 @@
 export { default } from './MediaPickerDialog';
 export { default as MediaPickerDialog } from './MediaPickerDialog';
-export { pickBestVideoFile, validateFile } from './utils';
+export {
+  DEFAULT_DOCUMENT_MAX_MB,
+  DEFAULT_IMAGE_MAX_MB,
+  DEFAULT_VIDEO_MAX_MB,
+  MB,
+  pickBestVideoFile,
+  validateFile,
+} from './utils';
 export type { FileCaps } from './utils';
 export type {
   CropRect,
@@ -24,6 +31,7 @@ export {
 export type { UploadPass, UploadProgress } from './useImagekitDirectUpload';
 export { compressUploadedVideo, type VideoTrim } from './videoCompression';
 export { useUploadSettings } from './useUploadSettings';
+export { useUploadCaps, type UploadCaps } from './useUploadCaps';
 export { croppablePresets, formatBytes, formatDuration, presetAspect, suggestPresetKey } from './cropUtils';
 export { default as ImageCropStep } from './ImageCropStep';
 export { default as FileDetails, useMediaDimensions } from './FileDetails';

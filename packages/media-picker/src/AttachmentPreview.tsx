@@ -3,7 +3,7 @@ import { useTranslation } from './i18n/useTranslation';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { describeAttachment, typeLabel } from './attachment';
 
 export type AttachmentDocVariant = 'chip' | 'card';
@@ -26,26 +26,16 @@ export default function AttachmentPreview({
 }: Readonly<AttachmentPreviewProps>) {
   const { t } = useTranslation();
   const info = describeAttachment(url);
-  const badgeSize = size >= 72 ? 24 : 22;
-  const badgeFont = size >= 72 ? 14 : 13;
   const removeButton = (
-    <DuncitIconButton
+    <DuncitRoundButton
       size="small"
+      tone="paper"
       aria-label={t('media.picker.removeAttachment')}
       onClick={onRemove}
-      sx={{
-        position: 'absolute',
-        top: -8,
-        right: -8,
-        bgcolor: 'background.paper',
-        border: 1,
-        borderColor: 'divider',
-        width: badgeSize,
-        height: badgeSize,
-      }}
+      sx={{ position: 'absolute', top: -8, right: -8 }}
     >
-      <CloseIcon sx={{ fontSize: badgeFont }} />
-    </DuncitIconButton>
+      <CloseIcon />
+    </DuncitRoundButton>
   );
 
   if (info.kind === 'image') {

@@ -207,6 +207,7 @@ export default function ChatRoomPage() {
           submit(url);
         }}
         folder="/chat"
+        surface="MWEB"
         title={t('mweb.common.sendImage')}
       />
     </Stack>

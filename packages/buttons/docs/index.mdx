@@ -15,6 +15,7 @@ consumers:
 exports:
   - 'DuncitButton'
   - 'DuncitIconButton'
+  - 'DuncitRoundButton'
   - 'withPress'
   - 'pressCss'
   - 'focusRingCss'
@@ -72,6 +73,49 @@ A state layer only ever lands on a part that is **transparent to begin with**.
 `background-color` replaces a fill, it does not layer over one, so tinting a
 filled chip would turn it translucent grey rather than pressing it. Anything
 carrying its own fill darkens with `brightness()` instead.
+
+### `DuncitRoundButton` — the one that has to stay a circle
+
+A close button drawn over a photo, pinned to a thumbnail's corner or sat in a
+sheet header is the same shape everywhere in mWeb: a circle with a background
+and a cross in the middle of it. `DuncitIconButton` draws that circle only while
+nothing disturbs it, and three things routinely do — a call site that pins a
+width smaller than MUI's padding plus the glyph (the icon is a flex item, so it
+squashes and spills over the top and bottom of the circle), a theme that rounds
+icon buttons by radius rather than by `50%`, and a flex row that squeezes the
+button narrower than it is tall.
+
+So this one fixes the box square, drops the padding, sizes the glyph to fit
+inside it, and lets neither the button nor the icon shrink. `tone` carries the
+background, which is what the call sites were each spelling out by hand.
+
+```tsx
+import { DuncitRoundButton } from '@duncit/buttons';
+import CloseIcon from '@mui/icons-material/Close';
+
+// Over a photo — 44px, translucent black, white cross.
+<DuncitRoundButton size="large" tone="overlay" aria-label={t('mweb.moments.closePreview')} onClick={close}>
+  <CloseIcon />
+</DuncitRoundButton>;
+
+// Pinned to a 64px thumbnail's corner — 24px, paper with a hairline border.
+<DuncitRoundButton size="small" tone="paper" aria-label={t('mweb.common.removeAttachment')} onClick={remove} sx={{ position: 'absolute', top: -8, right: -8 }}>
+  <CloseIcon />
+</DuncitRoundButton>;
+```
+
+| `size` | Diameter | Glyph | Where it lands |
+| --- | --- | --- | --- |
+| `small` | 24px | 14px | A badge pinned to a thumbnail corner |
+| `medium` | 36px | 20px | A sheet or dialog header |
+| `large` | 44px | 24px | A control floating over a photo or story |
+
+| `tone` | Background |
+| --- | --- |
+| `plain` | None — the bare button |
+| `surface` | `action.hover`, deepening to `action.selected` |
+| `paper` | `background.paper` with a `divider` hairline |
+| `overlay` | Black at 55%, deepening to 75%, white glyph |
 
 ### 2. `withPress(components, colors)` — the pressables no call site owns
 

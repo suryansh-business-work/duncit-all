@@ -1,9 +1,11 @@
 import {
+  MB,
   croppablePresets,
   formatBytes,
   formatDuration,
   presetAspect,
   suggestPresetKey,
+  validateFile,
   type UploadCropPreset,
 } from '@duncit/media-picker';
 import { defineDemo, defineDemos } from '../types';
@@ -54,4 +56,42 @@ export default defineDemos('media-picker', [
       };
     },
   }),
+  defineDemo<CapsMock>({
+    id: 'caps',
+    title: "What the admin's caps refuse",
+    note:
+      'Drop max_image_mb to 2 and the 3 MB pod cover is refused — the same sentence the user sees, from the same call the picker makes. Note the video: it is judged by max_video_mb, never by the image cap, which is the bug this replaced (one number for all three kinds).',
+    mock: {
+      max_image_mb: 8,
+      max_video_mb: 60,
+      allowed_image_formats: ['jpg', 'png', 'webp'],
+      allowed_video_formats: ['mp4', 'mov'],
+    },
+    compute: (mock) => {
+      const caps = {
+        maxImageMb: mock.max_image_mb,
+        maxVideoMb: mock.max_video_mb,
+        allowedImageFormats: mock.allowed_image_formats,
+        allowedVideoFormats: mock.allowed_video_formats,
+      };
+      const anything = { allowImage: true, allowVideo: true, allowDocuments: true };
+      const file = (name: string, type: string, mb: number) =>
+        ({ name, type, size: mb * MB }) as File;
+      return {
+        'Image caps at': `${mock.max_image_mb} MB`,
+        'Video caps at': `${mock.max_video_mb} MB`,
+        'pod-cover.jpg (3 MB)': validateFile(file('pod-cover.jpg', 'image/jpeg', 3), anything, caps) ?? 'accepted',
+        'pod-reel.mp4 (45 MB)': validateFile(file('pod-reel.mp4', 'video/mp4', 45), anything, caps) ?? 'accepted',
+        'venue-photo.heic (1 MB)': validateFile(file('venue-photo.heic', 'image/heic', 1), anything, caps) ?? 'accepted',
+        'gst-certificate.pdf (4 MB)': validateFile(file('gst-certificate.pdf', 'application/pdf', 4), anything, caps) ?? 'accepted',
+      };
+    },
+  }),
 ]);
+
+interface CapsMock {
+  max_image_mb: number;
+  max_video_mb: number;
+  allowed_image_formats: string[];
+  allowed_video_formats: string[];
+}

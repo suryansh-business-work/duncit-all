@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -43,7 +43,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
   const defaults = initial ? valuesFromEntry(initial) : emptyValues();
   const { control, handleSubmit, reset } = useForm<EnvEntryFormValues, any, EnvEntryFormValues>({
     defaultValues: defaults,
-    resolver: zodResolver(envEntrySchema(def, isEdit)),
+    resolver: zodResolver(envEntrySchema(def, isEdit)) as unknown as Resolver<EnvEntryFormValues, any, EnvEntryFormValues>,
     mode: 'all',
   });
 

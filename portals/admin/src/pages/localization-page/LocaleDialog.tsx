@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -60,7 +60,7 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
     watch,
     setValue,
     formState: { errors },
-  } = useForm<LocaleFormValues, any, LocaleFormValues>({ resolver: zodResolver(localeSchema), defaultValues: blank });
+  } = useForm<LocaleFormValues, any, LocaleFormValues>({ resolver: zodResolver(localeSchema) as unknown as Resolver<LocaleFormValues, any, LocaleFormValues>, defaultValues: blank });
 
   useEffect(() => {
     if (!open) return;

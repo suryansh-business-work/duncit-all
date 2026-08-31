@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -89,7 +89,7 @@ export function CreatePodStepper({
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(() => makeCreatePodSchema(t), [t]);
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<CreatePodFormValues, any, CreatePodFormValues>,
     defaultValues: initialValues,
     mode: 'onTouched',
   });

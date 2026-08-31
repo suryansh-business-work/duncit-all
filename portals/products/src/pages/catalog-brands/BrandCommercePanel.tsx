@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
@@ -30,7 +30,7 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
 
   const { control, handleSubmit, reset } = useForm<BrandCommissionFormValues, any, BrandCommissionFormValues>({
     defaultValues: { product_commission_pct: String(brand.product_commission_pct) },
-    resolver: zodResolver(brandCommissionSchema),
+    resolver: zodResolver(brandCommissionSchema) as unknown as Resolver<BrandCommissionFormValues, any, BrandCommissionFormValues>,
     mode: 'onTouched',
   });
 

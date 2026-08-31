@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -23,7 +23,7 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
     formState: { isValid },
   } = useForm<CampaignNameValues, any, CampaignNameValues>({
     defaultValues: emptyValues(),
-    resolver: zodResolver(campaignNameSchema),
+    resolver: zodResolver(campaignNameSchema) as unknown as Resolver<CampaignNameValues, any, CampaignNameValues>,
     mode: 'onChange',
   });
 

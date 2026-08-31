@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -43,7 +43,7 @@ export default function DefaultMediaForm({
     formState: { isValid },
   } = useForm<DefaultMediaValues, any, DefaultMediaValues>({
     defaultValues: { url: savedUrl, filename: savedFilename },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<DefaultMediaValues, any, DefaultMediaValues>,
     mode: 'onChange',
   });
 

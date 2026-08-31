@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
@@ -95,7 +95,7 @@ export default function PodCancelDialog({
     watch,
     formState: { errors },
   } = useForm<PodCancelValues, any, PodCancelValues>({
-    resolver: zodResolver(buildPodCancelSchema(labels)),
+    resolver: zodResolver(buildPodCancelSchema(labels)) as unknown as Resolver<PodCancelValues, any, PodCancelValues>,
     defaultValues: blankPodCancelValues,
   });
   const impactQ = useQuery<any>(HOST_POD_DELETE_IMPACT, {

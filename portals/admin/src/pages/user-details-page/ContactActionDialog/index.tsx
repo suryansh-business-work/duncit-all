@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog } from '@mui/material';
 import DraggableDialogPaper from '../DraggableDialogPaper';
@@ -38,7 +38,7 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
 
   const { control, watch, reset, handleSubmit } = useForm<ContactActionValues, any, ContactActionValues>({
     defaultValues: contactActionInitialValues,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<ContactActionValues, any, ContactActionValues>,
     mode: 'onTouched',
   });
 

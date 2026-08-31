@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Alert, CardContent, Grid, MenuItem, Stack, Typography } from '@mui/material';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
@@ -23,7 +23,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
   const { t } = useTranslation();
   const { control, handleSubmit, reset, setValue, watch, formState } = useForm<EditForm, any, EditForm>({
     defaultValues: form,
-    resolver: zodResolver(userProfileSchema),
+    resolver: zodResolver(userProfileSchema) as unknown as Resolver<EditForm, any, EditForm>,
     mode: 'onChange',
   });
 

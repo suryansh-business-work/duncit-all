@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, CircularProgress, Stack, TextField, Typography } from '@mui/material';
@@ -47,7 +47,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
   const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<EmailVerificationValues, any, EmailVerificationValues>({
     defaultValues: { otp: '' },
-    resolver: zodResolver(emailVerificationSchema),
+    resolver: zodResolver(emailVerificationSchema) as unknown as Resolver<EmailVerificationValues, any, EmailVerificationValues>,
   });
 
   const submit = handleSubmit(async (values) => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -32,7 +32,7 @@ export default function CoinSettingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { control, handleSubmit, reset, formState } = useForm<CoinSettingsForm, any, CoinSettingsForm>({
-    resolver: zodResolver(coinSettingsSchema),
+    resolver: zodResolver(coinSettingsSchema) as unknown as Resolver<CoinSettingsForm, any, CoinSettingsForm>,
     defaultValues: BLANK_COIN_SETTINGS,
     mode: 'onBlur',
   });

@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { useEffect, useState } from 'react';
-import { useForm, type Path } from 'react-hook-form';
+import { useForm, type Path , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Card, CardContent, Stack, Step, StepContent, StepLabel, Stepper } from '@mui/material';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
@@ -73,7 +73,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const editing = Boolean(product?.id);
 
   const { control, handleSubmit, reset, trigger, watch, getValues, setValue, setError } = useForm<ProductListingValues, any, ProductListingValues>({
-    resolver: zodResolver(productListingSchema),
+    resolver: zodResolver(productListingSchema) as unknown as Resolver<ProductListingValues, any, ProductListingValues>,
     defaultValues: productToValues(product),
     mode: 'onBlur',
   });

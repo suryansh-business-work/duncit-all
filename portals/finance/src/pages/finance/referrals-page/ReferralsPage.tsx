@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
@@ -40,7 +40,7 @@ export default function ReferralsPage() {
   const [total, setTotal] = useState<number | null>(null);
 
   const { control, handleSubmit, reset, formState } = useForm<ReferralSettingsForm, any, ReferralSettingsForm>({
-    resolver: zodResolver(referralSettingsSchema),
+    resolver: zodResolver(referralSettingsSchema) as unknown as Resolver<ReferralSettingsForm, any, ReferralSettingsForm>,
     defaultValues: BLANK_SETTINGS,
     mode: 'onBlur',
   });

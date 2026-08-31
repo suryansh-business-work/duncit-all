@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, FormHelperText, InputAdornment, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -28,7 +28,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
   const schema = useMemo(() => makeForgotPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ForgotPasswordValues, any, ForgotPasswordValues>({
     defaultValues: initialValues ?? forgotPasswordDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<ForgotPasswordValues, any, ForgotPasswordValues>,
     mode: 'onTouched',
   });
 

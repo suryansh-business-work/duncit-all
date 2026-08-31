@@ -6,13 +6,18 @@ import type { TableFetch, TableFilterValue, TablePage, TableQueryState } from '.
  * Structural slice of ApolloClient (or any compatible GraphQL client) — just the
  * `query` method the table fetch needs. Typed structurally so this package needs
  * no @apollo/client dependency; a real ApolloClient satisfies it as-is.
+ *
+ * The result is deliberately loose. Apollo 4 types `query` generically and
+ * defaults its data to `unknown`, so a result declared as `{ data: unknown }`
+ * no longer accepts a real client — and this fetch only ever reads `data` off
+ * it before handing the rows to the caller's own mapper.
  */
 export interface TableGqlClient {
   query(options: {
     query: unknown;
     variables?: Record<string, unknown>;
     fetchPolicy?: string;
-  }): Promise<{ data: unknown }>;
+  }): Promise<any>;
 }
 
 export interface ApolloTableFetchOptions<Row> {
@@ -67,7 +72,8 @@ export function makeApolloTableFetch<Row>(
     }
     const base = buildVariables ? buildVariables(state) : tableQueryToGql(state);
     const variables = extraVariables ? { ...base, ...extraVariables } : base;
-    const { data } = await client.query<any>({ query, variables, fetchPolicy });
+    // No type argument: this is the structural client above, not ApolloClient.
+    const { data } = await client.query({ query, variables, fetchPolicy });
     const payload = (data as Record<string, { rows: unknown[]; total: number }>)[resultKey];
     const rows = mapRow ? payload.rows.map(mapRow) : (payload.rows as Row[]);
     return { rows, total: payload.total };

@@ -68,7 +68,7 @@ export async function uploadStatusMedia(opts: {
   onStage({ progress: 8, message: 'Preparing status upload...' });
   const fileBase64 = await toBase64(file);
   onStage({ progress: 45, message: 'Uploading status media...' });
-  const uploaded = await apolloClient.mutate({
+  const uploaded = await apolloClient.mutate<any>({
     mutation: UPLOAD_STATUS_MEDIA,
     variables: {
       fileBase64,

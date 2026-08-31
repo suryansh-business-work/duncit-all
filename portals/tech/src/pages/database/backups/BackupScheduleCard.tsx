@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -35,7 +35,7 @@ export default function BackupScheduleCard({ settings, saving, error, onSave }: 
     watch,
     formState: { errors, isDirty },
   } = useForm<BackupSettingsForm, any, BackupSettingsForm>({
-    resolver: zodResolver(backupSettingsSchema),
+    resolver: zodResolver(backupSettingsSchema) as unknown as Resolver<BackupSettingsForm, any, BackupSettingsForm>,
     defaultValues: settings,
   });
 

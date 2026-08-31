@@ -34,7 +34,7 @@ const optionalPositiveInt = (t: CouponTranslate) =>
  */
 export const buildCouponFormSchema = (
   t: CouponTranslate,
-): z.ZodType<CouponFormValues, z.ZodTypeDef, unknown> =>
+) =>
   z
     .object({
       code: z

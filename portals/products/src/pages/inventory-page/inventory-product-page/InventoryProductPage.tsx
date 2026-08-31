@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, CircularProgress, Container, Snackbar, Stack } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -67,7 +67,7 @@ export default function InventoryProductPage() {
   );
 
   const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as unknown as Resolver<InventoryProductFormValues, any, InventoryProductFormValues>,
     mode: 'onChange',
     defaultValues: initialValues,
   });

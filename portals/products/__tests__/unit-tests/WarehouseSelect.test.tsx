@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import WarehouseSelect from '../../src/pages/inventory-page/inventory-product-page/WarehouseSelect';
 import { productSchema } from '../../src/pages/inventory-page/inventory-product-page/schema';
@@ -12,7 +12,7 @@ import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pick
 function Harness({ children, value = '' }: Readonly<{ children: ReactNode; value?: string }>) {
   const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
     defaultValues: { ...blankProductForm, pickup_location_id: value },
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as unknown as Resolver<InventoryProductFormValues, any, InventoryProductFormValues>,
     mode: 'onChange',
   });
   return (

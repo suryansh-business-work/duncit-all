@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   addressValuesFrom,
@@ -34,7 +34,7 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const schema = useMemo(() => makeAddressSchema(t), [t]);
   const { control, handleSubmit } = useForm<AddressValues, any, AddressValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<AddressValues, any, AddressValues>,
     defaultValues: addressValuesFrom(item),
   });
   const locked = isVerificationLocked(item.status);

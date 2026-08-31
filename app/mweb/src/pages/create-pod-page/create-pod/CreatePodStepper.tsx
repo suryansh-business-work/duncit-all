@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+
 import { Alert, Box, Stack } from '@mui/material';
 import {
   MODERATION_FIELD_MAP,
@@ -84,8 +85,16 @@ export default function CreatePodStepper({
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(() => makeCreatePodSchema(t), [t]);
+  // The schema coerces a few fields (a spot count arrives from the DOM as a
+  // string), so its INPUT type differs from CreatePodFormValues. The fields are
+  // the values type — every step component is typed on it — so the resolver is
+  // told that rather than the form being retyped around the coercion.
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<
+      CreatePodFormValues,
+      any,
+      CreatePodFormValues
+    >,
     defaultValues: initialValues,
     mode: 'onTouched',
   });

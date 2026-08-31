@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import { useForm, type UseFormReturn , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ADMIN_CATEGORIES } from '@duncit/category';
 import { ADMIN_LOCATIONS } from '@duncit/location';
@@ -90,7 +90,7 @@ interface HarnessProps {
 
 function Harness({ mode, defaults, formRef }: Readonly<HarnessProps>) {
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
-    resolver: zodResolver(registerVenueSchema),
+    resolver: zodResolver(registerVenueSchema) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });

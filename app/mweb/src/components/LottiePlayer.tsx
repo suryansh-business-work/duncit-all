@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import Lottie from 'lottie-react';
+// lottie-react 3 dropped its default export.
+import { Lottie } from 'lottie-react';
 import { Box, CircularProgress } from '@mui/material';
 
 interface Props {
@@ -70,12 +71,14 @@ export default function LottiePlayer({
   }
 
   return (
+    // lottie-react 3: the animation is `src`, and lifecycle callbacks arrive
+    // through `subscriptions` rather than as individual props.
     <Lottie
-      animationData={data}
+      src={data}
       loop={loop}
       autoplay={autoplay}
       style={{ width, height, ...style }}
-      onComplete={onComplete}
+      subscriptions={onComplete ? { complete: onComplete } : undefined}
     />
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -47,7 +47,7 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
   const [adjust, { loading }] = useMutation<any>(ADJUST_USER_COINS);
 
   const { control, handleSubmit, reset } = useForm<CoinGrantForm, any, CoinGrantForm>({
-    resolver: zodResolver(coinGrantSchema),
+    resolver: zodResolver(coinGrantSchema) as unknown as Resolver<CoinGrantForm, any, CoinGrantForm>,
     defaultValues: BLANK_GRANT,
     mode: 'onBlur',
   });

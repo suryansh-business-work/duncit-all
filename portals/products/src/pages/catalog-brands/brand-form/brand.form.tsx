@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { useForm, type Control } from 'react-hook-form';
+import { useForm, type Control , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -137,7 +137,7 @@ export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<
   const groups = useMemo(() => brandFieldGroups(t), [t]);
   const { control, handleSubmit, reset } = useForm<BrandFormValues, any, BrandFormValues>({
     defaultValues: initialValues ?? brandInitialValues,
-    resolver: zodResolver(brandSchema),
+    resolver: zodResolver(brandSchema) as unknown as Resolver<BrandFormValues, any, BrandFormValues>,
     mode: 'onTouched',
   });
 

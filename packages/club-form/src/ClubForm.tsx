@@ -1,5 +1,5 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
-import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
+import { FormProvider, useForm, type UseFormReturn , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, DialogActions, Grid } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -45,7 +45,7 @@ export default function ClubForm({
   const { t } = useTranslation();
   const schema = useMemo(() => makeClubSchema(config), [config]);
   const methods = useForm<ClubFormValues, any, ClubFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<ClubFormValues, any, ClubFormValues>,
     defaultValues: initialValues,
     mode: 'onBlur',
   });

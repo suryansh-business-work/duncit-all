@@ -4,7 +4,7 @@ import type { EditForm } from '../queries';
 
 const PINCODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
 
-export const userProfileSchema: z.ZodType<EditForm, z.ZodTypeDef, unknown> = z.object({
+export const userProfileSchema = z.object({
   first_name: zodRules.personName('First name'),
   last_name: zodRules.personName('Last name'),
   email: zodRules.optionalEmail('Email').default(''),

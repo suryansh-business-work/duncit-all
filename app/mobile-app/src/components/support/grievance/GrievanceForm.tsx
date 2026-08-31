@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import { Button, Text, YStack } from 'tamagui';
@@ -44,7 +44,7 @@ export function GrievanceForm({
 
   const { control, handleSubmit } = useForm<GrievanceValues, any, GrievanceValues>({
     defaultValues: grievanceDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<GrievanceValues, any, GrievanceValues>,
     mode: 'onTouched',
   });
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -61,7 +61,7 @@ export default function PodContentFormDialog({
     reset,
     formState: { errors },
   } = useForm<PodContentValues, any, PodContentValues>({
-    resolver: zodResolver(buildPodContentSchema(t)),
+    resolver: zodResolver(buildPodContentSchema(t)) as unknown as Resolver<PodContentValues, any, PodContentValues>,
     defaultValues,
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'pod_images_and_videos' });

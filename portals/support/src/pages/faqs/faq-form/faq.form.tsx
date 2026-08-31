@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -72,7 +72,7 @@ export default function FaqForm({
   const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<FaqFormValues, any, FaqFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(buildFaqSchema(t, !categoryEmptyLabel)),
+    resolver: zodResolver(buildFaqSchema(t, !categoryEmptyLabel)) as unknown as Resolver<FaqFormValues, any, FaqFormValues>,
     mode: 'onTouched',
   });
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, InputAdornment, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -49,7 +49,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
   const schema = useMemo(() => makeResetPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ResetPasswordValues, any, ResetPasswordValues>({
     defaultValues: resetPasswordDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<ResetPasswordValues, any, ResetPasswordValues>,
     mode: 'onTouched',
   });
   const showLabel = t('mweb.auth.showPassword');

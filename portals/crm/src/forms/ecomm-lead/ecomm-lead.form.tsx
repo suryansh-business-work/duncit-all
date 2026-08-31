@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -45,7 +45,7 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
 
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<EcommLeadFormValues, any, EcommLeadFormValues>({
-    resolver: zodResolver(ecommLeadSchema, undefined, { raw: true }),
+    resolver: zodResolver(ecommLeadSchema, undefined, { raw: true }) as unknown as Resolver<EcommLeadFormValues, any, EcommLeadFormValues>,
     mode: 'onChange',
     defaultValues: initialValues ?? ecommLeadInitialValues,
   });

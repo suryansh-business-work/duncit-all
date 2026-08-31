@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, InputAdornment, Stack } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -59,7 +59,7 @@ export function CurrentPasswordForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<CurrentPasswordValues, any, CurrentPasswordValues>({
     defaultValues: currentPasswordDefaults,
-    resolver: zodResolver(currentPasswordSchema),
+    resolver: zodResolver(currentPasswordSchema) as unknown as Resolver<CurrentPasswordValues, any, CurrentPasswordValues>,
     mode: 'onTouched',
   });
 
@@ -116,7 +116,7 @@ export function NewPasswordForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<NewPasswordValues, any, NewPasswordValues>({
     defaultValues: newPasswordDefaults,
-    resolver: zodResolver(newPasswordSchema),
+    resolver: zodResolver(newPasswordSchema) as unknown as Resolver<NewPasswordValues, any, NewPasswordValues>,
     mode: 'onTouched',
   });
 

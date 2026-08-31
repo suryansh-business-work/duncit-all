@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, MenuItem, Stack, TextField } from '@mui/material';
@@ -35,7 +35,7 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
   const { t } = useTranslation();
   const defaults = { ...supportInitialValues, ...initialValues };
   const { control, register, handleSubmit, reset, setError, formState } = useForm<SupportFormValues, any, SupportFormValues>({
-    resolver: zodResolver(buildSupportSchema(t)),
+    resolver: zodResolver(buildSupportSchema(t)) as unknown as Resolver<SupportFormValues, any, SupportFormValues>,
     defaultValues: defaults,
     mode: 'onBlur',
   });

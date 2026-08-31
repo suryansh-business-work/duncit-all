@@ -1,4 +1,4 @@
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Grid, MenuItem, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -31,7 +31,7 @@ export default function ShortLinkForm({
   const { t } = useTranslation();
   const { control, handleSubmit, formState } = useForm<ShortLinkFormValues, any, ShortLinkFormValues>({
     defaultValues: blankShortLinkValues(),
-    resolver: zodResolver(shortLinkSchema(t)),
+    resolver: zodResolver(shortLinkSchema(t)) as unknown as Resolver<ShortLinkFormValues, any, ShortLinkFormValues>,
     mode: 'onChange',
   });
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Chip, Divider, Stack, TextField, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
@@ -85,7 +85,7 @@ interface Props {
 export default function EcommBrandForm({ defaultValues, busy, locked, onSave, onSubmitForReview, onPickImage }: Readonly<Props>) {
   const { t } = useTranslation();
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<BrandFormValues, any, BrandFormValues>({
-    resolver: zodResolver(brandSchema),
+    resolver: zodResolver(brandSchema) as unknown as Resolver<BrandFormValues, any, BrandFormValues>,
     defaultValues,
   });
   const [categoryDraft, setCategoryDraft] = useState('');

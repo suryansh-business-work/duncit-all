@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -49,7 +49,7 @@ export default function MediaDialog({ scenario, saving, onClose, onSave }: Reado
     [t]
   );
   const { control, handleSubmit, reset } = useForm<MediaFormValues, any, MediaFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<MediaFormValues, any, MediaFormValues>,
     defaultValues: { url: '', filename: '' },
   });
 

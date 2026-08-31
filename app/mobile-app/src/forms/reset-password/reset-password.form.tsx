@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
@@ -28,7 +28,7 @@ export function ResetPasswordForm({
   const schema = useMemo(() => makeResetPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ResetPasswordFormValues, any, ResetPasswordFormValues>({
     defaultValues: resetPasswordDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<ResetPasswordFormValues, any, ResetPasswordFormValues>,
     mode: 'onBlur',
   });
   const submitLabel = loading ? t('mweb.resetPassword.submitting') : t('mweb.resetPassword.submit');

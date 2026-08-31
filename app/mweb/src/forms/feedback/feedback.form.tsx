@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -37,7 +37,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
   );
   const { control, handleSubmit, setValue, watch } = useForm<FeedbackValues, any, FeedbackValues>({
     defaultValues: feedbackDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<FeedbackValues, any, FeedbackValues>,
     mode: 'onTouched',
   });
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
@@ -35,7 +35,7 @@ interface Props {
 export default function WarehouseForm({ defaultValues, busy, apiError = null, onSave, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<WarehouseFormValues, any, WarehouseFormValues>({
-    resolver: zodResolver(warehouseSchema),
+    resolver: zodResolver(warehouseSchema) as unknown as Resolver<WarehouseFormValues, any, WarehouseFormValues>,
     defaultValues: defaultValues ?? emptyWarehouseValues,
     mode: 'onBlur',
   });

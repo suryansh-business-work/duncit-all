@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Checkbox,
@@ -42,7 +42,7 @@ export default function PickupLocationForm({
   const heading = title ?? t('products.pickup.formTitle');
   const { control, handleSubmit, reset } = useForm<PickupLocationFormValues, any, PickupLocationFormValues>({
     defaultValues: initialValues ?? pickupLocationInitialValues,
-    resolver: zodResolver(pickupLocationSchema),
+    resolver: zodResolver(pickupLocationSchema) as unknown as Resolver<PickupLocationFormValues, any, PickupLocationFormValues>,
     mode: 'onTouched',
   });
 

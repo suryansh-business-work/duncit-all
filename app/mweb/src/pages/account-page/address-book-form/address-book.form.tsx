@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Checkbox,
@@ -54,7 +54,7 @@ export default function AddressForm({
   const blank = { ...blankAddressValues, label: t('mweb.account.addressLabelDefault') };
   const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
-    resolver: zodResolver(addressSchema),
+    resolver: zodResolver(addressSchema) as unknown as Resolver<AddressFormValues, any, AddressFormValues>,
     mode: 'onTouched',
   });
 

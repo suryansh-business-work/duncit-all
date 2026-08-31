@@ -23,7 +23,7 @@ export interface PodPlanFormValues {
   is_active: boolean;
 }
 
-export const podPlanFormSchema: z.ZodType<PodPlanFormValues, z.ZodTypeDef, unknown> = z.object({
+export const podPlanFormSchema = z.object({
   key: z
     .string()
     .trim()

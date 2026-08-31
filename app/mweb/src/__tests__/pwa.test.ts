@@ -50,7 +50,9 @@ const subscription = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-type AnyMock = ReturnType<typeof vi.fn<any[], any>>;
+// vitest 4 types a mock by the FUNCTION it stands in for, not by an
+// args/return pair.
+type AnyMock = ReturnType<typeof vi.fn<(...args: any[]) => any>>;
 
 let pushManager: { getSubscription: AnyMock; subscribe: AnyMock };
 let register: AnyMock;

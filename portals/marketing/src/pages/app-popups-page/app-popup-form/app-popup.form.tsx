@@ -1,4 +1,4 @@
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Divider, Grid, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -35,7 +35,7 @@ export default function AppPopupForm({
   const { t } = useTranslation();
   const { control, handleSubmit, formState } = useForm<AppPopupFormValues, any, AppPopupFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(appPopupSchema(t)),
+    resolver: zodResolver(appPopupSchema(t)) as unknown as Resolver<AppPopupFormValues, any, AppPopupFormValues>,
     mode: 'onChange',
   });
 

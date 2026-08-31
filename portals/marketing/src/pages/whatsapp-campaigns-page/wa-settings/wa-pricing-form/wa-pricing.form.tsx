@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -71,7 +71,7 @@ export default function WaPricingForm({
   const { t } = useTranslation();
   const { control, handleSubmit, reset, watch, formState } = useForm<WaPricingValues, any, WaPricingValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(waPricingSchema),
+    resolver: zodResolver(waPricingSchema) as unknown as Resolver<WaPricingValues, any, WaPricingValues>,
     mode: 'onChange',
   });
 

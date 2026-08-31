@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, TextField, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -36,7 +36,7 @@ export default function MeetingReasonForm({
     reset,
     formState: { errors },
   } = useForm<MeetingReasonValues, any, MeetingReasonValues>({
-    resolver: zodResolver(buildMeetingReasonSchema(labels)),
+    resolver: zodResolver(buildMeetingReasonSchema(labels)) as unknown as Resolver<MeetingReasonValues, any, MeetingReasonValues>,
     defaultValues: blankMeetingReasonValues,
   });
 

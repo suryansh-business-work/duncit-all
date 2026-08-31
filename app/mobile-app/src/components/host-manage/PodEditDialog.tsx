@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -44,7 +44,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
   const { control, handleSubmit, reset, setError, setValue } = useForm<PodEditValues, any, PodEditValues>({
-    resolver: zodResolver(podEditSchema),
+    resolver: zodResolver(podEditSchema) as unknown as Resolver<PodEditValues, any, PodEditValues>,
     defaultValues: podEditInitialValues(pod),
   });
   const limits = usePodSpotLimits(pod?.id);

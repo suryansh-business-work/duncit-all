@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   makeCheckoutSchema,
@@ -98,7 +98,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
 
   const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm, any, CheckoutForm>({
     defaultValues: checkoutDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<CheckoutForm, any, CheckoutForm>,
     mode: 'onTouched',
   });
 

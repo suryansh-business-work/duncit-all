@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
@@ -68,7 +68,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
 
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<VenueLeadFormValues, any, VenueLeadFormValues>({
-    resolver: zodResolver(venueLeadSchema, undefined, { raw: true }),
+    resolver: zodResolver(venueLeadSchema, undefined, { raw: true }) as unknown as Resolver<VenueLeadFormValues, any, VenueLeadFormValues>,
     mode: 'onChange',
     defaultValues: initialValues ?? venueLeadInitialValues,
   });

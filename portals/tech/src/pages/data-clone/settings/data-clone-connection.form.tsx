@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { InputAdornment, Stack, TextField, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -36,7 +36,7 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
   };
   const { control, handleSubmit, reset } = useForm<DataCloneConnectionValues, any, DataCloneConnectionValues>({
     defaultValues: { uri: '', database: connection.database },
-    resolver: zodResolver(dataCloneConnectionSchema(connection.hasUri, messages)),
+    resolver: zodResolver(dataCloneConnectionSchema(connection.hasUri, messages)) as unknown as Resolver<DataCloneConnectionValues, any, DataCloneConnectionValues>,
     mode: 'all',
   });
 

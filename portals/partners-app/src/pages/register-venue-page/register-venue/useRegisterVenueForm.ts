@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTabParam } from '@duncit/tabs';
 import { VENUE_SECTIONS, sectionsForMode } from '../sections/venue-sections';
@@ -64,7 +64,7 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
   const originalDocCount = venue?.documents?.length ?? 0;
 
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
-    resolver: zodResolver(registerVenueSchema),
+    resolver: zodResolver(registerVenueSchema) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: blankRegisterVenueValues,
     mode: 'onBlur',
   });

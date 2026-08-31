@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
 import {
@@ -56,7 +56,7 @@ export default function SendTestDialog({
   const [values, setValues] = useState<Record<string, string>>({});
   const { control, handleSubmit, watch, reset, formState } = useForm<EmailTemplateTestValues, any, EmailTemplateTestValues>({
     defaultValues: { to: '' },
-    resolver: zodResolver(emailTemplateTestSchema),
+    resolver: zodResolver(emailTemplateTestSchema) as unknown as Resolver<EmailTemplateTestValues, any, EmailTemplateTestValues>,
     mode: 'onChange',
   });
   const to = watch('to');

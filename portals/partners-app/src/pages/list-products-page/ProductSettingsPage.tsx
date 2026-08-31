@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -59,7 +59,7 @@ export default function ProductSettingsPage() {
 
   const [updateSettings, { loading: saving }] = useMutation<any>(UPDATE_PRODUCT_SETTINGS);
   const { control, handleSubmit, reset } = useForm<SettingsValues, any, SettingsValues>({
-    resolver: zodResolver(settingsSchema),
+    resolver: zodResolver(settingsSchema) as unknown as Resolver<SettingsValues, any, SettingsValues>,
     defaultValues: { low_stock_alert: 5, notify_low_stock: false },
   });
 

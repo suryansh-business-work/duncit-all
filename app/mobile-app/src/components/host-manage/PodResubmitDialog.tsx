@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
@@ -43,7 +43,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [venues, setVenues] = useState<ResubmitVenueOption[]>([]);
   const { control, handleSubmit, reset, setValue, watch } = useForm<PodResubmitValues, any, PodResubmitValues>({
-    resolver: zodResolver(podResubmitSchema),
+    resolver: zodResolver(podResubmitSchema) as unknown as Resolver<PodResubmitValues, any, PodResubmitValues>,
     defaultValues: podResubmitInitialValues(pod),
   });
   const venueId = watch('venue_id');

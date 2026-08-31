@@ -95,7 +95,9 @@ const brandMock = {
  * makes useQuery return the product synchronously with loading=false.
  */
 function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[] = []) {
-  const cache = new InMemoryCache({ addTypename: false });
+  // Apollo 4 dropped the addTypename option; the cache normalises the same way
+  // the mocks are written.
+  const cache = new InMemoryCache();
   cache.writeQuery({
     query: PUBLIC_PRODUCT,
     variables: { id: PRODUCT_ID },

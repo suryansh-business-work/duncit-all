@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
@@ -29,7 +29,7 @@ export function CurrentPasswordForm({
   const { t } = useTranslation();
   const { control, handleSubmit } = useForm<CurrentPasswordValues, any, CurrentPasswordValues>({
     defaultValues: currentPasswordDefaults,
-    resolver: zodResolver(currentPasswordSchema),
+    resolver: zodResolver(currentPasswordSchema) as unknown as Resolver<CurrentPasswordValues, any, CurrentPasswordValues>,
     mode: 'onBlur',
   });
 
@@ -69,7 +69,7 @@ export function NewPasswordForm({
   const { t } = useTranslation();
   const { control, handleSubmit } = useForm<NewPasswordValues, any, NewPasswordValues>({
     defaultValues: newPasswordDefaults,
-    resolver: zodResolver(newPasswordSchema),
+    resolver: zodResolver(newPasswordSchema) as unknown as Resolver<NewPasswordValues, any, NewPasswordValues>,
     mode: 'onBlur',
   });
 

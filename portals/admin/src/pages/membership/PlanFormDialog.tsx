@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -45,7 +45,7 @@ export default function PlanFormDialog({
   const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<MembershipPlanFormValues, any, MembershipPlanFormValues>({
     defaultValues: toFormValues(editing),
-    resolver: zodResolver(membershipPlanFormSchema),
+    resolver: zodResolver(membershipPlanFormSchema) as unknown as Resolver<MembershipPlanFormValues, any, MembershipPlanFormValues>,
     mode: 'onTouched',
   });
 

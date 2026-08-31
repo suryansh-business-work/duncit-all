@@ -1,4 +1,5 @@
 import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
 import { Alert, Autocomplete, Grid, Stack, TextField } from '@mui/material';
@@ -20,7 +21,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
   const { t } = useTranslation();
   const [updateMut, { loading, error }] = useMutation<any>(UPDATE_PET);
 
-  const { control, handleSubmit, watch, setValue, formState } = useForm<PetFormValues, any, PetFormValues>({
+  const { control, handleSubmit, watch, setValue, formState } = useForm<z.input<typeof petSchema>, any, PetFormValues>({
     resolver: zodResolver(petSchema),
     defaultValues: {
       name: pet?.name ?? '',

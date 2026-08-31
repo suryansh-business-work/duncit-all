@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Controller, useForm, type Control } from 'react-hook-form';
+import { Controller, useForm, type Control , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -105,7 +105,7 @@ export default function CreateBuildForm({ platform, config, onSubmit }: Readonly
         playStoreRequiresAab: t('tech.appBuilds.playStoreRequiresAab'),
         playStoreRequiresProduction: t('tech.appBuilds.playStoreRequiresProduction'),
       })
-    ),
+    ) as unknown as Resolver<CreateBuildValues, any, CreateBuildValues>,
     mode: 'all',
   });
 

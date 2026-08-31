@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -48,7 +48,7 @@ export default function AiMonitoringForm({
   const schema = useMemo(() => buildAiMonitoringSchema(t), [t]);
   const { control, handleSubmit, watch, reset, formState } = useForm<AiMonitoringFormValues, any, AiMonitoringFormValues>({
     defaultValues: { ...aiMonitoringInitialValues, ...initialValues },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<AiMonitoringFormValues, any, AiMonitoringFormValues>,
     mode: 'onChange',
   });
 

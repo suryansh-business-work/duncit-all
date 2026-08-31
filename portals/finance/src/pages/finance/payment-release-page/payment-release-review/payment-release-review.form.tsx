@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -52,7 +52,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
   const requestedAmount = Number(request?.amount_requested || 0);
   const { control, handleSubmit, watch, setValue, reset } = useForm<PaymentReleaseReviewValues, any, PaymentReleaseReviewValues>({
     defaultValues: { status: 'APPROVED', approval_type: 'FULL', approved_amount: requestedAmount, approval_reason: '' },
-    resolver: zodResolver(paymentReleaseReviewSchema(requestedAmount, t)),
+    resolver: zodResolver(paymentReleaseReviewSchema(requestedAmount, t)) as unknown as Resolver<PaymentReleaseReviewValues, any, PaymentReleaseReviewValues>,
   });
   const status = watch('status');
   const approvalType = watch('approval_type');

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -56,7 +56,7 @@ export default function TelemetryLogsSettingsPage() {
     reset,
     formState: { errors, isDirty, isSubmitting },
   } = useForm<TelemetrySettingsForm, any, TelemetrySettingsForm>({
-    resolver: zodResolver(telemetrySettingsSchema),
+    resolver: zodResolver(telemetrySettingsSchema) as unknown as Resolver<TelemetrySettingsForm, any, TelemetrySettingsForm>,
     defaultValues: DEFAULTS,
   });
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
@@ -74,7 +74,7 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<DeletionSettingsValues, any, DeletionSettingsValues>({
-    resolver: zodResolver(deletionSettingsSchema),
+    resolver: zodResolver(deletionSettingsSchema) as unknown as Resolver<DeletionSettingsValues, any, DeletionSettingsValues>,
     // `values` rather than `defaultValues`: the card re-seeds from the server
     // whenever the query answers, so a save elsewhere is not overwritten by a
     // form that hydrated once at mount.

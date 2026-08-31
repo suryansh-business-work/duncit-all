@@ -13,7 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { Controller, FormProvider, useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
 import HostCategoriesSection from '../../components/host-form/HostCategoriesSection';
@@ -38,7 +38,7 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
   const [updateHost, state] = useMutation<any>(UPDATE_HOST);
 
   const methods = useForm<HostEditValues, any, HostEditValues>({
-    resolver: zodResolver(hostEditSchema),
+    resolver: zodResolver(hostEditSchema) as unknown as Resolver<HostEditValues, any, HostEditValues>,
     mode: 'onChange',
     defaultValues: hostEditInitialValues(host),
   });

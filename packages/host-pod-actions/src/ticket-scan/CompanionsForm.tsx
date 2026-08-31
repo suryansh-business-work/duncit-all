@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, Stack, TextField, Typography } from '@mui/material';
@@ -51,7 +51,7 @@ export default function CompanionsForm({ seats, required, busy, onSubmit }: Read
   const { labels } = useHostPodActionsConfig();
   const schema = useMemo(() => buildSchema(labels), [labels]);
   const { control, register, handleSubmit, formState } = useForm<CompanionValues, any, CompanionValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<CompanionValues, any, CompanionValues>,
     mode: 'onTouched',
     defaultValues: {
       companions: Array.from({ length: required }, () => ({ name: '', phone_number: '' })),

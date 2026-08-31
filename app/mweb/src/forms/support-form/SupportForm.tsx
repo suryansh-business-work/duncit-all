@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { z } from 'zod';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Chip, InputAdornment, MenuItem, Stack, TextField } from '@mui/material';
@@ -31,7 +32,7 @@ export default function SupportForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const { control, handleSubmit, formState, setValue } = useForm<SupportFormValues, any, SupportFormValues>({
+  const { control, handleSubmit, formState, setValue } = useForm<z.input<typeof supportSchema>, any, SupportFormValues>({
     defaultValues: { ...DEFAULTS, ...initialValues },
     resolver: zodResolver(supportSchema),
     mode: 'onBlur',
@@ -146,7 +147,7 @@ export default function SupportForm({
           control={control}
           name="attachments"
           render={({ field }) => (
-            <AttachmentsField attachments={field.value} setAttachments={field.onChange} />
+            <AttachmentsField attachments={field.value ?? []} setAttachments={field.onChange} />
           )}
         />
 

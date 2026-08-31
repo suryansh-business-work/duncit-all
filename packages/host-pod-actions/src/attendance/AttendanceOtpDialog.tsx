@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
 import {
@@ -57,7 +57,7 @@ export default function AttendanceOtpDialog({
   onVerified,
 }: Readonly<Props>) {
   const { control, getValues, trigger, reset, setError, formState } = useForm<AttendanceOtpValues, any, AttendanceOtpValues>({
-    resolver: zodResolver(buildAttendanceOtpSchema(labels)),
+    resolver: zodResolver(buildAttendanceOtpSchema(labels)) as unknown as Resolver<AttendanceOtpValues, any, AttendanceOtpValues>,
     defaultValues: attendanceOtpInitialValues(row),
   });
   const [challengeId, setChallengeId] = useState('');

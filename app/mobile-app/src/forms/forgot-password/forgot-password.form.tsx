@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
@@ -31,7 +31,7 @@ export function ForgotPasswordForm({
   const schema = useMemo(() => makeForgotPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ForgotPasswordValues, any, ForgotPasswordValues>({
     defaultValues: forgotPasswordDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<ForgotPasswordValues, any, ForgotPasswordValues>,
     mode: 'onBlur',
   });
   const submitLabel = loading

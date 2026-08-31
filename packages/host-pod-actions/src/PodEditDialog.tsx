@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -55,7 +56,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     setValue,
     setError,
     formState: { errors },
-  } = useForm<PodEditValues, any, PodEditValues>({
+  } = useForm<z.input<ReturnType<typeof buildPodEditSchema>>, any, PodEditValues>({
     resolver: zodResolver(buildPodEditSchema(labels)),
     defaultValues: podEditInitialValues(pod),
   });

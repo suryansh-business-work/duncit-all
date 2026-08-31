@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
@@ -84,7 +84,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
     setError,
     formState: { errors },
   } = useForm<CancelPodValues, any, CancelPodValues>({
-    resolver: zodResolver(cancelPodSchema),
+    resolver: zodResolver(cancelPodSchema) as unknown as Resolver<CancelPodValues, any, CancelPodValues>,
     defaultValues: { reason: '' },
   });
 

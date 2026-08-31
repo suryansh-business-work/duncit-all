@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Paper, Stack, Typography } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
@@ -34,7 +34,7 @@ export default function AudienceListForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { control, handleSubmit } = useForm<AudienceListFormValues, any, AudienceListFormValues>({
-    resolver: zodResolver(audienceListSchema),
+    resolver: zodResolver(audienceListSchema) as unknown as Resolver<AudienceListFormValues, any, AudienceListFormValues>,
     defaultValues: emptyAudienceList(defaultOwnerId),
     mode: 'onBlur',
   });

@@ -149,7 +149,8 @@ function mount() {
               <StudioModeProvider>
                 <DuncitLocalizationProvider timeZoneAware>
                   <GoogleOAuthProvider clientId={getGoogleClientId()}>
-                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    {/* The v7_* opt-ins are gone: react-router 7 IS that behaviour. */}
+                    <BrowserRouter>
                       <LocalizedPortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></LocalizedPortalModeGate>
                     </BrowserRouter>
                   </GoogleOAuthProvider>

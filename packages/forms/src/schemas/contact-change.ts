@@ -27,7 +27,11 @@ const anyString = z.string();
 export function makeContactValueSchema(
   channel: ContactChannel,
   t: Translate,
-): z.ZodType<ContactValueValues, z.ZodTypeDef, unknown> {
+  // zod 4 dropped the middle `ZodTypeDef` parameter: ZodType is <Output, Input>.
+  // Both sides are the draft shape — the refinements only trim — and naming the
+  // input is what lets zodResolver accept it: it requires field values, and
+  // `unknown` is not an object it can resolve paths against.
+): z.ZodType<ContactValueValues, ContactValueValues> {
   const emailValue = z
     .string()
     .trim()

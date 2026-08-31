@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { peopleCount } from '../../lib/reach';
 import {
@@ -52,7 +52,7 @@ export default function NotificationFormDialog({
   const { t } = useTranslation();
   const { control, handleSubmit, setValue, watch, reset } = useForm<NotifForm, any, NotifForm>({
     defaultValues: form,
-    resolver: zodResolver(notificationFormSchema),
+    resolver: zodResolver(notificationFormSchema) as unknown as Resolver<NotifForm, any, NotifForm>,
     mode: 'onChange',
   });
 

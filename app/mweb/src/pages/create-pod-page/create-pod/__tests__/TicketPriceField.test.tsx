@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
@@ -47,7 +47,11 @@ const pricedStep4: CreatePodFormValues = {
  * only" rule are exercised exactly as Step 4 renders them. */
 function Harness({ onValue }: Readonly<{ onValue: (value: number | null) => void }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
-    resolver: zodResolver(createPodSchema),
+    resolver: zodResolver(createPodSchema) as unknown as Resolver<
+      CreatePodFormValues,
+      any,
+      CreatePodFormValues
+    >,
     defaultValues: pricedStep4,
     mode: 'onTouched',
   });

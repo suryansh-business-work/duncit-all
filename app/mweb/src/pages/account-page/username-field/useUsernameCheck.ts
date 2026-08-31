@@ -29,7 +29,13 @@ export function useUsernameCheck(value: string, current: string | null): Usernam
               variables: { username: candidate },
               fetchPolicy: 'network-only',
             })
-            .then((result) => result.data.usernameAvailability),
+            // Apollo 4 types `data` optional — a query that errored has none,
+            // and the caller's contract is an answer, not a maybe.
+            .then((result) => {
+              const answer = result.data?.usernameAvailability;
+              if (!answer) throw new Error('No availability answer');
+              return answer;
+            }),
         onState: setCheck,
         onError: (error, candidate) =>
           logs.mWeb.error('useUsernameCheck', 'availability', { error, candidate }),

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -63,7 +63,7 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
 
   const { control, handleSubmit, watch, reset, setError, formState } = useForm<CouponFormValues, any, CouponFormValues>({
     defaultValues: buildDefaults(initial, lockedPod),
-    resolver: zodResolver(buildCouponFormSchema(t)),
+    resolver: zodResolver(buildCouponFormSchema(t)) as unknown as Resolver<CouponFormValues, any, CouponFormValues>,
     mode: 'onTouched',
   });
 

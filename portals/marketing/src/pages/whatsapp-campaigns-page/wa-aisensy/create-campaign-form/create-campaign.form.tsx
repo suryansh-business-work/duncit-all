@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -66,7 +66,7 @@ export default function CreateCampaignForm({
     formState: { isValid },
   } = useForm<CreateCampaignValues, any, CreateCampaignValues>({
     defaultValues: emptyValues(),
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<CreateCampaignValues, any, CreateCampaignValues>,
     mode: 'onChange',
   });
 

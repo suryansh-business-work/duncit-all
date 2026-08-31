@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.72.131",
+  "version": "1.72.132",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
     "dev:local:main": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:force": "vite --force",
-    "build": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && node ../../scripts/generate-app-links.mjs && tsc -b && vite build && vite build --config vite.config.server.ts",
+    "build": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && node ../../scripts/generate-app-links.mjs && tsc -b && vite build && node ../../scripts/verify-chunk-graph.mjs dist && vite build --config vite.config.server.ts",
     "build:e2e": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && tsc -b && vite build --mode e2e",
     "preview": "vite preview",
     "test:forms": "vitest run",

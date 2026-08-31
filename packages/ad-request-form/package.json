@@ -24,7 +24,7 @@
     "date-fns": ">=2",
     "react": ">=18",
     "react-hook-form": ">=7",
-    "zod": ">=3"
+    "zod": ">=4"
   },
   "devDependencies": {
     "@hookform/resolvers": "^5.9.1",

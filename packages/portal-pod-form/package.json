@@ -15,7 +15,7 @@
     "react": ">=18",
     "react-dom": ">=18",
     "react-hook-form": ">=7",
-    "zod": ">=3"
+    "zod": ">=4"
   },
   "devDependencies": {
     "@hookform/resolvers": "^5.9.1",

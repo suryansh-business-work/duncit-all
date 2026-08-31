@@ -84,7 +84,7 @@
     "react-dom": ">=18",
     "react-hook-form": ">=7",
     "react-router-dom": ">=6",
-    "zod": ">=3"
+    "zod": ">=4"
   },
   "devDependencies": {
     "@mui/icons-material": "^9.4.0",

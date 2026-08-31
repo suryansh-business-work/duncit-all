@@ -94,6 +94,16 @@ const LOCAL_RANGE = /^(?:workspace|file|link|portal|catalog):/;
 const REMOTE_RANGE = /^(?:npm|git|github|gitlab|bitbucket|https?):|^git\+/;
 /** The first version-looking token in a range: `^1.2.3`, `>=4.0 <5`, `~2.1`. */
 const VERSION_TOKEN = /(\d+)(?:\.(\d+))?(?:\.(\d+))?/;
+/**
+ * A lower bound with nothing above it: `>=5`, `> 4.1`.
+ *
+ * This is how nearly every peerDependency in the repo is written, and it accepts
+ * whatever npm publishes next as readily as the version it names — `@mui/material
+ * >=5` is satisfied by 9.4.0. Comparing only the first version token called all
+ * 218 of them a major behind, which is most of what the console reported as
+ * outdated and none of it real.
+ */
+const OPEN_LOWER_BOUND = /^\s*>=?\s*\d/;
 
 interface Semver {
   major: number;
@@ -123,10 +133,16 @@ function compareVersions(declared: Semver, latest: Semver): UpdateType {
   return 'UP_TO_DATE';
 }
 
+/** True when the range names a floor and no ceiling, so nothing published is outside it. */
+export function acceptsAnyNewerVersion(range: string): boolean {
+  return OPEN_LOWER_BOUND.test(range) && !range.includes('<');
+}
+
 /** The classification one declared range gets against the newest published version. */
 export function updateTypeOf(range: string, latest: string | null): UpdateType {
   if (LOCAL_RANGE.test(range)) return 'INTERNAL';
   if (!latest) return 'UNKNOWN';
+  if (acceptsAnyNewerVersion(range)) return 'UP_TO_DATE';
   const declared = parseVersion(range);
   const published = parseVersion(latest);
   if (!declared || !published) return 'UNKNOWN';

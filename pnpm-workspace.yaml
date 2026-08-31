@@ -47,6 +47,7 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - jscpd@5.1.0
+  - nodemailer@9.1.0
 
 # pnpm 10 moved these out of package.json's "pnpm" field. pnpm 11 does not read
 # that field at all — it only WARNS that it ignored it — so an override left

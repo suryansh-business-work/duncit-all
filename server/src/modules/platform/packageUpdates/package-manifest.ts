@@ -2646,7 +2646,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "jsonwebtoken", range: "^9.0.3", kind: "dependencies" },
       { name: "mjml", range: "^5.4.0", kind: "dependencies" },
       { name: "mongoose", range: "^8.24.4", kind: "dependencies" },
-      { name: "nodemailer", range: "^9.0.6", kind: "dependencies" },
+      { name: "nodemailer", range: "^9.1.0", kind: "dependencies" },
       { name: "npm-check-updates", range: "^23.1.0", kind: "dependencies" },
       { name: "pdfkit", range: "^0.20.2", kind: "dependencies" },
       { name: "qrcode", range: "1.5.4", kind: "dependencies" },

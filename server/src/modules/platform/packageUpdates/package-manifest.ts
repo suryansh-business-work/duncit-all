@@ -96,7 +96,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "expo-video", range: "~3.0.16", kind: "dependencies" },
       { name: "expo-web-browser", range: "~15.0.11", kind: "dependencies" },
       { name: "graphql", range: "^16.14.2", kind: "dependencies" },
-      { name: "graphql-request", range: "^7.4.0", kind: "dependencies" },
+      { name: "graphql-request", range: "^6.1.0", kind: "dependencies" },
       { name: "lottie-react-native", range: "~7.3.1", kind: "dependencies" },
       { name: "moti", range: "^0.30.0", kind: "dependencies" },
       { name: "react", range: "19.1.0", kind: "dependencies" },

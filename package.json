@@ -5,6 +5,8 @@
   "description": "Full Stack Monorepo (React + GraphQL + Node.js)",
   "packageManager": "pnpm@9.15.9",
   "scripts": {
+    "deps:check": "node scripts/deps.mjs check --all",
+    "deps:update": "node scripts/deps.mjs update --all",
     "dev:server": "pnpm --filter server dev",
     "dev:app": "pnpm --filter mweb-app dev",
     "dev:admin": "pnpm --filter admin dev",
@@ -115,6 +117,7 @@
     "husky": "^9.1.7",
     "jscpd": "4.3.0",
     "lint-staged": "^15.5.2",
+    "npm-check-updates": "^23.1.0",
     "typescript": "^5.9.3",
     "vitest": "^1.6.1"
   },

@@ -29,6 +29,9 @@ importers:
       lint-staged:
         specifier: ^15.5.2
         version: 15.5.2
+      npm-check-updates:
+        specifier: ^23.1.0
+        version: 23.1.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

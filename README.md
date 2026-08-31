@@ -117,6 +117,29 @@ login won't work — start the server first.
 E2E rules worth knowing: no `--if-present`, no `paths:` filter, no
 `continue-on-error` — a suite that never ran can never look green.
 
+## 📦 Dependency updates
+
+Every workspace declares the same pair, and both call one shared script
+(`scripts/deps.mjs`) so the flags live in a single place:
+
+```bash
+pnpm deps:check                     # at the root: all 79 manifests
+pnpm deps:update                    # at the root: rewrite every range
+pnpm --filter @duncit/table deps:check   # or just one workspace
+npm run deps:check --prefix app/mobile-app  # the app is npm, not pnpm
+```
+
+- `deps:update` rewrites ranges in `package.json` and **never installs** —
+  run `pnpm install` (and `npm install --prefix app/mobile-app`) when you mean
+  to resolve them.
+- `@duncit/*` is always skipped: those are `workspace:*` links to code in this
+  repo, so the registry has no answer about them. `portals/crm/open-wa-server`
+  is skipped too — vendored third party.
+- Adding or bumping a dependency makes `package-manifest.ts` stale; run
+  `node scripts/generate-package-manifest.mjs` (CI runs it with `--check`).
+- The same data, read-only and without a terminal, is in **Tech portal →
+  Package Updates**.
+
 ## 🌿 Branch & deploy flow (enforced by hooks)
 
 ```

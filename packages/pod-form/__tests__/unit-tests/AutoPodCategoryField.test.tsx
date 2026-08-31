@@ -52,7 +52,7 @@ async function pick(user: ReturnType<typeof userEvent.setup>, label: RegExp, opt
 
 describe('AutoPodCategoryField', () => {
   it('writes a fully picked Super → Sub pair into the form', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const ref = renderField();
     await pick(user, /Super Category/, 'Sports');
     await pick(user, /^Category/, 'Racket');
@@ -62,7 +62,7 @@ describe('AutoPodCategoryField', () => {
   });
 
   it('clears the Sub without complaint when a new Super is picked', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const ref = renderField({}, { super_category_id: 'sup-sports', sub_category_id: 'sub-badminton' });
     act(() => {
       ref.current?.setError('sub_category_id', { type: 'custom', message: 'Select a category' });

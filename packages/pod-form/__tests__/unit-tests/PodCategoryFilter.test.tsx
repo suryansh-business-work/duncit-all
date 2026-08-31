@@ -97,7 +97,7 @@ async function pick(user: ReturnType<typeof userEvent.setup>, label: string, opt
 
 describe('PodCategoryFilter', () => {
   it('sits above the form and offers every club until a category is picked', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderForm();
     expect(screen.getByTestId('pod-category-filter')).toBeInTheDocument();
     expect(await clubOptions(user)).toEqual(['Badminton Club', 'Dog Club']);
@@ -106,7 +106,7 @@ describe('PodCategoryFilter', () => {
   // The pod's category comes from its club, so picking it first simply narrows
   // what the club dropdown may offer.
   it('narrows the club list to the picked Super + Sub, dropping uncategorised clubs', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     // Legacy clubs: one with no category ids at all, one with only half the
     // pair. Neither can match, so both drop out once a category is picked.
     const LEGACY = { id: 'c3', club_name: 'Legacy Club' };
@@ -128,7 +128,7 @@ describe('PodCategoryFilter', () => {
   });
 
   it('warns when the picked category has no clubs yet', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderForm({ clubs: [DOG_CLUB] });
 
     await pick(user, 'Super Category', 'Sports');

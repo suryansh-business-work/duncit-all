@@ -33,7 +33,7 @@ export function ReelPanelBody({
   return (
     <YStack gap={10}>
       <Text fontSize={12} color="$muted">
-        {t('mweb.createPod.reelHint', { vars: { max: Math.round(limits.maxVideoBytes / MB) } })}
+        {t('mweb.createPod.reelCapHint', { vars: { max: Math.round(limits.maxVideoBytes / MB) } })}
       </Text>
       {value ? (
         <XStack

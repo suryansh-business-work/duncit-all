@@ -1795,7 +1795,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Consider adding a Pod Reel to attract more users and increase visibility.',
       // Native only — its card carries a subtitle under the title.
       reelSubtitle: 'A short video shown in Explore.',
-      reelHint:
+      reelCapHint:
         'Reel video shows in Explore while this pod is live. Optional — one video up to {max} MB.',
       reelUpload: 'Upload video',
       // mWeb only — native replaces a reel by removing it first.
@@ -1806,7 +1806,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — the native picker only offers videos, so the wrong file
       // type can never be chosen.
       reelNotVideo: 'Please pick a video file (MP4, MOV or WebM)',
-      reelTooLarge: 'That video is over {max}MB — pick a smaller reel.',
+      reelOverCap: 'That video is over {max}MB — pick a smaller reel.',
       // Native only — the OS asks for media permission before the picker opens.
       reelPermission: 'Media access is needed to upload a reel.',
       uploadFailed: 'Upload failed',

@@ -51,7 +51,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     // fileSize can be missing on some pickers — the cap check is skipped then.
     if (asset.fileSize != null && asset.fileSize > limits.maxVideoBytes) {
       setError(
-        t('mweb.createPod.reelTooLarge', {
+        t('mweb.createPod.reelOverCap', {
           vars: { max: Math.round(limits.maxVideoBytes / MB) },
         }),
       );

@@ -55,7 +55,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
     }
     if (file.size > caps.maxVideoBytes) {
       setError(
-        t('mweb.createPod.reelTooLarge', {
+        t('mweb.createPod.reelOverCap', {
           vars: { max: Math.round(caps.maxVideoBytes / MB) },
         })
       );
@@ -130,7 +130,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {t('mweb.createPod.reelHint', { vars: { max: Math.round(caps.maxVideoBytes / MB) } })}
+            {t('mweb.createPod.reelCapHint', { vars: { max: Math.round(caps.maxVideoBytes / MB) } })}
           </Typography>
           <Box>
             <AiMonitoringChip />

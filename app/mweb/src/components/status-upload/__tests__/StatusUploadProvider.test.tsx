@@ -12,9 +12,10 @@ vi.mock('../../../apollo', () => ({
   },
 }));
 
-const TEST_ACCEPT = 'image/*,video/*';
+// Inline rather than a const: a vi.mock factory is hoisted above every
+// top-level binding, so referencing one throws before the suite can run.
 vi.mock('@duncit/media-picker', () => ({
-  ATTACHMENT_ACCEPT_ALL: TEST_ACCEPT,
+  ATTACHMENT_ACCEPT_ALL: 'image/*,video/*',
   MB: 1024 * 1024,
   useUploadCaps: () => ({
     maxImageBytes: 4 * 1024 * 1024,

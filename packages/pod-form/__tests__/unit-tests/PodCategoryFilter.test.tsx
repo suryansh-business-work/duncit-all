@@ -21,6 +21,8 @@ const CATEGORIES = [
 ];
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: () => ({
     data: { venueAvailableSlots: [], categories: CATEGORIES },
     loading: false,

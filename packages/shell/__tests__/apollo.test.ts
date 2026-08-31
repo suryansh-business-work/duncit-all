@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
-type ErrHandler = (arg: { networkError?: { message: string } | null }) => void;
+// Apollo 4 hands the handler ONE error rather than a networkError/graphQLErrors pair.
+type ErrHandler = (arg: { error?: { message: string } | null }) => void;
 type AuthFn = (op: unknown, ctx: { headers?: Record<string, string> }) => { headers: Record<string, string> };
 type RetryIf = (error: unknown) => boolean;
 
@@ -15,15 +16,15 @@ const cap = vi.hoisted(() => ({
 }));
 
 vi.mock('@apollo/client', () => ({
-  ApolloClient: vi.fn((args: unknown) => {
+  ApolloClient: vi.fn(function (args: unknown) {
     cap.clientArgs = args;
     return { __client: true };
   }),
-  HttpLink: vi.fn((args: unknown) => {
+  HttpLink: vi.fn(function (args: unknown) {
     cap.httpArgs = args;
     return { __http: true };
   }),
-  InMemoryCache: vi.fn((args: unknown) => {
+  InMemoryCache: vi.fn(function (args: unknown) {
     cap.cacheArgs = args;
     return { __cache: true };
   }),
@@ -45,7 +46,7 @@ vi.mock('@apollo/client/link/error', () => ({
   }),
 }));
 vi.mock('@apollo/client/link/retry', () => ({
-  RetryLink: vi.fn((opts: { attempts: { retryIf: RetryIf } }) => {
+  RetryLink: vi.fn(function (opts: { attempts: { retryIf: RetryIf } }) {
     cap.retryOpts = opts;
     return { __retry: true };
   }),
@@ -64,15 +65,15 @@ import { apolloErrorLink, createApolloClient } from '../src/lib/apollo';
 describe('apolloErrorLink', () => {
   it('rewrites transport-failure messages to the friendly one', () => {
     const net = { message: 'Failed to fetch' };
-    cap.onErrorCb?.({ networkError: net });
+    cap.onErrorCb?.({ error: net });
     expect(net.message).toMatch(/Unable to connect to server/);
   });
 
   it('leaves other network errors alone and tolerates a missing one', () => {
     const net = { message: 'Some GraphQL error' };
-    cap.onErrorCb?.({ networkError: net });
+    cap.onErrorCb?.({ error: net });
     expect(net.message).toBe('Some GraphQL error');
-    expect(() => cap.onErrorCb?.({ networkError: null })).not.toThrow();
+    expect(() => cap.onErrorCb?.({ error: null })).not.toThrow();
   });
 });
 

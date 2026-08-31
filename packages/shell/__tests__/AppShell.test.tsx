@@ -8,9 +8,11 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 // arrangement (the taskbar clock, where the Agent tab was dragged to) — the
 // provider that does it is mounted by AppShell itself.
 vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: vi.fn(),
   useMutation: () => [vi.fn(), { loading: false }],
-  gql: (s: TemplateStringsArray) => s,
 }));
 // A factory mock REPLACES the module, so anything the shell imports and this
 // object omits arrives as undefined — which is how `useBreadcrumbOverride`

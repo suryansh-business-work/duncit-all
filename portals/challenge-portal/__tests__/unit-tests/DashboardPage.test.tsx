@@ -7,8 +7,8 @@ import { makeChallengeStats } from '../mocks';
 const useQueryMock = vi.hoisted(() => vi.fn());
 const navigateSpy = vi.hoisted(() => vi.fn());
 
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useQuery: useQueryMock,
 }));
 vi.mock('react-router-dom', async (importOriginal) => ({

@@ -4,7 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
-vi.mock('@apollo/client', () => ({ useMutation: vi.fn(), useQuery: vi.fn(), gql: (s: string) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: string) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useMutation: vi.fn(),
+  useQuery: vi.fn(),
+}));
 vi.mock('@duncit/utils', () => ({ parseApiError: (e: { message?: string }) => `DEF:${e?.message ?? ''}` }));
 
 const navSpy = vi.hoisted(() => vi.fn());

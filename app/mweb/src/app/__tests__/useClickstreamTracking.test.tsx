@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Capture the mutation function the hook receives from useMutation.
 const recordSpy = vi.fn(() => Promise.resolve());
 
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
   return { ...actual, useMutation: () => [recordSpy, {}] };
 });
 

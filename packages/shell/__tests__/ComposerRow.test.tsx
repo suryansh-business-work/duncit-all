@@ -22,6 +22,14 @@ const baseProps = () => ({
   onShareLocation: vi.fn(),
 });
 
+/** jsdom 30 will not match an astral character in an attribute selector, so
+ * the label is compared rather than queried. */
+const byAriaLabel = (label: string) =>
+  ([...document.body.querySelectorAll('[aria-label]')].find(
+    (node) => node.getAttribute('aria-label') === label
+    // A miss answers null, the same as querySelector did.
+  ) ?? null) as HTMLElement;
+
 describe('ComposerRow', () => {
   it('attaches the chosen file and clears the input for the next pick', () => {
     const onAttach = vi.fn();
@@ -71,7 +79,7 @@ describe('ComposerRow', () => {
     const { getByLabelText } = render(<ComposerRow {...baseProps()} draft="Hi " onDraft={onDraft} />);
 
     fireEvent.click(getByLabelText('Insert emoji'));
-    fireEvent.click(document.body.querySelector('[aria-label="👍"]') as HTMLElement);
+    fireEvent.click(byAriaLabel('👍') as HTMLElement);
 
     expect(onDraft).toHaveBeenCalledWith('Hi 👍', 'Hi 👍'.length);
   });

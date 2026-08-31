@@ -10,6 +10,8 @@ const { useQueryMock, useUserDataMock } = vi.hoisted(() => ({
 
 vi.mock('@apollo/client', () => ({
   gql: (strings: TemplateStringsArray) => strings,
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: useQueryMock,
 }));
 

@@ -6,6 +6,7 @@ import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
 import { deliverOtp } from './otp.delivery';
 import {
+  isPhoneMedium,
   OTP_MEDIUMS,
   OtpChallengeModel,
   type IOtpChallenge,
@@ -56,6 +57,60 @@ export function normalizePhone(extension: unknown, number: unknown) {
   };
 }
 
+/** Deliberately lenient — the shape a mailbox must have to be worth sending to,
+ * not a second opinion on what the account collection already accepted. */
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** The mailbox a code is addressed to, rejected rather than guessed at. */
+export function normalizeEmail(email: unknown): string {
+  const value = String(email ?? '').trim().toLowerCase();
+  if (!EMAIL_SHAPE.test(value)) throw badInput('Enter a valid email address');
+  return value;
+}
+
+/**
+ * Where a code is going.
+ *
+ * A phone pair OR a mailbox — never both, and which one is decided by the
+ * mediums asked for. Password recovery is the flow that made this necessary:
+ * the same purpose, the same expiry, the same attempt limit, reached from two
+ * channels the person chooses between.
+ */
+export interface OtpTarget {
+  phone_extension?: string | null;
+  phone_number?: string | null;
+  email?: string | null;
+}
+
+/** What a challenge is stored and found by. */
+interface NormalizedTarget {
+  phone_extension: string;
+  phone_number: string;
+  email: string;
+}
+
+/**
+ * Validate the destination the requested mediums actually need.
+ *
+ * Asked per medium rather than "whatever was supplied": a WhatsApp send with a
+ * mailbox and no number would otherwise be issued and then silently fail to
+ * deliver, and the person would be left waiting for a code nothing sent.
+ */
+export function normalizeTarget(
+  target: Readonly<OtpTarget>,
+  mediums: readonly OtpMedium[]
+): NormalizedTarget {
+  const phone = mediums.some(isPhoneMedium)
+    ? normalizePhone(target.phone_extension, target.phone_number)
+    : { phone_extension: '', phone_number: '' };
+  const email = mediums.includes('EMAIL') ? normalizeEmail(target.email) : '';
+  return { ...phone, email };
+}
+
+/** The ONE field a challenge is looked up by: its mailbox, or its number. */
+const targetFilter = (target: Readonly<NormalizedTarget>) =>
+  target.email ? { email: target.email } : { phone_number: target.phone_number };
+
 /** Only the mediums this platform knows, de-duplicated, never empty. */
 function cleanMediums(requested: readonly unknown[] | null | undefined): OtpMedium[] {
   const known = new Set<string>(OTP_MEDIUMS);
@@ -66,12 +121,11 @@ function cleanMediums(requested: readonly unknown[] | null | undefined): OtpMedi
   return picked;
 }
 
-export interface OtpRequestInput {
+export interface OtpRequestInput extends OtpTarget {
   purpose: OtpPurpose;
-  /** SMS, WhatsApp, or both — the medium IS a parameter, never a second method. */
+  /** SMS, WhatsApp, email, or several — the medium IS a parameter, never a
+   * second method. */
   mediums: readonly string[];
-  phone_extension: string;
-  phone_number: string;
   /** The name being proven alongside the number, when the flow proves one. */
   recipient_name?: string | null;
   /** Binds the proof to what asked for it (e.g. pod + membership). */

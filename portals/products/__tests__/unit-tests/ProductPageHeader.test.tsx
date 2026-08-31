@@ -10,8 +10,8 @@ vi.mock('react-router-dom', async (importOriginal) => ({
 }));
 
 const fns = vi.hoisted(() => ({ archive: vi.fn(), restore: vi.fn(), duplicate: vi.fn() }));
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useMutation: (doc: any) => {
     const name = doc?.definitions?.[0]?.name?.value;
     const map: Record<string, any> = {

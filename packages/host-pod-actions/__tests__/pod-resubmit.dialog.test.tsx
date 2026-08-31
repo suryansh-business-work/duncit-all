@@ -92,10 +92,7 @@ const cleanCheck: MockedResponse = {
 
 const resubmitMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   ({
-    request: { query: HOST_RESUBMIT_POD, variables: (v: Record<string, unknown>) => {
-          variables.push(v);
-          return true;
-        } } variables: () => true },
+    request: { query: HOST_RESUBMIT_POD, variables: () => true },
     result: {
       data: {
         hostResubmitPod: {
@@ -106,7 +103,7 @@ const resubmitMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
           is_active: true,
         },
       },
-    } },
+    },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
   }) as MockedResponse;
@@ -186,6 +183,15 @@ describe('PodResubmitDialog', () => {
       slotsMock('v-2', [slot({ id: 'slot-9', space_label: 'Court 9' })]),
       cleanCheck,
       resubmitMock({
+        // Apollo 4 carries the matcher inside the request; this one records
+        // what the mutation was actually sent.
+        request: {
+          query: HOST_RESUBMIT_POD,
+          variables: (v: Record<string, unknown>) => {
+            variables.push(v);
+            return true;
+          },
+        },
       }),
     ]);
     await settle();

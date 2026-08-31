@@ -259,10 +259,7 @@ describe('PodCancelDialog', () => {
 
   const deleteMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
-      request: { query: HOST_DELETE_POD, variables: (v: Record<string, unknown>) => {
-          variables.push(v);
-          return true;
-        } } variables: () => true },
+      request: { query: HOST_DELETE_POD, variables: () => true },
       result: { data: { hostDeletePod: true } },
       maxUsageCount: Number.POSITIVE_INFINITY,
       ...over,
@@ -364,6 +361,15 @@ describe('PodCancelDialog', () => {
     const { props } = dialog([
       impactMock(),
       deleteMock({
+        // Apollo 4 carries the matcher inside the request; this one records
+        // what the mutation was actually sent.
+        request: {
+          query: HOST_DELETE_POD,
+          variables: (v: Record<string, unknown>) => {
+            variables.push(v);
+            return true;
+          },
+        },
       }),
     ]);
     await settle();

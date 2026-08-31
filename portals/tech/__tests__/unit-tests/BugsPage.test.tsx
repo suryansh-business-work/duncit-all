@@ -9,8 +9,8 @@ const m = vi.hoisted(() => ({
   assignRefetch: true,
 }));
 
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useApolloClient: () => ({}),

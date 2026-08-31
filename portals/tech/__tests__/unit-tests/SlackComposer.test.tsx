@@ -3,8 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { SlackChannel } from '../../src/pages/slack/queries';
 
 const m = vi.hoisted(() => ({ mutate: vi.fn(), loading: false }));
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return { ...actual, useMutation: () => [m.mutate, { loading: m.loading }] };
 });
 

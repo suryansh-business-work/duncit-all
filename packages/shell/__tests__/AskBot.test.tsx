@@ -68,13 +68,7 @@ const reply = (over: Record<string, unknown> = {}) => ({
 
 const chatMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   ({
-    request: { query: ASK_BOT_CHAT, variables: () => (asked(), true) } variables: (v: Record<string, unknown>) => {
-          asked.push(v);
-          return true;
-        } } variables: (v: Record<string, unknown>) => {
-          asked.push(v);
-          return true;
-        } } variables: () => true },
+    request: { query: ASK_BOT_CHAT, variables: () => true },
     result: { data: { askBotChat: reply() } },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
@@ -272,7 +266,16 @@ describe('AskBotDialog', () => {
     const asked: Record<string, unknown>[] = [];
     open([
       botsMock([bot()]),
+      // Apollo 4 carries the matcher inside the request, and this one is here to
+      // record what the bot was actually asked.
       chatMock({
+        request: {
+          query: ASK_BOT_CHAT,
+          variables: (v: Record<string, unknown>) => {
+            asked.push(v);
+            return true;
+          },
+        },
       }),
     ]);
     await settle();
@@ -352,6 +355,13 @@ describe('useAskBot', () => {
     const asked: Record<string, unknown>[] = [];
     const { result } = hook([
       chatMock({
+        request: {
+          query: ASK_BOT_CHAT,
+          variables: (v: Record<string, unknown>) => {
+            asked.push(v);
+            return true;
+          },
+        },
       }),
     ]);
 

@@ -4,8 +4,8 @@ import AiDescribeButton from '../../src/pages/inventory-page/inventory-product-p
 import { blankProductForm } from '../../src/pages/inventory-page/inventory-product-page/types';
 
 const mut = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useMutation: () => [mut.fn, { loading: false }],
 }));
 

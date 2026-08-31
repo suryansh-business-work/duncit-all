@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('@apollo/client', () => ({ useMutation: vi.fn(), gql: (s: TemplateStringsArray) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useMutation: vi.fn(),
+}));
 
 const ENGLISH = { code: 'en-IN', label: 'English', english_label: 'English' };
 const HINDI = { code: 'hi-IN', label: 'हिन्दी', english_label: 'Hindi' };

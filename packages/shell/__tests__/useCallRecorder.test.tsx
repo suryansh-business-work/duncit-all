@@ -13,8 +13,8 @@ const uploadDirect = vi.hoisted(() => vi.fn());
 vi.mock('@duncit/media-picker', () => ({ directUploadToImagekit: uploadDirect }));
 
 const client = vi.hoisted(() => ({ query: vi.fn(), mutate: vi.fn() }));
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useApolloClient: () => client,
 }));
 

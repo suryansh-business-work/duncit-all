@@ -17,8 +17,8 @@ const h = vi.hoisted(() => ({
   mutate: vi.fn(),
 }));
 
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useMutation: (document: unknown) => [(options: unknown) => h.mutate(document, options)],

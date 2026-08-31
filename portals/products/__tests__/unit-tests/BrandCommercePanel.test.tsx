@@ -11,8 +11,8 @@ const m = vi.hoisted(() => ({
   activeState: { loading: false },
 }));
 
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useMutation: (doc: any) => {

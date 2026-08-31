@@ -17,6 +17,8 @@ const useQueryMock = vi.fn().mockReturnValue({
 });
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: (...args: unknown[]) => useQueryMock(...args),
 }));
 

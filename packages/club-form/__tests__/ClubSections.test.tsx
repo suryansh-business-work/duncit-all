@@ -8,6 +8,8 @@ const { useQueryMock } = vi.hoisted(() => ({ useQueryMock: vi.fn() }));
 
 vi.mock('@apollo/client', () => ({
   gql: (strings: TemplateStringsArray) => strings.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: useQueryMock,
 }));
 vi.mock('@duncit/category', () => import('./mocks/categoryMock'));

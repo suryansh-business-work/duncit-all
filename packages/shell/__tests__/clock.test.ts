@@ -42,10 +42,12 @@ describe('describeZone', () => {
     const RealDateTimeFormat = Intl.DateTimeFormat;
     const spy = vi
       .spyOn(Intl, 'DateTimeFormat')
-      .mockImplementation(
-        (locale, options) =>
-          new RealDateTimeFormat(locale ?? 'en-IN', options) as unknown as Intl.DateTimeFormat,
-      );
+      // A `function`, not an arrow: vitest 4 only lets a mock stand in for a
+      // constructor when its implementation is constructible, and this one is
+      // reached through `new Intl.DateTimeFormat(...)`.
+      .mockImplementation(function (locale, options) {
+        return new RealDateTimeFormat(locale ?? 'en-IN', options) as unknown as Intl.DateTimeFormat;
+      });
 
     const zone = describeZone('Asia/Kolkata', AT);
 

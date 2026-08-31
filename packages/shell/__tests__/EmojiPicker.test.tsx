@@ -13,19 +13,35 @@ const waitForExit = () =>
     await new Promise((resolve) => setTimeout(resolve, 400));
   });
 
+/** And its ENTER transition needs one too: the popover's children are not in
+ * the document on the tick the click lands. */
+const waitForEnter = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
+/** jsdom 30 will not match an astral character in an attribute selector, so
+ * the label is compared rather than queried. */
+const byAriaLabel = (label: string) =>
+  ([...document.body.querySelectorAll('[aria-label]')].find(
+    (node) => node.getAttribute('aria-label') === label
+    // A miss answers null, the same as querySelector did.
+  ) ?? null) as HTMLElement;
+
 describe('EmojiPicker', () => {
   it('picks an emoji, closing the popover behind it', async () => {
     const onPick = vi.fn();
     const { getByLabelText } = render(<EmojiPicker onPick={onPick} />);
 
     fireEvent.click(getByLabelText('Insert emoji'));
+    await waitForEnter();
     expect(document.body.querySelector('[role="presentation"]')).not.toBeNull();
 
-    fireEvent.click(document.body.querySelector('[aria-label="👍"]') as HTMLElement);
+    fireEvent.click(byAriaLabel('👍') as HTMLElement);
     expect(onPick).toHaveBeenCalledWith('👍');
 
     await waitForExit();
-    expect(document.body.querySelector('[aria-label="👎"]')).toBeNull();
+    expect(byAriaLabel('👎')).toBeNull();
   });
 
   it('closes from outside without picking anything', async () => {
@@ -36,7 +52,7 @@ describe('EmojiPicker', () => {
     fireEvent.keyDown(backdrop, { key: 'Escape', code: 'Escape' });
     await waitForExit();
 
-    expect(document.body.querySelector('[aria-label="👍"]')).toBeNull();
+    expect(byAriaLabel('👍')).toBeNull();
   });
 
   it('disables the button while sending', () => {

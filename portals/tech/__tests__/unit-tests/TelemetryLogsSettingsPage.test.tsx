@@ -16,8 +16,8 @@ const m = vi.hoisted(() => ({
   saveMock: vi.fn(),
 }));
 
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useQuery: () => ({ data: m.data, loading: m.loading, error: m.error, refetch: m.refetch }),

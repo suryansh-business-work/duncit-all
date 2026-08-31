@@ -195,7 +195,12 @@ describe('sounds', () => {
     const play = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal(
       'Audio',
-      vi.fn().mockImplementation(() => ({ play, volume: 0 })),
+      // A `function`, not an arrow: vitest 4 only lets a mock stand in for a
+      // constructor when its implementation is constructible, and this one is
+      // reached through `new Audio(...)`.
+      vi.fn().mockImplementation(function () {
+        return { play, volume: 0 };
+      }),
     );
 
     playMessagePing();
@@ -220,13 +225,15 @@ describe('sounds', () => {
     const pause = vi.fn();
     vi.stubGlobal(
       'Audio',
-      vi.fn().mockImplementation(() => ({
-        play: vi.fn().mockResolvedValue(undefined),
-        pause,
-        loop: false,
-        volume: 0,
-        currentTime: 5,
-      })),
+      vi.fn().mockImplementation(function () {
+        return {
+          play: vi.fn().mockResolvedValue(undefined),
+          pause,
+          loop: false,
+          volume: 0,
+          currentTime: 5,
+        };
+      }),
     );
 
     const stop = startRinging();

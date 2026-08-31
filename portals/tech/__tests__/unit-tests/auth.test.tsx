@@ -18,8 +18,8 @@ const m = vi.hoisted(() => ({
   query: { data: undefined as unknown, loading: false, error: undefined as Error | undefined, refetch: vi.fn() },
   save: vi.fn(),
 }));
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return { ...actual, useQuery: () => m.query, useMutation: () => [m.save, {}] as const };
 });
 vi.mock('@duncit/ui', () => ({

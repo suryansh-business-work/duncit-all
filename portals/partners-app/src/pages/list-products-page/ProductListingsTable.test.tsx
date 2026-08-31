@@ -158,9 +158,12 @@ const adSubmitMock = (
   traceId: string,
   capture: (input: Record<string, unknown>) => void,
 ): MockedResponse => ({
-  request: { query: SUBMIT_AD_REQUEST, variables: (variables) => { },
-    capture((variables as { input: Record<string, unknown> }).input);
-    return true;
+  request: {
+    query: SUBMIT_AD_REQUEST,
+    variables: (variables) => {
+      capture((variables as { input: Record<string, unknown> }).input);
+      return true;
+    },
   },
   result: {
     data: { submitAdRequest: { __typename: 'AdRequest', id: 'ad-1', trace_id: traceId } },

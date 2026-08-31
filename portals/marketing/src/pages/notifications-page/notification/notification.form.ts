@@ -43,8 +43,8 @@ export const notificationFormSchema = z
       }
     } else if (values.target_user_ids.length > 0) {
       ctx.addIssue({
-        code: z.ZodIssueCode.too_big,
-        type: 'array',
+        code: 'too_big',
+        origin: 'array',
         maximum: 0,
         inclusive: true,
         path: ['target_user_ids'],

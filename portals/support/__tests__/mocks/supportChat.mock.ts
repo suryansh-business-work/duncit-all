@@ -222,9 +222,12 @@ export const markReadMock = (sessionId: string): MockedResponse => ({
 export const sendMessageMock = (
   over: { message?: SupportChatMessageMock | null; onVars?: (vars: Record<string, unknown>) => void } = {},
 ): MockedResponse => ({
-  request: { query: SEND_SUPPORT_CHAT_MESSAGE, variables: (vars) => { },
-    over.onVars?.(vars);
-    return true;
+  request: {
+    query: SEND_SUPPORT_CHAT_MESSAGE,
+    variables: (vars) => {
+      over.onVars?.(vars);
+      return true;
+    },
   },
   result: {
     data: {

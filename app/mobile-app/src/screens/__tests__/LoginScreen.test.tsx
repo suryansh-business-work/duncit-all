@@ -58,10 +58,19 @@ const mockedGoogle = jest.mocked(loginWithGoogle);
 
 beforeEach(() => jest.clearAllMocks());
 
+/**
+ * Sign-in is a choice of method now, so the email/password form lives one step
+ * in. Every password assertion below walks through the landing step first.
+ */
+function openPasswordStep() {
+  fireEvent.press(screen.getByTestId('continue-with-password'));
+}
+
 describe('LoginScreen', () => {
   it('logs in and flips the auth gate', async () => {
     mockedLogin.mockResolvedValue({ token: 't', surveyCompleted: true });
     renderWithProviders(<LoginScreen />);
+    openPasswordStep();
     fireEvent.press(screen.getByTestId('submit-login'));
     await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('t', true));
   });
@@ -77,6 +86,7 @@ describe('LoginScreen', () => {
     const { ApiError } = jest.requireActual('@/utils/errors');
     mockedLogin.mockRejectedValue(new ApiError('bad creds'));
     renderWithProviders(<LoginScreen />);
+    openPasswordStep();
     fireEvent.press(screen.getByTestId('submit-login'));
     await waitFor(() => expect(mockedLogin).toHaveBeenCalled());
     expect(mockAuthenticate).not.toHaveBeenCalled();
@@ -98,8 +108,21 @@ describe('LoginScreen', () => {
 
   it('navigates to forgot password', () => {
     renderWithProviders(<LoginScreen />);
+    openPasswordStep();
     fireEvent.press(screen.getByTestId('go-forgot-password'));
     expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword');
+  });
+
+  it('opens on the method chooser, and goes back to it from the password step', () => {
+    renderWithProviders(<LoginScreen />);
+    // The landing step offers the two methods; the boxes are one step in.
+    expect(screen.queryByTestId('submit-login')).toBeNull();
+    openPasswordStep();
+    expect(screen.getByTestId('submit-login')).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('back-to-options'));
+    expect(screen.queryByTestId('submit-login')).toBeNull();
+    expect(screen.getByTestId('continue-with-password')).toBeTruthy();
   });
 
   it('shows the running app version footer', () => {

@@ -49,6 +49,12 @@ import {
   hostPodSection,
   mwebAttendanceLabels,
   needsOtp,
+  PASSWORD_RECOVERY_CHANNELS,
+  PASSWORD_RECOVERY_STEP_COUNT,
+  passwordRecoveryStepIndex,
+  previousRecoveryStep,
+  recoveryDestination,
+  recoveryResendSeconds,
   normalizeUsername,
   offersFollowBack,
   orderedAspects,
@@ -74,6 +80,8 @@ import {
   type CommChannelState,
   type ContactChannel,
   type ContactSnapshot,
+  type PasswordRecoveryChannel,
+  type PasswordRecoveryStep,
   type PodAttendanceMode,
   type PodAttendanceViewer,
   type PodFeedbackReminderChoice,
@@ -127,6 +135,17 @@ interface ContactChangeMock {
   channel: ContactChannel;
   draftExtension: string;
   draftNumber: string;
+}
+
+interface PasswordRecoveryMock {
+  channel: PasswordRecoveryChannel;
+  step: PasswordRecoveryStep;
+  extension: string;
+  number: string;
+  email: string;
+  /** Seconds since the last code went out. */
+  sentSecondsAgo: number;
+  resendAfterSeconds: number;
 }
 
 interface HandleMock {
@@ -714,6 +733,39 @@ export default defineDemos('utils', [
         'Dialog opens on': JSON.stringify(contactDraftFrom(account, mock.channel)),
         'Value stored': contactDraftValue(draft, mock.channel),
         'Sends a code': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
+      };
+    },
+  }),
+  defineDemo<PasswordRecoveryMock>({
+    id: 'password-recovery',
+    title: 'Recovering a forgotten password, step by step',
+    note:
+      'Move `step` to CODE and `Back goes to` becomes CHANNEL; move it to DONE and Back ' +
+      'disappears — the password has already changed, and going back would offer to change ' +
+      'it again with a code that was spent. Raise `sentSecondsAgo` past ' +
+      '`resendAfterSeconds` and `Resend in` reaches 0, which is when the Resend link wakes up.',
+    mock: {
+      channel: 'PHONE',
+      step: 'CODE',
+      extension: '+91',
+      number: '9845012345',
+      email: 'ravi@duncit.com',
+      sentSecondsAgo: 12,
+      resendAfterSeconds: 30,
+    },
+    compute: (mock) => {
+      const draft = { email: mock.email, extension: mock.extension, number: mock.number };
+      const back = previousRecoveryStep(mock.step);
+      const secondsLeft = recoveryResendSeconds({
+        lastSentAt: Date.now() - mock.sentSecondsAgo * 1000,
+        resendAfterSeconds: mock.resendAfterSeconds,
+      });
+      return {
+        'Code went to': recoveryDestination(mock.channel, draft),
+        'Step': `${passwordRecoveryStepIndex(mock.step)} of ${PASSWORD_RECOVERY_STEP_COUNT}`,
+        'Back goes to': back ?? '(nowhere — this step is final)',
+        'Resend in': `${secondsLeft}s`,
+        'Channels offered': PASSWORD_RECOVERY_CHANNELS.join(' · '),
       };
     },
   }),

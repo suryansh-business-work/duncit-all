@@ -35,6 +35,8 @@ export default function TicketsListPage() {
         query: TICKETS,
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
+        // A failed query rejects, so a resolved one always carries data.
+        errorPolicy: 'none',
       });
       return { rows: data.tickets.items, total: data.tickets.total };
     },

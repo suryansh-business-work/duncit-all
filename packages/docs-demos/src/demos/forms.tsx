@@ -14,6 +14,7 @@ import {
   makeContactValueSchema,
   makeDeleteAccountSchema,
   makeLoginSchema,
+  makePasswordPairSchema,
   makeResetPasswordSchema,
   makeWithdrawSchema,
   buildWithdrawInput,
@@ -126,6 +127,12 @@ export default defineDemos('forms', [
         'Reset password': say(
           makeResetPasswordSchema(t).safeParse({
             otp: mock.otp,
+            new_password: mock.new_password,
+            confirm_password: mock.confirm_password,
+          }),
+        ),
+        'Recovery: new password only': say(
+          makePasswordPairSchema(t).safeParse({
             new_password: mock.new_password,
             confirm_password: mock.confirm_password,
           }),

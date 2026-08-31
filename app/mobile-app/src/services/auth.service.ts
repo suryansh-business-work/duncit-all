@@ -1,8 +1,10 @@
+import type { PasswordRecoveryChannel } from '@duncit/utils';
 import {
   RegisterDocument,
   LoginDocument,
-  RequestPasswordResetOtpDocument,
-  ResetPasswordWithOtpDocument,
+  CompletePasswordResetDocument,
+  RequestPasswordResetCodeDocument,
+  VerifyPasswordResetCodeDocument,
   SignupWithGoogleDocument,
   LinkGoogleAccountDocument,
   LoginWithGoogleDocument,
@@ -10,7 +12,7 @@ import {
 // The enum is not re-exported through the generated index, so it is imported
 // from the module codegen writes it into — the surface is a server value, and
 // spelling it as a bare string would not survive a rename of the enum.
-import { PolicyAcceptanceSurface } from '@/generated/graphql/graphql';
+import { PasswordResetChannel, PolicyAcceptanceSurface } from '@/generated/graphql/graphql';
 import { graphqlRequest } from './graphql.client';
 import { setAuthToken, clearAuthToken } from './auth-token';
 
@@ -89,32 +91,89 @@ export async function login(values: LoginValues): Promise<AuthOutcome> {
   return { token: data.login.token, surveyCompleted: data.login.user.onboarding_survey_completed };
 }
 
-/** Request a password-reset OTP by email (mirrors mWeb). Returns whether the
- * email is a registered account — an OTP is only sent when `registered` is true;
- * an unregistered email is reported back so the UI can prompt sign-up. */
-export async function requestPasswordResetOtp(email: string): Promise<{ registered: boolean }> {
-  const data = await graphqlRequest(RequestPasswordResetOtpDocument, {
-    email: email.trim().toLowerCase(),
-  });
-  return { registered: data.requestPasswordResetOtp.registered ?? false };
+/**
+ * What identifies the account across all three recovery steps.
+ *
+ * One shape rather than one per step, because it is one answer: the destination
+ * chosen on step one is what step two proves a code against. Mirrors mWeb's
+ * `lookupOf` in usePasswordRecovery.
+ */
+export interface PasswordResetLookup {
+  channel: PasswordRecoveryChannel;
+  email?: string;
+  phone_extension?: string;
+  phone_number?: string;
 }
 
-export interface ResetPasswordValues {
-  email: string;
-  otp: string;
-  new_password: string;
+/**
+ * The shared channel as the generated enum member.
+ *
+ * Both are the strings 'EMAIL' and 'PHONE', but codegen emits a real TS enum
+ * and a bare string is not assignable to one — the same reason
+ * `PolicyAcceptanceSurface` is imported above rather than spelled out. Mapping
+ * here keeps the enum out of every screen, which shares its channel type with
+ * mWeb through @duncit/utils.
+ */
+const CHANNEL: Record<PasswordRecoveryChannel, PasswordResetChannel> = {
+  EMAIL: PasswordResetChannel.Email,
+  PHONE: PasswordResetChannel.Phone,
+};
+
+const toLookupInput = (lookup: Readonly<PasswordResetLookup>) => ({
+  ...lookup,
+  channel: CHANNEL[lookup.channel],
+});
+
+export interface PasswordResetRequestOutcome {
+  registered: boolean;
+  resendAfterSeconds: number;
+  expiresInMinutes: number;
+  /** Echoed back only while no medium could really carry the code. */
+  testCode: string | null;
 }
 
-/** Verify the OTP and set a new password. Returns true on success. */
-export async function resetPasswordWithOtp(values: ResetPasswordValues): Promise<boolean> {
-  const data = await graphqlRequest(ResetPasswordWithOtpDocument, {
-    input: {
-      email: values.email.trim().toLowerCase(),
-      otp: values.otp.trim(),
-      new_password: values.new_password,
-    },
+/**
+ * Step one: send a reset code to the chosen channel.
+ *
+ * `registered` false means there is no account with these details (or one that
+ * signs in with Google and has no password) — nothing was sent, and the screen
+ * says so rather than leaving somebody waiting on an empty inbox.
+ */
+export async function requestPasswordResetCode(
+  lookup: PasswordResetLookup,
+): Promise<PasswordResetRequestOutcome> {
+  const data = await graphqlRequest(RequestPasswordResetCodeDocument, {
+    input: toLookupInput(lookup),
   });
-  return data.resetPasswordWithOtp;
+  const result = data.requestPasswordResetCode;
+  return {
+    registered: result.registered,
+    resendAfterSeconds: result.resend_after_seconds,
+    expiresInMinutes: result.expires_in_minutes,
+    testCode: result.test_code ?? null,
+  };
+}
+
+/** Step two: prove the code. Returns the one-shot grant step three spends. */
+export async function verifyPasswordResetCode(
+  lookup: PasswordResetLookup,
+  otp: string,
+): Promise<string> {
+  const data = await graphqlRequest(VerifyPasswordResetCodeDocument, {
+    input: { ...toLookupInput(lookup), otp: otp.trim() },
+  });
+  return data.verifyPasswordResetCode.reset_token;
+}
+
+/** Step three: spend the grant and set the new password. */
+export async function completePasswordReset(
+  resetToken: string,
+  newPassword: string,
+): Promise<boolean> {
+  const data = await graphqlRequest(CompletePasswordResetDocument, {
+    input: { reset_token: resetToken, new_password: newPassword },
+  });
+  return data.completePasswordReset;
 }
 
 /**

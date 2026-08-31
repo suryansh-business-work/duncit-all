@@ -63,10 +63,10 @@ overrides:
   # for the same reason, at the 16 line @apollo/server and graphql-ws require.
   '@apollo/client': 4.2.12
   graphql: 16.14.0
-  vitest: 4.1.11
-  '@vitest/coverage-v8': 4.1.11
-  '@vitest/expect': 4.1.11
-  '@vitest/spy': 4.1.11
-  '@vitest/utils': 4.1.11
-  '@vitest/runner': 4.1.11
-  '@vitest/snapshot': 4.1.11
+  vitest: 3.2.4
+  '@vitest/coverage-v8': 3.2.4
+  '@vitest/expect': 3.2.4
+  '@vitest/spy': 3.2.4
+  '@vitest/utils': 3.2.4
+  '@vitest/runner': 3.2.4
+  '@vitest/snapshot': 3.2.4

@@ -13,7 +13,6 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const RegisterPage = lazy(() => import('../pages/RegisterPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const SignupSurveyPage = lazy(() => import('../pages/SignupSurveyPage'));
 const SignupWhatsappPage = lazy(() => import('../pages/SignupWhatsappPage'));
 const SignupReferralPage = lazy(() => import('../pages/signup-referral-page'));
@@ -320,7 +319,6 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />
         <Route path="/login" element={redirectIfAuthed(<LoginPage />)} />
         <Route path="/forgot-password" element={redirectIfAuthed(<ForgotPasswordPage />)} />
-        <Route path="/reset-password" element={redirectIfAuthed(<ResetPasswordPage />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>

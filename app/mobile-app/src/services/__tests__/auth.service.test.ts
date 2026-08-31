@@ -6,8 +6,9 @@ import {
   loginWithGoogle,
   logout,
   register,
-  requestPasswordResetOtp,
-  resetPasswordWithOtp,
+  completePasswordReset,
+  requestPasswordResetCode,
+  verifyPasswordResetCode,
   signupWithGoogle,
   splitName,
 } from '@/services/auth.service';
@@ -130,32 +131,70 @@ describe('auth.service mutations', () => {
     expect(mockedClearToken).toHaveBeenCalledTimes(1);
   });
 
-  it('requestPasswordResetOtp lowercases the email and returns the registered flag', async () => {
+  it('requestPasswordResetCode sends the email lookup and unpacks the result', async () => {
     mockedRequest.mockResolvedValue({
-      requestPasswordResetOtp: { ok: true, dev_otp: null, registered: true },
+      requestPasswordResetCode: {
+        ok: true,
+        registered: true,
+        channel: 'EMAIL',
+        expires_at: '2026-08-31T10:00:00.000Z',
+        resend_after_seconds: 30,
+        expires_in_minutes: 10,
+        test_code: null,
+      },
     } as never);
-    const res = await requestPasswordResetOtp('  Hello@Duncit.com ');
-    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({ email: 'hello@duncit.com' });
-    expect(res).toEqual({ registered: true });
+    const res = await requestPasswordResetCode({ channel: 'EMAIL', email: 'hello@duncit.com' });
+    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
+      input: { channel: 'EMAIL', email: 'hello@duncit.com' },
+    });
+    expect(res).toEqual({
+      registered: true,
+      resendAfterSeconds: 30,
+      expiresInMinutes: 10,
+      testCode: null,
+    });
     expect(mockedSetToken).not.toHaveBeenCalled();
   });
 
-  it('requestPasswordResetOtp defaults an absent registered flag to false (unregistered)', async () => {
+  it('requestPasswordResetCode reports an unregistered destination', async () => {
     mockedRequest.mockResolvedValue({
-      requestPasswordResetOtp: { ok: false, dev_otp: null, registered: null },
+      requestPasswordResetCode: {
+        ok: false,
+        registered: false,
+        channel: 'PHONE',
+        expires_at: null,
+        resend_after_seconds: 30,
+        expires_in_minutes: 10,
+        test_code: null,
+      },
     } as never);
-    expect(await requestPasswordResetOtp('ghost@duncit.com')).toEqual({ registered: false });
+    const res = await requestPasswordResetCode({
+      channel: 'PHONE',
+      phone_extension: '+91',
+      phone_number: '9876543210',
+    });
+    expect(res.registered).toBe(false);
   });
 
-  it('resetPasswordWithOtp maps the input and returns the boolean result', async () => {
-    mockedRequest.mockResolvedValue({ resetPasswordWithOtp: true } as never);
-    const ok = await resetPasswordWithOtp({
-      email: 'Hello@Duncit.com',
-      otp: ' 123456 ',
-      new_password: 'BrandNew123',
-    });
+  it('verifyPasswordResetCode trims the code and returns the grant', async () => {
+    mockedRequest.mockResolvedValue({
+      verifyPasswordResetCode: { ok: true, reset_token: 'challenge.secret' },
+    } as never);
+    const token = await verifyPasswordResetCode(
+      { channel: 'EMAIL', email: 'hello@duncit.com' },
+      ' 123456 ',
+    );
     expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
-      input: { email: 'hello@duncit.com', otp: '123456', new_password: 'BrandNew123' },
+      input: { channel: 'EMAIL', email: 'hello@duncit.com', otp: '123456' },
+    });
+    expect(token).toBe('challenge.secret');
+  });
+
+  it('completePasswordReset spends the grant and returns the boolean result', async () => {
+    mockedRequest.mockResolvedValue({ completePasswordReset: true } as never);
+    const ok = await completePasswordReset('challenge.secret', 'BrandNew123');
+    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
+      input: { reset_token: 'challenge.secret', new_password: 'BrandNew123' },
     });
     expect(ok).toBe(true);
   });

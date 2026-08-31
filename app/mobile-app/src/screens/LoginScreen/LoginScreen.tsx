@@ -1,22 +1,23 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Text, XStack } from 'tamagui';
+import { Text } from 'tamagui';
 
-import { AuthAvatarsStrip } from '@/components/AuthAvatarsStrip';
-import { AuthDivider } from '@/components/AuthDivider';
 import { AuthScaffold } from '@/components/AuthScaffold';
-import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { GoogleLinkConsentModal } from '@/components/GoogleLinkConsentModal';
 import { LegalLinks } from '@/components/LegalLinks';
-import { LoginForm, type LoginFormValues } from '@/forms/login';
+import { type LoginFormValues } from '@/forms/login';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { linkGoogleAccount, login as loginService, loginWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { appVersion } from '@/utils/app-version';
 import { errorCode, toErrorMessage } from '@/utils/errors';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { LoginMethodStep } from './LoginMethodStep';
+import { LoginPasswordStep } from './LoginPasswordStep';
+
+/** Which half of the sign-in screen is showing. */
+type LoginStep = 'CHOOSE' | 'PASSWORD';
 
 export function LoginScreen() {
   const { t } = useTranslation();
@@ -24,6 +25,8 @@ export function LoginScreen() {
   const authenticate = useAuthStore((s) => s.authenticate);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // A choice of method, not a place — reopening the app lands on the options.
+  const [step, setStep] = useState<LoginStep>('CHOOSE');
   // The pending consent grant. Holds the id_token loginWithGoogle just refused
   // so "Allow" can spend it on linkGoogleAccount without a second Google round
   // trip — Google id tokens stay valid for an hour, far longer than this step.
@@ -88,48 +91,42 @@ export function LoginScreen() {
     setError(t('mweb.login.linkConsentDenied'));
   };
 
+  const choosing = step === 'CHOOSE';
+
   return (
     <AuthScaffold
       testID="login-screen"
-      title={t('mweb.login.title')}
-      accentWord={t('mweb.login.titleAccent')}
-      subtitle={t('mweb.login.subtitle')}
+      title={choosing ? t('mweb.login.title') : t('mweb.login.passwordStepTitle')}
+      accentWord={
+        choosing ? t('mweb.login.titleAccent') : t('mweb.login.passwordStepTitleAccent')
+      }
+      subtitle={choosing ? t('mweb.login.subtitle') : ''}
     >
-      <AuthAvatarsStrip caption={t('mweb.login.avatarsCaption')} />
-      <LoginForm loading={loading} errorMessage={error} onSubmit={handleSubmit} />
-      <XStack justifyContent="flex-end">
-        <Text
-          pressStyle={PRESS_STYLE.inline}
-          testID="go-forgot-password"
-          fontSize={14}
-          fontWeight="600"
-          color="$primary"
-          onPress={() => navigation.navigate('ForgotPassword')}
-        >
-          {t('mweb.login.forgotPassword')}
+      {choosing ? (
+        <LoginMethodStep
+          onGoogle={(idToken) => {
+            handleGoogle(idToken).catch(() => undefined);
+          }}
+          onGoogleError={setError}
+          onChoosePassword={() => setStep('PASSWORD')}
+          onSignup={() => navigation.navigate('Signup')}
+        />
+      ) : (
+        <LoginPasswordStep
+          loading={loading}
+          errorMessage={error}
+          onSubmit={handleSubmit}
+          onForgotPassword={() => navigation.navigate('ForgotPassword')}
+          onBack={() => setStep('CHOOSE')}
+        />
+      )}
+
+      {choosing && error ? (
+        <Text testID="login-error" fontSize={14} color="$danger" textAlign="center">
+          {error}
         </Text>
-      </XStack>
-      <AuthDivider />
-      <GoogleAuthButton
-        label={t('mweb.login.googleSignIn')}
-        onIdToken={handleGoogle}
-        onError={setError}
-      />
-      <XStack justifyContent="center" gap={4}>
-        <Text fontSize={14} color="$muted">
-          {t('mweb.login.newHere')}
-        </Text>
-        <Text
-          pressStyle={PRESS_STYLE.inline}
-          testID="go-signup"
-          fontSize={14}
-          fontWeight="600"
-          color="$primary"
-          onPress={() => navigation.navigate('Signup')}
-        >
-          {t('mweb.login.createOne')}
-        </Text>
-      </XStack>
+      ) : null}
+
       <GoogleLinkConsentModal
         open={!!consent}
         email={consent?.email ?? ''}

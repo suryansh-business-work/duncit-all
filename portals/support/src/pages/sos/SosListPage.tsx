@@ -22,6 +22,8 @@ export default function SosListPage() {
         query: BOUNCER_SOS_ALERTS,
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
+        // A failed query rejects, so a resolved one always carries data.
+        errorPolicy: 'none',
       });
       return { rows: data.bouncerSosAlerts.items, total: data.bouncerSosAlerts.total };
     },

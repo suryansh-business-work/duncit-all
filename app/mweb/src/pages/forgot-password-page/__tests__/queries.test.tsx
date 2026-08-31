@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { REQUEST_PASSWORD_RESET_OTP, RESET_PASSWORD_WITH_OTP } from '../queries';
+import {
+  COMPLETE_PASSWORD_RESET,
+  REQUEST_PASSWORD_RESET_CODE,
+  VERIFY_PASSWORD_RESET_CODE,
+} from '../queries';
 
 function firstDefinition(doc: { definitions: readonly unknown[] }) {
   return doc.definitions[0] as {
@@ -11,37 +15,49 @@ function firstDefinition(doc: { definitions: readonly unknown[] }) {
 }
 
 describe('forgot-password-page queries module', () => {
-  it('exposes RequestPasswordResetOtp mutation with expected fields and variable', () => {
-    const def = firstDefinition(REQUEST_PASSWORD_RESET_OTP);
+  it('exposes RequestPasswordResetCode taking a PasswordResetLookupInput', () => {
+    const def = firstDefinition(REQUEST_PASSWORD_RESET_CODE);
     expect(def.kind).toBe('OperationDefinition');
     expect(def.operation).toBe('mutation');
-    expect(def.name?.value).toBe('RequestPasswordResetOtp');
+    expect(def.name?.value).toBe('RequestPasswordResetCode');
     expect((def.variableDefinitions ?? []).length).toBe(1);
 
-    const printed = JSON.stringify(REQUEST_PASSWORD_RESET_OTP);
-    expect(printed).toContain('requestPasswordResetOtp');
-    expect(printed).toContain('email');
-    expect(printed).toContain('ok');
-    expect(printed).toContain('dev_otp');
+    const printed = JSON.stringify(REQUEST_PASSWORD_RESET_CODE);
+    expect(printed).toContain('requestPasswordResetCode');
+    expect(printed).toContain('PasswordResetLookupInput');
     expect(printed).toContain('registered');
+    expect(printed).toContain('resend_after_seconds');
+    expect(printed).toContain('expires_in_minutes');
+    expect(printed).toContain('test_code');
   });
 
-  it('exposes ResetPasswordWithOtp mutation taking a ResetPasswordInput', () => {
-    const def = firstDefinition(RESET_PASSWORD_WITH_OTP);
-    expect(def.kind).toBe('OperationDefinition');
+  it('exposes VerifyPasswordResetCode, which is what yields the grant', () => {
+    const def = firstDefinition(VERIFY_PASSWORD_RESET_CODE);
     expect(def.operation).toBe('mutation');
-    expect(def.name?.value).toBe('ResetPasswordWithOtp');
-    expect((def.variableDefinitions ?? []).length).toBe(1);
+    expect(def.name?.value).toBe('VerifyPasswordResetCode');
 
-    const printed = JSON.stringify(RESET_PASSWORD_WITH_OTP);
-    expect(printed).toContain('resetPasswordWithOtp');
-    expect(printed).toContain('ResetPasswordInput');
+    const printed = JSON.stringify(VERIFY_PASSWORD_RESET_CODE);
+    expect(printed).toContain('verifyPasswordResetCode');
+    expect(printed).toContain('VerifyPasswordResetCodeInput');
+    expect(printed).toContain('reset_token');
   });
 
-  it('provides two distinct mutation documents', () => {
-    expect(REQUEST_PASSWORD_RESET_OTP).not.toBe(RESET_PASSWORD_WITH_OTP);
-    expect(firstDefinition(REQUEST_PASSWORD_RESET_OTP).name?.value).not.toBe(
-      firstDefinition(RESET_PASSWORD_WITH_OTP).name?.value,
-    );
+  it('exposes CompletePasswordReset, which spends it', () => {
+    const def = firstDefinition(COMPLETE_PASSWORD_RESET);
+    expect(def.operation).toBe('mutation');
+    expect(def.name?.value).toBe('CompletePasswordReset');
+
+    const printed = JSON.stringify(COMPLETE_PASSWORD_RESET);
+    expect(printed).toContain('completePasswordReset');
+    expect(printed).toContain('CompletePasswordResetInput');
+  });
+
+  it('provides three distinct mutation documents', () => {
+    const names = [
+      REQUEST_PASSWORD_RESET_CODE,
+      VERIFY_PASSWORD_RESET_CODE,
+      COMPLETE_PASSWORD_RESET,
+    ].map((doc) => firstDefinition(doc).name?.value);
+    expect(new Set(names).size).toBe(3);
   });
 });

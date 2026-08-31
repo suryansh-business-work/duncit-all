@@ -119,6 +119,15 @@ exports:
   - 'contactDraftIsUnchanged'
   - 'emptyContactDraft'
   - 'buildContactChangeLabels'
+  - 'PASSWORD_RECOVERY_CHANNELS'
+  - 'PASSWORD_RECOVERY_STEPS'
+  - 'PASSWORD_RECOVERY_STEP_COUNT'
+  - 'passwordRecoveryStepIndex'
+  - 'previousRecoveryStep'
+  - 'initialRecoveryState'
+  - 'recoveryResendSeconds'
+  - 'recoveryDestination'
+  - 'buildPasswordRecoveryLabels'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -1259,6 +1268,39 @@ contactDraftValue({ email: 'Ravi@Duncit.com', extension: '', number: '' }, 'EMAI
 Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the
 patterns it checks live in `@duncit/regex`, which this zero-dependency package cannot
 import.
+
+### Recovering a forgotten password
+
+Three steps: pick where the code goes, prove it, set the password. mWeb renders it as one
+card and the app as one screen, and both drive the state machine below — a second copy of it
+drifts on exactly the question of whether a person can go back a step.
+
+`PasswordRecoveryChannel` is `Extract<ContactChannel, 'EMAIL' | 'PHONE'>` and the draft is
+`ContactDraft`, so the two files cannot disagree about what a phone number is.
+
+```ts
+previousRecoveryStep('CODE');     // 'CHANNEL'
+previousRecoveryStep('PASSWORD'); // 'CODE'
+previousRecoveryStep('DONE');     // null — the password already changed; Back would
+                                  // offer to change it again with a spent code
+
+passwordRecoveryStepIndex('CODE'); // 2
+PASSWORD_RECOVERY_STEP_COUNT;      // 3 — DONE is an outcome, not a step to fill in
+```
+
+`recoveryResendSeconds` counts from when the last code was SENT rather than from a server
+timestamp, because the button being counted down is on the screen that sent it — a clock a
+few seconds off the server must not leave somebody pressing a button that answers "wait 1s"
+forever:
+
+```ts
+const sent = { lastSentAt: Date.now() - 12_000, resendAfterSeconds: 30 };
+recoveryResendSeconds(sent);                       // 18
+recoveryResendSeconds({ ...sent, lastSentAt: 0 }); // 0 — never below zero
+
+recoveryDestination('PHONE', { email: '', extension: '+91', number: '9845012345' });
+// '+91 9845012345' — what "We sent a code to …" says back
+```
 
 ### The follow button, and the follow rows in the inbox
 

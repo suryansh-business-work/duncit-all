@@ -15,10 +15,14 @@ import {
 } from '../../utils/redirect';
 import { LINK_GOOGLE_ACCOUNT, LOGIN, LOGIN_GOOGLE } from './queries';
 import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
-import LoginCard from './LoginCard';
+import LoginCard, { type LoginStep } from './LoginCard';
 
 export default function LoginPage() {
   const { t } = useTranslation();
+  // Which half of the sign-in screen is showing. Kept in state rather than the
+  // URL: it is a choice of method, not a place — a shared /login link should
+  // always open on the options.
+  const [step, setStep] = useState<LoginStep>('CHOOSE');
   const navigate = useNavigate();
   const location = useLocation();
   const [loginMutation, { loading, error }] = useMutation<any>(LOGIN);
@@ -113,6 +117,8 @@ export default function LoginPage() {
       <AuthModeToggle />
 
       <LoginCard
+        step={step}
+        onStep={setStep}
         loading={loading}
         errorMessage={error ? parseApiError(error) : null}
         onSubmit={handleSubmit}

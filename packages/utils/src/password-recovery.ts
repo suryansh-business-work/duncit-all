@@ -112,6 +112,84 @@ export function recoveryDestination(
   return `${draft.extension} ${draft.number}`.trim();
 }
 
+/** What identifies the account, in the shape all three server calls take. */
+export interface PasswordRecoveryLookup {
+  channel: PasswordRecoveryChannel;
+  email?: string;
+  phone_extension?: string;
+  phone_number?: string;
+}
+
+/**
+ * The lookup for a channel and what was typed into it.
+ *
+ * Only the fields the chosen channel uses travel: sending a blank `email`
+ * alongside a phone number makes the server's per-channel validator argue with
+ * a box nobody filled in.
+ */
+export function recoveryLookup(
+  channel: PasswordRecoveryChannel,
+  draft: Readonly<ContactDraft>,
+): PasswordRecoveryLookup {
+  if (channel === 'EMAIL') return { channel, email: draft.email.trim().toLowerCase() };
+  return {
+    channel,
+    phone_extension: draft.extension.trim(),
+    phone_number: draft.number.trim(),
+  };
+}
+
+/*
+  The four transitions, as pure functions on the state.
+
+  They live here rather than in each surface's hook because they are the flow,
+  not the rendering: which step follows which, what a resend keeps, and what a
+  finished reset throws away. mWeb and the app had these written twice before
+  the gate caught it, which is exactly how one surface ends up letting a spent
+  grant sit in state.
+*/
+
+/** Switching the channel keeps the draft — the boxes below it change, not the
+ * account being recovered. */
+export const recoveryWithChannel = (
+  state: Readonly<PasswordRecoveryState>,
+  channel: PasswordRecoveryChannel,
+): PasswordRecoveryState => ({ ...state, channel });
+
+/** A code just went out: move to the code step and start the cooldown. */
+export const recoveryAfterSend = (
+  state: Readonly<PasswordRecoveryState>,
+  draft: Readonly<ContactDraft>,
+  resendAfterSeconds: number,
+  sentAt: number = Date.now(),
+): PasswordRecoveryState => ({
+  ...state,
+  step: 'CODE',
+  draft: { ...draft },
+  lastSentAt: sentAt,
+  resendAfterSeconds,
+});
+
+/** The code was accepted: hold the grant and ask for the new password. */
+export const recoveryAfterVerify = (
+  state: Readonly<PasswordRecoveryState>,
+  resetToken: string,
+): PasswordRecoveryState => ({ ...state, step: 'PASSWORD', resetToken });
+
+/** The password is set. The grant is dropped: it has been spent, and keeping a
+ * spent credential in state is only a way to try to reuse it. */
+export const recoveryAfterComplete = (
+  state: Readonly<PasswordRecoveryState>,
+): PasswordRecoveryState => ({ ...state, step: 'DONE', resetToken: '' });
+
+/** Back a step, or unchanged when this step is the first or the last. */
+export function recoveryBack(
+  state: Readonly<PasswordRecoveryState>,
+): PasswordRecoveryState {
+  const step = previousRecoveryStep(state.step);
+  return step ? { ...state, step } : { ...state };
+}
+
 /** The translator each surface hands in — the same shape as the copy next door. */
 export type PasswordRecoveryTranslate = (
   key: string,
@@ -197,6 +275,44 @@ const CHANNEL_LABELS: Record<
     hint: t('mweb.passwordRecovery.phoneHint'),
   }),
 };
+
+/** The heading a step carries. Blank subtitle where the step's own copy says it. */
+export interface PasswordRecoveryHeading {
+  title: string;
+  accent: string;
+  subtitle: string;
+}
+
+/**
+ * Which heading belongs to which step.
+ *
+ * Shared because both surfaces render the same three, and a `title`/`accent`
+ * pair that drifts is a screen that says "Enter your code" over the password
+ * boxes.
+ */
+export function recoveryHeading(
+  step: PasswordRecoveryStep,
+  labels: Readonly<PasswordRecoveryLabels>,
+): PasswordRecoveryHeading {
+  if (step === 'CODE') {
+    return { title: labels.codeTitle, accent: labels.codeTitleAccent, subtitle: '' };
+  }
+  if (step === 'PASSWORD') {
+    return { title: labels.passwordTitle, accent: labels.passwordTitleAccent, subtitle: '' };
+  }
+  if (step === 'DONE') {
+    return {
+      title: labels.doneTitle,
+      accent: labels.doneTitleAccent,
+      subtitle: labels.doneSubtitle,
+    };
+  }
+  return {
+    title: labels.chooseTitle,
+    accent: labels.chooseTitleAccent,
+    subtitle: labels.chooseSubtitle,
+  };
+}
 
 /** Every word both recovery surfaces render, from one translator. */
 export function buildPasswordRecoveryLabels(

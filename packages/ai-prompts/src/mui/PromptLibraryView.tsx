@@ -69,6 +69,8 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
       query: AI_PROMPTS,
       variables: { filter: { kind } },
       fetchPolicy: 'network-only',
+      // A failed query rejects, so a resolved one always carries data.
+      errorPolicy: 'none',
     });
     return data.aiPrompts;
   }, [client, kind]);

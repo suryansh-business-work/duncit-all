@@ -22,6 +22,8 @@ export default function CallbacksListPage() {
         query: BOUNCER_CALLBACK_REQUESTS,
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
+        // A failed query rejects, so a resolved one always carries data.
+        errorPolicy: 'none',
       });
       return { rows: data.bouncerCallbackRequests.items, total: data.bouncerCallbackRequests.total };
     },

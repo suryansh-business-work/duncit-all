@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import { AppShell as ShellAppShell, type AppNavItem } from '@duncit/shell';
 import { useFeatureFlag } from '@duncit/app-settings';

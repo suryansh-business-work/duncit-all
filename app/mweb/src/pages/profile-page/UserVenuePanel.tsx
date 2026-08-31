@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { DuncitButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { formatDate } from '../../utils/dateFormat';
 
 const MY_VENUE = gql`

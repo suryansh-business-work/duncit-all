@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import AuthBackground from '../../components/AuthBackground';
 import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';

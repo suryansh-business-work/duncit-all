@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, CircularProgress, Stack } from '@mui/material';
 import PostDialog from './profile-page/post-dialog/PostDialog';
 

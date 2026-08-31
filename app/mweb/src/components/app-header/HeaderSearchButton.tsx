@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Tooltip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitIconButton } from '@duncit/buttons';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { ACCEPTANCE_SURFACE } from '../components/policy-acceptance';
 import { useTranslation } from '../i18n/useTranslation';
 import { parseApiError } from '../utils/parseApiError';

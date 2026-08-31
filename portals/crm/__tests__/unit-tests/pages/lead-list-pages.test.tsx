@@ -2,7 +2,7 @@ import '../helpers/agGridEnv';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import VenueLeadsPage from '@/pages/venue-leads/VenueLeadsPage';
 import HostLeadsPage from '@/pages/host-leads/HostLeadsPage';
 import { HOST_LEADS_TABLE, VENUE_LEADS_TABLE } from '@/api/crm.gql';

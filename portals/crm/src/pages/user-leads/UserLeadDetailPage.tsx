@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { BackHeader, InfoRow, QueryGuard } from '@duncit/ui';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_USER_LEAD } from '../tools/whatsapp/whatsappQueries';

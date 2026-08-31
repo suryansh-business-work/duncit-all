@@ -1,6 +1,6 @@
 import type { FollowStatus } from '@duncit/utils';
 import { Box, Card, CardContent, CardMedia, Chip, Grid, Stack, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
 import { DuncitButton } from '@duncit/buttons';

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Box, Card, Stack, Typography } from '@mui/material';
 import AddBusinessRoundedIcon from '@mui/icons-material/AddBusinessRounded';

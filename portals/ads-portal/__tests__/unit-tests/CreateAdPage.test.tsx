@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import CreateAdPage from '../../src/pages/create-ad-page/CreateAdPage';
 import type { AdRequestFormValues } from '@duncit/ad-request-form';

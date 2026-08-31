@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Avatar, Chip, Link, Stack, Typography } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import EmailIcon from '@mui/icons-material/Email';

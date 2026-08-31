@@ -13,7 +13,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Controller, type Control, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import {

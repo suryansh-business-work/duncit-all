@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { PodFinancePage, PodFinanceDetailPage } from '../../src/pages/finance/pod-finance-page';
 import SettlementStatusChip, { FrozenBadge } from '../../src/pages/finance/pod-finance-page/SettlementStatusChip';
 import { resetTableControls } from './mocks/table';

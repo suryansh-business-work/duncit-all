@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import HostStepContent from './HostStepContent';
 import HostWithdrawApplication from './HostWithdrawApplication';

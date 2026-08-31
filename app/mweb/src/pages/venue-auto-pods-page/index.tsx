@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { AutoPodQueue, VENUE_AUTO_PODS, VenueAcceptDialog } from '@duncit/auto-pods';

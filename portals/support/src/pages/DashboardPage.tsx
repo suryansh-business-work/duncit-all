@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';

@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { BackButton } from '@duncit/ui';
 import {

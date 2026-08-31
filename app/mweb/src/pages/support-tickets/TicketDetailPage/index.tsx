@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ReopenReasonDialog from '../../support-chat/ReopenReasonDialog';
 import ConfirmDialog from '../../../components/ConfirmDialog';

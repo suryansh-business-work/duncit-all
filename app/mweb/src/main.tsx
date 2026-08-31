@@ -5,7 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { gql } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { io } from 'socket.io-client';
 import {

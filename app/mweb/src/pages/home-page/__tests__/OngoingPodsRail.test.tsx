@@ -11,14 +11,14 @@
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import OngoingPodsRail from '../OngoingPodsRail';
 
 const navigate = vi.fn();
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
+vi.mock('react-router', async () => ({
+  ...(await vi.importActual<typeof import('react-router')>('react-router')),
   useNavigate: () => navigate,
 }));
 

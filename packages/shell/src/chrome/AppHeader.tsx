@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { AppBar, Box, Toolbar, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import AppsIcon from '@mui/icons-material/Apps';

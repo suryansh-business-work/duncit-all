@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { gql } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import HostDraftsCard from '../HostDraftsCard';
 import { PUBLIC_APP_SETTINGS } from '../../utils/dateFormat';
 

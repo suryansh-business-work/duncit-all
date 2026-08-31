@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Card, CardContent, Stack, Typography } from '@mui/material';
 import PhonelinkEraseOutlinedIcon from '@mui/icons-material/PhonelinkEraseOutlined';
 import { DuncitButton } from '@duncit/buttons';

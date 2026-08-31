@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { Alert, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { REFERRAL_CODE } from '@duncit/regex';

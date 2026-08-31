@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { Alert, Chip, Stack } from '@mui/material';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import { DuncitButton } from '@duncit/buttons';

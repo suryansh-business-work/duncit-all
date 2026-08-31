@@ -1,6 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import EventIcon from '@mui/icons-material/Event';
 import { DuncitIconButton } from '@duncit/buttons';
 import {

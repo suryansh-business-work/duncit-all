@@ -1,4 +1,4 @@
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { AppBreadcrumbs, BreadcrumbProvider, ID_CRUMB_LABEL } from '@duncit/breadcrumb';
 import { defineDemo, defineDemos } from '../types';
 

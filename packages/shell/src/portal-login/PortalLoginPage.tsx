@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { useColorMode } from '@duncit/theme';
 import { parseApiError } from '@duncit/utils';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';

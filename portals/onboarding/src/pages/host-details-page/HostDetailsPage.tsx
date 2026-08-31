@@ -1,5 +1,5 @@
 import { useApolloClient, useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { BackHeader, QueryGuard } from '@duncit/ui';

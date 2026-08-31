@@ -22,8 +22,8 @@ import { directUploadToImagekit } from '../src/useImagekitDirectUpload';
 import * as uploadModule from '../src/upload';
 const { uploadImageToImagekit } = uploadModule;
 import { IMPORT_REMOTE, PEXELS_SEARCH, UPLOAD_IMAGE, UPLOAD_SETTINGS } from '../src/queries';
-// @ts-expect-error -- untyped deep path; the shape is react-router-dom's own
-import { MemoryRouter } from '../../tabs/node_modules/react-router-dom';
+// @ts-expect-error -- untyped deep path; the shape is react-router's own
+import { MemoryRouter } from '../../tabs/node_modules/react-router';
 
 const testTheme = createTheme();
 

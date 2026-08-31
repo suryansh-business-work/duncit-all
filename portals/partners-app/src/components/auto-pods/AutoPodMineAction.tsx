@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Chip, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import type { AutoPodLabels, AutoPodRow, AutoPodStage } from '@duncit/utils';

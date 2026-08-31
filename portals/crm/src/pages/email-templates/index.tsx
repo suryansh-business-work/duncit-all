@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';

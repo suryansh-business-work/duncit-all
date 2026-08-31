@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import FileDetailsView from '../src/file-manager/FileDetailsView';
 import type { MediaItem } from '../src/file-manager/queries';
 

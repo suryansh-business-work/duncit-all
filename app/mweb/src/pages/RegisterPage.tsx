@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { readReferralCode } from '@duncit/utils';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthBackground from '../components/AuthBackground';

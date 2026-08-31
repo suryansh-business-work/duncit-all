@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import DashboardPage from '../../src/pages/DashboardPage';
 import { renderWithProviders } from '../testkit';

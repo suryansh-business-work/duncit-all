@@ -10,7 +10,7 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
 import PhoneField from './PhoneField';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router';
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';

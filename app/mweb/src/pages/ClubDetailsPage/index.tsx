@@ -1,6 +1,6 @@
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { isClubAdminOf } from '@duncit/utils';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';

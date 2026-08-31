@@ -12,7 +12,7 @@
  */
 import { MockedProvider } from '@apollo/client/testing/react';
 import { act, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from '../App';

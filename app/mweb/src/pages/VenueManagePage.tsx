@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';

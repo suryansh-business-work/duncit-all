@@ -1,7 +1,7 @@
 import type { MutableRefObject, ReactNode } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { Route, useParams } from 'react-router-dom';
+import { Route, useParams } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import { renderWithProviders } from '../../../__tests__/testkit';

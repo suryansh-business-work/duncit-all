@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useEntityPageMeta } from '../../app/pageMeta';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import {

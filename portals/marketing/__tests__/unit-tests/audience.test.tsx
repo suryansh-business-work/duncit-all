@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import {
@@ -37,8 +37,8 @@ const userMock = vi.hoisted(() => ({
 }));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => ({ user: userMock.user }) }));
 const navigateMock = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('react-router-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => navigateMock.fn,
 }));
 const dialogsMock = vi.hoisted(() => ({ notifySuccess: vi.fn() }));

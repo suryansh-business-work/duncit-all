@@ -7,7 +7,7 @@ import { MARK_ALL, MARK_READ, MY_NOTIFS } from './queries';
 import NotificationsScreen from './notifications-screen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
 import { useNotificationsSse } from './useNotificationsSse';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface HeaderNotificationsBellProps {

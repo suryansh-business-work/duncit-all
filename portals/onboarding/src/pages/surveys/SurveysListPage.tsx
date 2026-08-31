@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router';
 import {
   Alert,
   Box,

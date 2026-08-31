@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Box, Chip, Stack, Toolbar } from '@mui/material';
 import { HEADER_DATA, OPEN_LOCATION_PICKER_EVENT, SET_MY_SELECTED_LOCATION } from './queries';

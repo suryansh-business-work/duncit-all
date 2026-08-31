@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import KeyIcon from '@mui/icons-material/Key';
 import MenuBookIcon from '@mui/icons-material/MenuBook';

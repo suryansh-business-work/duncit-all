@@ -1,5 +1,5 @@
 import { useApolloClient } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { MY_ADMIN_CLUBS_TABLE, type ClubAdminClubInfoRow } from './queries';

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
 import HeaderCartButton from '../../../components/cart/HeaderCartButton';

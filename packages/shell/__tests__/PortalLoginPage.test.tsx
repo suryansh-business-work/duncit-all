@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
+import { MemoryRouter, type MemoryRouterProps } from 'react-router';
 import type { ReactNode } from 'react';
 
 vi.mock('@apollo/client', () => ({
@@ -14,8 +14,8 @@ vi.mock('@apollo/client/react', () => ({
 vi.mock('@duncit/utils', () => ({ parseApiError: (e: { message?: string }) => `DEF:${e?.message ?? ''}` }));
 
 const navSpy = vi.hoisted(() => vi.fn());
-vi.mock('react-router-dom', async (orig) => {
-  const actual = await orig<typeof import('react-router-dom')>();
+vi.mock('react-router', async (orig) => {
+  const actual = await orig<typeof import('react-router')>();
   return { ...actual, useNavigate: () => navSpy };
 });
 

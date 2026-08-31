@@ -1,5 +1,5 @@
 import { JSX, Suspense, lazy, useEffect } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
 import { Box, CircularProgress } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
 import { RedirectIfAuthed, RequireAuth } from './AuthGuards';

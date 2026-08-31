@@ -1,7 +1,7 @@
 import { Box, List, ListItemButton, Paper, Stack, Typography } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
 import type { FaqGroup } from './faqQueries';
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { CREATE_HOST_LEAD, HOST_LEAD, UPDATE_HOST_LEAD } from '../../api/crm.gql';
 import { useCrmConfig } from '../../api/useCrmConfig';

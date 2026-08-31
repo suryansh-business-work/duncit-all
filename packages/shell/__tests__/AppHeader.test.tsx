@@ -9,7 +9,7 @@ vi.mock('@apollo/client', () => ({
 vi.mock('@apollo/client/react', () => ({
   useQuery: vi.fn(),
 }));
-vi.mock('react-router-dom', () => ({
+vi.mock('react-router', () => ({
   useNavigate: () => vi.fn(),
   Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));

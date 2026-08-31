@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 /** The page keeps its header/footer filter in the URL — see ?fragment=. */
 const render = (ui: React.ReactElement, url = '/emails/templates') =>

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoModeIcon from '@mui/icons-material/AutoMode';

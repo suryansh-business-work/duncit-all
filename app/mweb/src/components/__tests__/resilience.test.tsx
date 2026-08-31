@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import OfflineBanner from '../OfflineBanner';
 import ErrorBoundary from '../ErrorBoundary';

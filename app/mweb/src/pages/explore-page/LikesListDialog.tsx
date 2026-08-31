@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import {
   Avatar,
   CircularProgress,

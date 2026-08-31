@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';

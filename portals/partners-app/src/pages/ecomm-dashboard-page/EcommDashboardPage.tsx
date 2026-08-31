@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DuncitButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import EcommStatCards from './EcommStatCards';
 import { PARTNER_ECOMM_STATS } from './ecomm-dashboard.queries';

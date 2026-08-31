@@ -1,5 +1,5 @@
 import { Chip, Stack, Tooltip, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import LayersIcon from '@mui/icons-material/Layers';
 import { useTranslation } from '@duncit/app-settings';
 import type { FragmentTemplateRef } from './queries';

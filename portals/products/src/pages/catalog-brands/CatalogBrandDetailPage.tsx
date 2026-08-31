@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { BackHeader } from '@duncit/ui';
 import { notifySuccess } from '@duncit/dialogs';

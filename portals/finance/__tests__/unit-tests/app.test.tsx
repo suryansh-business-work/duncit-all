@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import App from '../../src/App';
 import AppShell from '../../src/components/AppShell';
 import LoginPage from '../../src/pages/LoginPage';

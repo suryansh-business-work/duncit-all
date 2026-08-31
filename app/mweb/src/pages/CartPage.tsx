@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Stack, Typography } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { DuncitButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useCart, cartLineKey, type CartLine } from '../components/cart/CartContext';
 import { usePricing } from '../hooks/usePricing';
 import { useTranslation } from '../i18n/useTranslation';

@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Box, Paper, Stack, Typography, alpha } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from '../../i18n/useTranslation';

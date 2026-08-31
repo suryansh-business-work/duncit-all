@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import PullToRefreshIndicator from '../../components/PullToRefreshIndicator';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';

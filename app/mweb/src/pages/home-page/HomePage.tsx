@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Alert, Box, Fab, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { PriceFilter, DateFilter, SortBy } from './queries';

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import {
   PodEditorPage,
   makeNativeParityPodConfig,

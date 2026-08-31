@@ -1,14 +1,14 @@
 import '@testing-library/jest-dom/vitest';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
 import FeedbackPage from '../FeedbackPage';
 
-vi.mock('react-router-dom', async (io) => {
-  const actual = await io<typeof import('react-router-dom')>();
+vi.mock('react-router', async (io) => {
+  const actual = await io<typeof import('react-router')>();
   return { ...actual, useNavigate: () => vi.fn() };
 });
 

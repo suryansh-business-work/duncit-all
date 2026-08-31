@@ -25,7 +25,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { act, fireEvent, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import VenueSlotStep from '../VenueSlotStep';

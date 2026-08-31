@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter, Routes } from 'react-router-dom';
+import { MemoryRouter, Routes } from 'react-router';
 import { ColorModeProvider } from '@duncit/shell';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';

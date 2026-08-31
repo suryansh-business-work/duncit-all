@@ -18,7 +18,7 @@
  */
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import HomeStatusViewer, {

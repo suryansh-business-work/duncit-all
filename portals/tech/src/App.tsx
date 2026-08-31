@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import { NotifyHost } from '@duncit/dialogs';
 import LoginPage from './pages/LoginPage';

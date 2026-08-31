@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen } from '@testing-library/react';
 import AdDetailsPage from '../../src/pages/ads/AdDetailsPage';
 import { adRequestMock, makeAdDetail } from '../mocks';

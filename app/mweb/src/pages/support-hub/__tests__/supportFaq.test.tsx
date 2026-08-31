@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import FrequentlyAsked from '../FrequentlyAsked';
 import SupportTopics from '../SupportTopics';
 import type { FaqGroup, FaqItem } from '../faqQueries';

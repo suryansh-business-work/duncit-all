@@ -2,7 +2,7 @@ import { Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EventIcon from '@mui/icons-material/Event';
 import { DuncitButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
 import JoinMeetingButton from './JoinMeetingButton';

@@ -6,7 +6,7 @@ import {
   type PodRefundStatus,
 } from '@duncit/utils';
 import PodHistoryActions from './PodHistoryActions';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Alert, Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import RuleIcon from '@mui/icons-material/Rule';

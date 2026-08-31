@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router';
 import { Alert, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitButton } from '@duncit/buttons';

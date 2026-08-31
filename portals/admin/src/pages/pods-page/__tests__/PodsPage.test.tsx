@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { Route, useLocation } from 'react-router-dom';
+import { Route, useLocation } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
 import { renderWithProviders } from '../../../__tests__/testkit';
 import { COMPLETE_POD_SETTLEMENT, DELETE } from '../queries';

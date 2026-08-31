@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Stack } from '@mui/material';
 import { HOME_REFRESH_EVENT } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';

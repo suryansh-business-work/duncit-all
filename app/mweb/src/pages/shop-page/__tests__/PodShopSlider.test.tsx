@@ -2,13 +2,13 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import PodShopSlider, { POD_SHOP_SLIDER } from '../PodShopSlider';
 
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (io) => {
-  const actual = await io<typeof import('react-router-dom')>();
+vi.mock('react-router', async (io) => {
+  const actual = await io<typeof import('react-router')>();
   return { ...actual, useNavigate: () => mockNavigate };
 });
 // react-slick measures the DOM; render its children directly for a deterministic test.

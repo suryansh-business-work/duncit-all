@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CircularProgress, Divider, Stack } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';

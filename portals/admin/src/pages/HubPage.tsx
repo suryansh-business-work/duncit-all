@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardActionArea, CardContent, Container, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';

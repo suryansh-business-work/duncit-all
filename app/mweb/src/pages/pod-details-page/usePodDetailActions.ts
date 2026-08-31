@@ -4,7 +4,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 import { useMutation } from '@apollo/client/react';
 import { formatDateTime } from '../../utils/dateFormat';
 import { buildPodShareMessage, podMapLink, trackedPodShareLinks } from '@duncit/utils';
-import type { NavigateFunction } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router';
 import {
   BACKOUT,
   CANCEL_BACKOUT,

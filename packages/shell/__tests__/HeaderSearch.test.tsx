@@ -5,7 +5,7 @@ import type { AppNavItem } from '../src/types';
 import { HeaderSearch, deriveSearchItems } from '../src/chrome/HeaderSearch';
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
+vi.mock('react-router', () => ({ useNavigate: () => navigate }));
 
 const nav: AppNavItem[] = [
   { label: 'Home', to: '/' },

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router';
 import {
   Alert,
   Box,

@@ -3,7 +3,7 @@ import { Box, Collapse, List, ListItemButton, ListItemIcon, ListItemText } from 
 import { alpha, type Theme } from '@mui/material/styles';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 import type { AppNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
 import { bestChild, groupActive, matches } from './helpers';

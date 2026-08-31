@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Box, Container } from '@mui/material';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';

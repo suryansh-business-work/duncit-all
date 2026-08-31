@@ -1,4 +1,4 @@
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';

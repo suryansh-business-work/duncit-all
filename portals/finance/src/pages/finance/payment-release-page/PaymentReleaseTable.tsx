@@ -1,6 +1,6 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Link, Stack, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';

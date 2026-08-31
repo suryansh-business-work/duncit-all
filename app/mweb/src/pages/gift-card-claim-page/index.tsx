@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';

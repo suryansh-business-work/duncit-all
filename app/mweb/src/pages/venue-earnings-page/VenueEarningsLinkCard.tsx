@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';

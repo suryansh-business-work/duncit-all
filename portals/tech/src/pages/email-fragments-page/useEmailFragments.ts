@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { useConfirm } from '@duncit/dialogs';
 import {
   CREATE_FRAGMENT,

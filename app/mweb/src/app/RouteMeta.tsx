@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { usePageMeta } from '@duncit/app-settings';
 
 import { DYNAMIC_ROUTES, STATIC_ROUTES, matchPattern } from '../../server/meta-routes';

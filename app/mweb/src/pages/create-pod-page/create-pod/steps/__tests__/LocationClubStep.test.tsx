@@ -18,7 +18,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import LocationClubStep from '../LocationClubStep';

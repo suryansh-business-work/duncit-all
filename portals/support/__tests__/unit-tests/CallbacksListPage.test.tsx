@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import CallbacksListPage from '../../src/pages/callbacks/CallbacksListPage';
 import { renderWithProviders } from '../testkit';

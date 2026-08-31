@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { getSafeRedirectPath } from '../utils/redirect';
 import { reportJourneyStep } from '../lib/short-link-journey';
 import {

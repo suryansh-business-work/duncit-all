@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Alert, AlertTitle, Grid, Stack, Typography } from '@mui/material';
 import { BackHeader, QueryGuard, StatusChip } from '@duncit/ui';

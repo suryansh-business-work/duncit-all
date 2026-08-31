@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Grid, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitButton } from '@duncit/buttons';

@@ -22,7 +22,7 @@ import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 import { CartProvider } from '../components/cart/CartContext';
 import { TourProvider } from '../tours/TourContext';

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';

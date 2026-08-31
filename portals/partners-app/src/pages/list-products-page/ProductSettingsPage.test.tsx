@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { GraphQLError } from 'graphql';
 import ProductSettingsPage from './ProductSettingsPage';
 import { MY_PRODUCT_LISTINGS, UPDATE_PRODUCT_SETTINGS } from './queries';

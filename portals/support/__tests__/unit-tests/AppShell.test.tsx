@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { setToken, getToken } from '../../src/lib/session';
 
 // Capture the props the adapter forwards to the shared shell chrome so we can
@@ -26,8 +26,8 @@ vi.mock('@duncit/user-context', async (importActual) => {
 });
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('react-router-dom', async (importActual) => {
-  const actual = await importActual<typeof import('react-router-dom')>();
+vi.mock('react-router', async (importActual) => {
+  const actual = await importActual<typeof import('react-router')>();
   return { ...actual, useNavigate: () => navigate };
 });
 

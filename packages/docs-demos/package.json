@@ -83,7 +83,7 @@
     "react": ">=18",
     "react-dom": ">=18",
     "react-hook-form": ">=7",
-    "react-router-dom": ">=6",
+    "react-router": ">=8",
     "zod": ">=4"
   },
   "devDependencies": {

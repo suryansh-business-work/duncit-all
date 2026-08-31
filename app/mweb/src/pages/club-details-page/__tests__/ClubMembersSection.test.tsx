@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { gql } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 import ClubMembersSection from '../ClubMembersSection';
 

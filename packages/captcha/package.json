@@ -29,7 +29,7 @@
   "peerDependencies": {
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",
-    "astro": "^5.7.10",
+    "astro": ">=7",
     "react": ">=18",
     "react-hook-form": ">=7",
     "@duncit/forms": "workspace:*"

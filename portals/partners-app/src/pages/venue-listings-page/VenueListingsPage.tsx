@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import { DuncitButton } from '@duncit/buttons';

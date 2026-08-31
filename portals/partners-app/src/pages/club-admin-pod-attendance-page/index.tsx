@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Stack } from '@mui/material';
 import { BackButton } from '@duncit/ui';
 import ClubAdminAttendanceSection from '../../components/ClubAdminAttendanceSection';

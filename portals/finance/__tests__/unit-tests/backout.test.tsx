@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import BackoutRefundPage, { BackoutRefundDetailPage } from '../../src/pages/finance/backout-refund-page';
 import RefundBreakupDialog from '../../src/pages/finance/backout-refund-page/RefundBreakupDialog';
 import { notifyError, notifySuccess } from './mocks/dialogs';

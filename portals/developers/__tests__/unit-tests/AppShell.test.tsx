@@ -7,8 +7,8 @@ const hasAppAccessSpy = vi.hoisted(() => vi.fn());
 const useUserDataMock = vi.hoisted(() => vi.fn());
 const shellProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
 
-vi.mock('react-router-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => navigateSpy,
 }));
 vi.mock('@duncit/user-context', () => ({ useUserData: useUserDataMock }));

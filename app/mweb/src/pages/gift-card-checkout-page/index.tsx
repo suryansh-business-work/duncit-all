@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Alert, Box, Divider, Paper, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';

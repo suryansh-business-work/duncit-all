@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import MenuPanel from '../../components/app-header/profile-drawer/MenuPanel';
 import { HEADER_DATA, PUBLIC_POLICIES } from '../../components/app-header/queries';

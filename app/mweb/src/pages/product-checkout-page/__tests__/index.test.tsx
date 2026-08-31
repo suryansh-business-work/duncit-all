@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('lottie-react', () => ({ default: () => null }));
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ProductCheckoutPage from '../index';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';

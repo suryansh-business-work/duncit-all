@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import {

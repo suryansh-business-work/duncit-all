@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { useApolloClient } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';

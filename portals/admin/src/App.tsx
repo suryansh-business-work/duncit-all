@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import { ProfilePage, RequireAuth } from '@duncit/shell';
 import { useFeatureFlag } from '@duncit/app-settings';
 import AppShell from './components/AppShell';

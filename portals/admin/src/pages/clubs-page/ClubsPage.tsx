@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useConfirm, notifyError } from '@duncit/dialogs';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';

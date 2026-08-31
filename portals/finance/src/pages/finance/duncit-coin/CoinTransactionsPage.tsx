@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { useApolloTableFetch, type TableQueryState } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import CoinTransactionsTable from './CoinTransactionsTable';

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';

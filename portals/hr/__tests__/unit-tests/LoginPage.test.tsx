@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MockedResponse } from '@apollo/client/testing';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from '../../src/pages/LoginPage';
 import { appConfig } from '../../src/config/app-config';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardContent, Grid, Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';

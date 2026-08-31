@@ -5,7 +5,7 @@
  */
 import { MockedProvider } from '@apollo/client/testing/react';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 const workspaceState = vi.hoisted(() => ({

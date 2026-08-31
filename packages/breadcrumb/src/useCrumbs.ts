@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import type { BreadcrumbNavItem, Crumb } from './types';
 import { findBestNavMatch } from './findBestNavMatch';
 import { humanise } from './humanise';

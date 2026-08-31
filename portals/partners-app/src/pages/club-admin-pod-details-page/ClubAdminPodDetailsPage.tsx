@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
 import ClubAdminAttendanceSection from '../../components/ClubAdminAttendanceSection';
 

@@ -3,7 +3,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import { Box, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import VenueMapPreview from '../../components/VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
 import { formatDistance, haversineKm } from '../../utils/distance';

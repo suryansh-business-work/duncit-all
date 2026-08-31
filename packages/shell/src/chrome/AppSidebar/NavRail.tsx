@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Divider, List, ListItemButton, ListItemIcon, Popover, Tooltip, Typography } from '@mui/material';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 import type { AppNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
 import { groupActive, matches } from './helpers';

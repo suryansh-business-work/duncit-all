@@ -8,7 +8,7 @@ import '@fontsource/nunito/800.css';
 import React, { type ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { AppLocaleProvider, DuncitLocalizationProvider } from '@duncit/app-settings';
 import { SHELL_FALLBACK_FLAT } from './i18n/fallback';
 import { GoogleOAuthProvider } from '@react-oauth/google';

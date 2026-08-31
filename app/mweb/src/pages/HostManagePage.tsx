@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';

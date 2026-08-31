@@ -1,5 +1,5 @@
 import { useCallback, useMemo, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { buildSlotLabels } from '@duncit/slots';
 import { mwebPodMediaLabels, podFeedbackPath, podMediaPath } from '@duncit/utils';
 import {

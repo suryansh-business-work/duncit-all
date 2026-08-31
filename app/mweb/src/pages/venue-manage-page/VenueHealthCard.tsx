@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import HealthMeter from '../../components/health/HealthMeter';
 import type { HealthScore } from '../../components/health/queries';

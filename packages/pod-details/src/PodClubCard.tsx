@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Stack, Typography } from '@mui/material';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';

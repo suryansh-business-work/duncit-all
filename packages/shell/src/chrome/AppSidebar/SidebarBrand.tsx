@@ -1,5 +1,5 @@
 import { Box, Skeleton, Typography } from '@mui/material';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 import { tokens } from '@duncit/theme';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useBranding } from '../../hooks/useBranding';

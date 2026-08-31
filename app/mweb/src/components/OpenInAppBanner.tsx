@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { withAttribution } from '@duncit/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { useTranslation } from '../i18n/useTranslation';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';

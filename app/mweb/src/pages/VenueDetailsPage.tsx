@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import MomentLightbox from '../components/moments/MomentLightbox';
 import VenueMapPreview from '../components/VenueMapPreview';
 import { useTranslation } from '../i18n/useTranslation';

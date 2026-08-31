@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen, fireEvent } from '@testing-library/react';
 import AppShell from '../AppShell';
 import { getToken, setToken, clearToken } from '../../lib/session';

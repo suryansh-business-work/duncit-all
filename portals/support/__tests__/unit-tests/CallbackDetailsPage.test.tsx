@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { type MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import CallbackDetailsPage from '../../src/pages/callbacks/CallbackDetailsPage';

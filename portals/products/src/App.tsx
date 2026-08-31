@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import { useProductVisibility } from '@duncit/app-settings';
 import LoginPage from './pages/LoginPage';

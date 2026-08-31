@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ClubPodsScheduleSection from '../club-details-page/ClubPodsScheduleSection';
 import { usePricing } from '../../hooks/usePricing';

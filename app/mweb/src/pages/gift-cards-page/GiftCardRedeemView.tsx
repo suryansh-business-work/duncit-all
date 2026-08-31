@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useMutation } from '@apollo/client/react';
 import { Alert, Paper, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';

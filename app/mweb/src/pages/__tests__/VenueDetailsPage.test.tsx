@@ -7,12 +7,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const navigate = vi.fn();
 let params: Record<string, string | undefined> = { venueId: 'v1' };
-vi.mock('react-router-dom', async (importOriginal) => ({
+vi.mock('react-router', async (importOriginal) => ({
   // Spread, not replace: a factory mock IS the module, so every export it does
   // not name arrives as undefined — which is how useSearchParams became 'No
   // export is defined on the mock' the day a shared component started paging
   // through the URL.
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => navigate,
   useParams: () => params,
 }));

@@ -114,7 +114,11 @@ describe('DuncitTable checkbox selection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
     await screen.findByText('Person 26');
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith([]));
-    expect(rowCheckboxes()[0]).not.toBeChecked();
+    // The box follows the report rather than arriving with it: `onChange` is the
+    // grid's selection model, and the header/row checkboxes repaint on a later
+    // task again. Asserting it synchronously off the back of the report above is
+    // a race that only loses on a slow machine.
+    await waitFor(() => expect(rowCheckboxes()[0]).not.toBeChecked());
   });
 });
 

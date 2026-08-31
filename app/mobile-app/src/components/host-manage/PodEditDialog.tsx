@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { Controller, useForm , type Resolver } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 

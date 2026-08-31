@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { useEffect, useState } from 'react';
-import { useForm, type Path , type Resolver } from 'react-hook-form';
+import { useForm, type Path, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Card, CardContent, Stack, Step, StepContent, StepLabel, Stepper } from '@mui/material';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';

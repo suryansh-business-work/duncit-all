@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { formatMoney } from '@duncit/utils';
 import { Spinner, Text, XStack, YStack } from 'tamagui';

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { useForm, type UseFormReturn , type Resolver } from 'react-hook-form';
+import { useForm, type UseFormReturn, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ADMIN_CATEGORIES } from '@duncit/category';
 import { ADMIN_LOCATIONS } from '@duncit/location';

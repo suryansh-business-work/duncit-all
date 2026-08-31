@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTabParam } from '@duncit/tabs';
 import { VENUE_SECTIONS, sectionsForMode } from '../sections/venue-sections';

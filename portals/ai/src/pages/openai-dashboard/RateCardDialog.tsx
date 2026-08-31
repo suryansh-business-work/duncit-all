@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { notify } from '@duncit/dialogs';

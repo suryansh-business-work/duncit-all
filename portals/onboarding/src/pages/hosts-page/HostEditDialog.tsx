@@ -13,7 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { Controller, FormProvider, useForm , type Resolver } from 'react-hook-form';
+import { Controller, FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
 import HostCategoriesSection from '../../components/host-form/HostCategoriesSection';

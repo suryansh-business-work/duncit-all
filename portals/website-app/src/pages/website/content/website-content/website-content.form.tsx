@@ -1,4 +1,4 @@
-import { useForm, Controller , type Resolver } from 'react-hook-form';
+import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';

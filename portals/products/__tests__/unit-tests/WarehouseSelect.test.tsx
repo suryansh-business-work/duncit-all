@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { FormProvider, useForm , type Resolver } from 'react-hook-form';
+import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import WarehouseSelect from '../../src/pages/inventory-page/inventory-product-page/WarehouseSelect';
 import { productSchema } from '../../src/pages/inventory-page/inventory-product-page/schema';

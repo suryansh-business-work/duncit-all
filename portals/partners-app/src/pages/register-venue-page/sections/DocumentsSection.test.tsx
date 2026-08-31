@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useForm, type UseFormReturn , type Resolver } from 'react-hook-form';
+import { useForm, type UseFormReturn, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DocumentsSection from './DocumentsSection';
 import { registerVenueSchema } from '../register-venue/register-venue.schema';

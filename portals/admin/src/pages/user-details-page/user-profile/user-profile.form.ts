@@ -30,9 +30,8 @@ export const userProfileSchema = z.object({
   assigned_zones: zodRules.optionalText('Assigned zones', 500).default(''),
   bio: zodRules.optionalText('Bio', 500).default(''),
   profile_photo: zodRules.optionalText('Profile photo URL', 1000).default(''),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], {
-    errorMap: () => ({ message: 'Select a valid status' }),
-  }),
+  // zod 4 replaced errorMap with one `error`.
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], { error: 'Select a valid status' }),
 });
 
 /**

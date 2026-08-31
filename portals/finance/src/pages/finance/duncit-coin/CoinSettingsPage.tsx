@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';

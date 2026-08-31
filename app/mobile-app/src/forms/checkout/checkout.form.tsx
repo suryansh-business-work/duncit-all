@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useController, useForm, useWatch , type Resolver } from 'react-hook-form';
+import { useController, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';

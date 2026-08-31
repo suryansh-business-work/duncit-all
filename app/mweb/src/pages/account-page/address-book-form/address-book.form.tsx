@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm, Controller , type Resolver } from 'react-hook-form';
+import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Checkbox,

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog } from '@mui/material';
 import DraggableDialogPaper from '../DraggableDialogPaper';

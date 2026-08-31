@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, MenuItem, Stack, TextField } from '@mui/material';
@@ -19,7 +19,7 @@ export const buildSupportSchema = (t: Translate) =>
   z.object({
   name: zodRules.personName('Name'),
   email: zodRules.email('Email', { lengthFirst: true }),
-  category: z.enum(CATEGORY_VALUES, { errorMap: () => ({ message: t('partners.forms.selectAValidCategory') }) }),
+  category: z.enum(CATEGORY_VALUES, { error: t('partners.forms.selectAValidCategory') }),
   subject: zodRules.requiredText('Subject', 3, 120),
   message: zodRules.requiredText('Message', 10, 2000),
 });

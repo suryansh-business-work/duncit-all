@@ -28,7 +28,9 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
       // "the calculation doesn't appear" bugs are born.
       return (
         <Typography variant="caption" color={error ? 'error' : 'text.secondary'}>
-          {error?.graphQLErrors[0]?.message ?? error?.message ?? 'Preview unavailable.'}
+          {/* Apollo 4 hands back ONE error whose message already carries the
+              server's reason. */}
+          {error?.message ?? 'Preview unavailable.'}
         </Typography>
       );
     }

@@ -1,4 +1,4 @@
-import { useForm , type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
 import type { ContactChangeLabels } from '@duncit/utils';

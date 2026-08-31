@@ -57,14 +57,11 @@ export function normalizePhone(extension: unknown, number: unknown) {
   };
 }
 
-/** Deliberately lenient — the shape a mailbox must have to be worth sending to,
- * not a second opinion on what the account collection already accepted. */
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** The mailbox a code is addressed to, rejected rather than guessed at. */
+/** The mailbox a code is addressed to, rejected rather than guessed at. The
+ * shape is `@utils/email`'s — the ONE the API accepts anywhere (rule 34). */
 export function normalizeEmail(email: unknown): string {
-  const value = String(email ?? '').trim().toLowerCase();
-  if (!EMAIL_SHAPE.test(value)) throw badInput('Enter a valid email address');
+  const value = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!isEmailAddress(value)) throw badInput('Enter a valid email address');
   return value;
 }
 

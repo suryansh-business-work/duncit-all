@@ -71,7 +71,9 @@ export default function HostLeadsPage() {
         variables: { entity: 'HOST_LEAD' },
         fetchPolicy: 'network-only',
       });
-      const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
+      // Apollo 4 types `data` optional — a query that errored has none, and the
+      // next line already treats an empty payload as a failure.
+      const payload = kind === 'template' ? res.data?.crmExcelTemplate : res.data?.crmExcelExport;
       if (!payload) throw new Error('Empty response');
       downloadBase64File(payload.content_base64, payload.filename, XLSX_MIME);
       setToast(kind === 'template' ? 'Template downloaded' : 'Host leads exported');

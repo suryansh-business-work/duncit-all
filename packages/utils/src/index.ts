@@ -408,6 +408,23 @@ export {
   type ContactTranslate,
 } from './contact-change';
 export {
+  PASSWORD_RECOVERY_CHANNELS,
+  PASSWORD_RECOVERY_STEP_COUNT,
+  PASSWORD_RECOVERY_STEPS,
+  buildPasswordRecoveryLabels,
+  initialRecoveryState,
+  passwordRecoveryStepIndex,
+  previousRecoveryStep,
+  recoveryDestination,
+  recoveryResendSeconds,
+  type PasswordRecoveryChannel,
+  type PasswordRecoveryChannelLabels,
+  type PasswordRecoveryLabels,
+  type PasswordRecoveryState,
+  type PasswordRecoveryStep,
+  type PasswordRecoveryTranslate,
+} from './password-recovery';
+export {
   IDLE_USERNAME_CHECK,
   USERNAME_CHECK_DEBOUNCE_MS,
   USERNAME_PATTERN,

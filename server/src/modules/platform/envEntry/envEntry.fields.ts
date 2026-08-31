@@ -117,6 +117,11 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       label: 'Default Campaign Name (optional)',
       hint: 'API campaign name sends default to, e.g. duncit_camp_1',
     },
+    {
+      name: 'otp_campaign_name',
+      label: 'OTP Campaign Name (optional)',
+      hint: 'Campaign behind the AUTHENTICATION template that carries one-time codes. Defaults to whatsapp_authentication',
+    },
     { name: 'base_url', label: 'Base URL (optional)', hint: 'https://backend.aisensy.com' },
     {
       name: 'project_id',
@@ -226,6 +231,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   TURN_CREDENTIAL: { category: 'TURN', field: 'credential' },
   AISENSY_API_KEY: { category: 'AISENSY', field: 'api_key' },
   AISENSY_CAMPAIGN_NAME: { category: 'AISENSY', field: 'campaign_name' },
+  AISENSY_OTP_CAMPAIGN_NAME: { category: 'AISENSY', field: 'otp_campaign_name' },
   AISENSY_BASE_URL: { category: 'AISENSY', field: 'base_url' },
   AISENSY_PROJECT_ID: { category: 'AISENSY', field: 'project_id' },
   AISENSY_PROJECT_API_KEY: { category: 'AISENSY', field: 'project_api_key' },

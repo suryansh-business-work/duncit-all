@@ -20,17 +20,46 @@ export function makePasswordWithOtpSchema(t: Translate) {
         .string()
         .trim()
         .regex(/^\d{6}$/, t('mweb.resetPassword.validation.otpInvalid')),
-      new_password: z
-        .string()
-        .min(8, t('mweb.auth.validation.passwordMin'))
-        .max(100, t('mweb.auth.validation.passwordTooLong')),
-      confirm_password: z.string().min(8, t('mweb.auth.validation.passwordMin')),
+      ...passwordPairFields(t),
     })
     .refine((data) => data.new_password === data.confirm_password, {
       message: t('mweb.auth.validation.passwordsMismatch'),
       path: ['confirm_password'],
     });
 }
+
+/**
+ * The password policy, as the one pair of boxes every flow that sets a password
+ * renders.
+ *
+ * Split out because the recovery flow proves its code on a SEPARATE step, so
+ * the last screen has the pair and no `otp` — and the ceiling, the floor and the
+ * "these must match" rule must not be typed a second time to say so.
+ */
+function passwordPairFields(t: Translate) {
+  return {
+    new_password: z
+      .string()
+      .min(8, t('mweb.auth.validation.passwordMin'))
+      .max(100, t('mweb.auth.validation.passwordTooLong')),
+    confirm_password: z.string().min(8, t('mweb.auth.validation.passwordMin')),
+  };
+}
+
+/** A new password, typed twice, with no code beside it. */
+export function makePasswordPairSchema(t: Translate) {
+  return z.object(passwordPairFields(t)).refine(
+    (data) => data.new_password === data.confirm_password,
+    { message: t('mweb.auth.validation.passwordsMismatch'), path: ['confirm_password'] },
+  );
+}
+
+export type PasswordPairValues = z.infer<ReturnType<typeof makePasswordPairSchema>>;
+
+export const passwordPairDefaults: PasswordPairValues = {
+  new_password: '',
+  confirm_password: '',
+};
 
 export type PasswordWithOtpValues = z.infer<ReturnType<typeof makePasswordWithOtpSchema>>;
 

@@ -12,6 +12,7 @@ import type { EmailLogSource } from '@modules/content/emailLog/emailLog.model';
 import { mailPreferenceService } from '@modules/content/mailPreference/mailPreference.service';
 import { mailPreferenceUrl } from '@modules/content/mailPreference/mailPreference.token';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
+import { joinUrl } from '@utils/url';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
 import {
@@ -748,6 +749,42 @@ export function sendPasswordResetOtpEmail(opts: {
     category: 'authentication',
     vars: opts,
   });
+}
+
+/**
+ * "Your password was changed" — the notice AFTER a password moves, whichever
+ * door moved it.
+ *
+ * Not to be confused with `password-change-otp`, which asks permission. This is
+ * the only one of the two that reaches a person whose account has been taken
+ * over: by then the attacker holds the code, not them. `authentication` is a
+ * REQUIRED mail category, so it can never be switched off.
+ *
+ * Best-effort by design — the password is already changed by the time it runs,
+ * and a mailbox must not be able to fail a reset that has already happened.
+ * It lives here rather than in `user.service` because BOTH password doors (the
+ * signed-in change and the signed-out recovery) send it, and a second copy is
+ * how one of them quietly stops telling anybody (rule 40).
+ */
+export async function sendPasswordChangedEmail(email: string, firstName: string): Promise<void> {
+  if (!email) return;
+  try {
+    const { appUrl } = await getUrlConfigs();
+    await sendEmail({
+      to: email,
+      subject: 'Your Duncit password was changed',
+      template: 'password-changed',
+      category: 'authentication',
+      vars: {
+        name: firstName || 'there',
+        email,
+        when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+        security_url: joinUrl(appUrl, '/profile'),
+      },
+    });
+  } catch (error) {
+    logs.server.warn('email.service', 'sendPasswordChangedEmail', { error });
+  }
 }
 
 /**

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
-import { hasOtpTransport } from '@modules/platform/otp/otp.delivery';
+import { hasOtpTransport } from '@modules/platform/otp/otp.transports';
 
 /**
  * Which channels an account will accept a one-time code on.
@@ -18,10 +18,10 @@ import { hasOtpTransport } from '@modules/platform/otp/otp.delivery';
  *  - the switch is on;
  *  - we hold an address or number for it — WhatsApp cannot be somebody's
  *    remaining channel when they never gave us a WhatsApp number;
- *  - a transport exists behind it. SMS and WhatsApp are STUBBED today
- *    (`hasOtpTransport`), so counting them would let an account switch off
- *    email codes and be left with two channels that deliver nothing — the
- *    exact lockout this guard exists to prevent, passing its own check.
+ *  - a transport exists behind it. SMS still has no provider on this platform
+ *    (`hasOtpTransport`), so counting it would let an account switch off email
+ *    AND WhatsApp codes and be left with one channel that delivers nothing —
+ *    the exact lockout this guard exists to prevent, passing its own check.
  *
  * `reachable` on the row still means only "we hold an address", because that
  * is what the screen renders an "add your number" state from. Deliverability
@@ -78,9 +78,10 @@ function destinationsOf(user: any): Record<CommChannel, string> {
 /**
  * Could a code actually arrive on this channel, given what is wired?
  *
- * EMAIL is the platform transport and the only one the sign-in, password-reset
- * and account-deletion codes use at all. The two phone mediums defer to
- * `hasOtpTransport`, which lives next to the branch that would wire them.
+ * EMAIL is the platform transport, and the only channel the sign-in and
+ * account-deletion codes use. Password recovery reaches WhatsApp too. Both
+ * phone mediums defer to `hasOtpTransport`, which sits beside the branches
+ * that wire them.
  */
 const deliverable = (channel: CommChannel): boolean =>
   channel === 'EMAIL' || hasOtpTransport(channel);

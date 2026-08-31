@@ -155,12 +155,7 @@ export const contactChangeService = {
     if (field === 'PHONE') {
       await assertPhoneFree(user_id, phone.phone_extension, phone.phone_number);
     }
-    const challenge = await otpService.verifyLatest(
-      spec.purpose,
-      phone.phone_extension,
-      phone.phone_number,
-      otp
-    );
+    const challenge = await otpService.verifyLatest(spec.purpose, phone, otp);
     // Bound to the account that asked. Without this, one person's verified code
     // for a number could be replayed by another session to claim that number.
     await otpService.consume(String(challenge._id), {

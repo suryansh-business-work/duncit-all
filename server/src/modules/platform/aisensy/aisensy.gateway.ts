@@ -46,6 +46,21 @@ export async function defaultCampaign(): Promise<string> {
 }
 
 /**
+ * The campaign that carries a one-time code.
+ *
+ * Its own setting rather than `defaultCampaign`, because the two answer
+ * different questions: the default is what an unaddressed send falls back to,
+ * while this one names an AUTHENTICATION template Meta approves and prices on
+ * its own terms. It falls back to the name the template shipped under so a
+ * deployment that has never opened the Tech portal still sends codes.
+ */
+export const DEFAULT_OTP_CAMPAIGN = 'whatsapp_authentication';
+
+export async function otpCampaign(): Promise<string> {
+  return (await getRuntimeEnvValue('AISENSY_OTP_CAMPAIGN_NAME')) || DEFAULT_OTP_CAMPAIGN;
+}
+
+/**
  * A header image or document for a media template.
  *
  * AiSensy fetches the URL itself at send time, so it must be reachable from the

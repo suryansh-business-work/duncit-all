@@ -55,6 +55,74 @@ export const authTypeDefs = gql`
     new_password: String!
   }
 
+  "Where a forgotten-password code is sent."
+  enum PasswordResetChannel {
+    EMAIL
+    "WhatsApp, on the number the account signed up with or added later."
+    PHONE
+  }
+
+  """
+  Which account is recovering, and where its code should go.
+
+  The fields the chosen channel does not use are ignored rather than required —
+  one input rather than two mutations, because everything after this step is the
+  same either way.
+  """
+  input PasswordResetLookupInput {
+    channel: PasswordResetChannel!
+    "EMAIL only."
+    email: String
+    "PHONE only — the dial code, e.g. +91."
+    phone_extension: String
+    "PHONE only — digits, without the dial code."
+    phone_number: String
+  }
+
+  input VerifyPasswordResetCodeInput {
+    channel: PasswordResetChannel!
+    email: String
+    phone_extension: String
+    phone_number: String
+    otp: String!
+  }
+
+  input CompletePasswordResetInput {
+    "The one-shot grant verifyPasswordResetCode handed back."
+    reset_token: String!
+    new_password: String!
+  }
+
+  type PasswordResetRequestResult {
+    ok: Boolean!
+    """
+    False when there is no account with these details, or the account signs in
+    with Google and has no password to reset. No code is sent in either case.
+    """
+    registered: Boolean!
+    channel: PasswordResetChannel!
+    "ISO instant the code stops working. Null when nothing was sent."
+    expires_at: String
+    "Seconds to wait before another code can be asked for."
+    resend_after_seconds: Int!
+    "How long the code lasts, so no screen hard-codes the rule."
+    expires_in_minutes: Int!
+    """
+    The code itself, echoed back ONLY while no medium could really carry it.
+    Null the moment a real transport handles the send.
+    """
+    test_code: String
+  }
+
+  type PasswordResetVerifyResult {
+    ok: Boolean!
+    """
+    A single-use grant, valid for what is left of the code's own life. It is
+    what the last step spends — the code is never sent again.
+    """
+    reset_token: String!
+  }
+
   input RequestPasswordChangeInput {
     current_password: String!
   }
@@ -180,7 +248,31 @@ export const authTypeDefs = gql`
     and unlinking it would lock the user out of their own account.
     """
     disconnectGoogleAccount: ConnectedAccounts!
+    """
+    Step one of forgotten-password recovery: send a code to the chosen channel.
+
+    Replaces requestPasswordResetOtp, which is email-only and stays for app
+    builds already on people's phones.
+    """
+    requestPasswordResetCode(input: PasswordResetLookupInput!): PasswordResetRequestResult!
+    """
+    Step two: prove the code and get the grant that sets the password.
+
+    Its own step so a wrong code is reported before anybody types a new password
+    twice. The code is single-use, expires with the challenge, and a wrong one
+    costs an attempt.
+    """
+    verifyPasswordResetCode(input: VerifyPasswordResetCodeInput!): PasswordResetVerifyResult!
+    """
+    Step three: spend the grant and set the new password.
+
+    Refuses a password the account already holds, and ends every session opened
+    before it — the flow exists because somebody else may hold the old one.
+    """
+    completePasswordReset(input: CompletePasswordResetInput!): Boolean!
+    "Deprecated: email-only step one. Use requestPasswordResetCode."
     requestPasswordResetOtp(email: String!): OtpRequestResult!
+    "Deprecated: code + new password in one call. Use completePasswordReset."
     resetPasswordWithOtp(input: ResetPasswordInput!): Boolean!
     "Auth-required: verify the current password and email a change-confirmation OTP."
     requestPasswordChangeOtp(input: RequestPasswordChangeInput!): OtpRequestResult!

@@ -7,10 +7,9 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
     "useDefineForClassFields": true,
-    "types": ["vite/client"],
-    "baseUrl": ".",
+    "types": ["vite/client", "node"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "__tests__/unit-tests"],

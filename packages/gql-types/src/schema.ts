@@ -3303,6 +3303,12 @@ export type CommunicationLogPage = {
   total: Scalars['Int']['output'];
 };
 
+export type CompletePasswordResetInput = {
+  new_password: Scalars['String']['input'];
+  /** The one-shot grant verifyPasswordResetCode handed back. */
+  reset_token: Scalars['String']['input'];
+};
+
 export type CompletePodInput = {
   evidence_media?: InputMaybe<Array<PaymentReleaseMediaInput>>;
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
@@ -8293,6 +8299,13 @@ export type Mutation = {
    * restore from it.
    */
   completeDbBackupUpload: DbBackup;
+  /**
+   * Step three: spend the grant and set the new password.
+   *
+   * Refuses a password the account already holds, and ends every session opened
+   * before it — the flow exists because somebody else may hold the old one.
+   */
+  completePasswordReset: Scalars['Boolean']['output'];
   completePodSettlement: PodSettlementResult;
   /** Spend the code from requestContactPhoneChangeOtp and store the number. */
   confirmContactPhoneChange: User;
@@ -8891,6 +8904,14 @@ export type Mutation = {
   requestMeeting: OnboardingMeeting;
   /** Auth-required: verify the current password and email a change-confirmation OTP. */
   requestPasswordChangeOtp: OtpRequestResult;
+  /**
+   * Step one of forgotten-password recovery: send a code to the chosen channel.
+   *
+   * Replaces requestPasswordResetOtp, which is email-only and stays for app
+   * builds already on people's phones.
+   */
+  requestPasswordResetCode: PasswordResetRequestResult;
+  /** Deprecated: email-only step one. Use requestPasswordResetCode. */
   requestPasswordResetOtp: OtpRequestResult;
   /** Send the attendee a one-time code over the chosen medium(s). */
   requestPodAttendanceOtp: PhoneOtpRequestResult;
@@ -8918,6 +8939,7 @@ export type Mutation = {
   resetDashboardLayout: Scalars['Boolean']['output'];
   /** Restore one of the nine to the header and footer it shipped with. */
   resetEmailFragment: EmailFragment;
+  /** Deprecated: code + new password in one call. Use completePasswordReset. */
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   /**
    * Forget every live counter and cool-off.
@@ -9429,6 +9451,14 @@ export type Mutation = {
   venueCancelPod: VenueCancelPodResult;
   verifyEmailVerificationOtp: User;
   verifyEventTicketQr: EventTicketVerifyResult;
+  /**
+   * Step two: prove the code and get the grant that sets the password.
+   *
+   * Its own step so a wrong code is reported before anybody types a new password
+   * twice. The code is single-use, expires with the challenge, and a wrong one
+   * costs an attempt.
+   */
+  verifyPasswordResetCode: PasswordResetVerifyResult;
   /** Check the code the attendee read out. Spending it happens at the mark. */
   verifyPodAttendanceOtp: Scalars['Boolean']['output'];
   verifyRazorpayPayment: Payment;
@@ -9936,6 +9966,11 @@ export type MutationClubClaimAutoPodArgs = {
 
 export type MutationCompleteDbBackupUploadArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCompletePasswordResetArgs = {
+  input: CompletePasswordResetInput;
 };
 
 
@@ -10981,6 +11016,7 @@ export type MutationImportRemoteImageToImagekitArgs = {
   fileName?: InputMaybe<Scalars['String']['input']>;
   folder?: InputMaybe<Scalars['String']['input']>;
   remoteUrl: Scalars['String']['input'];
+  surface?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -10988,6 +11024,7 @@ export type MutationImportRemoteMediaToImagekitArgs = {
   fileName?: InputMaybe<Scalars['String']['input']>;
   folder?: InputMaybe<Scalars['String']['input']>;
   remoteUrl: Scalars['String']['input'];
+  surface?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -11408,6 +11445,11 @@ export type MutationRequestMeetingArgs = {
 
 export type MutationRequestPasswordChangeOtpArgs = {
   input: RequestPasswordChangeInput;
+};
+
+
+export type MutationRequestPasswordResetCodeArgs = {
+  input: PasswordResetLookupInput;
 };
 
 
@@ -12896,6 +12938,11 @@ export type MutationVerifyEventTicketQrArgs = {
 };
 
 
+export type MutationVerifyPasswordResetCodeArgs = {
+  input: VerifyPasswordResetCodeInput;
+};
+
+
 export type MutationVerifyPodAttendanceOtpArgs = {
   challenge_id: Scalars['ID']['input'];
   otp: Scalars['String']['input'];
@@ -13466,6 +13513,61 @@ export type PartyInvoiceTemplateInput = {
   label?: InputMaybe<Scalars['String']['input']>;
   note?: InputMaybe<Scalars['String']['input']>;
   terms?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Where a forgotten-password code is sent. */
+export type PasswordResetChannel =
+  | 'EMAIL'
+  /** WhatsApp, on the number the account signed up with or added later. */
+  | 'PHONE';
+
+/**
+ * Which account is recovering, and where its code should go.
+ *
+ * The fields the chosen channel does not use are ignored rather than required —
+ * one input rather than two mutations, because everything after this step is the
+ * same either way.
+ */
+export type PasswordResetLookupInput = {
+  channel: PasswordResetChannel;
+  /** EMAIL only. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  /** PHONE only — the dial code, e.g. +91. */
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  /** PHONE only — digits, without the dial code. */
+  phone_number?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PasswordResetRequestResult = {
+  __typename?: 'PasswordResetRequestResult';
+  channel: PasswordResetChannel;
+  /** ISO instant the code stops working. Null when nothing was sent. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  /** How long the code lasts, so no screen hard-codes the rule. */
+  expires_in_minutes: Scalars['Int']['output'];
+  ok: Scalars['Boolean']['output'];
+  /**
+   * False when there is no account with these details, or the account signs in
+   * with Google and has no password to reset. No code is sent in either case.
+   */
+  registered: Scalars['Boolean']['output'];
+  /** Seconds to wait before another code can be asked for. */
+  resend_after_seconds: Scalars['Int']['output'];
+  /**
+   * The code itself, echoed back ONLY while no medium could really carry it.
+   * Null the moment a real transport handles the send.
+   */
+  test_code?: Maybe<Scalars['String']['output']>;
+};
+
+export type PasswordResetVerifyResult = {
+  __typename?: 'PasswordResetVerifyResult';
+  ok: Scalars['Boolean']['output'];
+  /**
+   * A single-use grant, valid for what is left of the code's own life. It is
+   * what the last step spends — the code is never sent again.
+   */
+  reset_token: Scalars['String']['output'];
 };
 
 export type Payment = {
@@ -23821,6 +23923,14 @@ export type VerificationType =
   | 'ADDRESS'
   | 'EMAIL'
   | 'IDENTITY';
+
+export type VerifyPasswordResetCodeInput = {
+  channel: PasswordResetChannel;
+  email?: InputMaybe<Scalars['String']['input']>;
+  otp: Scalars['String']['input'];
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  phone_number?: InputMaybe<Scalars['String']['input']>;
+};
 
 export type VerifyRazorpayInput = {
   payment_doc_id: Scalars['ID']['input'];

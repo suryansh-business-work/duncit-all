@@ -23,6 +23,17 @@ export const WA_MANUAL_EVENT_KEY = 'MANUAL_TEST_SEND';
 /** Tech → Environment Variables → AiSensy → Test connection. */
 export const WA_CONNECTION_TEST_EVENT_KEY = 'TECH_CONNECTION_TEST';
 
+/**
+ * A one-time code carried over WhatsApp (`otp.delivery`).
+ *
+ * Not a domain scenario, and deliberately not in `whatsapp.events`: the funnel
+ * there refuses a second message for the same event and recipient, which is
+ * exactly what "Resend code" is. It still belongs in this log — it is a real,
+ * billed message on a real template, and "my code never arrived" needs an
+ * answer in the console. The code itself is NEVER recorded with it.
+ */
+export const WA_OTP_EVENT_KEY = 'AUTH_ONE_TIME_CODE';
+
 export interface WaManualLogInput {
   /** Which surface sent it — the Logs table draws this in Reference, so a row
    * says who pressed the button rather than which scenario fired. */

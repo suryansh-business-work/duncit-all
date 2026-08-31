@@ -1,6 +1,8 @@
 import { userService } from '@modules/access/user/user.service';
 import {
+  completePasswordResetSchema,
   loginSchema,
+  passwordResetLookupSchema,
   registerSchema,
   requestPasswordResetSchema,
   requestPortalLoginOtpSchema,
@@ -9,7 +11,12 @@ import {
   requestPasswordChangeSchema,
   changePasswordSchema,
   googleSignupSchema,
+  verifyPasswordResetCodeSchema,
 } from './auth.validator';
+import {
+  passwordResetService,
+  type PasswordResetLookup,
+} from './password-reset.service';
 import { validate } from '@utils/validate';
 import { assertEligibleDob } from '@utils/age';
 import { referralService } from '@modules/engagement/referral/referral.service';
@@ -110,6 +117,18 @@ export const authResolvers = {
     loginWithPortalOtp: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       const data = await validate(portalLoginOtpSchema, args.input);
       return userService.loginWithPortalOtp(data, signInContext(ctx));
+    },
+    requestPasswordResetCode: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(passwordResetLookupSchema, args.input);
+      return passwordResetService.request(data as PasswordResetLookup);
+    },
+    verifyPasswordResetCode: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(verifyPasswordResetCodeSchema, args.input);
+      return passwordResetService.verify(data as PasswordResetLookup & { otp: string });
+    },
+    completePasswordReset: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(completePasswordResetSchema, args.input);
+      return passwordResetService.complete(data);
     },
     requestPasswordResetOtp: async (_p: unknown, args: { email: string }) => {
       const data = await validate(requestPasswordResetSchema, { email: args.email });

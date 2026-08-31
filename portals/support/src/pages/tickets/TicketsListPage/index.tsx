@@ -36,9 +36,11 @@ export default function TicketsListPage() {
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
         // A failed query rejects, so a resolved one always carries data.
+        // Apollo v4 types it as optional anyway, and an empty page is the
+        // honest reading of the case the type insists on.
         errorPolicy: 'none',
       });
-      return { rows: data.tickets.items, total: data.tickets.total };
+      return { rows: data?.tickets.items ?? [], total: data?.tickets.total ?? 0 };
     },
     [client]
   );

@@ -69,10 +69,12 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
       query: AI_PROMPTS,
       variables: { filter: { kind } },
       fetchPolicy: 'network-only',
-      // A failed query rejects, so a resolved one always carries data.
+      // A failed query rejects, so a resolved one always carries data. Apollo
+      // v4 types it as optional anyway, and an empty library is the honest
+      // reading of the case the type insists on.
       errorPolicy: 'none',
     });
-    return data.aiPrompts;
+    return data?.aiPrompts ?? [];
   }, [client, kind]);
 
   // The table asks for a page; the query answers with the whole (small) list,

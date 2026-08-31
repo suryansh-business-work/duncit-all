@@ -12,7 +12,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import SlotCalendar from '../src/mui/SlotCalendar';
@@ -77,6 +77,12 @@ const settle = async () => {
 };
 
 afterEach(() => {
+  // Unmount FIRST. `globals: false` means Testing Library never sees a global
+  // `afterEach` to register its own cleanup in, so every render stayed mounted
+  // — and a MUI transition timer that outlives the jsdom environment throws
+  // `window is not defined` after teardown, which failed the run with all 98
+  // tests passing and every threshold met.
+  cleanup();
   vi.clearAllMocks();
 });
 

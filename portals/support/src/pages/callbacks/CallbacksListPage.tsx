@@ -23,9 +23,11 @@ export default function CallbacksListPage() {
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
         // A failed query rejects, so a resolved one always carries data.
+        // Apollo v4 types it as optional anyway, and an empty page is the
+        // honest reading of the case the type insists on.
         errorPolicy: 'none',
       });
-      return { rows: data.bouncerCallbackRequests.items, total: data.bouncerCallbackRequests.total };
+      return { rows: data?.bouncerCallbackRequests.items ?? [], total: data?.bouncerCallbackRequests.total ?? 0 };
     },
     [client]
   );

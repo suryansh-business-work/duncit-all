@@ -62,7 +62,7 @@ const result = (over: Record<string, unknown> = {}) => ({
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>

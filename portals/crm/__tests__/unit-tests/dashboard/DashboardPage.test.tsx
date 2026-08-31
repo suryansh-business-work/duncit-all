@@ -8,7 +8,7 @@ import DashboardPage from '@/pages/dashboard';
 
 const wrap = () =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DashboardPage />

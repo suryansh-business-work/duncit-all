@@ -62,7 +62,7 @@ function Harness({ onValue }: Readonly<{ onValue: (value: number | null) => void
 function renderField() {
   const seen: (number | null)[] = [];
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness onValue={(value) => seen.push(value)} />
     </MockedProvider>,
   );

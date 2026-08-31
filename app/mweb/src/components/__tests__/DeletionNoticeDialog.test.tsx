@@ -40,7 +40,7 @@ const withdrawMock = {
 
 function setup(mocks: unknown[]) {
   return render(
-    <MockedProvider mocks={mocks as never[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never[]}>
       <DuncitLocalizationProvider>
         <DeletionNoticeDialog />
       </DuncitLocalizationProvider>

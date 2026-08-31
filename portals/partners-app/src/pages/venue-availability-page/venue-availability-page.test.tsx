@@ -122,7 +122,7 @@ function renderPage(mocks: MockedResponse[]) {
     </MemoryRouter>
   );
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
     </MockedProvider>,
   );

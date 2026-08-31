@@ -20,7 +20,7 @@ function makeStore(seed: Record<string, string> = {}) {
 const wrapper =
   (store: ReturnType<typeof makeStore>, userId = 'u1') =>
   ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <TourProvider userId={userId} storage={store}>
         {children}
       </TourProvider>

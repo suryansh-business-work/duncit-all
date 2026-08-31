@@ -21,7 +21,7 @@ function settingsMock(publicAppSettings: Record<string, unknown> | null) {
 
 function makeWrapper(mocks: any[]) {
   return ({ children }: { children: React.ReactNode }) => (
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       {children}
     </MockedProvider>
   );

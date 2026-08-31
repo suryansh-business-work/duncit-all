@@ -40,7 +40,7 @@ const listMock = (addresses: unknown[]) => ({
 describe('SavedAddressPicker', () => {
   it('renders nothing while the address book is empty', async () => {
     const { container } = render(
-      <MockedProvider mocks={[listMock([]), listMock([])]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[listMock([]), listMock([])]}>
         <SavedAddressPicker onPick={vi.fn()} />
       </MockedProvider>,
     );
@@ -51,7 +51,7 @@ describe('SavedAddressPicker', () => {
 
   it('renders a saved-address dropdown once addresses load', async () => {
     render(
-      <MockedProvider mocks={[listMock([home, work]), listMock([home, work])]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[listMock([home, work]), listMock([home, work])]}>
         <SavedAddressPicker onPick={vi.fn()} />
       </MockedProvider>,
     );
@@ -61,7 +61,7 @@ describe('SavedAddressPicker', () => {
   it('auto-selects the default address on load and fires onPick with it', async () => {
     const onPick = vi.fn();
     render(
-      <MockedProvider mocks={[listMock([home, work]), listMock([home, work])]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[listMock([home, work]), listMock([home, work])]}>
         <SavedAddressPicker onPick={onPick} />
       </MockedProvider>,
     );
@@ -79,7 +79,7 @@ describe('SavedAddressPicker', () => {
   it('re-fires onPick with the chosen address when the buyer picks another', async () => {
     const onPick = vi.fn();
     render(
-      <MockedProvider mocks={[listMock([home, work]), listMock([home, work])]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[listMock([home, work]), listMock([home, work])]}>
         <SavedAddressPicker onPick={onPick} />
       </MockedProvider>,
     );

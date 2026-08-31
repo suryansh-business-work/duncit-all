@@ -133,7 +133,7 @@ const renderIt = (
   const onRejoin = handlers.onRejoin ?? vi.fn();
   const mocks = [appSettingsMock, financeMock, ...(item.pod?.id ? [ordersMock(item.pod.id)] : []), ...extraMocks];
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <PodHistoryDetails
           item={item}

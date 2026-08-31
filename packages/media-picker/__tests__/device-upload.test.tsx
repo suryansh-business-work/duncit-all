@@ -42,7 +42,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -293,7 +293,7 @@ describe('useDeviceUpload', () => {
   const hook = (over: Record<string, unknown> = {}) =>
     renderHook(() => useDeviceUpload(args(over) as never), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]}>
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
           <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
         </MockedProvider>
       ),
@@ -388,7 +388,7 @@ describe('useDeviceUpload uploading', () => {
   const hook = (over: Record<string, unknown> = {}) =>
     renderHook(() => useDeviceUpload(args(over) as never), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]}>
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
           <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
         </MockedProvider>
       ),

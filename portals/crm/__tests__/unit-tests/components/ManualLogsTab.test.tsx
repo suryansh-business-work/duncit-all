@@ -6,7 +6,7 @@ import type { CrmActivity } from '@/api/crm.types';
 
 const renderTab = (activities: CrmActivity[]) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ManualLogsTab entityType="VENUE_LEAD" entityId="v-1" activities={activities} />
     </MockedProvider>
   );

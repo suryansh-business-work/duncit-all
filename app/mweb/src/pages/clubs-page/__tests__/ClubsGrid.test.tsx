@@ -29,7 +29,7 @@ const makeClubs = (n: number) =>
   }));
 
 const setup = (mocks: any[], ui: ReactElement) =>
-  render(<MockedProvider mocks={mocks}>{ui}</MockedProvider>);
+  render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>{ui}</MockedProvider>);
 
 describe('ClubsGrid', () => {
   it('renders a card for each club with the pod count', () => {

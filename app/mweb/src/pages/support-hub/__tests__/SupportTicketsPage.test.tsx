@@ -78,7 +78,7 @@ const ticketsMock = {
 
 function renderPage(initialEntries: string[], mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <MemoryRouter initialEntries={initialEntries}>
           <SupportTicketsPage />

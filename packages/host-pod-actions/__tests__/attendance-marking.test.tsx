@@ -66,7 +66,7 @@ const row = (over: Partial<PodAttendanceRow> = {}): PodAttendanceRow =>
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -579,7 +579,7 @@ describe('AttendanceOtpDialog', () => {
     expect(screen.getByLabelText(labels.otpCode)).toBeInTheDocument();
 
     rerender(
-      <MockedProvider mocks={[requestMock()]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[requestMock()]}>
         <ThemeProvider theme={testTheme}>
           <AttendanceOtpDialog
             podId="pod-1"

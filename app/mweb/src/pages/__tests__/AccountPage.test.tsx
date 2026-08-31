@@ -174,7 +174,7 @@ const healthMock = (h: HealthScore | null) => ({
 
 const renderPage = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <AccountPage />
       </MemoryRouter>

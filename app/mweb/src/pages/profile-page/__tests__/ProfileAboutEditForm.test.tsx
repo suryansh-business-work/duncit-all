@@ -54,7 +54,7 @@ const LINK = { label: 'Strava', url: 'https://strava.com/meera' };
 const form = (over: Partial<Parameters<typeof ProfileAboutEditForm>[0]> = {}) => {
   const spies = { onCancel: vi.fn(), onSaved: vi.fn() };
   const result = render(
-    <MockedProvider mocks={[saved]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[saved]}>
       <ThemeProvider theme={testTheme}>
         <ProfileAboutEditForm bio="Plays doubles on Sundays." links={[LINK]} {...spies} {...over} />
       </ThemeProvider>

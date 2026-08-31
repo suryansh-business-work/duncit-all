@@ -99,7 +99,7 @@ const fileInput = () => document.querySelector('input[type="file"]') as HTMLInpu
 
 function renderReviews(mocks: MockedResponse[]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ProductReviews productId={PRODUCT_ID} />
     </MockedProvider>,
   );

@@ -103,7 +103,7 @@ const couponsMock = (pod_id: string | null): MockedResponse => ({
 
 function renderCheckout(mocks: MockedResponse[], path = `/checkout/${POD_ID}`) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <CartProvider>
         <MemoryRouter initialEntries={[path]}>
           <Routes>

@@ -108,7 +108,7 @@ describe('Step-4 pricing guards', () => {
 
   it('states the venue rule inside the Venue Charges section', async () => {
     render(
-      <MockedProvider mocks={[financeMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[financeMock]}>
         <PricePanel preview={previewWith({ venueShortfall: true, blocked: true })} />
       </MockedProvider>,
     );
@@ -119,7 +119,7 @@ describe('Step-4 pricing guards', () => {
 
   it('keeps the charges tree clean when the pod covers the venue', async () => {
     render(
-      <MockedProvider mocks={[financeMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[financeMock]}>
         <PricePanel preview={previewWith({})} />
       </MockedProvider>,
     );
@@ -139,7 +139,7 @@ const suggestionVariables = { no_of_spots: 10, venue_id: 'v1', venue_amount: 300
 
 function renderDialog(prices: { price: number; host_receives: number }[]) {
   return render(
-    <MockedProvider
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
       mocks={[
         {
           request: { query: SUGGESTED_TICKET_PRICES, variables: suggestionVariables },

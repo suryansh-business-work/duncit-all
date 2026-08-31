@@ -35,7 +35,7 @@ describe('useTranslation', () => {
 
   it('still resolves its own keys under a provider whose bundle lacks them', () => {
     const wrapper = ({ children }: Readonly<{ children: ReactNode }>) => (
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <LocaleProvider fallback={{}}>{children}</LocaleProvider>
       </MockedProvider>
     );

@@ -85,7 +85,7 @@ const settle = async () => {
 
 const sos = (selected: SupportPodOption | null, mocks: MockedResponse[] = [activeSos(null), raiseOk]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <SosContent selected={selected} />
       </ThemeProvider>

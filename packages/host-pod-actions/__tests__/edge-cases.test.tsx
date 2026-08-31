@@ -50,7 +50,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>
@@ -60,7 +60,7 @@ const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
 const hookWrapper =
   (mocks: readonly MockedResponse[] = []) =>
   ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{children}</HostPodActionsProvider>
       </ThemeProvider>

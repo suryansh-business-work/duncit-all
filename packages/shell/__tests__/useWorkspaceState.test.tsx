@@ -39,17 +39,17 @@ const stateMock = (dto: ShellWorkspaceStateDto): MockedResponse =>
 
 const saveMock = (onSave?: (input: Record<string, unknown>) => void): MockedResponse =>
   ({
-    request: { query: SAVE_SHELL_WORKSPACE_STATE, variables: (variables: { input: Record<string }, unknown> }) => {
+    request: { query: SAVE_SHELL_WORKSPACE_STATE, variables: (variables: { input: Record<string, unknown> }) => {
       onSave?.(variables.input);
       return true;
-    },
+    } },
     result: { data: { saveShellWorkspaceState: DTO } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   }) as MockedResponse;
 
 const wrapper = (mocks: readonly MockedResponse[]) =>
   function Wrapper({ children }: { children: ReactNode }) {
-    return <MockedProvider mocks={[...mocks]}>{children}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{children}</MockedProvider>;
   };
 
 describe('useWorkspaceState', () => {

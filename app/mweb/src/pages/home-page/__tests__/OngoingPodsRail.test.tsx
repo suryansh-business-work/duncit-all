@@ -41,7 +41,7 @@ const pod = (over: Record<string, unknown> = {}) => ({
 
 const rail = (pods: ReturnType<typeof pod>[]) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <OngoingPodsRail pods={pods} hostNameOf={() => 'Host One'} />

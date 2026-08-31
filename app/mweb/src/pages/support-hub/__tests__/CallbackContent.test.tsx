@@ -65,7 +65,7 @@ const populatedHistoryMock = {
 
 function renderContent(mocks: any[], selected: SupportPodOption | null = null) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <CallbackContent selected={selected} />
       </DuncitLocalizationProvider>

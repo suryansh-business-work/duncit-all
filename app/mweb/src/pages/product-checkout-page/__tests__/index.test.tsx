@@ -153,7 +153,7 @@ const dummyMock = (): MockedResponse => ({
 
 function renderPage(mocks: MockedResponse[], lines: Array<{ meta: CartLineMeta; qty: number }> = []) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <CartProvider>
         <MemoryRouter initialEntries={['/product-checkout']}>
           <Seed lines={lines} />

@@ -106,7 +106,7 @@ const meetingMock = (ok = true) => ({
 
 const renderGate = (mocks: unknown[], kind = 'venue') =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={[`/gate/${kind}`]}>
         <Routes>
           <Route path="/gate/:kind" element={<SurveyGatePage />} />

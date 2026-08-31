@@ -52,7 +52,7 @@ const populatedSlots = [
 
 const renderForm = (mocks: unknown[], props: Partial<React.ComponentProps<typeof MeetingForm>> = {}) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <DuncitLocalizationProvider>
         <MemoryRouter>
           <MeetingForm kind="VENUE" submitting={false} onSubmit={vi.fn()} {...props} />

@@ -59,7 +59,7 @@ const makeMock = (roles: string[], meetings: unknown[]) => ({
 
 function setup(mock: ReturnType<typeof makeMock>) {
   return render(
-    <MockedProvider mocks={[mock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[mock]}>
       <MemoryRouter>
         <EarnPage />
       </MemoryRouter>

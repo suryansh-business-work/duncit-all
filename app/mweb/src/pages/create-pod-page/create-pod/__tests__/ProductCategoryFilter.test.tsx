@@ -58,7 +58,7 @@ function Harness({ products }: Readonly<{ products: CreatePodProduct[] }>) {
 
 const renderFor = (club: unknown) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness products={filterProductsForClub(CATALOGUE, club) as CreatePodProduct[]} />
     </MockedProvider>,
   );

@@ -42,7 +42,7 @@ const flagsMock = (enabled: boolean) => ({
 
 function renderAt(initialPath: string, productsVisible = true) {
   return render(
-    <MockedProvider mocks={[flagsMock(productsVisible)]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[flagsMock(productsVisible)]}>
       <MemoryRouter initialEntries={[initialPath]}>
         <CartProvider>
           <Routes>

@@ -13,7 +13,7 @@ function Providers({
   children,
 }: Readonly<{ mocks: readonly MockedResponse[]; children: ReactNode }>) {
   return (
-    <MockedProvider mocks={mocks as MockedResponse[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]}>
       <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </MockedProvider>
   );

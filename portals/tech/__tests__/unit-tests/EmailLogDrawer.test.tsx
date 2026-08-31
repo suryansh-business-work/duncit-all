@@ -38,7 +38,7 @@ const mockFor = (data: Record<string, unknown> | null) => [
 const renderDrawer = (data: Record<string, unknown> | null = row, onClose = vi.fn()) => {
   render(
     <MemoryRouter>
-      <MockedProvider mocks={mockFor(data)}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mockFor(data)}>
         <EmailLogDrawer logId="L1" onClose={onClose} />
       </MockedProvider>
     </MemoryRouter>

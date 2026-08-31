@@ -33,7 +33,7 @@ const config: CrmOptionGroup = {
 
 const wrap = (ui: React.ReactElement) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
       </MemoryRouter>

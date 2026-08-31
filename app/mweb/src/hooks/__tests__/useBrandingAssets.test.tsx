@@ -21,7 +21,7 @@ const BRANDING_ASSETS = gql`
 
 function makeWrapper(mocks: any[]) {
   return ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       {children}
     </MockedProvider>
   );

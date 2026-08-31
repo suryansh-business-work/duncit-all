@@ -15,7 +15,7 @@ const summary = {
 
 function setup(withSummary: boolean) {
   return render(
-    <MockedProvider>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}>
       <MemoryRouter>
         <EarningsCard balance={99.5} currency="₹" summary={withSummary ? summary : null} />
       </MemoryRouter>

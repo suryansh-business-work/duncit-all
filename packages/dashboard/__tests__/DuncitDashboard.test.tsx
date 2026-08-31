@@ -70,7 +70,7 @@ const layoutMock = (items: SavedItem[]): MockedResponse => ({
 
 const mount = (widgets = WIDGETS, mocks: MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
       <DuncitDashboard dashboardId="admin.overview" widgets={widgets} header={<h1>Overview</h1>} />
       </ThemeProvider>

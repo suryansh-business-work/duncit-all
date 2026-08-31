@@ -39,7 +39,7 @@ const baseProps: Props = {
 
 const renderDialog = (over: Partial<Props> = {}) =>
   render(
-    <MockedProvider mocks={[superMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[superMock]}>
       <IdeaComposerDialog {...baseProps} {...over} />
     </MockedProvider>,
   );

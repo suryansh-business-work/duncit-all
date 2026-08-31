@@ -67,7 +67,7 @@ const renderRow = (over: Partial<OccasionalIconRow> = {}, index = 3) => {
   const onChange = vi.fn();
   const onRemove = vi.fn();
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <DuncitLocalizationProvider>
         <OccasionalIconRowFields
           row={makeRow(over)}

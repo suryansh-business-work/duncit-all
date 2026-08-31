@@ -106,14 +106,14 @@ const resubmitMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
           is_active: true,
         },
       },
-    },
+    } },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
   }) as MockedResponse;
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>

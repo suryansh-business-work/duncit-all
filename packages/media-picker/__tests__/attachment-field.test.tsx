@@ -31,7 +31,7 @@ const uploadAnswers: MockedResponse[] = [
 
 const wrap = (ui: React.ReactElement, mocks: MockedResponse[] = uploadAnswers) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );
@@ -176,7 +176,11 @@ describe('AttachmentUploadField picking', () => {
 
     chooseFiles([pngFile()]);
 
-    expect(await screen.findByText('Network error. Please try again.')).toBeInTheDocument();
+    // Apollo 4 throws the link's own error rather than wrapping it as
+    // `networkError`, so the reason reaches the user instead of a generic line.
+    // A real transport failure still maps to the offline message: its text is
+    // what the parser matches on.
+    expect(await screen.findByText('boom')).toBeInTheDocument();
   });
 
   it('reports the direct strategy being unavailable instead of swallowing it', async () => {

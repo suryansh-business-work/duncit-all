@@ -19,7 +19,7 @@ import { CLUBFORM_FALLBACK_FLAT, useTranslation } from '../../src/i18n/useTransl
 const providerWith =
   (fallback: Record<string, string>) =>
   ({ children }: Readonly<{ children: ReactNode }>) => (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <LocaleProvider fallback={fallback}>{children}</LocaleProvider>
     </MockedProvider>
   );

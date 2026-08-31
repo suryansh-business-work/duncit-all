@@ -60,7 +60,7 @@ const mocks = [
 describe('HostShareCard', () => {
   it('renders v2 payouts as your-amount − commission = payout', async () => {
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <HostShareCard />
       </MockedProvider>,
     );

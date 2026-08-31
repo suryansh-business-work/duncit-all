@@ -24,7 +24,7 @@ const mock = (position: string, ads: unknown[]) => ({
 });
 
 const setup = (mocks: any[], ui: ReactElement) =>
-  render(<MockedProvider mocks={mocks}>{ui}</MockedProvider>);
+  render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>{ui}</MockedProvider>);
 
 afterEach(() => {
   vi.restoreAllMocks();

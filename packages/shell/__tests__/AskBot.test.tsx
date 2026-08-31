@@ -81,7 +81,7 @@ const chatMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   }) as MockedResponse;
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
-  render(<MockedProvider mocks={[...mocks]}>{ui}</MockedProvider>);
+  render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{ui}</MockedProvider>);
 
 describe('useBotCopy', () => {
   it('names the bot this console ships copy for', () => {
@@ -344,7 +344,7 @@ describe('AskBotDialog', () => {
 describe('useAskBot', () => {
   const hook = (mocks: readonly MockedResponse[]) =>
     renderHook(() => useAskBot('navigation'), {
-      wrapper: ({ children }) => <MockedProvider mocks={[...mocks]}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{children}</MockedProvider>,
     });
 
   // "and in the app?" only works because the thread so far travels with it.

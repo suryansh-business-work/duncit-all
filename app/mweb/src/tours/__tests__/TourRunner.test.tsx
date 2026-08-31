@@ -31,7 +31,7 @@ function Starter() {
 
 function mount(anchors: string[]) {
   return render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <TourProvider userId="u1" storage={store}>
           {anchors.map((a) => (

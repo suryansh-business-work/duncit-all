@@ -7,7 +7,7 @@ import ForgotPasswordCard from '../ForgotPasswordCard';
 function renderCard(props: Partial<React.ComponentProps<typeof ForgotPasswordCard>> = {}) {
   const onSubmit = props.onSubmit ?? vi.fn().mockResolvedValue(undefined);
   const utils = render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <ForgotPasswordCard
           loading={props.loading ?? false}

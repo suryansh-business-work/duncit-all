@@ -73,7 +73,7 @@ const mount = (props: Partial<MediaPickerDialogProps> = {}) => {
   const onPicked = vi.fn();
   const result = render(
     <MemoryRouter>
-      <MockedProvider mocks={mocks()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks()}>
         <ThemeProvider theme={testTheme}>
           <MediaPickerDialog open onClose={onClose} onPicked={onPicked} folder="/pods" {...props} />
         </ThemeProvider>

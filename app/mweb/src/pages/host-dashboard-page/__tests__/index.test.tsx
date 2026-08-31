@@ -76,7 +76,7 @@ const podsMock = {
 
 function setup(mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter>
         <HostDashboardPage />
       </MemoryRouter>

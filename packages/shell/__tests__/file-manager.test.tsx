@@ -100,7 +100,7 @@ const PDF = file({
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>
@@ -267,7 +267,7 @@ describe('FileDetailsView saving', () => {
       onError: vi.fn(),
     };
     const view = render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>
           <MemoryRouter>
             <FileDetailsView file={file()} canWrite {...spies} {...props} />
@@ -563,7 +563,7 @@ describe('FileManagerDialog interactions', () => {
 
   const wrapMocked = (ui: React.ReactNode, mocks: readonly MockedResponse[]) =>
     render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>
           <MemoryRouter>{ui}</MemoryRouter>
         </ThemeProvider>

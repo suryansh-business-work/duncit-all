@@ -94,7 +94,7 @@ function Harness({
 
 const step = (over: Parameters<typeof Harness>[0] = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <Harness {...over} />

@@ -33,7 +33,7 @@ function Seed({ lines }: Readonly<{ lines: Array<{ meta: CartLineMeta; qty: numb
 
 const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <CartProvider>
         <MemoryRouter initialEntries={['/cart']}>
           <Seed lines={lines} />

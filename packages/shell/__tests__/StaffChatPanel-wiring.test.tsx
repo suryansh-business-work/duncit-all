@@ -53,7 +53,7 @@ const settle = async () => {
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
         <StaffChatPanel open onClose={vi.fn()} meId="u-1" meName="Asha Rao" meRoles={['SUPPORT']} {...props} />
       </ThemeProvider>

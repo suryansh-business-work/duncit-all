@@ -105,7 +105,7 @@ const participantsMock = {
 
 function renderPage(extraMocks: any[] = [], pod = podActive, messages = [otherMsg, mineMsg]) {
   return render(
-    <MockedProvider
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
       mocks={[messagesMock(pod, messages), participantsMock, ...extraMocks]}
     >
       <ChatRoomPage />

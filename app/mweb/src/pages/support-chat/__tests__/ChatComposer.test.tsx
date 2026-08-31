@@ -48,7 +48,7 @@ const fileInput = () => document.querySelector('input[type="file"]') as HTMLInpu
 function setup(mocks: MockedResponse[] = []) {
   const onSend = vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ChatComposer onSend={onSend} onTyping={vi.fn()} />
     </MockedProvider>,
   );

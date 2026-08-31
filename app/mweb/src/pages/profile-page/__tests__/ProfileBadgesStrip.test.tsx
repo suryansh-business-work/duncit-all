@@ -29,7 +29,7 @@ const row = (over: Partial<BadgeProgressRow>): BadgeProgressRow => ({
 
 const renderStrip = (rows: BadgeProgressRow[]) =>
   render(
-    <MockedProvider
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
       mocks={[{ request: { query: MY_BADGE_PROGRESS }, result: { data: { myBadgeProgress: rows } } }]}
     >
       <MemoryRouter>

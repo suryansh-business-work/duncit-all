@@ -47,7 +47,7 @@ const renderCascade = (
   mocks = [superMock, catMock, subMock],
 ) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <CategoryCascade value={value} onChange={onChange} allowAll={props.allowAll} />
     </MockedProvider>,
   );

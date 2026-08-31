@@ -93,7 +93,7 @@ interface Handlers {
 const renderTable = (mocks: MockedResponse[], handlers: Handlers = {}) => {
   const { onEdit = vi.fn(), canManageProducts = true, ...rest } = handlers;
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <ProductListingsTable
           brandId="b1"

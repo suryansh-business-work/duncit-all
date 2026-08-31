@@ -58,7 +58,7 @@ export const wrap = (
   surface: EarnSurfaceConfig = buildConfig(),
 ) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <DuncitLocalizationProvider>
           <EarnSurfaceProvider config={surface}>{ui}</EarnSurfaceProvider>

@@ -42,7 +42,7 @@ const appSettingsMock: MockedResponse = {
  */
 export const renderInPortal = (ui: ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[appSettingsMock, ...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[appSettingsMock, ...mocks]}>
       <ThemeProvider theme={createTheme()}>
         <DuncitLocalizationProvider>{ui}</DuncitLocalizationProvider>
       </ThemeProvider>

@@ -30,7 +30,7 @@ export function renderWithProviders(ui: ReactElement, options: Options = {}) {
   // Always provide branding + app-settings mocks — shell chrome and every
   // date-formatting table cell fire them; unused mocks are harmless otherwise.
   return render(
-    <MockedProvider mocks={[brandingMock(), appSettingsMock(), ...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[brandingMock(), appSettingsMock(), ...mocks]}>
       <ColorModeProvider>
         <ConfirmProvider>
           <MemoryRouter initialEntries={initialEntries}>

@@ -181,7 +181,7 @@ const brandsMock = (brands: ReturnType<typeof brand>[] = []): MockedResponse => 
 
 const renderPage = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/ecomm-brand']}>
         <Routes>
           <Route path="/ecomm-brand" element={<EcommBrandPage />} />

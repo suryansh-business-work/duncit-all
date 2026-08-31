@@ -99,7 +99,7 @@ beforeAll(() => {
 
 const mountAt = (route: string) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter initialEntries={[route]}>
         <App />
       </MemoryRouter>

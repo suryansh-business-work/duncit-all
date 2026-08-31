@@ -94,7 +94,7 @@ const hostPodsMock = (pods: unknown[] = []) => ({
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={['/host']}>{ui}</MemoryRouter>
     </MockedProvider>,
   );

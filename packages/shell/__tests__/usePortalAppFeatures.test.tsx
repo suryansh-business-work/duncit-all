@@ -24,7 +24,7 @@ const PORTAL_APP_FEATURES = gql`
 const wrapper =
   (mocks: readonly unknown[]) =>
   ({ children }: { children: ReactNode }) =>
-    <MockedProvider mocks={mocks as never}>{children}</MockedProvider>;
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>{children}</MockedProvider>;
 
 describe('usePortalAppFeatures', () => {
   it('turns everything on for a portal with no registry row at all', async () => {

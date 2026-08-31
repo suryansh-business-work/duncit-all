@@ -89,7 +89,7 @@ function renderDialog(
   const onClose = vi.fn();
   const onUpdateLine = vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ProductDetailDialog
         productId={PRODUCT_ID}
         onClose={onClose}
@@ -105,7 +105,7 @@ function renderDialog(
 describe('ProductDetailDialog', () => {
   it('renders nothing-open when productId is null and skips tracking', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ProductDetailDialog productId={null} onClose={vi.fn()} />
       </MockedProvider>,
     );
@@ -119,7 +119,7 @@ describe('ProductDetailDialog', () => {
 
   it('renders an error alert when the product query fails', async () => {
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           viewMock(),
           clickMock(),

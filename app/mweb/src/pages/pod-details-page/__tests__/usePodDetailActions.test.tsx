@@ -53,7 +53,7 @@ function renderActions(overrides: Partial<Parameters<typeof usePodDetailActions>
   };
   const utils = renderHook(() => usePodDetailActions(args as any), {
     wrapper: ({ children }: { children: React.ReactNode }) => (
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         {children}
       </MockedProvider>
     ),

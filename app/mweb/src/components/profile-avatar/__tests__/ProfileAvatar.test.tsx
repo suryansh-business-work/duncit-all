@@ -62,7 +62,7 @@ const oneStory: MockedResponse[] = [storedStory];
 
 function setup(photo: string | null, mocks = noStories, onChanged = vi.fn()) {
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ProfileAvatar photo={photo} name="Riya Sharma" onChanged={onChanged} />
     </MockedProvider>,
   );

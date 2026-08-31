@@ -49,7 +49,7 @@ function renderPage(
 ) {
   const { mocks = [], path, initialEntries } = options;
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <ConfirmProvider>
           <LocalizationProvider dateAdapter={AdapterDateFns}>

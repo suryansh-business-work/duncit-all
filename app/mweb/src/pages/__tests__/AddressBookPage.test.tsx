@@ -12,7 +12,7 @@ const emptyMock = {
 describe('AddressBookPage', () => {
   it('renders the Address Book section as a standalone page', async () => {
     render(
-      <MockedProvider mocks={[emptyMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[emptyMock]}>
         <AddressBookPage />
       </MockedProvider>,
     );

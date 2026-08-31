@@ -27,7 +27,7 @@ let activeMocks: MockedResponse[] = [];
 let onDone: Mock<[], void>;
 
 function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
-  return <MockedProvider mocks={activeMocks}>{children}</MockedProvider>;
+  return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={activeMocks}>{children}</MockedProvider>;
 }
 
 interface ExistingRow {

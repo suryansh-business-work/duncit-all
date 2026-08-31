@@ -38,7 +38,7 @@ describe('useTranslation', () => {
 
   it('lets the provider’s copy win, and answers the rest from the local bundle', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <LocaleProvider fallback={{ [KNOWN]: 'Klub' }}>
           <Probe />
         </LocaleProvider>

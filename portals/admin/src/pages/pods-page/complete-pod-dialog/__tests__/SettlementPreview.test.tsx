@@ -121,7 +121,7 @@ describe('SettlementPreview', () => {
     vi.useFakeTimers();
     const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
     const tree = (amount: number) => (
-      <MockedProvider mocks={[previewMock()]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[previewMock()]}>
         <SettlementPreview podId="pod-1" venueBillAmount={amount} hostUserId="u1" />
       </MockedProvider>
     );
@@ -154,7 +154,7 @@ describe('SettlementPreview', () => {
       },
     };
     const tree = (amount: number) => (
-      <MockedProvider mocks={[mock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[mock]}>
         <SettlementPreview podId="pod-1" venueBillAmount={amount} hostUserId="u1" />
       </MockedProvider>
     );

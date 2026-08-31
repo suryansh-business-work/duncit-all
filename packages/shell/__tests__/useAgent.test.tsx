@@ -31,7 +31,7 @@ const chatMock = (message: string, over: Partial<MockedResponse> = {}): MockedRe
 
 const wrapper = (mocks: readonly MockedResponse[]) =>
   function Wrapper({ children }: { children: ReactNode }) {
-    return <MockedProvider mocks={[...mocks]}>{children}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{children}</MockedProvider>;
   };
 
 afterEach(() => {

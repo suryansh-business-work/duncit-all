@@ -38,7 +38,7 @@ const config = () => hostActionsConfig();
 
 const wrap = (ui: ReactNode) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
       <HostPodActionsProvider {...config()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>

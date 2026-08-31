@@ -27,7 +27,7 @@ const catalogueMock = (locale: string, entries: { key: string; value: string }[]
 
 function renderSection(mocks: MockedResponse[]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <LocaleProvider fallback={MWEB_FALLBACK_FLAT} userLocale="en-IN">
         <LanguageSection />
       </LocaleProvider>

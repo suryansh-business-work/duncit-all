@@ -85,7 +85,7 @@ const settle = async () => {
 
 const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMock()]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
         <Routes>

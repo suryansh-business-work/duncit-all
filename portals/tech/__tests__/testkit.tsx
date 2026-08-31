@@ -28,7 +28,7 @@ interface Options {
 export function renderWithProviders(ui: ReactElement, options: Options = {}) {
   const { mocks = [], initialEntries = ['/'], routes } = options;
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ColorModeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <MemoryRouter initialEntries={initialEntries}>

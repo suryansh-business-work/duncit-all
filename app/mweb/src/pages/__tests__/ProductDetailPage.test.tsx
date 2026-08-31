@@ -108,7 +108,7 @@ function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[]
     result: { data: { podsForProduct: pods } },
   };
   return render(
-    <MockedProvider
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
       mocks={[...mocks, podsMock, podsMock] as never}
       cache={cache}
     >

@@ -33,7 +33,7 @@ export const mountSection = (
   scope: PodDetailsScope = 'ADMIN',
 ) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
           <PodDetailsScopeProvider scope={scope}>

@@ -22,7 +22,7 @@ function Harness({
   });
   const dob = watch('dob');
   return (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <DuncitLocalizationProvider>
         <div>
           <DobYearField control={control} minAge={18} />

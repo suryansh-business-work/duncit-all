@@ -134,7 +134,7 @@ function relatedMock(overrides: Partial<{ error: boolean }> = {}) {
 
 function renderPage(mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/club/chess']}>
         <Routes>
           <Route path="/club/:clubSlug" element={<ClubDetailsPage />} />

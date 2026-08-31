@@ -41,7 +41,7 @@ afterEach(() => {
 function Harness({ initial = [] as string[], mocks = [] as MockedResponse[] }: Readonly<{ initial?: string[]; mocks?: MockedResponse[] }>) {
   const [attachments, setAttachments] = useState<string[]>(initial);
   return (
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
     </MockedProvider>
   );

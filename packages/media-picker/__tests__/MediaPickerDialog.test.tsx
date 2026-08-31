@@ -45,7 +45,7 @@ const mount = (props: Partial<MediaPickerDialogProps> = {}) => {
   // mount inside a Router exactly as it does on every surface.
   const result = render(
     <MemoryRouter>
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
           <MediaPickerDialog open onClose={onClose} onPicked={onPicked} {...props} />
         </ThemeProvider>

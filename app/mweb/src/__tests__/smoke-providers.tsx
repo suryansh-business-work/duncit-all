@@ -51,9 +51,9 @@ export function SmokeProviders({ children, link }: Readonly<SmokeProvidersProps>
   );
 
   if (link) {
-    return <MockedProvider link={link}>{inner}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={link}>{inner}</MockedProvider>;
   }
-  return <MockedProvider mocks={[]}>{inner}</MockedProvider>;
+  return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>{inner}</MockedProvider>;
 }
 
 export interface SmokeRouteProps {

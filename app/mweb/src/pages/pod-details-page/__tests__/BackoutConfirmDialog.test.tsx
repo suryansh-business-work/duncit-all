@@ -48,7 +48,7 @@ function renderDialog(
   return {
     ...baseProps,
     ...render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <MemoryRouter initialEntries={['/pods/1']}>
           <BackoutConfirmDialog {...baseProps} />
         </MemoryRouter>

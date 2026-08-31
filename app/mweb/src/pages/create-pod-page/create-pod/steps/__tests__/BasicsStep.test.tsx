@@ -47,7 +47,7 @@ function Harness({ withErrors = false }: { withErrors?: boolean }) {
 
 function renderStep(withErrors = false) {
   return render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness withErrors={withErrors} />
     </MockedProvider>,
   );

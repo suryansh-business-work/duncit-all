@@ -179,7 +179,7 @@ function renderRail(props: Partial<Parameters<typeof HomeStatusRail>[0]> = {}) {
     ...props,
   };
   return render(
-    <MockedProvider mocks={mutationMocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mutationMocks}>
       <HomeStatusRail {...(merged as any)} />
     </MockedProvider>,
   );

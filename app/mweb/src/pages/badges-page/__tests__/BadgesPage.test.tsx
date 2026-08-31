@@ -26,7 +26,7 @@ const mockFor = (myBadgeProgress: BadgeProgressRow[]) => [
 
 const renderPage = (rows: BadgeProgressRow[]) =>
   render(
-    <MockedProvider mocks={mockFor(rows)}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mockFor(rows)}>
       <BadgesPage />
     </MockedProvider>,
   );

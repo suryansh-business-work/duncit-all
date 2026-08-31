@@ -8,7 +8,7 @@ import { publicAppSettingsMock, publicAppSettingsNullMock } from '../mocks/commo
 const wrapper =
   (mocks: MockedResponse[] = [publicAppSettingsMock()]) =>
   ({ children }: { children: React.ReactNode }) => (
-    <MockedProvider mocks={mocks}>{children}</MockedProvider>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>{children}</MockedProvider>
   );
 
 describe('useDateFormat', () => {

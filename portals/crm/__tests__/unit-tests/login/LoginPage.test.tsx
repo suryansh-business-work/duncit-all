@@ -19,7 +19,7 @@ const LOGIN = gql`
 
 const wrap = (mocks: any[], initialEntries: string[] = ['/login']) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={initialEntries}>
         <DuncitThemeProvider>
           <LoginPage />

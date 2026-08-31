@@ -64,7 +64,7 @@ function FormHarness({ children }: Readonly<{ children: React.ReactNode }>) {
 
 const wrap = (children: React.ReactNode) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <FormHarness>{children}</FormHarness>

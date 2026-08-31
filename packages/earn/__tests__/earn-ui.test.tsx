@@ -54,7 +54,7 @@ const config = (over: Partial<EarnSurfaceConfig> = {}): EarnSurfaceConfig =>
 
 const wrap = (ui: ReactElement, surface: EarnSurfaceConfig = config()) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
       <EarnSurfaceProvider config={surface}>{ui}</EarnSurfaceProvider>
       </ThemeProvider>

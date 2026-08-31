@@ -38,7 +38,7 @@ const settle = async () => {
 const wrap = (ui: React.ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
     <MemoryRouter>
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
       </MockedProvider>
     </MemoryRouter>
@@ -204,7 +204,7 @@ describe('useDeviceUpload with a croppable preset', () => {
         } as never),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={[settingsMock]}>
+          <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[settingsMock]}>
             <ThemeProvider theme={testTheme}>{children}</ThemeProvider>
           </MockedProvider>
         ),
@@ -559,10 +559,10 @@ describe('the last edges', () => {
           maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
-          request: { query: IMPORT_REMOTE, variables: (variables: Record<string }, unknown>) => {
+          request: { query: IMPORT_REMOTE, variables: (variables: Record<string, unknown>) => {
             importCalls.push(variables);
             return true;
-          },
+          } },
           result: {
             data: {
               importRemoteImageToImagekit: {

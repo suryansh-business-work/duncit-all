@@ -33,7 +33,7 @@ function Harness({ initialReel = '', onForm }: { initialReel?: string; onForm?: 
 function setup(initialReel = '') {
   let form: any;
   const utils = render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness initialReel={initialReel} onForm={(f) => (form = f)} />
     </MockedProvider>,
   );

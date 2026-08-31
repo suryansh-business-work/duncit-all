@@ -313,7 +313,7 @@ describe('StaffChatButton', () => {
 
   const button = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) =>
     render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ShellRuntimeProvider graphqlUrl="https://server.test/graphql" tokenKey="token">
           <StaffChatButton meId="me" open={false} onToggle={vi.fn()} {...props} />
         </ShellRuntimeProvider>
@@ -347,7 +347,7 @@ describe('StaffChatButton', () => {
   it('skips the unread query and the socket outside a portal boot at all', async () => {
     expect(() =>
       render(
-        <MockedProvider mocks={[]}>
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
           <StaffChatButton meId="me" open={false} onToggle={vi.fn()} />
         </MockedProvider>,
       ),

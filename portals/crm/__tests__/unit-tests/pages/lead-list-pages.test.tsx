@@ -21,7 +21,7 @@ const tableVars = {
 
 const wrap = (ui: React.ReactElement, mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter>{ui}</MemoryRouter>
     </MockedProvider>
   );

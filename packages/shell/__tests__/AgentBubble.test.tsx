@@ -26,7 +26,7 @@ describe('AgentBubble', () => {
       items: [{ kind: 'POD', ok: true, id: 'p-1', ref: 'DUN-POD-1', title: 'Badminton', detail: '', when: null }],
     };
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AgentBubble message={message} />
       </MockedProvider>,
     );

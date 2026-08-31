@@ -88,7 +88,7 @@ const podsMock = (venueId: string, pods: unknown[]) => ({
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       {ui}
     </MockedProvider>,
   );

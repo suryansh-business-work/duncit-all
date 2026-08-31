@@ -35,7 +35,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactNode, over = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig(over)}>{ui}</HostPodActionsProvider>
       </ThemeProvider>

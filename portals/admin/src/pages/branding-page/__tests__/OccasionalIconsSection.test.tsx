@@ -70,7 +70,7 @@ const iconsQuery = (rows: SavedRow[]): MockedResponse => ({
 
 const renderSection = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <OccasionalIconsSection />
       </DuncitLocalizationProvider>

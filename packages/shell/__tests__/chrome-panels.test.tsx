@@ -38,7 +38,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactElement) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={['/']}>{ui}</MemoryRouter>
       </ThemeProvider>
@@ -168,7 +168,7 @@ describe('BotChat', () => {
       },
     ];
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <ThemeProvider theme={testTheme}>
           <MemoryRouter initialEntries={['/']}>
             <BotChat botKey="navigation" copy={copy} onRegisterRestart={vi.fn()} />

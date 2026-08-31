@@ -28,7 +28,7 @@ const baseProps = () => ({
 
 const mount = (props: Partial<ReturnType<typeof baseProps>> = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ConversationDialogs {...baseProps()} {...props} />
     </MockedProvider>,
   );

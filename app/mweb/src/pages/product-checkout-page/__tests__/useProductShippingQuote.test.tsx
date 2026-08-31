@@ -17,7 +17,7 @@ const shippingMock = (): MockedResponse => ({
 const wrapper = (mocks: MockedResponse[]) =>
   (function Wrapper({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         {children}
       </MockedProvider>
     );

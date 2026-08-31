@@ -21,7 +21,7 @@ const settle = async () => {
 describe('AgentLauncher', () => {
   it('opens the drawer from the dock tab, hiding the tab while it is open', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AgentLauncher />
       </MockedProvider>,
     );
@@ -36,7 +36,7 @@ describe('AgentLauncher', () => {
 
   it('closes the drawer from its own close button, bringing the dock tab back', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AgentLauncher />
       </MockedProvider>,
     );
@@ -63,7 +63,7 @@ describe('AgentLauncher', () => {
       },
     ];
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <AgentLauncher />
       </MockedProvider>,
     );
@@ -81,7 +81,7 @@ describe('AgentLauncher', () => {
 
   it('runs whatever restart AgentChat registered from its own restart button', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AgentLauncher />
       </MockedProvider>,
     );

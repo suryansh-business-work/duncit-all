@@ -9,7 +9,7 @@ const contacts: CrmContact[] = [
   { name: 'Asha', role: 'Owner', mobile_number: '+919876543210', whatsapp_number: '', email: 'asha@x.com' },
 ];
 
-const wrap = (ui: JSX.Element) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
+const wrap = (ui: JSX.Element) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>{ui}</MockedProvider>);
 
 describe('ContactsTab', () => {
   it('lists contacts and opens the compose window when a contact is called', () => {

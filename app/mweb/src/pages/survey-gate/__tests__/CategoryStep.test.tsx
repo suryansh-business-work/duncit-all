@@ -31,7 +31,7 @@ const fullMocks = [
 const renderStep = (props: Partial<React.ComponentProps<typeof CategoryStep>> = {}, mocks = fullMocks) => {
   const onContinue = props.onContinue ?? vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <CategoryStep submitting={false} onContinue={onContinue} {...props} />
       </DuncitLocalizationProvider>
@@ -140,7 +140,7 @@ describe('CategoryStep', () => {
 
   it('disables the Continue button and shows the loading label while submitting', () => {
     render(
-      <MockedProvider mocks={fullMocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={fullMocks}>
         <DuncitLocalizationProvider>
           <CategoryStep submitting onContinue={vi.fn()} />
         </DuncitLocalizationProvider>

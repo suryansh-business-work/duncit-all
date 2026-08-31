@@ -32,7 +32,7 @@ const useCombined = () => ({ cart: useCart(), quick: useQuickAddToCart() });
 function renderCombined(mocks: MockedResponse[]) {
   return renderHook(() => useCombined(), {
     wrapper: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <CartProvider>{children}</CartProvider>
       </MockedProvider>
     ),

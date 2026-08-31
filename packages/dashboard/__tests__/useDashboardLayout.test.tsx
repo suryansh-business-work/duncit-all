@@ -66,7 +66,7 @@ const cachedItems = (cache: InMemoryCache) =>
 
 const mount = (mocks: MockedResponse[], cache = new InMemoryCache()) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks} cache={cache}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks} cache={cache}>
       {children}
     </MockedProvider>
   );

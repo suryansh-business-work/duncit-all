@@ -33,7 +33,7 @@ const listMock = () => ({
 
 const wrap = (mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ManageDynamicFieldsPage />
     </MockedProvider>
   );

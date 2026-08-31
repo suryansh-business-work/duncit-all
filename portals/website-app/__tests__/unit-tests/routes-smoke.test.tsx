@@ -77,7 +77,7 @@ const ROUTES = [
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */
 const mountRoute = (route: string, link?: ApolloLink) =>
   render(
-    <MockedProvider mocks={[]} link={link}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]} link={link}>
       <ThemeProvider theme={smokeTheme}>
         <ConfirmProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>

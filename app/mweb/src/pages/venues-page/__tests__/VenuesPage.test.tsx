@@ -81,7 +81,7 @@ const baseVars = { location_id: 'loc-1', search: null, super_category_id: null }
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       {ui}
     </MockedProvider>,
   );

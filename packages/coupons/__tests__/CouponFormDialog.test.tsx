@@ -68,7 +68,7 @@ const coupon = (over: Partial<CouponRow> = {}): CouponRow =>
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
       <CouponFormDialog open onClose={vi.fn()} onSaved={vi.fn()} pods={[POD]} {...(props as never)} />
       </ThemeProvider>
@@ -218,7 +218,7 @@ describe('CouponFormDialog', () => {
     expect(inputWithValue('SUMMER25')).toBeDefined();
 
     view.rerender(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
           <CouponFormDialog open onClose={vi.fn()} onSaved={vi.fn()} pods={[POD]} initial={coupon({ code: 'WINTER10' })} />
         </ThemeProvider>

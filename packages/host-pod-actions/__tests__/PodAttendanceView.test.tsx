@@ -106,7 +106,7 @@ const view = (
  */
 const mount = (mocks: MockedResponse[] = [boardMock()]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{view}</HostPodActionsProvider>
       </ThemeProvider>
@@ -116,7 +116,7 @@ const mount = (mocks: MockedResponse[] = [boardMock()]) =>
 /** A surface with no host area at all — the Club Admin's console. */
 const mountBare = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>{view}</ThemeProvider>
     </MockedProvider>
   );
@@ -278,7 +278,7 @@ describe('PodAttendanceView marking', () => {
     spies: { notifySuccess?: ReturnType<typeof vi.fn>; notifyError?: ReturnType<typeof vi.fn> } = {},
   ) =>
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <ThemeProvider theme={testTheme}>
           <HostPodActionsProvider {...hostActionsConfig()}>
             <PodAttendanceView

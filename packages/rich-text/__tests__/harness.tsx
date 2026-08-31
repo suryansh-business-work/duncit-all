@@ -42,7 +42,7 @@ let root: Root | null = null;
 
 const wrap = (ui: ReactElement, mocks: readonly MockedResponse[]) => (
   <StrictMode>
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   </StrictMode>

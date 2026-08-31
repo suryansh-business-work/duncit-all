@@ -69,7 +69,7 @@ const uploadMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
 
 const wrap = (ui: React.ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );

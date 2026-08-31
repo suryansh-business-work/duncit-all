@@ -43,7 +43,7 @@ function setup(item: Verification, mocks: MockedResponse[] = [okMock]) {
   const onChanged = vi.fn();
   const onError = vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <AddressCard item={item} onChanged={onChanged} onError={onError} />
     </MockedProvider>,
   );

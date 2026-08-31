@@ -46,7 +46,7 @@ const mocks = [
 ];
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <MockedProvider mocks={mocks}>
+  <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
     {children}
   </MockedProvider>
 );

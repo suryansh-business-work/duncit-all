@@ -71,7 +71,7 @@ function PreviewHarness({
 function renderPreview(podAmount: number, hostReceives: number, isFree = false) {
   const seen: EarningsPreview[] = [];
   render(
-    <MockedProvider mocks={[earningsMock(podAmount, hostReceives)]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[earningsMock(podAmount, hostReceives)]}>
       <PreviewHarness
         podAmount={podAmount}
         isFree={isFree}

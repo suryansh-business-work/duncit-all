@@ -38,7 +38,7 @@ function mocksCapturing(sent: { vars?: string }) {
 
 const renderDialog = (mocks: any[] = [], onResult = vi.fn()) => {
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <SendTestDialog
         open
         template={template}
@@ -92,7 +92,7 @@ describe('SendTestDialog', () => {
 
   it('says a template with no variables has nothing to fill', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <SendTestDialog
           open
           template={{ ...template, variables: [] } as unknown as Tpl}

@@ -89,7 +89,7 @@ function baseMocks({
 
 function renderPage(mocks: MockedResponse[]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <PodIdeasPage />
     </MockedProvider>,
   );

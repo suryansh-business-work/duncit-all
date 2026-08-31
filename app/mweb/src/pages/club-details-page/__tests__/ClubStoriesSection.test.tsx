@@ -42,7 +42,7 @@ describe('ClubStoriesSection', () => {
       },
     ];
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <DuncitLocalizationProvider>
           <ClubStoriesSection clubId="c1" canPost />
         </DuncitLocalizationProvider>

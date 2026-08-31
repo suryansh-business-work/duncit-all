@@ -67,7 +67,7 @@ const baseItem = (podDateTime: string, over: Record<string, unknown> = {}): PodH
 
 const renderIt = (item: PodHistoryItem) =>
   render(
-    <MockedProvider mocks={[appSettingsMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[appSettingsMock]}>
       <PodHistoryTimeline item={item} />
     </MockedProvider>,
   );

@@ -116,7 +116,7 @@ function setup(props: Partial<React.ComponentProps<typeof CreatePodStepper>> = {
   const onModerate = vi.fn().mockResolvedValue({ allowed: true, violations: [] });
   const onPublish = vi.fn().mockResolvedValue(undefined);
   const utils = render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <CreatePodStepper
         initialValues={validVirtual()}
         initialStep={0}

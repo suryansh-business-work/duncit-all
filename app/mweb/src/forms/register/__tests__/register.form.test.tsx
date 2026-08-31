@@ -26,7 +26,7 @@ const settingsMock = {
 function renderForm(props: Partial<React.ComponentProps<typeof RegisterForm>> = {}) {
   const onSubmit = props.onSubmit ?? vi.fn();
   const utils = render(
-    <MockedProvider mocks={[settingsMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[settingsMock]}>
       <DuncitLocalizationProvider>
         <MemoryRouter initialEntries={['/register']}>
           <RegisterForm onSubmit={onSubmit} {...props} />

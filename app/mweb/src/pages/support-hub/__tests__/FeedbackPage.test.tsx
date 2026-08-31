@@ -18,7 +18,7 @@ const input = buildAppFeedbackInput({ category: 'Bug', message: MESSAGE, platfor
 
 const renderPage = (mocks: readonly unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <FeedbackPage />
       </MemoryRouter>

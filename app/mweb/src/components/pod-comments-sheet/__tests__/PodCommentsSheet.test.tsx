@@ -111,7 +111,7 @@ const sheet = (
 ) => {
   const spies = { onClose: vi.fn(), onCountChange: vi.fn() };
   const result = render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <PodCommentsSheet podId={POD} open viewerId={ME} {...spies} {...over} />

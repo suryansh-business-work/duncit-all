@@ -96,7 +96,7 @@ const fields = (overrides: any[] = []) => ({
 describe('DynamicValuesView', () => {
   it('renders the "no fields" message when the server returns empty', async () => {
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           {
             request: { query: CRM_DYNAMIC_FIELDS, variables: { entity: 'VENUE_LEAD', include_inactive: false } },
@@ -118,7 +118,7 @@ describe('DynamicValuesView', () => {
       amenities: ['pool', 'gym'],
     });
     render(
-      <MockedProvider mocks={[fields()]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[fields()]}>
         <DynamicValuesView entity="VENUE_LEAD" json={json} />
       </MockedProvider>
     );
@@ -136,7 +136,7 @@ describe('DynamicValuesView', () => {
 
   it('falls back to em-dashes for missing values and survives bad JSON', async () => {
     render(
-      <MockedProvider mocks={[fields()]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[fields()]}>
         <DynamicValuesView entity="VENUE_LEAD" json="not-valid-json" />
       </MockedProvider>
     );

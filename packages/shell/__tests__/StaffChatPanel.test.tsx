@@ -54,7 +54,7 @@ const settle = async () => {
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
       <StaffChatPanel
         open

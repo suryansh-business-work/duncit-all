@@ -36,7 +36,7 @@ function errorMock(email: string) {
 
 function renderPage(mocks: readonly unknown[]) {
   return render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <ForgotPasswordPage />
       </MemoryRouter>

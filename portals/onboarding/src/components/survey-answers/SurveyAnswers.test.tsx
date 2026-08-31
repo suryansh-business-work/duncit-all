@@ -25,7 +25,7 @@ const mock = (userSurveyResponses: unknown) => [
 
 const renderAnswers = (data: unknown, props?: { title?: string }) =>
   render(
-    <MockedProvider mocks={mock(data) as any}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mock(data) as any}>
       <SurveyAnswers userId="u1" kind="HOST" {...props} />
     </MockedProvider>,
   );
@@ -77,7 +77,7 @@ describe('SurveyAnswers', () => {
 
   it('skips the query entirely without a user id', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <SurveyAnswers userId="" kind="HOST" />
       </MockedProvider>,
     );

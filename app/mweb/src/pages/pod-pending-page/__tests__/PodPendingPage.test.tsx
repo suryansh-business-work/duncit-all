@@ -57,7 +57,7 @@ const viewMock = (data: PodPendingView | null, error?: Error) => ({
 
 const renderPage = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={['/host/pod-pending/pod-doc-1']}>
         <Routes>
           <Route path="/host/pod-pending/:podId" element={<PodPendingPage />} />

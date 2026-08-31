@@ -61,7 +61,7 @@ const leadsMock = (): MockedResponse => ({
 
 const renderPage = (extraMocks: MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[statsMock(), leadsMock(), ...extraMocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[statsMock(), leadsMock(), ...extraMocks]}>
       <MemoryRouter>
         <UserLeadsPage />
       </MemoryRouter>
@@ -124,7 +124,7 @@ describe('UserLeadsPage', () => {
 
   it('shows the empty state when waUserLeads returns no page at all', async () => {
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           statsMock(),
           {

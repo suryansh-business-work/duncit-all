@@ -21,7 +21,7 @@ const CLUB_MEMBERS = gql`
 const renderSection = (memberIds: string[], mocks: any[]) =>
   render(
     <MemoryRouter>
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <ClubMembersSection memberIds={memberIds} />
       </MockedProvider>
     </MemoryRouter>,

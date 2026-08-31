@@ -30,7 +30,7 @@ export function renderWithProviders(ui: ReactElement, options: Options = {}) {
 export function makeWrapper(mocks: readonly MockedResponse[] = []) {
   return function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
     return (
-      <MockedProvider mocks={mocks as MockedResponse[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]}>
         <MemoryRouter>{children}</MemoryRouter>
       </MockedProvider>
     );

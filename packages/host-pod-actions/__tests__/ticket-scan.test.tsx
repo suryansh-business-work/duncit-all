@@ -82,7 +82,7 @@ const scanMock = (
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>
@@ -239,10 +239,10 @@ describe('TicketScanDialog', () => {
     const variables: Record<string, unknown>[] = [];
     wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, [
       {
-        request: { query: HOST_SCAN_POD_TICKET, variables: (v: Record<string }, unknown>) => {
+        request: { query: HOST_SCAN_POD_TICKET, variables: (v: Record<string, unknown>) => {
           variables.push(v);
           return true;
-        },
+        } },
         result: {
           data: {
             hostScanPodTicket: scanResult({

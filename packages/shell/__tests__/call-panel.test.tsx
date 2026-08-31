@@ -92,7 +92,7 @@ const spies = () => ({
 const panel = (over: Partial<PanelProps> = {}) => {
   const handlers = spies();
   const result = render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
         <CallPanel
           phase="connected"

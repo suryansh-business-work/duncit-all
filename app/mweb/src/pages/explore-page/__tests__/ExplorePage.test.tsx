@@ -105,7 +105,7 @@ const toggleMock = (id: string, error = false) => ({
 
 const setup = (mocks: any[], props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ExplorePage {...props} />
     </MockedProvider>,
   );

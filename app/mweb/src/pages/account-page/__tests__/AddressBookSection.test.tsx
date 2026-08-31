@@ -45,7 +45,7 @@ const listMock = (addresses: unknown[]) => ({
 
 const renderSection = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <AddressBookSection />
     </MockedProvider>,
   );

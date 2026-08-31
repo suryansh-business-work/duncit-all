@@ -50,7 +50,7 @@ const renderDialog = (mocks: MockedResponse[], row: VenuePodRow | null = makeVen
   const onCancelled = vi.fn();
   const onClose = vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <VenueCancelPodDialog row={row} onClose={onClose} onCancelled={onCancelled} />
     </MockedProvider>,
   );

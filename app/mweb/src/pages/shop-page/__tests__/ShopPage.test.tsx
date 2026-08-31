@@ -61,7 +61,7 @@ const categoriesMock: MockedResponse = {
 
 function renderPage(mocks: MockedResponse[] = [productsMock, categoriesMock]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <CartProvider>
         <MemoryRouter initialEntries={['/shop']}>
           <ShopPage />

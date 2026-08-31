@@ -7,7 +7,7 @@ import { CRM_LEAD_CONFIG, SUPER_CATEGORIES } from '@/api/crm.gql';
 
 const wrapper = (mocks: any[]) =>
   (function Wrapper({ children }: { children: React.ReactNode }) {
-    return <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>{children}</MockedProvider>;
   });
 
 describe('useCrmConfig', () => {

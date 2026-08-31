@@ -69,7 +69,7 @@ const iconsQuery: MockedResponse = {
 // navigates.
 const renderPage = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter>
         <BrandingPage />
       </MemoryRouter>

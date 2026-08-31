@@ -34,7 +34,7 @@ const brandingMock = (over: Record<string, string | null>) => ({
 
 const renderLogo = (over: Record<string, string | null>) =>
   render(
-    <MockedProvider mocks={[brandingMock(over)]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[brandingMock(over)]}>
       <AuthLogo tagline="Welcome back" />
     </MockedProvider>,
   );

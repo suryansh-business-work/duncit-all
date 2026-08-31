@@ -40,7 +40,7 @@ const settle = async () => {
 const wrap = (ui: ReactElement) =>
   render(
     <MemoryRouter>
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
       </MockedProvider>
     </MemoryRouter>

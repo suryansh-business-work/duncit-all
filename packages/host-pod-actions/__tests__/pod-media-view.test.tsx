@@ -81,7 +81,7 @@ const boardMock = (over: Record<string, unknown> = {}): MockedResponse => ({
 
 const mount = (mocks: readonly MockedResponse[] = [boardMock()], config = {}) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig({ podMediaLabels: labels, ...config })}>
           <PodMediaView podId={POD_ID} />
@@ -327,7 +327,7 @@ describe('PodMediaGrid', () => {
 describe('PodMediaShareCard', () => {
   const card = (config = {}) =>
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
           <HostPodActionsProvider {...hostActionsConfig({ podMediaLabels: labels, ...config })}>
             <PodMediaShareCard podId="DUN-POD-4821" podTitle="Sunday Badminton" />

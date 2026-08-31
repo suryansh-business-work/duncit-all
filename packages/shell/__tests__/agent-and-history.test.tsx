@@ -35,7 +35,7 @@ const item = (over: Partial<AgentResultItem> = {}): AgentResultItem => ({
   ...over,
 });
 
-const wrap = (ui: React.ReactNode) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
+const wrap = (ui: React.ReactNode) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>{ui}</MockedProvider>);
 
 describe('AgentResults', () => {
   it('renders nothing when the run made nothing at all', () => {
@@ -92,7 +92,7 @@ describe('EditHistoryDialog', () => {
   const dialog = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) => {
     const onClose = vi.fn();
     const view = render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <EditHistoryDialog
           open
           messageId="m1"
@@ -148,7 +148,7 @@ describe('EditHistoryDialog', () => {
   it('asks for nothing while it is closed', () => {
     const asked = vi.fn();
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           {
             request: { query: STAFF_MESSAGE_EDITS, variables: { id: 'm1' } },

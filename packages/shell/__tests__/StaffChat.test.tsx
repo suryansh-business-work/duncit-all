@@ -178,7 +178,7 @@ describe('Conversation', () => {
   const show = (over: Partial<Parameters<typeof Conversation>[0]> = {}) => {
     const props = { ...conversationProps(), ...over };
     render(
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={createTheme()}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Conversation {...props} />
@@ -281,7 +281,7 @@ describe('useStaffSocket ping', () => {
 
   it('pings for a message from someone else', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <Host meId="me" openPeerId={null} />
       </MockedProvider>
     );
@@ -291,7 +291,7 @@ describe('useStaffSocket ping', () => {
 
   it('stays silent for your own message from another tab', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <Host meId="me" openPeerId={null} />
       </MockedProvider>
     );
@@ -301,7 +301,7 @@ describe('useStaffSocket ping', () => {
 
   it('stays silent for the conversation already on screen', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <Host meId="me" openPeerId="u1" />
       </MockedProvider>
     );
@@ -312,7 +312,7 @@ describe('useStaffSocket ping', () => {
   it("forwards an edit or delete to the caller's own handler", async () => {
     const onMessageChanged = vi.fn();
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <Host meId="me" openPeerId={null} onMessageChanged={onMessageChanged} />
       </MockedProvider>
     );
@@ -325,7 +325,7 @@ describe('useStaffSocket ping', () => {
   it('records when a peer reports they are typing', async () => {
     let latest: ReturnType<typeof useStaffSocket> | undefined;
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <Host meId="me" openPeerId={null} onReady={(result) => { latest = result; }} />
       </MockedProvider>
     );
@@ -337,7 +337,7 @@ describe('useStaffSocket ping', () => {
   it('emits a typing beacon to the peer, best-effort', async () => {
     let latest: ReturnType<typeof useStaffSocket> | undefined;
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <Host meId="me" openPeerId={null} onReady={(result) => { latest = result; }} />
       </MockedProvider>
     );

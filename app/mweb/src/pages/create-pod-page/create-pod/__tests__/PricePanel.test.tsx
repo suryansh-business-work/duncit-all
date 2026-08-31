@@ -90,7 +90,7 @@ const venueMocks = [
 
 function setup(podAmount: number, noOfSpots = 0) {
   return render(
-    <MockedProvider mocks={venueMocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={venueMocks}>
       <Harness slotPrice={300} podAmount={podAmount} noOfSpots={noOfSpots} venueId="v1" isPhysical />
     </MockedProvider>,
   );
@@ -226,7 +226,7 @@ describe('PricePanel (auditable earnings statement)', () => {
       waterfall: { ...waterfall, club_admin_pct: 3, club_admin_amount: 700.42 },
     };
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           financeMock,
           {
@@ -251,7 +251,7 @@ describe('PricePanel (auditable earnings statement)', () => {
       waterfall: { ...waterfall, venue_amount: 0, venue_commission_amount: 0, venue_receives: 0 },
     };
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           financeMock,
           {

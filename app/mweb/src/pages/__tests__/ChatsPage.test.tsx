@@ -70,7 +70,7 @@ const chatMock = (rooms: unknown[], supers: unknown[] = [{ id: 's1', slug: 'spor
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <DuncitLocalizationProvider>
         {ui}
       </DuncitLocalizationProvider>

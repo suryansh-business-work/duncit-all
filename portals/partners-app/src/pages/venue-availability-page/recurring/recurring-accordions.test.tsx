@@ -28,7 +28,7 @@ const MUTATION_ERROR_POLICY = { mutate: { errorPolicy: 'all' as const } };
 
 function renderWithProviders(ui: ReactElement, mocks: MockedResponse[] = []) {
   return render(
-    <MockedProvider mocks={mocks} defaultOptions={MUTATION_ERROR_POLICY}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks} defaultOptions={MUTATION_ERROR_POLICY}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
     </MockedProvider>,
   );

@@ -20,7 +20,7 @@ import { AppShellNav } from '../src/chrome/AppShellNav';
 
 const mount = (over: Partial<Parameters<typeof AppShellNav>[0]> = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <AppShellNav name="CRM" nav={[]} mobileOpen={false} onCloseMobile={vi.fn()} {...over} />
       </MemoryRouter>

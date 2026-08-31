@@ -114,7 +114,7 @@ const theme = createTheme();
 
 const renderPage = (mocks: readonly MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks as MockedResponse[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]}>
       <ThemeProvider theme={theme}>
         <PodSettingsPage />
       </ThemeProvider>

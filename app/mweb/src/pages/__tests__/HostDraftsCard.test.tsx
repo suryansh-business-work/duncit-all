@@ -58,7 +58,7 @@ const sampleDrafts = [
 
 function renderCard(mocks: unknown[]) {
   return render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <HostDraftsCard />
       </MemoryRouter>

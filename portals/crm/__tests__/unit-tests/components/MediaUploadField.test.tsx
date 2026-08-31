@@ -17,7 +17,7 @@ function Harness({ initial, kind }: Readonly<{ initial: string; kind: 'image' | 
 
 const renderField = (initial: string, kind: 'image' | 'video' = 'image') =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness initial={initial} kind={kind} />
     </MockedProvider>
   );

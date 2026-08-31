@@ -145,7 +145,7 @@ const draftMock = (draftId: string) => ({
 
 const renderPage = (mocks: any[], entry = '/create-pod'): ReactElement =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/create-pod" element={<Page />} />

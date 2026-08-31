@@ -112,7 +112,7 @@ const mediaBoardMock = (items: unknown[] = []): MockedResponse => ({
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = [], config = {}) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig(config)}>{ui}</HostPodActionsProvider>
       </ThemeProvider>
@@ -224,7 +224,7 @@ describe('SettlementPreview', () => {
     await settle();
 
     rerender(
-      <MockedProvider mocks={[previewMock({ attended_seats: 9 })]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[previewMock({ attended_seats: 9 })]}>
         <ThemeProvider theme={testTheme}>
           <HostPodActionsProvider {...hostActionsConfig()}>
             <SettlementPreview podId="pod-1" venueBillAmount={0} onScan={vi.fn()} refreshToken={1} />

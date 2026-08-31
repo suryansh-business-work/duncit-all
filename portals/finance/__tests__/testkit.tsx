@@ -35,7 +35,7 @@ const makeCache = () => new InMemoryCache({ typePolicies: { Expense: { keyFields
 
 function Providers({ mocks, children }: Readonly<{ mocks: readonly MockedResponse[]; children: ReactNode }>) {
   return (
-    <MockedProvider mocks={mocks as MockedResponse[]} cache={makeCache()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]} cache={makeCache()}>
       <ThemeProvider theme={theme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>{children}</LocalizationProvider>
       </ThemeProvider>

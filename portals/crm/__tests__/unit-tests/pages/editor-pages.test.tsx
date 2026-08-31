@@ -9,7 +9,7 @@ import HostLeadEditorPage from '@/pages/host-leads/HostLeadEditorPage';
 
 const wrap = (route: string, path: string, ui: React.ReactElement) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter initialEntries={[route]}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Routes>

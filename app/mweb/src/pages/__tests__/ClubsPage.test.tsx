@@ -66,7 +66,7 @@ const noVars = { locationId: undefined, locality: undefined };
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <DuncitLocalizationProvider>
         {ui}
       </DuncitLocalizationProvider>

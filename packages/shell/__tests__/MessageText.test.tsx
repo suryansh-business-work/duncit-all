@@ -38,7 +38,7 @@ const previewMock = (url: string, data: StaffLinkPreview | null): MockedResponse
 describe('MessageText', () => {
   it('renders plain text as a paragraph', () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <MessageText text="See you at the door" fontSize={14} />
       </MockedProvider>
     );
@@ -48,7 +48,7 @@ describe('MessageText', () => {
 
   it('bolds an @mention inline, leaving the rest of the sentence plain', () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <MessageText text="ping @asha about the pod" fontSize={14} />
       </MockedProvider>
     );
@@ -60,7 +60,7 @@ describe('MessageText', () => {
 
   it('renders inline code without the code-block chrome', () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <MessageText text="run `npm test` first" fontSize={14} />
       </MockedProvider>
     );
@@ -70,7 +70,7 @@ describe('MessageText', () => {
 
   it('renders a fenced block through the syntax highlighter', () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <MessageText text={'```js\nconst x = 1;\n```'} fontSize={14} />
       </MockedProvider>
     );
@@ -81,7 +81,7 @@ describe('MessageText', () => {
 
   it('marks an outside link with the leaving-this-app arrow', () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <MessageText text="[the doc](https://docs.example.com/page)" fontSize={14} />
       </MockedProvider>
     );
@@ -93,7 +93,7 @@ describe('MessageText', () => {
 
   it('shows nothing extra below a message with no URL in it', () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <MessageText text="no links here at all" fontSize={14} />
       </MockedProvider>
     );
@@ -105,7 +105,7 @@ describe('MessageText', () => {
     const onNavigate = vi.fn();
     const mocks = [previewMock('https://example.com/report', preview())];
     const { container, findByText } = render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <MessageText text="see https://example.com/report for the numbers" fontSize={14} onNavigate={onNavigate} />
       </MockedProvider>
     );
@@ -118,7 +118,7 @@ describe('MessageText', () => {
 describe('LinkCard', () => {
   const card = (data: StaffLinkPreview | null, url = 'https://example.com/report', onNavigate?: (path: string) => void) =>
     render(
-      <MockedProvider mocks={[previewMock(url, data)]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[previewMock(url, data)]}>
         <LinkCard url={url} onNavigate={onNavigate} />
       </MockedProvider>
     );

@@ -59,7 +59,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
@@ -763,7 +763,7 @@ describe('a by-hand mark, all the way through its code', () => {
   it('spends the verified challenge on the row it was raised for', async () => {
     const notifySuccess = vi.fn();
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           {
             request: { query: POD_ATTENDANCE_BOARD, variables: { pod_doc_id: 'pod-1' } },

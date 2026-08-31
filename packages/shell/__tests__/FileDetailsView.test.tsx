@@ -37,7 +37,7 @@ const show = (active: MediaItem, siblings: MediaItem[], onNavigate = vi.fn()) =>
     // The tab strip keeps its selection in the URL (useTabParam), so the view
     // only renders under a router.
     <MemoryRouter>
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <FileDetailsView {...props} file={active} siblings={siblings} onNavigate={onNavigate} />
       </MockedProvider>
     </MemoryRouter>
@@ -100,7 +100,7 @@ describe('FileDetailsView tags', () => {
     const tagged = { ...file(1), tags: ['hero', 'banner'] };
     render(
       <MemoryRouter>
-        <MockedProvider mocks={[]}>
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
           <FileDetailsView {...props} canWrite file={tagged} />
         </MockedProvider>
       </MemoryRouter>

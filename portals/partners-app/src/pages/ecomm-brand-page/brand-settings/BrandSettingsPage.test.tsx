@@ -106,7 +106,7 @@ const warehousesMock = (
 
 const renderSettings = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={[`/ecomm-brand/${BRAND_ID}/settings`]}>
         <Routes>
           <Route path="/ecomm-brand" element={<p>Brands list</p>} />

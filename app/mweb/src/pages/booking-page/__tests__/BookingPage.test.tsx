@@ -29,7 +29,7 @@ function LocationProbe() {
 
 const renderPage = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={['/booking/booking-1']}>
         <Routes>
           <Route path="/booking/:bookingId" element={<BookingPage />} />

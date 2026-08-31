@@ -50,7 +50,7 @@ const pod = (over: Partial<HostPodTarget> = {}): HostPodTarget =>
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>

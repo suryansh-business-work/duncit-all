@@ -164,7 +164,7 @@ const theme = createTheme();
 
 const renderSection = (mocks: readonly MockedResponse[], onToast = vi.fn()) => {
   render(
-    <MockedProvider mocks={mocks as MockedResponse[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]}>
       <DuncitLocalizationProvider>
         <ThemeProvider theme={theme}>
           <TimeSourceSection onToast={onToast} />

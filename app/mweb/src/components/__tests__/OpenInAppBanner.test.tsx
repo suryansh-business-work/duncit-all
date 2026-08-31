@@ -40,7 +40,7 @@ const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
 
 function renderBanner(mocks: unknown[], entries = ['/pods?ref=x']) {
   return render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={entries}>
         <OpenInAppBanner />
       </MemoryRouter>

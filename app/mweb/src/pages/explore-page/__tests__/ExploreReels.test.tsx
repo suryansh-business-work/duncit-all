@@ -68,7 +68,7 @@ const baseProps = (over: Partial<Parameters<typeof ExploreReels>[0]> = {}) => ({
 
 const setup = (props: any, mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ExploreReels {...props} />
     </MockedProvider>,
   );

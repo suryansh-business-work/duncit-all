@@ -50,7 +50,7 @@ const flagsMock = (enabled: boolean) => ({
 
 function renderAt(path: string, mocks: unknown[] = []) {
   return render(
-    <MockedProvider mocks={mocks as never[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never[]}>
       <MemoryRouter initialEntries={[path]}>
         <AppRoutes {...props} />
         <LocationProbe />

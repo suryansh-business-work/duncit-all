@@ -42,7 +42,7 @@ const moderateMock = (
 
 const mount = (mocks: readonly MockedResponse[], setFieldError = vi.fn()) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       {children}
     </MockedProvider>
   );

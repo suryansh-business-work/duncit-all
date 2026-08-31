@@ -61,7 +61,7 @@ const listingsMock = (rows: unknown[]): MockedResponse => ({
 
 const renderPage = (mocks: MockedResponse[], stateProduct?: Record<string, unknown>) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter
         initialEntries={[{ pathname: SETTINGS_URL, state: stateProduct ? { product: stateProduct } : null }]}
       >

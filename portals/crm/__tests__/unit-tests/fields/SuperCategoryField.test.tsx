@@ -31,7 +31,7 @@ function Harness() {
 
 function renderField(mocks = [superCategoriesMock]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <Harness />
     </MockedProvider>
   );

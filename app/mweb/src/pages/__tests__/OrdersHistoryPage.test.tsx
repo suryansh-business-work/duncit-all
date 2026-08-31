@@ -42,7 +42,7 @@ const ordersMock = (orders: ProductOrder[]) => ({
 
 const renderPage = (mocks: readonly unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <OrdersHistoryPage />
     </MockedProvider>,
   );

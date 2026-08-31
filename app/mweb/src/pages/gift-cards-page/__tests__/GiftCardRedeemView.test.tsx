@@ -87,7 +87,7 @@ const settle = async () => {
 
 const view = (over: Partial<GiftCard> = {}, mocks: MockedResponse[] = [redeemed]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <GiftCardRedeemView card={card(over)} currencySymbol="₹" />

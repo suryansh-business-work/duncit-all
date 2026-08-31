@@ -58,7 +58,7 @@ const pods = [
 
 function setup(withData: boolean, podList = pods) {
   return render(
-    <MockedProvider mocks={withData ? [mock] : []}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={withData ? [mock] : []}>
       <HostInsights pods={podList} currency="₹" />
     </MockedProvider>,
   );

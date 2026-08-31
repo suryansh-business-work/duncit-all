@@ -101,7 +101,7 @@ function Harness({ mode, defaults, formRef }: Readonly<HarnessProps>) {
 const mount = (props: Omit<HarnessProps, 'formRef'>) => {
   const formRef: HarnessProps['formRef'] = { current: null };
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <Harness {...props} formRef={formRef} />
     </MockedProvider>
   );

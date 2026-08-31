@@ -59,7 +59,7 @@ const message = (over: Partial<StaffMessage> & { id: string }): StaffMessage => 
 const panel = (mocks: readonly MockedResponse[], over: Partial<Parameters<typeof ChatSearchPanel>[0]> = {}) => {
   const spies = { onJump: vi.fn(), onClose: vi.fn() };
   const result = render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <ChatSearchPanel

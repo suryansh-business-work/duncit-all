@@ -66,7 +66,7 @@ const walletMock = (
 
 const renderWallet = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <WalletPage />
     </MockedProvider>,
   );

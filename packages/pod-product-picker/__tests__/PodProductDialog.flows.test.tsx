@@ -53,7 +53,7 @@ const PRODUCTS = [
   }),
 ];
 
-const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>
+const wrap = (ui: ReactElement) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>);
 

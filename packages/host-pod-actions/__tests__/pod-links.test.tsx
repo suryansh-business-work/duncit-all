@@ -36,7 +36,7 @@ const mount = (
 ) => {
   const config = hostActionsConfig(over);
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <HostPodActionsProvider {...config}>{children}</HostPodActionsProvider>
     </MockedProvider>
   );

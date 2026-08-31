@@ -34,7 +34,7 @@ const theme = createTheme();
 
 const renderButton = (ui: ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={mocks as MockedResponse[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]}>
       <ThemeProvider theme={theme}>{ui}</ThemeProvider>
     </MockedProvider>,
   );

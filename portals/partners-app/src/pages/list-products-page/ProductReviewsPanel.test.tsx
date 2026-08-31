@@ -65,7 +65,7 @@ const reviewsMock = (
 
 const renderPanel = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ProductReviewsPanel productId="prod-1" />
     </MockedProvider>,
   );

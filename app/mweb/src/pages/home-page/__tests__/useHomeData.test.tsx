@@ -208,7 +208,7 @@ const followedUsersMock = {
 
 function wrapperWith(mocks: any[]) {
   return ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       {children}
     </MockedProvider>
   );

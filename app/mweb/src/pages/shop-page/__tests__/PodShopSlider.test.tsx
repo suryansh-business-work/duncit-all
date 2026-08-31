@@ -35,7 +35,7 @@ const sliderMock = (media: unknown[]) => ({
 
 const renderSlider = (media: unknown[]) =>
   render(
-    <MockedProvider mocks={[sliderMock(media), sliderMock(media)]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[sliderMock(media), sliderMock(media)]}>
       <MemoryRouter>
         <PodShopSlider />
       </MemoryRouter>

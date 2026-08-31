@@ -14,6 +14,5 @@ import { zodResolver } from '@hookform/resolvers/zod';
  * react-hook-form's own context parameter, which no form here supplies.
  */
 export const formResolver = <Values extends FieldValues>(
-  schema: Parameters<typeof zodResolver>[0]
-): Resolver<Values, any, Values> =>
-  zodResolver(schema) as unknown as Resolver<Values, any, Values>;
+  schema: Parameters<typeof zodResolver>[0],
+): Resolver<Values, any, Values> => zodResolver(schema) as unknown as Resolver<Values, any, Values>;

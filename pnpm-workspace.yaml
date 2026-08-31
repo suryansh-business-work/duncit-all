@@ -107,7 +107,7 @@ overrides:
   # in: hooks then read a context the provider never created. graphql is pinned
   # for the same reason, at the 16 line @apollo/server and graphql-ws require.
   '@apollo/client': 4.2.12
-  graphql: 16.14.0
+  graphql: 16.14.2
   vitest: 3.2.4
   '@vitest/coverage-v8': 3.2.4
   '@vitest/expect': 3.2.4

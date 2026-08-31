@@ -35,7 +35,7 @@ import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import type { ApolloServerPlugin } from '@apollo/server';
 import { unwrapResolverError } from '@apollo/server/errors';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { describeFetchFailure, humanFetchMessage } from '@utils/outboundFetch';
 import { connectDB } from './config/db';
@@ -505,7 +505,7 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     app.use(cors({ origin: true, credentials: true }));
-    app.options('*', cors({ origin: true, credentials: true }));
+    app.options('/{*splat}', cors({ origin: true, credentials: true }));
   }
 
   // 70mb covers a base64-inflated 50 MB document upload (50 MB raw ≈ 67 MB base64)

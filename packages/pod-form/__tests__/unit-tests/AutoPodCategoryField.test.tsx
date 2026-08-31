@@ -36,16 +36,27 @@ function renderField(over: Parameters<typeof makeConfig>[0] = {}, defaults: Part
   return methodsRef;
 }
 
+/**
+ * Pick one option out of a select that has just been opened.
+ *
+ * `findByRole`, because each level of the cascade rebuilds the NEXT select's
+ * options: the menu that opens after choosing Sports is a render behind the click
+ * that opened it. Reading it synchronously passes only when that render lands in
+ * the same tick — the race that took PodCategoryFilter red on CI while it stayed
+ * green locally.
+ */
+async function pick(user: ReturnType<typeof userEvent.setup>, label: RegExp, option: string) {
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole('option', { name: option }));
+}
+
 describe('AutoPodCategoryField', () => {
   it('writes a fully picked Super → Sub pair into the form', async () => {
     const user = userEvent.setup();
     const ref = renderField();
-    await user.click(screen.getByLabelText(/Super Category/));
-    await user.click(screen.getByRole('option', { name: 'Sports' }));
-    await user.click(screen.getByLabelText(/^Category/));
-    await user.click(screen.getByRole('option', { name: 'Racket' }));
-    await user.click(screen.getByLabelText(/Sub Category/));
-    await user.click(screen.getByRole('option', { name: 'Badminton' }));
+    await pick(user, /Super Category/, 'Sports');
+    await pick(user, /^Category/, 'Racket');
+    await pick(user, /Sub Category/, 'Badminton');
     expect(ref.current?.getValues('super_category_id')).toBe('sup-sports');
     expect(ref.current?.getValues('sub_category_id')).toBe('sub-badminton');
   });
@@ -58,8 +69,7 @@ describe('AutoPodCategoryField', () => {
     });
     expect(screen.getByText('Select a category')).toBeInTheDocument();
     // Moving the Super empties the Sub; only a chosen Sub (or a submit) validates.
-    await user.click(screen.getByLabelText(/Super Category/));
-    await user.click(screen.getByRole('option', { name: 'Arts' }));
+    await pick(user, /Super Category/, 'Arts');
     expect(ref.current?.getValues('sub_category_id')).toBe('');
     expect(screen.queryByText('Select a category')).not.toBeInTheDocument();
   });

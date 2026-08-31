@@ -74,9 +74,25 @@ function renderForm(over: Partial<PodFormProps> = {}) {
 /** Open the Club select and read back the option labels it offers. */
 async function clubOptions(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByLabelText(/Club/i));
-  const options = screen.getAllByRole('option').map((o) => o.textContent);
+  const options = (await screen.findAllByRole('option')).map((o) => o.textContent);
   await user.keyboard('{Escape}');
   return options;
+}
+
+/**
+ * Pick one option out of a select that has just been opened.
+ *
+ * `findByRole` rather than `getByRole`, because each step of the cascade rebuilds
+ * the NEXT select's options: choosing Sports re-renders Category, and the menu
+ * that opens after it is a render behind the click that opened it. Reading it
+ * synchronously passes whenever that render lands in the same tick and fails when
+ * it does not — which is how this suite went red on CI while staying green
+ * locally ("Unable to find an accessible element with the role option and name
+ * Racket").
+ */
+async function pick(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole('option', { name: option }));
 }
 
 describe('PodCategoryFilter', () => {
@@ -103,12 +119,9 @@ describe('PodCategoryFilter', () => {
       'Half Club',
     ]);
 
-    await user.click(screen.getByLabelText('Super Category'));
-    await user.click(screen.getByRole('option', { name: 'Sports' }));
-    await user.click(screen.getByLabelText('Category'));
-    await user.click(screen.getByRole('option', { name: 'Racket' }));
-    await user.click(screen.getByLabelText('Sub Category'));
-    await user.click(screen.getByRole('option', { name: 'Badminton' }));
+    await pick(user, 'Super Category', 'Sports');
+    await pick(user, 'Category', 'Racket');
+    await pick(user, 'Sub Category', 'Badminton');
 
     expect(await clubOptions(user)).toEqual(['Badminton Club']);
     expect(screen.queryByTestId('pod-category-no-clubs')).not.toBeInTheDocument();
@@ -118,12 +131,9 @@ describe('PodCategoryFilter', () => {
     const user = userEvent.setup();
     renderForm({ clubs: [DOG_CLUB] });
 
-    await user.click(screen.getByLabelText('Super Category'));
-    await user.click(screen.getByRole('option', { name: 'Sports' }));
-    await user.click(screen.getByLabelText('Category'));
-    await user.click(screen.getByRole('option', { name: 'Racket' }));
-    await user.click(screen.getByLabelText('Sub Category'));
-    await user.click(screen.getByRole('option', { name: 'Badminton' }));
+    await pick(user, 'Super Category', 'Sports');
+    await pick(user, 'Category', 'Racket');
+    await pick(user, 'Sub Category', 'Badminton');
 
     expect(screen.getByTestId('pod-category-no-clubs')).toBeInTheDocument();
   });

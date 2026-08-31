@@ -45,7 +45,10 @@ beforeEach(() => {
 const pickHindi = async () => {
   const u = userEvent.setup();
   await u.click(screen.getByRole('combobox', { name: 'Language' }));
-  await u.click(screen.getByRole('option', { name: 'हिन्दी · Hindi' }));
+  // `findByRole` — the menu opens a render after the click that opened it, so a
+  // synchronous read is a race that only shows up under load (see the same fix in
+  // @duncit/pod-form's category cascade).
+  await u.click(await screen.findByRole('option', { name: 'हिन्दी · Hindi' }));
 };
 
 describe('ProfileLanguage', () => {

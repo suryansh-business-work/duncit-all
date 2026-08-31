@@ -53,7 +53,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
       setError(
         t('mweb.createPod.reelTooLarge', {
           vars: { max: Math.round(limits.maxVideoBytes / MB) },
-        })
+        }),
       );
       return;
     }

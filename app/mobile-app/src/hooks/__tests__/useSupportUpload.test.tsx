@@ -106,7 +106,12 @@ describe('useSupportUpload', () => {
 
   it('judges a document by the server document ceiling', async () => {
     pickDoc.mockResolvedValueOnce(
-      pick({ uri: 'file://big.pdf', name: 'big.pdf', mimeType: 'application/pdf', size: 101 * 1024 * 1024 }),
+      pick({
+        uri: 'file://big.pdf',
+        name: 'big.pdf',
+        mimeType: 'application/pdf',
+        size: 101 * 1024 * 1024,
+      }),
     );
     const { url, result } = await run();
     expect(url).toBeNull();

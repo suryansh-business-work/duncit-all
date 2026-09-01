@@ -78,7 +78,7 @@ env:
 jobs:
   build:
     name: Build & publish IPA (unsigned)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 120
     env:
       # Each server signs its own tokens, so a production JWT is not valid on
@@ -100,15 +100,25 @@ jobs:
           # Full history: the report step describes the merged commit range.
           fetch-depth: 0
 
-      - name: Select Xcode 26 (Swift 6.2)
-        # expo-modules-jsi/apple/Package.swift declares `swift-tools-version:
-        # 6.2`, so resolving it needs Xcode 26. The macos-15 image ships several
-        # Xcode 26.x alongside older ones but still DEFAULTS to 16.4 (Swift
-        # 6.1), and the archive died in the ExpoModulesJSI xcframework script
-        # phase with "package 'apple' is using Swift tools version 6.2.0 but the
-        # installed version is 6.1.0". Newest 26.x rather than a pinned minor:
-        # the image rotates those, and the requirement is the major. An empty
-        # glob fails the step here instead of 3 minutes into the archive.
+      - name: Select the newest Xcode 26
+        # Two separate constraints, both from expo-modules-jsi (SDK 57), and
+        # only the newest 26.x satisfies both:
+        #
+        #  - `apple/Package.swift` declares `swift-tools-version: 6.2`, so
+        #    Xcode 16.4 (the macos-15 default, Swift 6.1) cannot even resolve
+        #    it: "package 'apple' is using Swift tools version 6.2.0 but the
+        #    installed version is 6.1.0".
+        #  - 57.0.5 annotated both RuntimeScheduler constructors
+        #    SWIFT_RETURNS_RETAINED to silence Xcode 27 ownership warnings, and
+        #    Xcode 26.3 and older reject that annotation on a constructor as a
+        #    hard error ("not returning a SWIFT_SHARED_REFERENCE type"). Only
+        #    the late 26.x compilers accept it, which is why this runs on
+        #    macos-26 (Xcode 26.4.1 through 26.6) and not macos-15, whose
+        #    newest is the 26.3 that fails.
+        #
+        # Newest rather than a pinned minor: the image rotates those, and an
+        # empty glob fails the version call here instead of 20 minutes into the
+        # archive.
         run: |
           DEVELOPER_DIR=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)/Contents/Developer
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"

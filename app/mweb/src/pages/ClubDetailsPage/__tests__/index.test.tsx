@@ -249,4 +249,19 @@ describe('ClubDetailsPage', () => {
     renderPage([slugMock({ clubBySlug: null }), catMock]);
     expect(await screen.findByText('Club not found.')).toBeInTheDocument();
   });
+
+  // A dropped or refused slug request left `club` undefined with no error on the
+  // related query, so the page said the club did not exist — the one reading a
+  // visitor cannot act on, and the one that hid the real failure.
+  it('reports the slug query failing instead of calling the club missing', async () => {
+    renderPage([
+      {
+        request: { query: CLUB_BY_SLUG, variables: { slug: 'chess' } },
+        error: new Error('Unable to connect to server.'),
+      },
+      catMock,
+    ]);
+    expect(await screen.findByText('Unable to connect to server.')).toBeInTheDocument();
+    expect(screen.queryByText('Club not found.')).not.toBeInTheDocument();
+  });
 });

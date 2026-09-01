@@ -51,8 +51,19 @@ export default function ClubDetailsPage() {
 
   const { data: catData } = useQuery<any>(CATEGORY_TREE, { fetchPolicy: 'cache-first' });
 
-  if (slugQuery.loading || (loading && !data)) return <ClubDetailsSkeleton />;
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  // The related query is still pending whenever the slug has resolved to an id
+  // but that query has not returned yet — this covers the render gap between the
+  // slug resolving and CLUB_DETAILS_RELATED starting, so the skeleton shows
+  // instead of a club page with no pods, venues or members on it.
+  const detailsPending = !!clubId && !error && (loading || !data);
+  if (slugQuery.loading || detailsPending) return <ClubDetailsSkeleton />;
+  // The slug lookup FAILING is not the same as the club not existing. A request
+  // the retry link will not retry — an abort, a 4xx — left `club` undefined with
+  // no error of its own on the related query, and that fell straight through to
+  // "Club not found.": the page reads as a deleted club and hides the only thing
+  // that would explain it. Report whichever query actually failed.
+  const failure = slugQuery.error ?? error;
+  if (failure) return <Alert severity="error">{failure.message}</Alert>;
   if (!club) return <Alert severity="warning">{t('mweb.clubDetailsPage.clubNotFound')}</Alert>;
 
   const featureMedia = club.club_feature_images_and_videos ?? [];

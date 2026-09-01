@@ -294,4 +294,18 @@ describe('PodDetailsPage', () => {
     setup([slugMock(null)]);
     expect(await screen.findByText('Pod not found.')).toBeInTheDocument();
   });
+
+  // A dropped or refused slug request left `id` empty with no error on
+  // POD_DETAILS, so the page said the pod did not exist — the one reading a
+  // visitor cannot act on, and the one that hid the real failure.
+  it('reports the slug query failing instead of calling the pod missing', async () => {
+    setup([
+      {
+        request: { query: POD_ID_BY_SLUGS, variables: { clubSlug: 'my-club', podSlug: 'my-pod' } },
+        error: new Error('Unable to connect to server.'),
+      },
+    ]);
+    expect(await screen.findByText('Unable to connect to server.')).toBeInTheDocument();
+    expect(screen.queryByText('Pod not found.')).not.toBeInTheDocument();
+  });
 });

@@ -33,6 +33,22 @@ const VENDOR_GROUPS = [
   { name: 'fontawesome', test: /node_modules\/@fortawesome\// },
 ];
 
+// This package must NOT declare `"type": "module"`. Rolldown, the bundler behind
+// Vite 8, reads that field to decide how a CommonJS dependency is interoped: with
+// it set, `import X from 'cjs-dep'` gets NODE's ESM semantics, where the binding
+// is the whole `module.exports` rather than the `exports.default` the dep put its
+// component on. react-slick is such a dep — CJS only, no `exports` map, no ESM
+// build — so every <Slider> on mWeb rendered a plain OBJECT and React killed the
+// page with "Element type is invalid" (minified #130) on the pod, club, explore
+// and shop surfaces. Nothing else catches it: the build is green, `tsc` reads the
+// dep's .d.ts default, and dev + vitest pre-bundle it to real ESM, so only the
+// production page dies. The field buys this app nothing — it ships no .js source.
+if ('type' in pkg) {
+  throw new Error(
+    'app/mweb/package.json declares "type" — remove it; see the CommonJS interop note in vite.config.ts.',
+  );
+}
+
 export default defineConfig({
   plugins: [react()],
   // Surface the package version to the app (shown in the profile drawer footer).

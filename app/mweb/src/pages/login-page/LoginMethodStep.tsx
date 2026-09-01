@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Divider, Link, Stack, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import LegalLinks from '../../components/LegalLinks';
@@ -11,6 +12,7 @@ interface Props {
   gError: string | null;
   onGoogleCredential: (idToken: string) => Promise<void> | void;
   onChoosePassword: () => void;
+  onChooseOtp: () => void;
 }
 
 /**
@@ -27,6 +29,7 @@ export default function LoginMethodStep({
   gError,
   onGoogleCredential,
   onChoosePassword,
+  onChooseOtp,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -69,6 +72,18 @@ export default function LoginMethodStep({
         }}
       >
         {t('mweb.login.continueWithPassword')}
+      </DuncitButton>
+
+      <DuncitButton
+        type="button"
+        variant="outlined"
+        size="large"
+        startIcon={<PinOutlinedIcon />}
+        onClick={onChooseOtp}
+        data-testid="continue-with-otp"
+        sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
+      >
+        {t('mweb.login.continueWithOtp')}
       </DuncitButton>
 
       <Stack spacing={1.4} sx={{ alignItems: 'center' }}>

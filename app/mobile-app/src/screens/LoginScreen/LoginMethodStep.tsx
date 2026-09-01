@@ -11,6 +11,7 @@ interface Props {
   onGoogle: (idToken: string) => void;
   onGoogleError: (message: string) => void;
   onChoosePassword: () => void;
+  onChooseOtp: () => void;
   onSignup: () => void;
 }
 
@@ -27,6 +28,7 @@ export function LoginMethodStep({
   onGoogle,
   onGoogleError,
   onChoosePassword,
+  onChooseOtp,
   onSignup,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -47,6 +49,11 @@ export function LoginMethodStep({
         testID="continue-with-password"
         label={t('mweb.login.continueWithPassword')}
         onPress={onChoosePassword}
+      />
+      <PrimaryButton
+        testID="continue-with-otp"
+        label={t('mweb.login.continueWithOtp')}
+        onPress={onChooseOtp}
       />
       <XStack justifyContent="center" gap={4}>
         <Text fontSize={14} color="$muted">

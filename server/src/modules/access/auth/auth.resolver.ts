@@ -2,7 +2,9 @@ import { userService } from '@modules/access/user/user.service';
 import {
   completePasswordResetSchema,
   loginSchema,
+  loginWithOtpSchema,
   passwordResetLookupSchema,
+  requestLoginOtpSchema,
   registerSchema,
   requestPasswordResetSchema,
   requestPortalLoginOtpSchema,
@@ -117,6 +119,17 @@ export const authResolvers = {
     loginWithPortalOtp: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       const data = await validate(portalLoginOtpSchema, args.input);
       return userService.loginWithPortalOtp(data, signInContext(ctx));
+    },
+    requestLoginOtp: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(requestLoginOtpSchema, args.input);
+      return userService.requestLoginOtp(data as PasswordResetLookup);
+    },
+    loginWithOtp: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      const data = await validate(loginWithOtpSchema, args.input);
+      return userService.loginWithOtp(
+        data as PasswordResetLookup & { otp: string },
+        signInContext(ctx)
+      );
     },
     requestPasswordResetCode: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(passwordResetLookupSchema, args.input);

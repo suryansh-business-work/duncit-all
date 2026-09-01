@@ -100,9 +100,12 @@ jest.mock('@/navigation/navigationRef', () => ({
   },
 }));
 
-// Reanimated 3: install the official jest helpers (worklets run on the JS
-// thread; animations resolve immediately under fake timers).
-require('react-native-reanimated').setUpTests();
+// Reanimated 4 (SDK 57): the worklets runtime is a TurboModule that does not
+// exist under jest — requiring the real library dies in react-native-worklets'
+// loadUnpackers before setUpTests() could run. The shipped mock stands in for
+// the whole library; animations become no-ops, which is what specs asserting
+// structure rather than frames want anyway.
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 
 // moti drives decorative state transitions (chevrons, pills); render them as
 // plain host Views in tests so specs assert structure, not animation frames.

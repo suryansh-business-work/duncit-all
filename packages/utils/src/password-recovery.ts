@@ -276,6 +276,31 @@ const CHANNEL_LABELS: Record<
   }),
 };
 
+/**
+ * Every word the OTP-LOGIN surfaces render — Continue with OTP, the
+ * passwordless sign-in.
+ *
+ * The flow is the recovery flow's first two steps with a session at the end
+ * instead of a password form, so it renders the SAME step components with the
+ * same label shape. Only the words that mean something different are its own
+ * keys: the headings (nothing is being recovered), and the verify button (a
+ * correct code signs you in rather than moving you to a password). Everything
+ * about channels, codes, cooldowns and resends reads identically because it IS
+ * identical.
+ */
+export function buildOtpLoginLabels(t: PasswordRecoveryTranslate): PasswordRecoveryLabels {
+  return {
+    ...buildPasswordRecoveryLabels(t),
+    chooseTitle: t('mweb.otpLogin.title'),
+    chooseTitleAccent: t('mweb.otpLogin.titleAccent'),
+    chooseSubtitle: t('mweb.otpLogin.chooseSubtitle'),
+    codeTitle: t('mweb.otpLogin.title'),
+    codeTitleAccent: t('mweb.otpLogin.titleAccent'),
+    verify: t('mweb.otpLogin.verify'),
+    verifying: t('mweb.otpLogin.verifying'),
+  };
+}
+
 /** The heading a step carries. Blank subtitle where the step's own copy says it. */
 export interface PasswordRecoveryHeading {
   title: string;

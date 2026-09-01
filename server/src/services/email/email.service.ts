@@ -752,6 +752,27 @@ export function sendPasswordResetOtpEmail(opts: {
 }
 
 /**
+ * The consumer sign-in code — the email half of Continue with OTP.
+ *
+ * Its own template rather than `portal-login-otp`, because that one names the
+ * console the code opens and this flow has no console to name.
+ */
+export function sendLoginOtpEmail(opts: {
+  to: string;
+  name: string;
+  otp: string;
+  expiresMinutes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit sign-in code',
+    template: 'login-otp',
+    category: 'authentication',
+    vars: opts,
+  });
+}
+
+/**
  * "Your password was changed" — the notice AFTER a password moves, whichever
  * door moved it.
  *

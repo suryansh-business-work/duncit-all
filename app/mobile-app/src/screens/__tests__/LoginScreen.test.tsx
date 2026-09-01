@@ -17,6 +17,13 @@ jest.mock('@/stores/auth.store', () => ({
 }));
 
 jest.mock('@/services/auth.service');
+jest.mock('@/components/password-recovery/RecoveryChannelStep', () => ({
+  RecoveryChannelStep: () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { View } = require('react-native');
+    return <View testID="otp-channel-step" />;
+  },
+}));
 jest.mock('@/components/AuthScaffold', () => ({
   AuthScaffold: ({ children, testID }: { children: ReactNode; testID?: string }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -123,6 +130,15 @@ describe('LoginScreen', () => {
     fireEvent.press(screen.getByTestId('back-to-options'));
     expect(screen.queryByTestId('submit-login')).toBeNull();
     expect(screen.getByTestId('continue-with-password')).toBeTruthy();
+  });
+
+  it('opens the OTP method and comes back to the options', () => {
+    renderWithProviders(<LoginScreen />);
+    fireEvent.press(screen.getByTestId('continue-with-otp'));
+    expect(screen.getByTestId('otp-channel-step')).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('otp-back'));
+    expect(screen.getByTestId('continue-with-otp')).toBeTruthy();
   });
 
   it('shows the running app version footer', () => {

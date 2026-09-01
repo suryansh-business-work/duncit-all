@@ -411,6 +411,7 @@ export {
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEP_COUNT,
   PASSWORD_RECOVERY_STEPS,
+  buildOtpLoginLabels,
   buildPasswordRecoveryLabels,
   initialRecoveryState,
   passwordRecoveryStepIndex,

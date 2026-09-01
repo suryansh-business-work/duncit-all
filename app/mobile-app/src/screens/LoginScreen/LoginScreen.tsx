@@ -14,10 +14,12 @@ import { useAuthStore } from '@/stores/auth.store';
 import { appVersion } from '@/utils/app-version';
 import { errorCode, toErrorMessage } from '@/utils/errors';
 import { LoginMethodStep } from './LoginMethodStep';
+import { LoginOtpStep } from './LoginOtpStep';
+import { useOtpLogin } from './useOtpLogin';
 import { LoginPasswordStep } from './LoginPasswordStep';
 
-/** Which half of the sign-in screen is showing. */
-type LoginStep = 'CHOOSE' | 'PASSWORD';
+/** Which part of the sign-in screen is showing. */
+type LoginStep = 'CHOOSE' | 'PASSWORD' | 'OTP';
 
 export function LoginScreen() {
   const { t } = useTranslation();
@@ -33,6 +35,9 @@ export function LoginScreen() {
   const [consent, setConsent] = useState<{ idToken: string; email: string } | null>(null);
   const [consentError, setConsentError] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
+  // Continue with OTP: a correct code flips the same auth gate every other
+  // method flips.
+  const otp = useOtpLogin(authenticate, t('mweb.auth.somethingWentWrong'));
 
   // Setting the token + survey flag flips the navigation gate to the survey or
   // app group automatically — no imperative navigation needed.
@@ -92,12 +97,23 @@ export function LoginScreen() {
   };
 
   const choosing = step === 'CHOOSE';
+  // Decided above the JSX (S3358): the chooser keeps the welcome, and each
+  // method names itself once its boxes are showing.
+  let headingTitle = t('mweb.login.title');
+  let headingAccent = t('mweb.login.titleAccent');
+  if (step === 'PASSWORD') {
+    headingTitle = t('mweb.login.passwordStepTitle');
+    headingAccent = t('mweb.login.passwordStepTitleAccent');
+  } else if (step === 'OTP') {
+    headingTitle = t('mweb.otpLogin.title');
+    headingAccent = t('mweb.otpLogin.titleAccent');
+  }
 
   return (
     <AuthScaffold
       testID="login-screen"
-      title={choosing ? t('mweb.login.title') : t('mweb.login.passwordStepTitle')}
-      accentWord={choosing ? t('mweb.login.titleAccent') : t('mweb.login.passwordStepTitleAccent')}
+      title={headingTitle}
+      accentWord={headingAccent}
       subtitle={choosing ? t('mweb.login.subtitle') : ''}
     >
       {choosing ? (
@@ -107,9 +123,11 @@ export function LoginScreen() {
           }}
           onGoogleError={setError}
           onChoosePassword={() => setStep('PASSWORD')}
+          onChooseOtp={() => setStep('OTP')}
           onSignup={() => navigation.navigate('Signup')}
         />
-      ) : (
+      ) : null}
+      {step === 'PASSWORD' ? (
         <LoginPasswordStep
           loading={loading}
           errorMessage={error}
@@ -117,7 +135,8 @@ export function LoginScreen() {
           onForgotPassword={() => navigation.navigate('ForgotPassword')}
           onBack={() => setStep('CHOOSE')}
         />
-      )}
+      ) : null}
+      {step === 'OTP' ? <LoginOtpStep otp={otp} onBack={() => setStep('CHOOSE')} /> : null}
 
       {choosing && error ? (
         <Text testID="login-error" fontSize={14} color="$danger" textAlign="center">

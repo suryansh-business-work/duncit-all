@@ -16,6 +16,7 @@ import {
 import { LINK_GOOGLE_ACCOUNT, LOGIN, LOGIN_GOOGLE } from './queries';
 import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
 import LoginCard, { type LoginStep } from './LoginCard';
+import { useOtpLogin } from './useOtpLogin';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -52,6 +53,9 @@ export default function LoginPage() {
     });
   };
 
+  // Continue with OTP shares the same landing: a correct code hands its token
+  // to the same finishLogin every other method spends.
+  const otp = useOtpLogin(finishLogin);
   const handleSubmit = async (values: LoginFormValues) => {
     try {
       const res = await loginMutation({ variables: { input: values } });
@@ -117,6 +121,7 @@ export default function LoginPage() {
       <AuthModeToggle />
 
       <LoginCard
+        otp={otp}
         step={step}
         onStep={setStep}
         loading={loading}

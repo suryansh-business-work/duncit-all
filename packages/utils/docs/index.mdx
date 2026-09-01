@@ -128,6 +128,7 @@ exports:
   - 'recoveryResendSeconds'
   - 'recoveryDestination'
   - 'buildPasswordRecoveryLabels'
+  - 'buildOtpLoginLabels'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -1300,6 +1301,16 @@ recoveryResendSeconds({ ...sent, lastSentAt: 0 }); // 0 — never below zero
 
 recoveryDestination('PHONE', { email: '', extension: '+91', number: '9845012345' });
 // '+91 9845012345' — what "We sent a code to …" says back
+```
+
+`buildOtpLoginLabels` is Continue with OTP — passwordless sign-in. It returns the SAME
+label shape, overriding only the words that mean something different when a correct code
+opens a session instead of a password form (the headings, and the verify button), so both
+apps render the same channel and code steps for both flows:
+
+```ts
+buildOtpLoginLabels(t).verify; // 'Verify & sign in' — recovery says 'Verify code'
+buildOtpLoginLabels(t).resend; // identical to recovery: same cooldown, same mechanics
 ```
 
 ### The follow button, and the follow rows in the inbox

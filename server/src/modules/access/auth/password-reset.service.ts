@@ -45,7 +45,7 @@ export type PasswordResetChannel = (typeof PASSWORD_RESET_CHANNELS)[number];
  * so asking for both would fan a code out to a medium that cannot carry it and
  * report the whole request as stubbed.
  */
-const MEDIUMS: Record<PasswordResetChannel, OtpMedium[]> = {
+export const CHANNEL_MEDIUMS: Record<PasswordResetChannel, OtpMedium[]> = {
   EMAIL: ['EMAIL'],
   PHONE: ['WHATSAPP'],
 };
@@ -61,7 +61,7 @@ export interface PasswordResetLookup {
 }
 
 /** The destination, validated for the channel that was actually chosen. */
-function targetOf(input: Readonly<PasswordResetLookup>): OtpTarget {
+export function targetOf(input: Readonly<PasswordResetLookup>): OtpTarget {
   if (input.channel === 'EMAIL') return { email: normalizeEmail(input.email) };
   return normalizePhone(input.phone_extension, input.phone_number);
 }
@@ -74,7 +74,7 @@ function targetOf(input: Readonly<PasswordResetLookup>): OtpTarget {
  * `allowedPhoneMediums` reads and a campaign is addressed to. Somebody who gave
  * us a WhatsApp number must be able to recover on it.
  */
-function accountFor(target: Readonly<OtpTarget>) {
+export function accountFor(target: Readonly<OtpTarget>) {
   const filter = target.email
     ? { 'auth.email': target.email }
     : {
@@ -105,7 +105,7 @@ export interface PasswordResetRequestResult {
   test_code: string | null;
 }
 
-const notRegistered = (channel: PasswordResetChannel): PasswordResetRequestResult => ({
+export const notRegistered = (channel: PasswordResetChannel): PasswordResetRequestResult => ({
   ok: false,
   registered: false,
   channel,
@@ -133,7 +133,7 @@ export const passwordResetService = {
 
     const issued = await otpService.request({
       purpose: PURPOSE,
-      mediums: MEDIUMS[input.channel],
+      mediums: CHANNEL_MEDIUMS[input.channel],
       ...target,
       recipient_name: user.profile?.first_name ?? '',
       /*

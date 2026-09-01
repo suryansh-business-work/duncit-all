@@ -1,7 +1,7 @@
 import { logs } from '@observability/log';
 import { otpCampaign, sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
 import { recordManualSend, WA_OTP_EVENT_KEY } from '@modules/platform/whatsapp/whatsapp.manualLog';
-import { sendPasswordResetOtpEmail } from '@services/email/email.service';
+import { sendLoginOtpEmail, sendPasswordResetOtpEmail } from '@services/email/email.service';
 import { OTP_TTL_MINUTES } from './otp.constants';
 import type { IOtpDelivery, OtpMedium, OtpPurpose } from './otp.model';
 
@@ -79,13 +79,14 @@ async function deliverWhatsApp(input: Readonly<OtpDeliveryInput>): Promise<IOtpD
   }
 }
 
-/** Email, over the platform's own mailer. Only the reset flow addresses one. */
+/** Email, over the platform's own mailer, with the mail chosen by the purpose. */
 async function deliverEmail(input: Readonly<OtpDeliveryInput>): Promise<IOtpDelivery> {
-  if (input.purpose !== 'PASSWORD_RESET') {
+  const send = EMAIL_SENDERS[input.purpose];
+  if (!send) {
     return failed('EMAIL', `No email template is wired for ${input.purpose} codes`);
   }
   try {
-    await sendPasswordResetOtpEmail({
+    await send({
       to: input.email,
       name: nameOf(input),
       otp: input.code,
@@ -96,6 +97,16 @@ async function deliverEmail(input: Readonly<OtpDeliveryInput>): Promise<IOtpDeli
     return failed('EMAIL', error instanceof Error ? error.message : 'The mail could not be sent');
   }
 }
+
+/**
+ * Which mail carries which purpose's code. A purpose absent here cannot ask
+ * for EMAIL — the copy in a code's mail says what typing it will DO, so a
+ * generic one-size message would promise the wrong thing.
+ */
+const EMAIL_SENDERS: Partial<Record<OtpPurpose, typeof sendPasswordResetOtpEmail>> = {
+  PASSWORD_RESET: sendPasswordResetOtpEmail,
+  LOGIN: sendLoginOtpEmail,
+};
 
 /**
  * The ONE seam a one-time code leaves Duncit through.

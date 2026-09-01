@@ -559,6 +559,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // which is also where "Forgot password?" belongs, since it is only ever
       // about the password.
       continueWithPassword: 'Continue with Password',
+      continueWithOtp: 'Continue with OTP',
       chooseMethod: 'How would you like to sign in?',
       passwordStepTitle: 'Sign in with',
       passwordStepTitleAccent: 'password',
@@ -695,6 +696,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       back: 'Back',
       stepOf: 'Step {current} of {total}',
       rememberedIt: 'Remembered it?',
+    },
+    // Continue with OTP — passwordless sign-in. Only the words that DIFFER from
+    // password recovery live here: the flow reuses the recovery steps and their
+    // channel/code copy through buildOtpLoginLabels, which overrides these few.
+    otpLogin: {
+      title: 'Sign in with',
+      titleAccent: 'a code',
+      chooseSubtitle: 'Choose where we should send your sign-in code.',
+      verify: 'Verify & sign in',
+      verifying: 'Signing in…',
     },
     resetPassword: {
       title: 'Reset',

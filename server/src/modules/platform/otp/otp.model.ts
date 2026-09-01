@@ -23,10 +23,14 @@ export const OTP_PURPOSES = [
   // code proving a contact number cannot move the WhatsApp one instead.
   'PHONE_CHANGE',
   'WHATSAPP_CHANGE',
-  // Recovering a forgotten password, on either channel. The ONE purpose that
-  // can be addressed to a mailbox as well as to a number — which is why the
+  // Recovering a forgotten password, on either channel. The first purpose that
+  // could be addressed to a mailbox as well as to a number — which is why the
   // challenge below carries an `email` alongside the phone pair.
   'PASSWORD_RESET',
+  // Signing in with a one-time code instead of a password, on either channel.
+  // Separate from PASSWORD_RESET so a code minted to recover a password can
+  // never be spent to open a session, and the other way round.
+  'LOGIN',
 ] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 

@@ -84,6 +84,9 @@ minimumReleaseAgeExclude:
   - jscpd-linux-x64-musl@5.1.1
   - jscpd-windows-arm64-msvc@5.1.1
   - jscpd-windows-x64-msvc@5.1.1
+  - '@astrojs/internal-helpers@0.11.0'
+  - '@astrojs/markdown-satteri@0.4.0'
+  - astro@7.2.10
 
 # pnpm 10 moved these out of package.json's "pnpm" field. pnpm 11 does not read
 # that field at all — it only WARNS that it ignored it — so an override left

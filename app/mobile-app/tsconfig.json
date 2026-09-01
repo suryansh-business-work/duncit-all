@@ -4,7 +4,12 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "baseUrl": ".",
+    // TS 6 (the SDK 57 toolchain) no longer auto-includes node_modules/@types,
+    // so the jest/node ambients every suite leans on must be named. Both are
+    // already installed: @types/jest directly, @types/node transitively.
+    "types": ["node", "jest"],
+    // No baseUrl: TS 6 deprecates it (TS 7 removes it), and every entry below
+    // is ./-relative, which resolves against this tsconfig's directory anyway.
     "paths": {
       "@/*": ["./src/*"],
       // Linked workspace packages are typechecked from their own SOURCE, so

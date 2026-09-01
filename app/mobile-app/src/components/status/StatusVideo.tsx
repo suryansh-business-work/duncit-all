@@ -57,7 +57,7 @@ export function StatusVideo({ uri, muted, onEnded }: Readonly<StatusVideoProps>)
     <VideoView
       testID="status-video"
       player={player}
-      style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' }}
+      style={{ ...StyleSheet.absoluteFill, width: '100%', height: '100%' }}
       contentFit="cover"
       nativeControls={false}
     />

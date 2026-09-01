@@ -140,6 +140,7 @@ describe('auth.service mutations', () => {
         expires_at: '2026-08-31T10:00:00.000Z',
         resend_after_seconds: 30,
         expires_in_minutes: 10,
+        sent: true,
         test_code: null,
       },
     } as never);
@@ -149,6 +150,7 @@ describe('auth.service mutations', () => {
     });
     expect(res).toEqual({
       registered: true,
+      sent: true,
       resendAfterSeconds: 30,
       expiresInMinutes: 10,
       testCode: null,

@@ -24,6 +24,8 @@ interface Props {
   busy: boolean;
   /** True when the destination typed has no account behind it. */
   notFound: boolean;
+  /** True when the account exists but nothing could carry its code. */
+  notSent: boolean;
   onChannel: (channel: PasswordRecoveryChannel) => void;
   onSend: (draft: ContactDraft) => void;
 }
@@ -43,6 +45,7 @@ export default function RecoveryChannelStep({
   defaultValues,
   busy,
   notFound,
+  notSent,
   onChannel,
   onSend,
 }: Readonly<Props>) {
@@ -121,6 +124,12 @@ export default function RecoveryChannelStep({
           {notFound && (
             <FormHelperText error role="alert" sx={{ mx: 1.75 }}>
               {labels.notFound}
+            </FormHelperText>
+          )}
+
+          {notSent && (
+            <FormHelperText error role="alert" sx={{ mx: 1.75 }}>
+              {labels.notSent}
             </FormHelperText>
           )}
 

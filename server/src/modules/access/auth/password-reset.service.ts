@@ -6,6 +6,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { OTP_RESEND_COOLDOWN_SEC, OTP_TTL_MINUTES } from '@modules/platform/otp/otp.constants';
 import type { OtpMedium } from '@modules/platform/otp/otp.model';
 import {
+  anyDelivered,
   normalizeEmail,
   normalizePhone,
   otpService,
@@ -101,6 +102,17 @@ export interface PasswordResetRequestResult {
   resend_after_seconds: number;
   /** Minutes the code lasts, so no screen has to hard-code the rule. */
   expires_in_minutes: number;
+  /**
+   * Whether a medium actually carried the code.
+   *
+   * `registered` says an account was found; this says the code left the
+   * building. They are different answers and the screen needs both: a mailbox
+   * that has opted out of email codes, a switched-off template and a mail
+   * server that refused the address are all a found account whose code nobody
+   * will ever receive, and telling that person to "check your email" is the one
+   * thing that leaves them with nowhere to go.
+   */
+  sent: boolean;
   /** Echoed back ONLY while no medium could really carry the code. */
   test_code: string | null;
 }
@@ -112,6 +124,8 @@ export const notRegistered = (channel: PasswordResetChannel): PasswordResetReque
   expires_at: null,
   resend_after_seconds: OTP_RESEND_COOLDOWN_SEC,
   expires_in_minutes: OTP_TTL_MINUTES,
+  // Nothing was asked for, so nothing went out.
+  sent: false,
   test_code: null,
 });
 
@@ -153,6 +167,7 @@ export const passwordResetService = {
       expires_at: issued.expires_at,
       resend_after_seconds: issued.resend_after_seconds,
       expires_in_minutes: OTP_TTL_MINUTES,
+      sent: anyDelivered(issued.deliveries),
       test_code: issued.test_code,
     };
   },

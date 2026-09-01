@@ -150,9 +150,18 @@ export interface PhoneOtpRequestResult {
   test_code: string | null;
 }
 
+/**
+ * True when at least one medium really carried the code.
+ *
+ * Exported because every flow that issues a code has to answer the same
+ * question to its own screen — "may I tell this person it is on its way?" — and
+ * a second reading of `deliveries` is a second chance to count STUBBED as sent.
+ */
+export const anyDelivered = (deliveries: readonly IOtpDelivery[]) =>
+  deliveries.some((d) => d.status === 'SENT');
+
 /** True when nothing actually left the building, so the code must be shown. */
-const nothingDelivered = (deliveries: readonly IOtpDelivery[]) =>
-  deliveries.every((d) => d.status !== 'SENT');
+const nothingDelivered = (deliveries: readonly IOtpDelivery[]) => !anyDelivered(deliveries);
 
 /**
  * The mediums that survive the recipient's own channel switches.

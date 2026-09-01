@@ -33,7 +33,12 @@ describe('LoginForm', () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toEqual({
+      // The channel rides out with the values: it is what the form was showing,
+      // and the service sends only the boxes belonging to it.
+      channel: 'EMAIL',
       email: 'hello@duncit.com',
+      phoneExtension: '+91',
+      phoneNumber: '',
       password: 'StrongPass123',
     });
   });
@@ -41,5 +46,38 @@ describe('LoginForm', () => {
   it('shows a server error message', () => {
     renderWithProviders(<LoginForm onSubmit={jest.fn()} errorMessage="Invalid credentials" />);
     expect(screen.getByTestId('login-error')).toHaveTextContent('Invalid credentials');
+  });
+
+  /*
+    Continue with password reaches the same account on either identifier. The
+    form is REMOUNTED per channel, so switching must swap the boxes outright
+    rather than leave the previous channel's field on screen.
+  */
+  it('swaps the email box for the number when the phone channel is chosen', () => {
+    renderWithProviders(<LoginForm onSubmit={jest.fn()} />);
+
+    fireEvent.press(screen.getByTestId('login-channel-PHONE'));
+
+    expect(screen.queryByTestId('field-email')).toBeNull();
+    expect(screen.getByTestId('field-phoneNumber')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-password')).toBeOnTheScreen();
+  });
+
+  it('submits a phone sign-in with the channel that was showing', async () => {
+    const onSubmit = jest.fn();
+    renderWithProviders(<LoginForm onSubmit={onSubmit} />);
+
+    fireEvent.press(screen.getByTestId('login-channel-PHONE'));
+    fireEvent.changeText(screen.getByTestId('field-phoneNumber'), '9845012345');
+    fireEvent.changeText(screen.getByTestId('field-password'), 'StrongPass123');
+    fireEvent.press(screen.getByTestId('login-submit'));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      channel: 'PHONE',
+      phoneExtension: '+91',
+      phoneNumber: '9845012345',
+      password: 'StrongPass123',
+    });
   });
 });

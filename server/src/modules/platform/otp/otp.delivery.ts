@@ -79,19 +79,32 @@ async function deliverWhatsApp(input: Readonly<OtpDeliveryInput>): Promise<IOtpD
   }
 }
 
-/** Email, over the platform's own mailer, with the mail chosen by the purpose. */
+/**
+ * Email, over the platform's own mailer, with the mail chosen by the purpose.
+ *
+ * `sendEmail` REFUSES without throwing — an opted-out recipient, a switched-off
+ * template, a channel preference that sends codes elsewhere, an address every
+ * mail server rejected — and says so in `skipped`, whose own comment is
+ * "callers read `skipped` to decide whether to tell a user their email is on the
+ * way". Awaiting it and reporting SENT regardless is how a code nobody could
+ * receive still moved the person to the "type the code" screen, with no error
+ * anywhere they could see it.
+ */
 async function deliverEmail(input: Readonly<OtpDeliveryInput>): Promise<IOtpDelivery> {
   const send = EMAIL_SENDERS[input.purpose];
   if (!send) {
     return failed('EMAIL', `No email template is wired for ${input.purpose} codes`);
   }
   try {
-    await send({
+    const result = await send({
       to: input.email,
       name: nameOf(input),
       otp: input.code,
       expiresMinutes: String(OTP_TTL_MINUTES),
     });
+    if (result.skipped) {
+      return failed('EMAIL', result.reason || 'The mail was not sent');
+    }
     return sent('EMAIL');
   } catch (error) {
     return failed('EMAIL', error instanceof Error ? error.message : 'The mail could not be sent');

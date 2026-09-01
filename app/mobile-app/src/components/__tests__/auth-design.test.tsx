@@ -50,6 +50,100 @@ describe('AuthBackground', () => {
     );
     expect(screen.getByTestId('bg-child-dark')).toBeTruthy();
   });
+
+  /*
+    Both switches off is the state an untouched install is in, and the gradient
+    is what it draws — so nothing extra may be rendered over it.
+  */
+  it('draws only the gradient when neither backdrop switch is on', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: {
+          branding: {
+            login_background_image_enabled: false,
+            login_background_image_url: 'https://cdn/pic.jpg',
+            login_background_video_enabled: false,
+            login_background_video_url: 'https://cdn/clip.mp4',
+          },
+        },
+      }),
+    );
+    renderWithProviders(
+      <AuthBackground>
+        <Text testID="bg-child">hi</Text>
+      </AuthBackground>,
+    );
+    expect(screen.queryByTestId('auth-backdrop-image')).toBeNull();
+    expect(screen.queryByTestId('auth-backdrop-video')).toBeNull();
+  });
+
+  it('draws the image when only its switch is on', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: {
+          branding: {
+            login_background_image_enabled: true,
+            login_background_image_url: 'https://cdn/pic.jpg',
+            login_background_video_enabled: false,
+            login_background_video_url: '',
+          },
+        },
+      }),
+    );
+    renderWithProviders(
+      <AuthBackground>
+        <Text testID="bg-child">hi</Text>
+      </AuthBackground>,
+    );
+    expect(screen.getByTestId('auth-backdrop-image')).toBeTruthy();
+    expect(screen.queryByTestId('auth-backdrop-video')).toBeNull();
+  });
+
+  /* Video wins when both are on — the same precedence mWeb applies. */
+  it('prefers the video when both switches are on', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: {
+          branding: {
+            login_background_image_enabled: true,
+            login_background_image_url: 'https://cdn/pic.jpg',
+            login_background_video_enabled: true,
+            login_background_video_url: 'https://cdn/clip.mp4',
+          },
+        },
+      }),
+    );
+    renderWithProviders(
+      <AuthBackground>
+        <Text testID="bg-child">hi</Text>
+      </AuthBackground>,
+    );
+    expect(screen.getByTestId('auth-backdrop-video')).toBeTruthy();
+    expect(screen.queryByTestId('auth-backdrop-image')).toBeNull();
+  });
+
+  /* A switch on with no asset behind it is nothing to draw, not a blank box. */
+  it('draws nothing when a switch is on but its asset is missing', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: {
+          branding: {
+            login_background_image_enabled: true,
+            login_background_image_url: '',
+            login_background_video_enabled: true,
+            login_background_video_url: '',
+          },
+        },
+      }),
+    );
+    renderWithProviders(
+      <AuthBackground>
+        <Text testID="bg-child">hi</Text>
+      </AuthBackground>,
+    );
+    expect(screen.queryByTestId('auth-backdrop-image')).toBeNull();
+    expect(screen.queryByTestId('auth-backdrop-video')).toBeNull();
+  });
 });
 
 describe('AuthCard', () => {

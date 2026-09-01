@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  codeSendVerdict,
   emptyContactDraft,
   initialRecoveryState,
   recoveryAfterSend,
@@ -14,6 +15,12 @@ import { parseApiError } from '../../utils/parseApiError';
 /** What a send came back with — the shape both request mutations answer in. */
 export interface CodeRequestOutcome {
   registered: boolean;
+  /**
+   * Whether a medium actually carried the code. Distinct from `registered`: an
+   * account can be found and its code still reach nobody, which is the one
+   * outcome the code box must not be shown for.
+   */
+  sent: boolean;
   resendAfterSeconds: number;
   expiresInMinutes: number;
   /** Echoed back only while no medium could really carry the code. */
@@ -40,6 +47,13 @@ export function useCodeRequest(
   const [error, setError] = useState<string | null>(null);
   /** True once a destination came back with no account behind it. */
   const [notFound, setNotFound] = useState(false);
+  /**
+   * True once the account was found but nothing could carry its code — an
+   * address that receives its codes elsewhere, a mail server that refused it,
+   * a switched-off template. Kept apart from `notFound` because the two say
+   * opposite things about whether the person has an account at all.
+   */
+  const [notSent, setNotSent] = useState(false);
   const [expiresInMinutes, setExpiresInMinutes] = useState(10);
   const [testCode, setTestCode] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
@@ -66,8 +80,11 @@ export function useCodeRequest(
 
   const setChannel = useCallback((channel: PasswordRecoveryChannel) => {
     // The refusal belonged to the value that earned it — keeping it across a
-    // channel switch would flag a box nobody has typed in yet.
+    // channel switch would flag a box nobody has typed in yet. That goes double
+    // for a failed send: switching channel is exactly what it asks the person
+    // to do, so the warning must not follow them to the box that will work.
     setNotFound(false);
+    setNotSent(false);
     setError(null);
     setState((prev) => recoveryWithChannel(prev, channel));
   }, []);
@@ -81,11 +98,19 @@ export function useCodeRequest(
     async (draft: Readonly<ContactDraft>) => {
       setError(null);
       setNotFound(false);
+      setNotSent(false);
       setRequesting(true);
       try {
         const result = await send(state.channel, draft);
-        if (!result.registered) {
+        // What the three outcomes mean is decided once, in @duncit/utils,
+        // because both surfaces read them identically (rule 40).
+        const verdict = codeSendVerdict(result);
+        if (verdict === 'NOT_REGISTERED') {
           setNotFound(true);
+          return;
+        }
+        if (verdict === 'NOT_SENT') {
+          setNotSent(true);
           return;
         }
         setExpiresInMinutes(result.expiresInMinutes);
@@ -113,6 +138,7 @@ export function useCodeRequest(
     state,
     error,
     notFound,
+    notSent,
     expiresInMinutes,
     testCode,
     resendIn,

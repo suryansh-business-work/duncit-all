@@ -36,7 +36,7 @@ interface Props {
 export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildPasswordRecoveryLabels(t);
-  const { state, error, notFound, expiresInMinutes, testCode, busy } = recovery;
+  const { state, error, notFound, notSent, expiresInMinutes, testCode, busy } = recovery;
 
   if (state.step === 'DONE') {
     return (
@@ -96,6 +96,7 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
             defaultValues={state.draft}
             busy={busy.requesting}
             notFound={notFound}
+            notSent={notSent}
             onChannel={recovery.setChannel}
             onSend={(draft) => {
               recovery.sendCode(draft).catch(() => undefined);

@@ -669,6 +669,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       sendCode: 'Send code',
       sending: 'Sending…',
       notFound: 'We couldn’t find an account with these details.',
+      notSent:
+        'We couldn’t send your code that way. Try the other option, or check that this is the right address.',
       newToDuncit: 'New to Duncit?',
       createAccount: 'Create Account',
       codeTitle: 'Enter your',

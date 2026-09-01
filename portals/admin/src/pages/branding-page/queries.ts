@@ -18,6 +18,10 @@ export const BRANDING_FIELDS = `
   portals_logo_url
   portals_splash_url
   portals_splash_type
+  login_background_image_enabled
+  login_background_image_url
+  login_background_video_enabled
+  login_background_video_url
   website_header_logo_url
   website_footer_logo_url
   website_favicon_url
@@ -123,6 +127,10 @@ export interface BrandingFormState {
   portals_logo_url: string;
   portals_splash_url: string;
   portals_splash_type: string;
+  login_background_image_enabled: boolean;
+  login_background_image_url: string;
+  login_background_video_enabled: boolean;
+  login_background_video_url: string;
   website_header_logo_url: string;
   website_footer_logo_url: string;
   website_favicon_url: string;
@@ -157,6 +165,10 @@ export const emptyBrandingForm: BrandingFormState = {
   portals_logo_url: '',
   portals_splash_url: '',
   portals_splash_type: 'IMAGE',
+  login_background_image_enabled: false,
+  login_background_image_url: '',
+  login_background_video_enabled: false,
+  login_background_video_url: '',
   website_header_logo_url: '',
   website_footer_logo_url: '',
   website_favicon_url: '',

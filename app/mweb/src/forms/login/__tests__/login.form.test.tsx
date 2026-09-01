@@ -38,7 +38,7 @@ afterEach(() => {
 
 describe('loginSchema', () => {
   it('starts empty — a sign-in form never arrives pre-filled', () => {
-    expect(loginDefaults).toEqual({ email: '', password: '' });
+    expect(loginDefaults).toEqual({ email: '', phoneExtension: '+91', phoneNumber: '', password: '' });
   });
 
   it('needs an email, and needs it to be one', () => {
@@ -94,7 +94,9 @@ describe('LoginForm', () => {
   it('opens empty, and on the values a caller hands it', () => {
     expect(fields(form().container)[0]?.value).toBe('');
 
-    const prefilled = form({ initialValues: { email: 'meera@duncit.com', password: '' } });
+    const prefilled = form({
+      initialValues: { ...loginDefaults, email: 'meera@duncit.com' },
+    });
     expect(fields(prefilled.container)[0]?.value).toBe('meera@duncit.com');
   });
 

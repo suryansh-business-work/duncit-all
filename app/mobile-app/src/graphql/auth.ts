@@ -43,6 +43,7 @@ export const RequestLoginOtpDocument = gql(`
       expires_at
       resend_after_seconds
       expires_in_minutes
+      sent
       test_code
     }
   }
@@ -72,6 +73,7 @@ export const RequestPasswordResetCodeDocument = gql(`
       expires_at
       resend_after_seconds
       expires_in_minutes
+      sent
       test_code
     }
   }

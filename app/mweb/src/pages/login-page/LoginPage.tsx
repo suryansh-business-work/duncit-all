@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router';
 import AuthBackground from '../../components/AuthBackground';
 import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
-import { type LoginFormValues } from '../../forms/login';
+import { type LoginSubmitValues } from '../../forms/login';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
 import {
@@ -56,9 +56,27 @@ export default function LoginPage() {
   // Continue with OTP shares the same landing: a correct code hands its token
   // to the same finishLogin every other method spends.
   const otp = useOtpLogin(finishLogin);
-  const handleSubmit = async (values: LoginFormValues) => {
+  const handleSubmit = async (values: LoginSubmitValues) => {
     try {
-      const res = await loginMutation({ variables: { input: values } });
+      /*
+        Only the chosen channel travels. Sending a blank email alongside a
+        phone number makes the server's per-channel validator argue with a
+        box nobody filled in — the same reason recoveryLookup exists.
+      */
+      const input =
+        values.channel === 'PHONE'
+          ? {
+              channel: 'PHONE' as const,
+              phone_extension: values.phoneExtension.trim(),
+              phone_number: values.phoneNumber.trim(),
+              password: values.password,
+            }
+          : {
+              channel: 'EMAIL' as const,
+              email: values.email.trim().toLowerCase(),
+              password: values.password,
+            };
+      const res = await loginMutation({ variables: { input } });
       const token = res.data?.login?.token;
       if (token) finishLogin(token, res.data?.login?.user);
     } catch (e) {

@@ -32,7 +32,7 @@ export function ForgotPasswordScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const labels = buildPasswordRecoveryLabels(t);
   const recovery = usePasswordRecovery(t('mweb.auth.somethingWentWrong'));
-  const { state, error, notFound, expiresInMinutes, testCode, resendIn, busy } = recovery;
+  const { state, error, notFound, notSent, expiresInMinutes, testCode, resendIn, busy } = recovery;
 
   if (state.step === 'DONE') {
     return (
@@ -76,6 +76,7 @@ export function ForgotPasswordScreen() {
           defaultValues={state.draft}
           busy={busy.requesting}
           notFound={notFound}
+          notSent={notSent}
           onChannel={recovery.setChannel}
           onSend={(draft) => {
             recovery.sendCode(draft).catch(() => undefined);

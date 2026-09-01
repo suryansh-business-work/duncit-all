@@ -62,7 +62,12 @@ export function PolicyAcceptanceSheet({
     else onClose();
   };
 
-  const acceptAll = canAcceptAll ? () => onChange(policies.map((policy) => policy.id)) : undefined;
+  const acceptAll = canAcceptAll
+    ? () => {
+        onChange(policies.map((policy) => policy.id));
+        onClose();
+      }
+    : undefined;
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={dismiss}>

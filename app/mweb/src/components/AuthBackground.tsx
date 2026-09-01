@@ -1,5 +1,6 @@
 import { Box, keyframes, useTheme } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
+import { useBrandingAssets } from '../hooks/useBrandingAssets';
 
 const gradientShift = keyframes`
   0%   { background-position: 0% 50%; }
@@ -14,9 +15,42 @@ interface Props {
  * the viewport) would cover their last rows without this extra bottom room. */
 const BANNER_OFFSET = 'var(--duncit-app-banner-offset, 0px)';
 
+/**
+ * The admin-configured backdrop, drawn under the card and over the gradient.
+ *
+ * Its own component so the gradient frame below stays one Box with one sx: a
+ * video and an image need different elements, and branching inside that sx was
+ * how the frame would end up rendering neither properly. Muted + playsInline
+ * are what let a mobile browser autoplay it at all.
+ */
+function BrandBackdrop({ videoUrl, imageUrl }: Readonly<{ videoUrl: string; imageUrl: string }>) {
+  /*
+    Negative z-index rather than a wrapper around the children: a positioned
+    element with z-index 0 paints ABOVE the in-flow card, and wrapping the card
+    to out-rank it would make it a flex item and lose the centring the frame
+    does. Below zero it paints over the frame's gradient and under everything
+    in flow, which is exactly the layer a backdrop wants.
+  */
+  const cover = {
+    position: 'absolute' as const,
+    inset: 0,
+    zIndex: -1,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+    pointerEvents: 'none' as const,
+  };
+  if (videoUrl) {
+    return <Box component="video" src={videoUrl} muted loop autoPlay playsInline sx={cover} />;
+  }
+  return <Box component="img" src={imageUrl} alt="" sx={cover} />;
+}
+
 export default function AuthBackground({ children }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const { loginBackgroundVideoUrl, loginBackgroundImageUrl } = useBrandingAssets();
+  const backdrop = loginBackgroundVideoUrl || loginBackgroundImageUrl;
 
   return (
     <Box
@@ -52,6 +86,25 @@ export default function AuthBackground({ children }: Readonly<Props>) {
         },
       }}
     >
+      {backdrop && (
+        <BrandBackdrop videoUrl={loginBackgroundVideoUrl} imageUrl={loginBackgroundImageUrl} />
+      )}
+      {/*
+        A scrim, only when there is a backdrop to sit on. A photograph or a
+        video is whatever an admin picked, and the card's text has to stay
+        readable over a bright one without the gradient behind it.
+      */}
+      {backdrop && (
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: -1,
+            pointerEvents: 'none',
+            backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.28)',
+          }}
+        />
+      )}
       {children}
     </Box>
   );

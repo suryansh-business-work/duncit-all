@@ -44,7 +44,17 @@ export const authTypeDefs = gql`
   }
 
   input LoginInput {
-    email: String!
+    """
+    Which of the two the password is being proved against. Defaults to EMAIL, so
+    every portal and shipped app build that posts a bare email + password keeps
+    working untouched.
+    """
+    channel: PasswordResetChannel = EMAIL
+    "Required when channel is EMAIL."
+    email: String
+    "Required, with the extension, when channel is PHONE."
+    phone_extension: String
+    phone_number: String
     password: String!
     portal_key: String
   }
@@ -107,6 +117,16 @@ export const authTypeDefs = gql`
     resend_after_seconds: Int!
     "How long the code lasts, so no screen hard-codes the rule."
     expires_in_minutes: Int!
+    """
+    Whether a medium actually carried the code out of the building.
+
+    Separate from registered, which only says an account was found. A mailbox
+    that receives its codes on another channel, a switched-off template and an
+    address every mail server refused are all a real account whose code never
+    arrives — and a screen that says to check your email for those leaves the
+    person with nothing to do. False means show the failure, not the code box.
+    """
+    sent: Boolean!
     """
     The code itself, echoed back ONLY while no medium could really carry it.
     Null the moment a real transport handles the send.

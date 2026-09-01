@@ -6,7 +6,7 @@ import { Text } from 'tamagui';
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { GoogleLinkConsentModal } from '@/components/GoogleLinkConsentModal';
 import { LegalLinks } from '@/components/LegalLinks';
-import { type LoginFormValues } from '@/forms/login';
+import { type LoginSubmitValues } from '@/forms/login';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { linkGoogleAccount, login as loginService, loginWithGoogle } from '@/services/auth.service';
@@ -41,7 +41,7 @@ export function LoginScreen() {
 
   // Setting the token + survey flag flips the navigation gate to the survey or
   // app group automatically — no imperative navigation needed.
-  const handleSubmit = async (values: LoginFormValues) => {
+  const handleSubmit = async (values: LoginSubmitValues) => {
     setError(null);
     setLoading(true);
     try {

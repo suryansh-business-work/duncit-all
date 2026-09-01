@@ -123,6 +123,30 @@ export const authTypeDefs = gql`
     reset_token: String!
   }
 
+  """
+  Continue with OTP — signing in with a one-time code instead of a password.
+
+  Its own input rather than PasswordResetLookupInput, so a client document
+  reads as the door it opens; the fields and the channels are the same ones.
+  """
+  input RequestLoginOtpInput {
+    channel: PasswordResetChannel!
+    "EMAIL only."
+    email: String
+    "PHONE only — the dial code, e.g. +91."
+    phone_extension: String
+    "PHONE only — digits, without the dial code."
+    phone_number: String
+  }
+
+  input LoginWithOtpInput {
+    channel: PasswordResetChannel!
+    email: String
+    phone_extension: String
+    phone_number: String
+    otp: String!
+  }
+
   input RequestPasswordChangeInput {
     current_password: String!
   }
@@ -248,6 +272,21 @@ export const authTypeDefs = gql`
     and unlinking it would lock the user out of their own account.
     """
     disconnectGoogleAccount: ConnectedAccounts!
+    """
+    Continue with OTP, step one: send a sign-in code to the chosen channel.
+
+    Answers exactly as the recovery request does — registered: false when no
+    account holds these details, and no code is sent then. Unlike recovery, an
+    account with no password may still ask: a code proves the mailbox or the
+    number, which is as authenticated as that account ever is.
+    """
+    requestLoginOtp(input: RequestLoginOtpInput!): PasswordResetRequestResult!
+    """
+    Continue with OTP, step two: trade a correct code for the same session a
+    password would have produced. Single-use, expires with the challenge, and a
+    wrong code costs an attempt.
+    """
+    loginWithOtp(input: LoginWithOtpInput!): AuthPayload!
     """
     Step one of forgotten-password recovery: send a code to the chosen channel.
 

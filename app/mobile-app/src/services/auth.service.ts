@@ -3,6 +3,8 @@ import {
   RegisterDocument,
   LoginDocument,
   CompletePasswordResetDocument,
+  LoginWithOtpDocument,
+  RequestLoginOtpDocument,
   RequestPasswordResetCodeDocument,
   VerifyPasswordResetCodeDocument,
   SignupWithGoogleDocument,
@@ -174,6 +176,36 @@ export async function completePasswordReset(
     input: { reset_token: resetToken, new_password: newPassword },
   });
   return data.completePasswordReset;
+}
+
+/**
+ * Continue with OTP, step one: send a sign-in code to the chosen channel.
+ * Same lookup, same outcome shape as the recovery request — a different door
+ * behind it, which is the server's PURPOSE split, not the client's.
+ */
+export async function requestLoginOtp(
+  lookup: PasswordResetLookup,
+): Promise<PasswordResetRequestOutcome> {
+  const data = await graphqlRequest(RequestLoginOtpDocument, { input: toLookupInput(lookup) });
+  const result = data.requestLoginOtp;
+  return {
+    registered: result.registered,
+    resendAfterSeconds: result.resend_after_seconds,
+    expiresInMinutes: result.expires_in_minutes,
+    testCode: result.test_code ?? null,
+  };
+}
+
+/** Step two: a correct code signs in — the same outcome a password login has. */
+export async function loginWithOtp(lookup: PasswordResetLookup, otp: string): Promise<AuthOutcome> {
+  const data = await graphqlRequest(LoginWithOtpDocument, {
+    input: { ...toLookupInput(lookup), otp: otp.trim() },
+  });
+  await setAuthToken(data.loginWithOtp.token);
+  return {
+    token: data.loginWithOtp.token,
+    surveyCompleted: data.loginWithOtp.user.onboarding_survey_completed,
+  };
 }
 
 /**

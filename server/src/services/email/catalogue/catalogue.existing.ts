@@ -154,6 +154,18 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     vars: otpVars('confirming the deletion'),
   }),
   describeEmail({
+    slug: 'login-otp',
+    name: 'Login OTP',
+    description:
+      'The passwordless sign-in code for the consumer apps. The email half of Continue with OTP — the phone half goes over WhatsApp and never through here.',
+    audience: 'USER',
+    category: 'authentication',
+    fires: 'Somebody asks to sign in to mWeb or the app with a one-time code',
+    subject: 'Your Duncit sign-in code',
+    footerNote: '',
+    vars: otpVars('signing in'),
+  }),
+  describeEmail({
     slug: 'portal-login-otp',
     name: 'Portal Login OTP',
     description: 'The passwordless sign-in code for a console. Names the portal, since a code only works for the one it was asked from.',

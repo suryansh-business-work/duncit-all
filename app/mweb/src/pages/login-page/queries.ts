@@ -47,3 +47,34 @@ export const LINK_GOOGLE_ACCOUNT = gql`
     }
   }
 `;
+
+/** Continue with OTP, step one — send a sign-in code to the chosen channel. */
+export const REQUEST_LOGIN_OTP = gql`
+  mutation RequestLoginOtp($input: RequestLoginOtpInput!) {
+    requestLoginOtp(input: $input) {
+      ok
+      registered
+      channel
+      expires_at
+      resend_after_seconds
+      expires_in_minutes
+      test_code
+    }
+  }
+`;
+
+/** Step two — trade a correct code for the same session a password produces. */
+export const LOGIN_WITH_OTP = gql`
+  mutation LoginWithOtp($input: LoginWithOtpInput!) {
+    loginWithOtp(input: $input) {
+      token
+      user {
+        user_id
+        first_name
+        email
+        roles
+        onboarding_survey_completed
+      }
+    }
+  }
+`;

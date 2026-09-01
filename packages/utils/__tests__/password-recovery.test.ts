@@ -5,6 +5,7 @@ import {
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEPS,
   PASSWORD_RECOVERY_STEP_COUNT,
+  buildOtpLoginLabels,
   buildPasswordRecoveryLabels,
   initialRecoveryState,
   passwordRecoveryStepIndex,
@@ -268,5 +269,34 @@ describe('recoveryHeading', () => {
       accent: 'mweb.passwordRecovery.doneTitleAccent',
       subtitle: 'mweb.passwordRecovery.doneSubtitle',
     });
+  });
+});
+
+describe('buildOtpLoginLabels', () => {
+  const t = (key: string) => key;
+  const labels = buildOtpLoginLabels(t);
+  const recovery = buildPasswordRecoveryLabels(t);
+
+  it('renames only what means something different when a code signs you in', () => {
+    expect(labels.chooseTitle).toBe('mweb.otpLogin.title');
+    expect(labels.chooseTitleAccent).toBe('mweb.otpLogin.titleAccent');
+    expect(labels.chooseSubtitle).toBe('mweb.otpLogin.chooseSubtitle');
+    expect(labels.codeTitle).toBe('mweb.otpLogin.title');
+    expect(labels.codeTitleAccent).toBe('mweb.otpLogin.titleAccent');
+    expect(labels.verify).toBe('mweb.otpLogin.verify');
+    expect(labels.verifying).toBe('mweb.otpLogin.verifying');
+  });
+
+  it('keeps every channel-and-code mechanic word the recovery flow uses', () => {
+    // Same channels, same cooldown copy, same test-code line — because it IS
+    // the same mechanism; only the door at the end differs.
+    expect(labels.channel('EMAIL')).toEqual(recovery.channel('EMAIL'));
+    expect(labels.channel('PHONE')).toEqual(recovery.channel('PHONE'));
+    expect(labels.sendCode).toBe(recovery.sendCode);
+    expect(labels.notFound).toBe(recovery.notFound);
+    expect(labels.resend).toBe(recovery.resend);
+    expect(labels.resendIn(18)).toBe(recovery.resendIn(18));
+    expect(labels.codeExpiry(10)).toBe(recovery.codeExpiry(10));
+    expect(labels.testCode('123456')).toBe(recovery.testCode('123456'));
   });
 });

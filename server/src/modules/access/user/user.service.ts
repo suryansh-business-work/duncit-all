@@ -17,6 +17,17 @@ import {
 import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { emitUserChanged } from '../../../realtime/user.events';
 import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
+import {
+  CHANNEL_MEDIUMS,
+  accountFor,
+  notRegistered,
+  targetOf,
+  type PasswordResetLookup,
+  type PasswordResetRequestResult,
+} from '@modules/access/auth/password-reset.service';
+import { otpService } from '@modules/platform/otp/otp.service';
+import { OTP_TTL_MINUTES } from '@modules/platform/otp/otp.constants';
+
 import { syncUserMirrors } from './user.mirrors';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
@@ -1401,6 +1412,79 @@ export const userService = {
     // AFTER the portal check, so a sign-in that is about to be refused does not
     // tell somebody their account was signed in to. Not awaited: the notice is
     // best-effort and a mailbox must never hold up a login.
+    noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
+    return payload;
+  },
+
+  /**
+   * Continue with OTP, step one: find the account and send it a sign-in code.
+   *
+   * The lookup, the channels and the answer shape are the password-recovery
+   * flow's — same helpers, same one-time-code service, a different PURPOSE so
+   * the two kinds of code can never be spent on each other. One deliberate
+   * difference: recovery refuses an account with no password (there is nothing
+   * to recover), while a code can sign anyone in — a Google-only account
+   * proving its mailbox is exactly as authenticated as it is pressing the
+   * Google button.
+   */
+  async requestLoginOtp(input: PasswordResetLookup): Promise<PasswordResetRequestResult> {
+    const target = targetOf(input);
+    const user = await accountFor(target);
+    // A sealed account reads as unregistered, exactly as recovery answers: the
+    // account is on its way out, and a code could only open a door every other
+    // gate already refuses.
+    if (!user || isAccountLocked(String(user._id))) {
+      return notRegistered(input.channel);
+    }
+
+    const issued = await otpService.request({
+      purpose: 'LOGIN',
+      mediums: CHANNEL_MEDIUMS[input.channel],
+      ...target,
+      recipient_name: user.profile?.first_name ?? '',
+      // Whose session a correct code opens — resolved once, here, rather than
+      // looked up again from a value the caller could change between steps.
+      context: { user_id: String(user._id) },
+      requested_by: String(user._id),
+    });
+
+    return {
+      ok: true,
+      registered: true,
+      channel: input.channel,
+      expires_at: issued.expires_at,
+      resend_after_seconds: issued.resend_after_seconds,
+      expires_in_minutes: OTP_TTL_MINUTES,
+      test_code: issued.test_code,
+    };
+  },
+
+  /** Continue with OTP, step two: trade a correct code for a session. */
+  async loginWithOtp(
+    input: PasswordResetLookup & { otp: string },
+    signIn?: SignInContext
+  ): Promise<{ token: string; user: any }> {
+    const challenge = await otpService.verifyLatest('LOGIN', targetOf(input), input.otp);
+    const userId = String((challenge.context as { user_id?: string })?.user_id ?? '');
+    const user = await UserModel.findById(userId);
+    if (!user) throw invalidCredentials();
+    // The same order the password door uses: proof first, then whether this
+    // account may still hold a session at all.
+    assertNotSealed(user._id);
+    if ((user as any).metadata?.status !== 'ACTIVE') {
+      throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
+    }
+    // Spent only by a login that is actually happening — a refusal above
+    // leaves the proof intact, and single use is what stops one code from
+    // opening two sessions.
+    await otpService.consume(String(challenge._id), { purpose: 'LOGIN' });
+
+    await UserModel.updateOne(
+      { _id: user._id },
+      { $set: { 'auth.last_login_provider': 'OTP', 'auth.last_login_at': new Date() } }
+    );
+    const fresh = await UserModel.findById(user._id);
+    const payload = await authPayload(fresh);
     noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
     return payload;
   },

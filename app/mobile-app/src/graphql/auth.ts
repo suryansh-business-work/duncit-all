@@ -33,6 +33,35 @@ export const LoginDocument = gql(`
   }
 `);
 
+/** Continue with OTP, step one — send a sign-in code to the chosen channel. */
+export const RequestLoginOtpDocument = gql(`
+  mutation MobileRequestLoginOtp($input: RequestLoginOtpInput!) {
+    requestLoginOtp(input: $input) {
+      ok
+      registered
+      channel
+      expires_at
+      resend_after_seconds
+      expires_in_minutes
+      test_code
+    }
+  }
+`);
+
+/** Step two — trade a correct code for the session a password would produce. */
+export const LoginWithOtpDocument = gql(`
+  mutation MobileLoginWithOtp($input: LoginWithOtpInput!) {
+    loginWithOtp(input: $input) {
+      token
+      user {
+        user_id
+        email
+        onboarding_survey_completed
+      }
+    }
+  }
+`);
+
 /** Step one of recovery — find the account and send a code on its channel. */
 export const RequestPasswordResetCodeDocument = gql(`
   mutation MobileRequestPasswordResetCode($input: PasswordResetLookupInput!) {

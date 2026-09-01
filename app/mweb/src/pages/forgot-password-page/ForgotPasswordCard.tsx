@@ -15,8 +15,8 @@ import {
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { useTranslation } from '../../i18n/useTranslation';
-import RecoveryChannelStep from './RecoveryChannelStep';
-import RecoveryCodeStep from './RecoveryCodeStep';
+import RecoveryChannelStep from '../../components/password-recovery/RecoveryChannelStep';
+import RecoveryCodeStep from '../../components/password-recovery/RecoveryCodeStep';
 import RecoveryPasswordStep from './RecoveryPasswordStep';
 import type { PasswordRecovery } from './usePasswordRecovery';
 

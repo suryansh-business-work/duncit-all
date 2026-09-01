@@ -10,7 +10,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { PasswordRecoveryLabels } from '@duncit/utils';
 import RhfTextField from '../../forms/components/RhfTextField';
 import { useTranslation } from '../../i18n/useTranslation';
-import { makeRecoveryPasswordSchema, type RecoveryPasswordValues } from './recovery.types';
+import { makeRecoveryPasswordSchema, type RecoveryPasswordValues } from '../../components/password-recovery/recovery.types';
 
 interface Props {
   labels: PasswordRecoveryLabels;

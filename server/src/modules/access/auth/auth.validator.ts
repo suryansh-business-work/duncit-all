@@ -80,6 +80,14 @@ export const verifyPasswordResetCodeSchema = yup.object({
     .required(),
 });
 
+/*
+  Continue with OTP. The lookup rules are the recovery request's — one shape,
+  validated per channel — so the two doors cannot drift on what a phone number
+  is. Aliased rather than re-declared (rule 34).
+*/
+export const requestLoginOtpSchema = passwordResetLookupSchema;
+export const loginWithOtpSchema = verifyPasswordResetCodeSchema;
+
 export const completePasswordResetSchema = yup.object({
   reset_token: yup.string().min(10).max(200).required(),
   // The application's password policy, in the one place every door reads it.
@@ -147,6 +155,7 @@ export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetS
 export type PasswordResetLookupDTO = yup.InferType<typeof passwordResetLookupSchema>;
 export type VerifyPasswordResetCodeDTO = yup.InferType<typeof verifyPasswordResetCodeSchema>;
 export type CompletePasswordResetDTO = yup.InferType<typeof completePasswordResetSchema>;
+export type LoginWithOtpDTO = yup.InferType<typeof loginWithOtpSchema>;
 export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
 export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
 export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;

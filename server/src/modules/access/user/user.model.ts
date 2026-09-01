@@ -83,7 +83,7 @@ const authSchema = new Schema(
      */
     google_email: { type: String },
     google_linked_at: { type: Date, default: null },
-    last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', null], default: null },
+    last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', 'OTP', null], default: null },
     last_login_at: { type: Date, default: null },
     // Optional: phone is no longer collected at signup. When present, the
     // phoneSchema still requires number+extension. Absent docs are excluded
